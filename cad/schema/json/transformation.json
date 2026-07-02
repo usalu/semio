@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema", "id", "version", "label", "source", "target", "typologies"],
   "properties": {
-    "schema": { "const": "spatial.transformation/v1" },
+    "schema": { "const": "spatial.transformation" },
     "id": { "type": "string" },
     "version": { "type": "string" },
     "label": { "type": "string" },

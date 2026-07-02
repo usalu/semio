@@ -12,7 +12,7 @@ use std::cell::Cell;
 use std::collections::HashMap;
 use trinity_jack::{execute, parse};
 use trinity_ram::{
-    create_trinity_graph_envelope, dispatch_trinity_graph_ops, Graph, GraphFixtureV1, Node, PortDirection, PropertyValue,
+    create_trinity_graph_envelope, dispatch_trinity_graph_ops, Graph, GraphFixture, Node, PortDirection, PropertyValue,
     TrinityGraphOp, TrinityGraphStore, port_key,
 };
 
@@ -20,7 +20,7 @@ pub use trinity_jack::{
     complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack,
     Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan,
 };
-pub use trinity_ram::{self, CameraV1, Manifest};
+pub use trinity_ram::{self, Camera, Manifest};
 
 type TrinityBoardEngine = BoardEngine;
 
@@ -425,7 +425,7 @@ fn trinity_graph_to_board_fixture(graph: &Graph) -> serde_json::Value {
         })
         .collect();
     serde_json::json!({
-        "schema": "puzzle.2d.fixture/v1",
+        "schema": "puzzle.2d.fixture",
         "camera": {
             "x": graph.camera.x,
             "y": graph.camera.y,
@@ -463,7 +463,7 @@ fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
         .map(|edge| serde_json::json!({ "source": edge.source, "target": edge.target }))
         .collect();
     serde_json::json!({
-        "schema": GraphFixtureV1::SCHEMA,
+        "schema": GraphFixture::SCHEMA,
         "nodes": nodes,
         "edges": edges,
     })
@@ -494,7 +494,7 @@ fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &se
     Ok(())
 }
 
-fn force_layout_reposition_ops(fixture: &GraphFixtureV1) -> Result<Vec<TrinityGraphOp>, String> {
+fn force_layout_reposition_ops(fixture: &GraphFixture) -> Result<Vec<TrinityGraphOp>, String> {
     let mut graph = Graph::from_fixture(fixture.clone())?;
     apply_force_layout_to_trinity_graph(&mut graph)?;
     let next = graph.to_fixture();
@@ -998,7 +998,7 @@ mod wasm_bridge {
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {
     use super::*;
-    use trinity_ram::GraphFixtureV1;
+    use trinity_ram::GraphFixture;
     use std::cell::RefCell;
     use std::rc::Rc;
     use wasm_bindgen::prelude::*;
@@ -1023,7 +1023,7 @@ mod wasm_session {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
             let fixture = include_str!("../../fixture/nakagin-capsule-tower.trinity.json");
-            let host = TrinityHost::load_fixture_json(fixture).unwrap_or_else(|_| TrinityHost::from_graph(Graph::from_fixture(GraphFixtureV1 { schema: GraphFixtureV1::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: CameraV1::default(), nodes: vec![], edges: vec![], root_node_id: None }).unwrap()));
+            let host = TrinityHost::load_fixture_json(fixture).unwrap_or_else(|_| TrinityHost::from_graph(Graph::from_fixture(GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None }).unwrap()));
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 

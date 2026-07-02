@@ -1,5 +1,5 @@
 {
-  "schema": "writer.document/v1",
+  "schema": "writer.document",
   "id": "jack",
   "languageId": "jack",
   "uri": "writer://jack",

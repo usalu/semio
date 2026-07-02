@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "primitive.createBoxFrom3Points",
   "version": "1.0.0",
   "label": "CreateBoxFrom3Points",

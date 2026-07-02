@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "transform.scale1d",
   "version": "1.0.0",
   "label": "Scale1d",

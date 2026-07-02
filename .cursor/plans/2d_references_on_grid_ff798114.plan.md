@@ -12,7 +12,7 @@ todos:
     content: "Add #region Reference to infinite/world/r3f: WorldReferenceProps, WorldReferencePlane, WorldReferenceGumball, WorldReferenceLayer, applyWorldReferenceTransform; reuse WorldEntityFlags + UnifiedGumball"
     status: completed
   - id: puzzle-schema
-    content: Extend puzzle 3d FixtureV1 with references[] + parse/encode + pure ops (add/update/relocate)
+    content: Extend puzzle 3d Fixture with references[] + parse/encode + pure ops (add/update/relocate)
     status: completed
   - id: puzzle-scene
     content: Render WorldReferenceLayer in puzzle 3d scene with registry selection/hover and relocate wiring
@@ -47,7 +47,7 @@ A reference is a flat, textured plane sitting on (and movable above) the world g
 flowchart TD
   port["ReferenceMediaPort (@semio-tech/ui-react)\nimage/svg/pdf path to CanvasTexture + aspect"]
   world["@semio-tech/infinite-world-r3f\nWorldReference* (plane, layer, gumball, flags)"]
-  puzzle["@semio-tech/puzzle-3d-react + play\nFixtureV1.references[]"]
+  puzzle["@semio-tech/puzzle-3d-react + play\nFixture.references[]"]
   cad["@semio-tech/cad-js-renderer + play\nreferences store"]
   port --> world
   world --> puzzle
@@ -90,7 +90,7 @@ New `#region 🖼️Reference` in [infinite/world/r3f/index.tsx](infinite/world/
 
 In [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx):
 
-- Extend `FixtureV1` (line ~1228) with `references: WorldReferenceProps[]` (default `[]`); update `parseFixtureV1` / encode, plus `updatePuzzle3dReferenceInFixture`, `applyReferenceRelocateToFixture`, `addReferenceToFixture`.
+- Extend `Fixture` (line ~1228) with `references: WorldReferenceProps[]` (default `[]`); update `parseFixture` / encode, plus `updatePuzzle3dReferenceInFixture`, `applyReferenceRelocateToFixture`, `addReferenceToFixture`.
 - Add a `WorldLayer` (e.g. `order` below objects) in the `Inner` scene core rendering `WorldReferenceLayer`, wired to registry selection/hover and `onRelocate`.
 - Reference picking + marquee participate via the existing registry; flags toggles reuse `updatePuzzle3dObjectInFixture`-style path.
 

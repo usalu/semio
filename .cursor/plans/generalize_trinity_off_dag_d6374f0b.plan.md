@@ -49,7 +49,7 @@ Also uncovered: the shared force-directed layout math is gated by a hardcoded tw
 
 ```104:106:mathematical/graph/normal/undirected/lib.rs
     fn fixture_schema_ok(schema: Option<&str>) -> bool {
-        matches!(schema, Some("puzzle.2d.fixture/v1") | Some("reasoning.mindmap.fixture/v1"))
+        matches!(schema, Some("puzzle.2d.fixture") | Some("reasoning.mindmap.fixture"))
     }
 ```
 
@@ -67,9 +67,9 @@ This blocks trinity (and any future technology) from reusing the generic layout 
 
 ```rust
 const FORCE_GRAPH_COMPATIBLE_SCHEMAS: &[&str] = &[
-    "puzzle.2d.fixture/v1",
-    "reasoning.mindmap.fixture/v1",
-    "trinity.graph/v1",
+    "puzzle.2d.fixture",
+    "reasoning.mindmap.fixture",
+    "trinity.graph",
 ];
 
 fn fixture_schema_ok(schema: Option<&str>) -> bool {
@@ -83,7 +83,7 @@ Update the `Err(...)` message to be built from the array instead of a hardcoded 
 
 [trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs): replace the dummy grid stub with a real adapter that reuses `mathematical_graph_port_directed::force_graph` (already a dependency of this crate):
 
-- Build a `serde_json::Value` shaped as the generic ported board fixture: `{"schema": trinity_ram::GraphFixtureV1::SCHEMA, "nodes": [{"id","x","y","width","height","shape":"rectangle","handles":[{"id": port_key(node.id, port.id)}, ...]}], "edges": [{"source","target"}]}` — trinity edges already store `source`/`target` as `"nodeId:portId"` strings, so they map 1:1 onto the expected handle-id fields.
+- Build a `serde_json::Value` shaped as the generic ported board fixture: `{"schema": trinity_ram::GraphFixture::SCHEMA, "nodes": [{"id","x","y","width","height","shape":"rectangle","handles":[{"id": port_key(node.id, port.id)}, ...]}], "edges": [{"source","target"}]}` — trinity edges already store `source`/`target` as `"nodeId:portId"` strings, so they map 1:1 onto the expected handle-id fields.
 - Call `mathematical_graph_port_directed::force_graph::apply_force_graph_layout_to_fixture_v1_value(&mut value, &ForceGraphLayoutOptions::default())`.
 - Copy the resulting `x`/`y` back onto `self.graph.nodes`, then `self.rebuild_engine()`.
 

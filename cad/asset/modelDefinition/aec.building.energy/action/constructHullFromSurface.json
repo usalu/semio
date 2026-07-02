@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "energy.energy.constructHullFromSurface",
   "version": "1.0.0",
   "label": "Construct Hull From Surface",

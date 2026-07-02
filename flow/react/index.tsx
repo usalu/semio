@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { borderNormalBottomClass, canvasViewportClass, cn, CanvasPickMenu, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, menuListItemClassName, SelectionMarquee, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@semio-tech/ui-react";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
 import { resolveColorHex, resolveSemanticColorHex, syncSessionVelloTheme, tokenVar } from "@semio-tech/ui-styling";
-import { isDagDrawLodKind, type DagDrawLodKind } from "@semio-tech/dag-react";
+import { isDagDrawLodKind, type DagDrawLodKind, DagSelectionBoundsBox, computeDagMarqueeOverlay, dagElementInteractionChrome, dagSelectionUnionBoundsEqual, dagWorldToScreen, parseDagNodeIdArray, parseDagPreselectJson, parseDagSelectionPreviewPoints, parseDagSelectionUnionBoundsScreen, paintDagLabelOverlays, type DagPreselectSnapshot, type DagSelectionUnionBoundsScreen } from "@semio-tech/dag-react";
 import initFlowWasm, { FlowSession, initSync } from "../core/pkg/flow_core.js";
 import flowCoreWasmUrl from "../core/pkg/flow_core_bg.wasm?url";
 import { FlowOrchestratorClient } from "../worker-client.ts";
@@ -80,18 +80,18 @@ export {
 // #endregion 🔖GpuWasmBridge
 
 // #region 🔖ExtensionHost
-export interface FlowModuleVariadicSpecV1 {
+export interface FlowModuleVariadicSpec {
   readonly slotKey: string;
   readonly min: number;
   readonly max?: number;
 }
 
-export interface FlowValueTypeV1 {
+export interface FlowValueType {
   readonly kind: string;
-  readonly of?: FlowValueTypeV1 | string;
+  readonly of?: FlowValueType | string;
 }
 
-export interface FlowChannelSpecV1 {
+export interface FlowChannelSpec {
   readonly name: string;
   readonly code: string;
   readonly abbreviation: string;
@@ -122,7 +122,7 @@ function flowCardinalityRangeContains(input: string | undefined, output: string 
   return outMax <= inMax;
 }
 
-export function flowChannelCompatible(output: FlowChannelSpecV1, input: FlowChannelSpecV1): boolean {
+export function flowChannelCompatible(output: FlowChannelSpec, input: FlowChannelSpec): boolean {
   if (!flowCardinalityRangeContains(input.cardinality, output.cardinality)) return false;
   if (!input.operators.length) return true;
   const provided = new Set(output.operators);
@@ -168,74 +168,74 @@ export function readFlowEvalErrors(outPorts: Readonly<Record<string, unknown>> |
     .filter((entry) => entry.length > 0 && entry !== "null");
 }
 
-export interface FlowModuleSchemaFieldV1 {
+export interface FlowModuleSchemaField {
   readonly key: string;
-  readonly value: FlowValueTypeV1;
+  readonly value: FlowValueType;
   readonly default?: unknown;
   readonly label?: string;
 }
 
-export interface FlowModuleSchemaV1 {
+export interface FlowModuleSchema {
   readonly id: string;
   readonly module: string;
   readonly name: string;
   readonly icon: string;
   readonly summary: string;
-  readonly fields: readonly FlowModuleSchemaFieldV1[];
+  readonly fields: readonly FlowModuleSchemaField[];
 }
 
-export interface FlowModuleOperatorInfoV1 {
+export interface FlowModuleOperatorInfo {
   readonly id: string;
   readonly module: string;
   readonly name: string;
   readonly abbreviation: string;
   readonly icon: string;
   readonly summary: string;
-  readonly inputs: readonly FlowChannelSpecV1[];
-  readonly outputs: readonly FlowChannelSpecV1[];
+  readonly inputs: readonly FlowChannelSpec[];
+  readonly outputs: readonly FlowChannelSpec[];
   readonly group?: readonly string[];
-  readonly variadicInput?: FlowModuleVariadicSpecV1;
-  readonly variadicOutput?: FlowModuleVariadicSpecV1;
+  readonly variadicInput?: FlowModuleVariadicSpec;
+  readonly variadicOutput?: FlowModuleVariadicSpec;
 }
 
-export type FlowModuleNeuronKindV1 = FlowModuleOperatorInfoV1;
+export type FlowModuleNeuronKind = FlowModuleOperatorInfo;
 
-export interface FlowModuleCommandV1 {
+export interface FlowModuleCommand {
   readonly id: string;
   readonly title: string;
 }
 
-export interface FlowModuleSettingV1 {
+export interface FlowModuleSetting {
   readonly id: string;
   readonly type: string;
   readonly default: unknown;
   readonly description: string;
 }
 
-export interface FlowModuleWidgetV1 {
+export interface FlowModuleWidget {
   readonly kind: string;
   readonly name: string;
   readonly summary: string;
 }
 
-export interface FlowModuleManifestV1 {
-  readonly schema: "flow.module/v1";
+export interface FlowModuleManifest {
+  readonly schema: "flow.module";
   readonly id: string;
   readonly name: string;
   readonly version: string;
   readonly activationEvents: readonly string[];
   readonly contributes: {
-    readonly schemas: readonly FlowModuleSchemaV1[];
-    readonly operators: readonly FlowModuleOperatorInfoV1[];
-    readonly widgets: readonly FlowModuleWidgetV1[];
-    readonly commands: readonly FlowModuleCommandV1[];
-    readonly settings: readonly FlowModuleSettingV1[];
+    readonly schemas: readonly FlowModuleSchema[];
+    readonly operators: readonly FlowModuleOperatorInfo[];
+    readonly widgets: readonly FlowModuleWidget[];
+    readonly commands: readonly FlowModuleCommand[];
+    readonly settings: readonly FlowModuleSetting[];
   };
 }
 
 export interface FlowExtensionEntry {
   readonly id: string;
-  readonly manifest: FlowModuleManifestV1;
+  readonly manifest: FlowModuleManifest;
   readonly active: boolean;
 }
 
@@ -290,7 +290,7 @@ export const FLOW_INSTALLED_MODULE_IDS = Object.keys(FLOW_MODULE_LOADERS);
 
 interface ActiveFlowModule {
   readonly glue: FlowModuleGlue;
-  readonly manifest: FlowModuleManifestV1;
+  readonly manifest: FlowModuleManifest;
 }
 
 export class FlowExtensionHost {
@@ -331,8 +331,8 @@ export class FlowExtensionHost {
     return this.active.has(id);
   }
 
-  activeCommands(): readonly FlowModuleCommandV1[] {
-    const commands: FlowModuleCommandV1[] = [];
+  activeCommands(): readonly FlowModuleCommand[] {
+    const commands: FlowModuleCommand[] = [];
     for (const entry of this.active.values()) {
       commands.push(...entry.manifest.contributes.commands);
     }
@@ -428,16 +428,16 @@ export class FlowExtensionHost {
   }
 
   kindInfosJson(): string {
-    const kinds: FlowModuleNeuronKindV1[] = [];
+    const kinds: FlowModuleNeuronKind[] = [];
     for (const entry of this.active.values()) {
       kinds.push(...entry.manifest.contributes.operators);
     }
     return JSON.stringify(kinds);
   }
 
-  private placeholderManifest(id: string): FlowModuleManifestV1 {
+  private placeholderManifest(id: string): FlowModuleManifest {
     return {
-      schema: "flow.module/v1",
+      schema: "flow.module",
       id,
       name: titleizeModuleId(id),
       version: "0.0.0",
@@ -459,9 +459,9 @@ if (typeof window !== "undefined") {
   window.__flowExtensionHost = flowExtensionHost;
 }
 
-export function parseFlowModuleManifest(json: string): FlowModuleManifestV1 {
-  const parsed = JSON.parse(json) as FlowModuleManifestV1;
-  if (parsed.schema !== "flow.module/v1") {
+export function parseFlowModuleManifest(json: string): FlowModuleManifest {
+  const parsed = JSON.parse(json) as FlowModuleManifest;
+  if (parsed.schema !== "flow.module") {
     throw new Error(`unsupported module manifest schema: ${parsed.schema}`);
   }
   return parsed;
@@ -477,10 +477,10 @@ export function createFlowEvalBridge(host: FlowExtensionHost = flowExtensionHost
 // #endregion 🔖ExtensionHost
 
 // #region 🔖Fixture
-export interface FlowFixtureV1 {
-  readonly schema: "flow.fixture/v1";
+export interface FlowFixture {
+  readonly schema: "flow.fixture";
   readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
-  readonly widgets: readonly FlowWidgetV1[];
+  readonly widgets: readonly FlowWidget[];
   readonly synapses: readonly {
     readonly id: string;
     readonly from: string;
@@ -491,48 +491,48 @@ export interface FlowFixtureV1 {
   readonly layout?: Readonly<Record<string, { readonly x: number; readonly y: number }>>;
 }
 
-export interface FlowDocumentV1 {
-  readonly schema: "flow.document/v1";
-  readonly flow: FlowGuiV1;
-  readonly tree: FlowTreeV1;
+export interface FlowDocument {
+  readonly schema: "flow.document";
+  readonly flow: FlowGui;
+  readonly tree: FlowTree;
 }
 
-export interface FlowGuiV1 {
+export interface FlowGui {
   readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
-  readonly nodes: Readonly<Record<string, FlowNodeGuiV1>>;
-  readonly previews?: readonly FlowPreviewGuiV1[];
+  readonly nodes: Readonly<Record<string, FlowNodeGui>>;
+  readonly previews?: readonly FlowPreviewGui[];
 }
 
-export interface FlowNodeGuiV1 {
+export interface FlowNodeGui {
   readonly layout: { readonly x: number; readonly y: number };
-  readonly chrome: FlowNodeChromeV1;
+  readonly chrome: FlowNodeChrome;
 }
 
-export type FlowNodeChromeV1 =
+export type FlowNodeChrome =
   | { readonly kind: "plain" }
   | { readonly kind: "slider"; readonly min: number; readonly max: number; readonly step: number }
   | { readonly kind: "note" }
   | { readonly kind: "image" }
   | { readonly kind: "variable" };
 
-export interface FlowSchemaRefV1 {
+export interface FlowSchemaRef {
   readonly id: string;
   readonly name: string;
   readonly icon: string;
 }
 
-export interface FlowPreviewGuiV1 {
+export interface FlowPreviewGui {
   readonly id: string;
   readonly source?: { readonly neuron: string; readonly channel: string };
   readonly mode: string;
 }
 
-export interface FlowTreeV1 {
+export interface FlowTree {
   readonly neurons: readonly { readonly id: string; readonly kind: string; readonly params?: unknown }[];
   readonly synapses: readonly { readonly id: string; readonly from: string; readonly to: string; readonly fromPort?: string; readonly toPort?: string }[];
 }
 
-export type FlowWidgetV1 =
+export type FlowWidget =
   | { readonly kind: "neuron"; readonly id: string; readonly neuronKind: string; readonly inputPorts?: readonly string[]; readonly outputPorts?: readonly string[] }
   | { readonly kind: "inputSlider"; readonly id: string; readonly value: number; readonly min?: number; readonly max?: number; readonly step?: number }
   | { readonly kind: "inputStepper"; readonly id: string; readonly schema: string; readonly fields?: readonly { readonly key: string; readonly value: number }[]; readonly step?: number }
@@ -541,10 +541,10 @@ export type FlowWidgetV1 =
   | { readonly kind: "variable"; readonly id: string; readonly name: string; readonly schema: string }
   | { readonly kind: "outputPreview"; readonly id: string; readonly expanded?: readonly string[] }
   | { readonly kind: "outputAction"; readonly id: string; readonly action: string }
-  | { readonly kind: "cluster"; readonly id: string; readonly name?: string; readonly tree: FlowTreeV1; readonly flow?: FlowGuiV1 };
+  | { readonly kind: "cluster"; readonly id: string; readonly name?: string; readonly tree: FlowTree; readonly flow?: FlowGui };
 
-export const FLOW_DEFAULT_FIXTURE: FlowFixtureV1 = {
-  schema: "flow.fixture/v1",
+export const FLOW_DEFAULT_FIXTURE: FlowFixture = {
+  schema: "flow.fixture",
   camera: { x: 0, y: 0, zoom: 1 },
   widgets: [
     { kind: "inputSlider", id: "slider", value: 3 },
@@ -557,18 +557,18 @@ export const FLOW_DEFAULT_FIXTURE: FlowFixtureV1 = {
   ],
 };
 
-export function flowFixtureToJson(fixture: FlowFixtureV1): string {
+export function flowFixtureToJson(fixture: FlowFixture): string {
   return JSON.stringify(fixture);
 }
 
 export type FlowFixtureEditOp =
-  | { readonly op: "setDocument"; readonly document: FlowFixtureV1 }
+  | { readonly op: "setDocument"; readonly document: FlowFixture }
   | { readonly op: "renameWidget"; readonly oldId: string; readonly newId: string }
   | { readonly op: "patchWidget"; readonly widgetId: string; readonly field: string; readonly value: unknown }
   | { readonly op: "patchWidgets"; readonly widgetIds: readonly string[]; readonly field: string; readonly value: unknown };
 
 /** @emoji 🚪 Applies one semantic flow fixture edit (CQRS projection applier). */
-export function applyFlowFixtureEditOp(fixture: FlowFixtureV1, op: FlowFixtureEditOp): FlowFixtureV1 {
+export function applyFlowFixtureEditOp(fixture: FlowFixture, op: FlowFixtureEditOp): FlowFixture {
   switch (op.op) {
     case "setDocument":
       return op.document;
@@ -578,7 +578,7 @@ export function applyFlowFixtureEditOp(fixture: FlowFixtureV1, op: FlowFixtureEd
         return fixture;
       }
       const widgets = fixture.widgets.map((widget) =>
-        widget.id === op.oldId ? ({ ...widget, id: trimmed } as FlowWidgetV1) : widget,
+        widget.id === op.oldId ? ({ ...widget, id: trimmed } as FlowWidget) : widget,
       );
       const synapses = fixture.synapses.map((synapse) => ({
         ...synapse,
@@ -608,10 +608,10 @@ export function applyFlowFixtureEditOp(fixture: FlowFixtureV1, op: FlowFixtureEd
         if (op.field === "value" || op.field === "min" || op.field === "max" || op.field === "step") {
           const numeric = typeof op.value === "number" ? op.value : Number(op.value);
           if (!Number.isFinite(numeric)) return widget;
-          return { ...widget, [op.field]: numeric } as FlowWidgetV1;
+          return { ...widget, [op.field]: numeric } as FlowWidget;
         }
         if (typeof op.value !== "string") return widget;
-        return { ...widget, [op.field]: op.value } as FlowWidgetV1;
+        return { ...widget, [op.field]: op.value } as FlowWidget;
       });
       return { ...fixture, widgets };
     }
@@ -619,7 +619,7 @@ export function applyFlowFixtureEditOp(fixture: FlowFixtureV1, op: FlowFixtureEd
 }
 
 /** @emoji ↩️ Inverts a flow fixture edit from the pre-apply projection. */
-export function backwardsFlowFixtureEditOp(fixture: FlowFixtureV1, op: FlowFixtureEditOp): readonly FlowFixtureEditOp[] {
+export function backwardsFlowFixtureEditOp(fixture: FlowFixture, op: FlowFixtureEditOp): readonly FlowFixtureEditOp[] {
   switch (op.op) {
     case "setDocument":
       return [{ op: "setDocument", document: fixture }];
@@ -640,7 +640,7 @@ export function backwardsFlowFixtureEditOp(fixture: FlowFixtureV1, op: FlowFixtu
 }
 
 /** @emoji 📊 Returns the flow fixture edit payload for persistence diffs. */
-export function diffFlowFixtureEditOp(_fixture: FlowFixtureV1, operation: FlowFixtureEditOp): unknown {
+export function diffFlowFixtureEditOp(_fixture: FlowFixture, operation: FlowFixtureEditOp): unknown {
   return operation;
 }
 
@@ -675,7 +675,7 @@ function canonicalizeFlowValue(value: unknown): unknown {
   return value;
 }
 
-function flowWidgetTreeSignature(widget: FlowWidgetV1): string {
+function flowWidgetTreeSignature(widget: FlowWidget): string {
   switch (widget.kind) {
     case "neuron":
       return JSON.stringify(
@@ -701,9 +701,9 @@ function flowWidgetTreeSignature(widget: FlowWidgetV1): string {
   }
 }
 
-function parseFlowFixtureForDirtyDiff(json: string): { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] } | null {
+function parseFlowFixtureForDirtyDiff(json: string): { readonly widgets: readonly FlowWidget[]; readonly synapses: FlowFixture["synapses"] } | null {
   try {
-    const fixture = JSON.parse(json) as FlowFixtureV1;
+    const fixture = JSON.parse(json) as FlowFixture;
     if (!Array.isArray(fixture.widgets)) return null;
     return { widgets: fixture.widgets, synapses: fixture.synapses ?? [] };
   } catch {
@@ -711,18 +711,18 @@ function parseFlowFixtureForDirtyDiff(json: string): { readonly widgets: readonl
   }
 }
 
-function incomingSynapseKeys(widgetId: string, synapses: FlowFixtureV1["synapses"]): string[] {
+function incomingSynapseKeys(widgetId: string, synapses: FlowFixture["synapses"]): string[] {
   return synapses
     .filter((synapse) => synapse.to === widgetId)
     .map((synapse) => `${synapse.from}|${synapse.fromPort ?? ""}|${synapse.toPort ?? ""}`)
     .sort();
 }
 
-function isComputeFlowWidget(widget: FlowWidgetV1): boolean {
+function isComputeFlowWidget(widget: FlowWidget): boolean {
   return widget.kind === "neuron" || widget.kind === "cluster";
 }
 
-function downstreamAdjacency(synapses: FlowFixtureV1["synapses"]): Map<string, string[]> {
+function downstreamAdjacency(synapses: FlowFixture["synapses"]): Map<string, string[]> {
   const adjacency = new Map<string, string[]>();
   for (const synapse of synapses) {
     const next = adjacency.get(synapse.from) ?? [];
@@ -734,7 +734,7 @@ function downstreamAdjacency(synapses: FlowFixtureV1["synapses"]): Map<string, s
 
 function downstreamSubgraphWidgetIds(
   roots: Iterable<string>,
-  fixture: { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] },
+  fixture: { readonly widgets: readonly FlowWidget[]; readonly synapses: FlowFixture["synapses"] },
 ): string[] {
   const adjacency = downstreamAdjacency(fixture.synapses);
   const visited = new Set<string>();
@@ -752,7 +752,7 @@ function downstreamSubgraphWidgetIds(
 
 function downstreamComputeWidgetIds(
   roots: Iterable<string>,
-  fixture: { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] },
+  fixture: { readonly widgets: readonly FlowWidget[]; readonly synapses: FlowFixture["synapses"] },
 ): string[] {
   const widgetById = new Map(fixture.widgets.map((widget) => [widget.id, widget]));
   return downstreamSubgraphWidgetIds(roots, fixture).filter((id) => {
@@ -761,7 +761,7 @@ function downstreamComputeWidgetIds(
   });
 }
 
-function topoSortWidgetIds(widgetIds: readonly string[], synapses: FlowFixtureV1["synapses"]): string[] {
+function topoSortWidgetIds(widgetIds: readonly string[], synapses: FlowFixture["synapses"]): string[] {
   const ids = new Set(widgetIds);
   const inDegree = new Map<string, number>();
   const adjacency = new Map<string, string[]>();
@@ -789,7 +789,7 @@ function topoSortWidgetIds(widgetIds: readonly string[], synapses: FlowFixtureV1
   return order.length === ids.size ? order : [...ids];
 }
 
-function flowFixtureComputePath(fixture: { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] }): string[] {
+function flowFixtureComputePath(fixture: { readonly widgets: readonly FlowWidget[]; readonly synapses: FlowFixture["synapses"] }): string[] {
   return topoSortWidgetIds(
     fixture.widgets.map((widget) => widget.id),
     fixture.synapses,
@@ -798,7 +798,7 @@ function flowFixtureComputePath(fixture: { readonly widgets: readonly FlowWidget
 
 function flowDirtyComputePath(
   roots: Iterable<string>,
-  fixture: { readonly widgets: readonly FlowWidgetV1[]; readonly synapses: FlowFixtureV1["synapses"] },
+  fixture: { readonly widgets: readonly FlowWidget[]; readonly synapses: FlowFixture["synapses"] },
 ): string[] {
   return topoSortWidgetIds(downstreamSubgraphWidgetIds(roots, fixture), fixture.synapses);
 }
@@ -846,7 +846,7 @@ export function flowComputeProgressPayload(path: readonly string[], activeIndex:
 
 function flowEvalAnimationPath(
   path: readonly string[],
-  fixture: { readonly widgets: readonly FlowWidgetV1[] },
+  fixture: { readonly widgets: readonly FlowWidget[] },
 ): string[] {
   const widgetById = new Map(fixture.widgets.map((widget) => [widget.id, widget]));
   return path.filter((id) => {
@@ -855,7 +855,7 @@ function flowEvalAnimationPath(
   });
 }
 
-function flowIncomingSynapseCount(widgetId: string, synapses: FlowFixtureV1["synapses"]): number {
+function flowIncomingSynapseCount(widgetId: string, synapses: FlowFixture["synapses"]): number {
   return synapses.filter((synapse) => synapse.to === widgetId).length;
 }
 
@@ -901,7 +901,7 @@ export interface FlowStore {
   clear(): void;
 }
 
-const FLOW_STORE_KEY = "flow.fixture/v1";
+const FLOW_STORE_KEY = "flow.fixture";
 
 export function createLocalFlowStore(storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> = globalThis.localStorage): FlowStore {
   return {
@@ -985,7 +985,7 @@ function catalogueGroupIdFromPath(sectionId: string, titlePath: readonly string[
 }
 
 /** @emoji 🧷 Maps a neuron kind manifest row to a draggable catalogue item. */
-export function neuronKindToCatalogueItem(kind: FlowModuleNeuronKindV1): CatalogueItem {
+export function neuronKindToCatalogueItem(kind: FlowModuleNeuronKind): CatalogueItem {
   return {
     kind: "neuron",
     neuronKind: kind.id,
@@ -1040,7 +1040,7 @@ function buildCatalogueGroupsFromBuilders(
 }
 
 /** @emoji 🌳 Nests neuron kinds into a catalogue section using each kind's authored group path. */
-export function nestNeuronKindsIntoCatalogueSection(id: string, title: string, kinds: readonly FlowModuleNeuronKindV1[]): CatalogueSection {
+export function nestNeuronKindsIntoCatalogueSection(id: string, title: string, kinds: readonly FlowModuleNeuronKind[]): CatalogueSection {
   const items: CatalogueItem[] = [];
   const rootGroups = new Map<string, CatalogueGroupBuilder>();
   for (const kind of kinds) {
@@ -1146,7 +1146,7 @@ export function buildCatalogueKindsTreeSections(
   });
 }
 
-export const FLOW_WIDGET_DRAG_V1_MIME = "application/x-flow-widget-v1";
+export const FLOW_WIDGET_DRAG_MIME = "application/x-flow-widget";
 export const FLOW_WIDGET_DRAG_PLAIN_MIME = "text/plain";
 
 /** @emoji 📍 Flow widget palette drop: descriptor plus pointer in CSS space and world on the canvas. */
@@ -1166,11 +1166,11 @@ export function flowCatalogueItemDescriptor(item: CatalogueItem): string {
   return JSON.stringify({ kind: item.kind });
 }
 
-export function encodeFlowWidgetDescriptorForDragV1(descriptorJson: string): string {
+export function encodeFlowWidgetDescriptorForDrag(descriptorJson: string): string {
   return descriptorJson;
 }
 
-export function decodeFlowWidgetDescriptorFromDragV1(encoded: string): string | null {
+export function decodeFlowWidgetDescriptorFromDrag(encoded: string): string | null {
   const trimmed = encoded.trim();
   if (!trimmed) return null;
   try {
@@ -1182,20 +1182,20 @@ export function decodeFlowWidgetDescriptorFromDragV1(encoded: string): string | 
 }
 
 export function readFlowWidgetDragDataTransfer(dataTransfer: DataTransfer): string | null {
-  const custom = dataTransfer.getData(FLOW_WIDGET_DRAG_V1_MIME);
+  const custom = dataTransfer.getData(FLOW_WIDGET_DRAG_MIME);
   if (custom?.trim()) {
-    return decodeFlowWidgetDescriptorFromDragV1(custom);
+    return decodeFlowWidgetDescriptorFromDrag(custom);
   }
   const plain = dataTransfer.getData(FLOW_WIDGET_DRAG_PLAIN_MIME);
   if (plain?.trim()) {
-    return decodeFlowWidgetDescriptorFromDragV1(plain);
+    return decodeFlowWidgetDescriptorFromDrag(plain);
   }
   return null;
 }
 
 export function flowPlayCatalogueItemDragData(item: CatalogueItem): Record<string, string> {
-  const encoded = encodeFlowWidgetDescriptorForDragV1(flowCatalogueItemDescriptor(item));
-  return { [FLOW_WIDGET_DRAG_V1_MIME]: encoded, [FLOW_WIDGET_DRAG_PLAIN_MIME]: encoded };
+  const encoded = encodeFlowWidgetDescriptorForDrag(flowCatalogueItemDescriptor(item));
+  return { [FLOW_WIDGET_DRAG_MIME]: encoded, [FLOW_WIDGET_DRAG_PLAIN_MIME]: encoded };
 }
 
 export const flowWidgetPaletteDragRef = { active: false };
@@ -1229,7 +1229,7 @@ function flowSyncPaletteDragGhostAtClient(clientX: number, clientY: number): voi
     sync(clientX, clientY, null);
     return;
   }
-  sync(clientX, clientY, decodeFlowWidgetDescriptorFromDragV1(encoded));
+  sync(clientX, clientY, decodeFlowWidgetDescriptorFromDrag(encoded));
 }
 
 function flowTickPaletteDragPreview(): void {
@@ -1350,14 +1350,14 @@ export function endFlowWidgetPalettePointerDrag(
   const encoded = flowWidgetPalettePointerDragRef.encoded;
   cancelFlowWidgetPalettePointerDrag();
   if (!encoded) return;
-  const descriptor = decodeFlowWidgetDescriptorFromDragV1(encoded);
+  const descriptor = decodeFlowWidgetDescriptorFromDrag(encoded);
   if (!descriptor) return;
   commitFlowWidgetDropAtClient(clientX, clientY, descriptor, host, onWidgetDrop);
 }
 
 /** @emoji 🔍 True when `dataTransfer.types` carries a flow widget palette drag. */
 export function flowWidgetDragMimeInTypes(types: readonly string[]): boolean {
-  return types.includes(FLOW_WIDGET_DRAG_V1_MIME) || types.includes(FLOW_WIDGET_DRAG_PLAIN_MIME);
+  return types.includes(FLOW_WIDGET_DRAG_MIME) || types.includes(FLOW_WIDGET_DRAG_PLAIN_MIME);
 }
 
 /** @emoji 🔍 Whether the viewport should accept a palette widget drop for this drag gesture. */
@@ -1373,7 +1373,7 @@ export function flowWidgetPaletteTreeDragController(
   dragDataByItemId: ReadonlyMap<string, Record<string, string>>,
 ): import("@semio-tech/framework-platform-core").TreeDragAndDropController {
   const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
-    const payload = dragData?.[FLOW_WIDGET_DRAG_V1_MIME];
+    const payload = dragData?.[FLOW_WIDGET_DRAG_MIME];
     return payload?.trim() ? payload : undefined;
   };
   return {
@@ -2057,31 +2057,6 @@ function FlowSpotlight({ anchor, sections, session, onCommit, onClose, renderFra
 // #endregion 🔖Spotlight
 
 // #region 🔖TextOverlay
-const FLOW_LABEL_SCREEN_PX = 11;
-const FLOW_LABEL_FONT_FAMILY = "ui-sans-serif, system-ui, sans-serif";
-
-interface FlowLabelOverlayRow {
-  readonly id: string;
-  readonly kind?: "port" | "node";
-  readonly text: string;
-  readonly layout: "horizontal" | "vertical";
-  readonly align?: "left" | "center" | "right";
-  readonly x: number;
-  readonly y: number;
-  readonly nodeW: number;
-  readonly nodeH: number;
-  readonly fontScreenPx?: number;
-  readonly maxScreenH?: number;
-  readonly ghost?: boolean;
-}
-
-interface FlowLabelOverlayPaintState {
-  readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
-  readonly width: number;
-  readonly height: number;
-  readonly labels: readonly FlowLabelOverlayRow[];
-}
-
 interface FlowParamOverlayEditor {
   readonly nodeId: string;
   readonly portId: string;
@@ -2108,92 +2083,7 @@ function flowWorldToScreen(
   width: number,
   height: number,
 ): { readonly x: number; readonly y: number } {
-  return {
-    x: (point.x - camera.x) * camera.zoom + width / 2,
-    y: (point.y - camera.y) * camera.zoom + height / 2,
-  };
-}
-
-function flowClampLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targetPx: number, maxW: number, maxH: number): number {
-  let px = Math.max(4, Math.round(targetPx));
-  ctx.font = `${px}px ${FLOW_LABEL_FONT_FAMILY}`;
-  if (ctx.measureText(text).width <= maxW && px * 1.2 <= maxH) {
-    return px;
-  }
-  let low = 4;
-  let high = px;
-  let best = 4;
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    ctx.font = `${mid}px ${FLOW_LABEL_FONT_FAMILY}`;
-    const w = ctx.measureText(text).width;
-    const h = mid * 1.2;
-    if (w <= maxW && h <= maxH) {
-      best = mid;
-      low = mid + 1;
-    } else {
-      high = mid - 1;
-    }
-  }
-  return best;
-}
-
-function flowClampPortLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targetPx: number, maxW: number, maxH: number): number {
-  let px = Math.max(8, Math.round(targetPx));
-  ctx.font = `${px}px ${FLOW_LABEL_FONT_FAMILY}`;
-  if (ctx.measureText(text).width <= maxW && px * 1.25 <= maxH) {
-    return px;
-  }
-  let low = 8;
-  let high = px;
-  let best = 8;
-  while (low <= high) {
-    const mid = Math.floor((low + high) / 2);
-    ctx.font = `${mid}px ${FLOW_LABEL_FONT_FAMILY}`;
-    if (ctx.measureText(text).width <= maxW) {
-      best = mid;
-      low = mid + 1;
-    } else {
-      high = mid - 1;
-    }
-  }
-  return best;
-}
-
-/** @emoji 🎯 Committed selection vs area-select preview chrome for flow label overlays. */
-export function flowElementInteractionChrome(
-  selectionIds: Iterable<string>,
-  preselection: FlowPreselectSnapshot,
-): { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> } {
-  if (!preselection.ids.length && !preselection.removedIds.length) {
-    return { selectedIds: new Set(selectionIds), highlightedIds: new Set() };
-  }
-  return { selectedIds: new Set(preselection.ids), highlightedIds: new Set(preselection.removedIds) };
-}
-
-function flowOverlayLabelFill(
-  nodeId: string,
-  ghost: boolean,
-  hoveredId: string | null,
-  chrome: { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> },
-  previewOffIds: readonly string[],
-): string {
-  if (ghost) {
-    return resolveColorHex(tokenVar("secondary"), "secondary");
-  }
-  if (previewOffIds.includes(nodeId)) {
-    return resolveSemanticColorHex("border-element-color", "gray");
-  }
-  if (chrome.selectedIds.has(nodeId)) {
-    return resolveSemanticColorHex("border-emphasized-color", "dark");
-  }
-  if (chrome.highlightedIds.has(nodeId)) {
-    return resolveColorHex(tokenVar("secondary"), "secondary");
-  }
-  if (hoveredId === nodeId) {
-    return resolveSemanticColorHex("border-emphasized-color", "dark");
-  }
-  return resolveSemanticColorHex("border-element-color", "gray");
+  return dagWorldToScreen(point, camera, width, height);
 }
 
 function paramEditorScalar(editor: FlowParamOverlayEditor): string | number | boolean {
@@ -2286,7 +2176,7 @@ interface FlowVariableOverlayEditor {
 
 function flowVariableOverlayEditors(fixtureJson: string, width: number, height: number): FlowVariableOverlayEditor[] {
   try {
-    const fixture = JSON.parse(fixtureJson) as FlowFixtureV1;
+    const fixture = JSON.parse(fixtureJson) as FlowFixture;
     const camera = fixture.camera ?? { x: 0, y: 0, zoom: 1 };
     const editors: FlowVariableOverlayEditor[] = [];
     for (const widget of fixture.widgets ?? []) {
@@ -2318,7 +2208,7 @@ function FlowVariableOverlay({
   onSchemaChange,
 }: {
   readonly fixtureJson: string;
-  readonly schemas: readonly FlowSchemaRefV1[];
+  readonly schemas: readonly FlowSchemaRef[];
   readonly width: number;
   readonly height: number;
   readonly onNameChange: (id: string, name: string) => void;
@@ -2446,72 +2336,12 @@ function FlowStepperOverlay({
 }
 
 function paintFlowLabelOverlays(session: FlowSession, canvas: HTMLCanvasElement, width: number, height: number, dpr: number): void {
-  let state: FlowLabelOverlayPaintState;
-  try {
-    state = JSON.parse(session.labelOverlayPaintStateJson()) as FlowLabelOverlayPaintState;
-  } catch {
-    return;
-  }
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
-  const pixelW = Math.max(1, Math.round(width * dpr));
-  const pixelH = Math.max(1, Math.round(height * dpr));
-  if (canvas.width !== pixelW || canvas.height !== pixelH) {
-    canvas.width = pixelW;
-    canvas.height = pixelH;
-  }
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, width, height);
-  const zoom = Math.max(0.05, Number(state.camera?.zoom) || 1);
-  const camera = {
-    x: Number(state.camera?.x) || 0,
-    y: Number(state.camera?.y) || 0,
-    zoom,
-  };
-  const viewportW = Number(state.width) || width;
-  const viewportH = Number(state.height) || height;
-  const hoveredId = session.hoveredWidgetId() ?? null;
-  const selectedIds = parseFlowWidgetIdArray(session.selectedWidgetIds());
-  const preselect = parseFlowPreselectJson(session.preselectWidgetIdsJson());
-  const chrome = flowElementInteractionChrome(selectedIds, preselect);
-  const previewOffIds = parseFlowWidgetIdArray(session.previewOffWidgetIds());
-  const inset = 0.88;
-  for (const row of state.labels ?? []) {
-    const text = typeof row.text === "string" ? row.text.trim() : "";
-    if (!text) continue;
-    const anchor = flowWorldToScreen({ x: Number(row.x), y: Number(row.y) }, camera, viewportW, viewportH);
-    const isPort = row.kind === "port" || row.align === "left" || row.align === "right";
-    const maxW = Math.max(4, Number(row.nodeW) * zoom * inset);
-    const maxH = Math.max(
-      4,
-      isPort && Number.isFinite(Number(row.maxScreenH)) && Number(row.maxScreenH) > 0
-        ? Number(row.maxScreenH)
-        : Number(row.nodeH) * zoom * inset,
-    );
-    const fontScreenPx = Number(row.fontScreenPx);
-    const targetPx = Number.isFinite(fontScreenPx) && fontScreenPx > 0 ? fontScreenPx : FLOW_LABEL_SCREEN_PX;
-    const fontPx = isPort
-      ? flowClampPortLabelFontPx(ctx, text, targetPx, maxW, maxH)
-      : flowClampLabelFontPx(ctx, text, targetPx, maxW, maxH);
-    ctx.font = `${fontPx}px ${FLOW_LABEL_FONT_FAMILY}`;
-    ctx.fillStyle = flowOverlayLabelFill(row.id, row.ghost === true, hoveredId, chrome, previewOffIds);
-    ctx.globalAlpha = row.ghost ? 0.85 : previewOffIds.includes(row.id) ? 0.5 : 1;
-    if (row.layout === "vertical") {
-      ctx.save();
-      ctx.translate(anchor.x, anchor.y);
-      ctx.rotate(-Math.PI / 2);
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(text, 0, 0);
-      ctx.restore();
-    } else {
-      const align = row.align === "left" || row.align === "right" ? row.align : "center";
-      ctx.textAlign = align;
-      ctx.textBaseline = "middle";
-      ctx.fillText(text, anchor.x, anchor.y);
-    }
-    ctx.globalAlpha = 1;
-  }
+  paintDagLabelOverlays(session.labelOverlayPaintStateJson(), canvas, width, height, dpr, {
+    hoveredId: session.hoveredWidgetId() ?? null,
+    selectedIds: parseFlowWidgetIdArray(session.selectedWidgetIds()),
+    preselect: parseFlowPreselectJson(session.preselectWidgetIdsJson()),
+    dimmedIds: parseFlowWidgetIdArray(session.previewOffWidgetIds()),
+  });
 }
 // #endregion 🔖TextOverlay
 
@@ -2526,28 +2356,11 @@ export type FlowSelectionAlignMode =
   | "distributeHorizontal"
   | "distributeVertical";
 
-export interface FlowSelectionUnionBoundsScreen {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
+export type FlowSelectionUnionBoundsScreen = DagSelectionUnionBoundsScreen;
 
 /** @emoji 📦 Parses screen-space selection union bounds from the flow session. */
 export function parseFlowSelectionUnionBoundsScreen(json: string): FlowSelectionUnionBoundsScreen | null {
-  if (json.trim() === "null") return null;
-  try {
-    const parsed = JSON.parse(json) as { x?: unknown; y?: unknown; width?: unknown; height?: unknown };
-    const x = Number(parsed.x);
-    const y = Number(parsed.y);
-    const width = Number(parsed.width);
-    const height = Number(parsed.height);
-    if (![x, y, width, height].every(Number.isFinite)) return null;
-    if (width <= 0 || height <= 0) return null;
-    return { x, y, width, height };
-  } catch {
-    return null;
-  }
+  return parseDagSelectionUnionBoundsScreen(json);
 }
 
 /** @emoji 📏 Compares selection union bounds for overlay state updates. */
@@ -2555,9 +2368,15 @@ export function flowSelectionUnionBoundsEqual(
   left: FlowSelectionUnionBoundsScreen | null,
   right: FlowSelectionUnionBoundsScreen | null,
 ): boolean {
-  if (left === right) return true;
-  if (!left || !right) return false;
-  return left.x === right.x && left.y === right.y && left.width === right.width && left.height === right.height;
+  return dagSelectionUnionBoundsEqual(left, right);
+}
+
+/** @emoji 🎯 Committed selection vs area-select preview chrome for flow label overlays. */
+export function flowElementInteractionChrome(
+  selectionIds: Iterable<string>,
+  preselection: FlowPreselectSnapshot,
+): { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> } {
+  return dagElementInteractionChrome(selectionIds, preselection);
 }
 
 const FLOW_SELECTION_ALIGN_BUTTON_PX = 24;
@@ -2700,10 +2519,7 @@ function FlowSelectionBoundsOverlay({ rect, selectionCount, onAlign }: FlowSelec
   const layout = flowSelectionAlignChromeLayout(rect, selectionCount);
   return (
     <div className="pointer-events-none absolute inset-0 z-20 overflow-visible" aria-hidden data-testid="flow-selection-bounds">
-      <div
-        className="pointer-events-none absolute border border-emphasized"
-        style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
-      />
+      <DagSelectionBoundsBox rect={rect} />
       {layout ? (
         <>
           <div
@@ -2815,10 +2631,7 @@ function FlowWidgetPaletteDragEscapeBridge(props: { readonly enabled: boolean })
 export type FlowSelectionMode = "default" | "additive" | "subtractive" | "invertive";
 export type FlowSelectionMethod = "rectangle" | "lasso";
 
-export interface FlowPreselectSnapshot {
-  readonly ids: readonly string[];
-  readonly removedIds: readonly string[];
-}
+export type FlowPreselectSnapshot = DagPreselectSnapshot;
 
 export interface FlowChannelRef {
   readonly widgetId: string;
@@ -2920,40 +2733,15 @@ export interface FlowCanvasProps {
 export const FLOW_DEFAULT_PROXIMITY_DISTANCE = 48;
 
 export function parseFlowPreselectJson(json: string): FlowPreselectSnapshot {
-  try {
-    const parsed = JSON.parse(json) as { ids?: unknown; removedIds?: unknown };
-    const ids = Array.isArray(parsed.ids) ? parsed.ids.filter((value): value is string => typeof value === "string") : [];
-    const removedIds = Array.isArray(parsed.removedIds) ? parsed.removedIds.filter((value): value is string => typeof value === "string") : [];
-    return { ids, removedIds };
-  } catch {
-    return { ids: [], removedIds: [] };
-  }
+  return parseDagPreselectJson(json);
 }
 
 export function parseFlowSelectionPreviewPoints(json: string): readonly { readonly x: number; readonly y: number }[] {
-  try {
-    const parsed = JSON.parse(json) as unknown;
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .map((entry) => {
-        if (!Array.isArray(entry) || entry.length < 2) return null;
-        const x = Number(entry[0]);
-        const y = Number(entry[1]);
-        return Number.isFinite(x) && Number.isFinite(y) ? { x, y } : null;
-      })
-      .filter((entry): entry is { x: number; y: number } => entry != null);
-  } catch {
-    return [];
-  }
+  return parseDagSelectionPreviewPoints(json);
 }
 
 export function parseFlowWidgetIdArray(json: string): string[] {
-  try {
-    const parsed = JSON.parse(json) as unknown;
-    return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [];
-  } catch {
-    return [];
-  }
+  return parseDagNodeIdArray(json);
 }
 
 export function flowWidgetIdArraysEqual(left: readonly string[], right: readonly string[]): boolean {
@@ -3085,7 +2873,7 @@ export function FlowCanvas({
   const [paramOverlayState, setParamOverlayState] = useState<FlowParamOverlayPaintState | null>(null);
   const [stepperOverlayState, setStepperOverlayState] = useState<FlowStepperOverlayState | null>(null);
   const [variableFixtureJson, setVariableFixtureJson] = useState("");
-  const [schemaCatalogue, setSchemaCatalogue] = useState<readonly FlowSchemaRefV1[]>([]);
+  const [schemaCatalogue, setSchemaCatalogue] = useState<readonly FlowSchemaRef[]>([]);
   const selectionBoundsRef = useRef<FlowSelectionUnionBoundsScreen | null>(null);
   const selectionBoundsCountRef = useRef(0);
   const alignSelectionRef = useRef<(mode: FlowSelectionAlignMode) => void>(() => {});
@@ -3201,22 +2989,8 @@ export function FlowCanvas({
 
   const syncMarqueeOverlay = useCallback((session: FlowSession) => {
     const points = parseFlowSelectionPreviewPoints(session.selectionPreviewPointsJson());
-    if (points.length < 2) {
-      setMarqueeOverlay(null);
-      return;
-    }
-    const coverage: SelectionMarqueeCoverage = session.selectionPreviewCrossing() ? "partial" : "full";
-    if (selectionMethod === "lasso" && points.length >= 3) {
-      setMarqueeOverlay({ coverage, shape: "polygon", points });
-      return;
-    }
-    const xs = points.map((point) => point.x);
-    const ys = points.map((point) => point.y);
-    const minX = Math.min(...xs);
-    const minY = Math.min(...ys);
-    const maxX = Math.max(...xs);
-    const maxY = Math.max(...ys);
-    setMarqueeOverlay({ coverage, shape: "rect", rect: { x: minX, y: minY, width: maxX - minX, height: maxY - minY } });
+    const overlay = computeDagMarqueeOverlay(points, session.selectionPreviewCrossing(), selectionMethod);
+    setMarqueeOverlay(overlay);
   }, [selectionMethod]);
 
   const syncSelectionBoundsOverlay = useCallback((session: FlowSession) => {
@@ -3759,7 +3533,7 @@ export function FlowCanvas({
       const json = saved ?? bootstrapFixtureJsonRef.current ?? flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
       session.loadFixtureJson(json);
       try {
-        setSchemaCatalogue(JSON.parse((session as FlowSessionVariableApi).schemasJson()) as FlowSchemaRefV1[]);
+        setSchemaCatalogue(JSON.parse((session as FlowSessionVariableApi).schemasJson()) as FlowSchemaRef[]);
       } catch {
         setSchemaCatalogue([]);
       }
@@ -4166,7 +3940,7 @@ export function FlowCanvas({
       const hoveredId = session.hoveredWidgetId();
       if (hoveredId) {
         try {
-          const fixture = JSON.parse(session.fixtureJson()) as FlowFixtureV1;
+          const fixture = JSON.parse(session.fixtureJson()) as FlowFixture;
           const widget = fixture.widgets.find((entry) => entry.id === hoveredId);
           if (widget?.kind === "inputImage") {
             openImagePicker(hoveredId);
@@ -4244,7 +4018,7 @@ export function FlowCanvas({
       let isImageWidget = false;
       let clusterNodeIds: string[] = [];
       try {
-        const fixture = JSON.parse(session.fixtureJson()) as FlowFixtureV1;
+        const fixture = JSON.parse(session.fixtureJson()) as FlowFixture;
         clusterNodeIds = fixture.widgets.filter((widget) => widget.kind === "cluster").map((widget) => widget.id);
         if (hoveredNodeId) {
           const widget = fixture.widgets.find((entry) => entry.id === hoveredNodeId);
@@ -4550,14 +4324,14 @@ if (import.meta.vitest) {
   describe("flow react fixture", () => {
     it("default fixture serializes", () => {
       const json = flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
-      expect(json).toContain("flow.fixture/v1");
+      expect(json).toContain("flow.fixture");
       expect(json).toContain("math.add");
     });
   });
 
   describe("flowTreeDirtyNeuronIds", () => {
-    const chainFixture: FlowFixtureV1 = {
-      schema: "flow.fixture/v1",
+    const chainFixture: FlowFixture = {
+      schema: "flow.fixture",
       camera: { x: 0, y: 0, zoom: 1 },
       layout: { slider: { x: 0, y: 0 }, add: { x: 120, y: 0 }, pass: { x: 240, y: 0 }, preview: { x: 360, y: 0 } },
       widgets: [
@@ -4582,7 +4356,7 @@ if (import.meta.vitest) {
 
     it("ignores layout and camera changes", () => {
       const base = flowFixtureToJson(chainFixture);
-      const moved: FlowFixtureV1 = {
+      const moved: FlowFixture = {
         ...chainFixture,
         camera: { x: 40, y: -20, zoom: 1.5 },
         layout: { slider: { x: 10, y: 20 }, add: { x: 130, y: 40 }, pass: { x: 250, y: 60 }, preview: { x: 370, y: 80 } },
@@ -4597,7 +4371,7 @@ if (import.meta.vitest) {
 
     it("deleting a downstream child does not dirty upstream parents", () => {
       const base = flowFixtureToJson(chainFixture);
-      const afterDelete: FlowFixtureV1 = {
+      const afterDelete: FlowFixture = {
         ...chainFixture,
         widgets: chainFixture.widgets.filter((widget) => widget.id !== "pass"),
         synapses: chainFixture.synapses.filter((synapse) => synapse.from !== "pass" && synapse.to !== "pass"),
@@ -4612,7 +4386,7 @@ if (import.meta.vitest) {
 
     it("deleting a leaf preview leaves upstream compute nodes clean", () => {
       const base = flowFixtureToJson(chainFixture);
-      const afterDelete: FlowFixtureV1 = {
+      const afterDelete: FlowFixture = {
         ...chainFixture,
         widgets: chainFixture.widgets.filter((widget) => widget.id !== "preview"),
         synapses: chainFixture.synapses.filter((synapse) => synapse.to !== "preview"),
@@ -4622,7 +4396,7 @@ if (import.meta.vitest) {
 
     it("marks downstream neurons when slider value changes", () => {
       const base = flowFixtureToJson(chainFixture);
-      const changed: FlowFixtureV1 = {
+      const changed: FlowFixture = {
         ...chainFixture,
         widgets: chainFixture.widgets.map((widget) => (widget.kind === "inputSlider" ? { ...widget, value: 7 } : widget)),
       };
@@ -4635,7 +4409,7 @@ if (import.meta.vitest) {
 
     it("marks target and downstream on reconnect", () => {
       const base = flowFixtureToJson(chainFixture);
-      const reconnected: FlowFixtureV1 = {
+      const reconnected: FlowFixture = {
         ...chainFixture,
         synapses: [
           { id: "s1", from: "slider", to: "add", fromPort: "number", toPort: "b" },
@@ -4652,7 +4426,7 @@ if (import.meta.vitest) {
 
     it("marks downstream when a node is added upstream", () => {
       const base = flowFixtureToJson(chainFixture);
-      const extended: FlowFixtureV1 = {
+      const extended: FlowFixture = {
         ...chainFixture,
         widgets: [...chainFixture.widgets, { kind: "neuron", id: "extra", neuronKind: "math.passThrough" }],
         synapses: [
@@ -4677,8 +4451,8 @@ if (import.meta.vitest) {
 
   describe("flowEvalAnimationPath", () => {
     it("omits output preview and action widgets from computing animation", () => {
-      const fixture: FlowFixtureV1 = {
-        schema: "flow.fixture/v1",
+      const fixture: FlowFixture = {
+        schema: "flow.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         widgets: [
           { kind: "inputSlider", id: "slider", value: 1 },
@@ -4698,8 +4472,8 @@ if (import.meta.vitest) {
 
   describe("flowDirtyComputePathReady", () => {
     it("waits for upstream inputs on disconnected measure nodes", () => {
-      const fixture: FlowFixtureV1 = {
-        schema: "flow.fixture/v1",
+      const fixture: FlowFixture = {
+        schema: "flow.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         widgets: [
           { kind: "neuron", id: "box", neuronKind: "brep.prim3d.box" },
@@ -4710,7 +4484,7 @@ if (import.meta.vitest) {
       const json = flowFixtureToJson(fixture);
       expect(flowDirtyComputePathReady(json, ["box"])).toBe(true);
       expect(flowDirtyComputePathReady(json, ["volume"])).toBe(false);
-      const connected: FlowFixtureV1 = {
+      const connected: FlowFixture = {
         ...fixture,
         synapses: [{ id: "s1", from: "box", to: "volume", fromPort: "solid", toPort: "geometry" }],
       };
@@ -4794,7 +4568,7 @@ if (import.meta.vitest) {
     it("parses module manifest", () => {
       const manifest = parseFlowModuleManifest(
         JSON.stringify({
-          schema: "flow.module/v1",
+          schema: "flow.module",
           id: "math",
           name: "Math",
           version: "0.1.0",
@@ -5108,8 +4882,8 @@ if (import.meta.vitest) {
 
     it("round-trips drag payload", () => {
       const item: CatalogueItem = { kind: "neuron", neuronKind: "math.add", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "Sum" };
-      const encoded = encodeFlowWidgetDescriptorForDragV1(flowCatalogueItemDescriptor(item));
-      expect(decodeFlowWidgetDescriptorFromDragV1(encoded)).toContain("math.add");
+      const encoded = encodeFlowWidgetDescriptorForDrag(flowCatalogueItemDescriptor(item));
+      expect(decodeFlowWidgetDescriptorFromDrag(encoded)).toContain("math.add");
     });
   });
 
@@ -5257,7 +5031,7 @@ if (import.meta.vitest) {
     it("aligns selected widgets through FlowSession wasm", async () => {
       await ensureFlowWasmLoaded();
       const session = new FlowSession();
-      const fixture: FlowFixtureV1 = {
+      const fixture: FlowFixture = {
         ...FLOW_DEFAULT_FIXTURE,
         layout: {
           slider: { x: -80, y: 10 },
@@ -5268,10 +5042,10 @@ if (import.meta.vitest) {
       session.loadFixtureJson(flowFixtureToJson(fixture));
       session.setSelection(JSON.stringify(["slider", "add"]));
       session.alignSelection("alignTop");
-      const layout = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      const layout = (JSON.parse(session.fixtureJson()) as FlowFixture).layout ?? {};
       expect(layout.slider?.y).toBe(layout.add?.y);
       session.alignSelection("alignLeft");
-      const leftAligned = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      const leftAligned = (JSON.parse(session.fixtureJson()) as FlowFixture).layout ?? {};
       expect(leftAligned.add?.x).not.toBe(160);
       expect(leftAligned.slider?.x).toBe(-80);
     });
@@ -5279,7 +5053,7 @@ if (import.meta.vitest) {
     it("undoes and redoes align selection through FlowSession wasm", async () => {
       await ensureFlowWasmLoaded();
       const session = new FlowSession();
-      const fixture: FlowFixtureV1 = {
+      const fixture: FlowFixture = {
         ...FLOW_DEFAULT_FIXTURE,
         layout: {
           slider: { x: -80, y: 10 },
@@ -5288,19 +5062,19 @@ if (import.meta.vitest) {
         },
       };
       session.loadFixtureJson(flowFixtureToJson(fixture));
-      const before = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      const before = (JSON.parse(session.fixtureJson()) as FlowFixture).layout ?? {};
       session.setSelection(JSON.stringify(["slider", "add"]));
       session.alignSelection("alignTop");
-      const aligned = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      const aligned = (JSON.parse(session.fixtureJson()) as FlowFixture).layout ?? {};
       expect(aligned.slider?.y).toBe(aligned.add?.y);
       expect(session.canUndo()).toBe(true);
       expect(session.undo()).toBe(true);
-      const undone = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      const undone = (JSON.parse(session.fixtureJson()) as FlowFixture).layout ?? {};
       expect(undone.slider?.y).toBe(before.slider?.y);
       expect(undone.add?.y).toBe(before.add?.y);
       expect(session.canRedo()).toBe(true);
       expect(session.redo()).toBe(true);
-      const redone = (JSON.parse(session.fixtureJson()) as FlowFixtureV1).layout ?? {};
+      const redone = (JSON.parse(session.fixtureJson()) as FlowFixture).layout ?? {};
       expect(redone.slider?.y).toBe(aligned.slider?.y);
       expect(redone.add?.y).toBe(aligned.add?.y);
     });

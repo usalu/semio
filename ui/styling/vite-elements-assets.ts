@@ -476,7 +476,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "imperative" | "sequence" | "lowpoly" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting" | "forms" | "raster" | "writer" | "semios" | "vcs";
+export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "lowpoly" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting" | "forms" | "raster" | "writer" | "s" | "vcs";
 
 const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
   "@semio-tech/framework-playground-renderer-react/puzzle/2d": "2d",
@@ -487,6 +487,7 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@semio-tech/framework-playground-renderer-react/dag": "dag",
   "@semio-tech/framework-playground-renderer-react/imperative": "imperative",
   "@semio-tech/framework-playground-renderer-react/sequence": "sequence",
+  "@semio-tech/framework-playground-renderer-react/layout": "layout",
   "@semio-tech/framework-playground-renderer-react/lowpoly": "lowpoly",
   "@semio-tech/framework-playground-renderer-react/trinity-jack": "trinity-jack",
   "@semio-tech/framework-playground-renderer-react/trinity-rewrite": "trinity-rewrite",
@@ -497,7 +498,7 @@ const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, Playgrou
   "@semio-tech/framework-playground-renderer-react/forms": "forms",
   "@semio-tech/framework-playground-renderer-react/raster": "raster",
   "@semio-tech/framework-playground-renderer-react/writer": "writer",
-  "@semio-tech/framework-playground-renderer-react/semios": "semios",
+  "@semio-tech/framework-playground-renderer-react/s": "s",
   "@semio-tech/framework-playground-renderer-react/vcs": "vcs",
   "@semio-tech/framework-playground-renderer-react/reasoning/wires": "wires",
 };
@@ -511,6 +512,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   dag: { start: "//#region 🔖DagPlayHost", end: "//#endregion 🔖DagPlayHost" },
   imperative: { start: "//#region 🔖ImperativePlayHost", end: "//#endregion 🔖ImperativePlayHost" },
   sequence: { start: "//#region 🔖SequencePlayHost", end: "//#endregion 🔖SequencePlayHost" },
+  layout: { start: "//#region 🔖LayoutPlayHost", end: "//#endregion 🔖LayoutPlayHost" },
   lowpoly: { start: "//#region 🔖LowpolyPlayHost", end: "//#endregion 🔖LowpolyPlayHost" },
   "trinity-jack": { start: "//#region 🔖TrinityPlayHost", end: "//#endregion 🔖TrinityPlayHost" },
   "trinity-rewrite": { start: "//#region 🔖TrinityPlayHost", end: "//#endregion 🔖TrinityPlayHost" },
@@ -525,7 +527,7 @@ const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendere
   wires: { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
 };
 
-const SEMIOS_PLAYGROUND_HOST_MARKERS: readonly { readonly start: string; readonly end: string }[] = [
+const S_PLAYGROUND_HOST_MARKERS: readonly { readonly start: string; readonly end: string }[] = [
   { start: "//#region 🔖Puzzle3dPlayHost", end: "//#endregion 🔖Puzzle3dPlayHost" },
   { start: "//#region 🔖Puzzle5dPlayHost", end: "//#endregion 🔖Puzzle5dPlayHost" },
   { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
@@ -541,17 +543,17 @@ const SEMIOS_PLAYGROUND_HOST_MARKERS: readonly { readonly start: string; readonl
   { start: "//#region 🔖DrawPlayHost", end: "//#endregion 🔖DrawPlayHost" },
   { start: "//#region 🔖WriterPlayHost", end: "//#endregion 🔖WriterPlayHost" },
   { start: "//#region 🔖PresentationPlayHost", end: "//#endregion 🔖PresentationPlayHost" },
-  { start: "//#region 🔖SemiosPlayHost", end: "//#endregion 🔖SemiosPlayHost" },
+  { start: "//#region 🔖SPlayHost", end: "//#endregion 🔖SPlayHost" },
 ];
 
-/** @emoji ✂️ Shell + semios-relevant play hosts + boot (excludes lowpoly/vcs/imperative/sequence). */
-export function stripPlaygroundRendererForSemios(source: string): string {
+/** @emoji ✂️ Shell + s-relevant play hosts + boot (excludes lowpoly/vcs/imperative/sequence). */
+export function stripPlaygroundRendererForS(source: string): string {
   const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
   const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
   const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
   if (puzzleStart < 0 || bootStart < 0) return source;
   const bootEnd = testsStart >= 0 ? testsStart : source.length;
-  const hosts = SEMIOS_PLAYGROUND_HOST_MARKERS.map((markers) => slicePlaygroundRendererRegion(source, markers.start, markers.end)).join("\n");
+  const hosts = S_PLAYGROUND_HOST_MARKERS.map((markers) => slicePlaygroundRendererRegion(source, markers.start, markers.end)).join("\n");
   return `${source.slice(0, puzzleStart)}${hosts}${source.slice(bootStart, bootEnd)}`;
 }
 
@@ -640,8 +642,8 @@ export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): P
         return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
       }
       const puzzleMatch = id.match(/playgroundEntry=puzzle-([^&?]+)/);
-      if (puzzleMatch && puzzleMatch[1] === "semios") {
-        return stripPlaygroundRendererForSemios(source);
+      if (puzzleMatch && puzzleMatch[1] === "s") {
+        return stripPlaygroundRendererForS(source);
       }
       if (puzzleMatch && puzzleMatch[1] in PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS) {
         return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
@@ -1168,6 +1170,10 @@ export function playgroundRendererResolveAliases(repoRoot: string): ReadonlyArra
     { find: "@semio-tech/sequence-react", replacement: resolve(repoRoot, "sequence/react/index.tsx") },
     { find: "@semio-tech/sequence-core", replacement: resolve(repoRoot, "sequence/core/index.ts") },
     { find: "@semio-tech/sequence-core/pkg/sequence_core.js", replacement: resolve(repoRoot, "sequence/core/pkg/sequence_core.js") },
+    { find: "@semio-tech/layout-play", replacement: resolve(repoRoot, "layout/play/index.ts") },
+    { find: "@semio-tech/layout-react", replacement: resolve(repoRoot, "layout/react/index.tsx") },
+    { find: "@semio-tech/layout-core", replacement: resolve(repoRoot, "layout/core/index.ts") },
+    { find: "@semio-tech/layout-rs", replacement: resolve(repoRoot, "layout/rs/pkg/layout_rs.js") },
     { find: "@semio-tech/lowpoly-play", replacement: resolve(repoRoot, "lowpoly/play/index.ts") },
     { find: "@semio-tech/lowpoly-react", replacement: resolve(repoRoot, "lowpoly/react/index.tsx") },
     { find: "@semio-tech/lowpoly-core", replacement: resolve(repoRoot, "lowpoly/core/index.ts") },

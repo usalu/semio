@@ -5,7 +5,7 @@ use vcs::{
 };
 use serde::{Deserialize, Serialize};
 
-pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d/v1";
+pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

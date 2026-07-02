@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/semios-studio-rs",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./pkg/semios_studio.js"
-  }
-}

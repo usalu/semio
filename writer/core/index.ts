@@ -17,8 +17,8 @@ export interface WriterCamera {
 	readonly zoom: number;
 }
 
-export interface WriterDocumentV1 {
-	readonly schema: "writer.document/v1";
+export interface WriterDocument {
+	readonly schema: "writer.document";
 	readonly id: string;
 	readonly languageId: string;
 	readonly uri: string;
@@ -26,7 +26,7 @@ export interface WriterDocumentV1 {
 	readonly camera: WriterCamera;
 }
 
-export const WRITER_DOCUMENT_SCHEMA = "writer.document/v1" as const;
+export const WRITER_DOCUMENT_SCHEMA = "writer.document" as const;
 
 export type WriterLanguageKindId = WriterLanguagesLanguageKindId;
 export { WRITERLANGUAGES_LANGUAGE_IDS as WRITER_LANGUAGE_KIND_IDS };
@@ -54,7 +54,7 @@ export function createWriterDocument(input: {
 	readonly uri?: string;
 	readonly text?: string;
 	readonly camera?: WriterCamera;
-}): WriterDocumentV1 {
+}): WriterDocument {
 	return {
 		schema: WRITER_DOCUMENT_SCHEMA,
 		id: input.id,
@@ -65,8 +65,8 @@ export function createWriterDocument(input: {
 	};
 }
 
-export function parseWriterDocumentJson(json: string): WriterDocumentV1 {
-	const value = JSON.parse(json) as Partial<WriterDocumentV1>;
+export function parseWriterDocumentJson(json: string): WriterDocument {
+	const value = JSON.parse(json) as Partial<WriterDocument>;
 	if (value.schema !== WRITER_DOCUMENT_SCHEMA) {
 		throw new Error(`expected schema ${WRITER_DOCUMENT_SCHEMA}`);
 	}
@@ -85,7 +85,7 @@ export function parseWriterDocumentJson(json: string): WriterDocumentV1 {
 	});
 }
 
-export function writerDocumentToJson(doc: WriterDocumentV1): string {
+export function writerDocumentToJson(doc: WriterDocument): string {
 	return JSON.stringify(doc);
 }
 // #endregion 📐WriterDocument
@@ -1218,11 +1218,11 @@ export function applyJackRename(
 
 //#region 🔖DocumentVcs
 export type WriterEditOp =
-	| { readonly op: "setDocument"; readonly document: WriterDocumentV1 }
+	| { readonly op: "setDocument"; readonly document: WriterDocument }
 	| { readonly op: "setText"; readonly text: string };
 
 /** @emoji ✏️ Applies a writer document edit operation. */
-export function applyWriterEditOp(doc: WriterDocumentV1, op: WriterEditOp): WriterDocumentV1 {
+export function applyWriterEditOp(doc: WriterDocument, op: WriterEditOp): WriterDocument {
 	switch (op.op) {
 		case "setDocument":
 			return op.document;
@@ -1232,7 +1232,7 @@ export function applyWriterEditOp(doc: WriterDocumentV1, op: WriterEditOp): Writ
 }
 
 /** @emoji ↩️ Inverts a writer edit from the pre-apply projection. */
-export function backwardsWriterEditOp(projection: WriterDocumentV1, operation: WriterEditOp): readonly WriterEditOp[] {
+export function backwardsWriterEditOp(projection: WriterDocument, operation: WriterEditOp): readonly WriterEditOp[] {
 	switch (operation.op) {
 		case "setDocument":
 			return [{ op: "setDocument", document: projection }];
@@ -1242,26 +1242,26 @@ export function backwardsWriterEditOp(projection: WriterDocumentV1, operation: W
 }
 
 /** @emoji 📊 Returns the writer edit payload for persistence diffs. */
-export function diffWriterEditOp(_projection: WriterDocumentV1, operation: WriterEditOp): unknown {
+export function diffWriterEditOp(_projection: WriterDocument, operation: WriterEditOp): unknown {
 	return operation;
 }
 
-export type WriterDocumentVcsEnvelope = DocumentVcsEnvelope<WriterDocumentV1, WriterEditOp>;
+export type WriterDocumentVcsEnvelope = DocumentVcsEnvelope<WriterDocument, WriterEditOp>;
 
 /** @emoji 📦 Creates a writer document VCS envelope with an empty or seeded projection. */
 export function createWriterDocumentVcsEnvelope(
 	id: string,
-	projection: WriterDocumentV1 = createWriterDocument({ id, languageId: "plaintext", text: "" }),
+	projection: WriterDocument = createWriterDocument({ id, languageId: "plaintext", text: "" }),
 ): WriterDocumentVcsEnvelope {
 	return createDocumentVcsEnvelope(WRITER_DOCUMENT_SCHEMA, id, projection);
 }
 
 /** @emoji 🔁 Materializes a writer document from its VCS envelope. */
-export function materializeWriterDocument(envelope: WriterDocumentVcsEnvelope, appliedChangeIds: readonly string[] = []): WriterDocumentV1 {
+export function materializeWriterDocument(envelope: WriterDocumentVcsEnvelope, appliedChangeIds: readonly string[] = []): WriterDocument {
 	return materializeDocumentProjection(envelope, appliedChangeIds, applyWriterEditOp);
 }
 
-/** @emoji 🧩 Semios app VCS handler factory for writer documents. */
+/** @emoji 🧩 S app VCS handler factory for writer documents. */
 export function createWriterAppVcsHandler() {
 	return {
 		format: WRITER_DOCUMENT_SCHEMA,

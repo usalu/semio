@@ -12,7 +12,7 @@ todos:
     content: Update MeshBody and VortexHandle to use pickClosestMeshUrl with depth-variable path; add ObjectProps.meshByLod and rewrite handleMeshByLod as a list
     status: completed
   - id: fixture
-    content: Rewrite parseFixtureV1 / parseHandleMeshByLod for the new list-based meshByLod shape
+    content: Rewrite parseFixture / parseHandleMeshByLod for the new list-based meshByLod shape
     status: completed
   - id: framework
     content: Extend WindowMeasure with slider + toggle kinds in elements/lib/framework/core/index.ts and bridge them in elements/lib/framework/renderer/react/index.tsx
@@ -47,7 +47,7 @@ export function pickClosestLod(available: readonly number[], desired: number): n
 
 `pickClosestLod` ranks by `Math.abs(Math.log(rep) - Math.log(desired))` and on ties picks the **smaller** rep (more detail per the user spec). Returns `null` when `available` is empty. A helper `pickClosestMeshUrl(entries, desired, fallback?)` is added for `MeshBody`/`VortexHandle`.
 
-`ObjectProps` gains `meshByLod?: readonly LodMeshEntry[]`; `meshUrl` becomes the fallback when no entry matches. `VortexProps.handleMeshByLod` changes from `Partial<Record<LodKind,string>>` to `readonly LodMeshEntry[]`. Fixture parsing in `parseFixtureV1` / `parseHandleMeshByLod` is rewritten to accept the new list shape.
+`ObjectProps` gains `meshByLod?: readonly LodMeshEntry[]`; `meshUrl` becomes the fallback when no entry matches. `VortexProps.handleMeshByLod` changes from `Partial<Record<LodKind,string>>` to `readonly LodMeshEntry[]`. Fixture parsing in `parseFixture` / `parseHandleMeshByLod` is rewritten to accept the new list shape.
 
 ## Canvas props & context
 
@@ -134,7 +134,7 @@ In [elements/lib/react/scene/index.tsx](elements/lib/react/scene/index.tsx) the 
 - `pickClosestLod`: `[50, 200, 1000]` with desired `100` → `50` (log-equidistant tie → smaller), with desired `500` → `200`, with desired `5000` → `1000`.
 - `lodGridStepWorld` continuity (returns null for very-coarse LOD, returns ~5 at lod=100 with gridFactor=10).
 - `lodHandlePrimaryVisible` / `lodHandlePickProxy` boundaries.
-- `parseFixtureV1` accepts the new `meshByLod` / `handleMeshByLod` list shape and rejects malformed entries.
+- `parseFixture` accepts the new `meshByLod` / `handleMeshByLod` list shape and rejects malformed entries.
 
 In [elements/lib/react/scene/play/e2e/scene.spec.ts](elements/lib/react/scene/play/e2e/scene.spec.ts) `SCENE_LOD_TIERS` becomes a positive-number regex `^\d+(\.\d+)?$`, and the "pins tier on canvas" test is rewritten to toggle the "Auto zoom" toggle off and drive the slider, asserting `data-scene-lod` changes to the manual numeric value.
 

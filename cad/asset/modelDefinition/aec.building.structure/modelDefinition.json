@@ -1,5 +1,5 @@
 {
-	"schema": "spatial.modelDefinition/v1",
+	"schema": "spatial.modelDefinition",
 	"id": "aec.building.structure",
 	"version": "1.0.0",
 	"label": "Structure",

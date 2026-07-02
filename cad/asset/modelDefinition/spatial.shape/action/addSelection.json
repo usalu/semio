@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "command.addSelection",
   "version": "1.0.0",
   "label": "AddSelection",

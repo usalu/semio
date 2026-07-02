@@ -12,7 +12,7 @@ import {
 	type CatalogueSection,
 	type FlowCanvasCommandRequest,
 	type FlowCanvasContextMenuContext,
-	type FlowFixtureV1,
+	type FlowFixture,
 	type FlowReorganizeRequest,
 } from "@semio-tech/flow-react";
 import {
@@ -98,8 +98,8 @@ export function useProcedural2dDrawingBridge(host: Procedural2dExtensionHost = p
 // #endregion 🔖DrawFlowModule
 
 // #region 🔖Fixture
-export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixtureV1 = {
-	schema: "flow.fixture/v1",
+export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixture = {
+	schema: "flow.fixture",
 	camera: { x: 0, y: 0, zoom: 1 },
 	widgets: [
 		{ kind: "neuron", id: "rect", neuronKind: "draw.shape.rect" },
@@ -112,7 +112,7 @@ export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixtureV1 = {
 	],
 };
 
-export function proceduralFixtureToJson(fixture: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE): string {
+export function proceduralFixtureToJson(fixture: FlowFixture = PROCEDURAL_DEFAULT_FIXTURE): string {
 	return JSON.stringify(fixture);
 }
 

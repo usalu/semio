@@ -34,13 +34,13 @@ export { TrinitySession };
 // #endregion 🔖GpuWasmBridge
 
 // #region 🔖Fixture
-export interface TrinityPortV1 {
+export interface TrinityPort {
   readonly id: string;
   readonly kind: string;
   readonly direction: "in" | "out";
 }
 
-export interface TrinityNodeV1 {
+export interface TrinityNode {
   readonly id: string;
   readonly kind: string;
   readonly name: string;
@@ -49,31 +49,31 @@ export interface TrinityNodeV1 {
   readonly width?: number;
   readonly height?: number;
   readonly properties?: Record<string, unknown>;
-  readonly ports?: readonly TrinityPortV1[];
+  readonly ports?: readonly TrinityPort[];
 }
 
-export interface TrinityFixtureV1 {
-  readonly schema: "trinity.graph/v1";
+export interface TrinityFixture {
+  readonly schema: "trinity.graph";
   readonly name: string;
   readonly manifestId?: string;
   readonly manifest?: Record<string, unknown>;
   readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
   readonly rootNodeId?: string;
-  readonly nodes: readonly TrinityNodeV1[];
+  readonly nodes: readonly TrinityNode[];
   readonly edges: readonly { readonly id: string; readonly kind: string; readonly source: string; readonly target: string; readonly properties?: Record<string, unknown> }[];
 }
 
-export const TRINITY_DEFAULT_FIXTURE: TrinityFixtureV1 = nakaginFixtureJson as TrinityFixtureV1;
+export const TRINITY_DEFAULT_FIXTURE: TrinityFixture = nakaginFixtureJson as TrinityFixture;
 export const TRINITY_DEFAULT_FIXTURE_JSON = JSON.stringify(TRINITY_DEFAULT_FIXTURE);
 
-export function trinityFixtureToJson(fixture: TrinityFixtureV1): string {
+export function trinityFixtureToJson(fixture: TrinityFixture): string {
   return JSON.stringify(fixture);
 }
 
-export function parseTrinityFixtureJson(json: string): TrinityFixtureV1 | null {
+export function parseTrinityFixtureJson(json: string): TrinityFixture | null {
   try {
-    const parsed = JSON.parse(json) as TrinityFixtureV1;
-    if (parsed.schema !== "trinity.graph/v1" || !Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) return null;
+    const parsed = JSON.parse(json) as TrinityFixture;
+    if (parsed.schema !== "trinity.graph" || !Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) return null;
     return parsed;
   } catch {
     return null;
@@ -100,54 +100,51 @@ export interface TrinityJackDispatchRequest {
 
 export type TrinityJackResultKind = "table" | "graph";
 
-export interface TrinityJackRunV1 {
+export interface TrinityJackRun {
   readonly kind: TrinityJackResultKind;
   readonly columns: readonly string[];
   readonly rows: readonly (readonly unknown[])[];
-  readonly graphFixture?: TrinityFixtureV1;
+  readonly graphFixture?: TrinityFixture;
   readonly fixtureJson: string;
 }
 
-/** @deprecated Use TrinityJackRunV1 */
-export type TrinityJackResultV1 = Pick<TrinityJackRunV1, "columns" | "rows">;
-
-export interface TrinityJackTokenV1 {
+export interface TrinityJackToken {
   readonly class: "keyword" | "ident" | "number" | "string" | "operator" | "punctuation" | "error";
   readonly start: number;
   readonly end: number;
 }
 
-export interface TrinityJackCompletionV1 {
+export interface TrinityJackCompletion {
   readonly label: string;
   readonly kind: string;
   readonly detail?: string;
   readonly insert: string;
 }
 
-export type RuleParameterKindV1 = "string" | "number" | "boolean";
+export type RuleParameterKind = "string" | "number" | "boolean";
 
-export interface RuleParameterV1 {
+export interface RuleParameter {
   readonly name: string;
-  readonly kind: RuleParameterKindV1;
+  readonly kind: RuleParameterKind;
   readonly default: string | number | boolean | null;
 }
 
-export function runJackOnFixture(fixtureJson: string, query: string): TrinityJackRunV1 {
+export function runJackOnFixture(fixtureJson: string, query: string): TrinityJackRun {
   const session = new TrinitySession();
   session.loadFixtureJson(fixtureJson);
-  return JSON.parse(session.runJackJsonWithFixture(query)) as TrinityJackRunV1;
+  return JSON.parse(session.runJackJsonWithFixture(query)) as TrinityJackRun;
 }
 
-export function tokenizeJackOnFixture(fixtureJson: string, source: string): readonly TrinityJackTokenV1[] {
+export function tokenizeJackOnFixture(fixtureJson: string, source: string): readonly TrinityJackToken[] {
   const session = new TrinitySession();
   session.loadFixtureJson(fixtureJson);
-  return JSON.parse(session.tokenizeJackJson(source)) as readonly TrinityJackTokenV1[];
+  return JSON.parse(session.tokenizeJackJson(source)) as readonly TrinityJackToken[];
 }
 
-export function completeJackOnFixture(fixtureJson: string, source: string, cursor: number): readonly TrinityJackCompletionV1[] {
+export function completeJackOnFixture(fixtureJson: string, source: string, cursor: number): readonly TrinityJackCompletion[] {
   const session = new TrinitySession();
   session.loadFixtureJson(fixtureJson);
-  return JSON.parse(session.completeJackJson(source, cursor)) as readonly TrinityJackCompletionV1[];
+  return JSON.parse(session.completeJackJson(source, cursor)) as readonly TrinityJackCompletion[];
 }
 
 export function createJackLspWorker(fixtureJson?: string): Worker {
@@ -230,7 +227,7 @@ export function buildTrinityPlayInspectorTree(
   }
   const nodes = selectedNodeIds
     .map((id) => fixture.nodes.find((row) => row.id === id))
-    .filter((node): node is TrinityNodeV1 => Boolean(node));
+    .filter((node): node is TrinityNode => Boolean(node));
   if (!nodes.length) {
     return uiDeclarativeSectionsToTree([
       {
@@ -720,7 +717,7 @@ if (import.meta.vitest) {
   describe("trinity fixture", () => {
     it("default nakagin fixture parses expanded graph", () => {
       const fixture = parseTrinityFixtureJson(TRINITY_DEFAULT_FIXTURE_JSON);
-      expect(fixture?.schema).toBe("trinity.graph/v1");
+      expect(fixture?.schema).toBe("trinity.graph");
       expect(fixture?.nodes.length).toBe(9);
       expect(fixture?.edges.length).toBe(6);
       const root = fixture?.nodes.find((node) => node.id === fixture?.rootNodeId);

@@ -4,6 +4,7 @@ import { createPlaygroundPlayViteConfig } from "../../ui/styling/vite-elements-a
 
 const playDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(playDir, "../..");
+const threeModule = path.resolve(repoRoot, "node_modules/three/build/three.module.js");
 
 export default createPlaygroundPlayViteConfig({
 	playDir,
@@ -13,10 +14,11 @@ export default createPlaygroundPlayViteConfig({
 		{ find: "@semio-tech/lowpoly-react", replacement: path.resolve(playDir, "../react/index.tsx") },
 		{ find: "@semio-tech/lowpoly-core", replacement: path.resolve(playDir, "../core/index.ts") },
 		{ find: "@semio-tech/lowpoly-core/pkg/lowpoly_core.js", replacement: path.resolve(playDir, "../core/pkg/lowpoly_core.js") },
+		{ find: /^three$/, replacement: threeModule },
 	],
-	resolveDedupe: ["react", "react-dom", "@semio-tech/lowpoly-react"],
+	resolveDedupe: ["react", "react-dom", "three", "scheduler", "@semio-tech/lowpoly-react"],
 	optimizeDeps: {
-		include: ["react", "react-dom"],
+		include: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],
 		exclude: ["@semio-tech/framework-playground-renderer-react/lowpoly", "@semio-tech/lowpoly-react"],
 		esbuildOptions: { target: "esnext" },
 	},

@@ -104,7 +104,6 @@ export function findReplaceableTypesForSelection(_sel: { pieces: readonly string
 
 // #region 🧱PlainDesignModel
 function __itemsOf<T>(node: unknown): readonly T[] {
-  if (Array.isArray(node)) return node as readonly T[];
   if (node && typeof node === "object" && "items" in node && Array.isArray((node as { items: unknown }).items)) return (node as { items: T[] }).items;
   return [];
 }

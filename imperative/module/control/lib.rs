@@ -2,7 +2,7 @@
 
 pub fn catalogue_json() -> String {
     serde_json::to_string(&serde_json::json!({
-        "schema": "imperative.catalogue/v1",
+        "schema": "imperative.catalogue",
         "sections": [{
             "id": "control",
             "title": "Control",

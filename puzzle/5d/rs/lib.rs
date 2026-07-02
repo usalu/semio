@@ -5,7 +5,7 @@ use vcs::{
 };
 use serde::{Deserialize, Serialize};
 
-pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d/v1";
+pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

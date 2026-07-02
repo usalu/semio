@@ -255,7 +255,7 @@ pub fn register(registry: &mut Registry) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
+    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommand};
 
     fn sample_dict() -> Dictionary {
         Dictionary::with_schema("dictionary").insert("number", Value::Dictionary(number_dictionary(3.0))).insert("text", Value::Dictionary(text_dictionary("hi".into())))
@@ -297,7 +297,7 @@ mod tests {
 
     #[test]
     fn manifest_lists_dictionary_operators() {
-        let json = build_manifest_json("dictionary", "Dictionary", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowModuleCommandV1 { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![]);
+        let json = build_manifest_json("dictionary", "Dictionary", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowModuleCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![]);
         assert!(json.contains("dictionary.get"));
     }
 
@@ -315,12 +315,12 @@ mod tests {
 #[cfg(all(target_arch = "wasm32", feature = "standalone-wasm"))]
 mod wasm_ext {
     use super::module_registry;
-    use flow_module_wasm::{build_manifest_json, command_json, evaluate_json, FlowModuleCommandV1};
+    use flow_module_wasm::{build_manifest_json, command_json, evaluate_json, FlowModuleCommand};
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
     pub fn manifest() -> String {
-        build_manifest_json("dictionary", "Dictionary", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowModuleCommandV1 { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![])
+        build_manifest_json("dictionary", "Dictionary", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowModuleCommand { id: "dictionary.showHelp".into(), title: "Dictionary: Show Help".into() }], vec![])
     }
 
     #[wasm_bindgen]

@@ -18,7 +18,7 @@ todos:
     content: Register all 5 modules in imperative_module_registry()/imperative_catalogue_json(), add crates to root Cargo.toml, extend IMPERATIVE_INSTALLED_MODULE_IDS and ImperativeExtensionHost catalogue sections in imperative/core/index.ts
     status: completed
   - id: sequence-slot-model
-    content: Add slot/collapsed fields to StepWidgetV1; make connect_steps/add_step/remove_step slot-scoped with cascade delete; make build_path recursive to populate Step.bodies
+    content: Add slot/collapsed fields to SequenceStep; make connect_steps/add_step/remove_step slot-scoped with cascade delete; make build_path recursive to populate Step.bodies
     status: completed
   - id: sequence-canvas-ui
     content: Add setStepCollapsed WASM export, hide/show slot members in build_dag_fixture, extend reorganize to fan out expanded slots, add collapse/expand click affordance and slot-aware drag-drop in sequence/react
@@ -69,7 +69,7 @@ flowchart TB
     end
     engineLayer --- moduleLayer
     subgraph sequenceTech [sequence technology]
-        SeqCore["sequence_core: slot ref + collapsed flag on StepWidgetV1, slot-scoped connect_steps, recursive build_path"]
+        SeqCore["sequence_core: slot ref + collapsed flag on SequenceStep, slot-scoped connect_steps, recursive build_path"]
         SeqCanvas["sequence_react: expand/collapse affordance, satellite layout for expanded slots"]
         SeqPlay["sequence_play: catalogue by module, inspector condition fields, Run/Stop via worker"]
         SeqWorker["sequence.worker.ts: headless ImperativeSession run, cancel via terminate"]
@@ -107,7 +107,7 @@ Both new modules follow the `imperative/module/core` pattern (`imperative/module
 
 ## 3. Sequence canvas: slot-based nested visual editing
 
-- `StepWidgetV1` (`sequence/core/lib.rs`) gains `slot: Option<SlotRef>` (`{ owner: String, name: String }` — which control step + which body this step belongs to) and `collapsed: bool` (only meaningful when `bodies` are non-empty, i.e. the step kind is one of the control kinds).
+- `SequenceStep` (`sequence/core/lib.rs`) gains `slot: Option<SlotRef>` (`{ owner: String, name: String }` — which control step + which body this step belongs to) and `collapsed: bool` (only meaningful when `bodies` are non-empty, i.e. the step kind is one of the control kinds).
 - `connect_steps`/`add_step`/`remove_step` become slot-aware: a chain only connects steps that share the same slot scope (both root, or both in the same `(owner, name)` slot); `remove_step` on a control step cascades to remove all of its slot descendants.
 - `build_path()` becomes recursive: walk the root chain as today, and for each control step encountered, additionally walk each of its slots' single-outgoing sub-chains (same algorithm, scoped by `slot`) to build the nested `imperative_engine::Path` values attached as `bodies["then"]`/`bodies["else"]`/`bodies["body"]`.
 - New WASM export `setStepCollapsed(stepId, collapsed)`. When collapsed, slot-member nodes are omitted from the DAG fixture built in `build_dag_fixture`/`step_to_dag_node` (hidden, not deleted) and the control step's node shows a small badge (e.g. "▸ 3 steps"); when expanded, the `reorganize` auto-layout is extended to fan out each slot's chain near/below its owning step (like a flowchart), and a distinct dashed "slot" edge style connects the control step to each slot's first node.

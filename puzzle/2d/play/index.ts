@@ -1030,7 +1030,6 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
 	nodeId: string,
 	childrenByParent: ReadonlyMap<string, readonly string[]>,
 	selectedIds: ReadonlySet<string>,
-	onSelect: (id: string) => void,
 	visiting: Set<string>,
 	omitItemSelection: boolean,
 	options?: Puzzle2dPlayHierarchyBuildOptions,
@@ -1045,7 +1044,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
   visiting.add(nodeId);
   const childItems: UiTreeItemNode[] = [];
   for (const childId of childrenByParent.get(nodeId) ?? []) {
-    const childItem = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, childId, childrenByParent, selectedIds, onSelect, visiting, omitItemSelection, options);
+    const childItem = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, childId, childrenByParent, selectedIds, visiting, omitItemSelection, options);
     if (childItem) {
       childItems.push(childItem);
     }
@@ -1057,7 +1056,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
     label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
     icon: puzzle2dPlayEntityTreeIcon("handle"),
     ...(omitItemSelection ? {} : { isSelected: selectedIds.has(handle.id) }),
-    onClick: () => onSelect(handle.id),
+    command: puzzle2dPlayCmd("hierarchySelect", { id: handle.id }),
     ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, handle.id),
     ...puzzle2dPlayHierarchyEntityChrome(handle, handle.id, options),
   }));
@@ -1068,7 +1067,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
     icon: puzzle2dPlayNodeHierarchyTreeIcon(node, kindCatalogs),
     ...(omitItemSelection ? {} : { isSelected: selectedIds.has(nodeId) }),
     defaultOpen: false,
-    onClick: () => onSelect(nodeId),
+    command: puzzle2dPlayCmd("hierarchySelect", { id: nodeId }),
     ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, nodeId),
     ...puzzle2dPlayHierarchyEntityChrome(node, nodeId, options),
     items: [...handleItems, ...childItems],
@@ -1158,7 +1157,6 @@ export function puzzle2dPlayHierarchyTreeHighlightedIds(
 export function buildPuzzle2dPlayHierarchySections(
 	fixture: Puzzle2dFixtureV1,
 	selectionIds: readonly string[],
-	onSelect: (id: string) => void,
 	kindCatalogs: KindCatalogBundle = puzzle2dFixtureMergedKindCatalogs(fixture),
 	options?: Puzzle2dPlayHierarchyBuildOptions,
 ): UiTreeNode {
@@ -1169,7 +1167,7 @@ export function buildPuzzle2dPlayHierarchySections(
 	const visiting = new Set<string>();
 	const nodeItems: UiTreeItemNode[] = [];
 	for (const rootId of rootIds) {
-		const item = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, rootId, childrenByParent, selectedIds, onSelect, visiting, omitItemSelection, options);
+		const item = buildPuzzle2dFixtureNodeHierarchyItem(fixture, kindCatalogs, rootId, childrenByParent, selectedIds, visiting, omitItemSelection, options);
 		if (item) {
 			nodeItems.push(item);
 		}
@@ -1179,7 +1177,7 @@ export function buildPuzzle2dPlayHierarchySections(
 		label: puzzle2dFixtureEdgeDisplayLabel(edge, fixture, kindCatalogs),
 		icon: puzzle2dPlayEntityTreeIcon("edge"),
 		...(omitItemSelection ? {} : { isSelected: selectedIds.has(edge.id) }),
-		onClick: () => onSelect(edge.id),
+		command: puzzle2dPlayCmd("hierarchySelect", { id: edge.id }),
 		...puzzle2dPlayHierarchyHoverHandlers(options?.onHover, fixture, edge.id),
 		...puzzle2dPlayHierarchyEntityChrome(edge, edge.id, options),
 	}));
@@ -1904,6 +1902,13 @@ export class Puzzle2dPlayShellController extends Controller {
 				this.hostBridge?.runHostCommand(command, args);
 				break;
 			}
+			case "hierarchySelect": {
+				const id = (args as { id?: string }).id;
+				if (typeof id === "string") {
+					this.hostBridge?.runHostCommand("hierarchySelect", { id });
+				}
+				break;
+			}
 			case "toggleGridSnap":
 			case "appendCircle":
 			case "toggleRedrawPlaying":
@@ -2615,7 +2620,7 @@ if (import.meta.vitest) {
 				edges: [{ id: "e1", source: "root", target: "child" }],
 			});
 			expect(fixture).not.toBeNull();
-			const tree = buildPuzzle2dPlayHierarchySections(fixture!, [], () => {});
+			const tree = buildPuzzle2dPlayHierarchySections(fixture!, []);
 			const nodesSection = tree.sections.find((section) => section.label === "Nodes");
 			const rootItem = nodesSection?.items?.find((row) => row.id === "puzzle-2d-play-hierarchy.node.root");
 			expect(rootItem?.items?.some((row) => row.label === "Child")).toBe(true);
@@ -2650,7 +2655,7 @@ if (import.meta.vitest) {
 				edges: [{ id: "e1", source: "h-root", target: "h-child" }],
 			});
 			expect(fixture).not.toBeNull();
-			const tree = buildPuzzle2dPlayHierarchySections(fixture!, [], () => {});
+			const tree = buildPuzzle2dPlayHierarchySections(fixture!, []);
 			const nodesSection = tree.sections.find((section) => section.label === "Nodes");
 			expect(nodesSection?.items?.[0]?.id).toBe("puzzle-2d-play-hierarchy.node.root");
 			expect(nodesSection?.items?.[0]?.label).toBe("Root");
@@ -3073,7 +3078,7 @@ if (import.meta.vitest) {
 	});
 
 	it("nakagin fixture yields a populated hierarchy nodes group", () => {
-		const tree = buildPuzzle2dPlayHierarchySections(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID), [], () => {});
+		const tree = buildPuzzle2dPlayHierarchySections(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID), []);
 		const nodesSection = tree.sections.find((section) => section.label === "Nodes");
 		expect(nodesSection?.items?.length).toBeGreaterThan(0);
 		expect(nodesSection?.items?.[0]?.label).not.toBe("(none)");

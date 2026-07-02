@@ -3,7 +3,7 @@ name: Generalize DAG Node Kinds
 overview: Generalize the DAG's single computation-rectangle node into a tagged node-kind model (Computation, Slider, Select, Screen) with per-kind Vello rendering, local widget interaction (no propagation), and React DOM media overlays for Screen nodes.
 todos:
   - id: model
-    content: Generalize IoNodeSpec -> DagNodeSpec + DagNodeKind (Computation/Slider/Select/Screen) + DagMedia, accessors, computation() ctor; update DagFixtureV1.nodes in dag/lib.rs
+    content: Generalize IoNodeSpec -> DagNodeSpec + DagNodeKind (Computation/Slider/Select/Screen) + DagMedia, accessors, computation() ctor; update DagFixture.nodes in dag/lib.rs
     status: completed
   - id: engine-sync
     content: Update rebuild_engine_with_layout + sync fns to use node.inputs()/outputs() generically
@@ -18,7 +18,7 @@ todos:
     content: Add DagSession.nodeOverlaysJson() (screen-space rects) and React DOM media overlay manager in rAF tick
     status: completed
   - id: ts-fixture
-    content: Update DagNodeV1 TS union + DAG_DEFAULT_FIXTURE + demo.dag.json showcasing all kinds; sync count assertions
+    content: Update DagNode TS union + DAG_DEFAULT_FIXTURE + demo.dag.json showcasing all kinds; sync count assertions
     status: completed
   - id: flow
     content: Adapt flow/core/lib.rs widget_to_io_node + build_dag_fixture_v1 to DagNodeSpec::computation, preserving behavior
@@ -62,7 +62,7 @@ flowchart TD
 - Replace `IoNodeSpec` with `DagNodeSpec { id, name, x, y, width, height, kind: DagNodeKind }`. Keep `IoPortSpec`.
 - Add `#[serde(tag = "kind", rename_all = "camelCase")] enum DagNodeKind { Computation { inputs, outputs }, Slider { min, max, step, value, output: IoPortSpec }, Select { options: Vec<String>, selected: usize, output: IoPortSpec }, Screen { media: Option<DagMedia>, input: IoPortSpec } }` and `struct DagMedia { kind: DagMediaKind (Image|Svg|Pdf|Video), src: String }`.
 - Add accessor methods `DagNodeSpec::inputs()/outputs()` returning the effective `&[IoPortSpec]` per kind, plus `DagNodeSpec::computation(...)` constructor (for Flow).
-- Update `DagFixtureV1.nodes: Vec<DagNodeSpec>` (line ~320).
+- Update `DagFixture.nodes: Vec<DagNodeSpec>` (line ~320).
 
 ### 2. Engine build & sync — same file, `rebuild_engine_with_layout` (~416-485), `sync_node_positions_from_engine`, `sync_edges_from_engine`
 
@@ -96,7 +96,7 @@ Vello can't render SVG/PDF/video, so Screen content renders as absolutely-positi
 
 ### 6. TS fixture types & default — [dag/react/index.tsx](mathematical/graph/port/directed/dag/react/index.tsx) `#region Fixture`
 
-- Replace `DagIoNodeV1` with the tagged `DagNodeV1` union mirroring `DagNodeKind` (computation/slider/select/screen).
+- Replace `DagIoNodeV1` with the tagged `DagNode` union mirroring `DagNodeKind` (computation/slider/select/screen).
 - Rewrite `DAG_DEFAULT_FIXTURE` to showcase all kinds, e.g. `Slider -> Scale (computation)`, `Select -> Combine`, `Combine -> Screen`. Use an inline SVG data-URI for the demo Screen `src` (offline-safe).
 
 ### 7. Demo fixture — [dag/fixture/demo.dag.json](mathematical/graph/port/directed/dag/fixture/demo.dag.json)

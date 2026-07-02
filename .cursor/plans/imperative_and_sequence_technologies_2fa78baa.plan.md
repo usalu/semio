@@ -21,7 +21,7 @@ todos:
     content: "Implement imperative/play: PlaygroundImperative step-list editor app with dev/build/test/validate targets"
     status: completed
   - id: sequence-core
-    content: "Implement sequence/core: SequenceFixtureV1 + SequenceHost wrapping DagHost with single-path connect validation + SequenceSession wasm (compileText/run)"
+    content: "Implement sequence/core: SequenceFixture + SequenceHost wrapping DagHost with single-path connect validation + SequenceSession wasm (compileText/run)"
     status: completed
   - id: sequence-react
     content: "Implement sequence/react: SequenceCanvas (attach/render/pointer), catalogue palette, inspector, compiled-text & effect-log panels"
@@ -112,7 +112,7 @@ sequence/
 ├── AGENTS.md                     # mirrors flow/AGENTS.md
 ├── core/                         # sequence_core (Rust+wasm) + TS
 │   ├── Cargo.toml
-│   ├── lib.rs                    # SequenceFixtureV1, SequenceHost (wraps DagHost), SequenceSession
+│   ├── lib.rs                    # SequenceFixture, SequenceHost (wraps DagHost), SequenceSession
 │   ├── index.ts
 │   ├── package.json / project.json / script.ts
 ├── react/                        # SequenceCanvas
@@ -186,14 +186,14 @@ A `PlaygroundImperative extends Playground` (mirrors [flow/play/index.ts:1172](f
 ## `sequence/core` (wasm binding wrapping `DagHost`, mirrors `FlowHost`/`FlowSession`)
 
 ```rust
-pub struct SequenceFixtureV1 { pub schema: String, pub camera: DagCameraV1, pub steps: Vec<StepWidgetV1>, pub edges: Vec<SequenceEdgeV1> }
-pub struct StepWidgetV1 { pub id: String, pub kind: String, pub params: Dictionary, pub x: f64, pub y: f64 }
-pub struct SequenceEdgeV1 { pub id: String, pub from: String, pub to: String } // from.next -> to.prev
+pub struct SequenceFixture { pub schema: String, pub camera: DagCamera, pub steps: Vec<SequenceStep>, pub edges: Vec<SequenceEdge> }
+pub struct SequenceStep { pub id: String, pub kind: String, pub params: Dictionary, pub x: f64, pub y: f64 }
+pub struct SequenceEdge { pub id: String, pub from: String, pub to: String } // from.next -> to.prev
 
-pub struct SequenceHost { pub fixture: SequenceFixtureV1, pub dag: DagHost, registry: Registry, ... }
+pub struct SequenceHost { pub fixture: SequenceFixture, pub dag: DagHost, registry: Registry, ... }
 impl SequenceHost {
     /// Maps each step to DagNodeKind::Computation with one "prev" input + one "next" output IoPortSpec (cardinality "!").
-    fn build_dag_fixture(&self) -> DagFixtureV1 { ... }
+    fn build_dag_fixture(&self) -> DagFixture { ... }
     /// Mirrors flow's connect_ports: self-connect / cycle (would_create_cycle) / existing-outgoing-on-source checks.
     pub fn connect_steps(&mut self, from_id: &str, to_id: &str) -> Result<String, String> { ... }
     /// Walks edges from the head (no incoming edge) to build an ordered imperative::Path.

@@ -953,13 +953,8 @@ export type Icon =
 /** @emoji 🎛 Shared icon editor tab buckets aligned with {@link Icon}. */
 export type IconSelectorMode = "url" | "shortcode" | "data" | "emoji" | "math" | "text" | "vector";
 
-function stripLegacyImageDataPrefixForIcon(raw: string): string {
-  const t = raw.trim();
-  return t.startsWith("image:") ? t.slice("image:".length).trim() : t;
-}
-
 function isRasterDataUrlPayloadForIcon(s: string): boolean {
-  const u = stripLegacyImageDataPrefixForIcon(s).toLowerCase();
+  const u = s.trim().toLowerCase();
   return (
     u.startsWith("data:image/png;base64,") ||
     u.startsWith("data:image/jpeg;base64,") ||
@@ -970,7 +965,7 @@ function isRasterDataUrlPayloadForIcon(s: string): boolean {
 }
 
 function isSvgDataUrlPayloadForIcon(s: string): boolean {
-  return stripLegacyImageDataPrefixForIcon(s).toLowerCase().startsWith("data:image/svg+xml");
+  return s.trim().toLowerCase().startsWith("data:image/svg+xml");
 }
 
 function looksLikeShortcodeToken(t: string): boolean {
@@ -4247,9 +4242,10 @@ export function measureWindowChromeScrollClearancePx(element?: Element | null): 
   return Math.max(0, Math.ceil(maxBottom - bodyTop));
 }
 
-/** @emoji 🏝️ True when an element scrolls inside a chrome-aware window with floating chrome overlays. */
+/** @emoji 🏝️ True when an element scrolls inside a window with floating chrome overlays (not edgeless canvas bodies). */
 export function isWindowContentDeadLineHost(element: Element | null): boolean {
-  if (!element?.closest('[data-window-content-layout=chrome-aware]')) return false;
+  if (!element) return false;
+  if (element.closest('[data-window-content-layout=edgeless]')) return false;
   const windowBody = element.closest('[data-slot="window-body"]');
   if (!windowBody) return false;
   return windowBody.querySelector('[data-slot="window-engagement-overlay"], [data-slot="window-measures-overlay"]') != null;
@@ -4258,9 +4254,23 @@ export function isWindowContentDeadLineHost(element: Element | null): boolean {
 /** @emoji 🏝️ Resolves the default dead-line scroll offset for chrome-aware window bodies. */
 export function readWindowContentDeadLinePx(element?: Element | null, rootPx = STYLING_COMPACT_ROOT_PX): number {
   if (!element || !isWindowContentDeadLineHost(element)) return 0;
+  const windowBody = element.closest('[data-slot="window-body"]');
+  const fromBodyVar = readSizeVarPx(windowContentDeadLineVar, windowBody ?? element);
+  if (fromBodyVar > 0) return fromBodyVar;
   const measured = measureWindowChromeScrollClearancePx(element);
   if (measured > 0) return measured;
   return readWindowChromeScrollClearancePx(element, rootPx);
+}
+
+/** @emoji 🏝️ True when a scroll host's content exceeds its viewport. */
+export function readScrollerContentOverflows(scroller: HTMLElement): boolean {
+  if (scroller.clientHeight <= 0) return true;
+  if (scroller.scrollHeight > scroller.clientHeight + 1) return true;
+  const viewport = scroller.querySelector('[data-slot="scroll-area-viewport"]');
+  if (viewport instanceof HTMLElement) {
+    return viewport.scrollHeight > scroller.clientHeight + 1;
+  }
+  return false;
 }
 
 /** @emoji 🏝️ Clears the first line under floating chrome by default; scrolling up reveals it edgelessly. */
@@ -4271,14 +4281,26 @@ export function useWindowContentDeadLineScroll(scrollerRef: React.RefObject<HTML
     if (!el) return;
     const applyDefault = () => {
       if (!isWindowContentDeadLineHost(el)) return;
+      const overflows = readScrollerContentOverflows(el);
+      if (!overflows) {
+        edgelessScrollRef.current = false;
+        if (el.scrollTop !== 0) el.scrollTop = 0;
+        return;
+      }
       const deadLine = readWindowContentDeadLinePx(el);
       if (deadLine <= 0 || edgelessScrollRef.current) return;
       if (el.scrollTop < deadLine) el.scrollTop = deadLine;
     };
     const onScroll = () => {
       if (!isWindowContentDeadLineHost(el)) return;
+      if (!readScrollerContentOverflows(el)) {
+        edgelessScrollRef.current = false;
+        return;
+      }
       const deadLine = readWindowContentDeadLinePx(el);
-      if (deadLine > 0 && el.scrollTop < deadLine - 1) edgelessScrollRef.current = true;
+      if (deadLine <= 0) return;
+      if (el.scrollTop < deadLine - 1) edgelessScrollRef.current = true;
+      else if (el.scrollTop >= deadLine) edgelessScrollRef.current = false;
     };
     applyDefault();
     el.addEventListener("scroll", onScroll, { passive: true });
@@ -9199,9 +9221,6 @@ export { Tabs, TabsContent, TabsList, TabsTrigger };
 
 // #region 🖼️IconSelector
 
-/** @deprecated Use {@link IconSelectorMode}. */
-export type Puzzle2dIconSelectorMode = IconSelectorMode;
-
 function stripTypstEmojiPrefixesForIconSelector(raw: string): string {
   const t = raw.trim();
   if (t.startsWith("typst:")) {
@@ -9293,8 +9312,6 @@ export interface IconSelectorProps {
   disabled?: boolean;
   uniform?: boolean;
   classifyIconSelectorMode?: (raw: string) => IconSelectorMode;
-  /** @deprecated Use {@link IconSelectorProps.classifyIconSelectorMode}. */
-  classifyPuzzle2dIconSelectorMode?: (raw: string) => IconSelectorMode;
 }
 
 /** @emoji 🖼️ Canonical `iconKind` editor for all canvases. */
@@ -9305,9 +9322,8 @@ export function IconSelector({
   disabled = false,
   uniform = true,
   classifyIconSelectorMode: classifyModeProp,
-  classifyPuzzle2dIconSelectorMode: legacyClassifyProp,
 }: IconSelectorProps): React.ReactElement {
-  const classifyMode = classifyModeProp ?? legacyClassifyProp ?? classifyIconSelectorMode;
+  const classifyMode = classifyModeProp ?? classifyIconSelectorMode;
   const activeMode = classifyMode(value);
   const fileInputRef = reactHostPort.useRef<HTMLInputElement>(null);
   const locked = disabled || !uniform;
@@ -22939,6 +22955,20 @@ if (import.meta.vitest) {
       );
       const scroller = container.querySelector('[data-slot="scroll-area"]') as HTMLDivElement;
       expect(scroller.scrollTop).toBe(0);
+    });
+
+    it("Window dead-line hosts skip offset when content fits", () => {
+      const { container } = render(
+        <Window id="fits-window" active engagement={{ input: { placeholder: "Command" } }}>
+          <Scrollable className="h-40">
+            <div style={{ height: 40 }}>Short</div>
+          </Scrollable>
+        </Window>,
+      );
+      const scroller = container.querySelector('[data-slot="scroll-area"]') as HTMLDivElement;
+      Object.defineProperty(scroller, "clientHeight", { value: 160, configurable: true });
+      Object.defineProperty(scroller, "scrollHeight", { value: 160, configurable: true });
+      expect(readScrollerContentOverflows(scroller)).toBe(false);
     });
 
     it("Window does not route keys to engagement while another input is focused", () => {

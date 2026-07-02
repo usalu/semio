@@ -68,7 +68,7 @@ Key rename: the crate name `mathematical_graph_port_directed` moves from the lea
 ## Phase A - Purge graph logic from infinite_cavas
 In [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) remove and relocate (to Phase B/D):
 - `pub mod vcompute` (handle/edge geometry: `handle_position_on_circle`, `circle_handle_angle_toward`, `rectangle_handle_angle_toward`, `compute_edge_bezier_points`, `distance_point_to_cubic_bezier`, `distance_between`, `encode_board_stroke_scene`).
-- `pub mod scene_json` + its re-export line (`CameraJson`, `NodeDescJson`, `HandleDescJson`, `EdgeDescJson`, `WireDescJson`, `SceneDescriptorJson`, `FixtureV1Json`, `fixture_edge_handle_ids_from_object`).
+- `pub mod scene_json` + its re-export line (`CameraJson`, `NodeDescJson`, `HandleDescJson`, `EdgeDescJson`, `WireDescJson`, `SceneDescriptorJson`, `FixtureJson`, `fixture_edge_handle_ids_from_object`).
 - `board_json_visible_option`, `board_json_visible_or_true`, `board_json_hidden_flag`, `normalize_board_descriptor_hidden_to_visible`.
 - `trait CanvasNodePaint` (graph-specific paint).
 
@@ -89,7 +89,7 @@ Create `mathematical/graph/port/Cargo.toml` (name `mathematical_graph_port`, dep
 ## Phase D - NEW crate mathematical_graph_port_directed at graph/port/directed/
 Create `mathematical/graph/port/directed/Cargo.toml` (name `mathematical_graph_port_directed`, deps `mathematical_graph_port` + `mathematical_graph_normal_undirected` for force layout) and `lib.rs`. This is the shared directed-port base for both `normal` and `dag`. Move here:
 - `DirectedPortGraphEngine`/`BoardEngine` type aliases, `Edge` type, `resolve_endpoint_node_id`.
-- Directed scene descriptors: `EdgeDescJson`, `WireDescJson`, `SceneDescriptorJson`, `FixtureV1Json`, `fixture_edge_handle_ids_from_object`, `board_json_visible_*`, `normalize_board_descriptor_hidden_to_visible`.
+- Directed scene descriptors: `EdgeDescJson`, `WireDescJson`, `SceneDescriptorJson`, `FixtureJson`, `fixture_edge_handle_ids_from_object`, `board_json_visible_*`, `normalize_board_descriptor_hidden_to_visible`.
 - Directed edge/board types from the monolith: `EdgeData`, `EdgeKindDef`, `EdgeTipDef`, `EdgeStrokePattern`, `EdgeTipGeometry`, `WireData`, `WireKindDef`, `LinkCompatRule`, `CompatSpecificity`, `GraphPortMode`, plus shared node/style types (`NodeShape`, `NodeData`, `NodeKindDef`, `BoardElementStyleKind`, `VelloThemePalette`, `SelectionOptions`, `ActiveTool`, `Interaction`).
 - The `force_graph`, `hierarchical_tree`, `redraw_layout` modules currently in the leaf [lib.rs](mathematical/graph/port/directed/normal/lib.rs), and the `GraphExtension` re-export.
 

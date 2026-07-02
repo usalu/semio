@@ -6,7 +6,7 @@ use vcs::{
 };
 use serde::{Deserialize, Serialize};
 
-pub const PRESENTATION_DOCUMENT_SCHEMA: &str = "presentation.deck/v1";
+pub const PRESENTATION_DOCUMENT_SCHEMA: &str = "presentation.deck";
 
 //#region 🔖Domain
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

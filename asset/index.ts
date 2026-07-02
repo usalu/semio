@@ -110,18 +110,17 @@ export type { IconName } from "@semio-tech/ui-asset";
 //#endregion 🔖Icons
 
 //#region 🔖KitBootstrapHelpers
-/** @emoji 🧾 Normalizes list-or-{items} shapes found on `wip.initialKit` DTOs. */
+/** @emoji 🧾 Normalizes `{items}` collection blocks on `wip.initialKit` DTOs. */
 function __itemsOf<T>(node: unknown): readonly T[] {
-  if (Array.isArray(node)) return node as readonly T[];
   if (node && typeof node === "object" && "items" in node && Array.isArray((node as { items: unknown }).items)) return (node as { items: T[] }).items;
   return [];
 }
 
-/** @emoji 🧾 Resolves the materialized kit payload (legacy root vs `wip.initialKit`). */
+/** @emoji 🧾 Resolves the materialized kit payload from `wip.initialKit`. */
 function __metabolismKitInner(): Record<string, unknown> {
   const root = MetabolismKitData as { wip?: { initialKit?: Record<string, unknown> } };
   const inner = root.wip?.initialKit;
-  return (inner && typeof inner === "object" ? inner : (MetabolismKitData as unknown as Record<string, unknown>)) ?? {};
+  return (inner && typeof inner === "object" ? inner : {}) ?? {};
 }
 
 /** @emoji 🏛️ Flattens kinds from root `types` or nested `typologies[].types`. */

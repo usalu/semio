@@ -18,7 +18,7 @@ todos:
     content: Copy cardinality symbol into IoPortSpec in flow/core/lib.rs bridge functions
     status: completed
   - id: ts
-    content: Add cardinality to FlowChannelSpecV1 and cardinality-aware logic in flowChannelCompatible
+    content: Add cardinality to FlowChannelSpec and cardinality-aware logic in flowChannelCompatible
     status: completed
   - id: modules
     content: Assign collection cardinalities to list-carrying channels across all flow/module/*/lib.rs
@@ -70,7 +70,7 @@ In [flow/core/lib.rs](flow/core/lib.rs), `channel_spec_to_output_port` and `inpu
 
 In [flow/react/index.tsx](flow/react/index.tsx):
 
-- Add `readonly cardinality: string` to `FlowChannelSpecV1` (line ~90).
+- Add `readonly cardinality: string` to `FlowChannelSpec` (line ~90).
 - Extend `flowChannelCompatible` (line ~100) so the output's `count_range` is contained in the input's accepted range (e.g. `!`→`+` ok, `*`→`!` rejected), in addition to the existing operator-capability check.
 
 ## 5. Module channels
@@ -102,7 +102,7 @@ flowchart LR
   IoPort --> Overlay["port_label_overlay_rows text = symbol + label"]
   Overlay --> Paint["paintFlowLabelOverlays (react)"]
   ChannelSpec --> Manifest["flow.module/v1 manifest"]
-  Manifest --> TS["FlowChannelSpecV1 + flowChannelCompatible"]
+  Manifest --> TS["FlowChannelSpec + flowChannelCompatible"]
   ChannelSpec --> Runtime["collect_neuron_input: enforce count + homogeneous list"]
 ```
 

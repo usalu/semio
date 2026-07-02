@@ -1,5 +1,5 @@
 {
-  "schema": "draw.document/v1",
+  "schema": "draw.document",
   "id": "semio",
   "title": "Semio Emblem",
   "camera": {

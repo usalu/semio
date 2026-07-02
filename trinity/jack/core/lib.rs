@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use trinity_ram::{
-    apply_trinity_graph_ops, Edge, EntityRef, Graph, GraphFixtureV1, Node, Port, PortDirection, PropertyBag, PropertyValue,
+    apply_trinity_graph_ops, Edge, EntityRef, Graph, GraphFixture, Node, Port, PortDirection, PropertyBag, PropertyValue,
     TrinityGraphOp, port_key,
 };
 
@@ -81,7 +81,7 @@ pub struct QueryResult {
     pub columns: Vec<String>,
     pub rows: Vec<Vec<PropertyValue>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub graph_fixture: Option<GraphFixtureV1>,
+    pub graph_fixture: Option<GraphFixture>,
 }
 
 impl Default for QueryResultKind {
@@ -95,7 +95,7 @@ impl QueryResult {
         Self { kind: QueryResultKind::Table, columns, rows, graph_fixture: None }
     }
 
-    pub fn graph(columns: Vec<String>, graph_fixture: GraphFixtureV1) -> Self {
+    pub fn graph(columns: Vec<String>, graph_fixture: GraphFixture) -> Self {
         Self { kind: QueryResultKind::Graph, columns, rows: vec![], graph_fixture: Some(graph_fixture) }
     }
 }
@@ -1439,7 +1439,7 @@ fn build_return(graph: &Graph, bindings: &[Binding], items: &[ReturnItem]) -> Qu
     QueryResult::table(columns, rows)
 }
 
-fn emit_set_op(fixture: &GraphFixtureV1, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphOp, String> {
+fn emit_set_op(fixture: &GraphFixture, node_id: &str, prop: &str, value: PropertyValue) -> Result<TrinityGraphOp, String> {
     let node = fixture
         .nodes
         .iter()
@@ -1479,7 +1479,7 @@ fn emit_set_op(fixture: &GraphFixtureV1, node_id: &str, prop: &str, value: Prope
     }
 }
 
-fn emit_create_ops(fixture: &GraphFixtureV1, pattern: &Pattern) -> Result<Vec<TrinityGraphOp>, String> {
+fn emit_create_ops(fixture: &GraphFixture, pattern: &Pattern) -> Result<Vec<TrinityGraphOp>, String> {
     let left = pattern.nodes.first().ok_or_else(|| "empty create pattern".to_string())?;
     let left_id = format!("{}-{}", left.var, fixture.nodes.len());
     let mut ops = Vec::new();
@@ -1535,15 +1535,15 @@ fn emit_create_ops(fixture: &GraphFixtureV1, pattern: &Pattern) -> Result<Vec<Tr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use trinity_ram::{CameraV1, GraphFixtureV1, Manifest};
+    use trinity_ram::{Camera, GraphFixture, Manifest};
 
     fn mini_graph() -> Graph {
-        let fixture = GraphFixtureV1 {
-            schema: GraphFixtureV1::SCHEMA.into(),
+        let fixture = GraphFixture {
+            schema: GraphFixture::SCHEMA.into(),
             name: "mini".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
-            camera: CameraV1::default(),
+            camera: Camera::default(),
             root_node_id: Some("root".into()),
             nodes: vec![
                 Node {

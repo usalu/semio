@@ -5,9 +5,8 @@ import path from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
 
 //#region 🔖AssembleSplitInitialKit
-/** @emoji 📎 Reads `{ hash, items }` or a legacy array collection from kit snapshot JSON. */
+/** @emoji 📎 Reads `{ hash, items }` collection blocks from kit snapshot JSON. */
 export function fixtureItemsOf(node: unknown): Record<string, unknown>[] {
-	if (Array.isArray(node)) return node as Record<string, unknown>[];
 	if (node && typeof node === "object" && Array.isArray((node as { items?: unknown[] }).items)) {
 		return (node as { items: Record<string, unknown>[] }).items;
 	}

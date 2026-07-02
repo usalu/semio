@@ -128,7 +128,7 @@ export interface RasterAdjustmentLayer extends RasterLayerBase {
 export type RasterLayerNode = RasterPixelLayer | RasterGroupLayer | RasterAdjustmentLayer;
 
 export interface RasterDocument {
-	readonly schema: "raster.document/v1";
+	readonly schema: "raster.document";
 	readonly id: string;
 	readonly title?: string;
 	readonly camera: RasterCamera;
@@ -259,7 +259,7 @@ export function cloneRasterLayerNode(node: RasterLayerNode, nameSuffix = " copy"
 export function defaultRasterDocument(id = "raster-default"): RasterDocument {
 	const background = createRasterId("bg");
 	return {
-		schema: "raster.document/v1",
+		schema: "raster.document",
 		id,
 		title: "Untitled",
 		camera: { x: 0, y: 0, zoom: 1 },
@@ -406,13 +406,13 @@ export function parseRasterDocument(raw: unknown): RasterDocument {
 	if (!isRecord(raw)) {
 		throw new Error("raster document must be an object");
 	}
-	if (raw.schema !== "raster.document/v1") {
+	if (raw.schema !== "raster.document") {
 		throw new Error(`unsupported raster schema: ${String(raw.schema)}`);
 	}
 	const layersRaw = Array.isArray(raw.layers) ? raw.layers : [];
 	const cameraRaw = isRecord(raw.camera) ? raw.camera : {};
 	return {
-		schema: "raster.document/v1",
+		schema: "raster.document",
 		id: typeof raw.id === "string" ? raw.id : "raster",
 		title: typeof raw.title === "string" ? raw.title : undefined,
 		camera: {
@@ -1181,7 +1181,7 @@ export function diffRasterEditOp(_projection: RasterDocument, operation: RasterE
 
 /** @emoji 📦 Creates a raster document VCS envelope with an empty or seeded projection. */
 export function createRasterDocumentVcsEnvelope(id: string, projection: RasterDocument = defaultRasterDocument(id)): RasterDocumentVcsEnvelope {
-	return createDocumentVcsEnvelope("raster.document/v1", id, projection);
+	return createDocumentVcsEnvelope("raster.document", id, projection);
 }
 
 /** @emoji 🔁 Materializes a raster document from its VCS envelope. */
@@ -1189,10 +1189,10 @@ export function materializeRasterDocument(envelope: RasterDocumentVcsEnvelope, a
 	return materializeDocumentProjection(envelope, appliedChangeIds, applyRasterEditOp);
 }
 
-/** @emoji 🧩 Semios app VCS handler factory for raster documents. */
+/** @emoji 🧩 S app VCS handler factory for raster documents. */
 export function createRasterAppVcsHandler() {
 	return {
-		format: "raster.document/v1",
+		format: "raster.document",
 		createEnvelope: (id: string) => createRasterDocumentVcsEnvelope(id),
 		applyOp: applyRasterEditOp,
 		serializeEnvelope: (envelope: RasterDocumentVcsEnvelope) => JSON.stringify(envelope),
@@ -1216,7 +1216,7 @@ if (import.meta.vitest) {
 	describe("parseRasterDocument", () => {
 		it("parses minimal document", () => {
 			const doc = parseRasterDocument({
-				schema: "raster.document/v1",
+				schema: "raster.document",
 				id: "test",
 				camera: { x: 0, y: 0, zoom: 1 },
 				layers: [{ kind: "pixel", id: "a", name: "A", visible: true, opacity: 1, blendMode: "multiply", transform: { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0 } }],
@@ -1230,7 +1230,7 @@ if (import.meta.vitest) {
 
 		it("round-trips assets and filters", () => {
 			const raw = {
-				schema: "raster.document/v1",
+				schema: "raster.document",
 				id: "semio",
 				camera: { x: 0, y: 0, zoom: 1 },
 				assets: { emblem: { mime: "image/png", data: "aGVsbG8=" } },
@@ -1265,7 +1265,7 @@ if (import.meta.vitest) {
 
 		it("reorders layers", () => {
 			const doc = parseRasterDocument({
-				schema: "raster.document/v1",
+				schema: "raster.document",
 				id: "t",
 				camera: { x: 0, y: 0, zoom: 1 },
 				layers: [
@@ -1289,7 +1289,7 @@ if (import.meta.vitest) {
 	describe("resolveRasterMarqueeLayerHits", () => {
 		it("selects layers inside a full marquee", () => {
 			const doc = parseRasterDocument({
-				schema: "raster.document/v1",
+				schema: "raster.document",
 				id: "test",
 				camera: { x: 0, y: 0, zoom: 1 },
 				layers: [
@@ -1330,7 +1330,7 @@ if (import.meta.vitest) {
 	describe("rasterNavigatorFitCamera", () => {
 		it("fits visible pixel layers into the navigator viewport", () => {
 			const doc = parseRasterDocument({
-				schema: "raster.document/v1",
+				schema: "raster.document",
 				id: "t",
 				camera: { x: 0, y: 0, zoom: 1 },
 				layers: [
@@ -1380,7 +1380,7 @@ if (import.meta.vitest) {
 	describe("rasterPlaySelectionIdsFromTreeRowIds", () => {
 		it("maps hierarchy and mask tree rows to layer ids", () => {
 			const doc = parseRasterDocument({
-				schema: "raster.document/v1",
+				schema: "raster.document",
 				id: "t",
 				camera: { x: 0, y: 0, zoom: 1 },
 				layers: [
@@ -1408,7 +1408,7 @@ if (import.meta.vitest) {
 	describe("rasterPlayLayersTreeHighlightedIdsForKind", () => {
 		it("highlights all layers sharing a blend mode", () => {
 			const doc = parseRasterDocument({
-				schema: "raster.document/v1",
+				schema: "raster.document",
 				id: "t",
 				camera: { x: 0, y: 0, zoom: 1 },
 				layers: [

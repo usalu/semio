@@ -1,0 +1,276 @@
+#!/usr/bin/env bun
+import fs from "node:fs";
+import path from "node:path";
+
+const root = path.resolve(import.meta.dir, "../../../../../../");
+const skipDirs = new Set(["node_modules", "target", "dist", "build", ".git", "pkg", "play", "dist"]);
+const exts = new Set([".ts", ".tsx", ".rs", ".json", ".graphql", ".py", ".go", ".cs", ".cypher", ".md"]);
+
+const schemaReplacements: [string, string][] = [
+  ['"dag.fixture/v1"', '"dag.fixture"'],
+  ['"flow.fixture/v1"', '"flow.fixture"'],
+  ['"flow.document/v1"', '"flow.document"'],
+  ['"flow.module/v1"', '"flow.module"'],
+  ['"flow.dag/v1"', '"flow.dag"'],
+  ['"sequence.fixture/v1"', '"sequence.fixture"'],
+  ['"puzzle.2d.fixture/v1"', '"puzzle.2d.fixture"'],
+  ['"puzzle.2d/v1"', '"puzzle.2d"'],
+  ['"puzzle.3d.fixture/v1"', '"puzzle.3d.fixture"'],
+  ['"puzzle.3d/v1"', '"puzzle.3d"'],
+  ['"puzzle.5d/v1"', '"puzzle.5d"'],
+  ['"trinity.graph/v1"', '"trinity.graph"'],
+  ['"writer.document/v1"', '"writer.document"'],
+  ['"imperative.document/v1"', '"imperative.document"'],
+  ['"imperative.catalogue/v1"', '"imperative.catalogue"'],
+  ['"raster.document/v1"', '"raster.document"'],
+  ['"draw.document/v1"', '"draw.document"'],
+  ['"forms.form/v1"', '"forms.form"'],
+  ['"forms.dictionary/v1"', '"forms.dictionary"'],
+  ['"presentation.deck/v1"', '"presentation.deck"'],
+  ['"semios.studio/v1"', '"semios.studio"'],
+  ['"semios.media-graph/v1"', '"semios.media-graph"'],
+  ['"manifest/v1"', '"manifest"'],
+  ['"lowpoly.fixture/v1"', '"lowpoly.fixture"'],
+  ['"shooting.fixture/v1"', '"shooting.fixture"'],
+  ['"shooting.scene/v1"', '"shooting.scene"'],
+  ['"gis.map/v1"', '"gis.map"'],
+  ['"gis.map.fixture/v1"', '"gis.map.fixture"'],
+  ['"cad.scene/v1"', '"cad.scene"'],
+  ['"spatial.model/v1"', '"spatial.model"'],
+  ['"spatial.modelspace/v1"', '"spatial.modelspace"'],
+  ['"reasoning.mindmap.fixture/v1"', '"reasoning.mindmap.fixture"'],
+  ['"reasoning.mindmap/v1"', '"reasoning.mindmap"'],
+  ['"reasoning.wires.fixture/v1"', '"reasoning.wires.fixture"'],
+  ['"procedural.2d/v1"', '"procedural.2d"'],
+  ['"procedural.3d/v1"', '"procedural.3d"'],
+  ['"procedural.fixture/v1"', '"procedural.fixture"'],
+  ['"procedural2d.fixture/v1"', '"procedural2d.fixture"'],
+  ['"compose.kit/v1"', '"compose.kit"'],
+  ['"compose.design/v1"', '"compose.design"'],
+  ['"compose.type/v1"', '"compose.type"'],
+  ['"vcs.demo/v1"', '"vcs.demo"'],
+  ['"test/v1"', '"test"'],
+  ['"sequence.play/v1"', '"sequence.play"'],
+  ['"sequence.play.script/v1"', '"sequence.play.script"'],
+  ['"flow.play/v1"', '"flow.play"'],
+  ['"flow.play.generate/v1"', '"flow.play.generate"'],
+  ['"dag.play/v1"', '"dag.play"'],
+  ['"puzzle.2d.play/v1"', '"puzzle.2d.play"'],
+  ['"puzzle.3d.play.viewport/v1"', '"puzzle.3d.play.viewport"'],
+  ['"procedural.play/v1"', '"procedural.play"'],
+  ['"procedural.play.preview/v1"', '"procedural.play.preview"'],
+  ['"procedural.play.generate/v1"', '"procedural.play.generate"'],
+  ['"procedural2d.play/v1"', '"procedural2d.play"'],
+  ['"procedural2d.play.preview/v1"', '"procedural2d.play.preview"'],
+  ['"procedural2d.play.generate/v1"', '"procedural2d.play.generate"'],
+  ['"writer.play/v1"', '"writer.play"'],
+  ['"imperative.play/v1"', '"imperative.play"'],
+  ['"raster.play.composite/v1"', '"raster.play.composite"'],
+  ['"raster.play.navigator/v1"', '"raster.play.navigator"'],
+  ['"draw.play.composite/v1"', '"draw.play.composite"'],
+  ['"draw.play.navigator/v1"', '"draw.play.navigator"'],
+  ['"shooting.play.model/v1"', '"shooting.play.model"'],
+  ['"shooting.play.icon/v1"', '"shooting.play.icon"'],
+  ['"gis.map.play/v1"', '"gis.map.play"'],
+  ['"lowpoly.play/v1"', '"lowpoly.play"'],
+  ['"semios.play.media-graph/v1"', '"semios.play.media-graph"'],
+  ['"semios.play.app-host/v1"', '"semios.play.app-host"'],
+  ['"semios.play.launcher/v1"', '"semios.play.launcher"'],
+  ['"semios.play.history/v1"', '"semios.play.history"'],
+  ['"vcs.play.editor/v1"', '"vcs.play.editor"'],
+  ['"vcs.play.history/v1"', '"vcs.play.history"'],
+  ['"forms.play.edit/v1"', '"forms.play.edit"'],
+  ['"forms.play.try/v1"', '"forms.play.try"'],
+  ['"presentation.tile.play/v1"', '"presentation.tile.play"'],
+  ['"trinity.jack.play/v1"', '"trinity.jack.play"'],
+  ['"trinity.jack.play.editor/v1"', '"trinity.jack.play.editor"'],
+  ['"trinity.jack.play.results/v1"', '"trinity.jack.play.results"'],
+  ['"trinity.rewrite.before/v1"', '"trinity.rewrite.before"'],
+  ['"trinity.rewrite.after/v1"', '"trinity.rewrite.after"'],
+  ['"trinity.rewrite.parameters/v1"', '"trinity.rewrite.parameters"'],
+  ['"compose.sketchpad.surface.type.representation/v1"', '"compose.sketchpad.surface.type.representation"'],
+  ['"compose.sketchpad.surface.docs.page/v1"', '"compose.sketchpad.surface.docs.page"'],
+  ['"compose.sketchpad.surface.feedback.form/v1"', '"compose.sketchpad.surface.feedback.form"'],
+  ['"test.playground.panel.workbench/v1"', '"test.playground.panel.workbench"'],
+  ['"test.playground.panel.details/v1"', '"test.playground.panel.details"'],
+  ['"forms.module/v1"', '"forms.module"'],
+  ['"spatial.interaction/v1"', '"spatial.interaction"'],
+  ['"spatial.modelDefinition/v1"', '"spatial.modelDefinition"'],
+  ['"spatial.extension/v1"', '"spatial.extension"'],
+  ['"spatial.typology/v1"', '"spatial.typology"'],
+  ['"spatial.attribute/v1"', '"spatial.attribute"'],
+  ['"spatial.property/v1"', '"spatial.property"'],
+  ['"spatial.stat/v1"', '"spatial.stat"'],
+  ['"spatial.transformation/v1"', '"spatial.transformation"'],
+  ['"spatial.action/v1"', '"spatial.action"'],
+  ['"compose.sketchpad.surface.kit.wires/v1"', '"compose.sketchpad.surface.kit.wires"'],
+  ['"compose.sketchpad.surface.design.scene/v1"', '"compose.sketchpad.surface.design.scene"'],
+  ['"compose.sketchpad.surface.design.diagram/v1"', '"compose.sketchpad.surface.design.diagram"'],
+  ['"compose.sketchpad.surface.type.scene/v1"', '"compose.sketchpad.surface.type.scene"'],
+  ["ShootingSunV1", "ShootingSun"],
+  ['application/x-semio-sequence-step-v1', 'application/x-semio-sequence-step'],
+  ['application/x-flow-widget-v1', 'application/x-flow-widget'],
+  ['application/x-puzzle-2d-fixture-v1', 'application/x-puzzle-2d-fixture'],
+  ['application/x-puzzle-3d-fixture-v1', 'application/x-puzzle-3d-fixture'],
+];
+
+const identifierReplacements: [string, string][] = [
+  ["FlowModuleVariadicSpecV1", "FlowModuleVariadicSpec"],
+  ["FlowModuleSchemaFieldV1", "FlowModuleSchemaField"],
+  ["FlowModuleOperatorInfoV1", "FlowModuleOperatorInfo"],
+  ["FlowModuleNeuronKindV1", "FlowModuleNeuronKind"],
+  ["FlowModuleContributesV1", "FlowModuleContributes"],
+  ["FlowModuleManifestV1", "FlowModuleManifest"],
+  ["FlowModuleSettingV1", "FlowModuleSetting"],
+  ["FlowModuleWidgetV1", "FlowModuleWidget"],
+  ["FlowModuleCommandV1", "FlowModuleCommand"],
+  ["FlowModuleSchemaV1", "FlowModuleSchema"],
+  ["FlowChannelSpecV1", "FlowChannelSpec"],
+  ["FlowPreviewGuiV1", "FlowPreviewGui"],
+  ["FlowNodeChromeV1", "FlowNodeChrome"],
+  ["FlowChannelRefV1", "FlowChannelRef"],
+  ["FlowSchemaRefV1", "FlowSchemaRef"],
+  ["FlowNodeGuiV1", "FlowNodeGui"],
+  ["FlowDocumentV1", "FlowDocument"],
+  ["FlowFixtureV1", "FlowFixture"],
+  ["FlowWidgetV1", "FlowWidget"],
+  ["FlowValueTypeV1", "FlowValueType"],
+  ["FlowModuleV1", "FlowModule"],
+  ["FlowTreeV1", "FlowTree"],
+  ["FlowGuiV1", "FlowGui"],
+  ["FlowUiV1", "FlowUi"],
+  ["Puzzle2dFixtureRectangleNodeV1", "Puzzle2dFixtureRectangleNode"],
+  ["Puzzle2dFixtureCircleNodeV1", "Puzzle2dFixtureCircleNode"],
+  ["Puzzle2dFixtureNodeParseV1", "Puzzle2dFixtureNodeParse"],
+  ["Puzzle2dFixtureHandleV1", "Puzzle2dFixtureHandle"],
+  ["Puzzle2dFixtureEdgeV1", "Puzzle2dFixtureEdge"],
+  ["Puzzle2dFixtureNodeV1", "Puzzle2dFixtureNode"],
+  ["Puzzle2dFixtureV1", "Puzzle2dFixture"],
+  ["MindmapFixtureNodeV1", "MindmapFixtureNode"],
+  ["MindmapFixtureEdgeV1", "MindmapFixtureEdge"],
+  ["MindmapFixtureV1", "MindmapFixture"],
+  ["WiresIdentityKindCatalogRowV1", "WiresIdentityKindCatalogRow"],
+  ["WiresRelationshipKindCatalogRowV1", "WiresRelationshipKindCatalogRow"],
+  ["WiresFixtureKindCatalogsV1", "WiresFixtureKindCatalogs"],
+  ["WiresFixtureRelationshipV1", "WiresFixtureRelationship"],
+  ["WiresFixtureIdentityV1", "WiresFixtureIdentity"],
+  ["WiresFixtureSourceV1", "WiresFixtureSource"],
+  ["WiresFixtureBoardV1", "WiresFixtureBoard"],
+  ["WiresFixtureV1", "WiresFixture"],
+  ["SketchpadPuzzle2dFixtureV1", "SketchpadPuzzle2dFixture"],
+  ["SketchpadVolumeFixtureV1", "SketchpadVolumeFixture"],
+  ["GraphManifestDocumentV1", "GraphManifestDocument"],
+  ["DagComputationNodeV1", "DagComputationNode"],
+  ["DagFixtureEdgeV1", "DagFixtureEdge"],
+  ["DagSliderNodeV1", "DagSliderNode"],
+  ["DagSelectNodeV1", "DagSelectNode"],
+  ["DagScreenNodeV1", "DagScreenNode"],
+  ["DagFixtureV1", "DagFixture"],
+  ["DagCameraV1", "DagCamera"],
+  ["DagNodeBaseV1", "DagNodeBase"],
+  ["DagNodeV1", "DagNode"],
+  ["DagPortV1", "DagPort"],
+  ["DagMediaV1", "DagMedia"],
+  ["SequenceSlotRefV1", "SequenceSlotRef"],
+  ["SequenceFixtureV1", "SequenceFixture"],
+  ["SequenceEdgeV1", "SequenceEdge"],
+  ["SequenceStepV1", "SequenceStep"],
+  ["StepWidgetV1", "SequenceStep"],
+  ["TrinityJackCompletionV1", "TrinityJackCompletion"],
+  ["TrinityJackTokenV1", "TrinityJackToken"],
+  ["TrinityFixtureV1", "TrinityFixture"],
+  ["TrinityJackRunV1", "TrinityJackRun"],
+  ["RuleParameterKindV1", "RuleParameterKind"],
+  ["RuleParameterV1", "RuleParameter"],
+  ["TrinityPortV1", "TrinityPort"],
+  ["TrinityNodeV1", "TrinityNode"],
+  ["GraphFixtureV1", "GraphFixture"],
+  ["PresentationDeckV1", "PresentationDeck"],
+  ["ImperativeCatalogueV1", "ImperativeCatalogue"],
+  ["ImperativeDocumentV1", "ImperativeDocument"],
+  ["ImperativePathRefV1", "ImperativePathRef"],
+  ["ImperativeStepV1", "ImperativeStep"],
+  ["ImperativePathV1", "ImperativePath"],
+  ["LowpolySelectionModeV1", "LowpolySelectionMode"],
+  ["LowpolyTransformV1", "LowpolyTransform"],
+  ["LowpolySelectionV1", "LowpolySelection"],
+  ["LowpolyFixtureV1", "LowpolyFixture"],
+  ["LowpolyObjectV1", "LowpolyObject"],
+  ["SemiosStudioDocumentV1", "SemiosStudioDocument"],
+  ["SemiosMediaGraphV1", "SemiosMediaGraph"],
+  ["WriterDocumentV1", "WriterDocument"],
+  ["ShootingSavedCameraV1", "ShootingSavedCamera"],
+  ["ShootingAmbientV1", "ShootingAmbient"],
+  ["ShootingMaterialV1", "ShootingMaterial"],
+  ["ShootingFixtureV1", "ShootingFixture"],
+  ["ShootingShadowV1", "ShootingShadow"],
+  ["ShootingCameraV1", "ShootingCamera"],
+  ["ShootingSceneV1", "ShootingScene"],
+  ["ShootingAssetV1", "ShootingAsset"],
+  ["ShootingShotV1", "ShootingShot"],
+  ["GisMapFixturePositionV1", "GisMapFixturePosition"],
+  ["GisMapFixtureRouteV1", "GisMapFixtureRoute"],
+  ["GisMapFixtureV1", "GisMapFixture"],
+  ["FixtureObjectV1", "FixtureObject"],
+  ["FixtureV1", "Fixture"],
+  ["FormsExtensionManifestV1", "FormsExtensionManifest"],
+  ["CameraV1", "Camera"],
+  ["encodeFlowWidgetDescriptorForDragV1", "encodeFlowWidgetDescriptorForDrag"],
+  ["decodeFlowWidgetDescriptorFromDragV1", "decodeFlowWidgetDescriptorFromDrag"],
+  ["encodePuzzle2dFixtureForDragV1", "encodePuzzle2dFixtureForDrag"],
+  ["decodePuzzle2dFixtureFromDragV1", "decodePuzzle2dFixtureFromDrag"],
+  ["clonePuzzle2dFixtureV1", "clonePuzzle2dFixture"],
+  ["parsePuzzle2dFixtureV1", "parsePuzzle2dFixture"],
+  ["puzzle2dNormalizeFixtureNodeV1", "puzzle2dNormalizeFixtureNode"],
+  ["encodeFixtureForDragV1", "encodeFixtureForDrag"],
+  ["decodePuzzle3dFixtureFromDragV1", "decodePuzzle3dFixtureFromDrag"],
+  ["parseFixtureV1", "parseFixture"],
+  ["parseGisMapFixtureV1", "parseGisMapFixture"],
+  ["parseWiresFixtureV1", "parseWiresFixture"],
+  ["mindmapBoardToPuzzle2dFixtureV1", "mindmapBoardToPuzzle2dFixture"],
+  ["FLOW_WIDGET_DRAG_V1_MIME", "FLOW_WIDGET_DRAG_MIME"],
+  ["PUZZLE_2D_FIXTURE_DRAG_V1_MIME", "PUZZLE_2D_FIXTURE_DRAG_MIME"],
+  ["FIXTURE_DRAG_V1_MIME", "FIXTURE_DRAG_MIME"],
+  ["SEQUENCE_STEP_DRAG_V1_MIME", "SEQUENCE_STEP_DRAG_MIME"],
+];
+
+function walk(dir: string, files: string[] = []): string[] {
+  for (const name of fs.readdirSync(dir)) {
+    if (skipDirs.has(name)) continue;
+    const full = path.join(dir, name);
+    let st: fs.Stats;
+    try {
+      st = fs.statSync(full);
+    } catch {
+      continue;
+    }
+    if (st.isDirectory()) {
+      if (full.includes(`${path.sep}.repo${path.sep}`)) continue;
+      walk(full, files);
+    } else if (exts.has(path.extname(name))) {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
+function applyReplacements(content: string, pairs: [string, string][]): string {
+  let out = content;
+  for (const [from, to] of pairs) {
+    out = out.split(from).join(to);
+  }
+  return out;
+}
+
+const files = walk(root);
+let changed = 0;
+for (const file of files) {
+  const before = fs.readFileSync(file, "utf8");
+  let next = applyReplacements(before, identifierReplacements);
+  next = applyReplacements(next, schemaReplacements);
+  if (next !== before) {
+    fs.writeFileSync(file, next);
+    changed += 1;
+  }
+}
+console.log(`[DEBUG] bulk rename touched ${changed} files`);

@@ -1,5 +1,5 @@
 {
-	"schema": "spatial.modelDefinition/v1",
+	"schema": "spatial.modelDefinition",
 	"id": "spatial.shape",
 	"version": "1.0.0",
 	"label": "ModelDefinition",

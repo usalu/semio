@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/s-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "s/core",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
+}

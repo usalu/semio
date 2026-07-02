@@ -13,7 +13,7 @@ pub use reasoning_mindmap as mindmap;
 
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
 fn is_undirected_fixture_schema(schema: &str) -> bool {
-    matches!(schema, "reasoning.mindmap.fixture/v1" | "reasoning.wires.fixture/v1")
+    matches!(schema, "reasoning.mindmap.fixture" | "reasoning.wires.fixture")
 }
 
 #[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
@@ -2093,7 +2093,7 @@ mod host_tests {
     fn board_host_parses_mindmap_fixture_without_handles() {
         let mut h = BoardHost::new_normal();
         let fixture = json!({
-            "schema": "reasoning.mindmap.fixture/v1",
+            "schema": "reasoning.mindmap.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "a", "x": 0.0, "y": 0.0, "width": 48.0, "height": 48.0, "shape": "rectangle", "root": true },
@@ -2214,7 +2214,7 @@ mod host_tests {
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -2257,7 +2257,7 @@ mod host_tests {
         h.set_camera(0.0, 0.0, 1.0);
         h.set_handle_link_compat_from_json(r#"[{"source":"parent","target":"child"}]"#).unwrap();
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -2311,7 +2311,7 @@ mod host_tests {
         h.set_size(800, 600, 1.0);
         set_detail_lod(&mut h);
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -3513,7 +3513,7 @@ mod force_graph_tests {
     #[test]
     fn force_graph_spreads_two_linked_circles_along_x() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -3552,7 +3552,7 @@ mod force_graph_tests {
     #[test]
     fn force_graph_pins_locked_node_positions() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -3594,7 +3594,7 @@ mod force_graph_tests {
     #[test]
     fn redraw_force_graph_top_level_locked_node_ids_pins() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -3637,7 +3637,7 @@ mod force_graph_tests {
     #[test]
     fn redraw_force_graph_mindmap_schema_uses_undirected_layout() {
         let fixture = json!({
-            "schema": "reasoning.mindmap.fixture/v1",
+            "schema": "reasoning.mindmap.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "a", "x": 0.0, "y": 0.0, "radius": 40.0 },
@@ -3667,7 +3667,7 @@ mod force_graph_tests {
     #[test]
     fn force_graph_normal_mode_node_id_edges_apply_spring_forces() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "a", "x": 0.0, "y": 0.0, "radius": 40.0, "handles": [] },
@@ -3720,7 +3720,7 @@ mod force_graph_tests {
             }
         }
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": nodes,
             "edges": edges
@@ -3772,7 +3772,7 @@ mod force_graph_tests {
             }
         }
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": nodes,
             "edges": edges
@@ -3797,7 +3797,7 @@ mod force_graph_tests {
     #[test]
     fn force_graph_pairwise_layout_is_deterministic_for_fixed_seed() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "a", "x": 0.0, "y": 0.0, "radius": 30.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }] },
@@ -3828,7 +3828,7 @@ mod force_graph_tests {
     #[test]
     fn force_graph_clamped_barnes_hut_theta_runs_without_error() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "a", "x": 0.0, "y": 0.0, "radius": 20.0, "handles": [{ "id": "a:h0", "angle": 0.0, "handleKind": "port" }] },
@@ -3861,7 +3861,7 @@ mod force_graph_tests {
     #[test]
     fn redraw_force_graph_wraps_flat_options() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -3903,7 +3903,7 @@ mod force_graph_tests {
     #[test]
     fn edge_handle_snap_sets_circle_handle_angles_on_center_line() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -3935,7 +3935,7 @@ mod force_graph_tests {
     #[test]
     fn redraw_force_graph_with_snap_sets_handle_angles() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -3992,7 +3992,7 @@ mod force_graph_tests {
     #[test]
     fn force_graph_accepts_logical_nodes_without_xy() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -4026,7 +4026,7 @@ mod force_graph_tests {
     #[test]
     fn hierarchical_tree_normal_mode_node_id_edges_stacks_by_depth() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "r", "root": true, "radius": 18.0, "handles": [] },
@@ -4062,7 +4062,7 @@ mod force_graph_tests {
     #[test]
     fn hierarchical_tree_stacks_by_depth() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -4111,7 +4111,7 @@ mod force_graph_tests {
     #[test]
     fn hierarchical_tree_pins_locked_root_coordinates() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -4167,7 +4167,7 @@ mod force_graph_tests {
     #[test]
     fn redraw_hierarchical_tree_nested_locked_node_ids_pins() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -4213,7 +4213,7 @@ mod force_graph_tests {
     #[test]
     fn hierarchical_tree_right_places_children_larger_x_than_root() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -4251,7 +4251,7 @@ mod force_graph_tests {
     #[test]
     fn hierarchical_tree_upwards_places_children_smaller_y_than_root() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -4289,7 +4289,7 @@ mod force_graph_tests {
     #[test]
     fn hierarchical_tree_rejects_unknown_direction() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 {
@@ -4312,7 +4312,7 @@ mod force_graph_tests {
     #[test]
     fn redraw_rejects_unknown_mode() {
         let fixture = json!({
-            "schema": "puzzle.2d.fixture/v1",
+            "schema": "puzzle.2d.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [],
             "edges": []
@@ -4472,7 +4472,7 @@ mod force_graph_tests {
         }
 
         let mut store: DocumentVcsStore<Puzzle2dProjection, Puzzle2dOp> = DocumentVcsStore::new(
-            create_document_vcs_envelope("puzzle.2d/v1", "puzzle2d", Puzzle2dProjection { nodes: Vec::new() }, None),
+            create_document_vcs_envelope("puzzle.2d", "puzzle2d", Puzzle2dProjection { nodes: Vec::new() }, None),
         );
         store
             .dispatch(DocumentVcsCommand::Apply {

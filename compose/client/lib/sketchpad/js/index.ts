@@ -82,7 +82,7 @@ import {
 } from "@semio-tech/framework-core";
 import {
 	type RelationshipKind,
-	type WiresFixtureV1,
+	type WiresFixture,
 	wiresFixtureBoard,
 	wiresKitInstanceId,
 } from "@semio-tech/reasoning-mindmap-wires-react";
@@ -11829,15 +11829,15 @@ const SKETCHPAD_FLAT_HANDLE_SEPARATOR = "::";
 /** @emoji 🔗 Re-exports {@link PLATFORM_TOPOLOGY_STORE_PREFIX} for sketchpad topology stores. */
 export const SKETCHPAD_TOPOLOGY_STORE_PREFIX = PLATFORM_TOPOLOGY_STORE_PREFIX;
 
-type SketchpadPuzzle2dFixtureV1 = {
-	readonly schema: "puzzle.2d.fixture/v1";
+type SketchpadPuzzle2dFixture = {
+	readonly schema: "puzzle.2d.fixture";
 	readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
 	readonly nodes: readonly Record<string, unknown>[];
 	readonly edges: readonly Record<string, unknown>[];
 };
 
-type SketchpadVolumeFixtureV1 = {
-	readonly schema: "puzzle.3d.fixture/v1";
+type SketchpadVolumeFixture = {
+	readonly schema: "puzzle.3d.fixture";
 	readonly domain: string;
 	readonly camera: {
 		readonly position: readonly [number, number, number];
@@ -11855,7 +11855,7 @@ function sketchpadFlatPartCenterFromTopLeft(
 	return { x: position.x + frame.width / 2, y: position.y + frame.height / 2 };
 }
 
-function sketchpadFlatCameraFromPartCenters(centers: readonly { x: number; y: number }[]): SketchpadPuzzle2dFixtureV1["camera"] {
+function sketchpadFlatCameraFromPartCenters(centers: readonly { x: number; y: number }[]): SketchpadPuzzle2dFixture["camera"] {
 	if (centers.length === 0) return { x: 0, y: 0, zoom: 1 };
 	let minX = Infinity;
 	let maxX = -Infinity;
@@ -11941,7 +11941,7 @@ export function sketchpadDesignDiagramInstanceId(kitId: string, designId: string
 }
 
 /** @emoji 🧩 Surface id prefix for per-representation type CAD windows. */
-export const SKETCHPAD_SURFACE_TYPE_REP_PREFIX = "compose.sketchpad.surface.type.representation/v1";
+export const SKETCHPAD_SURFACE_TYPE_REP_PREFIX = "compose.sketchpad.surface.type.representation";
 
 /** @emoji 🧩 Stable FiveD instance id for a type CAD scene (volume). */
 export function sketchpadTypeSceneInstanceId(kitId: string, typeId: string): string {
@@ -12001,9 +12001,9 @@ export function sketchpadTopologyStoreId(instanceId: string): string {
 	return platformTopologyStoreId(instanceId);
 }
 
-function sketchpadEmptyVolumeFixture(): SketchpadVolumeFixtureV1 {
+function sketchpadEmptyVolumeFixture(): SketchpadVolumeFixture {
 	return {
-		schema: "puzzle.3d.fixture/v1",
+		schema: "puzzle.3d.fixture",
 		domain: "architecture",
 		camera: { position: [12, 12, 12], target: [0, 0, 0], zoom: 1 },
 		objects: [],
@@ -12019,7 +12019,7 @@ export type SketchpadKitWiresReferenceData = {
 	readonly pieceBlueprints: ReadonlyMap<string, { readonly kind: "Type" | "Design"; readonly id: string }>;
 };
 
-const SKETCHPAD_KIT_WIRES_FILE_NODE_KIND_CATALOGS: NonNullable<WiresFixtureV1["kindCatalogs"]>["identityKinds"] = [
+const SKETCHPAD_KIT_WIRES_FILE_NODE_KIND_CATALOGS: NonNullable<WiresFixture["kindCatalogs"]>["identityKinds"] = [
 	{ id: "compose.kit.kit", name: "Kit", shape: "rectangle", color: "var(--color-dark-8-9)" },
 	{ id: "compose.kit.typology", name: "Typology", shape: "rectangle", color: "var(--color-dark-6-7)" },
 	{ id: "compose.kit.folder", name: "Folder", shape: "rectangle", color: "var(--color-dark-5-7)" },
@@ -12034,7 +12034,7 @@ const SKETCHPAD_KIT_WIRES_FILE_NODE_KIND_CATALOGS: NonNullable<WiresFixtureV1["k
 	{ id: "compose.kit.family", name: "Family", shape: "rectangle", color: "var(--color-gray-400)" },
 ];
 
-const SKETCHPAD_KIT_WIRES_RELATIONSHIP_KIND_CATALOGS: NonNullable<WiresFixtureV1["kindCatalogs"]>["relationshipKinds"] = [
+const SKETCHPAD_KIT_WIRES_RELATIONSHIP_KIND_CATALOGS: NonNullable<WiresFixture["kindCatalogs"]>["relationshipKinds"] = [
 	{ id: "wires.owns", name: "Owns", color: "var(--color-muted-foreground)", pattern: "solid" },
 	{ id: "wires.is", name: "Is", color: "var(--color-secondary)", pattern: "solid" },
 	{ id: "wires.references", name: "References", color: "var(--color-tertiary)", pattern: "dashed" },
@@ -12119,7 +12119,7 @@ function sketchpadKitWiresNodeIconKind(kit: Kit, node: VirtualFileSystemVisibleN
 function sketchpadKitWiresIdentityKindCatalogRow(
 	kit: Kit,
 	node: VirtualFileSystemVisibleNode,
-): NonNullable<WiresFixtureV1["kindCatalogs"]>["identityKinds"][number] {
+): NonNullable<WiresFixture["kindCatalogs"]>["identityKinds"][number] {
 	const identityKindId = sketchpadKitWiresIdentityKindId(node.id);
 	const template = sketchpadKitWiresFileNodeKindCatalog(node.fileNodeKindId);
 	const rawIcon = node.icon ?? sketchpadKitEntityAvailableIcon(kit, node.id, node.fileNodeKindId);
@@ -12305,18 +12305,18 @@ export async function sketchpadFetchKitWiresReferences(
 	return { designTransitiveTypes, designTransitiveDesigns, pieceBlueprints };
 }
 
-/** @emoji 🔗 Builds a {@link WiresFixtureV1} from visible kit VFS nodes and rust reference data. */
+/** @emoji 🔗 Builds a {@link WiresFixture} from visible kit VFS nodes and rust reference data. */
 export function sketchpadKitWiresFixtureFromVisible(
 	kit: Kit,
 	kitId: string,
 	visible: readonly VirtualFileSystemVisibleNode[],
 	references: SketchpadKitWiresReferenceData,
 	expandedDesignIds: ReadonlySet<string>,
-): WiresFixtureV1 {
+): WiresFixture {
 	const visibleIds = new Set(visible.map((node) => node.id));
 	const identityByNodeId = new Map<string, number>();
-	const identities: WiresFixtureV1["identities"][number][] = [];
-	const relationships: WiresFixtureV1["relationships"][number][] = [];
+	const identities: WiresFixture["identities"][number][] = [];
+	const relationships: WiresFixture["relationships"][number][] = [];
 	const boardNodes: { id: string; x: number; y: number; text?: string; iconKind?: string; nodeKind?: string; shape?: "circle" | "rectangle"; width?: number; height?: number; radius?: number }[] =
 		[];
 	const boardEdges: { id: string; source: string; target: string }[] = [];
@@ -12343,7 +12343,7 @@ export function sketchpadKitWiresFixtureFromVisible(
 		boardEdges.push({ id: edgeId, source: sourceId, target: targetId });
 	};
 
-	const identityKindCatalogRows = new Map<string, NonNullable<WiresFixtureV1["kindCatalogs"]>["identityKinds"][number]>();
+	const identityKindCatalogRows = new Map<string, NonNullable<WiresFixture["kindCatalogs"]>["identityKinds"][number]>();
 	for (const node of visible) {
 		const kindCount = kindIndex.get(node.fileNodeKindId) ?? 0;
 		kindIndex.set(node.fileNodeKindId, kindCount + 1);
@@ -12395,12 +12395,12 @@ export function sketchpadKitWiresFixtureFromVisible(
 
 	const camera = sketchpadFlatCameraFromPartCenters(boardNodes.map((node) => ({ x: node.x, y: node.y })));
 	return {
-		schema: "reasoning.wires.fixture/v1",
+		schema: "reasoning.wires.fixture",
 		source: { kitPath: `/kits/${kitId}`, kitId, kitName: String(kit.name ?? kitId) },
 		identities,
 		relationships,
 		board: {
-			schema: "reasoning.mindmap.fixture/v1",
+			schema: "reasoning.mindmap.fixture",
 			camera,
 			nodes: boardNodes,
 			edges: boardEdges,
@@ -12412,8 +12412,8 @@ export function sketchpadKitWiresFixtureFromVisible(
 	};
 }
 
-function sketchpadTopologyPayloadForKitWires(fixture: WiresFixtureV1): PlatformTopologyPayload {
-	return sketchpadTopologyPayload(wiresFixtureBoard(fixture) as unknown as SketchpadPuzzle2dFixtureV1, sketchpadEmptyVolumeFixture());
+function sketchpadTopologyPayloadForKitWires(fixture: WiresFixture): PlatformTopologyPayload {
+	return sketchpadTopologyPayload(wiresFixtureBoard(fixture) as unknown as SketchpadPuzzle2dFixture, sketchpadEmptyVolumeFixture());
 }
 //#endregion 🔖KitWires
 
@@ -12649,7 +12649,7 @@ export function sketchpadCreatePortGroupMap(
 /** @emoji ↔️ Adds dashed type adjacency edges for types that share compatible port groups. */
 export function sketchpadKitDiagramPushTypeCompatEdges(
 	kit: Kit,
-	edges: SketchpadPuzzle2dFixtureV1["edges"],
+	edges: SketchpadPuzzle2dFixture["edges"],
 	edgeIds: Set<string>,
 ): void {
 	const ports = sketchpadCollectKitPortRecords(kit);
@@ -12737,7 +12737,7 @@ function sketchpadKitVfsFileRowFields(file: Record<string, unknown>): { readonly
 }
 
 function sketchpadKitDiagramPushEdge(
-	edges: SketchpadPuzzle2dFixtureV1["edges"],
+	edges: SketchpadPuzzle2dFixture["edges"],
 	edgeIds: Set<string>,
 	id: string,
 	source: string,
@@ -12753,7 +12753,7 @@ function sketchpadKitDiagramNode(
 	entityId: string,
 	label: string,
 	root: boolean,
-): { node: SketchpadPuzzle2dFixtureV1["nodes"][number]; center: { x: number; y: number } } {
+): { node: SketchpadPuzzle2dFixture["nodes"][number]; center: { x: number; y: number } } {
 	const nodeId = `${kind}:${entityId}`;
 	const frame = sketchpadKitDiagramNodeFrame(kind);
 	const center = sketchpadFlatPartCenterFromTopLeft({ x: 0, y: 0 }, frame);
@@ -12778,14 +12778,14 @@ function sketchpadKitDiagramNode(
 	};
 }
 
-function sketchpadTopologyPayload(flat: SketchpadPuzzle2dFixtureV1, volume: SketchpadVolumeFixtureV1): PlatformTopologyPayload {
+function sketchpadTopologyPayload(flat: SketchpadPuzzle2dFixture, volume: SketchpadVolumeFixture): PlatformTopologyPayload {
 	return { flat: flat as unknown as Record<string, unknown>, volume: volume as unknown as Record<string, unknown> };
 }
 
 /** @emoji 🗺️ Builds a flat kit topology diagram from kit entities (types, designs, ports, files, …). */
-export function sketchpadKitPuzzle2dFixtureFromKit(kit: Kit): SketchpadPuzzle2dFixtureV1 {
-	const nodes: SketchpadPuzzle2dFixtureV1["nodes"] = [];
-	const edges: SketchpadPuzzle2dFixtureV1["edges"] = [];
+export function sketchpadKitPuzzle2dFixtureFromKit(kit: Kit): SketchpadPuzzle2dFixture {
+	const nodes: SketchpadPuzzle2dFixture["nodes"] = [];
+	const edges: SketchpadPuzzle2dFixture["edges"] = [];
 	const edgeIds = new Set<string>();
 	const centers: { x: number; y: number }[] = [];
 	const kindGroups: readonly SketchpadKitDiagramNodeKind[] = ["type", "design", "quality", "port", "file", "folder", "author"];
@@ -12893,7 +12893,7 @@ export function sketchpadKitPuzzle2dFixtureFromKit(kit: Kit): SketchpadPuzzle2dF
 	}
 	sketchpadKitDiagramPushTypeCompatEdges(kit, edges, edgeIds);
 	return {
-		schema: "puzzle.2d.fixture/v1",
+		schema: "puzzle.2d.fixture",
 		camera: sketchpadFlatCameraFromPartCenters(centers.length > 0 ? centers : [{ x: 0, y: 0 }]),
 		nodes,
 		edges,
@@ -13101,7 +13101,7 @@ export function parseSketchpadCadInstanceId(instanceId: string): { readonly kitI
 }
 
 /** @emoji 🗺️ Builds a flat design diagram from design pieces and connections. */
-export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: Kit): SketchpadPuzzle2dFixtureV1 {
+export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: Kit): SketchpadPuzzle2dFixture {
 	const pieces = design.pieces ?? [];
 	const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
 	const edges = connections
@@ -13118,7 +13118,7 @@ export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: K
 		})
 		.filter((edge): edge is NonNullable<typeof edge> => edge !== null);
 	return {
-		schema: "puzzle.2d.fixture/v1",
+		schema: "puzzle.2d.fixture",
 		camera: sketchpadFlatCameraFromPartCenters([{ x: 0, y: 0 }]),
 		nodes: pieces.map((piece) => {
 			const connectors = sketchpadPieceConnectorGeometry(piece, kit);
@@ -13144,7 +13144,7 @@ export function sketchpadDesignPuzzle2dFixtureFromDesign(design: Design, kit?: K
 }
 
 /** @emoji 🌐 Builds a 3D design scene volume from design pieces (placeholder meshes until file URLs are wired). */
-export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit): SketchpadVolumeFixtureV1 {
+export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit): SketchpadVolumeFixture {
 	const pieces = design.pieces ?? [];
 	const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as readonly SketchpadKitConnection[];
 	const fileUrls = kit ? sketchpadKitFileUrlById(kit) : new Map<string, string>();
@@ -13189,7 +13189,7 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
 		.filter((attraction): attraction is NonNullable<typeof attraction> => attraction !== null);
 	const camera = sketchpadSceneCameraFromDesign(design);
 	return {
-		schema: "puzzle.3d.fixture/v1",
+		schema: "puzzle.3d.fixture",
 		domain: "architecture",
 		camera,
 		objects,
@@ -13197,7 +13197,7 @@ export function sketchpadDesignVolumeFixtureFromDesign(design: Design, kit?: Kit
 	};
 }
 
-function sketchpadSceneCameraFromDesign(design: Design): SketchpadVolumeFixtureV1["camera"] {
+function sketchpadSceneCameraFromDesign(design: Design): SketchpadVolumeFixture["camera"] {
 	return { position: [8, 8, 8], target: [0, 0, 0], zoom: 1 };
 }
 
@@ -13218,10 +13218,10 @@ export function sketchpadTypeVolumeFixtureForRepresentation(
 	type: Type,
 	representation: SketchpadTypeRepresentationRef,
 	kit: Kit,
-): SketchpadVolumeFixtureV1 {
+): SketchpadVolumeFixture {
 	const fileUrls = sketchpadKitFileUrlById(kit);
 	return {
-		schema: "puzzle.3d.fixture/v1",
+		schema: "puzzle.3d.fixture",
 		domain: "architecture",
 		camera: { position: [4, 4, 4], target: [0, 0, 0], zoom: 1 },
 		objects: [
@@ -13241,11 +13241,11 @@ export function sketchpadTypeVolumeFixtureForRepresentation(
 }
 
 /** @emoji 🌐 Builds a single-mesh 3D volume for a kit kind (primary representation). */
-export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): SketchpadVolumeFixtureV1 {
+export function sketchpadTypeVolumeFixtureFromType(type: Type, kit: Kit): SketchpadVolumeFixture {
 	const reps = sketchpadListTypeRepresentations(type);
 	if (reps.length === 0) {
 		return {
-			schema: "puzzle.3d.fixture/v1",
+			schema: "puzzle.3d.fixture",
 			domain: "architecture",
 			camera: { position: [4, 4, 4], target: [0, 0, 0], zoom: 1 },
 			objects: [],
@@ -13267,8 +13267,8 @@ function sketchpadTopologyPayloadForTypeScene(type: Type, kit: Kit): PlatformTop
 	return sketchpadTopologyPayloadForTypeRepresentation(type, reps[0]!, kit);
 }
 
-function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixtureV1 {
-	return { schema: "puzzle.2d.fixture/v1", camera: { x: 0, y: 0, zoom: 1 }, nodes: [], edges: [] };
+function sketchpadEmptyPuzzle2dFixture(): SketchpadPuzzle2dFixture {
+	return { schema: "puzzle.2d.fixture", camera: { x: 0, y: 0, zoom: 1 }, nodes: [], edges: [] };
 }
 //#endregion 🔖Topology
 
@@ -13888,12 +13888,12 @@ const SKETCHPAD_BODY_DOCS = "compose.sketchpad.window.docs";
 const SKETCHPAD_BODY_FEEDBACK = "compose.sketchpad.window.feedback";
 const SKETCHPAD_SURFACE_KIT_VFS = virtualFileSystemSurfaceId(SKETCHPAD_KIT_APP_ID);
 const SKETCHPAD_SURFACE_DESIGN_VFS = virtualFileSystemSurfaceId(SKETCHPAD_DESIGN_APP_ID);
-const SKETCHPAD_SURFACE_KIT_WIRES = "compose.sketchpad.surface.kit.wires/v1";
-const SKETCHPAD_SURFACE_DESIGN_SCENE = "compose.sketchpad.surface.design.scene/v1";
-const SKETCHPAD_SURFACE_DESIGN_DIAGRAM = "compose.sketchpad.surface.design.diagram/v1";
-const SKETCHPAD_SURFACE_TYPE_SCENE = "compose.sketchpad.surface.type.scene/v1";
-export const SKETCHPAD_SURFACE_DOCS_PAGE = "compose.sketchpad.surface.docs.page/v1";
-export const SKETCHPAD_SURFACE_FEEDBACK_FORM = "compose.sketchpad.surface.feedback.form/v1";
+const SKETCHPAD_SURFACE_KIT_WIRES = "compose.sketchpad.surface.kit.wires";
+const SKETCHPAD_SURFACE_DESIGN_SCENE = "compose.sketchpad.surface.design.scene";
+const SKETCHPAD_SURFACE_DESIGN_DIAGRAM = "compose.sketchpad.surface.design.diagram";
+const SKETCHPAD_SURFACE_TYPE_SCENE = "compose.sketchpad.surface.type.scene";
+export const SKETCHPAD_SURFACE_DOCS_PAGE = "compose.sketchpad.surface.docs.page";
+export const SKETCHPAD_SURFACE_FEEDBACK_FORM = "compose.sketchpad.surface.feedback.form";
 const SKETCHPAD_PANEL_WINDOWS_BODY = "compose.sketchpad.panel.windows";
 const SKETCHPAD_PANEL_HIERARCHY_BODY = "compose.sketchpad.panel.hierarchy";
 const SKETCHPAD_PANEL_CATALOGUE_BODY = "compose.sketchpad.panel.catalogue";
@@ -15963,7 +15963,7 @@ const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
 	initialPanelVisibility: PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
 };
 
-/** @emoji 🖥️ Sketchpad as a semios {@link PlatformDefinition} program (apps mirror {@link buildSketchpadExtensionManifest}). */
+/** @emoji 🖥️ Sketchpad as a s {@link PlatformDefinition} program (apps mirror {@link buildSketchpadExtensionManifest}). */
 export function buildSketchpadProgramDefinition(): PlatformDefinition {
 	return {
 		id: SKETCHPAD_PLATFORM_SPEC.id,
@@ -17742,7 +17742,7 @@ if (import.meta.vitest) {
 			const topo = ctrl.getStore(platformTopologyStoreId(sketchpadKitWiresInstanceId(kitId))) as PlatformTopologyStore;
 			expect(topo).toBeDefined();
 			const flat = topo!.getSnapshot().flat as { schema?: string; edges?: readonly unknown[] };
-			expect(flat.schema).toBe("puzzle.2d.fixture/v1");
+			expect(flat.schema).toBe("puzzle.2d.fixture");
 			expect(flat.edges?.length).toBeGreaterThan(0);
 			ctrl.dispose();
 		});

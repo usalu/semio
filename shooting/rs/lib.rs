@@ -6,7 +6,7 @@ use vcs::{
 };
 use serde::{Deserialize, Serialize};
 
-pub const SHOOTING_DOCUMENT_SCHEMA: &str = "shooting.scene/v1";
+pub const SHOOTING_DOCUMENT_SCHEMA: &str = "shooting.scene";
 
 //#region 🔖Domain
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

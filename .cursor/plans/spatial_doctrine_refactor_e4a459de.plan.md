@@ -120,7 +120,7 @@ flowchart LR
 ### Rename fixtures under [spatial/fixtures](spatial/fixtures)
 
 - `small-building.topology.json` → `small-building.model.json`, same for `tall` and `large`.
-- `simple.spatial.json` and `spatial.spatial.json` already use the bundle envelope; update the inner `"schema": "spatial.topology/v1"` to `"spatial.model/v1"` and rename the `raw` block from the topology shape to the new `objects` + kernel `geometry` shape.
+- `simple.spatial.json` and `spatial.spatial.json` already use the bundle envelope; update the inner `"schema": "spatial.topology/v1"` to `"spatial.model"` and rename the `raw` block from the topology shape to the new `objects` + kernel `geometry` shape.
 
 ## Phase 2 — JS package refactor (parallel subagents)
 

@@ -1127,17 +1127,13 @@ pub mod icon_codec {
         Catalog { key: String },
     }
 
-    fn strip_legacy_image_data_prefix(raw: &str) -> &str {
-        raw.trim().strip_prefix("image:").map(str::trim).unwrap_or(raw.trim())
-    }
-
     fn is_raster_data_url_payload(s: &str) -> bool {
-        let u = strip_legacy_image_data_prefix(s).to_ascii_lowercase();
+        let u = s.trim().to_ascii_lowercase();
         u.starts_with("data:image/png;base64,") || u.starts_with("data:image/jpeg;base64,") || u.starts_with("data:image/jpg;base64,") || u.starts_with("data:image/webp;base64,") || u.starts_with("data:image/gif;base64,")
     }
 
     fn is_svg_data_url_payload(s: &str) -> bool {
-        strip_legacy_image_data_prefix(s).to_ascii_lowercase().starts_with("data:image/svg+xml")
+        s.trim().to_ascii_lowercase().starts_with("data:image/svg+xml")
     }
 
     fn looks_like_shortcode_token(t: &str) -> bool {
@@ -1280,7 +1276,7 @@ pub mod icon_codec {
     }
 
     fn decode_data_url_svg(s: &str) -> Option<String> {
-        let t = strip_legacy_image_data_prefix(s).trim();
+        let t = s.trim();
         let lower = t.to_ascii_lowercase();
         if lower.starts_with("data:image/svg+xml;base64,") {
             let rest = t.split_once(',').map(|(_, b)| b.trim())?;
@@ -1322,7 +1318,7 @@ pub mod icon_codec {
     }
 
     fn decode_raster_icon_bytes(t: &str) -> Option<RgbaImage> {
-        let s = strip_legacy_image_data_prefix(t).trim();
+        let s = t.trim();
         let rest = s
             .strip_prefix("data:image/png;base64,")
             .or_else(|| s.strip_prefix("data:image/jpeg;base64,"))

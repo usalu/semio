@@ -1,5 +1,5 @@
 {
-  "schema": "flow.fixture/v1",
+  "schema": "flow.fixture",
   "camera": { "x": 0, "y": 0, "zoom": 1 },
   "widgets": [
     { "kind": "neuron", "id": "rect", "neuronKind": "draw.shape.rect" },

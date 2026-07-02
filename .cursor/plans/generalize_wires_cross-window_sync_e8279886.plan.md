@@ -9,7 +9,7 @@ todos:
     content: Remove the wasmFixtureJson bypass (prop, setWasmFixtureJson, pushNormalWasmFixtureToSession, normal branches in pushSceneToWasmDriver/pushAuthoritativeDescriptorToWasmSession); normal graphs use descriptorJsonForWasmHost -> syncDescriptorJson with newNormal session.
     status: completed
   - id: wires-board-as-fixture
-    content: Make the WIRES layer emit a normal-shaped Puzzle2dFixtureV1 (empty handles, node-id edges); alias reasoning/mindmap types to the puzzle 2d fixture.
+    content: Make the WIRES layer emit a normal-shaped Puzzle2dFixture (empty handles, node-id edges); alias reasoning/mindmap types to the puzzle 2d fixture.
     status: completed
   - id: shell-normal-fixture
     content: Feed the wires board into the play shell fixture state and re-enable declarativeSceneDescriptor + sceneMarkers + sceneAuthoringEpoch + onDragEnd patchFixture for wires; thread graphPortMode=normal; remove duplicate mindmap camera/wasm helpers.
@@ -27,21 +27,21 @@ isProject: false
 
 ## Root cause
 
-The wires/normal path bypasses the shared pipeline by pushing `wasmFixtureJson` straight to WASM via `parseFixtureJson`, leaving the JS `Puzzle2dScene` empty and the play-shell fixture untouched. Every cross-pane mechanism reads the JS scene or the shell `Puzzle2dFixtureV1`:
+The wires/normal path bypasses the shared pipeline by pushing `wasmFixtureJson` straight to WASM via `parseFixtureJson`, leaving the JS `Puzzle2dScene` empty and the play-shell fixture untouched. Every cross-pane mechanism reads the JS scene or the shell `Puzzle2dFixture`:
 
 - live drag: `nodeMove` drain -> `puzzle2dBroadcastNodeMove` -> peer `applyNodePositionSilent` reads `this.scene.nodes` (empty -> dropped) ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) ~3716, ~5540)
 - selection / preselect / structural / brush broadcasts all operate on `this.scene` ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) ~10664-10708)
-- drag-commit / re-fit / hierarchy / inspector use the shell `Puzzle2dFixtureV1` + `sceneAuthoringEpoch` ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) ~3470+)
+- drag-commit / re-fit / hierarchy / inspector use the shell `Puzzle2dFixture` + `sceneAuthoringEpoch` ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) ~3470+)
 
 The Rust host already supports normal graphs through the shared `sync_descriptor` path: `EdgeData.source/target` are plain string ids and geometry/hit-test branch on `GraphPortMode` ([puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) ~3704). The only JS blocker is `Puzzle2dSceneEdge.source/target` being typed/resolved as handles only.
 
 ## Design principle (one core, clean layers)
 
-Represent a mindmap board as a normal-shaped `Puzzle2dFixtureV1`: nodes with `handles: []`, edges with `source`/`target` = node ids. The board flows through the existing shell unchanged; `graphPortMode: "normal"` (already added) only selects `BoardSession.newNormal()` and suppresses handle interactions/markers. Drop `wasmFixtureJson`, `setWasmFixtureJson`, and `pushNormalWasmFixtureToSession`.
+Represent a mindmap board as a normal-shaped `Puzzle2dFixture`: nodes with `handles: []`, edges with `source`/`target` = node ids. The board flows through the existing shell unchanged; `graphPortMode: "normal"` (already added) only selects `BoardSession.newNormal()` and suppresses handle interactions/markers. Drop `wasmFixtureJson`, `setWasmFixtureJson`, and `pushNormalWasmFixtureToSession`.
 
 ```mermaid
 flowchart LR
-  wires[WIRES JSON] --> board["normal Puzzle2dFixtureV1 (no handles, node-id edges)"]
+  wires[WIRES JSON] --> board["normal Puzzle2dFixture (no handles, node-id edges)"]
   board --> shell[play shell fixture state]
   shell --> desc[buildPuzzle2dSceneDescriptorFromFixture]
   desc --> scene[JS Puzzle2dScene per pane]
@@ -65,9 +65,9 @@ flowchart LR
 
 ## Phase 3 - Play shell holds the normal fixture (full parity)
 
-- WIRES layer produces a normal-shaped `Puzzle2dFixtureV1` board instead of a separate `MindmapFixtureV1`: update [reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts) `wiresFixtureBoard` to emit `Puzzle2dFixtureV1` (nodes `handles: []`, edges node-id). Keep `reasoning.mindmap.fixture/v1` as the external schema; `reasoning/mindmap/react` types alias to the puzzle 2d fixture ([reasoning/mindmap/react/index.tsx](reasoning/mindmap/react/index.tsx)).
+- WIRES layer produces a normal-shaped `Puzzle2dFixture` board instead of a separate `MindmapFixture`: update [reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts) `wiresFixtureBoard` to emit `Puzzle2dFixture` (nodes `handles: []`, edges node-id). Keep `reasoning.mindmap.fixture/v1` as the external schema; `reasoning/mindmap/react` types alias to the puzzle 2d fixture ([reasoning/mindmap/react/index.tsx](reasoning/mindmap/react/index.tsx)).
 - Framework wires entry ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)):
-  - `initialFixture`, `selectionSeedForFixture`, `triptychCamerasFromFixture`, `puzzle2dFixtureMergedKindCatalogs`, `buildPuzzle2dSceneDescriptorFromFixture`, `puzzle2dFixtureSceneMarkers` all already accept `Puzzle2dFixtureV1` -> feed the wires board when `PUZZLE_PLAY_ENTRY === "wires"`. Remove the special `triptychCamerasFromMindmapBoard`/`mindmapBoardWorldBounds`/`PUZZLE_2D_PLAY_WIRES_WASM_FIXTURE_JSON` helpers added earlier.
+  - `initialFixture`, `selectionSeedForFixture`, `triptychCamerasFromFixture`, `puzzle2dFixtureMergedKindCatalogs`, `buildPuzzle2dSceneDescriptorFromFixture`, `puzzle2dFixtureSceneMarkers` all already accept `Puzzle2dFixture` -> feed the wires board when `PUZZLE_PLAY_ENTRY === "wires"`. Remove the special `triptychCamerasFromMindmapBoard`/`mindmapBoardWorldBounds`/`PUZZLE_2D_PLAY_WIRES_WASM_FIXTURE_JSON` helpers added earlier.
   - In `Puzzle2dPlayPaneCanvas` pass `graphPortMode={isWires ? "normal" : undefined}` and the normal `declarativeSceneDescriptor` + `sceneMarkers` like the ported panes (re-enable `onFixtureDrop`/`sceneAuthoringEpoch`/`onDragEnd` -> `patchFixture`). Selection targets `{nodes:true, edges:true, handles:false}` for wires.
 
 ## Phase 4 - Hierarchy / inspector cleanliness for normal nodes

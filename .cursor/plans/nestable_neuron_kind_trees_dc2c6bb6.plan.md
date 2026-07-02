@@ -6,7 +6,7 @@ todos:
     content: "flow/core/lib.rs: add recursive CatalogueGroup struct + groups field on CatalogueSection (serde camelCase, skip empty); update static sections and test literals so nesting round-trips."
     status: completed
   - id: flow-model
-    content: "flow/react/index.tsx: add group to FlowModuleNeuronKindV1, recursive CatalogueGroup + groups on CatalogueSection, nest kinds by authored group in catalogueSections(), add flattenCatalogueItems and update flowRankCatalogueSuggestions."
+    content: "flow/react/index.tsx: add group to FlowModuleNeuronKind, recursive CatalogueGroup + groups on CatalogueSection, nest kinds by authored group in catalogueSections(), add flattenCatalogueItems and update flowRankCatalogueSuggestions."
     status: completed
   - id: shared-builder
     content: "flow/react/index.tsx: add exported buildCatalogueKindsTreeSections(sections, idPrefix, dragDataFn) recursive tree builder; update file tests."
@@ -40,7 +40,7 @@ The catalogue passes through `FlowSession` (`set_host_catalogue_json` → `catal
 - Update `static_catalogue_sections()` and the in-file test literals to include `groups: vec![]`.
 
 ### 2. Catalogue model + builders — [flow/react/index.tsx](flow/react/index.tsx)
-- Add `group?: readonly string[]` to `FlowModuleNeuronKindV1` (`#region 🔖ExtensionHost`).
+- Add `group?: readonly string[]` to `FlowModuleNeuronKind` (`#region 🔖ExtensionHost`).
 - Add recursive `CatalogueGroup` interface and `groups?: readonly CatalogueGroup[]` on `CatalogueSection` (`#region 🔖Catalogue`).
 - `FlowExtensionHost.catalogueSections()`: nest each module's kinds by their authored `group` path (helper that builds ordered nested groups with stable ids from the title path). Kinds without a group stay in `items`.
 - Add exported `flattenCatalogueItems(sections)` (recurses `groups`) and switch `flowRankCatalogueSuggestions` (and any spotlight flatten) to it so search still sees every leaf.

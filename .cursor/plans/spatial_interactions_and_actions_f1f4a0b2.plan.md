@@ -131,7 +131,7 @@ All previous variants (`cell.createBox`, `wire.extrudeToCell`, `face.offset`, `m
 ## 3. JSON fixtures + schema — [spatial/fixture/](spatial/fixtures), [spatial/schema/json/](spatial/schema/json)
 
 - Rename files: `box.command.json` → `box.interaction.json`, plus `extrude-wire`, `offset-surface`, `distance`, `area`. Delete the orphaned `factory.json`, `extrude.factory.json`, `offset-surface.factory.json` (per repo "no legacy api" rule) unless still referenced — verify with rg first.
-- Bump schema string `"spatial.command/v1"` → `"spatial.interaction/v1"`. Update the matching schema file under `spatial/schema/json/`.
+- Bump schema string `"spatial.command/v1"` → `"spatial.interaction"`. Update the matching schema file under `spatial/schema/json/`.
 - In every fixture rewrite `actions: [...]` → `effects: [...]`; rewrite every `{op:"box.transform", transform:"X"}` to `{op:"action", action:"box.X", params:{ point:{kind:"path",…}, value:{kind:"path",…} }, assignTo:{root:"context",segments:[…]}}` (one `assign` per slot the helper writes), or alternatively a single `{op:"action"}` whose `assignTo` is a `context` sub-object that the transition's next `assign` effect spreads — pick the per-slot form for explicitness.
 - Rewrite each `commit.operation` to the unified `{kind:"action", action:"…", params:{…}, outputDataPath?:…}` form.
 - Drop the entire `normalizeLegacyCommandDocument` + `migrateLegacyActionObject` + `legacyPathToTarget` block in `parseInteractionSpec` (greenfield, no legacy compat).

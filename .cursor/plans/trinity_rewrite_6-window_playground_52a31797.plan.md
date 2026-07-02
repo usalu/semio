@@ -77,7 +77,7 @@ LHS constructs `MATCH`, RHS derives `CREATE`/`DELETE`/`SET`/`MERGE` (per `trinit
 
 - `applyRewriteOnFixture(fixtureJson, ruleJson, bindingsJson = "{}")` — pass through to updated wasm signature.
 - New `ruleQueryOnFixture(ruleJson, bindingsJson = "{}"): string` calling the new free wasm export.
-- New TS types mirroring Rust: `RuleParameterKindV1`, `RuleParameterV1`, extend `TrinityFixtureV1`-adjacent rule types if any exist (currently rule shape is untyped JSON on the TS side — keep it that way, just add the parameter fields to the demo constant).
+- New TS types mirroring Rust: `RuleParameterKind`, `RuleParameter`, extend `TrinityFixture`-adjacent rule types if any exist (currently rule shape is untyped JSON on the TS side — keep it that way, just add the parameter fields to the demo constant).
 
 ## trinity/rewrite/play/index.ts: controller + 6 windows
 

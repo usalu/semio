@@ -170,7 +170,6 @@ import {
   vortexWorldCadFromObject,
   applyObjectPose,
   DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
-  kindsCompatible,
   publishPuzzle3dBrushCandidateAccept,
   type BrushCompatibleCandidate,
   type HoverTarget,
@@ -4367,11 +4366,6 @@ if (import.meta.vitest) {
         "Hexagonal Cut Concrete Forest Left",
         "Hexagonal Cut Concrete Forest Right",
       ]);
-      expect(kindsCompatible("b-l", "b-s-m", compat)).toBe(true);
-      expect(kindsCompatible("b-l", "c-b", compat)).toBe(false);
-      expect(kindsCompatible("c-b", "c-t", compat)).toBe(true);
-      expect(kindsCompatible("c-b", "c-b", compat)).toBe(false);
-      expect(kindsCompatible("c-t", "c-t", compat)).toBe(false);
       const target: AttractionVortexContext = {
         objectId: "seed-left-001",
         objectKind: "Hexagonal Cut Concrete Forest Left",

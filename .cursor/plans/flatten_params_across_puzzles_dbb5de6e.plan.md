@@ -9,7 +9,7 @@ todos:
     content: Add 8 params (gap,shift,rise,rotation,turn,tilt,u,v) to puzzle 2d edge type + parser + fingerprint.
     status: completed
   - id: params-3d
-    content: Add 8 params to puzzle 3d AttractionProps + parseFixtureV1 + appearance fingerprint.
+    content: Add 8 params to puzzle 3d AttractionProps + parseFixture + appearance fingerprint.
     status: completed
   - id: params-5d
     content: Add 8 params to puzzle 5d Fastener + parseModel + compose5d/project2d/project3d passthrough; add grip 2d t param.
@@ -75,8 +75,8 @@ flowchart LR
 
 ### A. Data model: add params (`gap, shift, rise, rotation, turn, tilt, u, v`)
 
-- Puzzle 2d edge [Puzzle2dFixtureEdgeV1](puzzle/2d/react/index.tsx) L918-928: add the 8 optional numeric fields; read them in the edge parser; include in any edge appearance fingerprint.
-- Puzzle 3d [AttractionProps](puzzle/3d/react/index.tsx) L378-383: add the 8 fields; read in [parseFixtureV1](puzzle/3d/react/index.tsx) L1744-1756; add to `fixtureAppearanceFingerprint` attraction key (L2523-2527).
+- Puzzle 2d edge [Puzzle2dFixtureEdge](puzzle/2d/react/index.tsx) L918-928: add the 8 optional numeric fields; read them in the edge parser; include in any edge appearance fingerprint.
+- Puzzle 3d [AttractionProps](puzzle/3d/react/index.tsx) L378-383: add the 8 fields; read in [parseFixture](puzzle/3d/react/index.tsx) L1744-1756; add to `fixtureAppearanceFingerprint` attraction key (L2523-2527).
 - Puzzle 5d [Fastener](puzzle/5d/react/index.tsx) L206-211: add the 8 fields; pass them through in [compose5d](puzzle/5d/react/index.tsx) edge->fastener (L586-595) and attraction->fastener (L596-605), and in [project2d](puzzle/5d/react/index.tsx) L679-684 and [project3d](puzzle/5d/react/index.tsx) L722-727; validate in `parseModel`.
 - Grip geometry for flatten: 3d already has `position` + `direction` ([Grip3dAspect](puzzle/5d/react/index.tsx) L158-164 / puzzle3d vortex). Add an optional `t` param to the 2d grip/handle aspect (mapping the rs port `t`); derive from existing `angle` when absent (`t = angle/360`).
 
@@ -84,8 +84,8 @@ flowchart LR
 
 Each lives in that technology's `react/index.tsx` as a pure exported function with its own private matrix/quaternion helpers (no shared import):
 
-- Puzzle 3d `flatten3d(fixture): FixtureV1` in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx): BFS over attractions; resolve endpoints via `parseVortexFullId`; use vortex `position`/`direction` as port point/dir; compute each object `origin` + `orientation` (quat from plane axes) from `compute_child_plane`; root anchored to its existing pose (or identity).
-- Puzzle 2d `flatten2d(fixture): Puzzle2dFixtureV1` in [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx): BFS over edges; compute node `x,y` via the diagram-center math using edge `u,v` and handle-angle-derived `t` (2d-only variant; no z, so radial/grid branch).
+- Puzzle 3d `flatten3d(fixture): Fixture` in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx): BFS over attractions; resolve endpoints via `parseVortexFullId`; use vortex `position`/`direction` as port point/dir; compute each object `origin` + `orientation` (quat from plane axes) from `compute_child_plane`; root anchored to its existing pose (or identity).
+- Puzzle 2d `flatten2d(fixture): Puzzle2dFixture` in [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx): BFS over edges; compute node `x,y` via the diagram-center math using edge `u,v` and handle-angle-derived `t` (2d-only variant; no z, so radial/grid branch).
 - Puzzle 5d `flatten5d(model): Model` in [puzzle/5d/react/index.tsx](puzzle/5d/react/index.tsx): full version - computes part `3d.origin/orientation` (from 3d grips) AND `2d.x/y` center (uses 3d grip `direction.z` for the vertical/horizontal branch, exactly like rs). Returns a new `Model` with updated part aspects; pure, idempotent on already-relative input.
 - compose rs [lib.rs](compose/client/lib/rs/lib.rs) L1167-1548 stays as the canonical reference; align constants/edge-cases if any drift is found while porting.
 

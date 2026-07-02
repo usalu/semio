@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.typology/v1",
+  "schema": "spatial.typology",
   "id": "structure.structure.onewayreinforcedconcreteslab",
   "version": "1.0.0",
   "label": "One Way Reinforced Concrete Slab",

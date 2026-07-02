@@ -11,9 +11,9 @@ import {
 	type EffectLogEntry,
 	type ImperativeCatalogueItem,
 	type ImperativeCatalogueSection,
-	type ImperativeDocumentV1,
-	type ImperativePathRefV1,
-	type ImperativeStepV1,
+	type ImperativeDocument,
+	type ImperativePathRef,
+	type ImperativeStep,
 	type RunResult,
 } from "@semio-tech/imperative-core";
 import { ImperativeRunClient } from "@semio-tech/imperative-core";
@@ -36,7 +36,7 @@ export async function ensureImperativeWasmLoaded(): Promise<void> {
 export { ImperativeSession };
 // #endregion 🔖WasmBridge
 
-export type { EffectLogEntry, ImperativeCatalogueItem, ImperativeCatalogueSection, ImperativeDocumentV1, ImperativePathRefV1, ImperativeStepV1, RunResult };
+export type { EffectLogEntry, ImperativeCatalogueItem, ImperativeCatalogueSection, ImperativeDocument, ImperativePathRef, ImperativeStep, RunResult };
 
 export interface ImperativeEditorProps {
 	readonly documentJson?: string;
@@ -72,19 +72,19 @@ function controlSlots(kind: string): readonly string[] {
 	return [];
 }
 
-function pathRefKey(pathRef: ImperativePathRefV1): string {
+function pathRefKey(pathRef: ImperativePathRef): string {
 	return pathRef.owner && pathRef.slot ? `${pathRef.owner}/${pathRef.slot}` : "root";
 }
 
-function pathRefJson(pathRef: ImperativePathRefV1): string {
+function pathRefJson(pathRef: ImperativePathRef): string {
 	return JSON.stringify(pathRef);
 }
 
 export interface StepListEditorProps {
 	readonly session: ImperativeSession;
-	readonly document: ImperativeDocumentV1;
+	readonly document: ImperativeDocument;
 	readonly catalogue: readonly ImperativeCatalogueSection[];
-	readonly pathRef: ImperativePathRefV1;
+	readonly pathRef: ImperativePathRef;
 	readonly depth: number;
 	readonly selectedStepId: string | null;
 	readonly onSelect: (stepId: string) => void;
@@ -183,7 +183,7 @@ export function StepListEditor({
 export function ImperativeEditor({ documentJson, className, onDocumentChange, onRunResult }: ImperativeEditorProps): React.JSX.Element {
 	const session = useMemo(() => new ImperativeSession(), []);
 	const runClientRef = useRef<ImperativeRunClient | null>(null);
-	const [document, setDocument] = useState<ImperativeDocumentV1>(DEFAULT_IMPERATIVE_DOCUMENT);
+	const [document, setDocument] = useState<ImperativeDocument>(DEFAULT_IMPERATIVE_DOCUMENT);
 	const [catalogue, setCatalogue] = useState<readonly ImperativeCatalogueSection[]>([]);
 	const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
 	const [compiledText, setCompiledText] = useState("");
@@ -217,7 +217,7 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 	}, [documentJson, session, syncFromSession]);
 
 	const selectedStep = useMemo(() => {
-		const findStep = (steps: readonly ImperativeStepV1[]): ImperativeStepV1 | null => {
+		const findStep = (steps: readonly ImperativeStep[]): ImperativeStep | null => {
 			for (const step of steps) {
 				if (step.id === selectedStepId) return step;
 				if (step.bodies) {
@@ -352,13 +352,13 @@ export function ImperativeEditor({ documentJson, className, onDocumentChange, on
 }
 
 export interface StepParamFormProps {
-	readonly step: ImperativeStepV1;
+	readonly step: ImperativeStep;
 	readonly catalogue?: readonly ImperativeCatalogueSection[];
 	readonly onChange: (key: string, value: unknown) => void;
 	readonly onRemove: () => void;
 }
 
-function catalogueFieldsForStep(step: ImperativeStepV1, catalogue: readonly ImperativeCatalogueSection[]): readonly { readonly key: string; readonly label: string; readonly type: "text" | "number" }[] {
+function catalogueFieldsForStep(step: ImperativeStep, catalogue: readonly ImperativeCatalogueSection[]): readonly { readonly key: string; readonly label: string; readonly type: "text" | "number" }[] {
 	const item = catalogue.flatMap((section) => section.items).find((entry) => entry.kind === step.kind);
 	if (!item?.inputs.length) {
 		return Object.keys(step.params).map((key) => ({

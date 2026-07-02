@@ -1,567 +1,740 @@
 {
-    "id": "synthetic-kit",
-    "name": "synthetic-kit",
-    "families": [
-        {
-            "id": "family-synthetic-kit-ports",
-            "name": "Ports",
-            "description": "Connector ports owned by the default family.",
-            "icon": "🔌",
-            "ports": [
-                {
-                    "id": "port-L",
-                    "name": "port-L",
-                    "compatiblePorts": [
-                        {
-                            "id": "port-L-compatible"
-                        }
-                    ]
-                },
-                {
-                    "id": "port-L-compatible",
-                    "name": "port-L-compatible",
-                    "compatiblePorts": [
-                        {
-                            "id": "port-L"
-                        }
-                    ]
-                },
-                {
-                    "id": "port-G",
-                    "name": "port-G"
-                }
-            ]
-        }
-    ],
-    "typologies": {
-        "hash": "typology-migration-stub",
-        "items": [
+  "id": "synthetic-kit",
+  "name": "synthetic-kit",
+  "families": {
+    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+    "items": [
+      {
+        "id": "family-synthetic-kit-ports",
+        "name": "Ports",
+        "description": "Connector ports owned by the default family.",
+        "icon": "🔌",
+        "ports": {
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+          "items": [
             {
-                "id": "typology-base",
-                "name": "Base",
-                "types": {
-                    "hash": "typology-migration-stub",
-                    "items": [
-                        {
-                            "id": "selected-external-lg",
-                            "name": "selected-external-lg",
-                            "connectors": [],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "selected-isolated-lg",
-                            "name": "selected-isolated-lg",
-                            "connectors": [
-                                {
-                                    "id": "selected-isolated-lg-connector-0",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-L"
-                                    }
-                                },
-                                {
-                                    "id": "selected-isolated-lg-connector-1",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-G"
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "selected-external-ll",
-                            "name": "selected-external-ll",
-                            "connectors": [],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "neighbor-l",
-                            "name": "neighbor-l",
-                            "connectors": [
-                                {
-                                    "id": "neighbor-l-connector-0",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-L"
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "neighbor-g",
-                            "name": "neighbor-g",
-                            "connectors": [
-                                {
-                                    "id": "neighbor-g-connector-0",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-G"
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "candidate-l",
-                            "name": "candidate-l",
-                            "connectors": [
-                                {
-                                    "id": "candidate-l-connector-0",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-L"
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "candidate-lg",
-                            "name": "candidate-lg",
-                            "connectors": [
-                                {
-                                    "id": "candidate-lg-connector-0",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-L-compatible"
-                                    }
-                                },
-                                {
-                                    "id": "candidate-lg-connector-1",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-G"
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "candidate-lg-lg",
-                            "name": "candidate-lg-lg",
-                            "connectors": [
-                                {
-                                    "id": "candidate-lg-lg-connector-0",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-L-compatible"
-                                    }
-                                },
-                                {
-                                    "id": "candidate-lg-lg-connector-1",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-G"
-                                    }
-                                },
-                                {
-                                    "id": "candidate-lg-lg-connector-2",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-L"
-                                    }
-                                },
-                                {
-                                    "id": "candidate-lg-lg-connector-3",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-G"
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "candidate-ll",
-                            "name": "candidate-ll",
-                            "connectors": [
-                                {
-                                    "id": "candidate-ll-connector-0",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-L"
-                                    }
-                                },
-                                {
-                                    "id": "candidate-ll-connector-1",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-L-compatible"
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "candidate-g",
-                            "name": "candidate-g",
-                            "connectors": [
-                                {
-                                    "id": "candidate-g-connector-0",
-                                    "t": 0,
-                                    "point": {
-                                        "x": 0,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "direction": {
-                                        "x": 1,
-                                        "y": 0,
-                                        "z": 0
-                                    },
-                                    "port": {
-                                        "id": "port-G"
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        }
-                    ]
-                },
-                "designs": {
-                    "hash": "typology-migration-stub",
-                    "items": [
-                        {
-                            "id": "root-design",
-                            "name": "root-design",
-                            "pieces": [
-                                {
-                                    "id": "piece-external-lg",
-                                    "type": {
-                                        "id": "selected-external-lg"
-                                    }
-                                },
-                                {
-                                    "id": "piece-isolated-lg",
-                                    "type": {
-                                        "id": "selected-isolated-lg"
-                                    }
-                                },
-                                {
-                                    "id": "piece-external-ll",
-                                    "type": {
-                                        "id": "selected-external-ll"
-                                    }
-                                },
-                                {
-                                    "id": "neighbor-piece-l",
-                                    "type": {
-                                        "id": "neighbor-l"
-                                    }
-                                },
-                                {
-                                    "id": "neighbor-piece-g",
-                                    "type": {
-                                        "id": "neighbor-g"
-                                    }
-                                },
-                                {
-                                    "id": "neighbor-piece-l-a",
-                                    "type": {
-                                        "id": "neighbor-l"
-                                    }
-                                },
-                                {
-                                    "id": "neighbor-piece-l-b",
-                                    "type": {
-                                        "id": "neighbor-l"
-                                    }
-                                }
-                            ],
-                            "connections": [
-                                {
-                                    "id": "external-lg-l",
-                                    "parent": {
-                                        "piece": {
-                                            "id": "piece-external-lg"
-                                        },
-                                        "connector": {
-                                            "id": "selected-external-lg-connector-0"
-                                        }
-                                    },
-                                    "child": {
-                                        "piece": {
-                                            "id": "neighbor-piece-l"
-                                        },
-                                        "connector": {
-                                            "id": "neighbor-l-connector-0"
-                                        }
-                                    }
-                                },
-                                {
-                                    "id": "external-lg-g",
-                                    "parent": {
-                                        "piece": {
-                                            "id": "piece-external-lg"
-                                        },
-                                        "connector": {
-                                            "id": "selected-external-lg-connector-1"
-                                        }
-                                    },
-                                    "child": {
-                                        "piece": {
-                                            "id": "neighbor-piece-g"
-                                        },
-                                        "connector": {
-                                            "id": "neighbor-g-connector-0"
-                                        }
-                                    }
-                                },
-                                {
-                                    "id": "external-ll-a",
-                                    "parent": {
-                                        "piece": {
-                                            "id": "piece-external-ll"
-                                        },
-                                        "connector": {
-                                            "id": "selected-external-ll-connector-0"
-                                        }
-                                    },
-                                    "child": {
-                                        "piece": {
-                                            "id": "neighbor-piece-l-a"
-                                        },
-                                        "connector": {
-                                            "id": "neighbor-l-connector-0"
-                                        }
-                                    }
-                                },
-                                {
-                                    "id": "external-ll-b",
-                                    "parent": {
-                                        "piece": {
-                                            "id": "piece-external-ll"
-                                        },
-                                        "connector": {
-                                            "id": "selected-external-ll-connector-1"
-                                        }
-                                    },
-                                    "child": {
-                                        "piece": {
-                                            "id": "neighbor-piece-l-b"
-                                        },
-                                        "connector": {
-                                            "id": "neighbor-l-connector-0"
-                                        }
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "candidate-design-free-lg",
-                            "name": "candidate-design-free-lg",
-                            "pieces": [
-                                {
-                                    "id": "candidate-design-free-piece",
-                                    "type": {
-                                        "id": "candidate-lg"
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        },
-                        {
-                            "id": "candidate-design-consumed-lg",
-                            "name": "candidate-design-consumed-lg",
-                            "pieces": [
-                                {
-                                    "id": "candidate-design-consumed-a",
-                                    "type": {
-                                        "id": "candidate-lg"
-                                    }
-                                },
-                                {
-                                    "id": "candidate-design-consumed-b",
-                                    "type": {
-                                        "id": "candidate-l"
-                                    }
-                                }
-                            ],
-                            "connections": [
-                                {
-                                    "id": "candidate-design-consumed-link",
-                                    "parent": {
-                                        "piece": {
-                                            "id": "candidate-design-consumed-a"
-                                        },
-                                        "connector": {
-                                            "id": "candidate-lg-connector-0"
-                                        }
-                                    },
-                                    "child": {
-                                        "piece": {
-                                            "id": "candidate-design-consumed-b"
-                                        },
-                                        "connector": {
-                                            "id": "candidate-l-connector-0"
-                                        }
-                                    }
-                                }
-                            ],
-                            "typology": {
-                                "id": "typology-base"
-                            }
-                        }
-                    ]
-                }
+              "id": "port-L",
+              "name": "port-L",
+              "compatiblePorts": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "port-L-compatible",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  }
+                ]
+              },
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+              "id": "port-L-compatible",
+              "name": "port-L-compatible",
+              "compatiblePorts": {
+                "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                "items": [
+                  {
+                    "id": "port-L",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  }
+                ]
+              },
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+            },
+            {
+              "id": "port-G",
+              "name": "port-G",
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
             }
-        ]
+          ]
+        },
+        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+      }
+    ]
+  },
+  "typologies": {
+    "hash": "typology-migration-stub",
+    "items": {
+      "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+      "items": [
+        {
+          "id": "typology-base",
+          "name": "Base",
+          "types": {
+            "hash": "typology-migration-stub",
+            "items": {
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+              "items": [
+                {
+                  "id": "selected-external-lg",
+                  "name": "selected-external-lg",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": []
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "selected-isolated-lg",
+                  "name": "selected-isolated-lg",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "selected-isolated-lg-connector-0",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-L",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "selected-isolated-lg-connector-1",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-G",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "selected-external-ll",
+                  "name": "selected-external-ll",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": []
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "neighbor-l",
+                  "name": "neighbor-l",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "neighbor-l-connector-0",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-L",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "neighbor-g",
+                  "name": "neighbor-g",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "neighbor-g-connector-0",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-G",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "candidate-l",
+                  "name": "candidate-l",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "candidate-l-connector-0",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-L",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "candidate-lg",
+                  "name": "candidate-lg",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "candidate-lg-connector-0",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-L-compatible",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "candidate-lg-connector-1",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-G",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "candidate-lg-lg",
+                  "name": "candidate-lg-lg",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "candidate-lg-lg-connector-0",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-L-compatible",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "candidate-lg-lg-connector-1",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-G",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "candidate-lg-lg-connector-2",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-L",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "candidate-lg-lg-connector-3",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-G",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "candidate-ll",
+                  "name": "candidate-ll",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "candidate-ll-connector-0",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-L",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "candidate-ll-connector-1",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-L-compatible",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "candidate-g",
+                  "name": "candidate-g",
+                  "connectors": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "candidate-g-connector-0",
+                        "t": 0,
+                        "point": {
+                          "x": 0,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "direction": {
+                          "x": 1,
+                          "y": 0,
+                          "z": 0
+                        },
+                        "port": {
+                          "id": "port-G",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                }
+              ]
+            }
+          },
+          "designs": {
+            "hash": "typology-migration-stub",
+            "items": {
+              "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+              "items": [
+                {
+                  "id": "root-design",
+                  "name": "root-design",
+                  "pieces": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "piece-external-lg",
+                        "type": {
+                          "id": "selected-external-lg",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "piece-isolated-lg",
+                        "type": {
+                          "id": "selected-isolated-lg",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "piece-external-ll",
+                        "type": {
+                          "id": "selected-external-ll",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "neighbor-piece-l",
+                        "type": {
+                          "id": "neighbor-l",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "neighbor-piece-g",
+                        "type": {
+                          "id": "neighbor-g",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "neighbor-piece-l-a",
+                        "type": {
+                          "id": "neighbor-l",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "neighbor-piece-l-b",
+                        "type": {
+                          "id": "neighbor-l",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "connections": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "external-lg-l",
+                        "parent": {
+                          "piece": {
+                            "id": "piece-external-lg",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "selected-external-lg-connector-0",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "child": {
+                          "piece": {
+                            "id": "neighbor-piece-l",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "neighbor-l-connector-0",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "external-lg-g",
+                        "parent": {
+                          "piece": {
+                            "id": "piece-external-lg",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "selected-external-lg-connector-1",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "child": {
+                          "piece": {
+                            "id": "neighbor-piece-g",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "neighbor-g-connector-0",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "external-ll-a",
+                        "parent": {
+                          "piece": {
+                            "id": "piece-external-ll",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "selected-external-ll-connector-0",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "child": {
+                          "piece": {
+                            "id": "neighbor-piece-l-a",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "neighbor-l-connector-0",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "external-ll-b",
+                        "parent": {
+                          "piece": {
+                            "id": "piece-external-ll",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "selected-external-ll-connector-1",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "child": {
+                          "piece": {
+                            "id": "neighbor-piece-l-b",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "neighbor-l-connector-0",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "candidate-design-free-lg",
+                  "name": "candidate-design-free-lg",
+                  "pieces": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "candidate-design-free-piece",
+                        "type": {
+                          "id": "candidate-lg",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                },
+                {
+                  "id": "candidate-design-consumed-lg",
+                  "name": "candidate-design-consumed-lg",
+                  "pieces": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "candidate-design-consumed-a",
+                        "type": {
+                          "id": "candidate-lg",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      },
+                      {
+                        "id": "candidate-design-consumed-b",
+                        "type": {
+                          "id": "candidate-l",
+                          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "connections": {
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",
+                    "items": [
+                      {
+                        "id": "candidate-design-consumed-link",
+                        "parent": {
+                          "piece": {
+                            "id": "candidate-design-consumed-a",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "candidate-lg-connector-0",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "child": {
+                          "piece": {
+                            "id": "candidate-design-consumed-b",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          },
+                          "connector": {
+                            "id": "candidate-l-connector-0",
+                            "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                          }
+                        },
+                        "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                      }
+                    ]
+                  },
+                  "typology": {
+                    "id": "typology-base",
+                    "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                  },
+                  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+                }
+              ]
+            }
+          },
+          "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+        }
+      ]
     }
+  },
+  "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
 }

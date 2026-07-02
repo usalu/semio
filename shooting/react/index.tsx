@@ -27,14 +27,14 @@ const { Box3, Color, MeshStandardMaterial, Vector3 } = sceneHostPort.three;
 //#region 🔖Fixture
 export type ShootingAssetFormat = "glb";
 
-export interface ShootingAssetV1 {
+export interface ShootingAsset {
 	readonly id: string;
 	readonly name: string;
 	readonly url: string;
 	readonly format: ShootingAssetFormat;
 }
 
-export interface ShootingCameraV1 {
+export interface ShootingCamera {
 	readonly position: readonly [number, number, number];
 	readonly target: readonly [number, number, number];
 	readonly zoom: number;
@@ -43,31 +43,31 @@ export interface ShootingCameraV1 {
 	readonly fov?: number;
 }
 
-export interface ShootingSavedCameraV1 {
+export interface ShootingSavedCamera {
 	readonly id: string;
 	readonly label: string;
-	readonly camera: ShootingCameraV1;
+	readonly camera: ShootingCamera;
 }
 
-export interface ShootingSunV1 {
+export interface ShootingSun {
 	readonly azimuth: number;
 	readonly elevation: number;
 	readonly intensity: number;
 	readonly color: string;
 }
 
-export interface ShootingAmbientV1 {
+export interface ShootingAmbient {
 	readonly intensity: number;
 	readonly color: string;
 }
 
-export interface ShootingShadowV1 {
+export interface ShootingShadow {
 	readonly enabled: boolean;
 	readonly opacity: number;
 	readonly softness: number;
 }
 
-export interface ShootingMaterialV1 {
+export interface ShootingMaterial {
 	readonly color: string;
 	readonly metalness: number;
 	readonly roughness: number;
@@ -75,19 +75,19 @@ export interface ShootingMaterialV1 {
 	readonly emissiveIntensity: number;
 }
 
-export interface ShootingSceneV1 {
+export interface ShootingScene {
 	readonly background: string;
-	readonly sun: ShootingSunV1;
-	readonly ambient: ShootingAmbientV1;
-	readonly shadow: ShootingShadowV1;
-	readonly material: ShootingMaterialV1;
+	readonly sun: ShootingSun;
+	readonly ambient: ShootingAmbient;
+	readonly shadow: ShootingShadow;
+	readonly material: ShootingMaterial;
 }
 
 export type ShootingShotFormat = "svg" | "png";
 
 export type ShootingShotShape = IconRenderShape;
 
-export interface ShootingShotV1 {
+export interface ShootingShot {
 	readonly id: string;
 	readonly label: string;
 	readonly width: number;
@@ -98,18 +98,18 @@ export interface ShootingShotV1 {
 	readonly cameraId?: string;
 }
 
-export interface ShootingFixtureV1 {
-	readonly schema: "shooting.fixture/v1";
-	readonly assets: readonly ShootingAssetV1[];
-	readonly camera: ShootingCameraV1;
-	readonly savedCameras: readonly ShootingSavedCameraV1[];
-	readonly scene: ShootingSceneV1;
-	readonly shots: readonly ShootingShotV1[];
+export interface ShootingFixture {
+	readonly schema: "shooting.fixture";
+	readonly assets: readonly ShootingAsset[];
+	readonly camera: ShootingCamera;
+	readonly savedCameras: readonly ShootingSavedCamera[];
+	readonly scene: ShootingScene;
+	readonly shots: readonly ShootingShot[];
 	readonly activeShotId?: string;
 	readonly activeAssetId?: string;
 }
 
-export const DEFAULT_SHOOTING_SCENE: ShootingSceneV1 = {
+export const DEFAULT_SHOOTING_SCENE: ShootingScene = {
 	background: "",
 	sun: { azimuth: 45, elevation: 35, intensity: 2.4, color: "#ffffff" },
 	ambient: { intensity: 1.15, color: "#ffffff" },
@@ -117,15 +117,15 @@ export const DEFAULT_SHOOTING_SCENE: ShootingSceneV1 = {
 	material: { color: "#9aa0ab", metalness: 0, roughness: 1, emissive: "#000000", emissiveIntensity: 0 },
 };
 
-export const DEFAULT_SHOOTING_CAMERA: ShootingCameraV1 = {
+export const DEFAULT_SHOOTING_CAMERA: ShootingCamera = {
 	position: [420, -420, 320],
 	target: [0, 0, 40],
 	zoom: 1,
 	fov: 50,
 };
 
-export const DEFAULT_SHOOTING_FIXTURE: ShootingFixtureV1 = {
-	schema: "shooting.fixture/v1",
+export const DEFAULT_SHOOTING_FIXTURE: ShootingFixture = {
+	schema: "shooting.fixture",
 	assets: [{ id: "base", name: "Base", url: "/mesh/base.glb", format: "glb" }],
 	camera: DEFAULT_SHOOTING_CAMERA,
 	savedCameras: [],
@@ -138,21 +138,21 @@ export const DEFAULT_SHOOTING_FIXTURE: ShootingFixtureV1 = {
 	activeAssetId: "base",
 };
 
-export function shootingFixtureToJson(fixture: ShootingFixtureV1): string {
+export function shootingFixtureToJson(fixture: ShootingFixture): string {
 	return JSON.stringify(fixture, null, 2);
 }
 
-export function parseShootingFixture(json: string): ShootingFixtureV1 | null {
+export function parseShootingFixture(json: string): ShootingFixture | null {
 	try {
-		const parsed = JSON.parse(json) as ShootingFixtureV1;
-		if (parsed.schema !== "shooting.fixture/v1") return null;
+		const parsed = JSON.parse(json) as ShootingFixture;
+		if (parsed.schema !== "shooting.fixture") return null;
 		return parsed;
 	} catch {
 		return null;
 	}
 }
 
-export function shootingCameraToWorldState(camera: ShootingCameraV1): WorldCameraState {
+export function shootingCameraToWorldState(camera: ShootingCamera): WorldCameraState {
 	return {
 		position: [camera.position[0], camera.position[1], camera.position[2]],
 		target: [camera.target[0], camera.target[1], camera.target[2]],
@@ -162,7 +162,7 @@ export function shootingCameraToWorldState(camera: ShootingCameraV1): WorldCamer
 	};
 }
 
-export function worldStateToShootingCamera(state: WorldCameraState, fov?: number): ShootingCameraV1 {
+export function worldStateToShootingCamera(state: WorldCameraState, fov?: number): ShootingCamera {
 	return {
 		position: [state.position[0], state.position[1], state.position[2]],
 		target: [state.target[0], state.target[1], state.target[2]],
@@ -173,29 +173,29 @@ export function worldStateToShootingCamera(state: WorldCameraState, fov?: number
 	};
 }
 
-export function resolveActiveShot(fixture: ShootingFixtureV1): ShootingShotV1 | null {
+export function resolveActiveShot(fixture: ShootingFixture): ShootingShot | null {
 	if (!fixture.shots.length) return null;
 	const active = fixture.activeShotId ? fixture.shots.find((shot) => shot.id === fixture.activeShotId) : undefined;
 	return active ?? fixture.shots[0] ?? null;
 }
 
-export function resolveActiveAsset(fixture: ShootingFixtureV1): ShootingAssetV1 | null {
+export function resolveActiveAsset(fixture: ShootingFixture): ShootingAsset | null {
 	if (!fixture.assets.length) return null;
 	const active = fixture.activeAssetId ? fixture.assets.find((asset) => asset.id === fixture.activeAssetId) : undefined;
 	return active ?? fixture.assets[0] ?? null;
 }
 
-export function resolveShootingShotShape(shot: ShootingShotV1): ShootingShotShape {
+export function resolveShootingShotShape(shot: ShootingShot): ShootingShotShape {
 	return shot.shape ?? "rectangle";
 }
 
-export function resolveShotCamera(fixture: ShootingFixtureV1, shot: ShootingShotV1): ShootingCameraV1 {
+export function resolveShotCamera(fixture: ShootingFixture, shot: ShootingShot): ShootingCamera {
 	if (!shot.cameraId) return fixture.camera;
 	const saved = fixture.savedCameras.find((entry) => entry.id === shot.cameraId);
 	return saved?.camera ?? fixture.camera;
 }
 
-export function applyShootingCameraToFixture(fixture: ShootingFixtureV1, shot: ShootingShotV1, camera: ShootingCameraV1): ShootingFixtureV1 {
+export function applyShootingCameraToFixture(fixture: ShootingFixture, shot: ShootingShot, camera: ShootingCamera): ShootingFixture {
 	if (!shot.cameraId) return { ...fixture, camera };
 	return {
 		...fixture,
@@ -203,7 +203,7 @@ export function applyShootingCameraToFixture(fixture: ShootingFixtureV1, shot: S
 	};
 }
 
-function mergeShootingScene(scene: ShootingSceneV1, patch: Partial<ShootingSceneV1>): ShootingSceneV1 {
+function mergeShootingScene(scene: ShootingScene, patch: Partial<ShootingScene>): ShootingScene {
 	return {
 		...scene,
 		...patch,
@@ -214,7 +214,7 @@ function mergeShootingScene(scene: ShootingSceneV1, patch: Partial<ShootingScene
 	};
 }
 
-function patchShootingShotField(shot: ShootingShotV1, field: string, value: unknown): ShootingShotV1 {
+function patchShootingShotField(shot: ShootingShot, field: string, value: unknown): ShootingShot {
 	if (field === "width" || field === "height") {
 		const numeric = typeof value === "number" ? value : Number(value);
 		if (!Number.isFinite(numeric)) return shot;
@@ -231,21 +231,21 @@ function patchShootingShotField(shot: ShootingShotV1, field: string, value: unkn
 }
 
 export type ShootingFixtureEditOp =
-	| { readonly op: "setDocument"; readonly document: ShootingFixtureV1 }
-	| { readonly op: "patchScene"; readonly patch: Partial<ShootingSceneV1> }
+	| { readonly op: "setDocument"; readonly document: ShootingFixture }
+	| { readonly op: "patchScene"; readonly patch: Partial<ShootingScene> }
 	| { readonly op: "patchShots"; readonly shotIds: readonly string[]; readonly field: string; readonly value: unknown }
 	| { readonly op: "patchShot"; readonly shotId: string; readonly field: string; readonly value: unknown }
 	| { readonly op: "patchAssets"; readonly assetIds: readonly string[]; readonly field: string; readonly value: unknown }
 	| { readonly op: "setActiveShot"; readonly shotId: string }
 	| { readonly op: "setActiveAsset"; readonly assetId: string }
-	| { readonly op: "setCamera"; readonly camera: ShootingCameraV1 }
-	| { readonly op: "setShotCamera"; readonly shotId: string; readonly camera: ShootingCameraV1 }
-	| { readonly op: "addSavedCamera"; readonly entry: ShootingSavedCameraV1 }
+	| { readonly op: "setCamera"; readonly camera: ShootingCamera }
+	| { readonly op: "setShotCamera"; readonly shotId: string; readonly camera: ShootingCamera }
+	| { readonly op: "addSavedCamera"; readonly entry: ShootingSavedCamera }
 	| { readonly op: "loadSavedCamera"; readonly cameraId: string }
-	| { readonly op: "importAsset"; readonly asset: ShootingAssetV1; readonly setActive: boolean };
+	| { readonly op: "importAsset"; readonly asset: ShootingAsset; readonly setActive: boolean };
 
 /** @emoji 🚪 Applies one semantic shooting fixture edit (CQRS projection applier). */
-export function applyShootingFixtureEditOp(fixture: ShootingFixtureV1, op: ShootingFixtureEditOp): ShootingFixtureV1 {
+export function applyShootingFixtureEditOp(fixture: ShootingFixture, op: ShootingFixtureEditOp): ShootingFixture {
 	switch (op.op) {
 		case "setDocument":
 			return op.document;
@@ -298,7 +298,7 @@ export function applyShootingFixtureEditOp(fixture: ShootingFixtureV1, op: Shoot
 }
 
 /** @emoji ↩️ Inverts a shooting fixture edit from the pre-apply projection. */
-export function backwardsShootingFixtureEditOp(fixture: ShootingFixtureV1, op: ShootingFixtureEditOp): readonly ShootingFixtureEditOp[] {
+export function backwardsShootingFixtureEditOp(fixture: ShootingFixture, op: ShootingFixtureEditOp): readonly ShootingFixtureEditOp[] {
 	switch (op.op) {
 		case "setDocument":
 			return [{ op: "setDocument", document: fixture }];
@@ -325,11 +325,11 @@ export function backwardsShootingFixtureEditOp(fixture: ShootingFixtureV1, op: S
 }
 
 /** @emoji 📊 Returns the shooting fixture edit payload for persistence diffs. */
-export function diffShootingFixtureEditOp(_fixture: ShootingFixtureV1, operation: ShootingFixtureEditOp): unknown {
+export function diffShootingFixtureEditOp(_fixture: ShootingFixture, operation: ShootingFixtureEditOp): unknown {
 	return operation;
 }
 
-export function shootingIconRenderRequest(fixture: ShootingFixtureV1, shot: ShootingShotV1, asset: ShootingAssetV1): IconRenderRequest {
+export function shootingIconRenderRequest(fixture: ShootingFixture, shot: ShootingShot, asset: ShootingAsset): IconRenderRequest {
 	const camera = resolveShotCamera(fixture, shot);
 	const background = shot.background ?? fixture.scene.background;
 	return {
@@ -385,7 +385,7 @@ export function sunPositionFromAzimuthElevation(azimuthDeg: number, elevationDeg
 	return [Math.cos(el) * Math.cos(az) * distance, Math.cos(el) * Math.sin(az) * distance, Math.sin(el) * distance];
 }
 
-function createStyledMaterial(material: ShootingMaterialV1): MeshStandardMaterial {
+function createStyledMaterial(material: ShootingMaterial): MeshStandardMaterial {
 	const mat = new MeshStandardMaterial({
 		color: new Color(material.color),
 		metalness: material.metalness,
@@ -403,9 +403,9 @@ export interface ShootingModelBounds {
 
 export function shootingFitCameraFromBounds(
 	bounds: ShootingModelBounds,
-	camera: Pick<ShootingCameraV1, "position" | "target" | "zoom" | "projection">,
+	camera: Pick<ShootingCamera, "position" | "target" | "zoom" | "projection">,
 	padding = 1.25,
-): Pick<ShootingCameraV1, "position" | "target" | "zoom"> {
+): Pick<ShootingCamera, "position" | "target" | "zoom"> {
 	const [cx, cy, cz] = bounds.center;
 	const distance = Math.max(bounds.radius * padding, 2);
 	const dx = camera.position[0] - camera.target[0];
@@ -436,9 +436,9 @@ function ShootingAutoFit({
 	readonly assetKey: string;
 	readonly enabled: boolean;
 	readonly fitRevision: number;
-	readonly camera: ShootingCameraV1;
+	readonly camera: ShootingCamera;
 	readonly projection: OrbitCameraProjection;
-	readonly onCamera: (camera: ShootingCameraV1) => void;
+	readonly onCamera: (camera: ShootingCamera) => void;
 }): null {
 	const { camera: sceneCamera, controls, invalidate } = useThree();
 	const appliedKeyRef = reactHostPort.useRef("");
@@ -491,7 +491,7 @@ function ShootingGlbMesh({
 	meshRef,
 }: {
 	readonly url: string;
-	readonly material: ShootingMaterialV1;
+	readonly material: ShootingMaterial;
 	readonly shadowEnabled: boolean;
 	readonly meshRef?: RefObject<Object3D | null>;
 }): ReactNode {
@@ -521,10 +521,10 @@ export interface ShootingViewportOptions {
 }
 
 export interface ShootingModelCanvasProps extends ShootingViewportOptions {
-	readonly fixture: ShootingFixtureV1;
+	readonly fixture: ShootingFixture;
 	readonly className?: string;
 	readonly style?: CSSProperties;
-	readonly onCamera?: (camera: ShootingCameraV1) => void;
+	readonly onCamera?: (camera: ShootingCamera) => void;
 }
 
 export function ShootingModelCanvas({
@@ -542,7 +542,7 @@ export function ShootingModelCanvas({
 	const meshRef = reactHostPort.useRef<Object3D | null>(null);
 	const sunPos = sunPositionFromAzimuthElevation(fixture.scene.sun.azimuth, fixture.scene.sun.elevation);
 	const handleCamera = reactHostPort.useCallback(
-		(next: ShootingCameraV1) => {
+		(next: ShootingCamera) => {
 			onCamera?.(next);
 		},
 		[onCamera],
@@ -671,7 +671,7 @@ export function ShootingShotFrame({
 
 //#region 🔖IconCanvas
 export interface ShootingIconCanvasProps {
-	readonly fixture: ShootingFixtureV1;
+	readonly fixture: ShootingFixture;
 	readonly className?: string;
 	readonly style?: CSSProperties;
 	readonly renderRevision?: number;
@@ -740,7 +740,7 @@ export function ShootingIconCanvas({ fixture, className, style, renderRevision =
 	);
 }
 
-export async function renderShootingShot(fixture: ShootingFixtureV1, shot: ShootingShotV1, asset?: ShootingAssetV1) {
+export async function renderShootingShot(fixture: ShootingFixture, shot: ShootingShot, asset?: ShootingAsset) {
 	const resolvedAsset = asset ?? resolveActiveAsset(fixture);
 	if (!resolvedAsset) throw new Error("No asset for shot render");
 	return iconRenderPort.render(shootingIconRenderRequest(fixture, shot, resolvedAsset));
@@ -753,7 +753,7 @@ if (import.meta.vitest) {
 
 	describe("@semio-tech/shooting-react", () => {
 		it("exports default fixture json", () => {
-			expect(shootingFixtureToJson(DEFAULT_SHOOTING_FIXTURE)).toContain("shooting.fixture/v1");
+			expect(shootingFixtureToJson(DEFAULT_SHOOTING_FIXTURE)).toContain("shooting.fixture");
 		});
 
 		it("parses shooting fixture", () => {

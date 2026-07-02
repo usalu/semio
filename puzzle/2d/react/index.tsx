@@ -20,7 +20,7 @@ import {
   type RenderMode,
 } from "@semio-tech/infinite-cavas-react-renderer";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
-import { type TreeDragAndDropController, CanvasPickMenu, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget } from "@semio-tech/ui-react";
+import { type TreeDragAndDropController, CanvasPickMenu, classifyIconSelectorMode, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget, type IconSelectorMode } from "@semio-tech/ui-react";
 import { createPortal } from "react-dom";
 import {
   blendTokenHex,
@@ -83,6 +83,7 @@ import {
 	type NodeKindHandleTemplate,
 	type WireKind,
   nakaginManifestCatalogBundle,
+  concrete_forestManifestCatalogBundle,
   puzzle2d_defaultManifestCatalogBundle,
   rewrite_lhsManifestCatalogBundle,
   rewrite_rhsManifestCatalogBundle,
@@ -343,7 +344,7 @@ function puzzle2dResolveDoorCapsuleHandleKindForNodeKind(nodeKindId: string | un
 }
 
 /** @emoji 🧩 Applies a semantic node kind to a fixture node and relabels door-capsule handles when needed. */
-export function puzzle2dApplyNodeKindToFixtureNode(node: Puzzle2dFixtureNodeV1, kindId: string, catalogs: KindCatalogBundle): Puzzle2dFixtureNodeV1 {
+export function puzzle2dApplyNodeKindToFixtureNode(node: Puzzle2dFixtureNode, kindId: string, catalogs: KindCatalogBundle): Puzzle2dFixtureNode {
   const trimmed = kindId.trim();
   const handles = node.handles.map((handle) => ({
     ...handle,
@@ -501,13 +502,13 @@ function puzzle2dFixtureMetaRecord(raw: unknown): Record<string, unknown> | unde
   if (box.meta && typeof box.meta === "object") {
     return box.meta as Record<string, unknown>;
   }
-  if (box.kindCompatibility !== undefined || box.kindCatalogs !== undefined) {
+  if (box.kindCompatibility !== undefined) {
     return box;
   }
   return undefined;
 }
 
-/** @emoji 🗂️ Resolves compile-time kind catalogs from fixture `meta.manifestId` or legacy `meta.kindCatalogs`. */
+/** @emoji 🗂️ Resolves compile-time kind catalogs from fixture `meta.manifestId`. */
 export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | undefined {
   const meta = puzzle2dFixtureMetaRecord(raw);
   if (!meta) {
@@ -516,6 +517,9 @@ export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | 
   const manifestId = typeof meta.manifestId === "string" ? meta.manifestId.trim() : "";
   if (manifestId === "nakagin") {
     return nakaginManifestCatalogBundle();
+  }
+  if (manifestId === "concrete-forest") {
+    return concrete_forestManifestCatalogBundle();
   }
   if (manifestId === "puzzle2d-default") {
     return puzzle2d_defaultManifestCatalogBundle();
@@ -526,35 +530,7 @@ export function fixtureMetaKindCatalogBundle(raw: unknown): KindCatalogBundle | 
   if (manifestId === "rewrite-rhs") {
     return rewrite_rhsManifestCatalogBundle();
   }
-  const kc = meta.kindCatalogs;
-  if (!kc || typeof kc !== "object") {
-    return undefined;
-  }
-  const box = kc as Record<string, unknown>;
-  const nodesRaw = box.nodes;
-  const handlesRaw = box.handles;
-  const edgesRaw = box.edges;
-  const edgeTipsRaw = box.edgeTips;
-  const out: KindCatalogBundle = {};
-  const nodes = parseNodeKindsFromFixtureJson(nodesRaw);
-  if (nodes) {
-    out.nodes = nodes;
-  }
-  const edgeTips = parseEdgeTipsFromFixtureJson(edgeTipsRaw);
-  if (edgeTips) {
-    out.edgeTips = edgeTips;
-  }
-  const edges = parseEdgeKindsFromFixtureJson(edgesRaw);
-  if (edges) {
-    out.edges = edges;
-  }
-  if (Array.isArray(handlesRaw)) {
-    out.handles = handlesRaw as readonly HandleKind[];
-  }
-  if (out.nodes === undefined && out.handles === undefined && out.edges === undefined && out.edgeTips === undefined) {
-    return undefined;
-  }
-  return enrichKindCatalogBundleDoorCapsules(out) ?? out;
+  return undefined;
 }
 
 /** @emoji 🔗 Returns `meta.kindCompatibility` from raw puzzle 2d fixture JSON or a `meta` slice when present. */
@@ -832,12 +808,12 @@ export function spreadPuzzleConnectionTransformParams(params: PuzzleConnectionTr
   return out;
 }
 
-/** @emoji 📄 Handle record inside {@link Puzzle2dFixtureV1}; optional `radius` overrides default world-space hit/draw size. */
-export interface Puzzle2dFixtureHandleV1 {
+/** @emoji 📄 Handle record inside {@link Puzzle2dFixture}; optional `radius` overrides default world-space hit/draw size. */
+export interface Puzzle2dFixtureHandle {
   angle: number;
   /** @emoji 📐 Optional port perimeter parameter (0–1); defaults from {@link angle} / 360 when absent. */
   t?: number;
-  /** @emoji 🔗 Required after {@link parsePuzzle2dFixtureV1}; JSON may omit it and receive {@link BUILTIN_PORT_HANDLE_KIND}. */
+  /** @emoji 🔗 Required after {@link parsePuzzle2dFixture}; JSON may omit it and receive {@link BUILTIN_PORT_HANDLE_KIND}. */
   handleKind: string;
   hidden?: boolean;
   id: string;
@@ -849,10 +825,10 @@ export interface Puzzle2dFixtureHandleV1 {
   radius?: number;
 }
 
-/** @emoji 📄 Circle node: {@link Puzzle2dFixtureCircleNodeV1.x}/{@link Puzzle2dFixtureCircleNodeV1.y} are the disk center in layout space; handle {@link Puzzle2dFixtureHandleV1.angle} aims at the connected neighbor (radians). */
-export interface Puzzle2dFixtureCircleNodeV1 {
+/** @emoji 📄 Circle node: {@link Puzzle2dFixtureCircleNode.x}/{@link Puzzle2dFixtureCircleNode.y} are the disk center in layout space; handle {@link Puzzle2dFixtureHandle.angle} aims at the connected neighbor (radians). */
+export interface Puzzle2dFixtureCircleNode {
   cad?: { x: number; y: number; z: number } | null;
-  handles: Puzzle2dFixtureHandleV1[];
+  handles: Puzzle2dFixtureHandle[];
   hidden?: boolean;
   id: string;
   locked?: boolean;
@@ -879,9 +855,9 @@ export interface Puzzle2dFixtureCircleNodeV1 {
 }
 
 /** @emoji 📄 Axis-aligned rectangle: center (x,y) in layout space, full width/height (not half-extents); handle `angle` is **0 at north** (top center), **CCW** in `[0,2π)` (`π/4` NW corner, `π/2` west, …); circles use **east-zero** polar `atan2(dy,dx)`. */
-export interface Puzzle2dFixtureRectangleNodeV1 {
+export interface Puzzle2dFixtureRectangleNode {
   cad?: { x: number; y: number; z: number } | null;
-  handles: Puzzle2dFixtureHandleV1[];
+  handles: Puzzle2dFixtureHandle[];
   height: number;
   hidden?: boolean;
   id: string;
@@ -908,11 +884,11 @@ export interface Puzzle2dFixtureRectangleNodeV1 {
   y: number;
 }
 
-/** @emoji 📄 Node record inside {@link Puzzle2dFixtureV1} (uniform circle body). */
-export type Puzzle2dFixtureNodeV1 = Puzzle2dFixtureCircleNodeV1;
+/** @emoji 📄 Node record inside {@link Puzzle2dFixture} (uniform circle body). */
+export type Puzzle2dFixtureNode = Puzzle2dFixtureCircleNode;
 
-/** @emoji 📄 Edge record inside {@link Puzzle2dFixtureV1}. */
-export interface Puzzle2dFixtureEdgeV1 extends PuzzleConnectionTransformParams {
+/** @emoji 📄 Edge record inside {@link Puzzle2dFixture}. */
+export interface Puzzle2dFixtureEdge extends PuzzleConnectionTransformParams {
   /** @emoji 🧩 Optional semantic edge-kind id for catalog defaults and compatibility. */
   edgeKind?: string;
   hidden?: boolean;
@@ -925,17 +901,17 @@ export interface Puzzle2dFixtureEdgeV1 extends PuzzleConnectionTransformParams {
 }
 
 /** @emoji 📄 Parsed `puzzle.2d.fixture/v1` JSON for declarative puzzle 2d scenes. */
-export interface Puzzle2dFixtureV1 {
+export interface Puzzle2dFixture {
   camera: CameraState;
-  edges: Puzzle2dFixtureEdgeV1[];
+  edges: Puzzle2dFixtureEdge[];
   meta?: Record<string, unknown>;
-  nodes: Puzzle2dFixtureNodeV1[];
+  nodes: Puzzle2dFixtureNode[];
   schema: string;
 }
 
 // #region 🏷️IconSelectorMode
 
-export { classifyIconSelectorMode as classifyPuzzle2dIconSelectorMode, type IconSelectorMode as Puzzle2dIconSelectorMode } from "@semio-tech/ui-react";
+export { classifyIconSelectorMode, type IconSelectorMode };
 
 // #endregion 🏷️IconSelectorMode
 
@@ -977,7 +953,7 @@ export interface Puzzle2dRedrawLayoutOptions {
 }
 
 /** @emoji 🕸️ Runs WASM force-directed layout on fixture node centers (edges via handle ids); uses dimforge `nalgebra` in Rust. */
-export function layoutPuzzle2dFixtureForceGraph(fixture: Puzzle2dFixtureV1, options?: Puzzle2dForceGraphLayoutOptions): Puzzle2dFixtureV1 {
+export function layoutPuzzle2dFixtureForceGraph(fixture: Puzzle2dFixture, options?: Puzzle2dForceGraphLayoutOptions): Puzzle2dFixture {
   const out = boardRedrawLayoutFixtureJson(
     JSON.stringify(fixture),
     JSON.stringify({
@@ -986,13 +962,13 @@ export function layoutPuzzle2dFixtureForceGraph(fixture: Puzzle2dFixtureV1, opti
       redrawHandlesAfter: false,
     }),
   );
-  return JSON.parse(out) as Puzzle2dFixtureV1;
+  return JSON.parse(out) as Puzzle2dFixture;
 }
 
 /** @emoji 🧩 Runs WASM fixture redraw (force graph or hierarchical tree) with optional chained handle snap. */
-export function layoutPuzzle2dFixtureRedrawNodes(fixture: Puzzle2dFixtureV1, options: Puzzle2dRedrawLayoutOptions): Puzzle2dFixtureV1 {
+export function layoutPuzzle2dFixtureRedrawNodes(fixture: Puzzle2dFixture, options: Puzzle2dRedrawLayoutOptions): Puzzle2dFixture {
   const out = boardRedrawLayoutFixtureJson(JSON.stringify(fixture), JSON.stringify(options));
-  return JSON.parse(out) as Puzzle2dFixtureV1;
+  return JSON.parse(out) as Puzzle2dFixture;
 }
 
 /** @emoji 🖱️ In-flight pointer drag state for live force-graph layout (shared by play shell and FiveD kit surfaces). */
@@ -1003,9 +979,9 @@ export type Puzzle2dLiveForceGraphDragState = {
 
 /** @emoji 🖱️ Re-applies authoritative drag centers after a layout pass so RAF cannot stomp an in-flight pointer drag. */
 export function puzzle2dFixtureWithDragAnchors(
-  fixture: Puzzle2dFixtureV1,
+  fixture: Puzzle2dFixture,
   dragAnchors: ReadonlyMap<string, { readonly x: number; readonly y: number }>,
-): Puzzle2dFixtureV1 {
+): Puzzle2dFixture {
   if (dragAnchors.size === 0) {
     return fixture;
   }
@@ -1019,7 +995,7 @@ export function puzzle2dFixtureWithDragAnchors(
 }
 
 /** @emoji 🕸️ Applies drag anchors and pushes layout positions to every authoring pane WASM host. */
-export function puzzle2dFinalizeLiveForceGraphLayoutTick(fixture: Puzzle2dFixtureV1, drag?: Puzzle2dLiveForceGraphDragState): Puzzle2dFixtureV1 {
+export function puzzle2dFinalizeLiveForceGraphLayoutTick(fixture: Puzzle2dFixture, drag?: Puzzle2dLiveForceGraphDragState): Puzzle2dFixture {
   const laid = drag && drag.dragAnchors.size > 0 ? puzzle2dFixtureWithDragAnchors(fixture, drag.dragAnchors) : fixture;
   puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(laid);
   return laid;
@@ -1027,10 +1003,10 @@ export function puzzle2dFinalizeLiveForceGraphLayoutTick(fixture: Puzzle2dFixtur
 
 /** @emoji 🕸️ One live force-graph tick: WASM layout, drag anchors, then immediate peer WASM position sync. */
 export function puzzle2dApplyLiveForceGraphLayoutTick(
-  fixture: Puzzle2dFixtureV1,
+  fixture: Puzzle2dFixture,
   layoutOptions: Puzzle2dRedrawLayoutOptions,
   drag?: Puzzle2dLiveForceGraphDragState,
-): Puzzle2dFixtureV1 {
+): Puzzle2dFixture {
   const locked = new Set(layoutOptions.lockedNodeIds ?? []);
   if (drag) {
     for (const id of drag.lockedNodeIds) {
@@ -1043,9 +1019,9 @@ export function puzzle2dApplyLiveForceGraphLayoutTick(
 }
 
 /** @emoji 🔗 Snaps fixture handle angles to straight chords between linked node centers (WASM). */
-export function layoutPuzzle2dFixtureRedrawHandles(fixture: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
+export function layoutPuzzle2dFixtureRedrawHandles(fixture: Puzzle2dFixture): Puzzle2dFixture {
   const out = boardRedrawHandlesFixtureJson(JSON.stringify(fixture));
-  return JSON.parse(out) as Puzzle2dFixtureV1;
+  return JSON.parse(out) as Puzzle2dFixture;
 }
 
 /** @emoji 🧩 Catalog-kind hover domain for transitive same-kind highlight. */
@@ -1185,10 +1161,10 @@ export function puzzle2dRectangleHandleAngleToCircleAngle(width: number, height:
   return Math.atan2(flat[1], flat[0]);
 }
 
-type Puzzle2dFixtureNodeParseV1 = Puzzle2dFixtureCircleNodeV1 | Puzzle2dFixtureRectangleNodeV1;
+type Puzzle2dFixtureNodeParse = Puzzle2dFixtureCircleNode | Puzzle2dFixtureRectangleNode;
 
 /** @emoji ⭕ Coerces any fixture node to a uniform circle (shape and radius cannot be overridden). */
-export function puzzle2dNormalizeFixtureNodeV1(node: Puzzle2dFixtureNodeParseV1): Puzzle2dFixtureCircleNodeV1 {
+export function puzzle2dNormalizeFixtureNode(node: Puzzle2dFixtureNodeParse): Puzzle2dFixtureCircleNode {
   const wasRectangle = node.shape === "rectangle";
   const width = wasRectangle ? node.width : node.radius * 2;
   const height = wasRectangle ? node.height : node.radius * 2;
@@ -1196,7 +1172,7 @@ export function puzzle2dNormalizeFixtureNodeV1(node: Puzzle2dFixtureNodeParseV1)
     ...handle,
     angle: wasRectangle ? puzzle2dRectangleHandleAngleToCircleAngle(width, height, handle.angle) : handle.angle,
   }));
-  const { shape: _shape, width: _width, height: _height, radius: _radius, ...rest } = node as Puzzle2dFixtureCircleNodeV1 & Partial<Puzzle2dFixtureRectangleNodeV1>;
+  const { shape: _shape, width: _width, height: _height, radius: _radius, ...rest } = node as Puzzle2dFixtureCircleNode & Partial<Puzzle2dFixtureRectangleNode>;
   return { ...rest, handles, radius: PUZZLE_2D_NODE_RADIUS_PX, shape: "circle" };
 }
 
@@ -2189,7 +2165,7 @@ function fixtureNodeTextFromJson(node: Record<string, unknown>): string | undefi
 }
 
 /** @emoji 🏷️ On-canvas / inspector caption for a parsed fixture node. */
-export function puzzle2dFixtureNodeCaption(node: Puzzle2dFixtureNodeV1): string | undefined {
+export function puzzle2dFixtureNodeCaption(node: Puzzle2dFixtureNode): string | undefined {
   const text = node.text?.trim();
   return text !== "" ? text : undefined;
 }
@@ -2232,13 +2208,13 @@ function puzzle2dFixtureOptionalEntityFlags(record: Record<string, unknown>): { 
   return out;
 }
 
-/** @emoji 🧾 Validates unknown JSON into {@link Puzzle2dFixtureV1} or returns null. */
-export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
+/** @emoji 🧾 Validates unknown JSON into {@link Puzzle2dFixture} or returns null. */
+export function parsePuzzle2dFixture(raw: unknown): Puzzle2dFixture | null {
   if (!raw || typeof raw !== "object") {
     return null;
   }
   const root = raw as Record<string, unknown>;
-  if (root.schema !== "puzzle.2d.fixture/v1") {
+  if (root.schema !== "puzzle.2d.fixture") {
     return null;
   }
   const cam = root.camera;
@@ -2257,7 +2233,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
   if (!Array.isArray(root.nodes) || !Array.isArray(root.edges)) {
     return null;
   }
-    const nodes: Puzzle2dFixtureNodeParseV1[] = [];
+    const nodes: Puzzle2dFixtureNodeParse[] = [];
   for (const entry of root.nodes) {
     if (!entry || typeof entry !== "object") {
       return null;
@@ -2275,7 +2251,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
     if (!Array.isArray(node.handles)) {
       return null;
     }
-    const handles: Puzzle2dFixtureHandleV1[] = [];
+    const handles: Puzzle2dFixtureHandle[] = [];
     for (const h of node.handles) {
       if (!h || typeof h !== "object") {
         return null;
@@ -2295,7 +2271,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
       const iconRaw = hr.iconKind;
       const iconTrim = typeof iconRaw === "string" && iconRaw.trim() !== "" ? iconRaw.trim() : undefined;
       const tRaw = Number(hr.t);
-      const base: Puzzle2dFixtureHandleV1 = {
+      const base: Puzzle2dFixtureHandle = {
         angle,
         handleKind,
         id: hid,
@@ -2329,31 +2305,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
           : undefined;
     const shapeRaw = node.shape;
     if (shapeRaw === "rectangle") {
-      const width = Number(node.width);
-      const height = Number(node.height);
-      if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
-        return null;
-      }
-      nodes.push({
-        ...(cad !== undefined ? { cad } : {}),
-        ...(textFromJson !== undefined ? { text: textFromJson } : {}),
-        ...(textAutofit ? { textAutofit: true } : {}),
-        ...(textFontFamily !== undefined ? { textFontFamily } : {}),
-        ...(textFontSize !== undefined ? { textFontSize } : {}),
-        ...(textAlignment !== undefined ? { textAlignment } : {}),
-        ...(rootFlag ? { root: true } : {}),
-        ...(iconKind !== undefined ? { iconKind } : {}),
-        ...(nodeKind !== undefined ? { nodeKind } : {}),
-        ...puzzle2dFixtureOptionalEntityFlags(node),
-        handles,
-        height,
-        id,
-        shape: "rectangle",
-        width,
-        x,
-        y,
-      });
-      continue;
+      return null;
     }
     if (shapeRaw !== undefined && shapeRaw !== "circle") {
       return null;
@@ -2381,7 +2333,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
       y,
     });
   }
-  const edges: Puzzle2dFixtureEdgeV1[] = [];
+  const edges: Puzzle2dFixtureEdge[] = [];
   for (const entry of root.edges) {
     if (!entry || typeof entry !== "object") {
       return null;
@@ -2413,7 +2365,7 @@ export function parsePuzzle2dFixtureV1(raw: unknown): Puzzle2dFixtureV1 | null {
     });
   }
   const meta = root.meta && typeof root.meta === "object" ? (root.meta as Record<string, unknown>) : undefined;
-  return { camera, edges, meta, nodes: nodes.map(puzzle2dNormalizeFixtureNodeV1), schema: "puzzle.2d.fixture/v1" };
+  return { camera, edges, meta, nodes, schema: "puzzle.2d.fixture" };
 }
 
 //#region 🌤️Flatten
@@ -2430,7 +2382,7 @@ function flatten2dParseEndpoint(endpoint: string): { readonly nodeId: string; re
   return { nodeId: endpoint.slice(0, colon), handleId: endpoint.slice(colon + 1) };
 }
 
-function flatten2dHandleT(handle: Puzzle2dFixtureHandleV1 | undefined): number {
+function flatten2dHandleT(handle: Puzzle2dFixtureHandle | undefined): number {
   if (!handle) {
     return 0;
   }
@@ -2448,9 +2400,9 @@ function flatten2dRound6(value: number): number {
 }
 
 /** @emoji 🌤️ Computes absolute node centers from edges and handle perimeter parameters. */
-export function flatten2d(fixture: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
+export function flatten2d(fixture: Puzzle2dFixture): Puzzle2dFixture {
   const nodeMap = new Map(fixture.nodes.map((node) => [node.id, node]));
-  const adjacency = new Map<string, { readonly neighborId: string; readonly edge: Puzzle2dFixtureEdgeV1; readonly sourceOnCurrent: boolean }[]>();
+  const adjacency = new Map<string, { readonly neighborId: string; readonly edge: Puzzle2dFixtureEdge; readonly sourceOnCurrent: boolean }[]>();
   for (const edge of fixture.edges) {
     const source = flatten2dParseEndpoint(edge.source);
     const target = flatten2dParseEndpoint(edge.target);
@@ -2523,38 +2475,38 @@ export function flatten2d(fixture: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
 //#endregion 🌤️Flatten
 
 /** @emoji 📌 MIME for in-app puzzle 2d fixture drags (not host filesystem file drops). */
-export const PUZZLE_2D_FIXTURE_DRAG_V1_MIME = "application/x-puzzle-2d-fixture-v1";
+export const PUZZLE_2D_FIXTURE_DRAG_MIME = "application/x-puzzle-2d-fixture";
 
-/** @emoji 🧩 `Puzzle2dFixtureV1.meta.puzzle2dFixtureDragKind` — shelf palette drops merge one node at the pointer; any other payload replaces the scene. */
+/** @emoji 🧩 `Puzzle2dFixture.meta.puzzle2dFixtureDragKind` — shelf palette drops merge one node at the pointer; any other payload replaces the scene. */
 export const PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE = "palette-node";
 
 /** @emoji 📍 Payload for puzzle 2d canvas fixture drops: scene plus pointer in canvas CSS space and mapped world coordinates. */
 export interface Puzzle2dFixtureDropDetail {
-  fixture: Puzzle2dFixtureV1;
+  fixture: Puzzle2dFixture;
   screen: { x: number; y: number };
   world: { x: number; y: number };
 }
 
-/** @emoji 📦 Serializes a validated fixture for {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME}. */
-export function encodePuzzle2dFixtureForDragV1(fixture: Puzzle2dFixtureV1): string {
+/** @emoji 📦 Serializes a validated fixture for {@link PUZZLE_2D_FIXTURE_DRAG_MIME}. */
+export function encodePuzzle2dFixtureForDrag(fixture: Puzzle2dFixture): string {
   return JSON.stringify(fixture);
 }
 
-/** @emoji 📋 Fallback MIME for hosts that only expose `text/plain` on drop (same JSON as {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME}). */
+/** @emoji 📋 Fallback MIME for hosts that only expose `text/plain` on drop (same JSON as {@link PUZZLE_2D_FIXTURE_DRAG_MIME}). */
 export const PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME = "text/plain";
 
 /** @emoji 📤 Writes puzzle 2d fixture drag payload (custom MIME + `text/plain` fallback). */
-export function setPuzzle2dFixtureDragDataTransfer(dataTransfer: DataTransfer, fixture: Puzzle2dFixtureV1): void {
-  const encoded = encodePuzzle2dFixtureForDragV1(fixture);
-  dataTransfer.setData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME, encoded);
+export function setPuzzle2dFixtureDragDataTransfer(dataTransfer: DataTransfer, fixture: Puzzle2dFixture): void {
+  const encoded = encodePuzzle2dFixtureForDrag(fixture);
+  dataTransfer.setData(PUZZLE_2D_FIXTURE_DRAG_MIME, encoded);
   dataTransfer.setData(PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME, encoded);
 }
 
 /** @emoji 📥 Reads puzzle 2d fixture drag payload from a drop `DataTransfer`. */
-export function readPuzzle2dFixtureDragDataTransfer(dataTransfer: DataTransfer): Puzzle2dFixtureV1 | null {
-  const custom = dataTransfer.getData(PUZZLE_2D_FIXTURE_DRAG_V1_MIME);
+export function readPuzzle2dFixtureDragDataTransfer(dataTransfer: DataTransfer): Puzzle2dFixture | null {
+  const custom = dataTransfer.getData(PUZZLE_2D_FIXTURE_DRAG_MIME);
   if (custom.trim() !== "") {
-    const parsed = decodePuzzle2dFixtureFromDragV1(custom);
+    const parsed = decodePuzzle2dFixtureFromDrag(custom);
     if (parsed) {
       return parsed;
     }
@@ -2563,23 +2515,23 @@ export function readPuzzle2dFixtureDragDataTransfer(dataTransfer: DataTransfer):
   if (plain.trim() === "") {
     return null;
   }
-  return decodePuzzle2dFixtureFromDragV1(plain);
+  return decodePuzzle2dFixtureFromDrag(plain);
 }
 
 /** @emoji 📋 Deep-clones a validated fixture for isolated React state (avoids mutating {@link PUZZLE_2D_PLAY_DEFAULT_FIXTURE}). */
-export function clonePuzzle2dFixtureV1(fixture: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
-  return JSON.parse(JSON.stringify(fixture)) as Puzzle2dFixtureV1;
+export function clonePuzzle2dFixture(fixture: Puzzle2dFixture): Puzzle2dFixture {
+  return JSON.parse(JSON.stringify(fixture)) as Puzzle2dFixture;
 }
 
-/** @emoji 📥 Parses drag payload from {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME}. */
-export function decodePuzzle2dFixtureFromDragV1(text: string): Puzzle2dFixtureV1 | null {
+/** @emoji 📥 Parses drag payload from {@link PUZZLE_2D_FIXTURE_DRAG_MIME}. */
+export function decodePuzzle2dFixtureFromDrag(text: string): Puzzle2dFixture | null {
   let raw: unknown;
   try {
     raw = JSON.parse(text) as unknown;
   } catch {
     return null;
   }
-  return parsePuzzle2dFixtureV1(raw);
+  return parsePuzzle2dFixture(raw);
 }
 
 function puzzle2dAuthoringId(prefix: string): string {
@@ -2589,7 +2541,7 @@ function puzzle2dAuthoringId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function isPaletteNodeDragFixture(fixture: Puzzle2dFixtureV1): boolean {
+function isPaletteNodeDragFixture(fixture: Puzzle2dFixture): boolean {
   if (fixture.meta?.puzzle2dFixtureDragKind === PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE) {
     return true;
   }
@@ -2601,12 +2553,12 @@ function isPaletteNodeDragFixture(fixture: Puzzle2dFixtureV1): boolean {
 }
 
 /** @emoji 🧩 Minimal fixture encoding one node kind for workbench palette drags. */
-export function buildPaletteNodeDragFixture(nodeKindId: string, catalogs?: KindCatalogBundle): Puzzle2dFixtureV1 {
+export function buildPaletteNodeDragFixture(nodeKindId: string, catalogs?: KindCatalogBundle): Puzzle2dFixture {
   const kind = catalogs?.nodes?.find((row) => row.id === nodeKindId);
   const templates = kind?.handles ?? [];
   const handles = puzzle2dFixtureHandlesFromNodeKind("palette-seed-node", templates);
   const icon = puzzle2dNodeKindCatalogIcon(kind ?? { id: nodeKindId });
-  const seed: Puzzle2dFixtureNodeV1 = {
+  const seed: Puzzle2dFixtureNode = {
     handles,
     id: "palette-seed-node",
     nodeKind: nodeKindId,
@@ -2617,7 +2569,7 @@ export function buildPaletteNodeDragFixture(nodeKindId: string, catalogs?: KindC
     ...(icon ? { iconKind: icon } : {}),
   };
   return {
-    schema: "puzzle.2d.fixture/v1",
+    schema: "puzzle.2d.fixture",
     camera: { x: 0, y: 0, zoom: 1 },
     edges: [],
     meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
@@ -2627,8 +2579,8 @@ export function buildPaletteNodeDragFixture(nodeKindId: string, catalogs?: KindC
 
 /** @emoji 📤 `dataTransfer` map for dragging one node kind from the workbench kinds tree. */
 export function puzzle2dPlayNodeKindDragData(nodeKindId: string, catalogs?: KindCatalogBundle): Record<string, string> {
-  const encoded = encodePuzzle2dFixtureForDragV1(buildPaletteNodeDragFixture(nodeKindId, catalogs));
-  return { [PUZZLE_2D_FIXTURE_DRAG_V1_MIME]: encoded, [PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME]: encoded };
+  const encoded = encodePuzzle2dFixtureForDrag(buildPaletteNodeDragFixture(nodeKindId, catalogs));
+  return { [PUZZLE_2D_FIXTURE_DRAG_MIME]: encoded, [PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME]: encoded };
 }
 
 /** @emoji 🎯 Non-scene handle id so WASM draws palette drop preview node without a preview edge wire. */
@@ -2760,7 +2712,7 @@ export const puzzle2dFixtureDropPointerToWorldRef: {
 export function commitPuzzle2dFixtureDropAtClient(
   clientX: number,
   clientY: number,
-  fixture: Puzzle2dFixtureV1,
+  fixture: Puzzle2dFixture,
   host: HTMLElement | null | undefined,
   onFixtureDrop: ((detail: Puzzle2dFixtureDropDetail) => void) | undefined,
 ): boolean {
@@ -2788,7 +2740,7 @@ export function endPuzzle2dFixturePalettePointerDrag(
   clientX: number,
   clientY: number,
   host: HTMLElement | null | undefined,
-  onPaletteDrop?: (fixture: Puzzle2dFixtureV1) => void,
+  onPaletteDrop?: (fixture: Puzzle2dFixture) => void,
 ): void {
   if (!puzzle2dFixturePalettePointerDragRef.active) {
     return;
@@ -2798,7 +2750,7 @@ export function endPuzzle2dFixturePalettePointerDrag(
   if (!encoded) {
     return;
   }
-  const fixture = decodePuzzle2dFixtureFromDragV1(encoded);
+  const fixture = decodePuzzle2dFixtureFromDrag(encoded);
   if (!fixture) {
     return;
   }
@@ -2810,7 +2762,7 @@ export function endPuzzle2dFixturePalettePointerDrag(
 
 /** @emoji 🔍 True when `dataTransfer.types` carries a puzzle 2D fixture palette drag. */
 export function puzzle2dFixtureDragMimeInTypes(types: readonly string[]): boolean {
-  return types.includes(PUZZLE_2D_FIXTURE_DRAG_V1_MIME) || types.includes(PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME);
+  return types.includes(PUZZLE_2D_FIXTURE_DRAG_MIME) || types.includes(PUZZLE_2D_FIXTURE_DRAG_PLAIN_MIME);
 }
 
 /** @emoji 🔍 Whether the viewport should accept a palette fixture drop for this drag gesture. */
@@ -2827,7 +2779,7 @@ export type Puzzle2dFixtureDropPreviewPayload = Record<string, unknown>;
 /** @emoji 👁️ Highlighted palette-drop preview node JSON for {@link setFixtureDropPreviewJson} (shared world point for every pane). */
 export function buildPaletteFixtureDropPreviewPayloadAtWorld(
   world: Point,
-  fixture: Puzzle2dFixtureV1,
+  fixture: Puzzle2dFixture,
   catalogs: KindCatalogBundle | undefined,
   brushNodeSize = DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
 ): Puzzle2dFixtureDropPreviewPayload | null {
@@ -2868,7 +2820,7 @@ export function abortPuzzle2dFixturePaletteDrag(): void {
 /** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry puzzle 2D fixture palette `dragData`. */
 export function puzzle2dFixturePaletteTreeDragController(dragDataByItemId: ReadonlyMap<string, Record<string, string>>): TreeDragAndDropController {
   const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
-    const payload = dragData?.[PUZZLE_2D_FIXTURE_DRAG_V1_MIME];
+    const payload = dragData?.[PUZZLE_2D_FIXTURE_DRAG_MIME];
     return payload?.trim() ? payload : undefined;
   };
   return {
@@ -2908,7 +2860,7 @@ export function puzzle2dFixturePaletteTreeDragController(dragDataByItemId: Reado
 }
 
 /** @emoji 🧩 When the drag payload is a palette seed, returns one node placed at the drop world point; else null so the scene should be replaced. */
-export function mergePaletteNodeFromDrop(detail: Puzzle2dFixtureDropDetail): Puzzle2dFixtureNodeV1 | null {
+export function mergePaletteNodeFromDrop(detail: Puzzle2dFixtureDropDetail): Puzzle2dFixtureNode | null {
   if (!isPaletteNodeDragFixture(detail.fixture)) {
     return null;
   }
@@ -2996,7 +2948,7 @@ export function puzzle2dNodeKindHandlesFromKitConnectors(
 }
 
 /** @emoji 🎯 Builds fixture handles for a new node from {@link NodeKind.handles} templates. */
-export function puzzle2dFixtureHandlesFromNodeKind(nodeId: string, templates: readonly NodeKindHandleTemplate[]): Puzzle2dFixtureHandleV1[] {
+export function puzzle2dFixtureHandlesFromNodeKind(nodeId: string, templates: readonly NodeKindHandleTemplate[]): Puzzle2dFixtureHandle[] {
   return templates.map((entry, index) => ({
     id: `${nodeId}:h${index}`,
     angle: entry.angle,
@@ -3008,11 +2960,11 @@ export function puzzle2dFixtureHandlesFromNodeKind(nodeId: string, templates: re
 /** @emoji 🖌️ Result of {@link applyBrushPlacementToFixture} (placed ids for structural-delete guards). */
 export type Puzzle2dBrushPlacementApplyResult =
   | { readonly kind: "unchanged" }
-  | { readonly fixture: Puzzle2dFixtureV1; readonly kind: "placed"; readonly nodeId: string; readonly edgeId: string };
+  | { readonly fixture: Puzzle2dFixture; readonly kind: "placed"; readonly nodeId: string; readonly edgeId: string };
 
 /** @emoji 🖌️ Appends a brushed node and parent edge from a WASM {@link Puzzle2dBrushPlacePayload}. */
 export function applyBrushPlacementToFixture(
-  fixture: Puzzle2dFixtureV1,
+  fixture: Puzzle2dFixture,
   payload: Puzzle2dBrushPlacePayload,
   catalogs?: KindCatalogBundle,
 ): Puzzle2dBrushPlacementApplyResult {
@@ -3033,9 +2985,9 @@ export function applyBrushPlacementToFixture(
   if (handles.some((h) => fixture.edges.some((e) => e.source === h.id || e.target === h.id))) {
     return { kind: "unchanged" };
   }
-  const edge: Puzzle2dFixtureEdgeV1 = { id: edgeId, source: payload.sourceHandleId, target: targetHandle.id };
+  const edge: Puzzle2dFixtureEdge = { id: edgeId, source: payload.sourceHandleId, target: targetHandle.id };
   const iconKind = payload.iconKind?.trim() || puzzle2dIconKindForBrushNodeKind(fixture, catalogs, payload.nodeKind);
-  const node: Puzzle2dFixtureNodeV1 = {
+  const node: Puzzle2dFixtureNode = {
     handles,
     id: nodeId,
     nodeKind: payload.nodeKind,
@@ -3054,7 +3006,7 @@ export function applyBrushPlacementToFixture(
 }
 
 /** @emoji 🪣 WASM scene descriptor JSON for a fixture snapshot (fill probes). */
-export function puzzle2dWasmDescriptorJsonFromFixture(fixture: Puzzle2dFixtureV1): string {
+export function puzzle2dWasmDescriptorJsonFromFixture(fixture: Puzzle2dFixture): string {
   const nodes: Record<string, unknown>[] = [];
   for (const node of fixture.nodes) {
     const base: Record<string, unknown> = {
@@ -3108,10 +3060,10 @@ export function puzzle2dWasmDescriptorJsonFromFixture(fixture: Puzzle2dFixtureV1
 
 /** @emoji 🪣 Appends a deterministic fill prefix to a base fixture. */
 export function applyBrushFillPlacementsToFixture(
-  fixture: Puzzle2dFixtureV1,
+  fixture: Puzzle2dFixture,
   payloads: readonly Puzzle2dBrushPlacePayload[],
   catalogs?: KindCatalogBundle,
-): Puzzle2dFixtureV1 {
+): Puzzle2dFixture {
   let next = fixture;
   for (const payload of payloads) {
     const result = applyBrushPlacementToFixture(next, payload, catalogs);
@@ -4119,12 +4071,12 @@ export function puzzle2dEdgeKindOverlayLabel(edgeKind: string, catalogs: KindCat
 }
 
 /** @emoji 🔀 Merges {@link DEFAULT_KIND_CATALOG_BUNDLE} with `meta.kindCatalogs` on a parsed fixture. */
-export function puzzle2dFixtureMergedKindCatalogs(fixture: Puzzle2dFixtureV1): KindCatalogBundle {
+export function puzzle2dFixtureMergedKindCatalogs(fixture: Puzzle2dFixture): KindCatalogBundle {
   return puzzle2dMergeKindCatalogBundle(fixtureMetaKindCatalogBundle(fixture));
 }
 
 /** @emoji 🏷️ Icon for a brushed node: catalog `icon`, else the first fixture peer with the same `nodeKind`. */
-export function puzzle2dIconKindForBrushNodeKind(fixture: Puzzle2dFixtureV1, catalogs: KindCatalogBundle | undefined, nodeKind: string): string | undefined {
+export function puzzle2dIconKindForBrushNodeKind(fixture: Puzzle2dFixture, catalogs: KindCatalogBundle | undefined, nodeKind: string): string | undefined {
   const kindId = nodeKind.trim();
   if (kindId === "") {
     return undefined;
@@ -4141,7 +4093,7 @@ function puzzle2dBrushHandlesForNodeKind(
   nodeId: string,
   payload: Puzzle2dBrushPlacePayload,
   catalogs: KindCatalogBundle | undefined,
-): Puzzle2dFixtureHandleV1[] {
+): Puzzle2dFixtureHandle[] {
   const kind = catalogs?.nodes?.find((row) => row.id === payload.nodeKind);
   const templates = kind?.handles ?? [];
   return puzzle2dFixtureHandlesFromNodeKind(
@@ -4195,7 +4147,7 @@ function puzzle2dHumanizeKindIdTail(kindId: string): string {
 }
 
 /** @emoji 🏷️ Primary tree/panel label for a fixture node (caption, then kind name — never the instance id). */
-export function puzzle2dFixtureNodeDisplayLabel(node: Puzzle2dFixtureNodeV1, catalogs: KindCatalogBundle): string {
+export function puzzle2dFixtureNodeDisplayLabel(node: Puzzle2dFixtureNode, catalogs: KindCatalogBundle): string {
   const caption = puzzle2dFixtureNodeCaption(node);
   if (caption) {
     return caption;
@@ -4215,7 +4167,7 @@ export function puzzle2dFixtureNodeDisplayLabel(node: Puzzle2dFixtureNodeV1, cat
 }
 
 /** @emoji 🏷️ Secondary line for a fixture node (kind name when caption is the primary label). */
-export function puzzle2dFixtureNodeDisplayDescription(node: Puzzle2dFixtureNodeV1, catalogs: KindCatalogBundle): string | undefined {
+export function puzzle2dFixtureNodeDisplayDescription(node: Puzzle2dFixtureNode, catalogs: KindCatalogBundle): string | undefined {
   const caption = puzzle2dFixtureNodeCaption(node);
   const kind = node.nodeKind?.trim();
   if (!kind) {
@@ -4238,14 +4190,14 @@ function puzzle2dFixtureHandleRoleSuffix(handleId: string): string | undefined {
 }
 
 /** @emoji 🏷️ Primary tree/panel label for a fixture handle (kind name, optional role suffix — not the instance id). */
-export function puzzle2dFixtureHandleDisplayLabel(handle: Puzzle2dFixtureHandleV1, catalogs: KindCatalogBundle): string {
+export function puzzle2dFixtureHandleDisplayLabel(handle: Puzzle2dFixtureHandle, catalogs: KindCatalogBundle): string {
   const kindLabel = puzzle2dHandleKindOverlayLabel(handle.handleKind ?? BUILTIN_PORT_HANDLE_KIND, catalogs);
   const suffix = puzzle2dFixtureHandleRoleSuffix(handle.id);
   return suffix ? `${kindLabel} · ${suffix}` : kindLabel;
 }
 
 /** @emoji 🏷️ Resolves a handle endpoint id (`nodeId:role` or catalog handle id) to a panel label. */
-export function puzzle2dFixtureHandleEndpointDisplayLabel(handleId: string, fixture: Puzzle2dFixtureV1, catalogs: KindCatalogBundle): string {
+export function puzzle2dFixtureHandleEndpointDisplayLabel(handleId: string, fixture: Puzzle2dFixture, catalogs: KindCatalogBundle): string {
   for (const node of fixture.nodes) {
     const handle = node.handles.find((row) => row.id === handleId);
     if (handle) {
@@ -4272,14 +4224,14 @@ export function puzzle2dFixtureHandleEndpointDisplayLabel(handleId: string, fixt
 }
 
 /** @emoji 🏷️ Primary tree/panel label for an edge (endpoint labels, not the edge uuid). */
-export function puzzle2dFixtureEdgeDisplayLabel(edge: Puzzle2dFixtureEdgeV1, fixture: Puzzle2dFixtureV1, catalogs: KindCatalogBundle): string {
+export function puzzle2dFixtureEdgeDisplayLabel(edge: Puzzle2dFixtureEdge, fixture: Puzzle2dFixture, catalogs: KindCatalogBundle): string {
   const source = puzzle2dFixtureHandleEndpointDisplayLabel(edge.source, fixture, catalogs);
   const target = puzzle2dFixtureHandleEndpointDisplayLabel(edge.target, fixture, catalogs);
   return `${source} → ${target}`;
 }
 
 /** @emoji 🏷️ Resolves any puzzle 2d scene object id to a panel label when possible. */
-export function puzzle2dFixtureObjectDisplayLabel(objectId: string, fixture: Puzzle2dFixtureV1, catalogs: KindCatalogBundle): string {
+export function puzzle2dFixtureObjectDisplayLabel(objectId: string, fixture: Puzzle2dFixture, catalogs: KindCatalogBundle): string {
   const node = fixture.nodes.find((row) => row.id === objectId);
   if (node) {
     return puzzle2dFixtureNodeDisplayLabel(node, catalogs);
@@ -4371,7 +4323,7 @@ export class Puzzle2dRenderer {
     }
   }
 
-  /** @emoji 🎮 True when imperative delete events should update {@link Puzzle2dFixtureV1} authorship (user Delete), not WASM/scene resync. */
+  /** @emoji 🎮 True when imperative delete events should update {@link Puzzle2dFixture} authorship (user Delete), not WASM/scene resync. */
   mirrorsStructuralDeletesToFixture(): boolean {
     return this.structuralDeleteFixtureMirrorDepth > 0;
   }
@@ -5218,7 +5170,7 @@ export class Puzzle2dRenderer {
       this.pushFixtureDropPreviewJsonToWasm("");
       return;
     }
-    const fixture = decodePuzzle2dFixtureFromDragV1(encoded);
+    const fixture = decodePuzzle2dFixtureFromDrag(encoded);
     if (!fixture) {
       this.pushFixtureDropPreviewJsonToWasm("");
       return;
@@ -5424,7 +5376,7 @@ export class Puzzle2dRenderer {
   }
 
   /** @emoji 🪣 Syncs WASM brush/fill probe state for a fixture snapshot without restoring the live scene. */
-  private syncWasmBrushFillProbe(fixture: Puzzle2dFixtureV1): void {
+  private syncWasmBrushFillProbe(fixture: Puzzle2dFixture): void {
     const fillCompat = puzzle2dFixtureMetaKindCompatibility(fixture);
     if (fillCompat !== undefined) {
       const normalized = (fillCompat ?? []).map((p) => {
@@ -5463,7 +5415,7 @@ export class Puzzle2dRenderer {
   }
 
   /** @emoji 🪣 Computes a deterministic fill sequence against a fixture snapshot (temporarily syncs WASM, then restores the live scene). */
-  computeBrushFillSequence(fixture: Puzzle2dFixtureV1, maxCount: number, seed: number): Puzzle2dBrushPlacePayload[] {
+  computeBrushFillSequence(fixture: Puzzle2dFixture, maxCount: number, seed: number): Puzzle2dBrushPlacePayload[] {
     if (this.wasmSessionCallBlockedForReentry()) {
       return [];
     }
@@ -5482,7 +5434,7 @@ export class Puzzle2dRenderer {
   }
 
   /** @emoji 🪣 Starts a chunked fill session against a fixture snapshot. */
-  beginBrushFillSession(fixture: Puzzle2dFixtureV1, maxCount: number, seed: number): void {
+  beginBrushFillSession(fixture: Puzzle2dFixture, maxCount: number, seed: number): void {
     if (this.wasmSessionCallBlockedForReentry() || this.brushFillSessionDepth > 0) {
       return;
     }
@@ -7944,7 +7896,7 @@ if (puzzle2dVitest) {
     });
 
     it("DEFAULT_HANDLE_KIND_CATALOG stores a theme token reference", () => {
-      expect(DEFAULT_HANDLE_KIND_CATALOG[0]?.color).toBe("var(--color-muted-foreground)");
+      expect(DEFAULT_KIND_CATALOG_BUNDLE.handles?.[0]?.color).toBe("var(--color-muted-foreground)");
     });
   });
 
@@ -8288,8 +8240,8 @@ if (puzzle2dVitest) {
       const mirrorCanvas = createMockCanvas();
       const driving = new Puzzle2dRenderer({ canvas: drivingCanvas.canvas, renderMode: "headless-test" });
       const mirror = new Puzzle2dRenderer({ canvas: mirrorCanvas.canvas, renderMode: "headless-test" });
-      const fixture: Puzzle2dFixtureV1 = {
-        schema: "puzzle.2d.fixture/v1",
+      const fixture: Puzzle2dFixture = {
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "a", x: 0, y: 0, radius: 40, handles: [{ id: "a:h0", angle: 0, handleKind: "port" }] }],
         edges: [],
@@ -9087,7 +9039,7 @@ if (puzzle2dVitest) {
       const syncDescriptorJson = vi.spyOn(rendererB.session, "syncDescriptorJson");
       const setNodePositionsJson = vi.spyOn(rendererB.session, "setNodePositionsJson");
       puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers({
-        schema: "reasoning.mindmap.fixture/v1",
+        schema: "reasoning.mindmap.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [
           { id: "a", x: 0, y: 0, radius: 24, handles: [] },
@@ -9125,7 +9077,7 @@ if (puzzle2dVitest) {
       const setNodePositionsJson = vi.spyOn(renderer.session, "setNodePositionsJson");
       setNodePositionsJson.mockClear();
       puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers({
-        schema: "reasoning.mindmap.fixture/v1",
+        schema: "reasoning.mindmap.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [
           { id: "a", x: 0, y: 0, radius: 24, handles: [] },
@@ -9140,7 +9092,7 @@ if (puzzle2dVitest) {
 
     it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers syncs normal graph across panes", () => {
       const fixture = {
-        schema: "puzzle.2d.fixture/v1" as const,
+        schema: "puzzle.2d.fixture" as const,
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "a", x: 10, y: 20, radius: 24, handles: [] as const }],
         edges: [{ id: "e1", source: "a", target: "a" }],
@@ -10118,7 +10070,7 @@ if (puzzle2dVitest) {
 
   describe("puzzle 2d fixture io", () => {
     it("parses minimal v1 fixture payloads", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 1, y: 2, zoom: 0.5 },
         edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
         meta: {},
@@ -10126,7 +10078,7 @@ if (puzzle2dVitest) {
           { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 10, text: "α", x: 0, y: 0 },
           { handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 10, x: 50, y: 0 },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(parsed).not.toBeNull();
       expect(parsed?.nodes).toHaveLength(2);
@@ -10138,13 +10090,13 @@ if (puzzle2dVitest) {
     });
 
     it("mergePaletteNodeFromDrop places a palette seed at the drop world point", () => {
-      const dragFixture = decodePuzzle2dFixtureFromDragV1(
-        encodePuzzle2dFixtureForDragV1({
+      const dragFixture = decodePuzzle2dFixtureFromDrag(
+        encodePuzzle2dFixtureForDrag({
           camera: { x: 0, y: 0, zoom: 1 },
           edges: [],
           meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
           nodes: [{ handles: [{ angle: 0, id: "palette-seed-circle.h0" }], id: "palette-seed-circle", radius: 24, x: 0, y: 0 }],
-          schema: "puzzle.2d.fixture/v1",
+          schema: "puzzle.2d.fixture",
         }),
       );
       expect(dragFixture).not.toBeNull();
@@ -10156,7 +10108,7 @@ if (puzzle2dVitest) {
     });
 
     it("normalizes legacy rectangle fixture nodes to uniform circles", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -10171,13 +10123,13 @@ if (puzzle2dVitest) {
             y: -5,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(parsed?.nodes[0]).toMatchObject({ shape: "circle", radius: PUZZLE_2D_NODE_RADIUS_PX, id: "box", text: "crate" });
     });
 
     it("parses optional iconKind on fixture nodes", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -10190,7 +10142,7 @@ if (puzzle2dVitest) {
             y: 0,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(parsed?.nodes[0]).toMatchObject({
         id: "ic",
@@ -10199,7 +10151,7 @@ if (puzzle2dVitest) {
     });
 
     it("parses optional metabolism catalog iconKind on fixture nodes", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -10212,13 +10164,13 @@ if (puzzle2dVitest) {
             y: 0,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(parsed?.nodes[0]).toMatchObject({ id: "nk", iconKind: "capsule-with-balcony_p" });
     });
 
     it("parses optional iconKind on fixture handles", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -10230,33 +10182,32 @@ if (puzzle2dVitest) {
             y: 0,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       const n = parsed?.nodes[0];
       expect(n && "handles" in n ? n.handles[0] : undefined).toMatchObject({ id: "hk.h", iconKind: "typst:$1+1$" });
     });
 
     it("classifies puzzle 2d icon selector modes for UI tabs", () => {
-      expect(classifyPuzzle2dIconSelectorMode("")).toBe("math");
-      expect(classifyPuzzle2dIconSelectorMode("typst:$x$")).toBe("math");
-      expect(classifyPuzzle2dIconSelectorMode("$x$")).toBe("math");
-      expect(classifyPuzzle2dIconSelectorMode("emoji:😀")).toBe("emoji");
-      expect(classifyPuzzle2dIconSelectorMode("data:image/png;base64,abc")).toBe("data");
-      expect(classifyPuzzle2dIconSelectorMode("image:data:image/jpeg;base64,xyz")).toBe("data");
-      expect(classifyPuzzle2dIconSelectorMode("<svg")).toBe("vector");
-      expect(classifyPuzzle2dIconSelectorMode("capsule-with-balcony_p")).toBe("vector");
-      expect(classifyPuzzle2dIconSelectorMode("😀")).toBe("emoji");
+      expect(classifyIconSelectorMode("")).toBe("math");
+      expect(classifyIconSelectorMode("typst:$x$")).toBe("math");
+      expect(classifyIconSelectorMode("$x$")).toBe("math");
+      expect(classifyIconSelectorMode("emoji:😀")).toBe("emoji");
+      expect(classifyIconSelectorMode("data:image/png;base64,abc")).toBe("data");
+      expect(classifyIconSelectorMode("<svg")).toBe("vector");
+      expect(classifyIconSelectorMode("capsule-with-balcony_p")).toBe("vector");
+      expect(classifyIconSelectorMode("😀")).toBe("emoji");
     });
 
     it("parses optional textAutofit on fixture nodes", () => {
-      const circle = parsePuzzle2dFixtureV1({
+      const circle = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [{ handles: [{ angle: 0, id: "c.h" }], id: "c", radius: 12, text: "cap", textAutofit: true, x: 0, y: 0 }],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(circle?.nodes[0]).toMatchObject({ id: "c", textAutofit: true, text: "cap" });
-      const rect = parsePuzzle2dFixtureV1({
+      const rect = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -10272,13 +10223,13 @@ if (puzzle2dVitest) {
             y: 0,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(rect?.nodes[0]).toMatchObject({ id: "r", textAutofit: true });
     });
 
     it("parses optional caption font, size, and alignment", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -10294,7 +10245,7 @@ if (puzzle2dVitest) {
             y: 0,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(parsed?.nodes[0]).toMatchObject({
         id: "z",
@@ -10303,17 +10254,17 @@ if (puzzle2dVitest) {
         textAlignment: "ne",
       });
       expect(
-        parsePuzzle2dFixtureV1({
+        parsePuzzle2dFixture({
           camera: { x: 0, y: 0, zoom: 1 },
           edges: [],
           nodes: [{ handles: [{ angle: 0, id: "bad.aln" }], id: "bad", radius: 3, textAlignment: "xx", x: 0, y: 0 }],
-          schema: "puzzle.2d.fixture/v1",
+          schema: "puzzle.2d.fixture",
         })?.nodes[0],
       ).not.toHaveProperty("textAlignment");
     });
 
     it("parses optional handle radius on fixture nodes", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -10327,32 +10278,32 @@ if (puzzle2dVitest) {
             y: 0,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(parsed?.nodes[0]?.handles[0]).toMatchObject({ angle: 1.2, id: "h1", radius: 4.5 });
     });
 
     it("rejects fixture edges that use legacy `from`/`to` instead of source/target", () => {
       expect(
-        parsePuzzle2dFixtureV1({
+        parsePuzzle2dFixture({
           camera: { x: 0, y: 0, zoom: 1 },
           edges: [{ from: "a:h0", id: "e1", to: "b:h0" }],
           nodes: [
             { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 20, x: 0, y: 0 },
             { handles: [{ angle: 3.14, id: "b:h0" }], id: "b", radius: 20, x: 100, y: 0 },
           ],
-          schema: "puzzle.2d.fixture/v1",
+          schema: "puzzle.2d.fixture",
         }),
       ).toBeNull();
     });
 
     it("rejects fixture nodes that use legacy `label` instead of `text`", () => {
       expect(
-        parsePuzzle2dFixtureV1({
+        parsePuzzle2dFixture({
           camera: { x: 0, y: 0, zoom: 1 },
           edges: [],
           nodes: [{ handles: [{ angle: 0, id: "n1.h" }], id: "n1", label: "legacy", radius: 5, x: 0, y: 0 }],
-          schema: "puzzle.2d.fixture/v1",
+          schema: "puzzle.2d.fixture",
         }),
       ).toBeNull();
     });
@@ -10369,7 +10320,7 @@ if (puzzle2dVitest) {
     });
 
     it("parses optional nodeKind on circle and rectangle fixture nodes", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -10385,7 +10336,7 @@ if (puzzle2dVitest) {
             y: 2,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(parsed?.nodes[0]).toMatchObject({ id: "c", nodeKind: "compose.kit.node.a" });
       expect(parsed?.nodes[1]).toMatchObject({ id: "r", nodeKind: "compose.kit.node.b" });
@@ -10433,14 +10384,14 @@ if (puzzle2dVitest) {
     });
 
     it("applyBrushPlacementToFixture is idempotent when the same brush ids are already in the fixture", () => {
-      const fixture = parsePuzzle2dFixtureV1({
+      const fixture = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [{ id: "edge-a", source: "a:h0", target: "b:h0" }],
         nodes: [
           { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, x: 0, y: 0 },
           { handles: [{ angle: Math.PI, id: "b:h0" }], id: "brush-node", nodeKind: "k", radius: 20, x: 120, y: 0 },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(fixture).toBeTruthy();
       const payload: Puzzle2dBrushPlacePayload = {
@@ -10462,8 +10413,8 @@ if (puzzle2dVitest) {
     });
 
     it("applyBrushPlacementToFixture appends node and parent edge", () => {
-      const fixture: Puzzle2dFixtureV1 = {
-        schema: "puzzle.2d.fixture/v1",
+      const fixture: Puzzle2dFixture = {
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "a", x: 0, y: 0, radius: 20, handles: [{ id: "a:h0", angle: 0, handleKind: "port" }] }],
         edges: [],
@@ -10489,8 +10440,8 @@ if (puzzle2dVitest) {
     });
 
     it("applyBrushPlacementToFixture copies iconKind from fixture peer nodeKind", () => {
-      const fixture: Puzzle2dFixtureV1 = {
-        schema: "puzzle.2d.fixture/v1",
+      const fixture: Puzzle2dFixture = {
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [
           { id: "peer", nodeKind: "capsule.kind", iconKind: "capsule_J", x: 0, y: 0, radius: PUZZLE_2D_NODE_RADIUS_PX, shape: "circle", handles: [{ id: "peer:h0", angle: 0, handleKind: "port" }] },
@@ -10527,9 +10478,9 @@ if (puzzle2dVitest) {
 
     it("puzzle2dBrushCompatibleCandidates lists every concrete forest beam mate handle", async () => {
       const fixture = (await import("../fixture/concrete-forest.2d.json")).default as {
-        meta?: { kindCatalogs?: unknown; kindCompatibility?: readonly KindCompatEntry[] };
+        meta?: { manifestId?: string; kindCompatibility?: readonly KindCompatEntry[] };
       };
-      const catalogs = fixtureMetaKindCatalogBundle(fixture.meta);
+      const catalogs = fixtureMetaKindCatalogBundle(fixture);
       const compat = puzzle2dFixtureMetaKindCompatibility(fixture.meta);
       const list = puzzle2dBrushCompatibleCandidates(
         { handleKind: "b-l", nodeKind: "Hexagonal Cut Concrete Forest Left" },
@@ -10545,7 +10496,7 @@ if (puzzle2dVitest) {
 
     it("applyBrushPlacementToFixture preserves concrete forest catalog handle radii", async () => {
       const raw = (await import("../fixture/concrete-forest.2d.json")).default as unknown;
-      const fixture = parsePuzzle2dFixtureV1(raw);
+      const fixture = parsePuzzle2dFixture(raw);
       expect(fixture).toBeTruthy();
       const catalogs = fixtureMetaKindCatalogBundle(fixture!.meta);
       const kind = catalogs?.nodes?.find((row) => row.id === "Hexagonal Cut Concrete Forest Right");
@@ -10928,7 +10879,7 @@ if (puzzle2dVitest) {
       const catalogs: KindCatalogBundle = {
         handles: [{ color: "#888", defaultWireKind: BUILTIN_LINK_WIRE_KIND, id: BUILTIN_PORT_HANDLE_KIND, name: "Port" }],
       };
-      const fixture: Puzzle2dFixtureV1 = {
+      const fixture: Puzzle2dFixture = {
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [{ id: "ff58a7b3-40c5-4a45-a260-c124706a1b8c", source: "a:link", target: "b:link" }],
         nodes: [
@@ -10941,7 +10892,7 @@ if (puzzle2dVitest) {
     });
 
     it("maps kit piece name to node text", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -10956,7 +10907,7 @@ if (puzzle2dVitest) {
             y: 2,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(parsed?.nodes[0]).toMatchObject({
         id: "a",
@@ -10968,29 +10919,29 @@ if (puzzle2dVitest) {
     });
 
     it("rejects wrong schema or malformed nodes", () => {
-      expect(parsePuzzle2dFixtureV1({ schema: "other", nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
-      expect(parsePuzzle2dFixtureV1({ schema: "puzzle.2d.fixture/v1", nodes: "x", edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
+      expect(parsePuzzle2dFixture({ schema: "other", nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
+      expect(parsePuzzle2dFixture({ schema: "puzzle.2d.fixture", nodes: "x", edges: [], camera: { x: 0, y: 0, zoom: 1 } })).toBeNull();
       expect(
-        parsePuzzle2dFixtureV1({
+        parsePuzzle2dFixture({
           camera: { x: 0, y: 0, zoom: 1 },
           edges: [],
           nodes: [{ handles: [], id: "bad", shape: "triangle", x: 0, y: 0 }],
-          schema: "puzzle.2d.fixture/v1",
+          schema: "puzzle.2d.fixture",
         }),
       ).toBeNull();
     });
 
     it("reads fixture drag payload from custom MIME or text/plain fallback", () => {
-      const fixture: Puzzle2dFixtureV1 = {
+      const fixture: Puzzle2dFixture = {
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         meta: { puzzle2dFixtureDragKind: PUZZLE_2D_FIXTURE_DRAG_KIND_PALETTE_NODE },
         nodes: [{ handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "seed.h0" }], id: "palette-seed-circle", radius: 12, x: 0, y: 0 }],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       };
-      const encoded = encodePuzzle2dFixtureForDragV1(fixture);
+      const encoded = encodePuzzle2dFixtureForDrag(fixture);
       const fromCustom = {
-        getData: (mime: string) => (mime === PUZZLE_2D_FIXTURE_DRAG_V1_MIME ? encoded : ""),
+        getData: (mime: string) => (mime === PUZZLE_2D_FIXTURE_DRAG_MIME ? encoded : ""),
       } as DataTransfer;
       expect(readPuzzle2dFixtureDragDataTransfer(fromCustom)?.nodes[0]?.id).toBe("palette-seed-circle");
       const fromPlain = {
@@ -11000,7 +10951,7 @@ if (puzzle2dVitest) {
     });
 
     it("round-trips drag codec for v1 fixtures", () => {
-      const fixture: Puzzle2dFixtureV1 = {
+      const fixture: Puzzle2dFixture = {
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
         meta: {},
@@ -11027,14 +10978,14 @@ if (puzzle2dVitest) {
             y: 0,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       };
-      const decoded = decodePuzzle2dFixtureFromDragV1(encodePuzzle2dFixtureForDragV1(fixture));
-      expect(decoded).toEqual(parsePuzzle2dFixtureV1(fixture));
+      const decoded = decodePuzzle2dFixtureFromDrag(encodePuzzle2dFixtureForDrag(fixture));
+      expect(decoded).toEqual(parsePuzzle2dFixture(fixture));
     });
 
     it("parses optional root on fixture nodes", () => {
-      const parsed = parsePuzzle2dFixtureV1({
+      const parsed = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [],
         nodes: [
@@ -11050,7 +11001,7 @@ if (puzzle2dVitest) {
             y: 2,
           },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(parsed?.nodes[0]).toMatchObject({ id: "r", root: true });
       expect(parsed?.nodes[1]).toMatchObject({ id: "sq", shape: "circle", radius: PUZZLE_2D_NODE_RADIUS_PX });
@@ -11060,24 +11011,24 @@ if (puzzle2dVitest) {
 
   describe("puzzle 2d force graph layout", () => {
     it("spreads linked nodes using wasm+nalgebra layout", () => {
-      const fixture: Puzzle2dFixtureV1 = {
+      const fixture: Puzzle2dFixture = {
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [{ id: "e1", source: "a:h0", target: "b:h0" }],
         nodes: [
           { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, shape: "circle", x: 0, y: 0 },
           { handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, shape: "circle", x: 2, y: 0 },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       };
       const laid = layoutPuzzle2dFixtureForceGraph(fixture, { gravity: 0, iterations: 220, idealEdgeLength: 200, randomSeed: 11 });
       const ax = (laid.nodes[0] as { x: number }).x;
       const bx = (laid.nodes[1] as { x: number }).x;
       expect(Math.abs(bx - ax)).toBeGreaterThan(90);
-      expect(laid.schema).toBe("puzzle.2d.fixture/v1");
+      expect(laid.schema).toBe("puzzle.2d.fixture");
     });
 
     it("throws on invalid fixture schema from wasm", () => {
-      const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as Puzzle2dFixtureV1;
+      const bad = { camera: { x: 0, y: 0, zoom: 1 }, edges: [], nodes: [], schema: "wrong" } as unknown as Puzzle2dFixture;
       expect(() => layoutPuzzle2dFixtureForceGraph(bad)).toThrow();
     });
   });
@@ -11970,7 +11921,7 @@ export interface Puzzle2dCanvasProps {
   companions?: ReactNode;
   className?: string;
   contextMenu?: ContextMenuItem[];
-  /** @emoji 📥 When true, accepts in-app fixture drags using {@link PUZZLE_2D_FIXTURE_DRAG_V1_MIME} (not OS file drops). */
+  /** @emoji 📥 When true, accepts in-app fixture drags using {@link PUZZLE_2D_FIXTURE_DRAG_MIME} (not OS file drops). */
   fixtureDragDrop?: boolean;
   height?: number;
   /** @emoji 🔗 Allowed kind pairs for link gestures (`specificity` tiers + `important`); empty omits filtering. */
@@ -12163,8 +12114,8 @@ export interface Puzzle2dFixtureSceneMarkersOptions {
   nodeContextMenuForId?: (nodeId: string) => ContextMenuItem[] | undefined;
 }
 
-/** @emoji 🗼 Declarative {@link Node}/{@link Edge} tree for {@link Puzzle2dCanvas} `children` from {@link Puzzle2dFixtureV1} (Fragment of host markers only). */
-export function puzzle2dFixtureSceneMarkers(fixture: Puzzle2dFixtureV1, options?: Puzzle2dFixtureSceneMarkersOptions): ReactElement {
+/** @emoji 🗼 Declarative {@link Node}/{@link Edge} tree for {@link Puzzle2dCanvas} `children` from {@link Puzzle2dFixture} (Fragment of host markers only). */
+export function puzzle2dFixtureSceneMarkers(fixture: Puzzle2dFixture, options?: Puzzle2dFixtureSceneMarkersOptions): ReactElement {
   const nodeMenu = options?.nodeContextMenuForId;
   const edgeMenu = options?.edgeContextMenuForId;
   return (
@@ -12245,8 +12196,8 @@ function appendHandleDescriptors(children: ReactNode, nodeId: string, handles: H
   });
 }
 
-/** @emoji 🗂️ Builds a {@link Puzzle2dSceneDescriptor} from {@link Puzzle2dFixtureV1} without walking React `children` (stable play sync). */
-export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixtureV1): Puzzle2dSceneDescriptor {
+/** @emoji 🗂️ Builds a {@link Puzzle2dSceneDescriptor} from {@link Puzzle2dFixture} without walking React `children` (stable play sync). */
+export function buildPuzzle2dSceneDescriptorFromFixture(fixture: Puzzle2dFixture): Puzzle2dSceneDescriptor {
   const catalogs = puzzle2dFixtureMergedKindCatalogs(fixture);
   const nodes: NodeDescriptor[] = [];
   const handles: HandleDescriptor[] = [];
@@ -12456,7 +12407,7 @@ export function puzzle2dPushPaletteFixtureDropPreviewWorldToAllPeers(
     return;
   }
   puzzle2dFixturePaletteDragWorldRef.current = world;
-  const fixture = decodePuzzle2dFixtureFromDragV1(payload);
+  const fixture = decodePuzzle2dFixtureFromDrag(payload);
   if (!fixture || !buildPaletteFixtureDropPreviewPayloadAtWorld(world, fixture, catalogs, brushNodeSize)) {
     return;
   }
@@ -12500,8 +12451,8 @@ function puzzle2dNotifyBrushSessionListeners(): void {
 export function puzzle2dCommitBrushPlacementToPlay(
   payload: Puzzle2dBrushPlacePayload,
   options: {
-    readonly catalogsForFixture: (fixture: Puzzle2dFixtureV1) => KindCatalogBundle | undefined;
-    readonly patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
+    readonly catalogsForFixture: (fixture: Puzzle2dFixture) => KindCatalogBundle | undefined;
+    readonly patchFixture: (updater: (prev: Puzzle2dFixture) => Puzzle2dFixture) => void;
   },
 ): boolean {
   let placed = false;
@@ -12537,7 +12488,7 @@ export function puzzle2dFinalizeBrushSuggestionsPlacement(): void {
 export function puzzle2dCommitPaletteNodeDropToPlay(
   detail: Puzzle2dFixtureDropDetail,
   options: {
-    readonly patchFixture: (updater: (prev: Puzzle2dFixtureV1) => Puzzle2dFixtureV1) => void;
+    readonly patchFixture: (updater: (prev: Puzzle2dFixture) => Puzzle2dFixture) => void;
     readonly setSelectionIds: (ids: readonly string[]) => void;
   },
 ): string | null {
@@ -12891,7 +12842,7 @@ export function puzzle2dIsBrushPlacementStructuralDeleteGuarded(id: string): boo
 }
 
 /** @emoji 📍 Pushes live force-layout node centers to every authoring pane without a full descriptor round-trip. */
-export function puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(fixture: Puzzle2dFixtureV1): void {
+export function puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(fixture: Puzzle2dFixture): void {
   const moves: Array<{ id: string; x: number; y: number }> = [];
   for (const node of fixture.nodes) {
     if (node.visible === false) {
@@ -12915,7 +12866,7 @@ export function puzzle2dSyncLayoutNodePositionsToAllAuthoringPeers(fixture: Puzz
 }
 
 /** @emoji 🔄 Syncs a committed fixture graph into every authoring pane (same descriptor on every peer). */
-export function puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture: Puzzle2dFixtureV1): void {
+export function puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(fixture: Puzzle2dFixture): void {
   const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture);
   for (const peer of puzzle2dAuthoringPeerRenderers) {
     if (!peer.authoringPeerActive()) {
@@ -13986,7 +13937,7 @@ export function Puzzle2dCanvas({
     [pushPalettePreviewAtClient, resolvedFixtureDragDrop],
   );
 
-  const commitFixtureDropAtClient = reactHostPort.useCallback((clientX: number, clientY: number, fixture: Puzzle2dFixtureV1): boolean => {
+  const commitFixtureDropAtClient = reactHostPort.useCallback((clientX: number, clientY: number, fixture: Puzzle2dFixture): boolean => {
     const handler = onFixtureDropRef.current;
     if (!handler) {
       return false;
@@ -14978,8 +14929,8 @@ if (puzzle2dReactVitest) {
       const canvasB = document.createElement("canvas");
       const rendererA = new Puzzle2dRenderer({ canvas: canvasA, renderMode: "headless-test" });
       const rendererB = new Puzzle2dRenderer({ canvas: canvasB, renderMode: "headless-test" });
-      const fixture = parsePuzzle2dFixtureV1({
-        schema: "puzzle.2d.fixture/v1",
+      const fixture = parsePuzzle2dFixture({
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a:h0", angle: 0 }] }],
         edges: [],
@@ -14995,7 +14946,7 @@ if (puzzle2dReactVitest) {
         nodes: [{ id: "Capsule J", name: "Capsule J", handles: [{ handleKind: "door capsule right", angle: 0 }] }],
       });
       const dragFixture = buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined);
-      const encoded = encodePuzzle2dFixtureForDragV1(dragFixture);
+      const encoded = encodePuzzle2dFixtureForDrag(dragFixture);
       let fixtureState = fixture;
       const nodeId = puzzle2dCommitPaletteNodeDropToPlay(
         { fixture: dragFixture, screen: { x: 100, y: 100 }, world: { x: 12, y: 18 } },
@@ -15031,7 +14982,7 @@ if (puzzle2dReactVitest) {
       const catalogs = enrichKindCatalogBundleMetabolismIcons({
         nodes: [{ id: "Capsule J", name: "Capsule J", handles: [{ handleKind: "door capsule right", angle: 0 }] }],
       });
-      const encoded = encodePuzzle2dFixtureForDragV1(buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined));
+      const encoded = encodePuzzle2dFixtureForDrag(buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined));
       rendererA["setSize"](200, 200, 1);
       rendererB["setSize"](200, 200, 1);
       rendererA["pushSceneToWasmDriver"]();
@@ -15064,7 +15015,7 @@ if (puzzle2dReactVitest) {
       const catalogs = enrichKindCatalogBundleMetabolismIcons({
         nodes: [{ id: "Capsule J", name: "Capsule J", handles: [{ handleKind: "door capsule right", angle: 0 }] }],
       });
-      const encoded = encodePuzzle2dFixtureForDragV1(buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined));
+      const encoded = encodePuzzle2dFixtureForDrag(buildPaletteNodeDragFixture("Capsule J", catalogs ?? undefined));
       renderer["setSize"](400, 300, 1);
       renderer["pushSceneToWasmDriver"]();
       const hintBefore = renderer.session.encodedSceneHint();
@@ -15084,8 +15035,8 @@ if (puzzle2dReactVitest) {
       const host = document.createElement("div");
       host.getBoundingClientRect = () => ({ left: 0, top: 0, right: 200, bottom: 200, width: 200, height: 200, x: 0, y: 0, toJSON: () => ({}) });
       const dragFixture = buildPaletteNodeDragFixture("Capsule J");
-      const encoded = encodePuzzle2dFixtureForDragV1(dragFixture);
-      let dropped: Puzzle2dFixtureV1 | null = null;
+      const encoded = encodePuzzle2dFixtureForDrag(dragFixture);
+      let dropped: Puzzle2dFixture | null = null;
       beginPuzzle2dFixturePalettePointerDrag(encoded);
       expect(puzzle2dFixturePalettePointerDragRef.active).toBe(true);
       endPuzzle2dFixturePalettePointerDrag(10, 10, host, (fixture) => {
@@ -15097,7 +15048,7 @@ if (puzzle2dReactVitest) {
 
     it("puzzle2dNotePaletteFixtureDragClient updates shared client ref and starts preview loop", () => {
       const dragFixture = buildPaletteNodeDragFixture("Capsule J");
-      const encoded = encodePuzzle2dFixtureForDragV1(dragFixture);
+      const encoded = encodePuzzle2dFixtureForDrag(dragFixture);
       beginPuzzle2dFixturePalettePointerDrag(encoded);
       try {
         puzzle2dNotePaletteFixtureDragClient(64, 96);
@@ -15108,8 +15059,8 @@ if (puzzle2dReactVitest) {
     });
 
     it("puzzle2dFixturePaletteTreeDragController toggles palette drag ref and drag session", () => {
-      const encoded = encodePuzzle2dFixtureForDragV1(buildPaletteNodeDragFixture("Capsule J"));
-      const dragData = new Map([["row-1", { [PUZZLE_2D_FIXTURE_DRAG_V1_MIME]: encoded }]]);
+      const encoded = encodePuzzle2dFixtureForDrag(buildPaletteNodeDragFixture("Capsule J"));
+      const dragData = new Map([["row-1", { [PUZZLE_2D_FIXTURE_DRAG_MIME]: encoded }]]);
       const controller = puzzle2dFixturePaletteTreeDragController(dragData);
       const item = { id: "row-1", label: "Capsule J" };
       const section = { id: "kinds", label: "Kinds" };
@@ -15137,8 +15088,8 @@ if (puzzle2dReactVitest) {
     });
 
     it("flatten2d propagates connection u on linked nodes", () => {
-      const fixture = parsePuzzle2dFixtureV1({
-        schema: "puzzle.2d.fixture/v1",
+      const fixture = parsePuzzle2dFixture({
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [
           { id: "root", shape: "circle", x: 1, y: 2, radius: 10, handles: [{ id: "root:h", angle: 0, handleKind: "port", t: 0 }] },
@@ -15151,9 +15102,9 @@ if (puzzle2dReactVitest) {
       expect(flattened.nodes.find((node) => node.id === "child")?.x).toBeCloseTo(2.53165, 3);
     });
 
-    it("parsePuzzle2dFixtureV1 preserves edgeKind on edges", () => {
-      const fixture = parsePuzzle2dFixtureV1({
-        schema: "puzzle.2d.fixture/v1",
+    it("parsePuzzle2dFixture preserves edgeKind on edges", () => {
+      const fixture = parsePuzzle2dFixture({
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a:h0", angle: 0 }] }],
         edges: [{ id: "e1", source: "a:h0", target: "a:h0", edgeKind: BUILTIN_LINK_EDGE_KIND }],
@@ -15162,8 +15113,8 @@ if (puzzle2dReactVitest) {
     });
 
     it("buildPuzzle2dSceneDescriptorFromFixture forwards edgeKind to the descriptor", () => {
-      const fixture = parsePuzzle2dFixtureV1({
-        schema: "puzzle.2d.fixture/v1",
+      const fixture = parsePuzzle2dFixture({
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a:h0", angle: 0 }] }],
         edges: [{ id: "e1", source: "a:h0", target: "a:h0", edgeKind: BUILTIN_LINK_EDGE_KIND }],
@@ -15174,7 +15125,7 @@ if (puzzle2dReactVitest) {
     });
 
     it("puzzle2dApplyNodeKindToFixtureNode sets nodeKind on the fixture node", () => {
-      const node: Puzzle2dFixtureCircleNodeV1 = {
+      const node: Puzzle2dFixtureCircleNode = {
         handles: [{ angle: 0, handleKind: BUILTIN_PORT_HANDLE_KIND, id: "n:h0" }],
         id: "n",
         radius: 10,
@@ -15188,7 +15139,7 @@ if (puzzle2dReactVitest) {
 
     it("buildPuzzle2dSceneDescriptorFromFixture relabels placed Capsule L door handles", async () => {
       const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
-      const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
+      const fixture = parsePuzzle2dFixture(nakaginFixtureJson);
       expect(fixture).toBeTruthy();
       const capsuleLKind = "Capsule L";
       const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture!);
@@ -15204,7 +15155,7 @@ if (puzzle2dReactVitest) {
 
     it("puzzle2dFixtureSceneMarkers maps nakagin fixture into scene descriptors", async () => {
       const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
-      const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
+      const fixture = parsePuzzle2dFixture(nakaginFixtureJson);
       expect(fixture?.nodes.length).toBeGreaterThan(100);
       const descriptor = buildPuzzle2dSceneDescriptor(puzzle2dFixtureSceneMarkers(fixture!));
       expect(descriptor.nodes.length).toBe(fixture!.nodes.length);
@@ -15214,7 +15165,7 @@ if (puzzle2dReactVitest) {
 
     it("buildPuzzle2dSceneDescriptorFromFixture maps nakagin fixture without React children", async () => {
       const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
-      const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
+      const fixture = parsePuzzle2dFixture(nakaginFixtureJson);
       expect(fixture).toBeTruthy();
       const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture!);
       expect(descriptor.nodes.length).toBe(fixture!.nodes.length);
@@ -15224,7 +15175,7 @@ if (puzzle2dReactVitest) {
 
     it("nakagin fixture encodes edge vector paths at play overview zoom in wasm", async () => {
       const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
-      const fixture = parsePuzzle2dFixtureV1(nakaginFixtureJson);
+      const fixture = parsePuzzle2dFixture(nakaginFixtureJson);
       expect(fixture).toBeTruthy();
       await ensurePuzzle2dWasmLoaded();
       const descriptor = buildPuzzle2dSceneDescriptor(puzzle2dFixtureSceneMarkers(fixture!));
@@ -15379,14 +15330,14 @@ if (puzzle2dReactVitest) {
     });
 
     it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers gives every pane the same graph", () => {
-      const fixture = parsePuzzle2dFixtureV1({
+      const fixture = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [{ id: "edge-real", source: "a:h0", target: "b:h0" }],
         nodes: [
           { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, x: 0, y: 0 },
           { handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, x: 200, y: 0 },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(fixture).toBeTruthy();
       const peerA = new Puzzle2dRenderer({ renderMode: "headless-test" });
@@ -15429,14 +15380,14 @@ if (puzzle2dReactVitest) {
     });
 
     it("puzzle2dSyncFixtureDescriptorToAllAuthoringPeers clears edge suppressions so fixture edges reach scene", () => {
-      const fixture = parsePuzzle2dFixtureV1({
+      const fixture = parsePuzzle2dFixture({
         camera: { x: 0, y: 0, zoom: 1 },
         edges: [{ id: "edge-real", source: "a:h0", target: "b:h0" }],
         nodes: [
           { handles: [{ angle: 0, id: "a:h0" }], id: "a", radius: 40, x: 0, y: 0 },
           { handles: [{ angle: Math.PI, id: "b:h0" }], id: "b", radius: 40, x: 200, y: 0 },
         ],
-        schema: "puzzle.2d.fixture/v1",
+        schema: "puzzle.2d.fixture",
       });
       expect(fixture).toBeTruthy();
       const peer = new Puzzle2dRenderer({ renderMode: "headless-test" });

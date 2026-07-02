@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.interaction/v1",
+  "schema": "spatial.interaction",
   "id": "structure.structure.constructReinforcedConcreteInternalWall",
   "version": "1.0.0",
   "label": "Construct Reinforced Concrete Internal Wall",

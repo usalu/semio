@@ -77,7 +77,7 @@ pub mod scene_json {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
-    pub struct FixtureV1Json {
+    pub struct FixtureJson {
         pub schema: String,
         pub camera: CameraJson,
         pub nodes: Vec<serde_json::Value>,
@@ -694,7 +694,7 @@ pub use mathematical_graph::{
     SELECTION_MARQUEE_DRAG_THRESHOLD_PX,
 };
 pub use mathematical_graph_port::*;
-pub use scene_json::{board_json_visible_option, board_json_visible_or_true, fixture_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, FixtureV1Json, SceneDescriptorJson, WireDescJson};
+pub use scene_json::{board_json_visible_option, board_json_visible_or_true, fixture_edge_handle_ids_from_object, normalize_board_descriptor_hidden_to_visible, EdgeDescJson, FixtureJson, SceneDescriptorJson, WireDescJson};
 pub use types::*;
 
 /// ➡️ Port graph engine with directed handle endpoints.
@@ -1133,8 +1133,8 @@ pub mod hierarchical_tree {
         let Some(root) = fixture.as_object_mut() else {
             return Err("fixture root must be object".into());
         };
-        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture/v1") {
-            return Err("schema must be puzzle.2d.fixture/v1".into());
+        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture") {
+            return Err("schema must be puzzle.2d.fixture".into());
         }
         let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
@@ -1391,8 +1391,8 @@ pub mod redraw_layout {
         let Some(root) = fixture.as_object_mut() else {
             return Err("fixture root must be object".into());
         };
-        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture/v1") {
-            return Err("schema must be puzzle.2d.fixture/v1".into());
+        if root.get("schema").and_then(|v| v.as_str()) != Some("puzzle.2d.fixture") {
+            return Err("schema must be puzzle.2d.fixture".into());
         }
         let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {

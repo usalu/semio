@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.typology/v1",
+  "schema": "spatial.typology",
   "id": "structure.surfacefem.surfaceelement",
   "version": "1.0.0",
   "label": "Surface Element",

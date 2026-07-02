@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.attribute/v1",
+  "schema": "spatial.attribute",
   "id": "spatial.shape.exposure",
   "version": "1.0.0",
   "label": "Exposure",

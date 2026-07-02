@@ -21,7 +21,7 @@ Each action JSON document will use this contract:
 
 ```json
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "transform.move",
   "version": "1.0.0",
   "label": "Move",

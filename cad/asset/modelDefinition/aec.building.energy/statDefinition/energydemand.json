@@ -1,5 +1,5 @@
 {
-	"schema": "spatial.stat/v1",
+	"schema": "spatial.stat",
 	"id": "energy.demand",
 	"version": "1.0.0",
 	"label": "Energy Demand",

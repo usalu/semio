@@ -5,7 +5,7 @@ pub use imperative_module_core::{catalogue_json, module_registry};
 pub use mathematical_graph_port_directed_dag as dag;
 
 use dag::{
-    would_create_cycle, DagCameraV1, DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeSpec, IoPortSpec,
+    would_create_cycle, DagCamera, DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape,
 };
 use imperative_engine::compile_to_text as imperative_compile_to_text;
 use neural_engine::{Atom, Dictionary, Registry, Value};
@@ -41,7 +41,7 @@ pub struct SlotRef {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StepWidgetV1 {
+pub struct SequenceStep {
     pub id: String,
     pub kind: String,
     #[serde(default)]
@@ -58,7 +58,7 @@ pub struct StepWidgetV1 {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SequenceEdgeV1 {
+pub struct SequenceEdge {
     pub id: String,
     pub from: String,
     pub to: String,
@@ -66,25 +66,25 @@ pub struct SequenceEdgeV1 {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SequenceFixtureV1 {
+pub struct SequenceFixture {
     pub schema: String,
-    pub camera: DagCameraV1,
-    pub steps: Vec<StepWidgetV1>,
-    pub edges: Vec<SequenceEdgeV1>,
+    pub camera: DagCamera,
+    pub steps: Vec<SequenceStep>,
+    pub edges: Vec<SequenceEdge>,
 }
 
-impl Default for SequenceFixtureV1 {
+impl Default for SequenceFixture {
     fn default() -> Self {
         default_fixture()
     }
 }
 
-pub fn default_fixture() -> SequenceFixtureV1 {
-    SequenceFixtureV1 {
-        schema: "sequence.fixture/v1".into(),
-        camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+pub fn default_fixture() -> SequenceFixture {
+    SequenceFixture {
+        schema: "sequence.fixture".into(),
+        camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         steps: vec![
-            StepWidgetV1 {
+            SequenceStep {
                 id: "step-1".into(),
                 kind: "state.set".into(),
                 params: Dictionary::new()
@@ -95,7 +95,7 @@ pub fn default_fixture() -> SequenceFixtureV1 {
                 slot: None,
                 collapsed: false,
             },
-            StepWidgetV1 {
+            SequenceStep {
                 id: "step-2".into(),
                 kind: "log.print".into(),
                 params: Dictionary::new().insert("message", Value::Atom(Atom::String("hello sequence".into()))),
@@ -105,14 +105,14 @@ pub fn default_fixture() -> SequenceFixtureV1 {
                 collapsed: false,
             },
         ],
-        edges: vec![SequenceEdgeV1 { id: "edge-1".into(), from: "step-1".into(), to: "step-2".into() }],
+        edges: vec![SequenceEdge { id: "edge-1".into(), from: "step-1".into(), to: "step-2".into() }],
     }
 }
 // #endregion 🔖Fixture
 
 // #region 🔖Host
 pub struct SequenceHost {
-    pub fixture: SequenceFixtureV1,
+    pub fixture: SequenceFixture,
     pub dag: DagHost,
     registry: Registry,
     next_serial: u64,
@@ -125,12 +125,12 @@ impl Default for SequenceHost {
 }
 
 impl SequenceHost {
-    pub fn from_fixture(fixture: SequenceFixtureV1) -> Self {
+    pub fn from_fixture(fixture: SequenceFixture) -> Self {
         let mut host = Self {
             fixture,
-            dag: DagHost::from_fixture_without_layout(DagFixtureV1 {
-                schema: "dag.fixture/v1".into(),
-                camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+            dag: DagHost::from_fixture_without_layout(DagFixture {
+                schema: "dag.fixture".into(),
+                camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
                 nodes: vec![],
                 edges: vec![],
             }),
@@ -142,8 +142,8 @@ impl SequenceHost {
     }
 
     pub fn load_json(json: &str) -> Result<Self, String> {
-        let fixture: SequenceFixtureV1 = serde_json::from_str(json).map_err(|err| err.to_string())?;
-        if fixture.schema != "sequence.fixture/v1" {
+        let fixture: SequenceFixture = serde_json::from_str(json).map_err(|err| err.to_string())?;
+        if fixture.schema != "sequence.fixture" {
             return Err(format!("unsupported schema: {}", fixture.schema));
         }
         Ok(Self::from_fixture(fixture))
@@ -186,9 +186,10 @@ impl SequenceHost {
     }
 
     pub fn add_step_in_slot(&mut self, kind: &str, x: f64, y: f64, slot: Option<SlotRef>) -> String {
+        self.clear_ghost_step();
         self.next_serial += 1;
         let id = format!("step-{}", self.next_serial);
-        self.fixture.steps.push(StepWidgetV1 {
+        self.fixture.steps.push(SequenceStep {
             id: id.clone(),
             kind: kind.into(),
             params: Dictionary::new(),
@@ -277,7 +278,7 @@ impl SequenceHost {
         }
         self.next_serial += 1;
         let id = format!("edge-{}", self.next_serial);
-        self.fixture.edges.push(SequenceEdgeV1 { id: id.clone(), from: from_id.into(), to: to_id.into() });
+        self.fixture.edges.push(SequenceEdge { id: id.clone(), from: from_id.into(), to: to_id.into() });
         self.rebuild_dag();
         Ok(id)
     }
@@ -310,7 +311,7 @@ impl SequenceHost {
                     self.next_serial += 1;
                     format!("edge-{}", self.next_serial)
                 });
-            edges.push(SequenceEdgeV1 { id, from: from.into(), to: to.into() });
+            edges.push(SequenceEdge { id, from: from.into(), to: to.into() });
         }
         self.fixture.edges = edges;
     }
@@ -337,7 +338,7 @@ impl SequenceHost {
 
     fn build_path_for_slot(&self, slot: Option<&SlotRef>) -> Path {
         let slot_filter = slot_key(slot);
-        let scoped_steps: Vec<&StepWidgetV1> = self
+        let scoped_steps: Vec<&SequenceStep> = self
             .fixture
             .steps
             .iter()
@@ -345,7 +346,7 @@ impl SequenceHost {
             .collect();
         let incoming: HashMap<&str, &str> = self.fixture.edges.iter().map(|edge| (edge.to.as_str(), edge.from.as_str())).collect();
         let outgoing: HashMap<&str, &str> = self.fixture.edges.iter().map(|edge| (edge.from.as_str(), edge.to.as_str())).collect();
-        let heads: Vec<&StepWidgetV1> = scoped_steps
+        let heads: Vec<&SequenceStep> = scoped_steps
             .iter()
             .copied()
             .filter(|step| !incoming.contains_key(step.id.as_str()))
@@ -363,7 +364,7 @@ impl SequenceHost {
             };
         };
         let mut ordered = Vec::new();
-        let mut by_id: BTreeMap<&str, &StepWidgetV1> = scoped_steps.into_iter().map(|step| (step.id.as_str(), step)).collect();
+        let mut by_id: BTreeMap<&str, &SequenceStep> = scoped_steps.into_iter().map(|step| (step.id.as_str(), step)).collect();
         let mut current = Some(start);
         let mut visited = std::collections::HashSet::new();
         while let Some(id) = current {
@@ -381,7 +382,7 @@ impl SequenceHost {
         Path { steps: ordered }
     }
 
-    fn step_to_imperative_step(&self, step: &StepWidgetV1) -> Step {
+    fn step_to_imperative_step(&self, step: &SequenceStep) -> Step {
         let mut bodies = BTreeMap::new();
         if is_control_kind(&step.kind) {
             for slot_name in control_slots(&step.kind) {
@@ -400,7 +401,7 @@ impl SequenceHost {
         }
     }
 
-    fn is_step_visible(&self, step: &StepWidgetV1) -> bool {
+    fn is_step_visible(&self, step: &SequenceStep) -> bool {
         let Some(slot) = &step.slot else {
             return true;
         };
@@ -467,12 +468,16 @@ impl SequenceHost {
     }
 
     fn rebuild_dag(&mut self) {
+        let selected = self.dag.selected_node_ids();
         let dag_fixture = self.build_dag_fixture();
         self.dag = DagHost::from_fixture_without_layout(dag_fixture);
         self.dag.set_camera(self.fixture.camera.x, self.fixture.camera.y, self.fixture.camera.zoom);
+        if !selected.is_empty() {
+            self.dag.set_selection(&selected);
+        }
     }
 
-    fn build_dag_fixture(&self) -> DagFixtureV1 {
+    fn build_dag_fixture(&self) -> DagFixture {
         let nodes: Vec<DagNodeSpec> = self
             .fixture
             .steps
@@ -482,27 +487,28 @@ impl SequenceHost {
             .collect();
         let visible_ids: std::collections::HashSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
         let existing: Vec<(String, String)> = self.fixture.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
-        let edges: Vec<DagFixtureEdgeV1> = self
+        let edges: Vec<DagFixtureEdge> = self
             .fixture
             .edges
             .iter()
             .filter(|edge| visible_ids.contains(&edge.from) && visible_ids.contains(&edge.to))
             .filter(|edge| !would_create_cycle(&existing, &edge.from, &edge.to))
-            .map(|edge| DagFixtureEdgeV1 {
+            .map(|edge| DagFixtureEdge {
                 id: edge.id.clone(),
                 source: format!("{}:{}", edge.from, FLOW_OUTPUT_PORT),
                 target: format!("{}:{}", edge.to, FLOW_INPUT_PORT),
+                route_style: EdgeRouteStyle::SharpSz,
             })
             .collect();
-        DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
+        DagFixture {
+            schema: "dag.fixture".into(),
             camera: self.fixture.camera.clone(),
             nodes,
             edges,
         }
     }
 
-    fn step_to_dag_node(&self, step: &StepWidgetV1) -> DagNodeSpec {
+    fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
         let info = self.registry.operator_info(&step.kind);
         let (name, mut abbreviation, icon) = info
             .map(|entry| (entry.name.clone(), entry.abbreviation.clone(), entry.icon.clone()))
@@ -515,11 +521,33 @@ impl SequenceHost {
                 format!("▾ {count}")
             };
         }
-        let inputs = vec![IoPortSpec::named("P", "Prv", FLOW_INPUT_PORT, "Previous")];
-        let outputs = vec![IoPortSpec::named("N", "Nxt", FLOW_OUTPUT_PORT, "Next")];
+        let mut inputs = vec![IoPortSpec::named("", "", FLOW_INPUT_PORT, "Previous")];
+        inputs[0].shape = PortShape::Triangle;
+        inputs[0].cardinality = String::new();
+        let mut outputs = vec![IoPortSpec::named("", "", FLOW_OUTPUT_PORT, "Next")];
+        outputs[0].shape = PortShape::Triangle;
+        outputs[0].cardinality = String::new();
         let width = dag::computation_node_width(&name, &inputs, &outputs);
         let height = dag::computation_node_height(inputs.len(), outputs.len(), false, false);
         DagNodeSpec::computation(step.id.clone(), name, abbreviation, icon, inputs, outputs, false, false, step.x, step.y, width, height)
+    }
+
+    pub fn set_ghost_step(&mut self, kind: &str, x: f64, y: f64) {
+        let ghost = SequenceStep {
+            id: "__ghost__".into(),
+            kind: kind.into(),
+            params: Dictionary::new(),
+            x,
+            y,
+            slot: None,
+            collapsed: false,
+        };
+        let node = self.step_to_dag_node(&ghost);
+        self.dag.set_ghost_node(Some(node));
+    }
+
+    pub fn clear_ghost_step(&mut self) {
+        self.dag.set_ghost_node(None);
     }
 }
 // #endregion 🔖Host
@@ -826,6 +854,56 @@ mod wasm_session {
             let selected: Vec<String> = ids.iter().filter_map(|value| value.as_string()).collect();
             self.state.borrow_mut().host.dag.set_selection(&selected);
         }
+
+        #[wasm_bindgen(js_name = labelOverlayPaintStateJson)]
+        pub fn label_overlay_paint_state_json(&self) -> Result<String, JsValue> {
+            self.state.borrow().host.dag.label_overlay_paint_state_json().map_err(|err| JsValue::from_str(&err))
+        }
+
+        #[wasm_bindgen(js_name = hoveredNodeId)]
+        pub fn hovered_node_id(&self) -> Option<String> {
+            self.state.borrow().host.dag.hovered_node_id()
+        }
+
+        #[wasm_bindgen(js_name = preselectNodeIdsJson)]
+        pub fn preselect_node_ids_json(&self) -> String {
+            let host = self.state.borrow();
+            serde_json::to_string(&serde_json::json!({
+                "ids": host.host.dag.preselect_widget_ids(),
+                "removedIds": host.host.dag.preselect_removed_widget_ids(),
+            }))
+            .unwrap_or_else(|_| "{\"ids\":[],\"removedIds\":[]}".into())
+        }
+
+        #[wasm_bindgen(js_name = selectionPreviewPointsJson)]
+        pub fn selection_preview_points_json(&self) -> String {
+            self.state.borrow().host.dag.selection_preview_points_json()
+        }
+
+        #[wasm_bindgen(js_name = selectionPreviewCrossing)]
+        pub fn selection_preview_crossing(&self) -> bool {
+            self.state.borrow().host.dag.selection_preview_crossing()
+        }
+
+        #[wasm_bindgen(js_name = selectionUnionBoundsScreenJson)]
+        pub fn selection_union_bounds_screen_json(&self) -> String {
+            self.state.borrow().host.dag.selection_union_bounds_screen_json()
+        }
+
+        #[wasm_bindgen(js_name = setSelectionOptions)]
+        pub fn set_selection_options(&self, method: &str, mode: &str) {
+            self.state.borrow_mut().host.dag.set_selection_options(method, mode, true, false, false);
+        }
+
+        #[wasm_bindgen(js_name = setGhostStep)]
+        pub fn set_ghost_step(&self, kind: &str, x: f64, y: f64) {
+            self.state.borrow_mut().host.set_ghost_step(kind, x, y);
+        }
+
+        #[wasm_bindgen(js_name = clearGhostStep)]
+        pub fn clear_ghost_step(&self) {
+            self.state.borrow_mut().host.clear_ghost_step();
+        }
     }
 }
 // #endregion 🔖WasmSession
@@ -868,7 +946,7 @@ mod tests {
     fn connect_steps_rejects_fan_out() {
         let mut host = SequenceHost::default();
         host.fixture.edges.clear();
-        host.fixture.steps.push(StepWidgetV1 {
+        host.fixture.steps.push(SequenceStep {
             id: "step-3".into(),
             kind: "wait.delay".into(),
             params: Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(10.0))),
@@ -884,7 +962,7 @@ mod tests {
     #[test]
     fn build_path_includes_control_bodies() {
         let mut host = SequenceHost::default();
-        host.fixture.steps.push(StepWidgetV1 {
+        host.fixture.steps.push(SequenceStep {
             id: "step-3".into(),
             kind: "control.if".into(),
             params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))),
@@ -893,7 +971,7 @@ mod tests {
             slot: None,
             collapsed: false,
         });
-        host.fixture.steps.push(StepWidgetV1 {
+        host.fixture.steps.push(SequenceStep {
             id: "step-4".into(),
             kind: "log.print".into(),
             params: Dictionary::new().insert("message", Value::Atom(Atom::String("yes".into()))),
@@ -902,11 +980,43 @@ mod tests {
             slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }),
             collapsed: false,
         });
-        host.fixture.edges.push(SequenceEdgeV1 { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() });
+        host.fixture.edges.push(SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() });
         let path = host.build_path();
         assert_eq!(path.steps.len(), 3);
         let control = path.steps.iter().find(|step| step.id == "step-3").expect("control step");
         assert!(control.bodies.contains_key("then"));
         assert_eq!(control.bodies.get("then").map(|body| body.steps.len()), Some(1));
+    }
+
+    #[test]
+    fn rebuild_dag_preserves_selection() {
+        let mut host = SequenceHost::default();
+        host.dag.set_selection(&["step-1".into()]);
+        host.fixture.steps.push(SequenceStep {
+            id: "step-3".into(),
+            kind: "wait.delay".into(),
+            params: Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(10.0))),
+            x: 560.0,
+            y: 0.0,
+            slot: None,
+            collapsed: false,
+        });
+        host.rebuild_dag();
+        assert!(host.dag.selected_node_ids().contains(&"step-1".to_string()));
+    }
+
+    #[test]
+    fn execution_ports_use_triangle_shape() {
+        let host = SequenceHost::default();
+        let node = host.step_to_dag_node(&host.fixture.steps[0]);
+        assert_eq!(node.inputs()[0].shape, dag::PortShape::Triangle);
+        assert_eq!(node.outputs()[0].shape, dag::PortShape::Triangle);
+    }
+
+    #[test]
+    fn execution_edges_use_sharp_sz_routing() {
+        let host = SequenceHost::default();
+        let fixture = host.build_dag_fixture();
+        assert!(fixture.edges.iter().all(|edge| edge.route_style == dag::EdgeRouteStyle::SharpSz));
     }
 }

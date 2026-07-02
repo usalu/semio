@@ -1254,7 +1254,7 @@ export interface CanvasProps {
   onBrushPlace?: (payload: BrushPlacePayload) => void;
   /** @emoji 📏 Solid overlap volume budget (m3) before brush placement counts as collision; defaults to {@link DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET}. */
   brushPlacementOverlapBudget?: number;
-  /** @emoji 📥 When true, accepts in-app fixture drags using {@link FIXTURE_DRAG_V1_MIME} (not OS file drops). */
+  /** @emoji 📥 When true, accepts in-app fixture drags using {@link FIXTURE_DRAG_MIME} (not OS file drops). */
   fixtureDragDrop?: boolean;
   /** @emoji 📥 Palette / shelf fixture dropped on the canvas at the grid-plane intersection. */
   onFixtureDrop?: (detail: Puzzle3dFixtureDropDetail) => void;
@@ -1265,7 +1265,7 @@ export interface CanvasProps {
   /** @emoji 🖱️ Fires when canvas or controlled sync changes hover focus. */
   onHover?: (payload: Puzzle3dHoverPayload) => void;
   /** @emoji 🎨 Loaded scene fixture used to resolve catalog kinds that omit `meshUrl` (e.g. Base). */
-  sceneFixture?: FixtureV1;
+  sceneFixture?: Fixture;
   /** @emoji 🔗 Host-driven attraction preview for cross-surface gestures (cleared when `attracting` is empty). */
   attractionSession?: AttractionSessionSnapshot | null;
   /** @emoji 🖱️ Marquee tool shape (rectangle default, lasso optional). */
@@ -1275,7 +1275,7 @@ export interface CanvasProps {
   children?: ReactNode;
 }
 
-export const FIXTURE_DRAG_V1_MIME = "application/x-puzzle-3d-fixture-v1";
+export const FIXTURE_DRAG_MIME = "application/x-puzzle-3d-fixture";
 
 /** @emoji 🖱️ True while a workbench object-kind palette drag is in flight (some hosts hide custom MIME in `types`). */
 export const puzzle3dFixturePaletteDragRef = { active: false };
@@ -1315,7 +1315,7 @@ export function isClientPointOverPuzzle3dFixtureDropHost(clientX: number, client
 export function commitPuzzle3dFixtureDropAtClient(
   clientX: number,
   clientY: number,
-  fixture: FixtureV1,
+  fixture: Fixture,
   host: HTMLElement | null | undefined,
   onFixtureDrop: ((detail: Puzzle3dFixtureDropDetail) => void) | undefined,
 ): boolean {
@@ -1355,7 +1355,7 @@ export function endPuzzle3dFixturePalettePointerDrag(
   if (!encoded) {
     return;
   }
-  const fixture = decodePuzzle3dFixtureFromDragV1(encoded);
+  const fixture = decodePuzzle3dFixtureFromDrag(encoded);
   if (!fixture) {
     return;
   }
@@ -1367,7 +1367,7 @@ export function endPuzzle3dFixturePalettePointerDrag(
 
 /** @emoji 🔍 True when `dataTransfer.types` carries a puzzle 3D fixture palette drag. */
 export function puzzle3dFixtureDragMimeInTypes(types: readonly string[]): boolean {
-  return types.includes(FIXTURE_DRAG_V1_MIME) || types.includes(FIXTURE_DRAG_PLAIN_MIME);
+  return types.includes(FIXTURE_DRAG_MIME) || types.includes(FIXTURE_DRAG_PLAIN_MIME);
 }
 
 /** @emoji 🔍 Whether the viewport should accept a palette fixture drop for this drag gesture. */
@@ -1381,7 +1381,7 @@ export function puzzle3dFixtureDragAcceptsTransfer(types: readonly string[]): bo
 /** @emoji 🖱️ {@link TreeDragAndDropController} for workbench rows that carry puzzle 3D fixture palette `dragData`. */
 export function puzzle3dFixturePaletteTreeDragController(dragDataByItemId: ReadonlyMap<string, Record<string, string>>): TreeDragAndDropController {
   const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
-    const payload = dragData?.[FIXTURE_DRAG_V1_MIME];
+    const payload = dragData?.[FIXTURE_DRAG_MIME];
     return payload?.trim() ? payload : undefined;
   };
   return {
@@ -1414,28 +1414,28 @@ export function puzzle3dFixturePaletteTreeDragController(dragDataByItemId: Reado
 /** @emoji 📋 Fallback MIME for hosts that only expose `text/plain` on drop. */
 export const FIXTURE_DRAG_PLAIN_MIME = "text/plain";
 
-/** @emoji 🧩 `FixtureV1.meta.puzzle3dFixtureDragKind` — workbench palette drops place one object at the pointer. */
+/** @emoji 🧩 `Fixture.meta.puzzle3dFixtureDragKind` — workbench palette drops place one object at the pointer. */
 export const FIXTURE_DRAG_KIND_PALETTE_OBJECT = "palette-object";
 
 /** @emoji 📍 Puzzle 3D canvas fixture drop: scene plus pointer in CSS space and CAD world on the grid plane. */
 export interface Puzzle3dFixtureDropDetail {
-  readonly fixture: FixtureV1;
+  readonly fixture: Fixture;
   readonly screen: { readonly x: number; readonly y: number };
   readonly worldCad: Vec3;
 }
 
-export interface FixtureObjectV1 extends ObjectProps {
+export interface FixtureObject extends ObjectProps {
   vortices: VortexProps[];
 }
 
 /** @emoji 🧭 Puzzle 3D fixture vectors and quaternions use CAD: X right, Y front, Z up; GLB meshes stay glTF Y-up. */
-export interface FixtureV1 {
-  schema: "puzzle.3d.fixture/v1";
+export interface Fixture {
+  schema: "puzzle.3d.fixture";
   camera: CameraState;
   domain: DomainKind;
   meta?: Record<string, unknown>;
   attractions: AttractionProps[];
-  objects: FixtureObjectV1[];
+  objects: FixtureObject[];
   references: WorldReferenceProps[];
   targetVolumes: WorldVolumeProps[];
 }
@@ -1454,7 +1454,7 @@ export function cameraStateNearEqual(a: CameraState, b: CameraState, epsilon = 1
 }
 
 /** @emoji 📷 Writes camera fields on the fixture; returns the same reference when unchanged. */
-export function updatePuzzle3dCameraInFixture(fixture: FixtureV1, camera: Partial<CameraState>): FixtureV1 {
+export function updatePuzzle3dCameraInFixture(fixture: Fixture, camera: Partial<CameraState>): Fixture {
   const nextCamera: CameraState = { ...fixture.camera, ...camera };
   if (cameraStateNearEqual(fixture.camera, nextCamera)) {
     return fixture;
@@ -1694,12 +1694,12 @@ function parseWorldVolume(row: Record<string, unknown>): WorldVolumeProps | null
 }
 
 /** @emoji 🖼️ Adds a reference plane to a puzzle 3D fixture. */
-export function addReferenceToFixture(fixture: FixtureV1, reference: WorldReferenceProps): FixtureV1 {
+export function addReferenceToFixture(fixture: Fixture, reference: WorldReferenceProps): Fixture {
   return { ...fixture, references: [...(fixture.references ?? []), reference] };
 }
 
 /** @emoji 🖼️ Patches one reference row in a puzzle 3D fixture. */
-export function updatePuzzle3dReferenceInFixture(fixture: FixtureV1, referenceId: string, patch: Partial<Omit<WorldReferenceProps, "id">>): FixtureV1 {
+export function updatePuzzle3dReferenceInFixture(fixture: Fixture, referenceId: string, patch: Partial<Omit<WorldReferenceProps, "id">>): Fixture {
   const references = fixture.references ?? [];
   const index = references.findIndex((row) => row.id === referenceId);
   if (index < 0) {
@@ -1711,7 +1711,7 @@ export function updatePuzzle3dReferenceInFixture(fixture: FixtureV1, referenceId
 }
 
 /** @emoji 🖼️ Applies a world reference gumball commit to a puzzle 3D fixture. */
-export function applyReferenceRelocateToFixture(fixture: FixtureV1, payload: WorldReferenceRelocatePayload): FixtureV1 {
+export function applyReferenceRelocateToFixture(fixture: Fixture, payload: WorldReferenceRelocatePayload): Fixture {
   const references = fixture.references ?? [];
   const index = references.findIndex((row) => row.id === payload.referenceId);
   if (index < 0) {
@@ -1723,12 +1723,12 @@ export function applyReferenceRelocateToFixture(fixture: FixtureV1, payload: Wor
 }
 
 /** @emoji 🧊 Adds a target volume to a puzzle 3D fixture. */
-export function addTargetVolumeToFixture(fixture: FixtureV1, volume: WorldVolumeProps): FixtureV1 {
+export function addTargetVolumeToFixture(fixture: Fixture, volume: WorldVolumeProps): Fixture {
   return { ...fixture, targetVolumes: [...(fixture.targetVolumes ?? []), volume] };
 }
 
 /** @emoji 🧊 Patches one target volume row in a puzzle 3D fixture. */
-export function updatePuzzle3dTargetVolumeInFixture(fixture: FixtureV1, volumeId: string, patch: Partial<Omit<WorldVolumeProps, "id">>): FixtureV1 {
+export function updatePuzzle3dTargetVolumeInFixture(fixture: Fixture, volumeId: string, patch: Partial<Omit<WorldVolumeProps, "id">>): Fixture {
   const targetVolumes = fixture.targetVolumes ?? [];
   const index = targetVolumes.findIndex((row) => row.id === volumeId);
   if (index < 0) {
@@ -1740,14 +1740,14 @@ export function updatePuzzle3dTargetVolumeInFixture(fixture: FixtureV1, volumeId
 }
 
 /** @emoji 🧊 Removes a target volume from a puzzle 3D fixture. */
-export function removeTargetVolumeFromFixture(fixture: FixtureV1, volumeId: string): FixtureV1 {
+export function removeTargetVolumeFromFixture(fixture: Fixture, volumeId: string): Fixture {
   const targetVolumes = fixture.targetVolumes ?? [];
   const next = targetVolumes.filter((row) => row.id !== volumeId);
   return next.length === targetVolumes.length ? fixture : { ...fixture, targetVolumes: next };
 }
 
 /** @emoji 🧊 Applies a world target volume gumball commit to a puzzle 3D fixture. */
-export function applyTargetVolumeRelocateToFixture(fixture: FixtureV1, payload: WorldVolumeRelocatePayload): FixtureV1 {
+export function applyTargetVolumeRelocateToFixture(fixture: Fixture, payload: WorldVolumeRelocatePayload): Fixture {
   const targetVolumes = fixture.targetVolumes ?? [];
   const index = targetVolumes.findIndex((row) => row.id === payload.volumeId);
   if (index < 0) {
@@ -1759,7 +1759,7 @@ export function applyTargetVolumeRelocateToFixture(fixture: FixtureV1, payload: 
 }
 
 /** @emoji 🧊 Removes a target volume at the snapped voxel cell. */
-export function removeVoxelFromFixture(fixture: FixtureV1, cad: Vec3, scale: Vec3): FixtureV1 {
+export function removeVoxelFromFixture(fixture: Fixture, cad: Vec3, scale: Vec3): Fixture {
   const volume = findVoxelAtCell(fixture.targetVolumes ?? [], cad, scale);
   if (!volume) {
     return fixture;
@@ -1768,7 +1768,7 @@ export function removeVoxelFromFixture(fixture: FixtureV1, cad: Vec3, scale: Vec
 }
 
 /** @emoji 🧊 Adds one axis-aligned voxel at the snapped cursor cell when empty. */
-export function addVoxelToFixture(fixture: FixtureV1, cad: Vec3, scale: Vec3): FixtureV1 {
+export function addVoxelToFixture(fixture: Fixture, cad: Vec3, scale: Vec3): Fixture {
   if (findVoxelAtCell(fixture.targetVolumes ?? [], cad, scale)) {
     return fixture;
   }
@@ -1827,10 +1827,10 @@ export function findVoxelAtCell(volumes: readonly WorldVolumeProps[], cad: Vec3,
 export const VOXEL_BRUSH_PREVIEW_COLOR = "#38bdf8";
 export const VOXEL_BRUSH_PREVIEW_OPACITY = 0.48;
 
-export function parseFixtureV1(raw: unknown): FixtureV1 | null {
+export function parseFixture(raw: unknown): Fixture | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "puzzle.3d.fixture/v1") return null;
+  if (r.schema !== "puzzle.3d.fixture") return null;
   const cam = r.camera;
   if (!cam || typeof cam !== "object") return null;
   const c = cam as Record<string, unknown>;
@@ -1855,7 +1855,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
       ...parseWorldEntityFlags(tr),
     });
   }
-  const objects: FixtureObjectV1[] = [];
+  const objects: FixtureObject[] = [];
   for (const o of objsRaw) {
     if (!o || typeof o !== "object") continue;
     const or = o as Record<string, unknown>;
@@ -1899,7 +1899,7 @@ export function parseFixtureV1(raw: unknown): FixtureV1 | null {
     });
   }
   return {
-    schema: "puzzle.3d.fixture/v1",
+    schema: "puzzle.3d.fixture",
     camera: { position: pos, target: tgt, zoom },
     domain: parseDomainKind(r.domain),
     ...(r.meta && typeof r.meta === "object" ? { meta: r.meta as Record<string, unknown> } : {}),
@@ -2133,7 +2133,7 @@ function flatten3dComputeChildPlane(
   return flatten3dMatrixToPlane(flatten3dMulMat(parentMatrix, transform));
 }
 
-function flatten3dResolveVortex(object: FixtureObjectV1, vortexId: string): { readonly point: Flatten3dVec3; readonly direction: Flatten3dVec3 } | null {
+function flatten3dResolveVortex(object: FixtureObject, vortexId: string): { readonly point: Flatten3dVec3; readonly direction: Flatten3dVec3 } | null {
   const parsed = parseVortexFullId(vortexId);
   const localId = parsed.vortexId;
   const vortex = object.vortices.find((row) => row.id === vortexId || row.id.endsWith(`:${localId}`) || row.id === localId);
@@ -2145,7 +2145,7 @@ function flatten3dResolveVortex(object: FixtureObjectV1, vortexId: string): { re
 }
 
 /** @emoji 🌤️ Computes absolute object origins and orientations from attractions and local vortex geometry. */
-export function flatten3d(fixture: FixtureV1): FixtureV1 {
+export function flatten3d(fixture: Fixture): Fixture {
   const objectMap = new Map(fixture.objects.map((object) => [object.id, object]));
   const adjacency = new Map<string, { readonly neighborId: string; readonly attraction: AttractionProps; readonly sourceOnCurrent: boolean }[]>();
   for (const attraction of fixture.attractions) {
@@ -2219,22 +2219,22 @@ export function flatten3d(fixture: FixtureV1): FixtureV1 {
 
 //#endregion 🌤️Flatten
 
-export function encodeFixtureForDragV1(fixture: FixtureV1): string {
+export function encodeFixtureForDrag(fixture: Fixture): string {
   return JSON.stringify(fixture);
 }
 
 /** @emoji 📤 Writes puzzle 3D fixture drag payload (custom MIME + `text/plain` fallback). */
-export function setPuzzle3dFixtureDragDataTransfer(dataTransfer: DataTransfer, fixture: FixtureV1): void {
-  const encoded = encodeFixtureForDragV1(fixture);
-  dataTransfer.setData(FIXTURE_DRAG_V1_MIME, encoded);
+export function setPuzzle3dFixtureDragDataTransfer(dataTransfer: DataTransfer, fixture: Fixture): void {
+  const encoded = encodeFixtureForDrag(fixture);
+  dataTransfer.setData(FIXTURE_DRAG_MIME, encoded);
   dataTransfer.setData(FIXTURE_DRAG_PLAIN_MIME, encoded);
 }
 
 /** @emoji 📥 Reads puzzle 3D fixture drag payload from a drop `DataTransfer`. */
-export function readPuzzle3dFixtureDragDataTransfer(dataTransfer: DataTransfer): FixtureV1 | null {
-  const custom = dataTransfer.getData(FIXTURE_DRAG_V1_MIME);
+export function readPuzzle3dFixtureDragDataTransfer(dataTransfer: DataTransfer): Fixture | null {
+  const custom = dataTransfer.getData(FIXTURE_DRAG_MIME);
   if (custom.trim() !== "") {
-    const parsed = decodePuzzle3dFixtureFromDragV1(custom);
+    const parsed = decodePuzzle3dFixtureFromDrag(custom);
     if (parsed) {
       return parsed;
     }
@@ -2243,24 +2243,24 @@ export function readPuzzle3dFixtureDragDataTransfer(dataTransfer: DataTransfer):
   if (plain.trim() === "") {
     return null;
   }
-  return decodePuzzle3dFixtureFromDragV1(plain);
+  return decodePuzzle3dFixtureFromDrag(plain);
 }
 
-/** @emoji 📥 Parses drag payload from {@link FIXTURE_DRAG_V1_MIME}. */
-export function decodePuzzle3dFixtureFromDragV1(text: string): FixtureV1 | null {
+/** @emoji 📥 Parses drag payload from {@link FIXTURE_DRAG_MIME}. */
+export function decodePuzzle3dFixtureFromDrag(text: string): Fixture | null {
   let raw: unknown;
   try {
     raw = JSON.parse(text) as unknown;
   } catch {
     return null;
   }
-  return parseFixtureV1(raw);
+  return parseFixture(raw);
 }
 
 /** @emoji 🧩 Minimal fixture encoding one object kind for workbench palette drags. */
-export function buildPaletteObjectDragFixture(objectKindId: string, domain: DomainKind = DEFAULT_DOMAIN): FixtureV1 {
+export function buildPaletteObjectDragFixture(objectKindId: string, domain: DomainKind = DEFAULT_DOMAIN): Fixture {
   return {
-    schema: "puzzle.3d.fixture/v1",
+    schema: "puzzle.3d.fixture",
     camera: { position: [420, -420, 320], target: [0, 0, 40], zoom: 1 },
     domain,
     meta: { puzzle3dFixtureDragKind: FIXTURE_DRAG_KIND_PALETTE_OBJECT },
@@ -2273,12 +2273,12 @@ export function buildPaletteObjectDragFixture(objectKindId: string, domain: Doma
 
 /** @emoji 📤 `dataTransfer` map for dragging one object kind from the workbench kinds tree. */
 export function puzzle3dPlayObjectKindDragData(objectKindId: string, domain: DomainKind = DEFAULT_DOMAIN): Record<string, string> {
-  const encoded = encodeFixtureForDragV1(buildPaletteObjectDragFixture(objectKindId, domain));
-  return { [FIXTURE_DRAG_V1_MIME]: encoded, [FIXTURE_DRAG_PLAIN_MIME]: encoded };
+  const encoded = encodeFixtureForDrag(buildPaletteObjectDragFixture(objectKindId, domain));
+  return { [FIXTURE_DRAG_MIME]: encoded, [FIXTURE_DRAG_PLAIN_MIME]: encoded };
 }
 
 /** @emoji 🧩 True when the drag payload is a palette object kind seed. */
-export function isPaletteObjectDragFixture(fixture: FixtureV1): boolean {
+export function isPaletteObjectDragFixture(fixture: Fixture): boolean {
   if (fixture.meta?.puzzle3dFixtureDragKind === FIXTURE_DRAG_KIND_PALETTE_OBJECT) {
     return true;
   }
@@ -2383,7 +2383,7 @@ export function puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId(kindId: string):
 }
 
 /** @emoji 🎨 Resolves a GLB URL for an object kind from the catalog, then from matching scene objects. */
-export function resolveObjectKindMeshUrl(kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): string | undefined {
+export function resolveObjectKindMeshUrl(kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: Fixture): string | undefined {
   const orientedCapsule = puzzle3dNakaginOrientedCapsuleMeshUrlFromKindId(kindId);
   if (orientedCapsule) {
     return orientedCapsule;
@@ -2410,7 +2410,7 @@ export function resolveObjectKindMeshUrl(kindId: string, kindCatalogs: KindCatal
   return undefined;
 }
 
-function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, origin: Vec3, meshUrl: string): FixtureObjectV1 {
+function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, origin: Vec3, meshUrl: string): FixtureObject {
   const vortices: VortexProps[] = (kind.vortices ?? []).map((entry, index) => ({
     id: `${objectId}:v${index}`,
     vortexKind: entry.vortexKind,
@@ -2433,7 +2433,7 @@ function buildFixtureObjectFromObjectKind(kind: ObjectKind, objectId: string, or
 }
 
 /** @emoji 🧩 When the drag payload is a palette object kind, returns one object at the drop CAD point. */
-export function mergePaletteObjectFromDrop(detail: Puzzle3dFixtureDropDetail, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): FixtureObjectV1 | null {
+export function mergePaletteObjectFromDrop(detail: Puzzle3dFixtureDropDetail, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: Fixture): FixtureObject | null {
   if (!isPaletteObjectDragFixture(detail.fixture)) {
     return null;
   }
@@ -2454,21 +2454,21 @@ export function mergePaletteObjectFromDrop(detail: Puzzle3dFixtureDropDetail, ki
 }
 
 /** @emoji 📥 Appends a palette-dropped object kind at a CAD origin. */
-export function applyPaletteObjectDropToFixture(fixture: FixtureV1, object: FixtureObjectV1): FixtureV1 {
+export function applyPaletteObjectDropToFixture(fixture: Fixture, object: FixtureObject): Fixture {
   return { ...fixture, objects: [...fixture.objects, object] };
 }
 
 /** @emoji 📥 Outcome of {@link resolvePuzzle3dFixtureDrop} for host fixture patching. */
 export type Puzzle3dFixtureDropResult =
-  | { readonly kind: "palette-object"; readonly object: FixtureObjectV1 }
-  | { readonly kind: "replace-fixture"; readonly fixture: FixtureV1 }
+  | { readonly kind: "palette-object"; readonly object: FixtureObject }
+  | { readonly kind: "replace-fixture"; readonly fixture: Fixture }
   | { readonly kind: "ignored" };
 
 /** @emoji 📥 Resolves a canvas drop: palette kinds merge one object; full fixtures replace; palette seeds never pass through unresolved. */
 export function resolvePuzzle3dFixtureDrop(
   detail: Puzzle3dFixtureDropDetail,
   kindCatalogs: KindCatalogBundle | undefined,
-  sceneFixture?: FixtureV1,
+  sceneFixture?: Fixture,
 ): Puzzle3dFixtureDropResult {
   const placed = mergePaletteObjectFromDrop(detail, kindCatalogs, sceneFixture);
   if (placed) {
@@ -2477,7 +2477,7 @@ export function resolvePuzzle3dFixtureDrop(
   if (isPaletteObjectDragFixture(detail.fixture)) {
     return { kind: "ignored" };
   }
-  const parsed = parseFixtureV1(detail.fixture);
+  const parsed = parseFixture(detail.fixture);
   if (parsed) {
     return { kind: "replace-fixture", fixture: parsed };
   }
@@ -2485,7 +2485,7 @@ export function resolvePuzzle3dFixtureDrop(
 }
 
 /** @emoji 📥 Applies {@link resolvePuzzle3dFixtureDrop} to a fixture, or returns null when ignored. */
-export function applyPuzzle3dFixtureDropResult(fixture: FixtureV1, result: Puzzle3dFixtureDropResult): FixtureV1 | null {
+export function applyPuzzle3dFixtureDropResult(fixture: Fixture, result: Puzzle3dFixtureDropResult): Fixture | null {
   if (result.kind === "palette-object") {
     return applyPaletteObjectDropToFixture(fixture, result.object);
   }
@@ -2819,14 +2819,14 @@ interface ObjectStateSnapshot {
 }
 
 type ObjectStateAction =
-  | { readonly type: "init"; readonly fixture: FixtureV1 }
-  | { readonly type: "syncPoses"; readonly fixture: FixtureV1 }
+  | { readonly type: "init"; readonly fixture: Fixture }
+  | { readonly type: "syncPoses"; readonly fixture: Fixture }
   | { readonly type: "relocate"; readonly payload: RelocatePayload }
   | { readonly type: "addAttraction"; readonly attraction: AttractionProps }
   | { readonly type: "removeObject"; readonly objectId: string }
   | { readonly type: "removeObjects"; readonly objectIds: readonly string[] };
 
-function fixtureToRecords(objects: readonly FixtureObjectV1[]): Map<string, ObjectRecord> {
+function fixtureToRecords(objects: readonly FixtureObject[]): Map<string, ObjectRecord> {
   const map = new Map<string, ObjectRecord>();
   for (const o of objects) {
     map.set(o.id, {
@@ -2882,14 +2882,14 @@ function buildSnapshot(records: ReadonlyMap<string, ObjectRecord>, attractions: 
 }
 
 /** @emoji ­ƒöæ Stable fingerprint for external fixture resync (ignores object reference identity). */
-export function fixtureStateFingerprint(fixture: FixtureV1): string {
+export function fixtureStateFingerprint(fixture: Fixture): string {
   const attractionIds = fixture.attractions.map((a) => a.id).join("\0");
   const objectIds = fixture.objects.map((o) => o.id).join("\0");
   return `${fixture.objects.length}\0${fixture.attractions.length}\0${objectIds}\0${attractionIds}`;
 }
 
 /** @emoji ­ƒôì Fingerprint of object poses for syncing fixture moves without resetting attractions. */
-export function fixturePoseFingerprint(fixture: FixtureV1): string {
+export function fixturePoseFingerprint(fixture: Fixture): string {
   return fixture.objects
     .map((object) => {
       const o = object.origin.join(",");
@@ -2901,7 +2901,7 @@ export function fixturePoseFingerprint(fixture: FixtureV1): string {
 }
 
 /** @emoji 🎨 Fingerprint of object mesh/kind/labels and vortex fields for inspector edits without structure revision bumps. */
-export function fixtureAppearanceFingerprint(fixture: FixtureV1): string {
+export function fixtureAppearanceFingerprint(fixture: Fixture): string {
   const objects = fixture.objects
     .map((object) => {
       const vortices = object.vortices
@@ -2928,10 +2928,10 @@ export function fixtureAppearanceFingerprint(fixture: FixtureV1): string {
 }
 
 /** @emoji 🧩 Applies an object-kind switch on a fixture object (mesh URL from catalog or scene). */
-export function applyObjectKindToFixtureObject(object: FixtureObjectV1, kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: FixtureV1): FixtureObjectV1 {
+export function applyObjectKindToFixtureObject(object: FixtureObject, kindId: string, kindCatalogs: KindCatalogBundle | undefined, sceneFixture?: Fixture): FixtureObject {
   const meshUrl = resolveObjectKindMeshUrl(kindId, kindCatalogs, sceneFixture);
   const kind = catalogObjectKindById(kindCatalogs, kindId);
-  const next: FixtureObjectV1 = {
+  const next: FixtureObject = {
     ...object,
     objectKind: kindId,
     ...(meshUrl ? { meshUrl } : {}),
@@ -3065,17 +3065,17 @@ export function relocateAffectedObjectIds(payload: RelocatePayload, attractingBy
 }
 
 /** @emoji ✋ Applies a relocate payload to a fixture (same rules as {@link objectStateReducer}). */
-export function applyRelocateToFixture(fixture: FixtureV1, payload: RelocatePayload, attractingByObjectId?: ReadonlyMap<string, readonly string[]>): FixtureV1 {
+export function applyRelocateToFixture(fixture: Fixture, payload: RelocatePayload, attractingByObjectId?: ReadonlyMap<string, readonly string[]>): Fixture {
   const tree = attractingByObjectId ?? buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0).tree.attractingByObjectId;
   const ids = relocateAffectedObjectIds(payload, tree);
   if (!ids.length) {
     return fixture;
   }
   const indexById = new Map(fixture.objects.map((object, index) => [object.id, index]));
-  let objects: FixtureObjectV1[] | null = null;
+  let objects: FixtureObject[] | null = null;
   let changed = false;
   const objectAt = (index: number) => (objects ? objects[index]! : fixture.objects[index]!);
-  const setObjectAt = (index: number, next: FixtureObjectV1) => {
+  const setObjectAt = (index: number, next: FixtureObject) => {
     if (!objects) {
       objects = fixture.objects.slice();
     }
@@ -3238,12 +3238,12 @@ export class ObjectStore {
     this.bumpStructure();
   }
 
-  initFromFixture(fixture: FixtureV1): void {
+  initFromFixture(fixture: Fixture): void {
     const snap = buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0);
     this.replaceFromSnapshot(snap);
   }
 
-  syncPosesFromFixture(fixture: FixtureV1): void {
+  syncPosesFromFixture(fixture: Fixture): void {
     const changed: string[] = [];
     for (const object of fixture.objects) {
       const cur = this.records.get(object.id);
@@ -3278,7 +3278,7 @@ export class ObjectStore {
     }
   }
 
-  syncAppearanceFromFixture(fixture: FixtureV1): void {
+  syncAppearanceFromFixture(fixture: Fixture): void {
     const changed: string[] = [];
     for (const object of fixture.objects) {
       const cur = this.records.get(object.id);
@@ -3382,7 +3382,7 @@ export class ObjectStore {
 }
 
 /** @emoji 🔗 Appends an attraction to a fixture when it does not introduce a cycle. */
-export function applyConnectToFixture(fixture: FixtureV1, payload: AttractionPayload): FixtureV1 {
+export function applyConnectToFixture(fixture: Fixture, payload: AttractionPayload): Fixture {
   const snap = buildSnapshot(fixtureToRecords(fixture.objects), fixture.attractions, 0);
   const attractionId = payload.attractionId ?? `attraction-${payload.attracting}-${payload.attracted}`;
   const next = objectStateReducer(snap, {
@@ -3409,7 +3409,7 @@ export const ObjectStateContext = reactHostPort.createContext<ObjectStateContext
 
 /** @emoji ­ƒùä´©Å Central scene object records, attractions, and resolved attraction ownership. */
 export function ObjectStateProvider(props: {
-  readonly fixture: FixtureV1;
+  readonly fixture: Fixture;
   readonly fixtureRevision?: number;
   readonly children: ReactNode;
   readonly onRelocate?: (payload: RelocatePayload, attractingByObjectId: ReadonlyMap<string, readonly string[]>) => void;
@@ -3804,11 +3804,6 @@ export const Attractions = reactHostPort.memo(function Attractions() {
 //#endregion ­ƒò©´©ÅAttractionGraph
 
 //#region ­ƒº®Compat
-export function kindsCompatible(aKind: string | undefined, bKind: string | undefined, table: readonly KindCompatEntry[] | undefined): boolean {
-  if (!table?.length || !aKind || !bKind) return false;
-  return table.some((e) => (e.source === aKind && e.target === bKind) || (e.bidirectional === true && e.source === bKind && e.target === aKind));
-}
-
 /** @emoji 🧾 Parses `meta.kindCompatibility` from a puzzle 3d fixture. */
 export function kindCompatibilityFromFixtureMeta(meta: Record<string, unknown> | undefined): readonly KindCompatEntry[] {
   if (!meta || typeof meta !== "object") return [];
@@ -4256,7 +4251,7 @@ function catalogKindDisplayLabel(entry: { readonly id: string; readonly label?: 
 export function brushCandidateSourceVortexLabel(
   candidate: BrushCompatibleCandidate,
   kindCatalogs: KindCatalogBundle | undefined,
-  sceneFixture?: FixtureV1,
+  sceneFixture?: Fixture,
 ): string {
   const kind = catalogObjectKindById(kindCatalogs, candidate.objectKindId);
   const template = kind?.vortices?.[candidate.sourceVortexIndex];
@@ -4286,7 +4281,7 @@ export function brushCandidateSourceVortexLabel(
 export function brushCandidateDisplayLabels(
   candidate: BrushCompatibleCandidate,
   kindCatalogs: KindCatalogBundle | undefined,
-  sceneFixture?: FixtureV1,
+  sceneFixture?: Fixture,
 ): { readonly object: string; readonly vortex: string } {
   const kind = catalogObjectKindById(kindCatalogs, candidate.objectKindId);
   const object = kind ? catalogKindDisplayLabel(kind) : candidate.objectKindId;
@@ -4341,15 +4336,6 @@ export const BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX = 1;
 /** @emoji 📏 Window slider step for brush overlap budget (m3). */
 export const BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP = 0.01;
 
-/** @deprecated Use {@link DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET}. */
-export const DEFAULT_BRUSH_PLACEMENT_COLLISION_TOLERANCE = DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET;
-
-/** @deprecated Use {@link BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX}. */
-export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_MAX = BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX;
-
-/** @deprecated Use {@link BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP}. */
-export const BRUSH_PLACEMENT_COLLISION_TOLERANCE_STEP = BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP;
-
 export function brushPreviewFromCandidate(args: {
   readonly targetVortexFullId: string;
   readonly candidate: BrushCompatibleCandidate;
@@ -4358,7 +4344,7 @@ export function brushPreviewFromCandidate(args: {
   readonly targetWorldDirectionCad: Vec3;
   readonly referenceOrientationCad?: Quat;
   readonly kindCatalogs: KindCatalogBundle | undefined;
-  readonly sceneFixture?: FixtureV1;
+  readonly sceneFixture?: Fixture;
 }): BrushPreviewState | null {
   const kind = catalogObjectKindById(args.kindCatalogs, args.candidate.objectKindId);
   const template = kind?.vortices?.[args.candidate.sourceVortexIndex];
@@ -4416,7 +4402,7 @@ export const puzzle3dBrushKindWeightsRef: { current: Puzzle3dBrushKindWeights } 
 
 export const puzzle3dBrushKindCatalogsRef: { current: KindCatalogBundle | undefined } = { current: undefined };
 
-export const puzzle3dBrushSceneFixtureRef: { current: FixtureV1 | undefined } = { current: undefined };
+export const puzzle3dBrushSceneFixtureRef: { current: Fixture | undefined } = { current: undefined };
 
 /** @emoji 🎚️ Publishes brush kind weights for {@link BrushSession} weighted candidate ordering. */
 export function publishPuzzle3dBrushKindWeights(objectWeights: Readonly<Record<string, number>>, vortexWeights: Readonly<Record<string, number>>): void {
@@ -4429,7 +4415,7 @@ export function publishPuzzle3dBrushKindCatalogs(kindCatalogs: KindCatalogBundle
 }
 
 /** @emoji 🧩 Publishes the live scene fixture for brush suggestion vortex labels. */
-export function publishPuzzle3dBrushSceneFixture(sceneFixture: FixtureV1 | undefined): void {
+export function publishPuzzle3dBrushSceneFixture(sceneFixture: Fixture | undefined): void {
   puzzle3dBrushSceneFixtureRef.current = sceneFixture;
 }
 
@@ -4673,7 +4659,7 @@ export function brushCollisionFreeCandidates(args: {
   readonly targetWorldDirectionCad: Vec3;
   readonly referenceOrientationCad?: Quat;
   readonly kindCatalogs: KindCatalogBundle | undefined;
-  readonly sceneFixture?: FixtureV1;
+  readonly sceneFixture?: Fixture;
   readonly meshRootForUrl?: (meshUrl: string) => Object3D | null | undefined;
   readonly overlapBudget?: number;
   readonly excludeSceneObjectIds?: ReadonlySet<string>;
@@ -4713,7 +4699,7 @@ export function brushCollisionFreeCandidates(args: {
 export function brushMeshUrlsForCompatibleCandidates(
   candidates: readonly BrushCompatibleCandidate[],
   kindCatalogs: KindCatalogBundle | undefined,
-  sceneFixture?: FixtureV1,
+  sceneFixture?: Fixture,
 ): readonly string[] {
   const urls: string[] = [];
   const seen = new Set<string>();
@@ -4730,7 +4716,7 @@ export function brushMeshUrlsForCompatibleCandidates(
 
 /** @emoji 📦 Catalog mesh URLs to preload before {@link buildBrushFillSequence} collision probes. */
 export function brushMeshUrlsForFillSession(
-  fixture: FixtureV1,
+  fixture: Fixture,
   kindCatalogs: KindCatalogBundle | undefined,
   kindCompatibility: readonly KindCompatEntry[] | undefined,
 ): readonly string[] {
@@ -4770,7 +4756,7 @@ export function brushPreviewMatchesCandidate(preview: BrushPreviewState, candida
 }
 
 /** @emoji 🖌️ Appends a brush-placed object and its attraction to a fixture. */
-export function applyBrushPlacementToFixture(fixture: FixtureV1, payload: BrushPlacePayload, kindCatalogs: KindCatalogBundle | undefined): FixtureV1 {
+export function applyBrushPlacementToFixture(fixture: Fixture, payload: BrushPlacePayload, kindCatalogs: KindCatalogBundle | undefined): Fixture {
   const kind = catalogObjectKindById(kindCatalogs, payload.objectKindId);
   const template = kind?.vortices?.[payload.sourceVortexIndex];
   const meshUrl = resolveObjectKindMeshUrl(payload.objectKindId, kindCatalogs, fixture);
@@ -4792,7 +4778,7 @@ export function applyBrushPlacementToFixture(fixture: FixtureV1, payload: BrushP
   }
   const attracting = puzzle3dVortexFullId(objectId, sourceVortex.id);
   const attractionId = payload.attractionId ?? `attraction-${attracting}-${payload.targetVortexFullId}`;
-  const nextObject: FixtureObjectV1 = {
+  const nextObject: FixtureObject = {
     id: objectId,
     objectKind: kind.id,
     meshUrl,
@@ -4865,7 +4851,7 @@ function weightedOrderFillVortexTargets(
 }
 
 /** @emoji 🪣 Lists fixture vortices that can still receive an attraction. */
-export function enumerateBrushFillVortexTargets(fixture: FixtureV1): readonly BrushFillVortexTarget[] {
+export function enumerateBrushFillVortexTargets(fixture: Fixture): readonly BrushFillVortexTarget[] {
   const blocked = blockedVortexFullIdsFromAttractions(fixture.attractions);
   const out: BrushFillVortexTarget[] = [];
   for (const obj of fixture.objects) {
@@ -4895,9 +4881,9 @@ export interface BrushPlacedCollisionEntry {
 
 function fixtureObjectCollisionEntry(
   objectId: string,
-  obj: Pick<FixtureObjectV1, "objectKind" | "origin" | "orientation" | "scale">,
+  obj: Pick<FixtureObject, "objectKind" | "origin" | "orientation" | "scale">,
   kindCatalogs: KindCatalogBundle | undefined,
-  sceneFixture: FixtureV1 | undefined,
+  sceneFixture: Fixture | undefined,
   meshRootForUrl: (meshUrl: string) => Object3D | null | undefined,
 ): BrushPlacedCollisionEntry | null {
   const meshUrl = resolveObjectKindMeshUrl(obj.objectKind, kindCatalogs, sceneFixture);
@@ -5021,7 +5007,7 @@ function orderBrushFillCompatibleCandidates(
 
 /** @emoji 🪣 Args shared by {@link buildBrushFillSequence} and {@link createBrushFillSequenceStepper}. */
 export interface BrushFillSequenceArgs {
-  readonly baseFixture: FixtureV1;
+  readonly baseFixture: Fixture;
   readonly maxCount?: number;
   readonly seed: number;
   readonly kindCatalogs: KindCatalogBundle | undefined;
@@ -5035,7 +5021,7 @@ export interface BrushFillSequenceArgs {
 /** @emoji 🪣 Incremental fill build snapshot for chunked session prep. */
 export interface BrushFillSequenceBuildResult {
   readonly sequence: readonly BrushPlacePayload[];
-  readonly appendedObjects: readonly FixtureObjectV1[];
+  readonly appendedObjects: readonly FixtureObject[];
   readonly appendedAttractions: readonly AttractionProps[];
   readonly done: boolean;
 }
@@ -5052,7 +5038,7 @@ export function createBrushFillSequenceStepper(args: BrushFillSequenceArgs): Bru
   const weights = args.weights ?? puzzle3dBrushKindWeightsRef.current;
   let fixture = args.baseFixture;
   const sequence: BrushPlacePayload[] = [];
-  const appendedObjects: FixtureObjectV1[] = [];
+  const appendedObjects: FixtureObject[] = [];
   const appendedAttractions: AttractionProps[] = [];
   const placed: BrushPlacedCollisionEntry[] = [];
   const candidateCache = new Map<string, readonly BrushCompatibleCandidate[]>();
@@ -5209,10 +5195,10 @@ export function buildBrushFillSequence(args: BrushFillSequenceArgs): readonly Br
 
 /** @emoji 🪣 Appends a deterministic fill prefix to a base fixture. */
 export function applyBrushFillPlacementsToFixture(
-  fixture: FixtureV1,
+  fixture: Fixture,
   payloads: readonly BrushPlacePayload[],
   kindCatalogs: KindCatalogBundle | undefined,
-): FixtureV1 {
+): Fixture {
   let next = fixture;
   for (const payload of payloads) {
     next = applyBrushPlacementToFixture(next, payload, kindCatalogs);
@@ -5252,7 +5238,7 @@ export function publishPuzzle3dBrushHostRules(rules: Puzzle3dBrushHostRules | nu
 
 /** @emoji 🧵 Scene snapshot pushed to the precompute worker. */
 export interface Puzzle3dPrecomputeSceneInput {
-  readonly fixture: FixtureV1;
+  readonly fixture: Fixture;
   readonly kindCatalogs?: KindCatalogBundle;
   readonly kindCompatibility?: readonly KindCompatEntry[];
   readonly overlapBudget?: number;
@@ -5337,7 +5323,7 @@ export interface Puzzle3dCollisionEngine {
     readonly referenceOrientationCad?: Quat;
     readonly kindCatalogs: KindCatalogBundle | undefined;
     readonly kindCompatibility?: readonly KindCompatEntry[];
-    readonly sceneFixture?: FixtureV1;
+    readonly sceneFixture?: Fixture;
     readonly meshRootForUrl?: (meshUrl: string) => Object3D | null | undefined;
     readonly overlapBudget?: number;
   }): Promise<BrushCollisionFreeResult>;
@@ -5665,7 +5651,7 @@ export interface Puzzle3dFillBuildProgress {
 /** @emoji 🪣 Extended fill snapshot including worker-appended fixture rows. */
 export interface Puzzle3dFillWorkerSnapshot extends Puzzle3dFillBuildProgress {
   readonly sequence: readonly BrushPlacePayload[];
-  readonly appendedObjects: readonly FixtureObjectV1[];
+  readonly appendedObjects: readonly FixtureObject[];
   readonly appendedAttractions: readonly AttractionProps[];
 }
 
@@ -8528,7 +8514,7 @@ export interface Puzzle3dPlayEngagementInputs {
   readonly brushTargetActive: boolean;
   readonly brushPlacementProbePending?: boolean;
   readonly kindCatalogs?: KindCatalogBundle;
-  readonly sceneFixture?: FixtureV1;
+  readonly sceneFixture?: Fixture;
 }
 
 /** @emoji 💬 Builds window {@link EngagementSpec}: command input, possibles, options, status (CAD play layout). */
@@ -9147,13 +9133,13 @@ function BrushCatalogMeshPreloadAll(props: { readonly urls: readonly string[]; r
 
 function Puzzle3dFillMeshBridge(props: {
   readonly fillActive: boolean;
-  readonly sceneFixture: FixtureV1 | undefined;
+  readonly sceneFixture: Fixture | undefined;
   readonly kindCatalogs: KindCatalogBundle | undefined;
   readonly kindCompatibility: readonly KindCompatEntry[] | undefined;
   readonly onMeshesReady: () => void;
 }): null {
   const prevFillActiveRef = reactHostPort.useRef(false);
-  const [fillSnapshot, setFillSnapshot] = reactHostPort.useState<FixtureV1 | null>(null);
+  const [fillSnapshot, setFillSnapshot] = reactHostPort.useState<Fixture | null>(null);
   reactHostPort.useLayoutEffect(() => {
     const enteredFill = props.fillActive && !prevFillActiveRef.current;
     if (props.fillActive && props.sceneFixture && (enteredFill || fillSnapshot === null)) {
@@ -9336,7 +9322,7 @@ function BrushSession(props: {
   readonly kindCatalogs: KindCatalogBundle | undefined;
   readonly kindCompatibility: readonly KindCompatEntry[] | undefined;
   readonly overlapBudget: number;
-  readonly sceneFixture?: FixtureV1;
+  readonly sceneFixture?: Fixture;
 }) {
   const reg = useRegistryCore();
   const { store } = useObjectState();
@@ -11673,7 +11659,7 @@ function RegistryProvider({
 }
 
 /** @emoji 👻 Live grid-plane preview while a workbench object-kind drag hovers the viewport. */
-function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | undefined; readonly sceneFixture?: FixtureV1 }): React.ReactElement | null {
+function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | undefined; readonly sceneFixture?: Fixture }): React.ReactElement | null {
   const { camera, gl } = useThree();
   const controls = useThree((state) => state.controls as { target?: Vector3 } | null);
   const lod = useLod();
@@ -11717,7 +11703,7 @@ function FixtureDropPreview(props: { readonly kindCatalogs: KindCatalogBundle | 
     if (!encodedDrag || !origin) {
       return null;
     }
-    const fixture = decodePuzzle3dFixtureFromDragV1(encodedDrag);
+    const fixture = decodePuzzle3dFixtureFromDrag(encodedDrag);
     const kindId = fixture?.objects[0]?.objectKind;
     if (!kindId) {
       return null;
@@ -12141,7 +12127,7 @@ function Inner(props: CanvasProps & {
 }
 
 export interface PlayCanvasProps {
-  readonly fixture: FixtureV1;
+  readonly fixture: Fixture;
   readonly className?: string;
   readonly camera?: CameraState;
   readonly cameraSeedKey?: string | number;
@@ -12628,7 +12614,7 @@ if (import.meta.vitest) {
       expect(cameraStateNearEqual(base, { ...base, position: [1.0001, 2, 3] })).toBe(true);
       expect(cameraStateNearEqual(base, { ...base, position: [2, 2, 3] })).toBe(false);
       const fixture = {
-        schema: "puzzle.3d.fixture/v1" as const,
+        schema: "puzzle.3d.fixture" as const,
         domain: "architecture" as const,
         camera: base,
         objects: [],
@@ -12794,10 +12780,10 @@ if (import.meta.vitest) {
       expect(store.getRevision()).toBe(2);
     });
   });
-  describe("parseFixtureV1", () => {
+  describe("parseFixture", () => {
     it("accepts minimal fixture", () => {
-      const f = parseFixtureV1({
-        schema: "puzzle.3d.fixture/v1",
+      const f = parseFixture({
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
         objects: [
@@ -12816,8 +12802,8 @@ if (import.meta.vitest) {
       expect(f?.targetVolumes).toEqual([]);
     });
     it("parses targetVolumes array", () => {
-      const f = parseFixtureV1({
-        schema: "puzzle.3d.fixture/v1",
+      const f = parseFixture({
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
         objects: [],
@@ -12834,8 +12820,8 @@ if (import.meta.vitest) {
       expect(f?.targetVolumes[0]?.scale).toEqual([4, 6, 8]);
     });
     it("parses references array", () => {
-      const f = parseFixtureV1({
-        schema: "puzzle.3d.fixture/v1",
+      const f = parseFixture({
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
         objects: [],
@@ -12852,8 +12838,8 @@ if (import.meta.vitest) {
       expect(f?.references[0]?.source.url).toBe("/example/reference.png");
     });
     it("parses domain case-insensitively", () => {
-      const f = parseFixtureV1({
-        schema: "puzzle.3d.fixture/v1",
+      const f = parseFixture({
+        schema: "puzzle.3d.fixture",
         domain: "Urban",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -12862,8 +12848,8 @@ if (import.meta.vitest) {
       expect(f?.domain).toBe("urban");
     });
     it("parses meshByLod list entries", () => {
-      const f = parseFixtureV1({
-        schema: "puzzle.3d.fixture/v1",
+      const f = parseFixture({
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
         objects: [
@@ -12894,8 +12880,8 @@ if (import.meta.vitest) {
       expect(v?.vortexMeshUrl).toBe("/fallback.glb");
     });
     it("parses hidden and locked flags on objects, vortices, and attractions", () => {
-      const f = parseFixtureV1({
-        schema: "puzzle.3d.fixture/v1",
+      const f = parseFixture({
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [{ id: "att-1", attracting: "obj-1:v-1", attracted: "obj-2:v-1", hidden: true, locked: true }],
         objects: [
@@ -12919,8 +12905,8 @@ if (import.meta.vitest) {
   });
   describe("flatten3d", () => {
     it("resolves linked object origin from local vortex geometry", () => {
-      const fixture = parseFixtureV1({
-        schema: "puzzle.3d.fixture/v1",
+      const fixture = parseFixture({
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         objects: [
           {
@@ -13065,12 +13051,6 @@ if (import.meta.vitest) {
       expect(true).toBe(true);
     });
   });
-  describe("kindsCompatible", () => {
-    it("matches bidirectional", () => {
-      const ok = kindsCompatible("a", "b", [{ source: "b", target: "a", bidirectional: true }]);
-      expect(ok).toBe(true);
-    });
-  });
   describe("blockedVortexFullIdsFromAttractions", () => {
     it("collects endpoints", () => {
       const s = blockedVortexFullIdsFromAttractions([{ attracting: "a:h1", attracted: "b:h2" }]);
@@ -13171,7 +13151,7 @@ if (import.meta.vitest) {
   });
   describe("applyRelocateToFixture", () => {
     it("translates attracted descendants when adjacency is passed", () => {
-      const fixture: FixtureV1 = {
+      const fixture: Fixture = {
         objects: [
           { id: "a", meshUrl: "m", origin: [0, 0, 0], vortices: [] },
           { id: "b", meshUrl: "m", origin: [1, 0, 0], vortices: [] },
@@ -13644,8 +13624,8 @@ if (import.meta.vitest) {
     });
     it("resolveObjectKindMeshUrl falls back to scene object mesh when catalog omits meshUrl", () => {
       const catalogs: KindCatalogBundle = { objects: [{ id: "Base", label: "Base" }] };
-      const scene: FixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const scene: Fixture = {
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         domain: "architecture",
         attractions: [],
@@ -13667,8 +13647,8 @@ if (import.meta.vitest) {
       const catalogs: KindCatalogBundle = {
         objects: [{ id: "Capsule Z", label: "Capsule Z", meshUrl: "/mesh/capsule_z.glb" }],
       };
-      const scene: FixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const scene: Fixture = {
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         domain: "architecture",
         attractions: [],
@@ -13700,8 +13680,8 @@ if (import.meta.vitest) {
       const catalogs: KindCatalogBundle = {
         objects: [{ id: "Capsule q", label: "Capsule q", meshUrl: PALETTE_DRAG_SEED_MESH_URL }],
       };
-      const scene: FixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const scene: Fixture = {
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         domain: "architecture",
         attractions: [],
@@ -13723,18 +13703,18 @@ if (import.meta.vitest) {
           { id: "kind-b", meshUrl: "/mesh/b.glb" },
         ],
       };
-      const object: FixtureObjectV1 = { id: "obj", objectKind: "kind-a", meshUrl: "/mesh/a.glb", origin: [0, 0, 0], vortices: [] };
+      const object: FixtureObject = { id: "obj", objectKind: "kind-a", meshUrl: "/mesh/a.glb", origin: [0, 0, 0], vortices: [] };
       const next = applyObjectKindToFixtureObject(object, "kind-b", catalogs);
       expect(next.objectKind).toBe("kind-b");
       expect(next.meshUrl).toBe("/mesh/b.glb");
-      expect(fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture/v1", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [object] })).not.toBe(
-        fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture/v1", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [next] }),
+      expect(fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [object] })).not.toBe(
+        fixtureAppearanceFingerprint({ schema: "puzzle.3d.fixture", camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 }, domain: "architecture", attractions: [], objects: [next] }),
       );
     });
     it("ObjectStore syncAppearanceFromFixture updates meshUrl on object-kind change", () => {
       const store = new ObjectStore();
-      const initial: FixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const initial: Fixture = {
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         domain: "architecture",
         attractions: [],
@@ -13751,8 +13731,8 @@ if (import.meta.vitest) {
     });
     it("ObjectStore syncAppearanceFromFixture syncs hidden and locked flags on objects and attractions", () => {
       const store = new ObjectStore();
-      const initial: FixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const initial: Fixture = {
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         domain: "architecture",
         attractions: [{ id: "att-1", attracting: "obj:v1", attracted: "obj:v1" }],
@@ -13813,7 +13793,7 @@ if (import.meta.vitest) {
       host.getBoundingClientRect = () => ({ left: 0, top: 0, right: 200, bottom: 200, width: 200, height: 200, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
       puzzle3dFixtureDropPointerToCadRef.current = () => [5, 6, 7];
       const dragFixture = buildPaletteObjectDragFixture("J");
-      const encoded = encodeFixtureForDragV1(dragFixture);
+      const encoded = encodeFixtureForDrag(dragFixture);
       let dropped: Puzzle3dFixtureDropDetail | null = null;
       beginPuzzle3dFixturePalettePointerDrag(encoded);
       expect(puzzle3dFixturePalettePointerDragRef.active).toBe(true);
@@ -13824,8 +13804,8 @@ if (import.meta.vitest) {
       expect(dropped?.worldCad).toEqual([5, 6, 7]);
     });
     it("puzzle3dFixturePaletteTreeDragController toggles palette drag ref and drag session", () => {
-      const encoded = encodeFixtureForDragV1(buildPaletteObjectDragFixture("J"));
-      const dragData = new Map([["row-j", { [FIXTURE_DRAG_V1_MIME]: encoded, [FIXTURE_DRAG_PLAIN_MIME]: encoded }]]);
+      const encoded = encodeFixtureForDrag(buildPaletteObjectDragFixture("J"));
+      const dragData = new Map([["row-j", { [FIXTURE_DRAG_MIME]: encoded, [FIXTURE_DRAG_PLAIN_MIME]: encoded }]]);
       const controller = puzzle3dFixturePaletteTreeDragController(dragData);
       const item = { id: "row-j", label: "J" };
       const section = { id: "objects", label: "Objects" };
@@ -14316,7 +14296,7 @@ if (import.meta.vitest) {
       expect(puzzle3dSingleLetterPortFamiliesCompatible("door tambour left", "door capsule left")).toBe(true);
     });
     it("concrete forest brush rejects c-* candidates for b-* targets even without compatibility rules", async () => {
-      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
+      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as Fixture;
       const meta = concreteForestFixture.meta as Record<string, unknown> | undefined;
       const kindCatalogs = (meta?.kindCatalogs ?? undefined) as KindCatalogBundle | undefined;
       const host = concreteForestFixture.objects[0]!;
@@ -14490,7 +14470,7 @@ if (import.meta.vitest) {
           },
         ],
       };
-      const fixture: FixtureV1 = {
+      const fixture: Fixture = {
         version: 1,
         objects: [
           {
@@ -14604,7 +14584,7 @@ if (import.meta.vitest) {
       expect(new Set(urls).size).toBe(urls.length);
     });
     it("brushMeshUrlsForFillSession includes scene objects and compatible placement meshes", () => {
-      const fixture: FixtureV1 = {
+      const fixture: Fixture = {
         version: 1,
         objects: [
           {
@@ -14631,7 +14611,7 @@ if (import.meta.vitest) {
       const meshRoot = registerBrushTestMesh("/mesh/tambour.glb", [4, 4, 4]);
       registerBrushTestMesh("/mesh/capsule_L.glb", [4, 4, 4]);
       registerBrushTestMesh("/mesh/capsule_R.glb", [4, 4, 4]);
-      const fixture: FixtureV1 = {
+      const fixture: Fixture = {
         version: 1,
         objects: [
           {
@@ -14665,7 +14645,7 @@ if (import.meta.vitest) {
       registerBrushTestMesh("/mesh/tambour.glb", [4, 4, 4]);
       registerBrushTestMesh("/mesh/capsule_L.glb", [4, 4, 4]);
       registerBrushTestMesh("/mesh/capsule_R.glb", [4, 4, 4]);
-      const fixture: FixtureV1 = {
+      const fixture: Fixture = {
         version: 1,
         objects: [
           {
@@ -14710,7 +14690,7 @@ if (import.meta.vitest) {
     it("buildBrushFillSequence rejects undersized collision mesh roots", () => {
       const stub = new Mesh(new BoxGeometry(1, 1, 1));
       expect(brushCollisionMeshExtentOk(stub)).toBe(false);
-      const fixture: FixtureV1 = {
+      const fixture: Fixture = {
         version: 1,
         objects: [
           {
@@ -14743,7 +14723,7 @@ if (import.meta.vitest) {
       registerBrushCollisionGltfScene("/mesh/hexagonal-cut-concrete-forest-left.glb", stubGroup);
       registerBrushCollisionGltfScene("/mesh/hexagonal-cut-concrete-forest-right.glb", stubGroup);
       expect(brushCollisionGltfRoot("/mesh/hexagonal-cut-concrete-forest-left.glb")).toBeNull();
-      const fixture: FixtureV1 = {
+      const fixture: Fixture = {
         version: 1,
         objects: [
           {
@@ -15052,8 +15032,8 @@ if (import.meta.vitest) {
     });
     it("snapCadToVoxelCenter and addVoxelToFixture place axis-aligned boxes", () => {
       expect(snapCadToVoxelCenter([0.2, 0.2, 0.2], [1, 2, 3])).toEqual([0.5, 1, 1.5]);
-      const base: FixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const base: Fixture = {
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         domain: "architecture",
         attractions: [],
@@ -15093,8 +15073,8 @@ if (import.meta.vitest) {
       }
     });
     it("applyBrushPlacementToFixture appends object and attraction", () => {
-      const fixture: FixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const fixture: Fixture = {
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         domain: "architecture",
         attractions: [],
@@ -15165,8 +15145,8 @@ if (import.meta.vitest) {
       registerBrushCollisionGltfScene(previewUrl, new Mesh(new BoxGeometry(8, 8, 8)));
       session.register_mesh(obstacleUrl, boxPositions, boxIndices);
       session.register_mesh(previewUrl, boxPositions, boxIndices);
-      const fixture: FixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const fixture: Fixture = {
+        schema: "puzzle.3d.fixture",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         domain: "architecture",
         attractions: [],
@@ -15231,7 +15211,7 @@ if (import.meta.vitest) {
       clearBrushCollisionGltfScenes();
     });
     it("concrete forest first brush iteration on every seed b-* vortex yields all beam connectors", async () => {
-      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
+      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as Fixture;
       const leftType = (await import("../../../compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.compose.json")).default as {
         connectors: { items: readonly { name: string; point: { x: number; y: number; z: number } }[] };
       };
@@ -15354,7 +15334,7 @@ if (import.meta.vitest) {
       clearBrushCollisionGltfScenes();
     }, 120_000);
     it("wasm concrete forest brush agrees with mesh-bvh on real geometry beam connector set", async () => {
-      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as FixtureV1;
+      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as Fixture;
       const leftType = (await import("../../../compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.compose.json")).default as {
         connectors: { items: readonly { name: string }[] };
       };

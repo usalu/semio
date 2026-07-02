@@ -102,9 +102,9 @@ pub mod fixture_layout {
     }
 
     const FORCE_GRAPH_COMPATIBLE_SCHEMAS: &[&str] = &[
-        "puzzle.2d.fixture/v1",
-        "reasoning.mindmap.fixture/v1",
-        "trinity.graph/v1",
+        "puzzle.2d.fixture",
+        "reasoning.mindmap.fixture",
+        "trinity.graph",
     ];
 
     fn fixture_schema_ok(schema: Option<&str>) -> bool {
@@ -374,7 +374,7 @@ mod tests {
     #[test]
     fn force_graph_without_gravity_stays_near_initial_centroid() {
         let fixture = serde_json::json!({
-            "schema": "reasoning.mindmap.fixture/v1",
+            "schema": "reasoning.mindmap.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "a", "x": 1000.0, "y": 1000.0, "radius": 40.0 },
@@ -404,7 +404,7 @@ mod tests {
     #[test]
     fn force_graph_node_id_edges_apply_spring_forces() {
         let fixture = serde_json::json!({
-            "schema": "reasoning.mindmap.fixture/v1",
+            "schema": "reasoning.mindmap.fixture",
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [
                 { "id": "a", "x": 0.0, "y": 0.0, "radius": 40.0 },

@@ -145,9 +145,9 @@ import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
-import { Puzzle2dCanvas, parsePuzzle2dFixtureV1, type Puzzle2dPreselectSnapshot, type Puzzle2dSelectionSnapshot } from "@semio-tech/puzzle-2d-react";
-import { parseFixtureV1, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@semio-tech/puzzle-3d-react";
-import { PUZZLE_2D_FIXTURE_DRAG_V1_MIME, puzzle2dFixturePaletteTreeDragController, classifyPuzzle2dIconSelectorMode } from "@semio-tech/puzzle-2d-react";
+import { Puzzle2dCanvas, parsePuzzle2dFixture, type Puzzle2dPreselectSnapshot, type Puzzle2dSelectionSnapshot } from "@semio-tech/puzzle-2d-react";
+import { parseFixture, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@semio-tech/puzzle-3d-react";
+import { PUZZLE_2D_FIXTURE_DRAG_MIME, puzzle2dFixturePaletteTreeDragController, classifyIconSelectorMode } from "@semio-tech/puzzle-2d-react";
 import { FiveD, StoreProvider, compose5d, createStore, prepareTopologyModel } from "@semio-tech/puzzle-5d-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -433,41 +433,6 @@ function isWindowLayout(value: unknown): value is WindowLayout {
   return isWindowLayoutAxisNode(candidate.root) || isWindowLayoutStackNode(candidate.root);
 }
 
-function convertLegacyGoldenNodeToWindowLayoutNode(value: unknown): WindowLayoutNode | WindowLayoutWindowNode | undefined {
-  if (!value || typeof value !== "object") return undefined;
-  const node = value as Record<string, unknown>;
-
-  if (node.type === "component") {
-    const componentName = typeof node.componentName === "string" ? node.componentName : undefined;
-    if (!componentName) return undefined;
-    return createWindowLayout(componentName, typeof node.title === "string" ? node.title : componentName);
-  }
-
-  if (node.type === "stack") {
-    const children = Array.isArray(node.content) ? node.content.map(convertLegacyGoldenNodeToWindowLayoutNode).filter(isWindowLayoutWindowNode) : [];
-    if (children.length === 0) return undefined;
-    return {
-      kind: "stack",
-      ...(typeof node.size === "string" ? { size: Number.parseFloat(node.size) } : typeof node.size === "number" ? { size: node.size } : {}),
-      children,
-    };
-  }
-
-  if (node.type === "row" || node.type === "column") {
-    const children = Array.isArray(node.content)
-      ? node.content.map(convertLegacyGoldenNodeToWindowLayoutNode).filter((child): child is WindowLayoutAxisNode | WindowLayoutStackNode => isWindowLayoutAxisNode(child) || isWindowLayoutStackNode(child))
-      : [];
-    if (children.length === 0) return undefined;
-    return {
-      kind: node.type,
-      ...(typeof node.size === "string" ? { size: Number.parseFloat(node.size) } : typeof node.size === "number" ? { size: node.size } : {}),
-      children,
-    };
-  }
-
-  return undefined;
-}
-
 /**
  * Parses a window layout from a string, object, or undefined input.
  * MUST return undefined for null, empty, or unparseable inputs.
@@ -484,90 +449,7 @@ export function parseWindowLayout(layout: unknown): WindowLayout | undefined {
     }
   }
   if (isWindowLayout(layout)) return layout;
-  if (typeof layout === "object") {
-    const candidate = layout as Record<string, unknown>;
-    const legacyRoot = convertLegacyGoldenNodeToWindowLayoutNode(candidate.root);
-    if (legacyRoot && (isWindowLayoutAxisNode(legacyRoot) || isWindowLayoutStackNode(legacyRoot))) {
-      return { root: legacyRoot };
-    }
-  }
   return undefined;
-}
-
-/**
- * Serializes a window layout to a JSON string.
- * MUST return undefined when serialization fails.
- **/
-export function stringifyWindowLayout(layout: unknown): string | undefined {
-  const parsedLayout = parseWindowLayout(layout);
-  if (!parsedLayout) return undefined;
-  try {
-    return JSON.stringify(parsedLayout);
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * Removes duplicate and disallowed window components from a layout.
- **/
-export function deduplicateWindowLayout(layout: unknown, allowedWindowIds: string[]): WindowLayout | undefined {
-  const parsedLayout = parseWindowLayout(layout);
-  if (!parsedLayout) return undefined;
-
-  const seenComponents = new Set<string>();
-
-  const deduplicateNode = (node: WindowLayoutNode): WindowLayoutNode | undefined => {
-    if (node.kind === "stack") {
-      const children = node.children.filter((child) => {
-        if (seenComponents.has(child.windowKindId) || !allowedWindowIds.includes(child.windowKindId)) return false;
-        seenComponents.add(child.windowKindId);
-        return true;
-      });
-
-      if (children.length === 0) return undefined;
-      return { ...node, children };
-    }
-
-    const children = node.children.map((child) => deduplicateNode(child)).filter((child): child is WindowLayoutAxisNode | WindowLayoutStackNode => Boolean(child));
-
-    if (children.length === 0) return undefined;
-    return { ...node, children };
-  };
-
-  const deduplicatedRoot = deduplicateNode(parsedLayout.root);
-  if (!deduplicatedRoot || isWindowLayoutWindowNode(deduplicatedRoot)) return undefined;
-  return { root: deduplicatedRoot };
-}
-
-function convertWindowLayoutNodeToGoldenConfig(node: WindowLayoutNode): Record<string, unknown> {
-  if (node.kind === "stack") {
-    return {
-      type: "stack",
-      ...(node.size !== undefined ? { size: `${node.size}%` } : {}),
-      content: node.children.map((child) => ({
-        type: "component",
-        componentName: child.windowKindId,
-        title: child.title ?? child.windowKindId,
-        componentState: {},
-      })),
-    };
-  }
-
-  return {
-    type: node.kind,
-    ...(node.size !== undefined ? { size: `${node.size}%` } : {}),
-    content: node.children.map((child) => convertWindowLayoutNodeToGoldenConfig(child)),
-  };
-}
-
-function convertWindowLayoutToGoldenConfig(layout: WindowLayout): Record<string, unknown> {
-  return { root: convertWindowLayoutNodeToGoldenConfig(layout.root) };
-}
-
-/** @emoji 🧩 Converts {@link WindowLayout} to legacy Golden Layout JSON (interop). */
-export function layoutNodeToGoldenLayoutConfig(layout: WindowLayout): Record<string, unknown> {
-  return convertWindowLayoutToGoldenConfig(layout);
 }
 
 /**
@@ -1212,7 +1094,7 @@ export function renderUiControl(control: UiControlNode, commandBus: CommandBus, 
 		case "iconSelect":
 			return (
 				<IconSelector
-					classifyIconSelectorMode={control.classifierKind === "puzzle2d" ? classifyPuzzle2dIconSelectorMode : undefined}
+					classifyIconSelectorMode={control.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
 					id={control.id}
 					onChange={(next) => dispatchUiCommand(commandBus, control.onChange, { value: next })}
 					uniform={control.uniform}
@@ -1259,7 +1141,6 @@ function uiTreeContextMenuToTreeData(items: UiTreeItemNode["contextMenu"]): Tree
 
 function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: CommandBus, platform: Platform | undefined): TreeDataItem[] {
 	return items.map((item) => {
-		const legacyActivate = (item as UiTreeItemNode & { readonly onClick?: () => void }).onClick;
 		return {
 			id: item.id,
 			label: item.label,
@@ -1282,7 +1163,7 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
 				revealOnHover: action.revealOnHover,
 			})),
 			contextMenu: uiTreeContextMenuToTreeData(item.contextMenu),
-			onClick: legacyActivate ?? (item.command ? () => dispatchUiCommand(commandBus, item.command!, {}) : undefined),
+			onClick: item.command ? () => dispatchUiCommand(commandBus, item.command!, {}) : undefined,
 			onPointerEnter: item.onPointerEnter,
 			onPointerLeave: item.onPointerLeave,
 		};
@@ -1294,7 +1175,7 @@ function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[]
 	const dragByItemId = collectUiTreeItemDragData(sections);
 	if (dragByItemId.size === 0) return undefined;
 	const sample = dragByItemId.values().next().value;
-	if (sample && PUZZLE_2D_FIXTURE_DRAG_V1_MIME in sample) {
+	if (sample && PUZZLE_2D_FIXTURE_DRAG_MIME in sample) {
 		return puzzle2dFixturePaletteTreeDragController(dragByItemId);
 	}
 	return puzzle3dFixturePaletteTreeDragController(dragByItemId);
@@ -2623,34 +2504,6 @@ if (import.meta.vitest) {
 	});
 
 	describe("layout helpers", () => {
-		it("converts abstract layout nodes to GoldenLayout config", () => {
-			expect(
-				layoutNodeToGoldenLayoutConfig({
-					root: {
-						kind: "row",
-						children: [
-							{
-								kind: "stack",
-								size: 100,
-								children: [{ kind: "window", windowKindId: "table", title: "table" }],
-							},
-						],
-					},
-				}),
-			).toEqual({
-				root: {
-					type: "row",
-					content: [
-						{
-							type: "stack",
-							size: "100%",
-							content: [{ type: "component", componentName: "table", title: "table", componentState: {} }],
-						},
-					],
-				},
-			});
-		});
-
 		it("merges toolbar trees and omits empty roots", () => {
 			const merged = mergeToolbarViewTools(
 				[{ id: "selection", kind: "collection", icon: null, children: [{ id: "a", onClick: () => undefined }] }],
@@ -3110,7 +2963,7 @@ const BuiltinPuzzle3dKindRenderer: ComponentKindRenderer = ({ component, node })
 
 /** @emoji 🔑 Stable topology identity ignoring flat node positions (live force updates positions locally). */
 export function platformTopologyStructureKey(flat: Record<string, unknown>, volume: Record<string, unknown>): string {
-	const parsed = parsePuzzle2dFixtureV1(flat);
+	const parsed = parsePuzzle2dFixture(flat);
 	if (!parsed) return "";
 	const nodes = [...parsed.nodes]
 		.map((node) => node.id)
@@ -3153,7 +3006,7 @@ function usePlatformTopologyStore(
 		if (!flatPayload || !volumePayload) {
 			return;
 		}
-		const model = prepareTopologyModel(compose5d(parsePuzzle2dFixtureV1(flatPayload)!, parseFixtureV1(volumePayload)!));
+		const model = prepareTopologyModel(compose5d(parsePuzzle2dFixture(flatPayload)!, parseFixture(volumePayload)!));
 		const existing = topologyStoreRef.current;
 		if (existing) {
 			if (lastStructureKeyRef.current !== structureKey) {
@@ -3959,31 +3812,31 @@ if (import.meta.vitest) {
 	describe("platformTopologyStructureKey", () => {
 		it("ignores node position changes", () => {
 			const flatA = {
-				schema: "puzzle.2d.fixture/v1",
+				schema: "puzzle.2d.fixture",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "a", x: 0, y: 0, shape: "circle", radius: 8, handles: [] }],
 				edges: [],
 			};
 			const flatB = {
-				schema: "puzzle.2d.fixture/v1",
+				schema: "puzzle.2d.fixture",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "a", x: 40, y: 50, shape: "circle", radius: 8, handles: [] }],
 				edges: [],
 			};
-			const volume = { schema: "puzzle.3d.fixture/v1", objects: [], attractions: [], cables: [] };
+			const volume = { schema: "puzzle.3d.fixture", objects: [], attractions: [], cables: [] };
 			expect(platformTopologyStructureKey(flatA, volume)).toBe(platformTopologyStructureKey(flatB, volume));
 		});
 
 		it("changes when node ids change", () => {
-			const volume = { schema: "puzzle.3d.fixture/v1", objects: [], attractions: [], cables: [] };
+			const volume = { schema: "puzzle.3d.fixture", objects: [], attractions: [], cables: [] };
 			const flatA = {
-				schema: "puzzle.2d.fixture/v1",
+				schema: "puzzle.2d.fixture",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "a", x: 0, y: 0, shape: "circle", radius: 8, handles: [] }],
 				edges: [],
 			};
 			const flatB = {
-				schema: "puzzle.2d.fixture/v1",
+				schema: "puzzle.2d.fixture",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "b", x: 0, y: 0, shape: "circle", radius: 8, handles: [] }],
 				edges: [],

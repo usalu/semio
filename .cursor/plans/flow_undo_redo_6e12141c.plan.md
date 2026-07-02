@@ -42,7 +42,7 @@ flowchart LR
 
 
 
-State of record is `FlowHost.fixture` (`FlowFixtureV1`: widgets, synapses, layout, camera). Snapshots clone the fixture; comparison/undo ignore `camera` so zoom/pan never creates or is affected by undo steps. Selection/hover/preview-visibility live in the dag (ephemeral) and are intentionally not part of history.
+State of record is `FlowHost.fixture` (`FlowFixture`: widgets, synapses, layout, camera). Snapshots clone the fixture; comparison/undo ignore `camera` so zoom/pan never creates or is affected by undo steps. Selection/hover/preview-visibility live in the dag (ephemeral) and are intentionally not part of history.
 
 ## Ticket (repo MCP, first step)
 
@@ -57,14 +57,14 @@ Add a `// #region History` inside the `FlowHost` impl area (struct field + metho
 ```rust
 #[derive(Default)]
 struct FlowHistory {
-    past: Vec<FlowFixtureV1>,
-    future: Vec<FlowFixtureV1>,
-    pending: Option<FlowFixtureV1>, // pre-gesture snapshot
+    past: Vec<FlowFixture>,
+    future: Vec<FlowFixture>,
+    pending: Option<FlowFixture>, // pre-gesture snapshot
 }
 ```
 
 - Helpers on `FlowHost`:
-  - `fn content_changed(a: &FlowFixtureV1, b: &FlowFixtureV1) -> bool` → `a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout` (camera ignored; all derive `PartialEq`).
+  - `fn content_changed(a: &FlowFixture, b: &FlowFixture) -> bool` → `a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout` (camera ignored; all derive `PartialEq`).
   - `fn begin_change(&mut self)`: if `history.pending.is_none()` (not in a gesture), push `self.fixture.clone()` onto `past` and clear `future`. No-op during a gesture so a drag = one undo step.
   - `fn undo(&mut self) -> bool` / `redo(&mut self) -> bool`: pop from `past`/`future`, push current onto the other stack, set `self.fixture = snapshot` but preserve current `camera`, then `rebuild_dag()` + `evaluate_internal()`.
   - `fn can_undo(&self)` / `can_redo(&self)`.

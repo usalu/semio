@@ -1,26 +1,26 @@
 /** @emoji ⚙️ Imperative core — path document types and effect runtime. */
 
-export const IMPERATIVE_DOCUMENT_SCHEMA = "imperative.document/v1";
+export const IMPERATIVE_DOCUMENT_SCHEMA = "imperative.document";
 
-export type ImperativeStepV1 = {
+export type ImperativeStep = {
 	readonly id: string;
 	readonly kind: string;
 	readonly params: Record<string, unknown>;
-	readonly bodies?: Record<string, ImperativePathV1>;
+	readonly bodies?: Record<string, ImperativePath>;
 };
 
-export type ImperativePathV1 = {
-	readonly steps: readonly ImperativeStepV1[];
+export type ImperativePath = {
+	readonly steps: readonly ImperativeStep[];
 };
 
-export type ImperativePathRefV1 = {
+export type ImperativePathRef = {
 	readonly owner?: string;
 	readonly slot?: string;
 };
 
-export type ImperativeDocumentV1 = {
+export type ImperativeDocument = {
 	readonly schema: typeof IMPERATIVE_DOCUMENT_SCHEMA;
-	readonly path: ImperativePathV1;
+	readonly path: ImperativePath;
 	readonly seed?: Record<string, unknown>;
 };
 
@@ -58,13 +58,13 @@ export type ImperativeCatalogueSection = {
 	readonly items: readonly ImperativeCatalogueItem[];
 };
 
-export type ImperativeCatalogueV1 = {
-	readonly schema: "imperative.catalogue/v1";
+export type ImperativeCatalogue = {
+	readonly schema: "imperative.catalogue";
 	readonly sections: readonly ImperativeCatalogueSection[];
 };
 
-export const DEFAULT_IMPERATIVE_CATALOGUE: ImperativeCatalogueV1 = {
-	schema: "imperative.catalogue/v1",
+export const DEFAULT_IMPERATIVE_CATALOGUE: ImperativeCatalogue = {
+	schema: "imperative.catalogue",
 	sections: [
 		{
 			id: "actions",
@@ -220,9 +220,9 @@ export class ImperativeExtensionHost {
 		}));
 	}
 
-	getCatalogue(): ImperativeCatalogueV1 {
+	getCatalogue(): ImperativeCatalogue {
 		return {
-			schema: "imperative.catalogue/v1",
+			schema: "imperative.catalogue",
 			sections: [
 				...DEFAULT_IMPERATIVE_CATALOGUE.sections,
 				TEXT_MODULE_CATALOGUE_SECTION,
@@ -290,7 +290,7 @@ function readEffectNumber(value: unknown): number {
 	return Number(value);
 }
 
-export const DEFAULT_IMPERATIVE_DOCUMENT: ImperativeDocumentV1 = {
+export const DEFAULT_IMPERATIVE_DOCUMENT: ImperativeDocument = {
 	schema: IMPERATIVE_DOCUMENT_SCHEMA,
 	path: {
 		steps: [
@@ -309,13 +309,13 @@ export const DEFAULT_IMPERATIVE_DOCUMENT: ImperativeDocumentV1 = {
 	seed: {},
 };
 
-export function imperativeDocumentToJson(document: ImperativeDocumentV1): string {
+export function imperativeDocumentToJson(document: ImperativeDocument): string {
 	return JSON.stringify(document);
 }
 
-export function parseImperativeDocumentJson(json: string): ImperativeDocumentV1 | null {
+export function parseImperativeDocumentJson(json: string): ImperativeDocument | null {
 	try {
-		const parsed = JSON.parse(json) as ImperativeDocumentV1;
+		const parsed = JSON.parse(json) as ImperativeDocument;
 		if (parsed.schema !== IMPERATIVE_DOCUMENT_SCHEMA || !parsed.path || !Array.isArray(parsed.path.steps)) return null;
 		return parsed;
 	} catch {

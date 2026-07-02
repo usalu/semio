@@ -37,8 +37,8 @@ import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import {
 	DEFAULT_LOWPOLY_SELECTION,
 	LOWPOLY_FIXTURE_SCHEMA,
-	type LowpolyFixtureV1,
-	type LowpolySelectionModeV1,
+	type LowpolyFixture,
+	type LowpolySelectionMode,
 	lowpolyFixtureToJson,
 	parseLowpolyFixtureJson,
 } from "@semio-tech/lowpoly-core";
@@ -53,7 +53,7 @@ export const LOWPOLY_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const LOWPOLY_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const LOWPOLY_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 
-const EMPTY_FIXTURE: LowpolyFixtureV1 = {
+const EMPTY_FIXTURE: LowpolyFixture = {
 	schema: LOWPOLY_FIXTURE_SCHEMA,
 	objects: [],
 	activeObjectId: "",
@@ -82,10 +82,10 @@ function lowpolyPlayCmd(command: string, args?: Record<string, unknown>): Comman
 /** @emoji 🧰 Lowpoly play footer toolbar. */
 export function buildLowpolyPlayToolbarTools(
 	controllerId: string,
-	selectionMode: LowpolySelectionModeV1,
+	selectionMode: LowpolySelectionMode,
 	transformTool: LowpolyTransformTool,
 ): AppTools {
-	const modeToggle = (id: string, label: string, mode: LowpolySelectionModeV1): ToolLeaf => ({
+	const modeToggle = (id: string, label: string, mode: LowpolySelectionMode): ToolLeaf => ({
 		id,
 		kind: "toggle",
 		label,
@@ -239,6 +239,54 @@ export function buildLowpolyPlayInspectorTree(fixtureJson: string, toolParams: R
 				},
 				{
 					type: "field",
+					id: "lowpoly-inspector.bevel",
+					label: "Bevel amount",
+					child: {
+						type: "input",
+						id: "lowpoly-inspector.bevel.input",
+						inputKind: "number",
+						value: String(toolParams.bevelAmount ?? 0.05),
+						onChange: lowpolyPlayCmd("setToolParam", { field: "bevelAmount" }),
+					},
+				},
+				{
+					type: "field",
+					id: "lowpoly-inspector.loop",
+					label: "Loop cuts",
+					child: {
+						type: "input",
+						id: "lowpoly-inspector.loop.input",
+						inputKind: "number",
+						value: String(toolParams.loopCuts ?? 1),
+						onChange: lowpolyPlayCmd("setToolParam", { field: "loopCuts" }),
+					},
+				},
+				{
+					type: "field",
+					id: "lowpoly-inspector.snap",
+					label: "Snap grid",
+					child: {
+						type: "input",
+						id: "lowpoly-inspector.snap.input",
+						inputKind: "number",
+						value: String(toolParams.snapGrid ?? 0.25),
+						onChange: lowpolyPlayCmd("setToolParam", { field: "snapGrid" }),
+					},
+				},
+				{
+					type: "field",
+					id: "lowpoly-inspector.mirror",
+					label: "Mirror axis (0=x,1=y,2=z)",
+					child: {
+						type: "input",
+						id: "lowpoly-inspector.mirror.input",
+						inputKind: "number",
+						value: String(toolParams.mirrorAxis ?? 0),
+						onChange: lowpolyPlayCmd("setToolParam", { field: "mirrorAxis" }),
+					},
+				},
+				{
+					type: "field",
 					id: "lowpoly-inspector.decimate",
 					label: "Decimate ratio",
 					child: {
@@ -261,7 +309,7 @@ export function buildLowpolyPlayInspectorTree(fixtureJson: string, toolParams: R
 export class LowpolyPlayController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	private fixtureJson = LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
-	private selectionMode: LowpolySelectionModeV1 = "object";
+	private selectionMode: LowpolySelectionMode = "object";
 	private selectedIds: number[] = [];
 	private transformTool: LowpolyTransformTool = "move";
 	private toolParams: Record<string, number> = {
@@ -289,7 +337,7 @@ export class LowpolyPlayController extends Controller {
 		return this.fixtureJson;
 	}
 
-	getSelectionMode(): LowpolySelectionModeV1 {
+	getSelectionMode(): LowpolySelectionMode {
 		return this.selectionMode;
 	}
 
@@ -387,7 +435,7 @@ export class LowpolyPlayController extends Controller {
 			return;
 		}
 		if (command === "setSelectionMode") {
-			const mode = (args as { mode?: LowpolySelectionModeV1 }).mode;
+			const mode = (args as { mode?: LowpolySelectionMode }).mode;
 			if (mode) {
 				this.selectionMode = mode;
 				this.rebuildShellMode();
@@ -398,7 +446,7 @@ export class LowpolyPlayController extends Controller {
 			return;
 		}
 		if (command === "setSelection") {
-			const mode = (args as { mode?: LowpolySelectionModeV1 }).mode;
+			const mode = (args as { mode?: LowpolySelectionMode }).mode;
 			const ids = (args as { ids?: number[] }).ids;
 			if (mode) this.selectionMode = mode;
 			if (Array.isArray(ids)) this.selectedIds = [...ids];
@@ -515,6 +563,6 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
 	void (async () => {
 		await import("./globals.css");
 		const { bootLowpolyPlay } = await import("@semio-tech/framework-playground-renderer-react/lowpoly");
-		bootLowpolyPlay(new PlaygroundLowpoly());
+		await bootLowpolyPlay(new PlaygroundLowpoly());
 	})();
 }

@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.typology/v1",
+  "schema": "spatial.typology",
   "id": "building.building.ceiling",
   "version": "1.0.0",
   "label": "Ceiling",

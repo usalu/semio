@@ -440,7 +440,7 @@ if (import.meta.vitest) {
 			type P = { n: number };
 			type Op = { op: "setN"; n: number };
 			const store = new DocumentVcsStore<P, Op>({
-				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				envelope: createDocumentVcsEnvelope("test", "t", { n: 0 }),
 				applyOp: (p, o) => ({ n: o.n }),
 				backwardsOp: (p) => [{ op: "setN", n: p.n }],
 				diffOp: (_p, o) => o,
@@ -457,7 +457,7 @@ if (import.meta.vitest) {
 			type P = { n: number };
 			type Op = { op: "setN"; n: number };
 			const store = new DocumentVcsStore<P, Op>({
-				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				envelope: createDocumentVcsEnvelope("test", "t", { n: 0 }),
 				applyOp: (p, o) => ({ n: o.n }),
 				backwardsOp: (p) => [{ op: "setN", n: p.n }],
 				diffOp: (_p, o) => o,
@@ -473,7 +473,7 @@ if (import.meta.vitest) {
 			type P = { n: number };
 			type Op = { op: "setN"; n: number };
 			const store = new DocumentVcsStore<P, Op>({
-				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				envelope: createDocumentVcsEnvelope("test", "t", { n: 0 }),
 				applyOp: (p, o) => ({ n: o.n }),
 				backwardsOp: (p) => [{ op: "setN", n: p.n }],
 				diffOp: (_p, o) => o,
@@ -490,7 +490,7 @@ if (import.meta.vitest) {
 			type P = { n: number };
 			type Op = { op: "setN"; n: number };
 			const store = new DocumentVcsStore<P, Op>({
-				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				envelope: createDocumentVcsEnvelope("test", "t", { n: 0 }),
 				applyOp: (p, o) => ({ n: o.n }),
 				backwardsOp: (p) => [{ op: "setN", n: p.n }],
 				diffOp: (_p, o) => o,
@@ -516,7 +516,7 @@ if (import.meta.vitest) {
 			type P = { n: number };
 			type Op = { op: "setN"; n: number };
 			const store = new DocumentVcsStore<P, Op>({
-				envelope: createDocumentVcsEnvelope("test/v1", "t", { n: 0 }),
+				envelope: createDocumentVcsEnvelope("test", "t", { n: 0 }),
 				applyOp: (p, o) => ({ n: o.n }),
 				backwardsOp: (p) => [{ op: "setN", n: p.n }],
 				diffOp: (_p, o) => o,

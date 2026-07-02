@@ -679,7 +679,7 @@ mod tests {
     #[test]
     fn manifest_lists_bim_operators() {
         let json = build_manifest_json("bim", "Bim", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![], vec![]);
-        assert!(json.contains("flow.module/v1"));
+        assert!(json.contains("flow.module"));
         assert!(json.contains("bim.element.wall"));
         assert!(json.contains("bim.assemble.building"));
         assert!(json.contains("bim.measure.floorArea"));

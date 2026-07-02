@@ -1,5 +1,5 @@
 {
-  "schema": "trinity.graph/v1",
+  "schema": "trinity.graph",
   "name": "Nakagin Capsule Tower",
   "camera": {
     "x": 0,

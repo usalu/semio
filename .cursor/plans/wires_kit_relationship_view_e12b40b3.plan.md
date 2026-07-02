@@ -50,7 +50,7 @@ flowchart LR
   VFS["Kit VFS (visible nodes)"]
   REL["Reference queries\nreferencesTypesTransitive / blueprint"]
   BUILD["wires fixture builder"]
-  WF["WiresFixtureV1"]
+  WF["WiresFixture"]
   P2D["wiresFixtureBoard -> puzzle.2d.fixture"]
   TOPO["PlatformTopologyStore (flat)"]
   FIVE["Puzzle5d / FiveD flat canvas"]
@@ -74,7 +74,7 @@ Edge resolution rule (generalized from the design/type example): a transitive re
 
 - [compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts): manifest, window body, the fixture builder, sync triggers, VFS access.
 - [compose/client/lib/js/index.ts](compose/client/lib/js/index.ts): relationship APIs already exist (`referencesTypes`/`referencesTypesTransitive` at ~3342/3363, `blueprint`/`isType`/`isDesign` at ~4067-4076); add a small batched relationship-fetch helper if needed.
-- [reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts): reuse `WiresFixtureV1`, `wiresFixtureBoard`, `relationshipKindToEdgeKindId`, kind catalogs.
+- [reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts): reuse `WiresFixture`, `wiresFixtureBoard`, `relationshipKindToEdgeKindId`, kind catalogs.
 - [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts): VFS controller; add a method to enumerate currently-visible nodes for a scope.
 
 ## Implementation
@@ -100,7 +100,7 @@ Edge resolution rule (generalized from the design/type example): a transitive re
   - emits containment edges from `row.parentId` with `owns`/`has` per the mapping,
   - emits `is` edges for visible piece->blueprint and `references` edges for collapsed-design->visible type/design, applying the bridging rule (skip a design's transitive references when that design is expanded),
   - assigns deterministic seed `x/y` per node (kind-layered), and a `kindCatalogs` block coloring `wires.owns/is/references/has`,
-  - returns `WiresFixtureV1` -> `wiresFixtureBoard(...)` -> `puzzle.2d.fixture/v1` for the flat topology (empty volume).
+  - returns `WiresFixture` -> `wiresFixtureBoard(...)` -> `puzzle.2d.fixture/v1` for the flat topology (empty volume).
 
 ### 5. Sync triggers (sketchpad)
 

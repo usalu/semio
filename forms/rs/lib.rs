@@ -5,7 +5,7 @@ use vcs::{
 };
 use serde::{Deserialize, Serialize};
 
-pub const FORMS_DOCUMENT_SCHEMA: &str = "forms.form/v1";
+pub const FORMS_DOCUMENT_SCHEMA: &str = "forms.form";
 
 //#region 🔖Domain
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

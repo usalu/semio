@@ -354,7 +354,7 @@ pub fn imperative_catalogue_json(registry: &Registry) -> String {
         }
     }
     serde_json::to_string(&serde_json::json!({
-        "schema": "imperative.catalogue/v1",
+        "schema": "imperative.catalogue",
         "sections": sections,
     }))
     .unwrap_or_else(|_| "{}".into())

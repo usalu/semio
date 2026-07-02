@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.interaction/v1",
+  "schema": "spatial.interaction",
   "id": "solid.booleanDifference",
   "version": "1.0.0",
   "label": "BooleanDifference",

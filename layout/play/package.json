@@ -1,0 +1,32 @@
+{
+	"$schema": "../../../node_modules/nx/schemas/project-schema.json",
+	"name": "@semio-tech/layout-play",
+	"projectType": "application",
+	"type": "module",
+	"private": true,
+	"scripts": {
+		"dev": "bun nx run @semio-tech/layout-play:dev",
+		"build": "bun nx run @semio-tech/layout-play:build",
+		"test": "bun nx run @semio-tech/layout-play:test"
+	},
+	"dependencies": {
+		"@semio-tech/framework-playground-core": "workspace:*",
+		"@semio-tech/layout-core": "workspace:*",
+		"@semio-tech/layout-react": "workspace:*",
+		"@semio-tech/ui-react": "workspace:*",
+		"@semio-tech/ui-styling": "workspace:*"
+	},
+	"devDependencies": {
+		"@semio-tech/framework-playground-renderer-react": "workspace:*",
+		"@tailwindcss/vite": "^4.1.18",
+		"@types/react": "^19.2.8",
+		"@types/react-dom": "^19.2.3",
+		"@vitejs/plugin-react": "^5.1.2",
+		"react": "^19.2.3",
+		"react-dom": "^19.2.3",
+		"typescript": "^5.9.3",
+		"vite": "^7.3.1",
+		"vitest": "^4.0.17"
+	},
+	"bundleKind": "application"
+}

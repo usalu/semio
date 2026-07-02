@@ -46,7 +46,7 @@ isProject: false
   - `flow/module/logic` (`flow_module_logic`): e.g. `logic.greater`, `logic.not`.
 
 ## 2. Flow core: positions, editing API, rectangle rendering (`flow/core/lib.rs`)
-- Fixture: add a `layout: BTreeMap<String,{x,y}>` to `FlowFixtureV1` (serde default). Auto-DAG-layout only fills ids missing from `layout`; persisted/dropped positions win.
+- Fixture: add a `layout: BTreeMap<String,{x,y}>` to `FlowFixture` (serde default). Auto-DAG-layout only fills ids missing from `layout`; persisted/dropped positions win.
 - Register all modules in `evaluate_internal` (`math`+`text`+`logic`) and add `catalogue_json()` returning sections: one per module (from `Registry::catalogue()` grouped by `module`) plus synthetic `Inputs` (slider, note) and `Outputs` (preview, action) sections.
 - Editing methods on `FlowHost` + matching `#[wasm_bindgen]` on `FlowSession`:
   - `add_widget(descriptor_json, world_x, world_y)` (descriptor = catalogue item: neuron kind, or input/output type) -> new unique id at position; `remove_widget(id)`; `move_widget(id, x, y)`.

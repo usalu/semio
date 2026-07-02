@@ -189,12 +189,6 @@ export interface Puzzle5dPlayHostBridge {
 //#endregion 🔖Ids
 
 //#region 🔖Puzzle5dPlayHierarchy
-export interface Puzzle5dPlayHierarchySelectHandlers {
-  readonly onSelectPart: (partId: string) => void;
-  readonly onSelectGrip: (gripFullId: string) => void;
-  readonly onSelectFastener: (fastenerId: string) => void;
-}
-
 function puzzle5dPartDisplayLabel(part: Puzzle5dModel["parts"][number]): string {
   const kind = part.partKind?.trim();
   if (kind) return kind;
@@ -254,7 +248,7 @@ function puzzle5dPlayKindSectionTreeIcon(sectionId: string): string | undefined 
 }
 
 /** @emoji 🌳 Puzzle 5d hierarchy: Parts (with nested Grips) and Fasteners. */
-export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapshot, handlers: Puzzle5dPlayHierarchySelectHandlers): UiTreeNode {
+export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapshot): UiTreeNode {
   const model = snapshot.model;
   const selectedPartIds = new Set(snapshot.selection.partIds);
   const selectedGripIds = new Set(snapshot.selection.gripIds);
@@ -267,7 +261,7 @@ export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapsho
         description: fullId,
         icon: puzzle5dPlayEntityTreeIcon("grip"),
         isSelected: selectedGripIds.has(fullId),
-        onClick: () => handlers.onSelectGrip(fullId),
+        command: puzzle5dPlayCmd("hierarchySelectGrip", { gripFullId: fullId }),
       };
     });
     return {
@@ -277,7 +271,7 @@ export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapsho
       icon: puzzle5dPlayEntityTreeIcon("part"),
       defaultOpen: gripItems.length > 0,
       isSelected: selectedPartIds.has(part.id),
-      onClick: () => handlers.onSelectPart(part.id),
+      command: puzzle5dPlayCmd("hierarchySelectPart", { partId: part.id }),
       ...(gripItems.length ? { items: gripItems } : {}),
     };
   });
@@ -286,7 +280,7 @@ export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapsho
     label: puzzle5dFastenerDisplayLabel(fastener, model),
     description: `${fastener.source} → ${fastener.target}`,
     icon: puzzle5dPlayEntityTreeIcon("fastener"),
-    onClick: () => handlers.onSelectFastener(fastener.id),
+    command: puzzle5dPlayCmd("hierarchySelectFastener", { fastenerId: fastener.id }),
   }));
   if (!partItems.length && !fastenerItems.length) {
     return playgroundTreePanelRootItems("puzzle-5d-play-hierarchy.root", [{ id: "puzzle-5d-play-hierarchy.empty", label: "(no parts)" }]);
@@ -1381,6 +1375,39 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
         else changed = false;
         break;
       }
+      case "hierarchySelectPart": {
+        const partId = (args as { partId?: string }).partId;
+        if (typeof partId === "string") {
+          this.puzzle5dStore.setSelection({ partIds: [partId], gripIds: [] });
+          this.selected2d = new Set([partId]);
+          this.selected3d = partId;
+        } else {
+          changed = false;
+        }
+        break;
+      }
+      case "hierarchySelectGrip": {
+        const gripFullId = (args as { gripFullId?: string }).gripFullId;
+        if (typeof gripFullId === "string") {
+          this.puzzle5dStore.setSelection({ partIds: [], gripIds: [gripFullId] });
+          this.selected2d = new Set([gripFullId]);
+          this.selected3d = null;
+        } else {
+          changed = false;
+        }
+        break;
+      }
+      case "hierarchySelectFastener": {
+        const fastenerId = (args as { fastenerId?: string }).fastenerId;
+        if (typeof fastenerId === "string") {
+          this.puzzle5dStore.setSelection({ partIds: [], gripIds: [] });
+          this.selected2d = new Set([fastenerId]);
+          this.selected3d = null;
+        } else {
+          changed = false;
+        }
+        break;
+      }
       case "set3dSelection": {
         const selected = (args as { objectIds: readonly string[] }).objectIds[0] ?? null;
         if (this.selected3d !== selected) this.selected3d = selected;
@@ -1801,11 +1828,7 @@ if (import.meta.vitest) {
       const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
       expect(controller).toBeTruthy();
       const snapshot = await puzzle5dPlaySnapshotWithConcreteForest(controller!);
-      const tree = buildPuzzle5dPlayHierarchySections(snapshot, {
-        onSelectPart: () => {},
-        onSelectGrip: () => {},
-        onSelectFastener: () => {},
-      });
+      const tree = buildPuzzle5dPlayHierarchySections(snapshot);
       const sectionLabels = tree.sections.map((section) => section.label);
       expect(sectionLabels).toContain("Parts");
       expect(sectionLabels).toContain("Fasteners");

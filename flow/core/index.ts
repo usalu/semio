@@ -35,11 +35,11 @@ export function applyFlowEditOp(doc: FlowDocument, op: FlowEditOp): FlowDocument
 	}
 }
 
-/** @emoji 🧩 Semios app VCS handler factory for flow documents. */
+/** @emoji 🧩 S app VCS handler factory for flow documents. */
 export function createFlowAppVcsHandler() {
 	return {
-		format: "flow.document/v1",
-		createEnvelope: (id: string) => createDocumentVcsEnvelope("flow.document/v1", id, FLOW_DOCUMENT_EMPTY()),
+		format: "flow.document",
+		createEnvelope: (id: string) => createDocumentVcsEnvelope("flow.document", id, FLOW_DOCUMENT_EMPTY()),
 		applyOp: applyFlowEditOp,
 		serializeEnvelope: (envelope: FlowDocumentVcsEnvelope) => JSON.stringify(envelope),
 		deserializeEnvelope: (json: string) => JSON.parse(json) as FlowDocumentVcsEnvelope,

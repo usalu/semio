@@ -21,10 +21,10 @@ import {
   Edge, Handle, Node, Wire,
   BUILTIN_PORT_HANDLE_KIND,
   fixtureMetaKindCatalogBundle,
-  parsePuzzle2dFixtureV1,
+  parsePuzzle2dFixture,
   type CameraState as Puzzle2dCameraState,
   type Puzzle2dCanvasProps,
-  type Puzzle2dFixtureV1,
+  type Puzzle2dFixture,
   type Puzzle2dForceGraphLayoutOptions,
   type Puzzle2dRedrawLayoutOptions,
   puzzle2dApplyLiveForceGraphLayoutTick,
@@ -48,7 +48,7 @@ import {
   abortPuzzle2dFixturePaletteDrag,
   puzzle2dFixturePaletteDropCommittedRef,
   type Puzzle2dFixtureDropDetail,
-  type Puzzle2dFixtureNodeV1,
+  type Puzzle2dFixtureNode,
   type Puzzle2dKindHover,
   type Puzzle2dHoverPayload,
   puzzle2dSubscribeBrushSession,
@@ -73,12 +73,12 @@ import {
   blockedVortexFullIdsFromAttractions,
   cancelPuzzle3dFixturePalettePointerDrag,
   meshStyleColors,
-  parseFixtureV1,
+  parseFixture,
   type AttractionKind as Puzzle3dFastenerKind,
   type AttractionSessionSnapshot,
   type CableKind as Puzzle3dRopeKind,
   type DomainKind,
-  type FixtureV1 as Puzzle3dFixtureV1,
+  type Fixture as Puzzle3dFixture,
   type KindCatalogBundle as Puzzle3dKindCatalogBundle,
   type KindCompatEntry as Puzzle3dKindCompatEntry,
   type ObjectKind as Puzzle3dPartKind,
@@ -89,7 +89,7 @@ import {
   type LodMeshEntry as Puzzle3dLodMeshEntry,
   type BrushPlacePayload,
   type Puzzle3dBrushKindWeights,
-  type FixtureObjectV1 as Puzzle3dFixtureObjectV1,
+  type FixtureObject as Puzzle3dFixtureObject,
   type HoverTarget,
   type MeshStyleColors,
   type MeshStyleKind,
@@ -401,7 +401,7 @@ function puzzle5dKindHoverTo3d(kind: Puzzle5dKindHover): Puzzle3dKindHover {
 }
 
 /** @emoji 🖱️ Resolves a flat graph element id to a unified hover instance. */
-export function puzzle5dHoverInstanceFrom2dGraphId(fixture2d: Puzzle2dFixtureV1, graphId: string): Puzzle5dHoverInstance | null {
+export function puzzle5dHoverInstanceFrom2dGraphId(fixture2d: Puzzle2dFixture, graphId: string): Puzzle5dHoverInstance | null {
   if (fixture2d.nodes.some((node) => node.id === graphId)) {
     return { kind: "part", id: graphId };
   }
@@ -431,7 +431,7 @@ function puzzle5dHoverInstanceFrom3dTarget(target: HoverTarget): Puzzle5dHoverIn
 
 /** @emoji 🖱️ Maps flat canvas hover to unified store hover focus. */
 export function hoverFocusFrom2dPayload(
-  fixture2d: Puzzle2dFixtureV1,
+  fixture2d: Puzzle2dFixture,
   payload: Pick<Puzzle2dHoverPayload, "id" | "kind">,
 ): HoverFocusSnapshot {
   if (!payload.id && !payload.kind) {
@@ -503,7 +503,7 @@ export interface Model {
   readonly kindCatalogs?: KindCatalogBundle;
   readonly kindCompatibility?: readonly KindCompatEntry[];
   readonly camera2d: Puzzle2dCameraState;
-  readonly camera3d: Puzzle3dFixtureV1["camera"];
+  readonly camera3d: Puzzle3dFixture["camera"];
   readonly parts: readonly Part[];
   readonly fasteners: readonly Fastener[];
   readonly references3d?: readonly Puzzle3dWorldReferenceProps[];
@@ -532,7 +532,7 @@ export function parseModel(raw: unknown): Model | null {
   if (!Array.isArray(r.parts) || !Array.isArray(r.fasteners)) return null;
   const domain = typeof r.domain === "string" ? (r.domain as DomainKind) : "architecture";
   const flatCam = r.camera2d as Puzzle2dCameraState | undefined;
-  const volumeCam = r.camera3d as Puzzle3dFixtureV1["camera"] | undefined;
+  const volumeCam = r.camera3d as Puzzle3dFixture["camera"] | undefined;
   if (!flatCam || !volumeCam) return null;
   return {
     schema: PUZZLE_5D_SCHEMA,
@@ -551,7 +551,7 @@ export function parseModel(raw: unknown): Model | null {
 }
 
 /** @emoji 🔀 Builds {@link Model} by merging 2d and 3d fixtures (same part ids unite). */
-export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtureV1): Model {
+export function compose5d(fixture2d: Puzzle2dFixture, fixture3d: Puzzle3dFixture): Model {
   const partsMap = new Map<string, Part>();
   for (const node of fixture2d.nodes) {
     const grips: Grip[] = node.handles.map((h) => {
@@ -704,7 +704,7 @@ export function compose5d(fixture2d: Puzzle2dFixtureV1, fixture3d: Puzzle3dFixtu
 }
 
 /** @emoji 📐 Projects {@link Model} to a 2d fixture for WASM rendering. */
-export function project2d(model: Model): Puzzle2dFixtureV1 {
+export function project2d(model: Model): Puzzle2dFixture {
   const nodes = model.parts
     .filter((p) => p["2d"])
     .map((p) => {
@@ -755,7 +755,7 @@ export function project2d(model: Model): Puzzle2dFixtureV1 {
       };
     });
   return {
-    schema: "puzzle.2d.fixture/v1",
+    schema: "puzzle.2d.fixture",
     camera: { ...model.camera2d },
     nodes,
     edges: model.fasteners.map((b) => ({
@@ -770,7 +770,7 @@ export function project2d(model: Model): Puzzle2dFixtureV1 {
 }
 
 /** @emoji 📐 Projects {@link Model} to a @puzzle/3d fixture for 3d rendering. */
-export function project3d(model: Model): Puzzle3dFixtureV1 {
+export function project3d(model: Model): Puzzle3dFixture {
   const objects = model.parts
     .filter((p) => p["3d"])
     .map((p) => {
@@ -806,7 +806,7 @@ export function project3d(model: Model): Puzzle3dFixtureV1 {
       };
     });
   return {
-    schema: "puzzle.3d.fixture/v1",
+    schema: "puzzle.3d.fixture",
     domain: model.domain,
     camera: { ...model.camera3d },
     objects,
@@ -2131,7 +2131,7 @@ export function Puzzle5dBrushPairedSync(): null {
 //#endregion 🔖BrushPairedSync
 
 //#region 🔖PaletteDrop
-function nodeAspectFromPaletteNode(node: Puzzle2dFixtureNodeV1): Part2dAspect {
+function nodeAspectFromPaletteNode(node: Puzzle2dFixtureNode): Part2dAspect {
   if (node.shape === "rectangle") {
     return {
       x: node.x,
@@ -2183,7 +2183,7 @@ function clearVolumePaletteDragSession(): void {
 }
 
 /** @emoji 📥 Builds one unified part from a flat palette node drop. */
-export function partFromPaletteNodeDrop(model: Model, node: Puzzle2dFixtureNodeV1): Part | null {
+export function partFromPaletteNodeDrop(model: Model, node: Puzzle2dFixtureNode): Part | null {
   const partKind = node.nodeKind?.trim();
   if (!partKind) {
     return null;
@@ -2221,7 +2221,7 @@ export function partFromPaletteNodeDrop(model: Model, node: Puzzle2dFixtureNodeV
 }
 
 /** @emoji 📥 Builds one unified part from a volume palette object drop. */
-export function partFromPaletteObjectDrop(model: Model, object: Puzzle3dFixtureObjectV1): Part | null {
+export function partFromPaletteObjectDrop(model: Model, object: Puzzle3dFixtureObject): Part | null {
   const partKind = object.objectKind?.trim();
   if (!partKind) {
     return null;
@@ -2233,7 +2233,7 @@ export function partFromPaletteObjectDrop(model: Model, object: Puzzle3dFixtureO
   }
   const peer = peerPartForKind(model, partKind);
   const center = peer?.["2d"] && peer?.["3d"] ? paletteFlatCenterFromVolume(peer, object.origin) : { x: object.origin[0], y: -object.origin[1] };
-  const flatNode: Puzzle2dFixtureNodeV1 = {
+  const flatNode: Puzzle2dFixtureNode = {
     ...template,
     id: object.id,
     x: center.x,
@@ -2467,7 +2467,7 @@ export interface StoreSnapshot {
   readonly selection: SelectionSnapshot;
   readonly hoverFocus: HoverFocusSnapshot;
   readonly connectSession: ConnectSession | null;
-  readonly cameras: Readonly<Record<string, { readonly "2d": Puzzle2dCameraState; readonly "3d": Puzzle3dFixtureV1["camera"] }>>;
+  readonly cameras: Readonly<Record<string, { readonly "2d": Puzzle2dCameraState; readonly "3d": Puzzle3dFixture["camera"] }>>;
   readonly fillCount: number;
   readonly fillBuildDone: boolean;
 }
@@ -2514,7 +2514,7 @@ export class Store {
     return this.snapshot.cameras[instanceId]?.["2d"] ?? this.snapshot.model.camera2d;
   }
 
-  get3dCamera(instanceId: string): Puzzle3dFixtureV1["camera"] {
+  get3dCamera(instanceId: string): Puzzle3dFixture["camera"] {
     return this.snapshot.cameras[instanceId]?.["3d"] ?? this.snapshot.model.camera3d;
   }
 
@@ -2533,7 +2533,7 @@ export class Store {
     };
   }
 
-  set3dCamera(instanceId: string, camera: Puzzle3dFixtureV1["camera"]): void {
+  set3dCamera(instanceId: string, camera: Puzzle3dFixture["camera"]): void {
     const prev = this.snapshot.cameras[instanceId]?.["3d"] ?? this.snapshot.model.camera3d;
     if (
       prev.position[0] === camera.position[0] &&
@@ -2579,7 +2579,7 @@ export class Store {
   }
 
   /** @emoji 🖱️ Commits flat canvas hover into the unified store. */
-  setHoverFocusFrom2d(fixture2d: Puzzle2dFixtureV1, payload: Pick<Puzzle2dHoverPayload, "id" | "kind">): void {
+  setHoverFocusFrom2d(fixture2d: Puzzle2dFixture, payload: Pick<Puzzle2dHoverPayload, "id" | "kind">): void {
     this.setHoverFocus(hoverFocusFrom2dPayload(fixture2d, payload));
   }
 
@@ -2765,7 +2765,7 @@ export class Store {
   }
 
   /** @emoji 📥 Appends a unified part from a volume palette object drop. */
-  applyPaletteObjectDrop(object: Puzzle3dFixtureObjectV1): string | null {
+  applyPaletteObjectDrop(object: Puzzle3dFixtureObject): string | null {
     const part = partFromPaletteObjectDrop(this.snapshot.model, object);
     if (!part) {
       return null;
@@ -2963,7 +2963,7 @@ function fiveDAttractionSessionFromStore(session: ConnectSession | null): Attrac
   };
 }
 
-function markers2dFromFixture(props: { readonly fixture: Puzzle2dFixtureV1; readonly lockedIds: ReadonlySet<string>; readonly selectedIds: ReadonlySet<string> }): ReactElement {
+function markers2dFromFixture(props: { readonly fixture: Puzzle2dFixture; readonly lockedIds: ReadonlySet<string>; readonly selectedIds: ReadonlySet<string> }): ReactElement {
   const { fixture, lockedIds, selectedIds } = props;
   return (
     <>
@@ -3289,7 +3289,7 @@ const FiveD3dInner = reactHostPort.memo(function FiveD3dInner(props: FiveDProps)
   const attractionSession = fiveDAttractionSessionFromStore(snap.connectSession);
   const storeRef = reactHostPort.useRef(store);
   storeRef.current = store;
-  const onCamera = reactHostPort.useCallback((c: Puzzle3dFixtureV1["camera"]) => {
+  const onCamera = reactHostPort.useCallback((c: Puzzle3dFixture["camera"]) => {
     storeRef.current.set3dCamera(props.instanceId, c);
   }, [props.instanceId]);
   const onCanvasHover = reactHostPort.useCallback((payload: Puzzle3dHoverPayload) => {
@@ -3990,7 +3990,7 @@ export function camera2dFromPartCenters(centers: readonly { x: number; y: number
 /** @emoji ┬¡ãÆ├┤├¼ Writes WASM layout node centers back into top-left layout positions. */
 export function flatApplyFixtureCentersToTopLeft<T extends { readonly id: string; readonly position: { x: number; y: number } }>(
   items: readonly T[],
-  fixture: Puzzle2dFixtureV1,
+  fixture: Puzzle2dFixture,
   frameForItem: (item: T) => { width: number; height: number },
 ): T[] {
   const centerById = new Map(fixture.nodes.map((node) => [node.id, { x: node.x, y: node.y }]));
@@ -4024,7 +4024,7 @@ export interface FlatWireRecord {
 
 /** @emoji 🧩 Builds "2d" host markers from a puzzle 2d fixture (same static shape walk as puzzle 2d play). */
 export function flatMarkersFromFixture(props: {
-  readonly fixture: Puzzle2dFixtureV1;
+  readonly fixture: Puzzle2dFixture;
   readonly lockedIds: ReadonlySet<string>;
   readonly selectedIds: ReadonlySet<string>;
   readonly contextMenuById: (id: string | null) => ContextMenuItem[];
@@ -4128,7 +4128,7 @@ export function flatMarkersFromFixture(props: {
 }
 //#endregion 🔖Puzzle2dMarkers
 
-export { DEFAULT_PUZZLE_2D_GRID_FACTOR, getPuzzle2dLodScale, blockedVortexFullIdsFromAttractions, parsePuzzle2dFixtureV1, parseFixtureV1 };
+export { DEFAULT_PUZZLE_2D_GRID_FACTOR, getPuzzle2dLodScale, blockedVortexFullIdsFromAttractions, parsePuzzle2dFixture, parseFixture };
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -4169,14 +4169,14 @@ if (import.meta.vitest) {
   });
   describe("compose5d", () => {
     it("merges 2d nodes and 3d objects by id", () => {
-      const fixture2d: Puzzle2dFixtureV1 = {
-        schema: "puzzle.2d.fixture/v1",
+      const fixture2d: Puzzle2dFixture = {
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "p1", shape: "circle", x: 1, y: 2, radius: 10, handles: [{ id: "p1:h", angle: 0, handleKind: "port" }] }],
         edges: [],
       };
-      const fixture3d: Puzzle3dFixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const fixture3d: Puzzle3dFixture = {
+        schema: "puzzle.3d.fixture",
         domain: "architecture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         objects: [{ id: "p1", meshUrl: "m.glb", origin: [0, 0, 0], vortices: [{ id: "p1:h", position: [0, 0, 0] }] }],
@@ -4187,8 +4187,8 @@ if (import.meta.vitest) {
     });
 
     it("preserves edge kinds as tie kinds for wires-style fixtures", () => {
-      const fixture2d: Puzzle2dFixtureV1 = {
-        schema: "puzzle.2d.fixture/v1",
+      const fixture2d: Puzzle2dFixture = {
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [
           { id: "a", shape: "circle", x: 0, y: 0, radius: 10, handles: [] },
@@ -4196,8 +4196,8 @@ if (import.meta.vitest) {
         ],
         edges: [{ id: "e1", source: "a", target: "b", edgeKind: "wires.owns" }],
       };
-      const fixture3d: Puzzle3dFixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const fixture3d: Puzzle3dFixture = {
+        schema: "puzzle.3d.fixture",
         domain: "architecture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         objects: [],
@@ -4211,8 +4211,8 @@ if (import.meta.vitest) {
 
   describe("flatten5d", () => {
     it("resolves linked piece absolute pose from local grip geometry", () => {
-      const fixture2d: Puzzle2dFixtureV1 = {
-        schema: "puzzle.2d.fixture/v1",
+      const fixture2d: Puzzle2dFixture = {
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [
           {
@@ -4242,8 +4242,8 @@ if (import.meta.vitest) {
           },
         ],
       };
-      const fixture3d: Puzzle3dFixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const fixture3d: Puzzle3dFixture = {
+        schema: "puzzle.3d.fixture",
         domain: "architecture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         objects: [
@@ -4297,13 +4297,13 @@ if (import.meta.vitest) {
     it("projects parts with 3d aspects to a 3d fixture", () => {
       const model = compose5d(
         {
-          schema: "puzzle.2d.fixture/v1",
+          schema: "puzzle.2d.fixture",
           camera: { x: 0, y: 0, zoom: 1 },
           nodes: [{ id: "p1", shape: "circle", x: 0, y: 0, radius: 10, handles: [] }],
           edges: [],
         },
         {
-          schema: "puzzle.3d.fixture/v1",
+          schema: "puzzle.3d.fixture",
           domain: "architecture",
           camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
           objects: [{ id: "p1", meshUrl: "m.glb", origin: [1, 2, 3], vortices: [] }],
@@ -4317,14 +4317,14 @@ if (import.meta.vitest) {
     });
 
     it("round-trips native 3d appearance fields through 5d", () => {
-      const fixture2d: Puzzle2dFixtureV1 = {
-        schema: "puzzle.2d.fixture/v1",
+      const fixture2d: Puzzle2dFixture = {
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [],
         edges: [],
       };
-      const fixture3d: Puzzle3dFixtureV1 = {
-        schema: "puzzle.3d.fixture/v1",
+      const fixture3d: Puzzle3dFixture = {
+        schema: "puzzle.3d.fixture",
         domain: "architecture",
         camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
         objects: [
@@ -4376,8 +4376,8 @@ if (import.meta.vitest) {
         import("../../2d/fixture/concrete-forest.2d.json"),
         import("../../3d/fixture/concrete-forest.3d.json"),
       ]);
-      const fixture2d = parsePuzzle2dFixtureV1(fixture2dRaw as unknown);
-      const fixture3d = parseFixtureV1(fixture3dRaw as unknown);
+      const fixture2d = parsePuzzle2dFixture(fixture2dRaw as unknown);
+      const fixture3d = parseFixture(fixture3dRaw as unknown);
       expect(fixture2d).toBeTruthy();
       expect(fixture3d).toBeTruthy();
       expect(fixture3d!.objects.every((object) => object.style === undefined)).toBe(true);
@@ -4389,13 +4389,13 @@ if (import.meta.vitest) {
     it("round-trips part centers", () => {
       const model = compose5d(
         {
-          schema: "puzzle.2d.fixture/v1",
+          schema: "puzzle.2d.fixture",
           camera: { x: 0, y: 0, zoom: 1 },
           nodes: [{ id: "n", shape: "circle", x: 5, y: 6, radius: 4, handles: [] }],
           edges: [],
         },
         {
-          schema: "puzzle.3d.fixture/v1",
+          schema: "puzzle.3d.fixture",
           domain: "architecture",
           camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
           objects: [],
@@ -4517,8 +4517,8 @@ if (import.meta.vitest) {
     });
   });
   describe("paired hover focus", () => {
-    const fixture2d: Puzzle2dFixtureV1 = {
-      schema: "puzzle.2d.fixture/v1",
+    const fixture2d: Puzzle2dFixture = {
+      schema: "puzzle.2d.fixture",
       camera: { x: 0, y: 0, zoom: 1 },
       nodes: [
         { id: "p1", shape: "circle", x: 0, y: 0, radius: 10, handles: [{ id: "p1:h", angle: 0, handleKind: "port" }] },
@@ -4743,8 +4743,8 @@ if (import.meta.vitest) {
   });
   describe("flatApplyFixtureCentersToTopLeft", () => {
     it("converts centers to top-left using frame size", () => {
-      const fixture: Puzzle2dFixtureV1 = {
-        schema: "puzzle.2d.fixture/v1",
+      const fixture: Puzzle2dFixture = {
+        schema: "puzzle.2d.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [{ id: "n1", shape: "rectangle", width: 40, height: 20, x: 50, y: 30, handles: [] }],
         edges: [],
@@ -4765,7 +4765,7 @@ if (import.meta.vitest) {
     it("removes a unified part from both projections when a flat node is deleted", () => {
       const model = compose5d(
         {
-          schema: "puzzle.2d.fixture/v1",
+          schema: "puzzle.2d.fixture",
           camera: { x: 0, y: 0, zoom: 1 },
           nodes: [
             { id: "p1", shape: "circle", x: 0, y: 0, radius: 10, handles: [{ id: "p1:h", angle: 0, handleKind: "port" }] },
@@ -4774,7 +4774,7 @@ if (import.meta.vitest) {
           edges: [{ id: "e1", source: "p1:h", target: "p2" }],
         },
         {
-          schema: "puzzle.3d.fixture/v1",
+          schema: "puzzle.3d.fixture",
           domain: "architecture",
           camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
           objects: [
@@ -5086,7 +5086,7 @@ if (import.meta.vitest) {
       const store = createStore(
         compose5d(
           {
-            schema: "puzzle.2d.fixture/v1",
+            schema: "puzzle.2d.fixture",
             camera: { x: 0, y: 0, zoom: 1 },
             nodes: [
               { id: "a", shape: "circle", x: 0, y: 0, radius: 20, handles: [] },
@@ -5095,7 +5095,7 @@ if (import.meta.vitest) {
             edges: [{ id: "e1", source: "a", target: "b" }],
           },
           {
-            schema: "puzzle.3d.fixture/v1",
+            schema: "puzzle.3d.fixture",
             domain: "architecture",
             camera: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
             objects: [],

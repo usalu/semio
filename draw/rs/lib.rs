@@ -5,7 +5,7 @@ use vcs::{
 };
 use serde::{Deserialize, Serialize};
 
-pub const DRAW_DOCUMENT_SCHEMA: &str = "draw.document/v1";
+pub const DRAW_DOCUMENT_SCHEMA: &str = "draw.document";
 
 //#region 🔖Domain
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

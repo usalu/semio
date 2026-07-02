@@ -1,5 +1,5 @@
 {
-	"schema": "spatial.stat/v1",
+	"schema": "spatial.stat",
 	"id": "structure.stability",
 	"version": "1.0.0",
 	"label": "Structural Stability",

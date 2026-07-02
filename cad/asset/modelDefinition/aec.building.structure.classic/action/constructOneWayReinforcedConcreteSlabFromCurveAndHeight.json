@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "structure.structure.constructOneWayReinforcedConcreteSlabFromCurveAndHeight",
   "version": "1.0.0",
   "label": "Construct One Way Reinforced Concrete Slab From Curve And Height",

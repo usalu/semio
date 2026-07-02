@@ -7869,7 +7869,7 @@ pub mod vcs {
         use crate::external_adapters::serde::{Deserialize, Serialize};
         use crate::external_adapters::serde_json::Value;
 
-        pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit/v1";
+        pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit";
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
         pub struct KitSnapshot(pub Value);
@@ -11465,19 +11465,17 @@ pub mod kit_backbone {
     /// @emoji 🧾 ISO timestamp used when a checkpoint has no persisted time yet.
     pub const KIT_BUNDLE_CHECKPOINT_TIMESTAMP_STUB: &str = "2020-01-01T00:00:00.000Z";
 
-    /// @emoji 📎 Resolve kit snapshot collection slices whether serialized as a legacy JSON array or a `{ hash, items }` block (`metabolism.new.kit.compose.json`).
-    pub(crate) fn json_array_or_block_items_ref(v: &crate::external_adapters::serde_json::Value) -> Option<&Vec<crate::external_adapters::serde_json::Value>> {
+    /// @emoji 📎 Resolve kit snapshot collection slices serialized as `{ hash, items }` blocks.
+    pub(crate) fn json_block_items_ref(v: &crate::external_adapters::serde_json::Value) -> Option<&Vec<crate::external_adapters::serde_json::Value>> {
         match v {
-            crate::external_adapters::serde_json::Value::Array(a) => Some(a),
             crate::external_adapters::serde_json::Value::Object(o) => o.get("items").and_then(|x| x.as_array()),
             _ => None,
         }
     }
 
-    /// @emoji 📎 Mutable slice for hydrate / blob merge paths that must accept block lists or legacy arrays.
-    pub(crate) fn json_array_or_block_items_mut(v: &mut crate::external_adapters::serde_json::Value) -> Option<&mut Vec<crate::external_adapters::serde_json::Value>> {
+    /// @emoji 📎 Mutable slice for hydrate / blob merge paths on `{ hash, items }` blocks.
+    pub(crate) fn json_block_items_mut(v: &mut crate::external_adapters::serde_json::Value) -> Option<&mut Vec<crate::external_adapters::serde_json::Value>> {
         match v {
-            crate::external_adapters::serde_json::Value::Array(a) => Some(a),
             crate::external_adapters::serde_json::Value::Object(o) => o.get_mut("items").and_then(|x| x.as_array_mut()),
             _ => None,
         }
@@ -12586,9 +12584,9 @@ pub mod kit_backbone {
         use std::sync::Arc;
         let mut ports_by_id: HashMap<String, Arc<crate::kit::r#type::Port>> = HashMap::new();
         let owner = std::sync::Weak::<crate::kit::r#type::Type>::new();
-        let families: Vec<crate::external_adapters::serde_json::Value> = json.get("families").and_then(crate::kit_backbone::json_array_or_block_items_ref).map(|rows| rows.to_vec()).unwrap_or_default();
+        let families: Vec<crate::external_adapters::serde_json::Value> = json.get("families").and_then(crate::kit_backbone::json_block_items_ref).map(|rows| rows.to_vec()).unwrap_or_default();
         for fam in &families {
-            let Some(ports_list) = fam.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) else {
+            let Some(ports_list) = fam.get("ports").and_then(crate::kit_backbone::json_block_items_ref) else {
                 continue;
             };
             for p_json in ports_list {
@@ -12602,14 +12600,14 @@ pub mod kit_backbone {
             }
         }
         for fam in families {
-            let Some(ports_list) = fam.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) else {
+            let Some(ports_list) = fam.get("ports").and_then(crate::kit_backbone::json_block_items_ref) else {
                 continue;
             };
             for p_json in ports_list {
                 let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else { continue };
                 let Some(port) = ports_by_id.get(pid) else { continue };
                 let mut compat = Vec::new();
-                if let Some(compat_list) = p_json.get("compatiblePorts").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+                if let Some(compat_list) = p_json.get("compatiblePorts").and_then(crate::kit_backbone::json_block_items_ref) {
                     for cref in compat_list {
                         if let Some(cid) = crate::kit_backbone::json_entity_id_ref(cref) {
                             if let Some(target) = ports_by_id.get(cid) {
@@ -12628,7 +12626,7 @@ pub mod kit_backbone {
     pub(crate) async fn hydrate_kit_folders_from_snapshot_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::ComposeError> {
         let mut folders_slot = kit.folders.write().await;
         folders_slot.clear();
-        let folders_list = json.get("folders").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+        let folders_list = json.get("folders").and_then(crate::kit_backbone::json_block_items_ref).cloned().unwrap_or_default();
         for folder_json in &folders_list {
             let Some(fid) = crate::kit_backbone::json_entity_id_ref(folder_json) else {
                 continue;
@@ -12652,7 +12650,7 @@ pub mod kit_backbone {
     pub(crate) async fn hydrate_kit_files_from_snapshot_value(kit: &std::sync::Arc<crate::kit::Kit>, json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::ComposeError> {
         let mut files_slot = kit.files.write().await;
         files_slot.clear();
-        let files_list = json.get("files").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+        let files_list = json.get("files").and_then(crate::kit_backbone::json_block_items_ref).cloned().unwrap_or_default();
         for f_json in &files_list {
             let Some(fid) = crate::kit_backbone::json_entity_id_ref(f_json) else {
                 continue;
@@ -12716,12 +12714,12 @@ pub mod kit_backbone {
             Ok(())
         }
 
-        if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+        if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_block_items_ref) {
             for p_json in ports_list {
                 remember_port_json(owner.clone(), &mut ports_by_id, kit_scope_ports, p_json).await?;
             }
         }
-        if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+        if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_block_items_ref) {
             for c_json in connectors_list {
                 if let Some(port_json) = c_json.get("port") {
                     remember_port_json(owner.clone(), &mut ports_by_id, kit_scope_ports, port_json).await?;
@@ -12730,12 +12728,12 @@ pub mod kit_backbone {
         }
 
         let lookup_port = |pid: &str| ports_by_id.get(pid).cloned().or_else(|| kit_scope_ports.get(pid).cloned());
-        if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+        if let Some(ports_list) = t_json.get("ports").and_then(crate::kit_backbone::json_block_items_ref) {
             for p_json in ports_list {
                 let Some(pid) = crate::kit_backbone::json_entity_id_ref(p_json) else { continue };
                 let Some(port) = ports_by_id.get(pid) else { continue };
                 let mut compat = Vec::new();
-                if let Some(compat_list) = p_json.get("compatiblePorts").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+                if let Some(compat_list) = p_json.get("compatiblePorts").and_then(crate::kit_backbone::json_block_items_ref) {
                     for cref in compat_list {
                         if let Some(cid) = crate::kit_backbone::json_entity_id_ref(cref) {
                             if let Some(target) = lookup_port(cid) {
@@ -12757,7 +12755,7 @@ pub mod kit_backbone {
         }
 
         let mut connectors = Vec::new();
-        if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+        if let Some(connectors_list) = t_json.get("connectors").and_then(crate::kit_backbone::json_block_items_ref) {
             for c_json in connectors_list {
                 let Some(cid) = crate::kit_backbone::json_entity_id_ref(c_json) else { continue };
                 let code = c_json.get("name").and_then(|v| v.as_str()).or_else(|| c_json.get("code").and_then(|v| v.as_str())).unwrap_or(cid);
@@ -12790,7 +12788,7 @@ pub mod kit_backbone {
         *ty.connectors.write().await = connectors;
 
         let mut representations = Vec::new();
-        if let Some(reps_list) = t_json.get("representations").and_then(crate::kit_backbone::json_array_or_block_items_ref) {
+        if let Some(reps_list) = t_json.get("representations").and_then(crate::kit_backbone::json_block_items_ref) {
             for r_json in reps_list {
                 let Some(rid) = crate::kit_backbone::json_entity_id_ref(r_json) else {
                     continue;
@@ -12918,7 +12916,7 @@ pub mod kit_backbone {
             Ok(())
         }
 
-        let typologies_arr = json.get("typologies").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned();
+        let typologies_arr = json.get("typologies").and_then(crate::kit_backbone::json_block_items_ref).cloned();
         if let Some(topos) = typologies_arr {
             let mut topo_entries: Vec<(crate::external_adapters::serde_json::Value, std::sync::Arc<crate::gql_relay::Typology>)> = Vec::new();
             for topo_json in &topos {
@@ -12935,17 +12933,17 @@ pub mod kit_backbone {
                 topo_entries.push((topo_json.clone(), topo));
             }
             for (topo_json, topo) in &topo_entries {
-                let types_arr = topo_json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+                let types_arr = topo_json.get("types").and_then(crate::kit_backbone::json_block_items_ref).cloned().unwrap_or_default();
                 hydrate_types_block(topo, kit, &types_arr, &kit_scope_ports).await?;
             }
             for (topo_json, topo) in &topo_entries {
-                let designs_arr = topo_json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+                let designs_arr = topo_json.get("designs").and_then(crate::kit_backbone::json_block_items_ref).cloned().unwrap_or_default();
                 hydrate_designs_block(topo, kit, &designs_arr).await?;
             }
         } else {
             let default_topo = crate::gql_relay::Typology::new(kit_owner.clone(), "Default".to_string()).await;
-            let types_arr = json.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
-            let designs_arr = json.get("designs").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+            let types_arr = json.get("types").and_then(crate::kit_backbone::json_block_items_ref).cloned().unwrap_or_default();
+            let designs_arr = json.get("designs").and_then(crate::kit_backbone::json_block_items_ref).cloned().unwrap_or_default();
             hydrate_types_block(&default_topo, kit, &types_arr, &kit_scope_ports).await?;
             hydrate_designs_block(&default_topo, kit, &designs_arr).await?;
             kit.typologies.write().await.push(default_topo);
@@ -12962,7 +12960,7 @@ pub mod kit_backbone {
             pcs.clear();
         }
         *des.piece_weak_by_external_id.write().await = HashMap::new();
-        let plist = d_json.get("pieces").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+        let plist = d_json.get("pieces").and_then(crate::kit_backbone::json_block_items_ref).cloned().unwrap_or_default();
         let owner_des = std::sync::Arc::downgrade(des);
         for pj in plist {
             let pid = pj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::ComposeError::invalid("design piece missing id"))?;
@@ -13003,7 +13001,7 @@ pub mod kit_backbone {
             let mut conns = des.connections.write().await;
             conns.clear();
         }
-        let clist = d_json.get("connections").and_then(crate::kit_backbone::json_array_or_block_items_ref).cloned().unwrap_or_default();
+        let clist = d_json.get("connections").and_then(crate::kit_backbone::json_block_items_ref).cloned().unwrap_or_default();
         let owner_des = std::sync::Arc::downgrade(des);
         for cj in clist {
             let cid = cj.get("id").and_then(|x| x.as_str()).ok_or_else(|| crate::error::ComposeError::invalid("connection missing id"))?;
@@ -13443,7 +13441,7 @@ pub mod kit_backbone {
             let Some(files_val) = kit.get("files") else {
                 return;
             };
-            let Some(files) = crate::kit_backbone::json_array_or_block_items_ref(files_val) else {
+            let Some(files) = crate::kit_backbone::json_block_items_ref(files_val) else {
                 return;
             };
             for f in files {
@@ -13458,7 +13456,7 @@ pub mod kit_backbone {
             let Some(files_holder) = kit.get_mut("files") else {
                 return;
             };
-            let Some(files) = crate::kit_backbone::json_array_or_block_items_mut(files_holder) else {
+            let Some(files) = crate::kit_backbone::json_block_items_mut(files_holder) else {
                 return;
             };
             for f in files.iter_mut() {
@@ -13497,7 +13495,7 @@ pub mod kit_backbone {
             let Some(files_holder) = kit.get_mut("files") else {
                 return;
             };
-            let Some(files) = crate::kit_backbone::json_array_or_block_items_mut(files_holder) else {
+            let Some(files) = crate::kit_backbone::json_block_items_mut(files_holder) else {
                 return;
             };
             for f in files.iter_mut() {
@@ -19031,7 +19029,7 @@ mod tests {
 
     use crate::gql::AppSchema;
 
-    /// @emoji 🗄️ `vcs` integration — compose shares generic typed document VCS primitives with semios technologies.
+    /// @emoji 🗄️ `vcs` integration — compose shares generic typed document VCS primitives with s technologies.
     #[test]
     fn vcs_typed_ops_materialize_projection() {
         use vcs::{
@@ -19086,7 +19084,7 @@ mod tests {
             }
         }
 
-        let envelope = create_document_vcs_envelope("compose.kit/v1", "kit-test", KitProjection { id: "base".into() }, None);
+        let envelope = create_document_vcs_envelope("compose.kit", "kit-test", KitProjection { id: "base".into() }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
@@ -20861,8 +20859,8 @@ mod tests {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixture/metabolism.kit.light.compose.json");
         let v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read metabolism.kit.light")).expect("parse json");
         let kit = v["wip"]["initialKit"].as_object().expect("wip.initialKit object");
-        let typologies = crate::kit_backbone::json_array_or_block_items_ref(kit.get("typologies").expect("typologies")).expect("typologies list");
-        let types_arr: Vec<&crate::external_adapters::serde_json::Value> = typologies.iter().flat_map(|topo| topo.get("types").and_then(crate::kit_backbone::json_array_or_block_items_ref).into_iter().flatten()).collect();
+        let typologies = crate::kit_backbone::json_block_items_ref(kit.get("typologies").expect("typologies")).expect("typologies list");
+        let types_arr: Vec<&crate::external_adapters::serde_json::Value> = typologies.iter().flat_map(|topo| topo.get("types").and_then(crate::kit_backbone::json_block_items_ref).into_iter().flatten()).collect();
         assert!(!types_arr.is_empty(), "expected seeded types");
         for t in &types_arr {
             let id = t["id"].as_str().expect("type id");
@@ -20870,11 +20868,11 @@ mod tests {
             let exp = format!("compose.metabolism.light.node.{id}");
             assert_eq!(nk, exp.as_str(), "nodeKind must follow compose.metabolism.light.node.<typeId>");
         }
-        let fam_arr = crate::kit_backbone::json_array_or_block_items_ref(kit.get("families").expect("families")).expect("families list");
+        let fam_arr = crate::kit_backbone::json_block_items_ref(kit.get("families").expect("families")).expect("families list");
         let mut port_rows = 0usize;
         for fam in fam_arr {
             let Some(ports_holder) = fam.get("ports") else { continue };
-            let Some(ports) = crate::kit_backbone::json_array_or_block_items_ref(ports_holder) else {
+            let Some(ports) = crate::kit_backbone::json_block_items_ref(ports_holder) else {
                 continue;
             };
             for p in ports {
@@ -20887,7 +20885,7 @@ mod tests {
         }
         assert!(port_rows >= 1, "expected at least one family port in fixture");
         for t in &types_arr {
-            if let Some(connectors) = t.get("connectors").and_then(|c| crate::kit_backbone::json_array_or_block_items_ref(c)) {
+            if let Some(connectors) = t.get("connectors").and_then(|c| crate::kit_backbone::json_block_items_ref(c)) {
                 for c in connectors {
                     let Some(port) = c.get("port") else { continue };
                     let Some(pid) = port["id"].as_str() else { continue };
@@ -20925,13 +20923,13 @@ mod tests {
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
-    fn json_array_or_block_items_helpers_accept_legacy_or_block_lists() {
-        let flat = crate::external_adapters::serde_json::json!([{"id":"a"}]);
+    fn json_block_items_helpers_accept_block_lists() {
         let block = crate::external_adapters::serde_json::json!({"hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB,"items":[{"id":"b"}]});
-        assert_eq!(crate::kit_backbone::json_array_or_block_items_ref(&flat).unwrap().len(), 1);
-        assert_eq!(crate::kit_backbone::json_array_or_block_items_ref(&block).unwrap()[0]["id"], "b");
+        assert_eq!(crate::kit_backbone::json_block_items_ref(&block).unwrap()[0]["id"], "b");
         let mut m = block.clone();
-        assert!(crate::kit_backbone::json_array_or_block_items_mut(&mut m).unwrap()[0].get("id").is_some());
+        assert!(crate::kit_backbone::json_block_items_mut(&mut m).unwrap()[0].get("id").is_some());
+        let flat = crate::external_adapters::serde_json::json!([{"id":"a"}]);
+        assert!(crate::kit_backbone::json_block_items_ref(&flat).is_none());
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -21237,7 +21235,7 @@ mod tests {
         let raw: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
         assert!(raw.get("typologies").is_some(), "fixture must include typologies collection");
-        let topo_items = crate::kit_backbone::json_array_or_block_items_ref(raw.get("typologies").expect("typologies")).expect("typologies list");
+        let topo_items = crate::kit_backbone::json_block_items_ref(raw.get("typologies").expect("typologies")).expect("typologies list");
         assert!(topo_items.iter().any(|t| t.get("types").is_some()), "fixture typologies must include types");
         assert!(topo_items.iter().any(|t| t.get("designs").is_some()), "fixture typologies must include designs");
     }

@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema", "id", "version", "label", "kinds"],
   "properties": {
-    "schema": { "const": "spatial.extension/v1" },
+    "schema": { "const": "spatial.extension" },
     "id": { "type": "string" },
     "version": { "type": "string" },
     "label": { "type": "string" },

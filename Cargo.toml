@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "vcs/rs",
-    "semios/rs",
+    "s/rs",
     "draw/rs",
     "forms/rs",
     "shooting/rs",
@@ -62,6 +62,7 @@ members = [
     "trinity/jack/lsp",
     "trinity/jack/shell",
     "trinity/rewrite/engine",
+    "layout/rs",
 ]
 
 resolver = "2"

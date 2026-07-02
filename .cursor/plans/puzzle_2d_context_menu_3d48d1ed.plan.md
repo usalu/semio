@@ -63,7 +63,7 @@ flowchart LR
 
 ## 1. Hidden/locked flags on fixture and scene ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx))
 
-- Add `hidden?: boolean` and `locked?: boolean` to `Puzzle2dFixtureNodeV1` (circle + rectangle), `Puzzle2dFixtureHandleV1`, `Puzzle2dFixtureEdgeV1` (~850–936) and parse them in `parsePuzzle2dFixtureV1`.
+- Add `hidden?: boolean` and `locked?: boolean` to `Puzzle2dFixtureNode` (circle + rectangle), `Puzzle2dFixtureHandle`, `Puzzle2dFixtureEdge` (~850–936) and parse them in `parsePuzzle2dFixture`.
 - Add `locked: boolean` to `Puzzle2dSceneObject` / `Puzzle2dSceneObjectOptions` (alongside existing `visible`) and to declarative marker props (`Puzzle2dNode*Props`, `Puzzle2dHandleProps`, `Puzzle2dEdgeProps`); propagate through descriptor build and host prop-apply regions.
 - `hidden` maps to existing `visible: false` descriptor support (WASM already normalizes `hidden` → `visible`); `locked` is a new descriptor field.
 - Locked rendering: dim locked entities via the paint/chrome path (analog of 3d's `WORLD_LOCKED_OPACITY_SCALE`), e.g. in `puzzle2dElementInteractionChrome` / theme palette serialization.

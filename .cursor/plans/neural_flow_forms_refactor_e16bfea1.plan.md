@@ -12,10 +12,10 @@ todos:
     content: "flow/module/wasm: add evaluate_function_json headless bridge"
     status: in_progress
   - id: flow-core
-    content: "flow/core: make flow.document/v1 (tree + ui) canonical; delete FlowFixtureV1/tree_from_fixture; add output boundary nodes + UI-only preview nodes; update DAG node mapping, ports, eval, Rust tests"
+    content: "flow/core: make flow.document/v1 (tree + ui) canonical; delete FlowFixture/tree_from_fixture; add output boundary nodes + UI-only preview nodes; update DAG node mapping, ports, eval, Rust tests"
     status: pending
   - id: flow-ts
-    content: "flow/react + worker + play: replace FlowFixtureV1 types/default with FlowDocumentV1, add output/preview node catalogue, headless evaluateFunction, fixtures + fixture-slugs, vitest"
+    content: "flow/react + worker + play: replace FlowFixture types/default with FlowDocument, add output/preview node catalogue, headless evaluateFunction, fixtures + fixture-slugs, vitest"
     status: pending
   - id: procedural
     content: "procedural 2d/3d: migrate all fixtures to flow.document/v1 with output + preview nodes; update react defaults, extractChannelPreviewItems, play controllers/slugs"
@@ -71,8 +71,8 @@ In [flow/module/wasm/lib.rs](flow/module/wasm/lib.rs):
 
 In [flow/core/lib.rs](flow/core/lib.rs):
 
-- Make `flow.document/v1` the single schema: `{ schema, tree: Tree, ui: FlowUiV1 }`. Delete `FlowFixtureV1`, `tree_from_fixture`, and the seed-derivation path; the `tree` is authoritative and serialized directly (no widget->neuron derivation).
-- `FlowUiV1`: `camera`, `nodes: { id -> { layout, chrome } }`, `previews: [{ id, source: {neuron, channel}, mode }]`. `chrome` carries presentation-only data (slider min/max/step + current value, note text, image src, stepper fields, variable enum).
+- Make `flow.document/v1` the single schema: `{ schema, tree: Tree, ui: FlowUi }`. Delete `FlowFixture`, `tree_from_fixture`, and the seed-derivation path; the `tree` is authoritative and serialized directly (no widget->neuron derivation).
+- `FlowUi`: `camera`, `nodes: { id -> { layout, chrome } }`, `previews: [{ id, source: {neuron, channel}, mode }]`. `chrome` carries presentation-only data (slider min/max/step + current value, note text, image src, stepper fields, variable enum).
 - Node model on the tree:
   - Input nodes = `INPUT_KIND` boundary neurons (channel = key); current value lives in `ui.nodes[id].chrome` (interactive) or supplied via in-dict (headless).
   - Compute nodes = operator neurons (unchanged).
@@ -84,7 +84,7 @@ In [flow/core/lib.rs](flow/core/lib.rs):
 
 ### Layer 3 - flow react / play (TS)
 
-- [flow/react/index.tsx](flow/react/index.tsx): replace `FlowFixtureV1` TS types + `FLOW_DEFAULT_FIXTURE` with `FlowDocumentV1` (`tree` + `ui`); update the localStorage key, catalogue (add Output node + Preview node), DOM overlays, and eval-output application.
+- [flow/react/index.tsx](flow/react/index.tsx): replace `FlowFixture` TS types + `FLOW_DEFAULT_FIXTURE` with `FlowDocument` (`tree` + `ui`); update the localStorage key, catalogue (add Output node + Preview node), DOM overlays, and eval-output application.
 - [flow/worker.ts](flow/worker.ts) / [flow/worker-client.ts](flow/worker-client.ts): evaluate from `document.tree`; add a headless `evaluateFunction(treeJson, inDictJson)` entry for forms.
 - [flow/play/index.ts](flow/play/index.ts): update controller, hierarchy/inspector builders, and default document; add `flow/fixture/*.flow.json` + `flow/fixture-slugs.ts` (none today) for parity with other technologies.
 

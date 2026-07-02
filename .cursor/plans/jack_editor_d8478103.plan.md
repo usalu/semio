@@ -53,7 +53,7 @@ File: [trinity/rewrite/engine/lib.rs](trinity/rewrite/engine/lib.rs)
 
 ## 3. React language bridge
 File: [trinity/react/index.tsx](trinity/react/index.tsx)
-- In the `🔖Fixture` region, add `TrinityJackTokenV1 { class, start, end }` and `TrinityJackCompletionV1 { label, kind, detail, insert }` types, plus `tokenizeJackOnFixture(fixtureJson, source)` and `completeJackOnFixture(fixtureJson, source, cursor)` that mirror `runJackOnFixture` (line 84): new `TrinitySession`, `loadFixtureJson`, call the new WASM methods, `JSON.parse`. Export them. Add vitest cases in the `🧪Tests` region.
+- In the `🔖Fixture` region, add `TrinityJackToken { class, start, end }` and `TrinityJackCompletion { label, kind, detail, insert }` types, plus `tokenizeJackOnFixture(fixtureJson, source)` and `completeJackOnFixture(fixtureJson, source, cursor)` that mirror `runJackOnFixture` (line 84): new `TrinitySession`, `loadFixtureJson`, call the new WASM methods, `JSON.parse`. Export them. Add vitest cases in the `🧪Tests` region.
 
 ## 4. New generic framework `editor` component
 - [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts): add `"editor"` to `ComponentKind` (line 286) and to `CANVAS_COMPONENT_KINDS` (line 288, host-bound full surface). Add `interface UiEditorHostSurfaceNode { type: "editor"; componentKind: "editor"; surfaceId; controllerId; paneId?; bindingId? }`, include it in the `UiNode`/host unions (lines ~173, ~431), and add `buildEditorWindowBody(surfaceId, controllerId, paneId?, bindingId?)` next to `buildTableWindowBody` (line 512).

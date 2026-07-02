@@ -9,7 +9,7 @@ todos:
     content: Update flow/module/wasm glue and all in-repo modules (core/math/text/logic/dictionary/list) registrations + tests to operator-typed channels.
     status: completed
   - id: channel-operators-flowcore-react
-    content: flow/core port layout (neuron_io_layout/input_spec_to_port) and flow/react FlowChannelSpecV1 + connection compatibility switched to required-operator set-containment; update flow/react vitest.
+    content: flow/core port layout (neuron_io_layout/input_spec_to_port) and flow/react FlowChannelSpec + connection compatibility switched to required-operator set-containment; update flow/react vitest.
     status: completed
   - id: brep-rust-interface
     content: Create geometry/brep/engine (Rust BrepKernel trait + handle/kind/mesh value types) as the external-lib interface; wire Cargo workspace, script.ts, launch.json.
@@ -56,7 +56,7 @@ graph TB
     brepmod --> brepiface --> brepimpl
   end
   subgraph js [TypeScript]
-    flowreact["flow/react<br/>FlowChannelSpecV1.operators + compat"]
+    flowreact["flow/react<br/>FlowChannelSpec.operators + compat"]
     proc["procedural/react<br/>loads brep wasm, preview via wasm tessellate"]
     brepmod -->|wasm| proc
     neural --> flowreact --> proc
@@ -78,7 +78,7 @@ Files: [neural/engine/lib.rs](neural/engine/lib.rs), [flow/module/wasm/lib.rs](f
 - `inject_channel_defaults` (L561-572) unchanged (uses `default`).
 - ChannelSpec builders: replace `number()/list()/dictionary()/value()/text_default()` etc. with capability-based helpers (e.g. `requires(["math.add"])`, plus `*_default` that still emit full schema'd default dicts). Numbers feeding `math.add` require `["math.add"]` and accept number/point/vector.
 - `flow/core` port layout (L347-398): `value_type` derives from `operators` (display + compat) instead of `spec.schema.id()`.
-- `flow/react`: `FlowChannelSpecV1.schema` -> `operators: string[]`; update manifest interfaces (L69-138) and any connection/port-compat logic to set-containment.
+- `flow/react`: `FlowChannelSpec.schema` -> `operators: string[]`; update manifest interfaces (L69-138) and any connection/port-compat logic to set-containment.
 - Update all in-repo operator registrations (core/math/text/logic/dictionary/list) + their tests to the new channel shape. Keep multi-impl dispatch and variadics intact.
 
 ## Phase 2 — Pure-Rust brep kernel (brepkit, behind interface)

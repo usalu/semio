@@ -301,8 +301,8 @@ export class DevScript extends Script {
       runCmd("bun", ["nx", "run", "@semio-tech/draw-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
-    if (segments[0] === "semios") {
-      runCmd("bun", ["nx", "run", "@semio-tech/semios-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
+    if (segments[0] === "s") {
+      runCmd("bun", ["nx", "run", "@semio-tech/s-play:dev", ...segments.slice(1)], { cwd: this.root, env: devToolingEnv() });
       return;
     }
     if (segments[0] === "writer") {

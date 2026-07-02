@@ -79,7 +79,7 @@ Establish a glossary in [reasoning/mindmap/wires/AGENTS.md](reasoning/mindmap/wi
 **Rename in wires crate (greenfield, no compat layer):**
 
 - Rust ([reasoning/mindmap/wires/lib.rs](reasoning/mindmap/wires/lib.rs)): prefer `RelationshipKind` (enum) over `WireRelationship`; `identity_label` / `allowed_identities` on extension; keep `mindmap::TopicId` only as internal graph id type.
-- TS ([reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts)): `WiresFixtureIdentityV1`, `identityId`, `identityKind`, `sourceIdentityId` / `targetIdentityId`, `RelationshipKind` type alias; central helpers:
+- TS ([reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts)): `WiresFixtureIdentity`, `identityId`, `identityKind`, `sourceIdentityId` / `targetIdentityId`, `RelationshipKind` type alias; central helpers:
   - `relationshipKindToEdgeKindId(kind)` → `wires.owns` …
   - `edgeKindIdToRelationshipKind(id)` / `relationshipKindDisplayName(kind)` → `"Owns"` …
 - Fixture JSON ([metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json)): `topics` → `identities`, `topicId` → `identityId`, `nodeKind` → `identityKind`, `sourceTopicId` → `sourceIdentityId`, meta `allowedTopicIds` → `allowedIdentityIds`, catalog keys `identityKinds` / `relationshipKinds` (adapter maps to puzzle `nodes`/`edges` when calling `setKindCatalogsJson`).

@@ -41,7 +41,7 @@ Rewrite `gis/map/fixture/reuse.map.gis.json` to:
 
 ```json
 {
-  "schema": "gis.map.fixture/v1",
+  "schema": "gis.map.fixture",
   "name": "Reuse map",
   "positions": [
     { "id": "...", "lon": 0, "lat": 0, "label": "...", "name": "...", "kind": "receiver", "icon": "landmark", "sourceUrl": "https://..." }
@@ -78,7 +78,7 @@ Add a `FixtureScript` (registered as `fixture`) that reads `../fixture/reuse.gra
 - Extend the `🧪Tests` region (descriptor serializes new fields; selection state).
 
 ### 4. Play host wiring
-- `[gis/map/play/index.ts](gis/map/play/index.ts)`: import the converted fixture JSON, add a `parseGisMapFixtureV1` + types, expose `GIS_MAP_PLAY_FIXTURE_OPTIONS` and a default fixture, and surface positions/routes through controller state (mirror puzzle2d's `getFixtureCatalog`/`setActiveFixture`). Provide the active descriptor to the surface host.
+- `[gis/map/play/index.ts](gis/map/play/index.ts)`: import the converted fixture JSON, add a `parseGisMapFixture` + types, expose `GIS_MAP_PLAY_FIXTURE_OPTIONS` and a default fixture, and surface positions/routes through controller state (mirror puzzle2d's `getFixtureCatalog`/`setActiveFixture`). Provide the active descriptor to the surface host.
 - `MapPlayPaneSurfaceHost` in `[framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)`: replace the hardcoded Zürich/Bern demo with `<Position>`/`<Route>` mapped from the active fixture (name/icon/sourceUrl/kind passed through).
 - Extend the play `🧪Tests` (fixture parse + catalog options).
 

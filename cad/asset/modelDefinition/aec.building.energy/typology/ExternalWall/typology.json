@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.typology/v1",
+  "schema": "spatial.typology",
   "id": "energy.energy.externalwall",
   "version": "1.0.0",
   "label": "External Wall",

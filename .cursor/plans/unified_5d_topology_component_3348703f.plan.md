@@ -63,8 +63,8 @@ flowchart TB
 
 ### Phase 1 - Unified model, projections, store (puzzle/5d)
 
-- `parseTopologyV1(raw)` replacing the manifest-only `parseTopologyFixtureV1`.
-- `projectFlat(model): BoardFixtureV1` and `projectSpatial(model): FixtureV1` (reuse existing `topologyBoardCenterFromTopLeft`, `topologyKitBoardHandleAngle`, kind-catalog/compat helpers already in the file).
+- `parseTopologyV1(raw)` replacing the manifest-only `parseTopologyFixture`.
+- `projectFlat(model): BoardFixture` and `projectSpatial(model): Fixture` (reuse existing `topologyBoardCenterFromTopLeft`, `topologyKitBoardHandleAngle`, kind-catalog/compat helpers already in the file).
 - Reverse reducers updating the model: `applyFlatNodeMove`, `applySpatialRelocate`, `applyBond(sourceAnchor,targetAnchor,kind)`, `applySelect`, `applyCameraFlat/Spatial`.
 - `createTopologyStore(model)` external store (mirror existing `SnapshotStore`/`SceneObjectStore` patterns; no zustand/jotai - keep behind the existing `reactHostPort` interface). Holds model, selection, `connectSession`, and a per-`instanceId` camera map. `TopologyStoreProvider` + `useTopologyStore()` so sibling `<FiveD>` instances share one store.
 - `<FiveD>` component: `mode: "flat" | "spatial"`, `instanceId`, optional presentation overrides; renders `BoardCanvas` (+ neutral markers built from `projectFlat`) or `Canvas3D`/`SceneObjects`/`SceneAttractions` (from `projectSpatial`); wires every callback into store reducers and reads `connectSession` to drive preview props (Phase 2/3).
@@ -85,7 +85,7 @@ flowchart TB
 
 - Replace `TopologyBoardSurfaceHost`/`TopologySceneSurfaceHost` in [framework/playground/renderer/react/index.tsx](framework/playground/renderer/react/index.tsx):1246-1316 with `<FiveD>` + a shared `TopologyStore`; the 5d play ([puzzle/5d/play/index.ts](puzzle/5d/play/index.ts)) keeps two windows (one `mode="flat"`, one `mode="spatial"`) over the same store to validate cross-instance gestures.
 - Sketchpad: rewrite `useDesignTopologyAdapter` + `DesignTopologyBoardWindow`/`DesignTopologySceneWindow` ([compose/client/lib/sketchpad/js/index.ts](compose/client/lib/sketchpad/js/index.ts):~34564-35034) to build the unified model from design data once into a shared store; both windows render `<FiveD>`. Kit diagram uses `<FiveD mode="flat">`.
-- Fixtures: make a single canonical `puzzle/5d/play/fixture/nakagin-capsule-tower.topology.json` in the new `puzzle.5d.topology/v1` schema (parts/anchors/bonds with flat+spatial aspects). Refactor `parseBoardFixtureV1`/`parseFixtureV1` usage in the 2d/3d plays to project from the unified fixture so it is the single source of truth.
+- Fixtures: make a single canonical `puzzle/5d/play/fixture/nakagin-capsule-tower.topology.json` in the new `puzzle.5d.topology/v1` schema (parts/anchors/bonds with flat+spatial aspects). Refactor `parseBoardFixture`/`parseFixture` usage in the 2d/3d plays to project from the unified fixture so it is the single source of truth.
 - Update e2e specs ([puzzle/5d/play/e2e/topology.spec.ts](puzzle/5d/play/e2e/topology.spec.ts), 2d/3d specs) to cover: edit-in-flat updates spatial and vice versa; indirect connect started in flat previews in spatial and is terminated in spatial.
 - Remove the old dual-surface exports (`TopologyBoardPane`, `TopologyScenePane`, `buildTopologyDualSurfaceBindings`, mirror helpers) - no backwards-compat/legacy per repo rules.
 - Run the full suites: `bun nx run @semio-tech/puzzle-2d-react:test`, `@semio-tech/puzzle-3d-react:test`, `@semio-tech/puzzle-5d-react:test`, the Rust tests, and the play e2e; confirm runtime via `[DEBUG]` logs before declaring done. Close the ticket (`ticket_close`) with summary + touched files.

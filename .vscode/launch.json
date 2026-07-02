@@ -438,6 +438,25 @@
       }
     },
     {
+      "name": "🛠️dev📄layout",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:layout",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "LAYOUT_PLAY_PORT": "6079"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 158
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6079)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🌐gis📍2d",
       "type": "node-terminal",
       "request": "launch",
@@ -925,14 +944,14 @@
       }
     },
     {
-      "name": "🛠️dev🖥️semios",
+      "name": "🛠️dev🖥️s",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:semios",
+      "command": "bun run dev:s",
       "cwd": "${workspaceFolder}",
-      "dependsOn": ["📦build🗄️vcs", "📦build🖥️semios🔗studio"],
+      "dependsOn": ["📦build🗄️vcs", "📦build🖥️s🔗studio"],
       "env": {
-        "SEMIOS_PLAY_PORT": "6066"
+        "S_PLAY_PORT": "6066"
       },
       "presentation": {
         "group": "3_dev",
@@ -1073,10 +1092,10 @@
       }
     },
     {
-      "name": "📦build🖥️semios🔗studio",
+      "name": "📦build🖥️s🔗studio",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/semios-studio-rs:wasm",
+      "command": "bun nx run @semio-tech/s-studio-rs:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",

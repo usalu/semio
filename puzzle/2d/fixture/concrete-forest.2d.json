@@ -1,5 +1,5 @@
 {
-  "schema": "puzzle.2d.fixture/v1",
+  "schema": "puzzle.2d.fixture",
   "camera": {
     "x": 230.72767272727273,
     "y": 93.53074909090908,
@@ -9,11 +9,10 @@
     {
       "id": "seed-left-001",
       "nodeKind": "Hexagonal Cut Concrete Forest Left",
-      "shape": "rectangle",
+      "shape": "circle",
       "x": 230.72767272727273,
       "y": 93.53074909090908,
-      "width": 432,
-      "height": 248,
+      "radius": 24,
       "text": "Hexagonal Cut Concrete Forest Left",
       "handles": [
         {
@@ -25,7 +24,7 @@
         {
           "id": "seed-left-001:v1",
           "handleKind": "b-l-m",
-          "angle": -0.9995976625058433,
+          "angle": -0.9995976625058431,
           "radius": 3
         },
         {
@@ -73,13 +72,13 @@
         {
           "id": "seed-left-001:v9",
           "handleKind": "c-b",
-          "angle": 3.569991651806583,
+          "angle": -2.713193655373004,
           "radius": 3
         },
         {
           "id": "seed-left-001:v10",
           "handleKind": "c-t",
-          "angle": 4.141190316095637,
+          "angle": -2.14199499108395,
           "radius": 3
         }
       ]
@@ -87,195 +86,7 @@
   ],
   "edges": [],
   "meta": {
-    "kindCatalogs": {
-      "handles": [
-        {
-          "id": "b-l",
-          "label": "b-l",
-          "name": "b-l",
-          "color": "hsl(206 52% 48%)",
-          "defaultWireKind": "cable.link"
-        },
-        {
-          "id": "b-l-m",
-          "label": "b-l-m",
-          "name": "b-l-m",
-          "color": "hsl(290 52% 48%)",
-          "defaultWireKind": "cable.link"
-        },
-        {
-          "id": "b-s",
-          "label": "b-s",
-          "name": "b-s",
-          "color": "hsl(55 52% 48%)",
-          "defaultWireKind": "cable.link"
-        },
-        {
-          "id": "b-s-m",
-          "label": "b-s-m",
-          "name": "b-s-m",
-          "color": "hsl(124 52% 48%)",
-          "defaultWireKind": "cable.link"
-        },
-        {
-          "id": "c-b",
-          "label": "c-b",
-          "name": "c-b",
-          "color": "hsl(37 52% 48%)",
-          "defaultWireKind": "cable.link"
-        },
-        {
-          "id": "c-t",
-          "label": "c-t",
-          "name": "c-t",
-          "color": "hsl(169 52% 48%)",
-          "defaultWireKind": "cable.link"
-        }
-      ],
-      "nodes": [
-        {
-          "id": "Hexagonal Cut Concrete Forest Left",
-          "label": "Hexagonal Cut Concrete Forest Left",
-          "name": "Hexagonal Cut Concrete Forest Left",
-          "meshUrl": "/mesh/hexagonal-cut-concrete-forest-left.glb",
-          "handles": [
-            {
-              "handleKind": "b-l",
-              "angle": -1.5707963267948966,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-l-m",
-              "angle": -0.9995976625058433,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-l",
-              "angle": -0.42839899821678995,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-s-m",
-              "angle": 0.14279966607226324,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-s",
-              "angle": 0.7139983303613167,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-s-m",
-              "angle": 1.28519699465037,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-s",
-              "angle": 1.856395658939423,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "c-b",
-              "angle": 2.4275943232284765,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "c-t",
-              "angle": 2.99879298751753,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "c-b",
-              "angle": 3.569991651806583,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "c-t",
-              "angle": 4.141190316095637,
-              "radius": 0.36
-            }
-          ]
-        },
-        {
-          "id": "Hexagonal Cut Concrete Forest Right",
-          "label": "Hexagonal Cut Concrete Forest Right",
-          "name": "Hexagonal Cut Concrete Forest Right",
-          "meshUrl": "/mesh/hexagonal-cut-concrete-forest-right.glb",
-          "handles": [
-            {
-              "handleKind": "b-l",
-              "angle": -1.5707963267948966,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-l-m",
-              "angle": -0.9995976625058433,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-l",
-              "angle": -0.42839899821678995,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-s-m",
-              "angle": 0.14279966607226324,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-s-m",
-              "angle": 0.7139983303613167,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-s",
-              "angle": 1.28519699465037,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "b-s-m",
-              "angle": 1.856395658939423,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "c-b",
-              "angle": 2.4275943232284765,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "c-t",
-              "angle": 2.99879298751753,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "c-b",
-              "angle": 3.569991651806583,
-              "radius": 0.36
-            },
-            {
-              "handleKind": "c-t",
-              "angle": 4.141190316095637,
-              "radius": 0.36
-            }
-          ]
-        }
-      ],
-      "wires": [
-        {
-          "id": "cable.link",
-          "label": "Link",
-          "name": "Link",
-          "defaultEdgeKind": "puzzle3d.attraction.link"
-        }
-      ],
-      "edges": [
-        {
-          "id": "puzzle3d.attraction.link",
-          "label": "Link",
-          "name": "Link"
-        }
-      ]
-    },
+    "manifestId": "concrete-forest",
     "kindCompatibility": [
       {
         "bidirectional": true,

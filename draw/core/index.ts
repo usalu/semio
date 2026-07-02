@@ -205,7 +205,7 @@ export interface DrawArtboard {
 }
 
 export interface DrawDocument {
-	readonly schema: "draw.document/v1";
+	readonly schema: "draw.document";
 	readonly id: string;
 	readonly title?: string;
 	readonly camera: DrawCamera;
@@ -395,7 +395,7 @@ export function createDrawImageLayer(name = "Image", imageKey: string, width = 2
 
 export function defaultDrawDocument(id = "empty", title?: string): DrawDocument {
 	return {
-		schema: "draw.document/v1",
+		schema: "draw.document",
 		id,
 		title,
 		camera: { x: 0, y: 0, zoom: 1 },
@@ -423,7 +423,7 @@ export function cloneDrawLayerNode(node: DrawLayerNode, nameSuffix = " copy"): D
 export function parseDrawDocument(raw: unknown): DrawDocument {
 	if (!raw || typeof raw !== "object" || Array.isArray(raw)) throw new Error("draw document must be an object");
 	const record = raw as DrawDocument;
-	if (record.schema !== "draw.document/v1") throw new Error(`unsupported draw schema: ${String((raw as { schema?: string }).schema)}`);
+	if (record.schema !== "draw.document") throw new Error(`unsupported draw schema: ${String((raw as { schema?: string }).schema)}`);
 	if (!Array.isArray(record.layers)) throw new Error("draw document layers must be an array");
 	validateDrawLayerNodes(record.layers);
 	return record;
@@ -1349,7 +1349,7 @@ export function diffDrawEditOp(_projection: DrawDocument, operation: DrawEditOp)
 
 /** @emoji 📦 Creates a draw document VCS envelope with an empty or seeded projection. */
 export function createDrawDocumentVcsEnvelope(id: string, projection: DrawDocument = defaultDrawDocument(id)): DrawDocumentVcsEnvelope {
-	return createDocumentVcsEnvelope("draw.document/v1", id, projection);
+	return createDocumentVcsEnvelope("draw.document", id, projection);
 }
 
 /** @emoji 🔁 Materializes a draw document from its VCS envelope. */
@@ -1357,10 +1357,10 @@ export function materializeDrawDocument(envelope: DrawDocumentVcsEnvelope, appli
 	return materializeDocumentProjection(envelope, appliedChangeIds, applyDrawEditOp);
 }
 
-/** @emoji 🧩 Semios app VCS handler factory for draw documents. */
+/** @emoji 🧩 S app VCS handler factory for draw documents. */
 export function createDrawAppVcsHandler() {
 	return {
-		format: "draw.document/v1",
+		format: "draw.document",
 		createEnvelope: (id: string) => createDrawDocumentVcsEnvelope(id),
 		applyOp: applyDrawEditOp,
 		serializeEnvelope: (envelope: DrawDocumentVcsEnvelope) => JSON.stringify(envelope),
@@ -1384,7 +1384,7 @@ if (import.meta.vitest) {
 	describe("@semio-tech/draw-core", () => {
 		it("parses draw documents", () => {
 			const doc = defaultDrawDocument("test");
-			expect(parseDrawDocument(doc).schema).toBe("draw.document/v1");
+			expect(parseDrawDocument(doc).schema).toBe("draw.document");
 		});
 
 		it("rejects unknown layer kinds", () => {

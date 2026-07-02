@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.transformation/v1",
+  "schema": "spatial.transformation",
   "id": "from_aec.building.structure",
   "version": "1.0.0",
   "label": "From Aec Building Structure",

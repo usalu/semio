@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema", "id", "version", "label", "primitiveKinds", "actions", "interactions"],
   "properties": {
-    "schema": { "const": "spatial.typology/v1" },
+    "schema": { "const": "spatial.typology" },
     "id": { "type": "string" },
     "version": { "type": "string" },
     "label": { "type": "string" },

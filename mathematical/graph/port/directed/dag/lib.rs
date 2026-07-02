@@ -9,7 +9,7 @@ use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator
 use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed::{
-    self as graph, compute_edge_bezier_points, handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node,
+    self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outward_at_node_rim, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node,
     NodeId, RenderSnapshot, Selection, VelloThemePalette,
 };
 
@@ -211,6 +211,24 @@ fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
     }
 }
 
+/// 🔌 Visual shape of a port handle cap.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum PortShape {
+    #[default]
+    Semicircle,
+    Triangle,
+}
+
+/// 📐 Edge routing style between port handles.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum EdgeRouteStyle {
+    #[default]
+    Bezier,
+    SharpSz,
+}
+
 /// 🪝 Named horizontal port on a DAG node edge.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -233,6 +251,8 @@ pub struct IoPortSpec {
     pub connected: Option<bool>,
     #[serde(default = "default_port_cardinality")]
     pub cardinality: String,
+    #[serde(default)]
+    pub shape: PortShape,
 }
 
 fn default_port_cardinality() -> String {
@@ -241,7 +261,7 @@ fn default_port_cardinality() -> String {
 
 impl Default for IoPortSpec {
     fn default() -> Self {
-        Self { id: String::new(), label: String::new(), code: String::new(), abbreviation: String::new(), full_name: String::new(), value_type: None, default: None, value: None, connected: None, cardinality: default_port_cardinality() }
+        Self { id: String::new(), label: String::new(), code: String::new(), abbreviation: String::new(), full_name: String::new(), value_type: None, default: None, value: None, connected: None, cardinality: default_port_cardinality(), shape: PortShape::default() }
     }
 }
 
@@ -249,7 +269,7 @@ impl IoPortSpec {
     pub fn named(code: impl Into<String>, abbreviation: impl Into<String>, id: impl Into<String>, full_name: impl Into<String>) -> Self {
         let id = id.into();
         let abbreviation = abbreviation.into();
-        Self { code: code.into(), abbreviation: abbreviation.clone(), label: abbreviation, id, full_name: full_name.into(), cardinality: default_port_cardinality(), ..Default::default() }
+        Self { code: code.into(), abbreviation: abbreviation.clone(), label: abbreviation, id, full_name: full_name.into(), cardinality: default_port_cardinality(), shape: PortShape::default(), ..Default::default() }
     }
 
     pub fn simple(id: impl Into<String>, label: impl Into<String>) -> Self {
@@ -1095,8 +1115,8 @@ pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayou
     let Some(root) = fixture.as_object_mut() else {
         return Err("fixture root must be object".into());
     };
-    if root.get("schema").and_then(|v| v.as_str()) != Some("dag.fixture/v1") {
-        return Err("schema must be dag.fixture/v1".into());
+    if root.get("schema").and_then(|v| v.as_str()) != Some("dag.fixture") {
+        return Err("schema must be dag.fixture".into());
     }
     let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
     let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
@@ -1604,7 +1624,7 @@ impl DagChannelRef {
 
 /// 🌳 Retained DAG host: typed nodes, edges, engine, camera.
 pub struct DagHost {
-    pub fixture: DagFixtureV1,
+    pub fixture: DagFixture,
     pub engine: DagBoardEngine,
     pub vello_theme: VelloThemePalette,
     width: u32,
@@ -1614,7 +1634,9 @@ pub struct DagHost {
     last_screen_y: f64,
     node_id_map: HashMap<NodeId, usize>,
     handle_key_map: HashMap<HandleId, String>,
+    handle_port_shape: HashMap<HandleId, PortShape>,
     edge_id_map: HashMap<EdgeId, String>,
+    edge_route_style: HashMap<EdgeId, EdgeRouteStyle>,
     widget_drag: Option<usize>,
     pending_port_insert: Option<(DagPortSide, String, usize)>,
     last_logged_lod: Cell<i8>,
@@ -1667,17 +1689,17 @@ impl DagNodePaintChrome {
 /// 📦 `dag.fixture/v1` document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DagFixtureV1 {
+pub struct DagFixture {
     pub schema: String,
-    pub camera: DagCameraV1,
+    pub camera: DagCamera,
     pub nodes: Vec<DagNodeSpec>,
-    pub edges: Vec<DagFixtureEdgeV1>,
+    pub edges: Vec<DagFixtureEdge>,
 }
 
 /// 📷 Fixture camera snapshot.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DagCameraV1 {
+pub struct DagCamera {
     pub x: f64,
     pub y: f64,
     pub zoom: f64,
@@ -1686,33 +1708,41 @@ pub struct DagCameraV1 {
 /// 🔗 Edge between port handles.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DagFixtureEdgeV1 {
+pub struct DagFixtureEdge {
     pub id: String,
     pub source: String,
     pub target: String,
+    #[serde(default)]
+    pub route_style: EdgeRouteStyle,
 }
 
-impl Default for DagFixtureV1 {
+impl Default for DagFixtureEdge {
     fn default() -> Self {
-        serde_json::from_str(include_str!("fixture/demo.dag.json")).unwrap_or_else(|_| Self { schema: "dag.fixture/v1".into(), camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] })
+        Self { id: String::new(), source: String::new(), target: String::new(), route_style: EdgeRouteStyle::default() }
+    }
+}
+
+impl Default for DagFixture {
+    fn default() -> Self {
+        serde_json::from_str(include_str!("fixture/demo.dag.json")).unwrap_or_else(|_| Self { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] })
     }
 }
 
 impl DagHost {
     pub fn default_demo() -> Self {
-        Self::from_fixture(DagFixtureV1::default())
+        Self::from_fixture(DagFixture::default())
     }
 
-    pub fn from_fixture(fixture: DagFixtureV1) -> Self {
+    pub fn from_fixture(fixture: DagFixture) -> Self {
         Self::from_fixture_with_layout(fixture, false)
     }
 
     /// 🌳 Builds a host without running auto-layout (preserves node positions).
-    pub fn from_fixture_without_layout(fixture: DagFixtureV1) -> Self {
+    pub fn from_fixture_without_layout(fixture: DagFixture) -> Self {
         Self::from_fixture(fixture)
     }
 
-    fn from_fixture_with_layout(fixture: DagFixtureV1, apply_layout: bool) -> Self {
+    fn from_fixture_with_layout(fixture: DagFixture, apply_layout: bool) -> Self {
         let mut host = Self {
             fixture,
             engine: DagBoardEngine::new(),
@@ -1724,7 +1754,9 @@ impl DagHost {
             last_screen_y: 0.0,
             node_id_map: HashMap::new(),
             handle_key_map: HashMap::new(),
+            handle_port_shape: HashMap::new(),
             edge_id_map: HashMap::new(),
+            edge_route_style: HashMap::new(),
             widget_drag: None,
             pending_port_insert: None,
             last_logged_lod: Cell::new(-1),
@@ -1827,7 +1859,7 @@ impl DagHost {
 
     fn sync_camera_from_engine(&mut self) {
         let cam = self.engine.camera;
-        self.fixture.camera = DagCameraV1 { x: cam.x, y: cam.y, zoom: cam.zoom };
+        self.fixture.camera = DagCamera { x: cam.x, y: cam.y, zoom: cam.zoom };
     }
 
     /// 🎯 Selected fixture node ids from the engine selection snapshot.
@@ -2403,9 +2435,9 @@ impl DagHost {
     }
 
     pub fn load_fixture_json(json: &str) -> Result<Self, String> {
-        let fixture: DagFixtureV1 = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        if fixture.schema != "dag.fixture/v1" {
-            return Err("schema must be dag.fixture/v1".into());
+        let fixture: DagFixture = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        if fixture.schema != "dag.fixture" {
+            return Err("schema must be dag.fixture".into());
         }
         validate_dag_fixture_node_kinds(&fixture.nodes)?;
         Ok(Self::from_fixture(fixture))
@@ -2429,7 +2461,9 @@ impl DagHost {
         self.engine.enforce_acyclic = true;
         self.node_id_map.clear();
         self.handle_key_map.clear();
+        self.handle_port_shape.clear();
         self.edge_id_map.clear();
+        self.edge_route_style.clear();
         for node in &mut self.fixture.nodes {
             fit_node_size(node);
         }
@@ -2438,7 +2472,7 @@ impl DagHost {
         if apply_layout {
             let mut fixture_value = serde_json::to_value(&self.fixture).unwrap_or_else(|_| serde_json::json!({}));
             let _ = apply_dag_layout_to_fixture_v1_value(&mut fixture_value, &DagLayoutOptions::default());
-            if let Ok(updated) = serde_json::from_value::<DagFixtureV1>(fixture_value.clone()) {
+            if let Ok(updated) = serde_json::from_value::<DagFixture>(fixture_value.clone()) {
                 self.fixture = updated;
             }
         }
@@ -2459,6 +2493,7 @@ impl DagHost {
                 let public_key = format!("{}:{}", node.id, port.id);
                 handle_map.insert(Self::dag_port_handle_key(&node.id, &port.id, true), hid);
                 self.handle_key_map.insert(hid, public_key);
+                self.handle_port_shape.insert(hid, port.shape);
                 self.engine.create_handle(hid, nid, in_a);
                 if let Some(handle) = self.engine.handles.get_mut(&hid) {
                     handle.radius = DAG_HANDLE_WORLD_RADIUS;
@@ -2472,6 +2507,7 @@ impl DagHost {
                 let public_key = format!("{}:{}", node.id, port.id);
                 handle_map.insert(Self::dag_port_handle_key(&node.id, &port.id, false), hid);
                 self.handle_key_map.insert(hid, public_key);
+                self.handle_port_shape.insert(hid, port.shape);
                 self.engine.create_handle(hid, nid, out_a);
                 if let Some(handle) = self.engine.handles.get_mut(&hid) {
                     handle.radius = DAG_HANDLE_WORLD_RADIUS;
@@ -2503,6 +2539,7 @@ impl DagHost {
                 eid = eid.max(id).saturating_add(1);
                 self.engine.create_edge(id, s, t);
                 self.edge_id_map.insert(id, edge.id.clone());
+                self.edge_route_style.insert(id, edge.route_style);
             }
         }
         self.engine.set_next_edge_id(eid);
@@ -2564,7 +2601,7 @@ impl DagHost {
             };
             let id = self.edge_id_map.get(eid).cloned().unwrap_or_else(|| format!("e{eid}"));
             self.edge_id_map.insert(*eid, id.clone());
-            edges.push(DagFixtureEdgeV1 { id, source, target });
+            edges.push(DagFixtureEdge { id, source, target, ..Default::default() });
         }
         self.fixture.edges = edges;
     }
@@ -2611,7 +2648,7 @@ impl DagHost {
     }
 
     pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
-        self.fixture.camera = DagCameraV1 { x, y, zoom };
+        self.fixture.camera = DagCamera { x, y, zoom };
         self.engine.set_camera(x, y, zoom);
     }
 
@@ -3060,11 +3097,49 @@ impl DagHost {
         centers
     }
 
+    fn handle_cap_peak(&self, center: cavas::vello::kurbo::Point, outward: cavas::vello::kurbo::Vec2, radius: f64, shape: PortShape) -> cavas::vello::kurbo::Point {
+        match shape {
+            PortShape::Semicircle => handle_exterior_cap_peak(center, outward, radius),
+            PortShape::Triangle => handle_exterior_cap_triangle_peak(center, outward, radius),
+        }
+    }
+
+    fn handle_cap_fill_path(&self, center: cavas::vello::kurbo::Point, outward: cavas::vello::kurbo::Vec2, radius: f64, shape: PortShape) -> cavas::vello::kurbo::BezPath {
+        match shape {
+            PortShape::Semicircle => handle_exterior_cap_fill_path(center, outward, radius),
+            PortShape::Triangle => handle_exterior_cap_triangle_fill_path(center, outward, radius),
+        }
+    }
+
+    fn handle_cap_stroke_path(&self, center: cavas::vello::kurbo::Point, outward: cavas::vello::kurbo::Vec2, radius: f64, shape: PortShape) -> cavas::vello::kurbo::BezPath {
+        match shape {
+            PortShape::Semicircle => handle_exterior_cap_stroke_path(center, outward, radius),
+            PortShape::Triangle => handle_exterior_cap_triangle_stroke_path(center, outward, radius),
+        }
+    }
+
+    fn edge_sharp_path(&self, eid: EdgeId) -> Option<cavas::vello::kurbo::BezPath> {
+        let edge = self.engine.edges.get(&eid)?;
+        let source_handle = self.engine.handles.get(&edge.source)?;
+        let target_handle = self.engine.handles.get(&edge.target)?;
+        let source_node = self.engine.nodes.get(&source_handle.node_id)?;
+        let target_node = self.engine.nodes.get(&target_handle.node_id)?;
+        let source_position = handle_position(source_node, source_handle);
+        let target_position = handle_position(target_node, target_handle);
+        let source_out = handle_outward_at_node_rim(source_position, source_node.center, source_node.shape, source_node.radius, source_node.width, source_node.height)?;
+        let target_out = handle_outward_at_node_rim(target_position, target_node.center, target_node.shape, target_node.radius, target_node.width, target_node.height)?;
+        let source_shape = self.handle_port_shape.get(&edge.source).copied().unwrap_or_default();
+        let target_shape = self.handle_port_shape.get(&edge.target).copied().unwrap_or_default();
+        let source_wire = self.handle_cap_peak(source_position, source_out, source_handle.radius, source_shape);
+        let target_wire = self.handle_cap_peak(target_position, target_out, target_handle.radius, target_shape);
+        Some(compute_edge_sharp_sz_path(source_wire, target_wire, source_out, target_out))
+    }
+
     fn paint_node_handles_for_spec(&self, scene: &mut cavas::vello::Scene, aff: &cavas::vello::kurbo::Affine, cam: &cavas::camera::Camera, node: &DagNodeSpec, chrome: &DagNodePaintChrome) {
         use cavas::vello::kurbo::Stroke;
         use cavas::vello::kurbo::{Circle, Point};
         use cavas::vello::peniko::Fill;
-        use graph::{handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, NodeShape};
+        use graph::{handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
 
         let theme = &self.vello_theme;
         let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
@@ -3073,13 +3148,15 @@ impl DagHost {
         let stroke_c = dag_handle_body_stroke(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
         let handle_chrome = chrome.has_interaction_chrome();
         let center = Point::new(node.x, node.y);
-        for handle_center in Self::node_handle_centers(node) {
+        let paint_port = |scene: &mut cavas::vello::Scene, port_idx: usize, inputs: bool, port: &IoPortSpec| {
+            let angle = io_node_rect_port_angle_for_node(node, port_idx, inputs);
+            let handle_center = handle_position_on_rectangle(center, node.width, node.height, angle);
             let outward = handle_outward_at_node_rim(handle_center, center, NodeShape::Rectangle, 0.0, node.width, node.height);
             if let Some(out) = outward {
                 if handle_chrome {
-                    scene.fill(Fill::NonZero, *aff, fill, None, &handle_exterior_cap_fill_path(handle_center, out, DAG_HANDLE_WORLD_RADIUS));
+                    scene.fill(Fill::NonZero, *aff, fill, None, &self.handle_cap_fill_path(handle_center, out, DAG_HANDLE_WORLD_RADIUS, port.shape));
                 }
-                scene.stroke(&Stroke::new(handle_stroke_px), *aff, stroke_c, None, &handle_exterior_cap_stroke_path(handle_center, out, DAG_HANDLE_WORLD_RADIUS));
+                scene.stroke(&Stroke::new(handle_stroke_px), *aff, stroke_c, None, &self.handle_cap_stroke_path(handle_center, out, DAG_HANDLE_WORLD_RADIUS, port.shape));
             } else {
                 let circle = Circle::new(handle_center, DAG_HANDLE_WORLD_RADIUS);
                 if handle_chrome {
@@ -3087,6 +3164,12 @@ impl DagHost {
                 }
                 scene.stroke(&Stroke::new(handle_stroke_px), *aff, stroke_c, None, &circle);
             }
+        };
+        for (port_idx, port) in node.inputs().iter().enumerate() {
+            paint_port(scene, port_idx, true, port);
+        }
+        for (port_idx, port) in node.outputs().iter().enumerate() {
+            paint_port(scene, port_idx, false, port);
         }
     }
 
@@ -3148,6 +3231,9 @@ impl DagHost {
         let input_column_w = if computation { io_port_column_width(&inputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
         let output_column_w = if computation { io_port_column_width(&outputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
         for (i, port) in inputs.iter().enumerate() {
+            if port.shape == PortShape::Triangle {
+                continue;
+            }
             let label = port.label_with_cardinality(lod);
             if label.trim().is_empty() {
                 continue;
@@ -3169,6 +3255,9 @@ impl DagHost {
             }));
         }
         for (i, port) in outputs.iter().enumerate() {
+            if port.shape == PortShape::Triangle {
+                continue;
+            }
             let label = port.label_with_cardinality(lod);
             if label.trim().is_empty() {
                 continue;
@@ -3977,41 +4066,58 @@ impl DagHost {
         let snap = self.engine.render_snapshot();
         let edge_stroke = dag_world_stroke(lod.edge_stroke_screen_px(), cam.zoom);
         for (&eid, _edge) in &self.engine.edges {
-            if let Some(curve) = self.engine.edge_curve(eid) {
-                let (is_selected, is_highlighted, is_hovered) = self.edge_interaction_chrome(eid);
-                let stroke_c = dag_edge_body_stroke(theme, false, is_selected, is_highlighted, is_hovered);
-                scene.stroke(&Stroke::new(edge_stroke), aff, stroke_c, None, &curve);
+            let (is_selected, is_highlighted, is_hovered) = self.edge_interaction_chrome(eid);
+            let stroke_c = dag_edge_body_stroke(theme, false, is_selected, is_highlighted, is_hovered);
+            let style = self.edge_route_style.get(&eid).copied().unwrap_or_default();
+            match style {
+                EdgeRouteStyle::Bezier => {
+                    if let Some(curve) = self.engine.edge_curve(eid) {
+                        scene.stroke(&Stroke::new(edge_stroke), aff, stroke_c, None, &curve);
+                    }
+                }
+                EdgeRouteStyle::SharpSz => {
+                    if let Some(path) = self.edge_sharp_path(eid) {
+                        scene.stroke(&Stroke::new(edge_stroke), aff, stroke_c, None, &path);
+                    }
+                }
             }
         }
         if let Some(preview) = snap.pending_edge {
             scene.stroke(&Stroke::new(edge_stroke), aff, dag_edge_body_stroke(theme, false, true, false, false), None, &preview);
         }
-        if lod.shows_handles() {
-            let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
-            for (hid, center, _radius) in &snap.handles {
-                let node_id = self.engine.handles.get(hid).map(|handle| handle.node_id);
-                let is_dimmed = node_id.is_some_and(|nid| self.dimmed.contains(&nid));
-                let (is_selected, is_highlighted, is_hovered) = self.handle_interaction_chrome(*hid);
-                let fill = dag_handle_body_fill(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
-                let stroke_c = dag_handle_body_stroke(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
-                let chrome = is_dimmed || is_selected || is_highlighted || is_hovered;
-                let outward = node_id.and_then(|nid| self.engine.nodes.get(&nid).and_then(|node| handle_outward_at_node_rim(*center, node.center, node.shape, node.radius, node.width, node.height)));
-                if let Some(out) = outward {
-                    if chrome {
-                        scene.fill(Fill::NonZero, aff, fill, None, &handle_exterior_cap_fill_path(*center, out, DAG_HANDLE_WORLD_RADIUS));
-                    }
-                    scene.stroke(&Stroke::new(handle_stroke_px), aff, stroke_c, None, &handle_exterior_cap_stroke_path(*center, out, DAG_HANDLE_WORLD_RADIUS));
-                } else {
-                    let circle = Circle::new(*center, DAG_HANDLE_WORLD_RADIUS);
-                    if chrome {
-                        scene.fill(Fill::NonZero, aff, fill, None, &circle);
-                    }
-                    scene.stroke(&Stroke::new(handle_stroke_px), aff, stroke_c, None, &circle);
+        let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
+        let paint_snap_handle = |scene: &mut cavas::vello::Scene, hid: &HandleId, center: &cavas::vello::kurbo::Point, shape_filter: Option<PortShape>| {
+            let shape = self.handle_port_shape.get(hid).copied().unwrap_or_default();
+            if let Some(filter) = shape_filter {
+                if shape != filter {
+                    return;
                 }
             }
-            if let Some(ghost) = self.ghost_node.as_ref() {
-                self.paint_node_handles_for_spec(scene, &aff, &cam, ghost, &DagNodePaintChrome::ghost_preview());
+            if !lod.shows_handles() && shape != PortShape::Triangle {
+                return;
             }
+            let node_id = self.engine.handles.get(hid).map(|handle| handle.node_id);
+            let is_dimmed = node_id.is_some_and(|nid| self.dimmed.contains(&nid));
+            let (is_selected, is_highlighted, is_hovered) = self.handle_interaction_chrome(*hid);
+            let fill = dag_handle_body_fill(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
+            let stroke_c = dag_handle_body_stroke(theme, is_dimmed, is_selected, is_highlighted, is_hovered);
+            let chrome = is_dimmed || is_selected || is_highlighted || is_hovered;
+            let outward = node_id.and_then(|nid| self.engine.nodes.get(&nid).and_then(|node| handle_outward_at_node_rim(*center, node.center, node.shape, node.radius, node.width, node.height)));
+            if let Some(out) = outward {
+                if chrome {
+                    scene.fill(Fill::NonZero, aff, fill, None, &self.handle_cap_fill_path(*center, out, DAG_HANDLE_WORLD_RADIUS, shape));
+                }
+                scene.stroke(&Stroke::new(handle_stroke_px), aff, stroke_c, None, &self.handle_cap_stroke_path(*center, out, DAG_HANDLE_WORLD_RADIUS, shape));
+            } else {
+                let circle = Circle::new(*center, DAG_HANDLE_WORLD_RADIUS);
+                if chrome {
+                    scene.fill(Fill::NonZero, aff, fill, None, &circle);
+                }
+                scene.stroke(&Stroke::new(handle_stroke_px), aff, stroke_c, None, &circle);
+            }
+        };
+        for (hid, center, _radius) in &snap.handles {
+            paint_snap_handle(scene, hid, center, Some(PortShape::Semicircle));
         }
         let paint_minimap_node = |scene: &mut cavas::vello::Scene, idx: usize, fixture_node: &DagNodeSpec| {
             let node = self.node_spec_for_paint(idx, fixture_node);
@@ -4071,6 +4177,17 @@ impl DagHost {
         }
         if let Some(ghost) = self.ghost_node.as_ref() {
             self.paint_node_visual(scene, &aff, &cam, &viewport, lod, lod_index, ghost, None, DagNodePaintChrome::ghost_preview());
+        }
+        for (hid, center, _radius) in &snap.handles {
+            paint_snap_handle(scene, hid, center, Some(PortShape::Triangle));
+        }
+        if let Some(ghost) = self.ghost_node.as_ref() {
+            let paint_ghost_handles = lod.shows_handles()
+                || ghost.inputs().iter().any(|port| port.shape == PortShape::Triangle)
+                || ghost.outputs().iter().any(|port| port.shape == PortShape::Triangle);
+            if paint_ghost_handles {
+                self.paint_node_handles_for_spec(scene, &aff, &cam, ghost, &DagNodePaintChrome::ghost_preview());
+            }
         }
     }
 }
@@ -4252,9 +4369,9 @@ mod tests {
 
     #[test]
     fn dag_selection_hover_and_dimmed_map_widget_ids() {
-        let fixture = DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let fixture = DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
                 DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 0.0, 0.0, 160.0, 24.0),
                 DagNodeSpec::computation(
@@ -4293,7 +4410,7 @@ mod tests {
     #[test]
     fn dag_layout_left_right_orders_depth_on_x() {
         let mut fixture: Value = serde_json::json!({
-            "schema": "dag.fixture/v1",
+            "schema": "dag.fixture",
             "nodes": [
                 {"id": "a", "x": 0, "y": 0, "handles": []},
                 {"id": "b", "x": 0, "y": 0, "handles": []}
@@ -4309,7 +4426,7 @@ mod tests {
     #[test]
     fn dag_layout_top_bottom_orders_depth_on_y() {
         let mut fixture: Value = serde_json::json!({
-            "schema": "dag.fixture/v1",
+            "schema": "dag.fixture",
             "nodes": [
                 {"id": "a", "x": 0, "y": 0, "handles": []},
                 {"id": "b", "x": 0, "y": 0, "handles": []}
@@ -4326,7 +4443,7 @@ mod tests {
     #[test]
     fn dag_layout_spacing_scales_coordinates() {
         let mut fixture: Value = serde_json::json!({
-            "schema": "dag.fixture/v1",
+            "schema": "dag.fixture",
             "nodes": [
                 {"id": "a", "x": 0, "y": 0, "handles": []},
                 {"id": "b", "x": 0, "y": 0, "handles": []}
@@ -4401,9 +4518,9 @@ mod tests {
 
     #[test]
     fn handle_hover_does_not_hover_parent_node() {
-        let fixture = DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let fixture = DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec::computation(
                 "merge".into(),
                 "Merge".into(),
@@ -4486,9 +4603,9 @@ mod tests {
 
     #[test]
     fn dag_host_delete_selected_preserves_remaining_positions() {
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
                 DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
                 DagNodeSpec::computation(
@@ -4507,7 +4624,7 @@ mod tests {
                 ),
                 DagNodeSpec::computation("c".into(), "C".into(), "C".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
             ],
-            edges: vec![DagFixtureEdgeV1 { id: "e1".into(), source: "a:out".into(), target: "b:in".into() }, DagFixtureEdgeV1 { id: "e2".into(), source: "b:out".into(), target: "c:in".into() }],
+            edges: vec![DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "b:out".into(), target: "c:in".into(), ..Default::default() }],
         });
         host.set_selection(&["b".to_string()]);
         host.delete_selected();
@@ -4522,9 +4639,9 @@ mod tests {
 
     #[test]
     fn dag_host_delete_selected_removes_edge_only_selection() {
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
                 DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 100.0, 200.0, 160.0, 56.0),
                 DagNodeSpec::computation(
@@ -4543,7 +4660,7 @@ mod tests {
                 ),
                 DagNodeSpec::computation("c".into(), "C".into(), "C".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
             ],
-            edges: vec![DagFixtureEdgeV1 { id: "e1".into(), source: "a:out".into(), target: "b:in".into() }, DagFixtureEdgeV1 { id: "e2".into(), source: "b:out".into(), target: "c:in".into() }],
+            edges: vec![DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "b:out".into(), target: "c:in".into(), ..Default::default() }],
         });
         let edge_id = *host.engine.edges.keys().next().expect("edge");
         host.engine.selection.edge_ids.insert(edge_id);
@@ -4557,14 +4674,14 @@ mod tests {
 
     #[test]
     fn dag_host_reorganize_updates_engine_positions() {
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
                 DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 500.0, 500.0, 160.0, 56.0),
                 DagNodeSpec::computation("b".into(), "B".into(), "B".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 500.0, 500.0, 160.0, 56.0),
             ],
-            edges: vec![DagFixtureEdgeV1 { id: "e1".into(), source: "a:out".into(), target: "b:in".into() }],
+            edges: vec![DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() }],
         });
         host.reorganize(&DagLayoutOptions::default()).unwrap();
         let a = host.fixture.nodes.iter().find(|n| n.id == "a").expect("a");
@@ -4575,7 +4692,7 @@ mod tests {
     #[test]
     fn dag_host_loads_demo_fixture() {
         let host = DagHost::default_demo();
-        assert_eq!(host.fixture.schema, "dag.fixture/v1");
+        assert_eq!(host.fixture.schema, "dag.fixture");
         assert_eq!(host.fixture.nodes.len(), 5);
         assert_eq!(host.fixture.edges.len(), 4);
         assert!(!host.engine.render_snapshot().edges.is_empty());
@@ -4608,9 +4725,9 @@ mod tests {
     #[test]
     fn dag_host_slider_drag_mutates_value() {
         let output = IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() };
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec {
                 id: "slider".into(),
                 name: "Amount".into(),
@@ -4639,9 +4756,9 @@ mod tests {
     #[test]
     fn dag_host_slider_drag_ignored_when_controls_hidden() {
         let output = IoPortSpec { id: "out".into(), label: "value".into(), ..Default::default() };
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec {
                 id: "slider".into(),
                 name: "Amount".into(),
@@ -4671,9 +4788,9 @@ mod tests {
 
     #[test]
     fn dag_host_select_click_advances_option() {
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec {
                 id: "mode".into(),
                 name: "Mode".into(),
@@ -4712,9 +4829,9 @@ mod tests {
 
     #[test]
     fn dag_host_label_overlay_paint_state_json_includes_slider_name() {
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
             nodes: vec![DagNodeSpec {
                 id: "slider".into(),
                 name: "Radius".into(),
@@ -4738,9 +4855,9 @@ mod tests {
 
     #[test]
     fn label_overlay_port_rows_are_not_duplicated_in_json() {
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
             nodes: vec![DagNodeSpec {
                 id: "combine".into(),
                 name: "Combine".into(),
@@ -4800,7 +4917,7 @@ mod tests {
             kind: DagNodeKind::Computation { inputs: vec![IoPortSpec::named("W", "Wid", "width", "BoxWidth")], outputs: vec![IoPortSpec::named("S", "Sld", "solid", "BoxSolid")], variadic_inputs: false, variadic_outputs: false },
         };
         let port_texts = |lod: &str| -> Vec<String> {
-            let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 { schema: "dag.fixture/v1".into(), camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 }, nodes: vec![node.clone()], edges: vec![] });
+            let mut host = DagHost::from_fixture_without_layout(DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 }, nodes: vec![node.clone()], edges: vec![] });
             host.set_viewport(1280, 800, 1.0);
             host.set_automatic_lod(false);
             host.set_forced_draw_lod_label(lod);
@@ -4817,9 +4934,9 @@ mod tests {
 
     #[test]
     fn dag_host_exports_screen_overlay_rect() {
-        let host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec {
                 id: "screen".into(),
                 name: "Preview".into(),
@@ -4993,9 +5110,9 @@ mod tests {
         let tgt_w = computation_node_width("Tgt", &inputs, &outputs);
         let src_h = computation_node_height(0, 1, false, false);
         let tgt_h = computation_node_height(1, 1, false, false);
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
                 DagNodeSpec::computation("src".into(), "Src".into(), "Src".into(), "emoji:🔢".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
                 DagNodeSpec::computation("tgt".into(), "Tgt".into(), "Tgt".into(), "emoji:🔢".into(), inputs, outputs, false, false, 220.0, 0.0, tgt_w, tgt_h),
@@ -5023,15 +5140,15 @@ mod tests {
         let cut_w = computation_node_width("Cut", &inputs, &outputs);
         let src_h = computation_node_height(0, 1, false, false);
         let cut_h = computation_node_height(2, 1, false, false);
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
                 DagNodeSpec::computation("sphere".into(), "Sphere".into(), "Sphere".into(), "emoji:🔵".into(), vec![], outputs.clone(), false, false, 0.0, -60.0, src_w, src_h),
                 DagNodeSpec::computation("torus".into(), "Torus".into(), "Torus".into(), "emoji:🍩".into(), vec![], outputs.clone(), false, false, 0.0, 60.0, src_w, src_h),
                 DagNodeSpec::computation("cut".into(), "Cut".into(), "Cut".into(), "emoji:✂️".into(), inputs, outputs, false, false, 240.0, 0.0, cut_w, cut_h),
             ],
-            edges: vec![DagFixtureEdgeV1 { id: "e1".into(), source: "sphere:out".into(), target: "cut:a".into() }, DagFixtureEdgeV1 { id: "e2".into(), source: "torus:out".into(), target: "cut:b".into() }],
+            edges: vec![DagFixtureEdge { id: "e1".into(), source: "sphere:out".into(), target: "cut:a".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "torus:out".into(), target: "cut:b".into(), ..Default::default() }],
         });
         assert_eq!(host.engine.edges.len(), 2, "fixture edges should load into engine");
         host.set_viewport(1280, 800, 1.0);
@@ -5053,15 +5170,15 @@ mod tests {
         let solid = vec![IoPortSpec { id: "solid".into(), label: "solid".into(), ..Default::default() }];
         let brep = vec![IoPortSpec { id: "brep".into(), label: "brep".into(), ..Default::default() }];
         let list = vec![IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }];
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
                 DagNodeSpec::computation("extrude".into(), "Extrude".into(), "Extrude".into(), "emoji:⬆️".into(), vec![], solid.clone(), false, false, 0.0, 0.0, computation_node_width("Extrude", &[], &solid), computation_node_height(0, 1, false, false)),
                 DagNodeSpec::computation("brep".into(), "Brep".into(), "Brep".into(), "emoji:🧊".into(), brep.clone(), brep.clone(), false, false, 200.0, 0.0, computation_node_width("Brep", &brep, &brep), computation_node_height(1, 1, false, false)),
                 DagNodeSpec::computation("get".into(), "Get".into(), "Get".into(), "emoji:📋".into(), list, vec![], false, false, 400.0, 0.0, computation_node_width("Get", &[IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }], &[]), computation_node_height(1, 0, false, false)),
             ],
-            edges: vec![DagFixtureEdgeV1 { id: "e100".into(), source: "extrude:solid".into(), target: "brep:brep".into() }, DagFixtureEdgeV1 { id: "e101".into(), source: "brep:brep".into(), target: "get:list".into() }],
+            edges: vec![DagFixtureEdge { id: "e100".into(), source: "extrude:solid".into(), target: "brep:brep".into(), ..Default::default() }, DagFixtureEdge { id: "e101".into(), source: "brep:brep".into(), target: "get:list".into(), ..Default::default() }],
         });
         host.sync_edges_from_engine();
         let incoming = host.engine.edges.get(&100).expect("incoming brep edge");
@@ -5082,9 +5199,9 @@ mod tests {
         let tgt_w = computation_node_width("Tgt", &inputs, &outputs);
         let src_h = computation_node_height(0, 1, false, false);
         let tgt_h = computation_node_height(1, 1, false, false);
-        let mut host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
                 DagNodeSpec::computation("src".into(), "Src".into(), "Src".into(), "emoji:🔢".into(), vec![], outputs.clone(), false, false, 0.0, 0.0, src_w, src_h),
                 DagNodeSpec::computation("tgt".into(), "Tgt".into(), "Tgt".into(), "emoji:🔢".into(), inputs, outputs, false, false, 220.0, 0.0, tgt_w, tgt_h),
@@ -5298,9 +5415,9 @@ mod tests {
         let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];
         let width = computation_node_width("dictionary.merge", &inputs, &outputs);
         let height = computation_node_height(2, 1, true, false);
-        let host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
+        let host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
             nodes: vec![DagNodeSpec::computation("merge".into(), "Merge".into(), "Merge".into(), "emoji:🔀".into(), inputs, outputs, true, false, 0.0, 0.0, width, height)],
             edges: vec![],
         });
@@ -5320,9 +5437,9 @@ mod tests {
         let inputs = vec![IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }, IoPortSpec { id: "index".into(), label: "index".into(), ..Default::default() }];
         let width = computation_node_width("list.get", &inputs, &outputs);
         let height = computation_node_height(2, 1, false, true);
-        let host = DagHost::from_fixture_without_layout(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 2.0 },
+        let host = DagHost::from_fixture_without_layout(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 2.0 },
             nodes: vec![DagNodeSpec::computation("get".into(), "Get".into(), "Get".into(), "emoji:📋".into(), inputs, outputs, false, true, 0.0, 0.0, width, height)],
             edges: vec![],
         });
@@ -5739,9 +5856,9 @@ mod tests {
 
     #[test]
     fn fit_note_sizes_resizes_after_text_change() {
-        let mut host = DagHost::from_fixture(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec {
                 id: "note".into(),
                 name: "Note".into(),
@@ -5767,9 +5884,9 @@ mod tests {
 
     #[test]
     fn note_label_overlay_skips_title_and_ports() {
-        let mut host = DagHost::from_fixture(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec {
                 id: "note".into(),
                 name: "Note".into(),
@@ -5871,9 +5988,9 @@ mod tests {
     #[test]
     fn preview_tree_toggle_expands_and_resizes() {
         let json = serde_json::json!({ "alpha": { "beta": 1 }, "gamma": "x" });
-        let mut host = DagHost::from_fixture(DagFixtureV1 {
-            schema: "dag.fixture/v1".into(),
-            camera: DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 },
+        let mut host = DagHost::from_fixture(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![DagNodeSpec {
                 id: "preview".into(),
                 name: "Preview".into(),
@@ -5946,7 +6063,7 @@ use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
 
-pub const FLOW_DAG_SCHEMA: &str = "flow.dag/v1";
+pub const FLOW_DAG_SCHEMA: &str = "flow.dag";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

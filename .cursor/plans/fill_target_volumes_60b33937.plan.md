@@ -9,7 +9,7 @@ todos:
     content: Add shared WorldVolume* oriented-box primitive (props, pose/transform helpers, BoxItem, Layer, worldVolumesContainAabb) in infinite/world/r3f
     status: completed
   - id: fixture
-    content: "Extend FixtureV1 with targetVolumes[]: parse/encode, pure ops (add/update/remove/relocate), selection snapshot targetVolumeIds + pick kind"
+    content: "Extend Fixture with targetVolumes[]: parse/encode, pure ops (add/update/remove/relocate), selection snapshot targetVolumeIds + pick kind"
     status: completed
   - id: render-layer
     content: Render WorldVolumeLayer in puzzle 3d scene wired to registry selection/hover + onTargetVolumeRelocate; canvas props fillEditTargetVolumes/onTargetVolumeRelocate/onTargetVolumeDraw
@@ -52,7 +52,7 @@ New `#region Volume` mirroring the `WorldReference*` block (lines ~1656-1860):
 
 ### 2. Fixture wiring — [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx)
 - Import `WorldVolumeLayer`, `applyWorldVolumeTransform`, `WorldVolumeProps`, `WorldVolumeRelocatePayload` (next to the existing reference imports, lines 70-74).
-- Extend `FixtureV1` (line 1260) with `targetVolumes: WorldVolumeProps[]` (default `[]`); parse in `parseFixtureV1` (line ~1612, mirror `references` flatMap) and include in any encode path.
+- Extend `Fixture` (line 1260) with `targetVolumes: WorldVolumeProps[]` (default `[]`); parse in `parseFixture` (line ~1612, mirror `references` flatMap) and include in any encode path.
 - Pure ops mirroring `addReferenceToFixture`/`updatePuzzle3dReferenceInFixture`/`applyReferenceRelocateToFixture` (lines 1507-1532): `addTargetVolumeToFixture`, `updatePuzzle3dTargetVolumeInFixture`, `removeTargetVolumeFromFixture`, `applyTargetVolumeRelocateToFixture`.
 - Selection: add `targetVolumeIds` to `SelectionSnapshot` (line 452), `EMPTY_SELECTION_SNAPSHOT` (483), `{ kind: "targetVolume"; id }` pick (492/888), `selectionFromPick` + merge (498-575), equality checks.
 - Canvas props: add `fillEditTargetVolumes?: boolean`, `onTargetVolumeRelocate?`, `onTargetVolumeDraw?(volume)` near `onReferenceRelocate` (line 1069).

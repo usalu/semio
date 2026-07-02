@@ -293,7 +293,7 @@ fn parse_layer(raw: LayerNodeJson) -> LayerNode {
 
 fn parse_document(json: &str) -> Result<RasterDocument, String> {
     let doc: DocumentJson = serde_json::from_str(json).map_err(|e| e.to_string())?;
-    if doc.schema != "raster.document/v1" {
+    if doc.schema != "raster.document" {
         return Err(format!("unsupported schema {}", doc.schema));
     }
     Ok(RasterDocument {
@@ -984,7 +984,7 @@ mod tests {
 
     #[test]
     fn parse_minimal_document() {
-        let json = r#"{"schema":"raster.document/v1","id":"t","camera":{"x":0,"y":0,"zoom":1},"layers":[]}"#;
+        let json = r#"{"schema":"raster.document","id":"t","camera":{"x":0,"y":0,"zoom":1},"layers":[]}"#;
         let doc = parse_document(json).expect("parse");
         assert!(doc.layers.is_empty());
     }
@@ -1172,7 +1172,7 @@ pub type RasterStore = DocumentVcsStore<RasterProjection, RasterOp>;
 
 pub fn empty_raster_projection() -> RasterProjection {
     RasterProjection {
-        schema: "raster.document/v1".into(),
+        schema: "raster.document".into(),
         id: "raster".into(),
         layers: Vec::new(),
     }
@@ -1234,7 +1234,7 @@ mod raster_vcs_tests {
     #[test]
     fn raster_document_vcs_uses_framework_engine() {
         let mut store = RasterStore::new(create_document_vcs_envelope(
-            "raster.document/v1",
+            "raster.document",
             "raster",
             empty_raster_projection(),
             None,

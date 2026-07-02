@@ -65,7 +65,7 @@ interface Puzzle2dFixtureEdgeJson {
 	target: string;
 }
 
-interface Puzzle2dFixtureV1 {
+interface Puzzle2dFixture {
 	camera: { x: number; y: number; zoom: number };
 	edges: Puzzle2dFixtureEdgeJson[];
 	meta?: Record<string, unknown>;
@@ -73,7 +73,7 @@ interface Puzzle2dFixtureV1 {
 	schema: string;
 }
 
-const nakaginCapsuleTowerPuzzle2d = nakaginCapsuleTowerPuzzle2dFixture as Puzzle2dFixtureV1;
+const nakaginCapsuleTowerPuzzle2d = nakaginCapsuleTowerPuzzle2dFixture as Puzzle2dFixture;
 
 const nakaginStoryKindCatalogs = mergeKindCatalogBundleByRowId(
 	{ ...DEFAULT_KIND_CATALOG_BUNDLE },

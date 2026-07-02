@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "structure.structure.constructReinforcedConcreteExternalWallFromCurveAndHeight",
   "version": "1.0.0",
   "label": "Construct Reinforced Concrete External Wall From Curve And Height",

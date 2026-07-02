@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use trinity_jack::{
     complete, format, hover, lint, semantic_tokens, Completion, Diagnostic, DiagnosticSeverity, Hover,
 };
-use trinity_ram::{CameraV1, Edge, Graph, GraphFixtureV1, Manifest, Node, Port, PortDirection, PropertyBag};
+use trinity_ram::{Camera, Edge, Graph, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag};
 
 // #region 🔖LspTypes
 #[derive(Clone, Debug, Deserialize)]
@@ -101,12 +101,12 @@ impl Default for JackLanguageServer {
 
 impl JackLanguageServer {
     pub fn new() -> Self {
-        let fixture = GraphFixtureV1 {
-            schema: GraphFixtureV1::SCHEMA.into(),
+        let fixture = GraphFixture {
+            schema: GraphFixture::SCHEMA.into(),
             name: "jack-lsp".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
-            camera: CameraV1::default(),
+            camera: Camera::default(),
             root_node_id: Some("root".into()),
             nodes: vec![Node {
                 id: "root".into(),

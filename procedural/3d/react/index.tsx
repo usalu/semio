@@ -14,8 +14,8 @@ import {
     type DagDrawLodKind,
     type FlowCanvasCommandRequest,
     type FlowCanvasContextMenuContext,
-    type FlowFixtureV1,
-    type FlowModuleCommandV1,
+    type FlowFixture,
+    type FlowModuleCommand,
     type FlowReorganizeRequest,
 } from "@semio-tech/flow-react";
 import {
@@ -139,8 +139,8 @@ export function useProceduralBrepBridge(host: ProceduralExtensionHost = procedur
 
 
 // #region 🔖Fixture
-export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixtureV1 = {
-	schema: "flow.fixture/v1",
+export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixture = {
+	schema: "flow.fixture",
 	camera: { x: 0, y: 0, zoom: 1 },
 	widgets: [
 		{ kind: "neuron", id: "box", neuronKind: "brep.prim3d.box" },
@@ -157,7 +157,7 @@ export const PROCEDURAL_DEFAULT_FIXTURE: FlowFixtureV1 = {
 	],
 };
 
-export function proceduralFixtureToJson(fixture: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE): string {
+export function proceduralFixtureToJson(fixture: FlowFixture = PROCEDURAL_DEFAULT_FIXTURE): string {
 	return JSON.stringify(fixture);
 }
 
@@ -1532,7 +1532,7 @@ export function ProceduralFlowEditor({
 	);
 }
 
-export { createFlowEvalBridge, type FlowModuleCommandV1, type FlowReorganizeRequest };
+export { createFlowEvalBridge, type FlowModuleCommand, type FlowReorganizeRequest };
 // #endregion 🔖ProceduralEditor
 
 // #region 🧪Tests

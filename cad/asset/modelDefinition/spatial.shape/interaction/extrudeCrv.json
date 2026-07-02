@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.interaction/v1",
+  "schema": "spatial.interaction",
   "id": "surface.extrudeCrv",
   "version": "1.0.0",
   "label": "ExtrudeCrv",

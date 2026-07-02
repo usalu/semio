@@ -4,36 +4,36 @@ use neural_engine::{inject_channel_defaults, Dictionary, OperatorInfo, Registry,
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Manifest
-/// 📋 `flow.module/v1` manifest document.
+/// 📋 `flow.module` manifest document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowModuleManifestV1 {
+pub struct FlowModuleManifest {
     pub schema: String,
     pub id: String,
     pub name: String,
     pub version: String,
     pub activation_events: Vec<String>,
-    pub contributes: FlowModuleContributesV1,
+    pub contributes: FlowModuleContributes,
 }
 
 /// 🎁 Contributed extension surface.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowModuleContributesV1 {
+pub struct FlowModuleContributes {
     pub schemas: Vec<Schema>,
     pub operators: Vec<OperatorInfo>,
     #[serde(default)]
-    pub widgets: Vec<FlowModuleWidgetV1>,
+    pub widgets: Vec<FlowModuleWidget>,
     #[serde(default)]
-    pub commands: Vec<FlowModuleCommandV1>,
+    pub commands: Vec<FlowModuleCommand>,
     #[serde(default)]
-    pub settings: Vec<FlowModuleSettingV1>,
+    pub settings: Vec<FlowModuleSetting>,
 }
 
 /// 🧩 Declared widget contribution.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowModuleWidgetV1 {
+pub struct FlowModuleWidget {
     pub kind: String,
     pub name: String,
     pub summary: String,
@@ -42,7 +42,7 @@ pub struct FlowModuleWidgetV1 {
 /// ⌘ Declared command contribution.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowModuleCommandV1 {
+pub struct FlowModuleCommand {
     pub id: String,
     pub title: String,
 }
@@ -50,7 +50,7 @@ pub struct FlowModuleCommandV1 {
 /// ⚙️ Declared setting contribution.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowModuleSettingV1 {
+pub struct FlowModuleSetting {
     pub id: String,
     #[serde(rename = "type")]
     pub setting_type: String,
@@ -58,15 +58,15 @@ pub struct FlowModuleSettingV1 {
     pub description: String,
 }
 
-/// 📦 Builds a `flow.module/v1` JSON manifest from registry catalogue metadata.
-pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, activation_events: Vec<String>, widgets: Vec<FlowModuleWidgetV1>, commands: Vec<FlowModuleCommandV1>, settings: Vec<FlowModuleSettingV1>) -> String {
-    let manifest = FlowModuleManifestV1 {
-        schema: "flow.module/v1".into(),
+/// 📦 Builds a `flow.module` JSON manifest from registry catalogue metadata.
+pub fn build_manifest_json(id: &str, name: &str, version: &str, registry: &Registry, activation_events: Vec<String>, widgets: Vec<FlowModuleWidget>, commands: Vec<FlowModuleCommand>, settings: Vec<FlowModuleSetting>) -> String {
+    let manifest = FlowModuleManifest {
+        schema: "flow.module".into(),
         id: id.into(),
         name: name.into(),
         version: version.into(),
         activation_events,
-        contributes: FlowModuleContributesV1 { schemas: registry.schema_catalogue(), operators: registry.operator_catalogue(), widgets, commands, settings },
+        contributes: FlowModuleContributes { schemas: registry.schema_catalogue(), operators: registry.operator_catalogue(), widgets, commands, settings },
     };
     serde_json::to_string(&manifest).unwrap_or_else(|_| "{}".into())
 }
@@ -147,7 +147,7 @@ mod tests {
             &[],
         );
         let json = build_manifest_json("test", "Test", "0.1.0", &reg, vec!["onStartup".into()], vec![], vec![], vec![]);
-        assert!(json.contains("flow.module/v1"));
+        assert!(json.contains("flow.module"));
         assert!(json.contains("test.echo"));
     }
 

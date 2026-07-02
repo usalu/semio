@@ -67,11 +67,11 @@ flowchart TB
 
 ## Part B: flow/core — cluster widget + contract channels + collapse/explode ([flow/core/lib.rs](flow/core/lib.rs))
 
-- `#region Widget`: add `Widget::Cluster { id, name, tree: Tree, flow: FlowGuiV1 }` (inner GUI kept for explode/round-trip). Update every `match widget` site (`widget_id_for`, `widget_label`, `widget_display_meta`, `widget_chrome`, `widget_io_ports`, `widget_node_size`, `widget_to_dag_node`, `tree_from_fixture`, `apply_preview_outputs`, `sync_dag_display_from_widgets`).
+- `#region Widget`: add `Widget::Cluster { id, name, tree: Tree, flow: FlowGui }` (inner GUI kept for explode/round-trip). Update every `match widget` site (`widget_id_for`, `widget_label`, `widget_display_meta`, `widget_chrome`, `widget_io_ports`, `widget_node_size`, `widget_to_dag_node`, `tree_from_fixture`, `apply_preview_outputs`, `sync_dag_display_from_widgets`).
 - `tree_from_fixture`: a `Widget::Cluster` becomes a `Neuron { id, kind: "cluster", params: {name}, tree: Some(inner) }`. Add contract-channel catalogue items (`flow.input`, `flow.output`) to `static_catalogue_sections` ([flow/core/lib.rs](flow/core/lib.rs):800) under a new "Contract" section, mapping to boundary neuron widgets.
 - Ports/size: `widget_io_ports`/`widget_node_size` for `Cluster` derive ports from `neural::cluster_operator_info(...).inputs/outputs` and route via the new `DagNodeKind::Cluster`.
 - New host commands (mirroring `toggle_preview`):
-  - `collapse(selected_ids: &[String]) -> Result<String, String>`: partition synapses into internal / crossing-in / crossing-out; synthesize `INPUT_KIND`/`OUTPUT_KIND` boundary neurons (one per distinct crossing port), build inner `Tree` + inner `FlowGuiV1`, replace selected widgets with one `Widget::Cluster` at the selection centroid, and rewire external synapses to the cluster's contract ports.
+  - `collapse(selected_ids: &[String]) -> Result<String, String>`: partition synapses into internal / crossing-in / crossing-out; synthesize `INPUT_KIND`/`OUTPUT_KIND` boundary neurons (one per distinct crossing port), build inner `Tree` + inner `FlowGui`, replace selected widgets with one `Widget::Cluster` at the selection centroid, and rewire external synapses to the cluster's contract ports.
   - `explode(cluster_id: &str) -> Result<(), String>`: re-add inner neurons as widgets (namespacing ids `{cluster}/{inner}`, offset by cluster layout), reconnect external synapses through each boundary neuron's inner downstream/upstream, drop boundary neurons + the cluster widget.
   - Both push history (`begin_history`/`commit_history` like existing edits) and call `rebuild_dag` + `evaluate_internal`.
 - `evaluate_internal` ([flow/core/lib.rs](flow/core/lib.rs):1524) needs no change beyond the recursive Evaluator (it already passes `kind_infos` + bridge `dispatch`); leaf ops inside clusters dispatch through the same bridge.
@@ -85,7 +85,7 @@ flowchart TB
 
 ## Part D: flow/react — cluster rendering + UI ([flow/react/index.tsx](flow/react/index.tsx))
 
-- `#region Fixture`: add `Cluster` to `FlowWidgetV1` ([flow/react/index.tsx](flow/react/index.tsx):425) mirroring the Rust shape; extend `DagNodeKind` mirror types.
+- `#region Fixture`: add `Cluster` to `FlowWidget` ([flow/react/index.tsx](flow/react/index.tsx):425) mirroring the Rust shape; extend `DagNodeKind` mirror types.
 - `#region Catalogue`: surface the new `flow.input`/`flow.output` contract items (they arrive from the host catalogue JSON automatically; just ensure rendering/icons).
 - `#region FlowCanvas`: in the `canvasCommand` switch ([flow/react/index.tsx](flow/react/index.tsx):2945) add `collapse` (calls `session.collapseSelection(JSON.stringify(ids))`) and `explode` (`session.explodeCluster(id)`), each followed by `emitInteractionState/evaluate/persistFixture/renderFrame`. Wire the cluster node's explode hit-rect (double-click or button) to dispatch `explode`, and add a context-menu/spotlight action "Collapse to cluster" for multi-selection (near the `togglePreview` menu entry at [flow/react/index.tsx](flow/react/index.tsx):1160).
 - `#region Tests`: add cluster serde/round-trip and a collapse→explode command test.

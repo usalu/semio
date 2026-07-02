@@ -1,5 +1,5 @@
 {
-	"schema": "spatial.property/v1",
+	"schema": "spatial.property",
 	"id": "energy.heatedvolume",
 	"version": "1.0.0",
 	"label": "Heated Volume",

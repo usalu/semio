@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.interaction/v1",
+  "schema": "spatial.interaction",
   "id": "feature.extrudeWire",
   "version": "1.0.0",
   "label": "ExtrudeWire",

@@ -66,8 +66,8 @@ impl DefaultWiresExtension {
         let Some(obj) = root.as_object() else {
             return Err("fixture root must be object".into());
         };
-        if obj.get("schema").and_then(|v| v.as_str()) != Some("reasoning.wires.fixture/v1") {
-            return Err("schema must be reasoning.wires.fixture/v1".into());
+        if obj.get("schema").and_then(|v| v.as_str()) != Some("reasoning.wires.fixture") {
+            return Err("schema must be reasoning.wires.fixture".into());
         }
         let mut ext = Self::default();
         let Some(identities) = obj.get("identities").and_then(|v| v.as_array()) else {

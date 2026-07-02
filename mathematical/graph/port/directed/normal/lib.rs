@@ -18,7 +18,7 @@ use crate::{
     board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
     handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
     normalize_selection_mode, pick_merge_mode_for_modifiers, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveTool, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
-    EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureV1Json, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate,
+    EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate,
     NodeShape, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
 };
 use infinite_cavas::camera::Camera;
@@ -3923,13 +3923,13 @@ impl BoardHost {
     }
 
     pub fn parse_fixture_v1(&mut self, raw: &serde_json::Value) -> bool {
-        let f: FixtureV1Json = match serde_json::from_value(raw.clone()) {
+        let f: FixtureJson = match serde_json::from_value(raw.clone()) {
             Ok(v) => v,
             Err(_) => return false,
         };
         self.port_mode = match f.schema.as_str() {
-            "reasoning.mindmap.fixture/v1" => GraphPortMode::Normal,
-            "puzzle.2d.fixture/v1" => GraphPortMode::Ported,
+            "reasoning.mindmap.fixture" => GraphPortMode::Normal,
+            "puzzle.2d.fixture" => GraphPortMode::Ported,
             _ => return false,
         };
         if !self.has_ports() {

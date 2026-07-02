@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.transformation/v1",
+  "schema": "spatial.transformation",
   "id": "solidfem",
   "version": "1.0.0",
   "label": "Solid Fem",

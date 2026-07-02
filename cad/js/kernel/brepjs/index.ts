@@ -2603,13 +2603,13 @@ export function inlineModelSpaceFixtureJson(model: Model, modelId: string, objec
 	}
 	primitives.push({ kind: "solid", slot: "solid", id: solidId, shellIds: [...shellIds] });
 	return {
-		schema: "spatial.modelspace/v1",
+		schema: "spatial.modelspace",
 		revision: 1,
 		models: [
 			{
 				id: modelId,
 				model: {
-					schema: "spatial.model/v1",
+					schema: "spatial.model",
 					revision: model.revision,
 					objects: [{ id: objectId, typology: object.typology, primitives }],
 				},
@@ -4119,7 +4119,7 @@ if (import.meta.vitest) {
 		it("worker arg serialization roundtrips nested model in command params", () => {
 			const g = new Model();
 			const bag = serializeWorkerValue({ model: g, points: [[0, 0, 0], [2, 1, 0]] }) as Record<string, unknown>;
-			expect(bag.model).toEqual(expect.objectContaining({ __modelJson: expect.objectContaining({ schema: "spatial.model/v1" }) }));
+			expect(bag.model).toEqual(expect.objectContaining({ __modelJson: expect.objectContaining({ schema: "spatial.model" }) }));
 			const restored = deserializeWorkerValue(bag) as { model: Model; points: readonly Vec3[] };
 			expect(restored.model).toBeInstanceOf(Model);
 			expect(restored.points).toHaveLength(2);

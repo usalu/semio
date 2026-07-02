@@ -1,5 +1,5 @@
 {
-  "schema": "trinity.graph/v1",
+  "schema": "trinity.graph",
   "name": "Branch Chain",
   "manifestId": "nakagin",
   "camera": { "x": 0, "y": 0, "zoom": 1 },

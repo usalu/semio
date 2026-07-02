@@ -41,7 +41,7 @@ use vcs::{
 };
 use serde::{Deserialize, Serialize};
 
-pub const MINDMAP_SCHEMA: &str = "reasoning.mindmap/v1";
+pub const MINDMAP_SCHEMA: &str = "reasoning.mindmap";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,5 +1,5 @@
 {
-  "schema": "raster.document/v1",
+  "schema": "raster.document",
   "id": "semio",
   "title": "Semio Brand Showcase",
   "camera": {

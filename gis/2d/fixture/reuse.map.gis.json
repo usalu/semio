@@ -1,5 +1,5 @@
 {
-  "schema": "gis.map.fixture/v1",
+  "schema": "gis.map.fixture",
   "name": "Reuse map",
   "positions": [
     {

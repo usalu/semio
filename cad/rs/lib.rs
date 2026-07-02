@@ -6,7 +6,7 @@ use vcs::{
 };
 use serde::{Deserialize, Serialize};
 
-pub const CAD_DOCUMENT_SCHEMA: &str = "cad.scene/v1";
+pub const CAD_DOCUMENT_SCHEMA: &str = "cad.scene";
 
 //#region 🔖Domain
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema", "id", "version", "label", "outputs"],
   "properties": {
-    "schema": { "const": "spatial.stat/v1" },
+    "schema": { "const": "spatial.stat" },
     "id": { "type": "string" },
     "version": { "type": "string" },
     "label": { "type": "string" },

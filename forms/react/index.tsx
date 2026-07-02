@@ -134,7 +134,7 @@ export function formSpecFromJson(json: string): FormSpec {
 
 export function defaultFormSpec(id = "default"): FormSpec {
 	return {
-		schema: "forms.form/v1",
+		schema: "forms.form",
 		id,
 		version: "1",
 		title: "New Form",
@@ -1121,7 +1121,7 @@ if (import.meta.vitest) {
 	describe("forms-react", () => {
 	it("maps flow fixture widgets to form spec", () => {
 		const json = JSON.stringify({
-			schema: "flow.fixture/v1",
+			schema: "flow.fixture",
 			widgets: [{ kind: "inputSlider", id: "width", value: 4, min: 0, max: 10 }],
 			synapses: [],
 		});
@@ -1130,7 +1130,7 @@ if (import.meta.vitest) {
 	});
 
 	it("applies generation values to fixture", () => {
-		const json = JSON.stringify({ schema: "flow.fixture/v1", widgets: [{ kind: "inputSlider", id: "width", value: 1 }], synapses: [] });
+		const json = JSON.stringify({ schema: "flow.fixture", widgets: [{ kind: "inputSlider", id: "width", value: 1 }], synapses: [] });
 		const next = applyGenerationValuesToFixture(json, { width: 7 });
 		const parsed = JSON.parse(next) as { widgets: { value: number }[] };
 		expect(parsed.widgets[0]?.value).toBe(7);

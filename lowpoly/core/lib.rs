@@ -9,13 +9,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LowpolyTransformV1 {
+pub struct LowpolyTransform {
     pub position: [f32; 3],
     pub rotation: [f32; 3],
     pub scale: [f32; 3],
 }
 
-impl Default for LowpolyTransformV1 {
+impl Default for LowpolyTransform {
     fn default() -> Self {
         Self {
             position: [0.0, 0.0, 0.0],
@@ -27,12 +27,12 @@ impl Default for LowpolyTransformV1 {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LowpolySelectionV1 {
+pub struct LowpolySelection {
     pub mode: String,
     pub ids: Vec<u32>,
 }
 
-impl Default for LowpolySelectionV1 {
+impl Default for LowpolySelection {
     fn default() -> Self {
         Self {
             mode: "object".into(),
@@ -43,44 +43,44 @@ impl Default for LowpolySelectionV1 {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LowpolyObjectV1 {
+pub struct LowpolyObject {
     pub id: String,
     pub name: String,
-    pub transform: LowpolyTransformV1,
+    pub transform: LowpolyTransform,
     pub smooth_shading: bool,
     pub mesh_json: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct LowpolyFixtureV1 {
+pub struct LowpolyFixture {
     pub schema: String,
-    pub objects: Vec<LowpolyObjectV1>,
+    pub objects: Vec<LowpolyObject>,
     pub active_object_id: String,
-    pub selection: LowpolySelectionV1,
+    pub selection: LowpolySelection,
 }
 
-impl Default for LowpolyFixtureV1 {
+impl Default for LowpolyFixture {
     fn default() -> Self {
         default_fixture()
     }
 }
 
-pub fn default_fixture() -> LowpolyFixtureV1 {
+pub fn default_fixture() -> LowpolyFixture {
     let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 1).unwrap_or_else(|_| HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap());
     let _ = mesh.extrude_faces(&[FaceId(0)], 0.3);
     let mesh_json = mesh.to_json().unwrap_or_else(|_| "{}".into());
-    LowpolyFixtureV1 {
-        schema: "lowpoly.fixture/v1".into(),
-        objects: vec![LowpolyObjectV1 {
+    LowpolyFixture {
+        schema: "lowpoly.fixture".into(),
+        objects: vec![LowpolyObject {
             id: "obj-1".into(),
             name: "Rock".into(),
-            transform: LowpolyTransformV1::default(),
+            transform: LowpolyTransform::default(),
             smooth_shading: false,
             mesh_json,
         }],
         active_object_id: "obj-1".into(),
-        selection: LowpolySelectionV1 {
+        selection: LowpolySelection {
             mode: "object".into(),
             ids: vec![0],
         },
@@ -92,13 +92,13 @@ pub fn default_fixture() -> LowpolyFixtureV1 {
 //#region Document
 
 struct LowpolyDocument {
-    fixture: LowpolyFixtureV1,
+    fixture: LowpolyFixture,
     meshes: Vec<HalfedgeMesh>,
     next_object_serial: u32,
 }
 
 impl LowpolyDocument {
-    fn new(fixture: LowpolyFixtureV1) -> Result<Self, String> {
+    fn new(fixture: LowpolyFixture) -> Result<Self, String> {
         let mut doc = Self {
             fixture,
             meshes: Vec::new(),
@@ -175,16 +175,16 @@ impl LowpolyDocument {
         self.next_object_serial += 1;
         let id = format!("obj-{}", self.next_object_serial);
         let mesh_json = mesh.to_json().map_err(|e| format!("{e:?}"))?;
-        self.fixture.objects.push(LowpolyObjectV1 {
+        self.fixture.objects.push(LowpolyObject {
             id: id.clone(),
             name: kind.into(),
-            transform: LowpolyTransformV1::default(),
+            transform: LowpolyTransform::default(),
             smooth_shading: false,
             mesh_json,
         });
         self.meshes.push(mesh);
         self.fixture.active_object_id = id.clone();
-        self.fixture.selection = LowpolySelectionV1 {
+        self.fixture.selection = LowpolySelection {
             mode: "object".into(),
             ids: vec![(self.fixture.objects.len() - 1) as u32],
         };
@@ -202,6 +202,12 @@ fn map_err(e: MeshKernelError) -> String {
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = defaultFixtureJson)]
+pub fn default_fixture_json() -> Result<String, JsValue> {
+    serde_json::to_string(&default_fixture()).map_err(|e| JsValue::from_str(&e.to_string()))
+}
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
@@ -229,7 +235,7 @@ impl LowpolySession {
 
     #[wasm_bindgen(js_name = loadFixtureJson)]
     pub fn load_fixture_json(&mut self, json: &str) -> Result<(), JsValue> {
-        let fixture: LowpolyFixtureV1 = serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let fixture: LowpolyFixture = serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
         self.doc = LowpolyDocument::new(fixture).map_err(|e| JsValue::from_str(&e))?;
         Ok(())
     }
@@ -250,7 +256,7 @@ impl LowpolySession {
 
     #[wasm_bindgen(js_name = setSelection)]
     pub fn set_selection(&mut self, mode: &str, ids: Vec<u32>) -> Result<(), JsValue> {
-        self.doc.fixture.selection = LowpolySelectionV1 {
+        self.doc.fixture.selection = LowpolySelection {
             mode: mode.into(),
             ids,
         };
@@ -258,17 +264,16 @@ impl LowpolySession {
     }
 
     #[wasm_bindgen(js_name = tessellateActive)]
-    pub fn tessellate_active(&self) -> Result<JsValue, JsValue> {
+    pub fn tessellate_active(&self) -> Result<String, JsValue> {
         let mesh = self.doc.active_mesh().map_err(|e| JsValue::from_str(&e))?;
         let transfer = mesh.tessellate().map_err(|e| JsValue::from_str(&map_err(e)))?;
-        let obj = serde_wasm_bindgen::to_value(&serde_json::json!({
+        serde_json::to_string(&serde_json::json!({
             "positions": transfer.positions,
             "normals": transfer.normals,
             "indices": transfer.indices,
             "edgePositions": transfer.edge_positions,
         }))
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
-        Ok(obj)
+        .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = exportObjActive)]
@@ -428,7 +433,7 @@ mod tests {
     #[test]
     fn default_fixture_has_rock_object() {
         let fixture = default_fixture();
-        assert_eq!(fixture.schema, "lowpoly.fixture/v1");
+        assert_eq!(fixture.schema, "lowpoly.fixture");
         assert_eq!(fixture.objects.len(), 1);
         assert_eq!(fixture.objects[0].name, "Rock");
     }
@@ -438,6 +443,14 @@ mod tests {
         let doc = LowpolyDocument::new(default_fixture()).unwrap();
         assert_eq!(doc.meshes.len(), 1);
         assert!(doc.meshes[0].face_count() > 0);
+    }
+
+    #[test]
+    fn active_mesh_tessellates() {
+        let doc = LowpolyDocument::new(default_fixture()).unwrap();
+        let transfer = doc.active_mesh().unwrap().tessellate().unwrap();
+        assert!(!transfer.positions.is_empty());
+        assert!(!transfer.indices.is_empty());
     }
 
     #[test]

@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "building.wall.constructWallFromHorizontalPathAndProfile",
   "version": "1.0.0",
   "label": "Construct Wall From Horizontal Path And Profile",

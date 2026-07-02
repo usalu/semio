@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "energy.energy.constructBasePlateFromSurface",
   "version": "1.0.0",
   "label": "Construct Base Plate From Surface",

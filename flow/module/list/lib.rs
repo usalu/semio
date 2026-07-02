@@ -280,7 +280,7 @@ pub fn register(registry: &mut Registry) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1};
+    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommand};
 
     fn sample_list() -> Dictionary {
         Dictionary::with_schema("list").insert("0", Value::Dictionary(number_dictionary(1.0))).insert("1", Value::Dictionary(number_dictionary(2.0))).insert("2", Value::Dictionary(number_dictionary(3.0)))
@@ -366,7 +366,7 @@ mod tests {
     fn manifest_lists_operators() {
         let mut reg = Registry::new();
         register(&mut reg);
-        let json = build_manifest_json("list", "List", "0.1.0", &reg, vec!["onStartup".into()], vec![], vec![FlowModuleCommandV1 { id: "list.test".into(), title: "Test".into() }], vec![]);
+        let json = build_manifest_json("list", "List", "0.1.0", &reg, vec!["onStartup".into()], vec![], vec![FlowModuleCommand { id: "list.test".into(), title: "Test".into() }], vec![]);
         assert!(json.contains("list.get"));
         assert!(json.contains("operators"));
     }
@@ -386,12 +386,12 @@ mod tests {
 #[cfg(all(target_arch = "wasm32", feature = "standalone-wasm"))]
 mod wasm_ext {
     use super::module_registry;
-    use flow_module_wasm::{build_manifest_json, command_json, evaluate_json, FlowModuleCommandV1};
+    use flow_module_wasm::{build_manifest_json, command_json, evaluate_json, FlowModuleCommand};
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
     pub fn manifest() -> String {
-        build_manifest_json("list", "List", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowModuleCommandV1 { id: "list.showHelp".into(), title: "List: Show Help".into() }], vec![])
+        build_manifest_json("list", "List", "0.1.0", &module_registry(), vec!["onStartup".into()], vec![], vec![FlowModuleCommand { id: "list.showHelp".into(), title: "List: Show Help".into() }], vec![])
     }
 
     #[wasm_bindgen]

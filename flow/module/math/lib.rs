@@ -606,7 +606,7 @@ pub fn register(registry: &mut Registry) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommandV1, FlowModuleSettingV1};
+    use flow_module_wasm::{build_manifest_json, evaluate_json, FlowModuleCommand, FlowModuleSetting};
 
     #[test]
     fn add_sums_number_dictionaries() {
@@ -659,10 +659,10 @@ mod tests {
             &module_registry(),
             vec!["onStartup".into()],
             vec![],
-            vec![FlowModuleCommandV1 { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
-            vec![FlowModuleSettingV1 { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
+            vec![FlowModuleCommand { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
+            vec![FlowModuleSetting { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
         );
-        assert!(json.contains("flow.module/v1"));
+        assert!(json.contains("flow.module"));
         assert!(json.contains("math.vector"));
         assert!(json.contains("vector"));
     }
@@ -704,7 +704,7 @@ mod tests {
 #[cfg(all(target_arch = "wasm32", feature = "standalone-wasm"))]
 mod wasm_ext {
     use super::module_registry;
-    use flow_module_wasm::{build_manifest_json, command_json, evaluate_json, FlowModuleCommandV1, FlowModuleSettingV1};
+    use flow_module_wasm::{build_manifest_json, command_json, evaluate_json, FlowModuleCommand, FlowModuleSetting};
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -716,8 +716,8 @@ mod wasm_ext {
             &module_registry(),
             vec!["onStartup".into()],
             vec![],
-            vec![FlowModuleCommandV1 { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
-            vec![FlowModuleSettingV1 { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
+            vec![FlowModuleCommand { id: "math.showHelp".into(), title: "Math: Show Help".into() }],
+            vec![FlowModuleSetting { id: "math.defaultPrecision".into(), setting_type: "number".into(), default: serde_json::json!(1), description: "Decimal places for number preview".into() }],
         )
     }
 

@@ -74,15 +74,15 @@ fn format_cell(value: &PropertyValue) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use trinity_ram::{CameraV1, Edge, GraphFixtureV1, Manifest, Node, Port, PortDirection, PropertyBag};
+    use trinity_ram::{Camera, Edge, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag};
 
     fn mini_json() -> String {
-        let fixture = GraphFixtureV1 {
-            schema: GraphFixtureV1::SCHEMA.into(),
+        let fixture = GraphFixture {
+            schema: GraphFixture::SCHEMA.into(),
             name: "mini".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
-            camera: CameraV1::default(),
+            camera: Camera::default(),
             root_node_id: Some("root".into()),
             nodes: vec![Node {
                 id: "root".into(),

@@ -48,7 +48,7 @@ flowchart LR
 
 In [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) (session ref + `preparePuzzle3dFillSession` ~360-433):
 
-- Extend the fill session ref to store, alongside `sequence`, the precomputed `appendedObjects: FixtureObjectV1[]` and `appendedAttractions[]` (one entry per placement), captured while the sequence is built.
+- Extend the fill session ref to store, alongside `sequence`, the precomputed `appendedObjects: FixtureObject[]` and `appendedAttractions[]` (one entry per placement), captured while the sequence is built.
 - Rewrite `applyPuzzle3dFillCount(count)` to compose `{ ...baseFixture, objects: [...base.objects, ...appendedObjects.slice(0, n)], attractions: [...base.attractions, ...appendedAttractions.slice(0, n)] }` instead of calling `applyBrushFillPlacementsToFixture`. This removes the per-tick `buildSnapshot`/`objectStateReducer` cost; a 1000-element array spread is microseconds.
 
 This alone makes each slider tick cheap; the remaining `syncShell()` cost in `patchFixture` stays but operates on a ready fixture.

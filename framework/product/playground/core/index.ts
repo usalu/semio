@@ -147,7 +147,7 @@ export type UiNode =
   | import("@semio-tech/framework-platform-core").UiFormsHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiRasterHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiDrawHostSurfaceNode
-  | import("@semio-tech/framework-platform-core").UiSemiosHostSurfaceNode
+  | import("@semio-tech/framework-platform-core").UiSHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiEditorHostSurfaceNode
   | UiTableHostSurfaceNode
   | import("@semio-tech/framework-platform-core").UiTreeNode;
@@ -160,13 +160,14 @@ import {
   buildDagWindowBody,
   buildImperativeWindowBody,
   buildSequenceWindowBody,
+  buildLayoutWindowBody,
   buildTrinityWindowBody,
   buildShootingWindowBody,
   buildFormsWindowBody,
   buildRasterWindowBody,
   buildDrawWindowBody,
   buildVcsWindowBody,
-  buildSemiosWindowBody,
+  buildSWindowBody,
   buildWriterWindowBody,
   buildEditorWindowBody,
   buildTableWindowBody,
@@ -183,13 +184,14 @@ export {
   buildDagWindowBody,
   buildImperativeWindowBody,
   buildSequenceWindowBody,
+  buildLayoutWindowBody,
   buildTrinityWindowBody,
   buildShootingWindowBody,
   buildFormsWindowBody,
   buildRasterWindowBody,
   buildDrawWindowBody,
   buildVcsWindowBody,
-  buildSemiosWindowBody,
+  buildSWindowBody,
   buildWriterWindowBody,
   buildEditorWindowBody,
   buildTableWindowBody,
@@ -1057,9 +1059,9 @@ if (import.meta.vitest) {
     detailsTabBodyKey: "test.playground.details",
     workbenchIconId: "test.playground.icon.workbench",
     detailsIconId: "test.playground.icon.details",
-    mainPuzzle3dViewportSurfaceId: "test.playground.puzzle3d/v1",
-    workbenchPanelSurfaceId: "test.playground.panel.workbench/v1",
-    detailsPanelSurfaceId: "test.playground.panel.details/v1",
+    mainPuzzle3dViewportSurfaceId: "test.playground.puzzle3d",
+    workbenchPanelSurfaceId: "test.playground.panel.workbench",
+    detailsPanelSurfaceId: "test.playground.panel.details",
   };
 
   class DemoPlaygroundController extends PlaygroundController<"a" | "b"> {
@@ -1305,8 +1307,8 @@ if (import.meta.vitest) {
 
   describe("canonical window bodies", () => {
     it("buildPuzzle2dWindowBody is canvas-only", () => {
-      const node = buildPuzzle2dWindowBody("puzzle.2d/v1", "puzzle2d-ctrl", "pane-a");
-      expect(node).toEqual({ type: "puzzle2d", componentKind: "puzzle2d", surfaceId: "puzzle.2d/v1", controllerId: "puzzle2d-ctrl", paneId: "pane-a" });
+      const node = buildPuzzle2dWindowBody("puzzle.2d", "puzzle2d-ctrl", "pane-a");
+      expect(node).toEqual({ type: "puzzle2d", componentKind: "puzzle2d", surfaceId: "puzzle.2d", controllerId: "puzzle2d-ctrl", paneId: "pane-a" });
     });
   });
 

@@ -817,9 +817,9 @@
         "@semio-tech/raster-react": "workspace:*",
         "@semio-tech/reasoning-mindmap-react": "workspace:*",
         "@semio-tech/reasoning-mindmap-wires-play": "workspace:*",
-        "@semio-tech/semios-core": "workspace:*",
-        "@semio-tech/semios-play": "workspace:*",
-        "@semio-tech/semios-react": "workspace:*",
+        "@semio-tech/s-core": "workspace:*",
+        "@semio-tech/s-play": "workspace:*",
+        "@semio-tech/s-react": "workspace:*",
         "@semio-tech/shooting-play": "workspace:*",
         "@semio-tech/shooting-react": "workspace:*",
         "@semio-tech/trinity-jack-play": "workspace:*",
@@ -1410,14 +1410,14 @@
         "typescript": "^5.8.3",
       },
     },
-    "semios/core": {
-      "name": "@semio-tech/semios-core",
+    "s/core": {
+      "name": "@semio-tech/s-core",
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-platform-core": "workspace:*",
         "@semio-tech/graph-manifest": "workspace:*",
-        "@semio-tech/semios-studio-rs": "workspace:*",
+        "@semio-tech/s-studio-rs": "workspace:*",
         "@semio-tech/vcs-core": "workspace:*",
       },
       "devDependencies": {
@@ -1431,8 +1431,8 @@
         "vitest": "^4.0.17",
       },
     },
-    "semios/play": {
-      "name": "@semio-tech/semios-play",
+    "s/play": {
+      "name": "@semio-tech/s-play",
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/compose-sketchpad": "workspace:*",
@@ -1442,8 +1442,8 @@
         "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/framework-presentation-core": "workspace:*",
         "@semio-tech/raster-core": "workspace:*",
-        "@semio-tech/semios-core": "workspace:*",
-        "@semio-tech/semios-react": "workspace:*",
+        "@semio-tech/s-core": "workspace:*",
+        "@semio-tech/s-react": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
         "@semio-tech/writer-core": "workspace:*",
       },
@@ -1458,11 +1458,11 @@
         "vitest": "^4.0.17",
       },
     },
-    "semios/react": {
-      "name": "@semio-tech/semios-react",
+    "s/react": {
+      "name": "@semio-tech/s-react",
       "version": "0.1.0",
       "dependencies": {
-        "@semio-tech/semios-core": "workspace:*",
+        "@semio-tech/s-core": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
       },
       "devDependencies": {
@@ -1474,8 +1474,8 @@
         "vitest": "^4.0.17",
       },
     },
-    "semios/rs": {
-      "name": "@semio-tech/semios-studio-rs",
+    "s/rs": {
+      "name": "@semio-tech/s-studio-rs",
     },
     "shooting/play": {
       "name": "@semio-tech/shooting-play",
@@ -2835,13 +2835,13 @@
 
     "@semio-tech/semio-logo": ["@semio-tech/semio-logo@workspace:asset/logo"],
 
-    "@semio-tech/semios-core": ["@semio-tech/semios-core@workspace:semios/core"],
+    "@semio-tech/s-core": ["@semio-tech/s-core@workspace:s/core"],
 
-    "@semio-tech/semios-play": ["@semio-tech/semios-play@workspace:semios/play"],
+    "@semio-tech/s-play": ["@semio-tech/s-play@workspace:s/play"],
 
-    "@semio-tech/semios-react": ["@semio-tech/semios-react@workspace:semios/react"],
+    "@semio-tech/s-react": ["@semio-tech/s-react@workspace:s/react"],
 
-    "@semio-tech/semios-studio-rs": ["@semio-tech/semios-studio-rs@workspace:semios/rs"],
+    "@semio-tech/s-studio-rs": ["@semio-tech/s-studio-rs@workspace:s/rs"],
 
     "@semio-tech/shooting-play": ["@semio-tech/shooting-play@workspace:shooting/play"],
 

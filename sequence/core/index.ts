@@ -1,36 +1,36 @@
 /** @emoji 📜 Sequence core — fixture types and compile surface. */
 
-export const SEQUENCE_FIXTURE_SCHEMA = "sequence.fixture/v1";
+export const SEQUENCE_FIXTURE_SCHEMA = "sequence.fixture";
 
-export type SequenceSlotRefV1 = {
+export type SequenceSlotRef = {
 	readonly owner: string;
 	readonly name: string;
 };
 
-export type SequenceStepV1 = {
+export type SequenceStep = {
 	readonly id: string;
 	readonly kind: string;
 	readonly params: Record<string, unknown>;
 	readonly x?: number;
 	readonly y?: number;
-	readonly slot?: SequenceSlotRefV1;
+	readonly slot?: SequenceSlotRef;
 	readonly collapsed?: boolean;
 };
 
-export type SequenceEdgeV1 = {
+export type SequenceEdge = {
 	readonly id: string;
 	readonly from: string;
 	readonly to: string;
 };
 
-export type SequenceFixtureV1 = {
+export type SequenceFixture = {
 	readonly schema: typeof SEQUENCE_FIXTURE_SCHEMA;
 	readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
-	readonly steps: readonly SequenceStepV1[];
-	readonly edges: readonly SequenceEdgeV1[];
+	readonly steps: readonly SequenceStep[];
+	readonly edges: readonly SequenceEdge[];
 };
 
-export const DEFAULT_SEQUENCE_FIXTURE: SequenceFixtureV1 = {
+export const DEFAULT_SEQUENCE_FIXTURE: SequenceFixture = {
 	schema: SEQUENCE_FIXTURE_SCHEMA,
 	camera: { x: 0, y: 0, zoom: 1 },
 	steps: [
@@ -40,13 +40,13 @@ export const DEFAULT_SEQUENCE_FIXTURE: SequenceFixtureV1 = {
 	edges: [{ id: "edge-1", from: "step-1", to: "step-2" }],
 };
 
-export function sequenceFixtureToJson(fixture: SequenceFixtureV1): string {
+export function sequenceFixtureToJson(fixture: SequenceFixture): string {
 	return JSON.stringify(fixture);
 }
 
-export function parseSequenceFixtureJson(json: string): SequenceFixtureV1 | null {
+export function parseSequenceFixtureJson(json: string): SequenceFixture | null {
 	try {
-		const parsed = JSON.parse(json) as SequenceFixtureV1;
+		const parsed = JSON.parse(json) as SequenceFixture;
 		if (parsed.schema !== SEQUENCE_FIXTURE_SCHEMA || !Array.isArray(parsed.steps) || !Array.isArray(parsed.edges)) return null;
 		return parsed;
 	} catch {

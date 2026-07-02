@@ -55,13 +55,13 @@ pub struct Edge {
 /// 📷 Camera for fixture documents.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct CameraV1 {
+pub struct Camera {
     pub x: f64,
     pub y: f64,
     pub zoom: f64,
 }
 
-impl Default for CameraV1 {
+impl Default for Camera {
     fn default() -> Self {
         Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
@@ -70,22 +70,22 @@ impl Default for CameraV1 {
 /// 📦 `trinity.graph/v1` fixture document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct GraphFixtureV1 {
+pub struct GraphFixture {
     pub schema: String,
     pub name: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub manifest_id: Option<String>,
     #[serde(default)]
     pub manifest: Manifest,
-    pub camera: CameraV1,
+    pub camera: Camera,
     pub nodes: Vec<Node>,
     pub edges: Vec<Edge>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub root_node_id: Option<String>,
 }
 
-impl GraphFixtureV1 {
-    pub const SCHEMA: &'static str = "trinity.graph/v1";
+impl GraphFixture {
+    pub const SCHEMA: &'static str = "trinity.graph";
 
     pub fn validate_schema(&self) -> Result<(), String> {
         if self.schema != Self::SCHEMA {
@@ -127,14 +127,14 @@ impl GraphFixtureV1 {
 pub struct Graph {
     pub name: String,
     pub manifest: Manifest,
-    pub camera: CameraV1,
+    pub camera: Camera,
     pub nodes: BTreeMap<String, Node>,
     pub edges: BTreeMap<String, Edge>,
     pub root_node_id: Option<String>,
 }
 
 impl Graph {
-    pub fn from_fixture(mut fixture: GraphFixtureV1) -> Result<Self, String> {
+    pub fn from_fixture(mut fixture: GraphFixture) -> Result<Self, String> {
         fixture.validate_schema()?;
         fixture.resolve_manifest()?;
         if let Some(id) = fixture.manifest_id.as_deref() {
@@ -160,9 +160,9 @@ impl Graph {
         })
     }
 
-    pub fn to_fixture(&self) -> GraphFixtureV1 {
-        GraphFixtureV1 {
-            schema: GraphFixtureV1::SCHEMA.to_string(),
+    pub fn to_fixture(&self) -> GraphFixture {
+        GraphFixture {
+            schema: GraphFixture::SCHEMA.to_string(),
             name: self.name.clone(),
             manifest_id: Some("nakagin".into()),
             manifest: self.manifest.clone(),
@@ -174,7 +174,7 @@ impl Graph {
     }
 
     pub fn load_json(json: &str) -> Result<Self, String> {
-        Self::from_fixture(GraphFixtureV1::from_json(json)?)
+        Self::from_fixture(GraphFixture::from_json(json)?)
     }
 
     pub fn fixture_json(&self) -> Result<String, String> {
@@ -182,12 +182,12 @@ impl Graph {
     }
 
     /// 🧩 Build a `trinity.graph/v1` fixture containing only the given node and edge ids.
-    pub fn subgraph_fixture(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> GraphFixtureV1 {
+    pub fn subgraph_fixture(&self, node_ids: &BTreeSet<String>, edge_ids: &BTreeSet<String>) -> GraphFixture {
         let nodes: Vec<Node> = node_ids.iter().filter_map(|id| self.nodes.get(id).cloned()).collect();
         let edges: Vec<Edge> = edge_ids.iter().filter_map(|id| self.edges.get(id).cloned()).collect();
         let root_node_id = self.root_node_id.clone().filter(|id| node_ids.contains(id));
-        GraphFixtureV1 {
-            schema: GraphFixtureV1::SCHEMA.to_string(),
+        GraphFixture {
+            schema: GraphFixture::SCHEMA.to_string(),
             name: format!("{} subgraph", self.name),
             manifest_id: Some("nakagin".into()),
             manifest: self.manifest.clone(),
@@ -332,7 +332,7 @@ impl Graph {
 }
 
 /// 🛡️ Validates trinity fixture instances against a compile-time graph manifest.
-fn validate_trinity_fixture(gm: &GraphManifest, fixture: &GraphFixtureV1) -> Result<(), String> {
+fn validate_trinity_fixture(gm: &GraphManifest, fixture: &GraphFixture) -> Result<(), String> {
     let validator = ManifestValidator::new(gm);
     for node in &fixture.nodes {
         validator.validate_node_kind(&node.kind).map_err(manifest_err)?;
@@ -399,7 +399,7 @@ use vcs::{
     ItemPatch, Operation, OperationDiff,
 };
 
-pub const TRINITY_GRAPH_SCHEMA: &str = GraphFixtureV1::SCHEMA;
+pub const TRINITY_GRAPH_SCHEMA: &str = GraphFixture::SCHEMA;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -428,8 +428,8 @@ pub struct TrinityGraphDiff {
     pub recompute_derived: bool,
 }
 
-impl OperationDiff<GraphFixtureV1> for TrinityGraphDiff {
-    fn apply(&self, projection: &GraphFixtureV1) -> GraphFixtureV1 {
+impl OperationDiff<GraphFixture> for TrinityGraphDiff {
+    fn apply(&self, projection: &GraphFixture) -> GraphFixture {
         let mut next = projection.clone();
         for id in &self.nodes.removed {
             remove_node_from_fixture(&mut next, id);
@@ -553,14 +553,14 @@ pub enum TrinityGraphOp {
     },
 }
 
-pub type TrinityGraphEnvelope = DocumentVcsEnvelope<GraphFixtureV1, TrinityGraphOp>;
-pub type TrinityGraphStore = DocumentVcsStore<GraphFixtureV1, TrinityGraphOp>;
+pub type TrinityGraphEnvelope = DocumentVcsEnvelope<GraphFixture, TrinityGraphOp>;
+pub type TrinityGraphStore = DocumentVcsStore<GraphFixture, TrinityGraphOp>;
 
-pub fn create_trinity_graph_envelope(id: &str, fixture: GraphFixtureV1) -> TrinityGraphEnvelope {
+pub fn create_trinity_graph_envelope(id: &str, fixture: GraphFixture) -> TrinityGraphEnvelope {
     create_document_vcs_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
 }
 
-pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixtureV1) -> Result<(), String> {
+pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixture) -> Result<(), String> {
     match op {
         TrinityGraphOp::CreateNode { id, kind, ports, .. } => {
             if fixture.nodes.iter().any(|node| node.id == *id) {
@@ -619,7 +619,7 @@ pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixtureV1) 
     Ok(())
 }
 
-pub fn apply_trinity_graph_ops(fixture: GraphFixtureV1, ops: &[TrinityGraphOp]) -> Result<GraphFixtureV1, String> {
+pub fn apply_trinity_graph_ops(fixture: GraphFixture, ops: &[TrinityGraphOp]) -> Result<GraphFixture, String> {
     let mut projection = fixture;
     for op in ops {
         validate_trinity_graph_op(op, &projection)?;
@@ -645,7 +645,7 @@ pub fn dispatch_trinity_graph_ops(store: &mut TrinityGraphStore, ops: Vec<Trinit
         .map_err(|e| e.to_string())
 }
 
-fn validate_clear_data_property(fixture: &GraphFixtureV1, entity: &EntityRef, key: &str) -> Result<(), String> {
+fn validate_clear_data_property(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Result<(), String> {
     match entity {
         EntityRef::Node(id) => {
             fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| format!("node {id} not found"))?;
@@ -659,7 +659,7 @@ fn validate_clear_data_property(fixture: &GraphFixtureV1, entity: &EntityRef, ke
 }
 
 fn validate_set_data_property(
-    fixture: &GraphFixtureV1,
+    fixture: &GraphFixture,
     entity: &EntityRef,
     key: &str,
     value: &PropertyValue,
@@ -769,7 +769,7 @@ fn property_value_matches_type_trinity(value: &PropertyValue, def: &PropertyDef)
     }
 }
 
-fn remove_node_from_fixture(fixture: &mut GraphFixtureV1, id: &str) {
+fn remove_node_from_fixture(fixture: &mut GraphFixture, id: &str) {
     fixture.nodes.retain(|node| node.id != id);
     fixture.edges.retain(|edge| {
         port_node_id(&edge.source) != Some(id.as_ref()) && port_node_id(&edge.target) != Some(id.as_ref())
@@ -779,7 +779,7 @@ fn remove_node_from_fixture(fixture: &mut GraphFixtureV1, id: &str) {
     }
 }
 
-fn delete_node_snapshot(fixture: &GraphFixtureV1, id: &str) -> (Option<Node>, Vec<Edge>) {
+fn delete_node_snapshot(fixture: &GraphFixture, id: &str) -> (Option<Node>, Vec<Edge>) {
     let node = fixture.nodes.iter().find(|node| node.id == id).cloned();
     let edges: Vec<Edge> = fixture
         .edges
@@ -790,7 +790,7 @@ fn delete_node_snapshot(fixture: &GraphFixtureV1, id: &str) -> (Option<Node>, Ve
     (node, edges)
 }
 
-fn entity_property_value(fixture: &GraphFixtureV1, entity: &EntityRef, key: &str) -> Option<PropertyValue> {
+fn entity_property_value(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Option<PropertyValue> {
     match entity {
         EntityRef::Node(id) => fixture
             .nodes
@@ -805,10 +805,10 @@ fn entity_property_value(fixture: &GraphFixtureV1, entity: &EntityRef, key: &str
     }
 }
 
-impl Operation<GraphFixtureV1> for TrinityGraphOp {
+impl Operation<GraphFixture> for TrinityGraphOp {
     type Diff = TrinityGraphDiff;
 
-    fn diff(&self, projection: &GraphFixtureV1) -> TrinityGraphDiff {
+    fn diff(&self, projection: &GraphFixture) -> TrinityGraphDiff {
         match self {
             TrinityGraphOp::CreateNode {
                 id,
@@ -946,7 +946,7 @@ impl Operation<GraphFixtureV1> for TrinityGraphOp {
         }
     }
 
-    fn backwards(&self, projection: &GraphFixtureV1) -> Vec<Self> {
+    fn backwards(&self, projection: &GraphFixture) -> Vec<Self> {
         match self {
             TrinityGraphOp::CreateNode { id, .. } => vec![TrinityGraphOp::DeleteNode { id: id.clone() }],
             TrinityGraphOp::DeleteNode { id } => {
@@ -1060,13 +1060,13 @@ impl Default for NodeGeometryPatch {
 }
 // #endregion 🔖GraphOps
 
-pub fn empty_trinity_graph_fixture() -> GraphFixtureV1 {
-    GraphFixtureV1 {
-        schema: GraphFixtureV1::SCHEMA.into(),
+pub fn empty_trinity_graph_fixture() -> GraphFixture {
+    GraphFixture {
+        schema: GraphFixture::SCHEMA.into(),
         name: "trinity".into(),
         manifest_id: Some("nakagin".into()),
         manifest: Manifest::nakagin_default(),
-        camera: CameraV1::default(),
+        camera: Camera::default(),
         nodes: Vec::new(),
         edges: Vec::new(),
         root_node_id: None,
@@ -1137,13 +1137,13 @@ mod wasm_bridge {
 mod tests {
     use super::*;
 
-    fn mini_fixture() -> GraphFixtureV1 {
-        GraphFixtureV1 {
-            schema: GraphFixtureV1::SCHEMA.into(),
+    fn mini_fixture() -> GraphFixture {
+        GraphFixture {
+            schema: GraphFixture::SCHEMA.into(),
             name: "mini".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
-            camera: CameraV1::default(),
+            camera: Camera::default(),
             root_node_id: Some("root".into()),
             nodes: vec![
                 Node {
@@ -1216,7 +1216,7 @@ mod tests {
 
     #[test]
     fn fixture_loads_manifest_id_only() {
-        let json = r#"{"schema":"trinity.graph/v1","name":"mini","manifestId":"nakagin","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
+        let json = r#"{"schema":"trinity.graph","name":"mini","manifestId":"nakagin","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
         let graph = Graph::load_json(json).unwrap();
         assert!(graph.manifest.node_kind("Piece").is_some());
     }
@@ -1225,7 +1225,7 @@ mod tests {
     fn fixture_round_trip() {
         let fixture = mini_fixture();
         let json = fixture.to_json().unwrap();
-        let back = GraphFixtureV1::from_json(&json).unwrap();
+        let back = GraphFixture::from_json(&json).unwrap();
         assert_eq!(back.nodes.len(), 2);
         assert_eq!(back.edges.len(), 1);
     }
@@ -1240,12 +1240,12 @@ mod tests {
 
     #[test]
     fn derived_flat_position_covers_disconnected_components() {
-        let fixture = GraphFixtureV1 {
-            schema: GraphFixtureV1::SCHEMA.into(),
+        let fixture = GraphFixture {
+            schema: GraphFixture::SCHEMA.into(),
             name: "disconnected".into(),
             manifest_id: Some("nakagin".into()),
             manifest: Manifest::nakagin_default(),
-            camera: CameraV1::default(),
+            camera: Camera::default(),
             root_node_id: Some("root-a".into()),
             nodes: vec![
                 Node {

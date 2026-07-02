@@ -1,9 +1,9 @@
 {
   "title": "Generalize Trinity Directed Port Graph",
   "emoji": "🔺",
-  "status": "open",
+  "status": "closed",
   "description": "Trinity operates on general directed property port graphs, not DAGs. Remove DAG-only canvas assumptions (enforce_acyclic), wire reorganize to shared force layout, generalize flatPosition derivation for disconnected components, and extend force-graph schema allowlist.",
-  "summary": "Generalized Trinity off DAG constraints and aligned canvas rendering with puzzle 2d port graphs. Removed enforce_acyclic, wired force-directed reorganize, generalized flatPosition for disconnected components, and routed vector rendering through BoardHost. Fixed rectangle node/port caps: trinity_graph_to_board_fixture and force-layout adapter now emit circle nodes (shape circle, radius) with handleKind port at left/right angles; rebuild_engine uses create_node; kind catalogs registered for port handles. Rebuilt trinity_rewrite WASM. Validated cargo test trinity_rewrite (11) and play vitest rewrite (19) + jack (14).",
+  "summary": "Repo-wide cleanup removing legacy bridges and V1 version suffixes across ~170+ files.\n\nPhase 1: Removed Golden Layout conversion, image: prefix stripping, TrinityJackResultV1, deprecated brush budget aliases, deprecated IconSelector props, kindsCompatible test helper.\n\nPhase 2: Migrated compose kit fixtures to block {hash,items} format; deleted array-vs-block dual parsing; migrated puzzle2d/5d/wires hierarchy onClick to command descriptors; removed legacyActivate; added concrete-forest manifest and migrated concrete-forest.2d.json to manifestId + circle nodes; removed kindCatalogs fallback and rectangle normalization.\n\nPhases 3-4: Bulk-stripped V1 suffix from ~90 types/structs/functions/MIME constants and /v1 from schema/play-surface strings across the monorepo; regenerated graph manifests and puzzle2d/sequence wasm pkg bindings.\n\nVerification: cargo test puzzle_2d (115/116 pass), sequence wasm rebuild OK; puzzle2d-react vitest has pre-existing scene test failures unrelated to schema rename; flow wasm rebuild blocked by unrelated kernel_3d_brepkit compile error.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1781"
   },

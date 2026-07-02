@@ -31,8 +31,8 @@ Every play host under `@elements/playground` gets a **left workbench tab** (icon
 
 | Play                                                           | Left workbench today  | Composition source (unused for UI trees)                                               |
 | -------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------- |
-| [board/index.tsx](elements/lib/board/index.tsx)                | Library only          | `BoardFixtureV1` nodes/handles/edges; graph via `computeBoardGraphObservationSnapshot` |
-| [scene/index.tsx](elements/lib/react/scene/index.tsx)          | None (left panel off) | `FixtureV1` + `SceneAttractionTree` (3D ownership only)                                |
+| [board/index.tsx](elements/lib/board/index.tsx)                | Library only          | `BoardFixture` nodes/handles/edges; graph via `computeBoardGraphObservationSnapshot` |
+| [scene/index.tsx](elements/lib/react/scene/index.tsx)          | None (left panel off) | `Fixture` + `SceneAttractionTree` (3D ownership only)                                |
 | [topology/index.tsx](elements/lib/react/topology/index.tsx)    | None                  | `TopologyPlaySnapshot.boardFixture` + `sceneFixture`                                   |
 | [spatial play/main.tsx](spatial/js/renderer-r3f/play/main.tsx) | None                  | `ModelSpace.models` + `objectPrimitiveEntries`                                         |
 

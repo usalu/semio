@@ -3927,7 +3927,7 @@ use vcs::{
 };
 use serde::{Deserialize, Serialize};
 
-pub const GIS_MAP_SCHEMA: &str = "gis.map/v1";
+pub const GIS_MAP_SCHEMA: &str = "gis.map";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

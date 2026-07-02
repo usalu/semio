@@ -80,7 +80,7 @@ flowchart LR
 
 ## 5. Manifest plumbing — [flow/module/wasm/lib.rs](flow/module/wasm/lib.rs) and [flow/react/index.tsx](flow/react/index.tsx)
 
-- `build_manifest_json` already serializes `registry.catalogue()`, so the new `NeuronKindInfo` variadic fields flow through automatically; verify the TS `FlowModuleNeuronKindV1` interface in [flow/react/index.tsx](flow/react/index.tsx) mirrors the new fields.
+- `build_manifest_json` already serializes `registry.catalogue()`, so the new `NeuronKindInfo` variadic fields flow through automatically; verify the TS `FlowModuleNeuronKind` interface in [flow/react/index.tsx](flow/react/index.tsx) mirrors the new fields.
 - Ensure the React host forwards kind metadata to the wasm core (via `setCatalogueJson`) so core can resolve variadic specs. No new pointer handlers needed: `+` clicks are handled inside wasm `pointerDownScreen` (canvas already routes pointer + wheel events). `onPointerUp` already calls `persistFixture()`, so inserted slots persist.
 
 ## 6. Fixtures, launch.json, validation

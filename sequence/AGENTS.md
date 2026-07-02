@@ -13,7 +13,7 @@ A sequence is a graphical execution-flow graph of imperative steps on an infinit
 Sequence data (steps + flow edges) compiles to an imperative Path and then to text (one line per step).
 
 ```json
-{"schema":"sequence.fixture/v1","steps":[…],"edges":[…]}
+{"schema":"sequence.fixture","steps":[…],"edges":[…]}
 ```
 
 # Step

@@ -1,5 +1,5 @@
 {
-  "schema": "puzzle.2d.fixture/v1",
+  "schema": "puzzle.2d.fixture",
   "camera": {
     "x": 0,
     "y": 0,

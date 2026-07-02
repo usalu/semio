@@ -24,10 +24,10 @@ todos:
     content: Convert list/logic/text/dictionary to operators + their schema, accurate channels, keep variadics, update tests.
     status: completed
   - id: flow-core-doc
-    content: Replace FlowFixtureV1 with FlowDocumentV1 {flow, tree}; inputs become value neurons; previews GUI-only; build_tree returns stored tree; drop build_seeds; accurate channel layout; add shakability test.
+    content: Replace FlowFixture with FlowDocument {flow, tree}; inputs become value neurons; previews GUI-only; build_tree returns stored tree; drop build_seeds; accurate channel layout; add shakability test.
     status: completed
   - id: flow-react
-    content: Mirror FlowDocumentV1/OperatorInfo/Schema in flow/react; render chrome/ports/previews from new model; load module-core; update vitest.
+    content: Mirror FlowDocument/OperatorInfo/Schema in flow/react; render chrome/ports/previews from new model; load module-core; update vitest.
     status: completed
   - id: validate-all
     content: Run neural/module/flow tests + flow/react vitest and verify ports, schema dispatch, and flow-strip behavior in the play app.
@@ -69,7 +69,7 @@ flowchart TB
   end
   modules -->|register_schema / register_operator| Reg
   subgraph flow["flow/core + flow/react"]
-    Doc["FlowDocumentV1 {flow, tree}"]
+    Doc["FlowDocument {flow, tree}"]
     Doc -->|tree authoritative| Eval
     Doc -->|flow strippable: camera/layout/chrome/previews| GUI
     Eval -->|OperatorInfo channels| Ports["accurate DAG IoPortSpec ports"]
@@ -95,15 +95,15 @@ flowchart TB
 
 ## Part B: module glue + modules
 
-- [flow/module/wasm/lib.rs](flow/module/wasm/lib.rs): `FlowModuleContributesV1` gains `schemas: Vec<Schema>` and renames `neuron_kinds` -> `operators: Vec<OperatorInfo>`; `build_manifest_json` pulls `registry.operator_catalogue()` + `registry.schema_catalogue()`; `evaluate_json` calls `registry.dispatch(...)` with `inject_channel_defaults`.
+- [flow/module/wasm/lib.rs](flow/module/wasm/lib.rs): `FlowModuleContributes` gains `schemas: Vec<Schema>` and renames `neuron_kinds` -> `operators: Vec<OperatorInfo>`; `build_manifest_json` pulls `registry.operator_catalogue()` + `registry.schema_catalogue()`; `evaluate_json` calls `registry.dispatch(...)` with `inject_channel_defaults`.
 - NEW crate `flow/module/core` (necessary, clean): registers core schemas `number`,`text`,`boolean`,`list`,`dictionary`,`image` and **value operators** `core.number`/`core.text`/`core.image` (read their value from params, emit a `$schema`-tagged dict). These back the input widgets so values live in the tree. Follows the exact `script.ts`/`project.json`/`package.json`/`Cargo.toml`/`wasm_ext` pattern of the other modules. Add to root [Cargo.toml](Cargo.toml) workspace members.
 - [flow/module/math/lib.rs](flow/module/math/lib.rs): register schemas `point` and `vector` (fields x,y,z decimals). Convert each op to an operator with accurate channels; make `math.add`/`subtract` multi-impl (`["number"]`, `["point"]`, `["vector"]`) + variadic; add `math.constructVector`/`math.constructPoint` (inputs `x`,`y`,`z`, default 0 -> vector/point) and `math.move` (impls `["point"]`,`["vector"]`). Remove the `read_number("a").or_else(read_number("number"))` hacks now that channels are accurate. (Sphere/geometry `move` impls are intentionally out of scope to avoid mixing the `geometry`/`procedural` technology — they would register the same way in that module as a follow-up.)
 - [flow/module/{list,logic,text,dictionary}/lib.rs](flow/module): register their schema (`list`/`boolean`/`text`/`dictionary`) and convert kinds to operators with accurate channels; keep variadic where present (e.g. `dictionary.merge`, `text.concat`). Update each module's `#region Tests`.
 
 ## Part C: flow/core authoritative {flow, tree} ([flow/core/lib.rs](flow/core/lib.rs))
 
-- Replace `FlowFixtureV1` (widgets + synapses) with `FlowDocumentV1 { schema: "flow.document/v1", tree: Tree, flow: FlowGuiV1 }`.
-  - `FlowGuiV1 { camera, nodes: BTreeMap<String, FlowNodeGui>, previews: Vec<FlowPreviewGui> }`.
+- Replace `FlowFixture` (widgets + synapses) with `FlowDocument { schema: "flow.document", tree: Tree, flow: FlowGui }`.
+  - `FlowGui { camera, nodes: BTreeMap<String, FlowNodeGui>, previews: Vec<FlowPreviewGui> }`.
   - `FlowNodeGui { layout: {x,y}, chrome: NodeChrome }` where `NodeChrome = Plain | Slider{min,max,step} | Note | Image`.
   - `FlowPreviewGui { id, source: {neuron, channel}, mode: text|image|video }` — purely GUI, strippable.
 - Inputs are now neurons: a slider is a `core.number` neuron (`params.number`) plus `chrome: Slider`; note -> `core.text`; image -> `core.image`. Previews stay GUI-only; actions stay real neurons.
@@ -113,7 +113,7 @@ flowchart TB
 
 ## Part D: flow/react ([flow/react/index.tsx](flow/react/index.tsx))
 
-- Mirror new TS types: `FlowDocumentV1 {flow, tree}`, `OperatorInfo`, `ChannelSpec`, `Schema`; catalogue keyed by operators + schemas. Bridge signature unchanged (`(operatorId, inputJson) => json`).
+- Mirror new TS types: `FlowDocument {flow, tree}`, `OperatorInfo`, `ChannelSpec`, `Schema`; catalogue keyed by operators + schemas. Bridge signature unchanged (`(operatorId, inputJson) => json`).
 - Render input chrome (slider/note/image) from a neuron's params + `flow.nodes[id].chrome`; render ports from operator channels; render previews from `flow.previews`. Load `@semio-tech/flow-module-core` in `activateDefaults()`. Update `#region Tests`.
 
 ## Part E: wiring / infra

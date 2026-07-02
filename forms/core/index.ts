@@ -157,7 +157,7 @@ export interface FormStep {
 }
 
 export interface FormSpec {
-	readonly schema: "forms.form/v1";
+	readonly schema: "forms.form";
 	readonly id: string;
 	readonly version: string;
 	readonly title?: string;
@@ -201,8 +201,8 @@ export interface FormsQuestionKindContribution {
 	readonly controls?: FormsQuestionKindControls;
 }
 
-export interface FormsExtensionManifestV1 {
-	readonly schema: "forms.module/v1";
+export interface FormsExtensionManifest {
+	readonly schema: "forms.module";
 	readonly id: string;
 	readonly name: string;
 	readonly version: string;
@@ -214,7 +214,7 @@ export interface FormsExtensionManifestV1 {
 
 export interface FormsExtensionEntry {
 	readonly id: string;
-	readonly manifest: FormsExtensionManifestV1;
+	readonly manifest: FormsExtensionManifest;
 	readonly active: boolean;
 }
 
@@ -317,9 +317,9 @@ function contributionValueShape(kind: FormQuestionKind): FormsQuestionValueShape
 	return "scalar";
 }
 
-function buildBuiltinFormsExtensionManifest(): FormsExtensionManifestV1 {
+function buildBuiltinFormsExtensionManifest(): FormsExtensionManifest {
 	return {
-		schema: "forms.module/v1",
+		schema: "forms.module",
 		id: "builtin",
 		name: "Built-in",
 		version: "1.0.0",
@@ -337,8 +337,8 @@ function buildBuiltinFormsExtensionManifest(): FormsExtensionManifestV1 {
 }
 
 /** @emoji 🏗 Procedural forms extension manifest contributing flow-backed question kinds. */
-export const PROCEDURAL_FORMS_EXTENSION_MANIFEST: FormsExtensionManifestV1 = {
-	schema: "forms.module/v1",
+export const PROCEDURAL_FORMS_EXTENSION_MANIFEST: FormsExtensionManifest = {
+	schema: "forms.module",
 	id: "procedural",
 	name: "Procedural",
 	version: "1.0.0",
@@ -363,7 +363,7 @@ export const PROCEDURAL_FORMS_EXTENSION_MANIFEST: FormsExtensionManifestV1 = {
 export const FORMS_DEFAULT_EXTENSION_IDS = ["builtin", "procedural"] as const;
 
 interface ActiveFormsExtension {
-	readonly manifest: FormsExtensionManifestV1;
+	readonly manifest: FormsExtensionManifest;
 }
 
 /** @emoji 🧩 Controlled, DOM-free forms extension host. */
@@ -394,7 +394,7 @@ export class FormsExtensionHost {
 		}
 	}
 
-	registerManifest(manifest: FormsExtensionManifestV1): void {
+	registerManifest(manifest: FormsExtensionManifest): void {
 		this.active.set(manifest.id, { manifest });
 		for (const kind of manifest.contributes.questionKinds) {
 			this.kinds.set(kind.kind, { ...kind, moduleId: manifest.id });
@@ -507,13 +507,13 @@ export function parseFormSpec(raw: unknown): FormSpec {
 	if (raw == null || typeof raw !== "object") throw new Error("FormSpec must be an object");
 	const obj = raw as Record<string, unknown>;
 	assertNoForbiddenKeys(obj);
-	if (obj.schema !== "forms.form/v1") throw new Error(`Invalid schema: ${String(obj.schema)}`);
+	if (obj.schema !== "forms.form") throw new Error(`Invalid schema: ${String(obj.schema)}`);
 	if (typeof obj.id !== "string" || !obj.id.trim()) throw new Error("FormSpec.id is required");
 	if (typeof obj.version !== "string" || !obj.version.trim()) throw new Error("FormSpec.version is required");
 	if (!Array.isArray(obj.steps) || obj.steps.length === 0) throw new Error("FormSpec.steps must be a non-empty array");
 	const steps = obj.steps.map(parseFormStep);
 return {
-		schema: "forms.form/v1",
+		schema: "forms.form",
 		id: obj.id,
 		version: obj.version,
 		title: typeof obj.title === "string" ? obj.title : undefined,
@@ -768,7 +768,7 @@ export function flowFixtureToFormSpec(fixtureJson: string, formId = "flow-genera
 		}
 	}
 	return {
-		schema: "forms.form/v1",
+		schema: "forms.form",
 		id: formId,
 		version: "1",
 		title: "Generate",
@@ -1112,7 +1112,7 @@ export function diffFormEditOp(_projection: FormSpec, operation: FormEditOp): un
 /** @emoji 📦 Default empty form spec for VCS envelopes and fixtures. */
 export function defaultFormSpec(id = "default"): FormSpec {
 	return {
-		schema: "forms.form/v1",
+		schema: "forms.form",
 		id,
 		version: "1",
 		title: "New Form",
@@ -1122,7 +1122,7 @@ export function defaultFormSpec(id = "default"): FormSpec {
 
 /** @emoji 📦 Creates a forms document VCS envelope with an empty or seeded projection. */
 export function createFormSpecVcsEnvelope(id: string, projection: FormSpec = defaultFormSpec(id)): FormSpecVcsEnvelope {
-	return createDocumentVcsEnvelope("forms.form/v1", id, projection);
+	return createDocumentVcsEnvelope("forms.form", id, projection);
 }
 
 /** @emoji 🔁 Materializes a form spec from its VCS envelope. */
@@ -1130,10 +1130,10 @@ export function materializeFormSpec(envelope: FormSpecVcsEnvelope, appliedChange
 	return materializeDocumentProjection(envelope, appliedChangeIds, applyFormEditOp);
 }
 
-/** @emoji 🧩 Semios app VCS handler factory for form documents. */
+/** @emoji 🧩 S app VCS handler factory for form documents. */
 export function createFormsAppVcsHandler() {
 	return {
-		format: "forms.form/v1",
+		format: "forms.form",
 		createEnvelope: (id: string) => createFormSpecVcsEnvelope(id),
 		applyOp: applyFormEditOp,
 		serializeEnvelope: (envelope: FormSpecVcsEnvelope) => JSON.stringify(envelope),
@@ -1156,7 +1156,7 @@ if (import.meta.vitest) {
 
 	describe("forms-core", () => {
 	const sampleSpec: FormSpec = {
-		schema: "forms.form/v1",
+		schema: "forms.form",
 		id: "sample",
 		version: "1",
 		steps: [
@@ -1189,7 +1189,7 @@ if (import.meta.vitest) {
 	});
 
 	it("rejects forbidden keys", () => {
-		expect(() => parseFormSpec({ schema: "forms.form/v1", id: "x", version: "1", steps: [], code: "bad" })).toThrow();
+		expect(() => parseFormSpec({ schema: "forms.form", id: "x", version: "1", steps: [], code: "bad" })).toThrow();
 	});
 
 	it("evaluates visibility conditions", () => {
@@ -1231,7 +1231,7 @@ if (import.meta.vitest) {
 
 	it("parses extension question params", () => {
 		const spec = parseFormSpec({
-			schema: "forms.form/v1",
+			schema: "forms.form",
 			id: "ext",
 			version: "1",
 			steps: [
@@ -1260,7 +1260,7 @@ if (import.meta.vitest) {
 
 	it("maps flow fixture widgets to form spec", () => {
 		const json = JSON.stringify({
-			schema: "flow.fixture/v1",
+			schema: "flow.fixture",
 			widgets: [{ kind: "inputSlider", id: "width", label: "Span Width", value: 4, min: 0, max: 10, unit: "m" }],
 			synapses: [],
 		});
@@ -1275,7 +1275,7 @@ if (import.meta.vitest) {
 
 	it("infers slider labels from synapse target ports", () => {
 		const json = JSON.stringify({
-			schema: "flow.fixture/v1",
+			schema: "flow.fixture",
 			widgets: [{ kind: "inputSlider", id: "slider_7", value: 6, min: 0, max: 10 }],
 			synapses: [{ id: "e1", from: "slider_7", to: "vector", fromPort: "number", toPort: "z" }],
 		});
@@ -1284,7 +1284,7 @@ if (import.meta.vitest) {
 	});
 
 	it("applies generation values to fixture", () => {
-		const json = JSON.stringify({ schema: "flow.fixture/v1", widgets: [{ kind: "inputSlider", id: "width", value: 1 }], synapses: [] });
+		const json = JSON.stringify({ schema: "flow.fixture", widgets: [{ kind: "inputSlider", id: "width", value: 1 }], synapses: [] });
 		const next = applyGenerationValuesToFixture(json, { width: 7 });
 		const parsed = JSON.parse(next) as { widgets: { value: number }[] };
 		expect(parsed.widgets[0]?.value).toBe(7);

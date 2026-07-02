@@ -3518,7 +3518,7 @@ class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
 }
 //#endregion 🔖CadPlayDetails
 
-/** @emoji 🧊 CAD play chrome root for standalone boot and semios nested host. */
+/** @emoji 🧊 CAD play chrome root for standalone boot and s nested host. */
 export function CadPlayRoot(): ReactNode {
   const runtimeRef = reactHostPort.useRef<Platform | null>(null);
   const shellControllerRef = reactHostPort.useRef<CadPlayShellController | null>(null);
@@ -3559,7 +3559,7 @@ export function CadPlayRoot(): ReactNode {
   );
 }
 
-/** @emoji 🛝 Registers CAD play surface hosts for semios and playground boot. */
+/** @emoji 🛝 Registers CAD play surface hosts for s and playground boot. */
 export function registerCadPlaySurfaceHosts(): void {
   registerCadPlayChrome();
 }

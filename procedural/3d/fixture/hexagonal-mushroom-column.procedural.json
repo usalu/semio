@@ -1,5 +1,5 @@
 {
-  "schema": "flow.fixture/v1",
+  "schema": "flow.fixture",
   "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 },
   "widgets": [
     { "kind": "inputSlider", "id": "height", "label": "Column Height", "value": 6.0, "min": 0.0, "max": 10.0, "step": 0.5, "unit": "m" },

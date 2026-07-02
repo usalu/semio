@@ -1995,8 +1995,8 @@ export type FigureTileDraft = {
 	readonly crop: { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
 };
 
-export type PresentationDeckV1 = {
-	readonly schema: "presentation.deck/v1";
+export type PresentationDeck = {
+	readonly schema: "presentation.deck";
 	readonly source: FigureTileSource;
 	readonly tiles: readonly FigureTileDraft[];
 };
@@ -2019,10 +2019,10 @@ export type PresentationEditOp =
 			readonly field: keyof FigureTileDraft["crop"];
 			readonly value: number;
 	  }
-	| { readonly op: "setDocument"; readonly document: PresentationDeckV1 };
+	| { readonly op: "setDocument"; readonly document: PresentationDeck };
 
 /** @emoji ↩️ Inverts a presentation edit from the pre-apply projection. */
-export function backwardsPresentationEditOp(deck: PresentationDeckV1, operation: PresentationEditOp): readonly PresentationEditOp[] {
+export function backwardsPresentationEditOp(deck: PresentationDeck, operation: PresentationEditOp): readonly PresentationEditOp[] {
 	const snapshot = (): readonly PresentationEditOp[] => [{ op: "setDocument", document: deck }];
 	switch (operation.op) {
 		case "setDocument":
@@ -2059,14 +2059,14 @@ export function backwardsPresentationEditOp(deck: PresentationDeckV1, operation:
 }
 
 /** @emoji 📊 Returns the presentation edit payload for persistence diffs. */
-export function diffPresentationEditOp(_projection: PresentationDeckV1, operation: PresentationEditOp): unknown {
+export function diffPresentationEditOp(_projection: PresentationDeck, operation: PresentationEditOp): unknown {
 	return operation;
 }
 
-export type PresentationDeckVcsEnvelope = DocumentVcsEnvelope<PresentationDeckV1, PresentationEditOp>;
+export type PresentationDeckVcsEnvelope = DocumentVcsEnvelope<PresentationDeck, PresentationEditOp>;
 
-const PRESENTATION_DECK_EMPTY = (): PresentationDeckV1 => ({
-	schema: "presentation.deck/v1",
+const PRESENTATION_DECK_EMPTY = (): PresentationDeck => ({
+	schema: "presentation.deck",
 	source: { src: "", kind: "figure", frame: { x: 0, y: 0, width: 1, height: 1 } },
 	tiles: [],
 });
@@ -2080,7 +2080,7 @@ export function clampTileCrop(crop: FigureTileDraft["crop"]): FigureTileDraft["c
 	return { x, y, width, height };
 }
 
-export function applyPresentationEditOp(deck: PresentationDeckV1, op: PresentationEditOp): PresentationDeckV1 {
+export function applyPresentationEditOp(deck: PresentationDeck, op: PresentationEditOp): PresentationDeck {
 	switch (op.op) {
 		case "setSource":
 			return { ...deck, source: op.source };
@@ -2131,11 +2131,11 @@ export function applyPresentationEditOp(deck: PresentationDeckV1, op: Presentati
 	}
 }
 
-/** @emoji 🧩 Semios app VCS handler factory for presentation deck documents. */
+/** @emoji 🧩 S app VCS handler factory for presentation deck documents. */
 export function createPresentationAppVcsHandler() {
 	return {
-		format: "presentation.deck/v1",
-		createEnvelope: (id: string) => createDocumentVcsEnvelope("presentation.deck/v1", id, PRESENTATION_DECK_EMPTY()),
+		format: "presentation.deck",
+		createEnvelope: (id: string) => createDocumentVcsEnvelope("presentation.deck", id, PRESENTATION_DECK_EMPTY()),
 		applyOp: applyPresentationEditOp,
 		serializeEnvelope: (envelope: PresentationDeckVcsEnvelope) => JSON.stringify(envelope),
 		deserializeEnvelope: (json: string) => JSON.parse(json) as PresentationDeckVcsEnvelope,
@@ -2144,7 +2144,7 @@ export function createPresentationAppVcsHandler() {
 				const envelope = JSON.parse(source.vcsJson) as PresentationDeckVcsEnvelope;
 				return materializeDocumentProjection(envelope, envelope.vcs.edits.map((edit) => edit.id), applyPresentationEditOp);
 			}
-			if (source.inline) return JSON.parse(source.inline) as PresentationDeckV1;
+			if (source.inline) return JSON.parse(source.inline) as PresentationDeck;
 			return PRESENTATION_DECK_EMPTY();
 		},
 	};
@@ -3285,7 +3285,7 @@ if (import.meta.vitest) {
 		it("materializes deck projection from inline json", () => {
 			const handler = createPresentationAppVcsHandler();
 			const projection = handler.materializeProjection({
-				inline: JSON.stringify({ schema: "presentation.deck/v1", source: { src: "/a.png" }, tiles: [{ id: "t1", name: "A", crop: { x: 0, y: 0, width: 1, height: 1 } }] }),
+				inline: JSON.stringify({ schema: "presentation.deck", source: { src: "/a.png" }, tiles: [{ id: "t1", name: "A", crop: { x: 0, y: 0, width: 1, height: 1 } }] }),
 			}) as { tiles: readonly unknown[] };
 			expect(projection.tiles).toHaveLength(1);
 		});

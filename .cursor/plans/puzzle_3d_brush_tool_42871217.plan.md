@@ -48,7 +48,7 @@ Add a `//#region 🖌️Brush` region with:
 - `brushCompatibleCandidates(target, kindCatalogs, kindCompatibility)` → for target vortex kind, returns ordered candidate descriptors `{ kindId, sourceVortexIndex }` for every catalog object-kind vortex passing `vorticesAttractionCompatibleForDrag(targetCtx, candidateCtx, …)`.
 - `computeBrushPlacementPose({ sourceLocalPosition, sourceLocalDirection, scale, targetWorldPositionCad, targetWorldDirectionCad })` → `{ origin: Vec3, orientation: Quat }` in CAD. Math: `R` = quaternion mapping `sourceLocalDirection` → `-targetWorldDirectionCad` (`setFromUnitVectors`); `origin = targetWorldPositionCad − R·(scale·sourceLocalPosition)`. Guarantees coincident vortex point and opposite direction.
 - `boxesIntersect(a, b)` AABB overlap helper (with small tolerance) for collision filtering.
-- `applyBrushPlacementToFixture(fixture, payload)` (mirrors `applyConnectToFixture` ~1766): append the new `FixtureObjectV1` (generated object id + generated vortex ids) to `objects` and the attraction to `attractions`; marks a structure change so `fixtureRevision` bumps and the ghost becomes a real object.
+- `applyBrushPlacementToFixture(fixture, payload)` (mirrors `applyConnectToFixture` ~1766): append the new `FixtureObject` (generated object id + generated vortex ids) to `objects` and the attraction to `attractions`; marks a structure change so `fixtureRevision` bumps and the ghost becomes a real object.
 
 ## 3. Canvas gesture + preview ([puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx))
 New `CanvasProps` (~481): `brushActive?: boolean`, `onBrushPlace?: (payload: BrushPlacePayload) => void`. Templates read from existing `kindCatalogs`. Thread through `Inner`/`RegistryProvider` and `PlayCanvas` (~5427/5459) like other props.

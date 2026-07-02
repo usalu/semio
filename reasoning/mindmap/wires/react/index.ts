@@ -3,14 +3,14 @@
 // #endregion 🧲Header
 
 import metabolismWiresJson from "../fixture/metabolism.wires.json";
-import { mergeKindCatalogBundleByRowId, type CameraState, type KindCatalogBundle, type Puzzle2dFixtureEdgeV1, type Puzzle2dFixtureNodeV1, type Puzzle2dFixtureV1 } from "@semio-tech/puzzle-2d-react";
+import { mergeKindCatalogBundleByRowId, type CameraState, type KindCatalogBundle, type Puzzle2dFixtureEdge, type Puzzle2dFixtureNode, type Puzzle2dFixture } from "@semio-tech/puzzle-2d-react";
 import { mergeManifestCatalogBundles, type WiresEdgeKindId, wiresManifestCatalogBundle } from "@semio-tech/graph-manifest";
-import type { MindmapFixtureEdgeV1, MindmapFixtureNodeV1, MindmapFixtureV1 } from "@semio-tech/reasoning-mindmap-react";
+import type { MindmapFixtureEdge, MindmapFixtureNode, MindmapFixture } from "@semio-tech/reasoning-mindmap-react";
 
-/** @emoji 🧩 Board slice embedded in {@link WiresFixtureV1}. */
-export type WiresFixtureBoardV1 = MindmapFixtureV1;
+/** @emoji 🧩 Board slice embedded in {@link WiresFixture}. */
+export type WiresFixtureBoard = MindmapFixture;
 
-export type { MindmapFixtureEdgeV1, MindmapFixtureNodeV1, MindmapFixtureV1 };
+export type { MindmapFixtureEdge, MindmapFixtureNode, MindmapFixture };
 
 // #region 🔖RelationshipKind
 export type RelationshipKind = "owns" | "is" | "references" | "has";
@@ -69,7 +69,7 @@ export function relationshipKindTips(kind: RelationshipKind): RelationshipKindTi
 // #endregion 🔖RelationshipKind
 
 // #region 🔖IdentityKindCatalog
-export interface WiresIdentityKindCatalogRowV1 {
+export interface WiresIdentityKindCatalogRow {
   readonly id: string;
   readonly name: string;
   readonly color?: string;
@@ -78,7 +78,7 @@ export interface WiresIdentityKindCatalogRowV1 {
   readonly stroke?: string;
 }
 
-export interface WiresRelationshipKindCatalogRowV1 {
+export interface WiresRelationshipKindCatalogRow {
   readonly id: string;
   readonly name: string;
   readonly color?: string;
@@ -89,12 +89,12 @@ export interface WiresRelationshipKindCatalogRowV1 {
   readonly directed?: boolean;
 }
 
-export interface WiresFixtureKindCatalogsV1 {
-  readonly identityKinds?: readonly WiresIdentityKindCatalogRowV1[];
-  readonly relationshipKinds?: readonly WiresRelationshipKindCatalogRowV1[];
+export interface WiresFixtureKindCatalogs {
+  readonly identityKinds?: readonly WiresIdentityKindCatalogRow[];
+  readonly relationshipKinds?: readonly WiresRelationshipKindCatalogRow[];
 }
 
-export function wiresFixtureKindCatalogsToPuzzle2d(catalogs: WiresFixtureKindCatalogsV1 | undefined): KindCatalogBundle {
+export function wiresFixtureKindCatalogsToPuzzle2d(catalogs: WiresFixtureKindCatalogs | undefined): KindCatalogBundle {
   const base = wiresManifestCatalogBundle();
   if (catalogs == null) {
     return base;
@@ -125,7 +125,7 @@ export function wiresFixtureKindCatalogsToPuzzle2d(catalogs: WiresFixtureKindCat
   return mergeKindCatalogBundleByRowId(mergeManifestCatalogBundles(base), patch);
 }
 
-function parseWiresFixtureKindCatalogs(meta: Record<string, unknown> | undefined): WiresFixtureKindCatalogsV1 | undefined {
+function parseWiresFixtureKindCatalogs(meta: Record<string, unknown> | undefined): WiresFixtureKindCatalogs | undefined {
   if (meta == null) {
     return undefined;
   }
@@ -145,11 +145,11 @@ function parseWiresFixtureKindCatalogs(meta: Record<string, unknown> | undefined
   };
 }
 
-function parseIdentityKindCatalogRows(value: unknown): WiresIdentityKindCatalogRowV1[] | null {
+function parseIdentityKindCatalogRows(value: unknown): WiresIdentityKindCatalogRow[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
-  const out: WiresIdentityKindCatalogRowV1[] = [];
+  const out: WiresIdentityKindCatalogRow[] = [];
   for (const row of value) {
     if (row == null || typeof row !== "object") {
       return null;
@@ -170,11 +170,11 @@ function parseIdentityKindCatalogRows(value: unknown): WiresIdentityKindCatalogR
   return out;
 }
 
-function parseRelationshipKindCatalogRows(value: unknown): WiresRelationshipKindCatalogRowV1[] | null {
+function parseRelationshipKindCatalogRows(value: unknown): WiresRelationshipKindCatalogRow[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
-  const out: WiresRelationshipKindCatalogRowV1[] = [];
+  const out: WiresRelationshipKindCatalogRow[] = [];
   for (const row of value) {
     if (row == null || typeof row !== "object") {
       return null;
@@ -206,20 +206,20 @@ function parseRelationshipKindCatalogRows(value: unknown): WiresRelationshipKind
   return out;
 }
 
-function identityKindCatalogShape(catalogs: WiresFixtureKindCatalogsV1 | undefined, identityKindId: string): "circle" | "rectangle" | undefined {
+function identityKindCatalogShape(catalogs: WiresFixtureKindCatalogs | undefined, identityKindId: string): "circle" | "rectangle" | undefined {
   return catalogs?.identityKinds?.find((row) => row.id === identityKindId)?.shape;
 }
 // #endregion 🔖IdentityKindCatalog
 
 // #region 🔖WiresFixture
-export interface WiresFixtureIdentityV1 {
+export interface WiresFixtureIdentity {
   readonly identityId: number;
   readonly label: string;
   readonly nodeId: string;
   readonly identityKind?: string;
 }
 
-export interface WiresFixtureRelationshipV1 {
+export interface WiresFixtureRelationship {
   readonly relationshipId: number;
   readonly sourceIdentityId: number;
   readonly targetIdentityId: number;
@@ -227,27 +227,27 @@ export interface WiresFixtureRelationshipV1 {
   readonly edgeId: string;
 }
 
-export interface WiresFixtureSourceV1 {
+export interface WiresFixtureSource {
   readonly kitPath: string;
   readonly kitId: string;
   readonly kitName: string;
 }
 
-export interface WiresFixtureV1 {
-  readonly schema: "reasoning.wires.fixture/v1";
-  readonly source: WiresFixtureSourceV1;
-  readonly identities: readonly WiresFixtureIdentityV1[];
-  readonly relationships: readonly WiresFixtureRelationshipV1[];
-  readonly board: WiresFixtureBoardV1;
-  readonly kindCatalogs?: WiresFixtureKindCatalogsV1;
+export interface WiresFixture {
+  readonly schema: "reasoning.wires.fixture";
+  readonly source: WiresFixtureSource;
+  readonly identities: readonly WiresFixtureIdentity[];
+  readonly relationships: readonly WiresFixtureRelationship[];
+  readonly board: WiresFixtureBoard;
+  readonly kindCatalogs?: WiresFixtureKindCatalogs;
 }
 
-export function parseWiresFixtureV1(value: unknown): WiresFixtureV1 | null {
+export function parseWiresFixture(value: unknown): WiresFixture | null {
   if (value == null || typeof value !== "object") {
     return null;
   }
   const root = value as Record<string, unknown>;
-  if (root.schema !== "reasoning.wires.fixture/v1") {
+  if (root.schema !== "reasoning.wires.fixture") {
     return null;
   }
   const sourceRaw = root.source;
@@ -272,7 +272,7 @@ export function parseWiresFixtureV1(value: unknown): WiresFixtureV1 | null {
   }
   const kindCatalogs = parseWiresFixtureKindCatalogs(board.meta);
   return {
-    schema: "reasoning.wires.fixture/v1",
+    schema: "reasoning.wires.fixture",
     source: { kitPath: source.kitPath, kitId: source.kitId, kitName: source.kitName },
     identities,
     relationships,
@@ -281,11 +281,11 @@ export function parseWiresFixtureV1(value: unknown): WiresFixtureV1 | null {
   };
 }
 
-function parseWiresFixtureIdentities(value: unknown): WiresFixtureIdentityV1[] | null {
+function parseWiresFixtureIdentities(value: unknown): WiresFixtureIdentity[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
-  const out: WiresFixtureIdentityV1[] = [];
+  const out: WiresFixtureIdentity[] = [];
   for (const row of value) {
     if (row == null || typeof row !== "object") {
       return null;
@@ -304,11 +304,11 @@ function parseWiresFixtureIdentities(value: unknown): WiresFixtureIdentityV1[] |
   return out;
 }
 
-function parseWiresFixtureRelationships(value: unknown): WiresFixtureRelationshipV1[] | null {
+function parseWiresFixtureRelationships(value: unknown): WiresFixtureRelationship[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
-  const out: WiresFixtureRelationshipV1[] = [];
+  const out: WiresFixtureRelationship[] = [];
   for (const row of value) {
     if (row == null || typeof row !== "object") {
       return null;
@@ -335,12 +335,12 @@ function parseWiresFixtureRelationships(value: unknown): WiresFixtureRelationshi
   return out;
 }
 
-function parseWiresFixtureBoard(value: unknown): WiresFixtureBoardV1 | null {
+function parseWiresFixtureBoard(value: unknown): WiresFixtureBoard | null {
   if (value == null || typeof value !== "object") {
     return null;
   }
   const board = value as Record<string, unknown>;
-  if (board.schema !== "reasoning.mindmap.fixture/v1") {
+  if (board.schema !== "reasoning.mindmap.fixture") {
     return null;
   }
   const camera = board.camera;
@@ -376,19 +376,19 @@ function parseWiresFixtureBoard(value: unknown): WiresFixtureBoardV1 | null {
     }
   }
   return {
-    schema: "reasoning.mindmap.fixture/v1",
+    schema: "reasoning.mindmap.fixture",
     camera: { x: cam.x, y: cam.y, zoom: cam.zoom },
-    nodes: board.nodes as MindmapFixtureNodeV1[],
-    edges: board.edges as MindmapFixtureEdgeV1[],
+    nodes: board.nodes as MindmapFixtureNode[],
+    edges: board.edges as MindmapFixtureEdge[],
     meta: board.meta != null && typeof board.meta === "object" ? (board.meta as Record<string, unknown>) : undefined,
   };
 }
 
-function identityKindByNodeId(fixture: WiresFixtureV1, nodeId: string): string | undefined {
+function identityKindByNodeId(fixture: WiresFixture, nodeId: string): string | undefined {
   return fixture.identities.find((identity) => identity.nodeId === nodeId)?.identityKind;
 }
 
-function applyIdentityKindsToBoardNodes(fixture: WiresFixtureV1): MindmapFixtureNodeV1[] {
+function applyIdentityKindsToBoardNodes(fixture: WiresFixture): MindmapFixtureNode[] {
   const catalogs = fixture.kindCatalogs;
   return fixture.board.nodes.map((node) => {
     const identityKind = identityKindByNodeId(fixture, node.id) ?? node.nodeKind;
@@ -402,7 +402,7 @@ function applyIdentityKindsToBoardNodes(fixture: WiresFixtureV1): MindmapFixture
   });
 }
 
-function applyRelationshipKindsToBoardEdges(fixture: WiresFixtureV1): MindmapFixtureEdgeV1[] {
+function applyRelationshipKindsToBoardEdges(fixture: WiresFixture): MindmapFixtureEdge[] {
   const byEdgeId = new Map(fixture.relationships.map((rel) => [rel.edgeId, rel.kind]));
   return fixture.board.edges.map((edge) => {
     const kind = byEdgeId.get(edge.id);
@@ -411,8 +411,8 @@ function applyRelationshipKindsToBoardEdges(fixture: WiresFixtureV1): MindmapFix
   });
 }
 
-export function mindmapBoardToPuzzle2dFixtureV1(board: MindmapFixtureV1, kindCatalogs?: WiresFixtureKindCatalogsV1): Puzzle2dFixtureV1 {
-  const nodes: Puzzle2dFixtureNodeV1[] = board.nodes.map((node) => {
+export function mindmapBoardToPuzzle2dFixture(board: MindmapFixture, kindCatalogs?: WiresFixtureKindCatalogs): Puzzle2dFixture {
+  const nodes: Puzzle2dFixtureNode[] = board.nodes.map((node) => {
     const shared = {
       id: node.id,
       x: node.x,
@@ -428,7 +428,7 @@ export function mindmapBoardToPuzzle2dFixtureV1(board: MindmapFixtureV1, kindCat
     }
     return { ...shared, radius: node.radius ?? 40, shape: "circle" as const };
   });
-  const edges: Puzzle2dFixtureEdgeV1[] = board.edges.map((edge) => ({
+  const edges: Puzzle2dFixtureEdge[] = board.edges.map((edge) => ({
     id: edge.id,
     source: edge.source,
     target: edge.target,
@@ -436,7 +436,7 @@ export function mindmapBoardToPuzzle2dFixtureV1(board: MindmapFixtureV1, kindCat
   }));
   const puzzleCatalogs = wiresFixtureKindCatalogsToPuzzle2d(kindCatalogs);
   return {
-    schema: "puzzle.2d.fixture/v1",
+    schema: "puzzle.2d.fixture",
     camera: board.camera as CameraState,
     nodes,
     edges,
@@ -446,29 +446,29 @@ export function mindmapBoardToPuzzle2dFixtureV1(board: MindmapFixtureV1, kindCat
   };
 }
 
-export function wiresFixtureBoard(fixture: WiresFixtureV1): Puzzle2dFixtureV1 {
-  const board: MindmapFixtureV1 = {
+export function wiresFixtureBoard(fixture: WiresFixture): Puzzle2dFixture {
+  const board: MindmapFixture = {
     ...fixture.board,
     nodes: applyIdentityKindsToBoardNodes(fixture),
     edges: applyRelationshipKindsToBoardEdges(fixture),
   };
-  return mindmapBoardToPuzzle2dFixtureV1(board, fixture.kindCatalogs);
+  return mindmapBoardToPuzzle2dFixture(board, fixture.kindCatalogs);
 }
 
-export function wiresRelationshipKindForEdgeId(fixture: WiresFixtureV1, edgeId: string): RelationshipKind | undefined {
+export function wiresRelationshipKindForEdgeId(fixture: WiresFixture, edgeId: string): RelationshipKind | undefined {
   return fixture.relationships.find((rel) => rel.edgeId === edgeId)?.kind;
 }
 
-export function wiresIdentityLabelForNodeId(fixture: WiresFixtureV1, nodeId: string): string | undefined {
+export function wiresIdentityLabelForNodeId(fixture: WiresFixture, nodeId: string): string | undefined {
   return fixture.identities.find((identity) => identity.nodeId === nodeId)?.label;
 }
 
-export function wiresRelationshipDisplayLabelForEdgeId(fixture: WiresFixtureV1, edgeId: string): string | undefined {
+export function wiresRelationshipDisplayLabelForEdgeId(fixture: WiresFixture, edgeId: string): string | undefined {
   const kind = wiresRelationshipKindForEdgeId(fixture, edgeId);
   return kind != null ? relationshipKindDisplayName(kind) : undefined;
 }
 
-export function wiresRelationshipHierarchyLabel(fixture: WiresFixtureV1, edgeId: string): string | undefined {
+export function wiresRelationshipHierarchyLabel(fixture: WiresFixture, edgeId: string): string | undefined {
   const edge = fixture.board.edges.find((row) => row.id === edgeId);
   const kind = wiresRelationshipKindForEdgeId(fixture, edgeId);
   if (edge == null || kind == null) {
@@ -479,8 +479,8 @@ export function wiresRelationshipHierarchyLabel(fixture: WiresFixtureV1, edgeId:
   return `${relationshipKindDisplayName(kind)}: ${source} → ${target}`;
 }
 
-export const METABOLISM_WIRES_FIXTURE: WiresFixtureV1 =
-  parseWiresFixtureV1(metabolismWiresJson as unknown) ?? (metabolismWiresJson as WiresFixtureV1);
+export const METABOLISM_WIRES_FIXTURE: WiresFixture =
+  parseWiresFixture(metabolismWiresJson as unknown) ?? (metabolismWiresJson as WiresFixture);
 
 /** @emoji 🧩 FiveD instance id suffix for kit WIRES surfaces (`{kitId}:kit:wires`). */
 export const WIRES_KIT_INSTANCE_SUFFIX = ":kit:wires";
@@ -500,20 +500,20 @@ export function isWiresLiveForceGraphInstanceId(instanceId: string): boolean {
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  describe("parseWiresFixtureV1", () => {
+  describe("parseWiresFixture", () => {
     it("parses metabolism wires fixture with normal graph board", () => {
-      const fixture = parseWiresFixtureV1(metabolismWiresJson as unknown);
-      expect(fixture?.schema).toBe("reasoning.wires.fixture/v1");
+      const fixture = parseWiresFixture(metabolismWiresJson as unknown);
+      expect(fixture?.schema).toBe("reasoning.wires.fixture");
       expect(fixture?.source.kitName).toBe("Metabolism");
       expect(fixture?.identities.length).toBe(7);
       expect(fixture?.relationships.length).toBe(9);
-      expect(fixture?.board.schema).toBe("reasoning.mindmap.fixture/v1");
+      expect(fixture?.board.schema).toBe("reasoning.mindmap.fixture");
       expect(fixture?.board.nodes.length).toBe(7);
       expect(fixture?.board.edges.length).toBe(9);
       expect(fixture?.board.nodes.every((node) => !("handles" in node))).toBe(true);
       expect(fixture?.board.edges[0]?.source).toBe("f042c2a4-3ba5-44b0-b22c-0ae8f568aacc");
       const board = wiresFixtureBoard(fixture!);
-      expect(board.schema).toBe("puzzle.2d.fixture/v1");
+      expect(board.schema).toBe("puzzle.2d.fixture");
       expect(board.nodes.every((node) => node.handles.length === 0)).toBe(true);
       expect(board.edges[0]?.source).toBe("f042c2a4-3ba5-44b0-b22c-0ae8f568aacc");
       expect(board.edges[0]?.edgeKind).toBe("wires.owns");
@@ -545,12 +545,12 @@ if (import.meta.vitest) {
     });
 
     it("propagates node text and iconKind avatars onto the puzzle 2d board", () => {
-      const board = mindmapBoardToPuzzle2dFixtureV1({
-        schema: "reasoning.mindmap.fixture/v1",
+      const board = mindmapBoardToPuzzle2dFixture({
+        schema: "reasoning.mindmap.fixture",
         camera: { x: 0, y: 0, zoom: 1 },
         nodes: [
-          { id: "a", x: 0, y: 0, shape: "rectangle", width: 40, height: 40, text: "Alpha", iconKind: "<svg></svg>" } as MindmapFixtureNodeV1,
-          { id: "b", x: 10, y: 0, shape: "circle", radius: 20, text: "Beta" } as MindmapFixtureNodeV1,
+          { id: "a", x: 0, y: 0, shape: "rectangle", width: 40, height: 40, text: "Alpha", iconKind: "<svg></svg>" } as MindmapFixtureNode,
+          { id: "b", x: 10, y: 0, shape: "circle", radius: 20, text: "Beta" } as MindmapFixtureNode,
         ],
         edges: [],
       });

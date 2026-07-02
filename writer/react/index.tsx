@@ -25,7 +25,7 @@ import {
 	type LspTransport,
 	WRITER_DEFAULT_EDITOR_SETTINGS,
 	type WriterEditorSettings,
-	type WriterDocumentV1,
+	type WriterDocument,
 } from "@semio-tech/writer-core";
 import initWriterWasm, { WriterSession, initSync } from "../rs/pkg/writer.js";
 
@@ -48,8 +48,8 @@ export { WriterSession };
 // #endregion 🔖Wasm
 
 export interface WriterCanvasProps {
-	readonly document: WriterDocumentV1;
-	readonly onChange?: (next: WriterDocumentV1) => void;
+	readonly document: WriterDocument;
+	readonly onChange?: (next: WriterDocument) => void;
 	readonly onSubmit?: () => void;
 	readonly createLspTransport?: () => LspTransport;
 	readonly fixtureJsonForLsp?: string;
@@ -247,7 +247,7 @@ export function WriterCanvas({
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const inputRef = useRef<HTMLTextAreaElement | null>(null);
-	const userScrolledRef = useRef(false);
+	const [gpuSessionReady, setGpuSessionReady] = useState(false);
 	const sessionRef = useRef<WriterSession | null>(null);
 	const lspRef = useRef<LspClient | null>(null);
 	const versionRef = useRef(1);
@@ -493,10 +493,10 @@ export function WriterCanvas({
 		const container = containerRef.current;
 		if (!container || !isWindowContentDeadLineHost(container)) {
 			session.setDeadLineY(0);
+			session.setChromeEdgelessScroll(false);
 			return;
 		}
 		session.setDeadLineY(readWindowContentDeadLinePx(container));
-		session.setChromeEdgelessScroll(userScrolledRef.current);
 	}, []);
 
 	const syncCaret = useCallback(() => {
@@ -577,6 +577,7 @@ export function WriterCanvas({
 			canvas.style.width = `${w}px`;
 			canvas.style.height = `${h}px`;
 			session.setSize(w, h, dpr);
+			if (session.gpuReady()) syncWriterDeadLine(session);
 			renderFrame();
 		};
 
@@ -610,6 +611,7 @@ export function WriterCanvas({
 				session.detachGpu();
 				return;
 			}
+			setGpuSessionReady(true);
 			session.setCamera(0, documentRef.current.camera.y, 1);
 			syncWriterDeadLine(session);
 			session.setText(documentRef.current.text);
@@ -624,6 +626,7 @@ export function WriterCanvas({
 
 		return () => {
 			cancelled = true;
+			setGpuSessionReady(false);
 			cleanupResize?.();
 			if (tickLoopRef.current != null) cancelAnimationFrame(tickLoopRef.current);
 			tickLoopRef.current = null;
@@ -635,7 +638,7 @@ export function WriterCanvas({
 	reactHostPort.useLayoutEffect(() => {
 		const session = sessionRef.current;
 		const container = containerRef.current;
-		if (!session?.gpuReady() || !container) return;
+		if (!gpuSessionReady || !session?.gpuReady() || !container) return;
 		const apply = () => syncWriterDeadLine(session);
 		apply();
 		const body = container.closest('[data-slot="window-body"]');
@@ -647,7 +650,7 @@ export function WriterCanvas({
 			if (overlay) ro.observe(overlay);
 		}
 		return () => ro.disconnect();
-	}, [syncWriterDeadLine]);
+	}, [gpuSessionReady, syncWriterDeadLine]);
 
 	useEffect(() => {
 		const session = sessionRef.current;
@@ -1118,11 +1121,9 @@ export function WriterCanvas({
 		const canvas = canvasRef.current;
 		if (!canvas) return;
 		const handleWheel = (event: WheelEvent) => {
-			event.preventDefault();
 			const session = sessionRef.current;
 			if (!session) return;
-			userScrolledRef.current = true;
-			session.setChromeEdgelessScroll(true);
+			event.preventDefault();
 			session.wheelScrollScreen(event.deltaY);
 			const camera = JSON.parse(session.cameraJson()) as { x: number; y: number; zoom: number };
 			onChange?.({ ...documentRef.current, camera: { x: 0, y: camera.y, zoom: 1 } });
@@ -1423,7 +1424,7 @@ if (import.meta.vitest) {
 	describe("writer document helper", () => {
 		it("creates jack document", () => {
 			const doc = createWriterDocument({ id: "jack", languageId: "jack", text: "MATCH (a:Piece) RETURN a.name" });
-			expect(doc.schema).toBe("writer.document/v1");
+			expect(doc.schema).toBe("writer.document");
 		});
 	});
 }

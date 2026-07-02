@@ -13,7 +13,7 @@ A mindmap is a normal directed graph, but WIRES currently renders through the **
 
 - `BoardHost` in [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) (~~5200 lines) is self-contained and entirely handle-centric. `parse_fixture_v1` (~~3762) hard-fails without per-node `handles[]`; `edge_curve` (~3254) only resolves through handles; scene build draws handle markers; hit-test prioritizes handles; `delete_selection` cascades node→handles→edges.
 - `SceneDescriptorJson` ([infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) ~421) carries `handles` and edges reference handle ids.
-- The React layer [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) (~12.6k lines) is **not thin**: TS owns fixture parsing (`parsePuzzle2dFixtureV1` ~1718, requires handles), kind catalogs (`#region 🔖Kinds`), theme probing (`#region 🎨ElementsUiPuzzle2dPaint`), declarative scene sync (`syncPuzzle2dScene` ~10586, binds edges to handle objects), and hierarchy observation (`#region 🔖DirectedGraphObservation`).
+- The React layer [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) (~12.6k lines) is **not thin**: TS owns fixture parsing (`parsePuzzle2dFixture` ~1718, requires handles), kind catalogs (`#region 🔖Kinds`), theme probing (`#region 🎨ElementsUiPuzzle2dPaint`), declarative scene sync (`syncPuzzle2dScene` ~10586, binds edges to handle objects), and hierarchy observation (`#region 🔖DirectedGraphObservation`).
 - WIRES shoehorns this: [metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json) gives every topic a synthetic `:link` handle and connects edges handle→handle; [wires/play](reasoning/mindmap/wires/play/index.ts) boots the full puzzle 2d chrome via `PUZZLE_PLAY_ENTRY=wires`.
 
 ### Target
@@ -48,7 +48,7 @@ All graph logic and styling move to (or stay in) Rust; React only hosts the canv
 ### Phase 1 - Normal-graph fixture schema
 
 - Define `reasoning.mindmap.fixture/v1` and migrate [metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json): drop `handles[]`, repoint edges to node ids (e.g. `source: "f042c2a4-..."`), move handle catalog out, keep node/edge kind catalogs + `meta.wires.allowedTopicIds`.
-- Update [wires/react/index.ts](reasoning/mindmap/wires/react/index.ts): `WiresFixtureBoardV1.schema` -> `reasoning.mindmap.fixture/v1`; `parseWiresFixtureBoard` validates node-id edges (no handles).
+- Update [wires/react/index.ts](reasoning/mindmap/wires/react/index.ts): `WiresFixtureBoard.schema` -> `reasoning.mindmap.fixture/v1`; `parseWiresFixtureBoard` validates node-id edges (no handles).
 
 ### Phase 2 - Rust: normal mode in the host
 

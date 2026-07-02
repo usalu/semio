@@ -34,7 +34,7 @@ Confirmed decisions: canonical BIM set; building model auto-loads into the Build
 
 ## 1. Add canonical BIM typologies to `aec.building`
 
-Create `cad/asset/modelDefinition/aec.building/typology/<Name>/typology.json` for the canonical set, each `schema: "spatial.typology/v1"`, `primitiveKinds: ["solid"]`, a `style` block (color/edgeColor/opacity, mirroring [energy Roof](cad/asset/modelDefinition/aec.building.energy/typology/Roof/typology.json)), and id `building.building.<name>` (matches the `energy.energy.*` / `structure.structure.*` base-definition convention):
+Create `cad/asset/modelDefinition/aec.building/typology/<Name>/typology.json` for the canonical set, each `schema: "spatial.typology"`, `primitiveKinds: ["solid"]`, a `style` block (color/edgeColor/opacity, mirroring [energy Roof](cad/asset/modelDefinition/aec.building.energy/typology/Roof/typology.json)), and id `building.building.<name>` (matches the `energy.energy.*` / `structure.structure.*` base-definition convention):
 
 - `Column` -> `building.building.column`
 - `Beam` -> `building.building.beam`

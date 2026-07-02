@@ -173,7 +173,7 @@ pub fn catalogue_json(registry: &Registry) -> String {
         })
         .collect();
     serde_json::to_string(&serde_json::json!({
-        "schema": "imperative.catalogue/v1",
+        "schema": "imperative.catalogue",
         "sections": [{
             "id": "logic",
             "title": "Logic",

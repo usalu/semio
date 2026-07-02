@@ -7,6 +7,7 @@ export {
   PUZZLE_2D_PLAY_APP_ID as WIRES_PLAY_APP_ID,
   PUZZLE_2D_PLAY_CONTROLLER_ID as WIRES_PLAY_CONTROLLER_ID,
   buildPuzzle2dPlayRuntime as buildWiresPlayRuntime,
+  puzzle2dPlayCmd,
 } from "@semio-tech/puzzle-2d-play";
 
 export const WIRES_PLAY_HIERARCHY_TAB_ID = "wires-play-hierarchy";
@@ -184,7 +185,6 @@ export function buildWiresPlayHierarchySections(
   wiresFixture: WiresFixtureV1,
   puzzleFixture: Puzzle2dFixtureV1,
   selectionIds: readonly string[],
-  onSelect: (id: string) => void,
   options?: WiresPlayHierarchyBuildOptions,
 ): UiTreeNode {
   const omitItemSelection = options?.omitItemSelection === true;
@@ -199,7 +199,7 @@ export function buildWiresPlayHierarchySections(
       label: identity.label,
       ...(description !== undefined ? { description } : {}),
       ...(omitItemSelection ? {} : { isSelected: selectedIds.has(identity.nodeId) }),
-      onClick: () => onSelect(identity.nodeId),
+      command: puzzle2dPlayCmd("hierarchySelect", { id: identity.nodeId }),
       ...wiresHierarchyHoverHandlers(onHover, identity.nodeId),
     };
   });
@@ -207,7 +207,7 @@ export function buildWiresPlayHierarchySections(
     id: `${WIRES_PLAY_HIERARCHY_RELATIONSHIP_PREFIX}${edge.id}`,
     label: wiresRelationshipHierarchyLabel(wiresFixture, edge.id) ?? edge.id,
     ...(omitItemSelection ? {} : { isSelected: selectedIds.has(edge.id) }),
-    onClick: () => onSelect(edge.id),
+    command: puzzle2dPlayCmd("hierarchySelect", { id: edge.id }),
     ...wiresHierarchyHoverHandlers(onHover, edge.id),
   }));
   return {
@@ -258,7 +258,7 @@ if (import.meta.vitest) {
     });
 
     it("buildWiresPlayHierarchySections uses Identities and Relationships groups", () => {
-      const tree = buildWiresPlayHierarchySections(WIRES_PLAY_FIXTURE, WIRES_PLAY_DEFAULT_FIXTURE, [], () => {});
+      const tree = buildWiresPlayHierarchySections(WIRES_PLAY_FIXTURE, WIRES_PLAY_DEFAULT_FIXTURE, []);
       const groups = tree.sections.map((section) => section.label);
       expect(groups).toEqual(["Identities", "Relationships"]);
       const relationshipsSection = tree.sections.find((section) => section.label === "Relationships");

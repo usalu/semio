@@ -21,25 +21,25 @@ pub struct PathRef {
 /// 📄 Imperative path document envelope.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ImperativeDocumentV1 {
+pub struct ImperativeDocument {
     pub schema: String,
     pub path: Path,
     #[serde(default)]
     pub seed: Dictionary,
 }
 
-impl Default for ImperativeDocumentV1 {
+impl Default for ImperativeDocument {
     fn default() -> Self {
         Self {
-            schema: "imperative.document/v1".into(),
+            schema: "imperative.document".into(),
             path: Path::new(),
             seed: Dictionary::new(),
         }
     }
 }
 
-pub fn default_document() -> ImperativeDocumentV1 {
-    ImperativeDocumentV1 {
+pub fn default_document() -> ImperativeDocument {
+    ImperativeDocument {
         path: Path {
             steps: vec![
                 Step {
@@ -69,7 +69,7 @@ pub fn default_document() -> ImperativeDocumentV1 {
 // #region 🔖Host
 /// 🎛️ Native imperative path host.
 pub struct ImperativeHost {
-    pub document: ImperativeDocumentV1,
+    pub document: ImperativeDocument,
     registry: Registry,
     next_serial: u64,
 }
@@ -81,7 +81,7 @@ impl Default for ImperativeHost {
 }
 
 impl ImperativeHost {
-    pub fn from_document(document: ImperativeDocumentV1) -> Self {
+    pub fn from_document(document: ImperativeDocument) -> Self {
         Self {
             document,
             registry: imperative_module_registry(),
@@ -90,8 +90,8 @@ impl ImperativeHost {
     }
 
     pub fn load_json(json: &str) -> Result<Self, String> {
-        let document: ImperativeDocumentV1 = serde_json::from_str(json).map_err(|err| err.to_string())?;
-        if document.schema != "imperative.document/v1" {
+        let document: ImperativeDocument = serde_json::from_str(json).map_err(|err| err.to_string())?;
+        if document.schema != "imperative.document" {
             return Err(format!("unsupported schema: {}", document.schema));
         }
         Ok(Self::from_document(document))

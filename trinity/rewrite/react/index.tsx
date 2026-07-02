@@ -4,13 +4,13 @@
 
 import { mergeManifestCatalogBundles, rewrite_lhsManifestCatalogBundle, rewrite_rhsManifestCatalogBundle } from "@semio-tech/graph-manifest";
 import {
-  parsePuzzle2dFixtureV1,
+  parsePuzzle2dFixture,
   type KindCatalogBundle,
-  type Puzzle2dFixtureCircleNodeV1,
-  type Puzzle2dFixtureHandleV1,
-  type Puzzle2dFixtureV1,
+  type Puzzle2dFixtureCircleNode,
+  type Puzzle2dFixtureHandle,
+  type Puzzle2dFixture,
 } from "@semio-tech/puzzle-2d-react";
-import type { RuleParameterV1 } from "@semio-tech/trinity-react";
+import type { RuleParameter } from "@semio-tech/trinity-react";
 
 export const REWRITE_NODE_MATCH = "rewrite.match" as const;
 export const REWRITE_NODE_WHERE = "rewrite.where" as const;
@@ -28,7 +28,7 @@ export const REWRITE_RHS_MANIFEST_ID = "rewrite-rhs" as const;
 
 type RewritePortKind = "in" | "out";
 
-function rewritePortHandle(nodeId: string, port: RewritePortKind): Puzzle2dFixtureHandleV1 {
+function rewritePortHandle(nodeId: string, port: RewritePortKind): Puzzle2dFixtureHandle {
   return { id: `${nodeId}:${port}`, handleKind: REWRITE_PORT_HANDLE, angle: port === "out" ? 0 : Math.PI };
 }
 
@@ -39,7 +39,7 @@ function rewriteGraphNode(
   x: number,
   y: number,
   ports: readonly RewritePortKind[],
-): Puzzle2dFixtureCircleNodeV1 {
+): Puzzle2dFixtureCircleNode {
   return { id, nodeKind, text, x, y, radius: 44, shape: "circle", handles: ports.map((port) => rewritePortHandle(id, port)) };
 }
 
@@ -60,7 +60,7 @@ function parseWhereVars(text: string): readonly string[] {
   return [...vars];
 }
 
-function rewriteNodeVar(node: Puzzle2dFixtureCircleNodeV1): string | null {
+function rewriteNodeVar(node: Puzzle2dFixtureCircleNode): string | null {
   if (
     node.nodeKind === REWRITE_NODE_MATCH ||
     node.nodeKind === REWRITE_NODE_CREATE ||
@@ -79,14 +79,14 @@ function rewriteNodeVar(node: Puzzle2dFixtureCircleNodeV1): string | null {
 }
 
 /** @emoji 🏷️ Resolve the Jack variable name bound to a rewrite rule-graph node id. */
-export function rewriteVarForNodeId(fixture: Puzzle2dFixtureV1, nodeId: string): string | null {
+export function rewriteVarForNodeId(fixture: Puzzle2dFixture, nodeId: string): string | null {
   const node = fixture.nodes.find((entry) => entry.id === nodeId);
   if (!node) return null;
   return rewriteNodeVar(node);
 }
 
 /** @emoji 🔗 Resolve rewrite rule-graph node ids that reference a Jack variable name. */
-export function rewriteNodeIdsForVar(fixture: Puzzle2dFixtureV1, varName: string): readonly string[] {
+export function rewriteNodeIdsForVar(fixture: Puzzle2dFixture, varName: string): readonly string[] {
   const ids: string[] = [];
   for (const node of fixture.nodes) {
     const bound = rewriteNodeVar(node);
@@ -161,11 +161,11 @@ function parseSetLabel(text: string): { var: string; prop: string; value: string
   return { var: match[1], prop: match[2], value: match[3].trim() };
 }
 
-function parseParameterLabel(text: string): RuleParameterV1 | null {
+function parseParameterLabel(text: string): RuleParameter | null {
   const match = text.trim().match(/^([\w$]+):(string|number|boolean)=(.*)$/);
   if (!match) return null;
   const name = match[1];
-  const kind = match[2] as RuleParameterV1["kind"];
+  const kind = match[2] as RuleParameter["kind"];
   const raw = match[3].trim();
   if (kind === "number") {
     const value = Number(raw);
@@ -178,7 +178,7 @@ function parseParameterLabel(text: string): RuleParameterV1 | null {
   return { name, kind, default: unquoted };
 }
 
-function formatParameterDefault(param: RuleParameterV1): string {
+function formatParameterDefault(param: RuleParameter): string {
   if (param.kind === "string") return String(param.default ?? "");
   if (param.kind === "number") return String(param.default ?? 0);
   return param.default === true ? "true" : "false";
@@ -192,8 +192,8 @@ export function rewriteRhsKindCatalogs(): KindCatalogBundle {
   return mergeManifestCatalogBundles(rewrite_rhsManifestCatalogBundle());
 }
 
-export const REWRITE_DEFAULT_LHS_FIXTURE: Puzzle2dFixtureV1 = {
-  schema: "puzzle.2d.fixture/v1",
+export const REWRITE_DEFAULT_LHS_FIXTURE: Puzzle2dFixture = {
+  schema: "puzzle.2d.fixture",
   camera: { x: 0, y: 0, zoom: 1 },
   meta: { manifestId: REWRITE_LHS_MANIFEST_ID },
   nodes: [
@@ -203,8 +203,8 @@ export const REWRITE_DEFAULT_LHS_FIXTURE: Puzzle2dFixtureV1 = {
   edges: [{ id: "lhs-flow", source: "match-a:out", target: "where-b:in", edgeKind: REWRITE_EDGE_FLOW }],
 };
 
-export const REWRITE_DEFAULT_RHS_FIXTURE: Puzzle2dFixtureV1 = {
-  schema: "puzzle.2d.fixture/v1",
+export const REWRITE_DEFAULT_RHS_FIXTURE: Puzzle2dFixture = {
+  schema: "puzzle.2d.fixture",
   camera: { x: 0, y: 0, zoom: 1 },
   meta: { manifestId: REWRITE_RHS_MANIFEST_ID },
   nodes: [
@@ -217,15 +217,15 @@ export const REWRITE_DEFAULT_RHS_FIXTURE: Puzzle2dFixtureV1 = {
 export const REWRITE_DEFAULT_LHS_FIXTURE_JSON = JSON.stringify(REWRITE_DEFAULT_LHS_FIXTURE);
 export const REWRITE_DEFAULT_RHS_FIXTURE_JSON = JSON.stringify(REWRITE_DEFAULT_RHS_FIXTURE);
 
-export function parseRewriteGraphFixtureJson(json: string): Puzzle2dFixtureV1 | null {
+export function parseRewriteGraphFixtureJson(json: string): Puzzle2dFixture | null {
   try {
-    return parsePuzzle2dFixtureV1(JSON.parse(json));
+    return parsePuzzle2dFixture(JSON.parse(json));
   } catch {
     return null;
   }
 }
 
-export function rewriteLhsGraphToJson(fixture: Puzzle2dFixtureV1): string {
+export function rewriteLhsGraphToJson(fixture: Puzzle2dFixture): string {
   const matchNodes = fixture.nodes.filter((node) => node.nodeKind === REWRITE_NODE_MATCH);
   const whereNodes = fixture.nodes.filter((node) => node.nodeKind === REWRITE_NODE_WHERE);
   let pattern: {
@@ -274,7 +274,7 @@ export function rewriteLhsGraphToJson(fixture: Puzzle2dFixtureV1): string {
   return JSON.stringify(lhs, null, 2);
 }
 
-export function rewriteRhsGraphToJson(fixture: Puzzle2dFixtureV1): string {
+export function rewriteRhsGraphToJson(fixture: Puzzle2dFixture): string {
   const setRows = fixture.nodes
     .filter((node) => node.nodeKind === REWRITE_NODE_SET)
     .map((node) => parseSetLabel(node.text ?? ""))
@@ -284,7 +284,7 @@ export function rewriteRhsGraphToJson(fixture: Puzzle2dFixtureV1): string {
   const parameters = fixture.nodes
     .filter((node) => node.nodeKind === REWRITE_NODE_PARAMETER)
     .map((node) => parseParameterLabel(node.text ?? ""))
-    .filter((row): row is RuleParameterV1 => row != null);
+    .filter((row): row is RuleParameter => row != null);
 
   const create = fixture.nodes
     .filter((node) => node.nodeKind === REWRITE_NODE_CREATE)
@@ -310,7 +310,7 @@ export function rewriteRhsGraphToJson(fixture: Puzzle2dFixtureV1): string {
   return JSON.stringify({ create, delete: del, set: setRows, merge, parameters }, null, 2);
 }
 
-export function rewriteLhsJsonToGraph(lhsJson: string): Puzzle2dFixtureV1 {
+export function rewriteLhsJsonToGraph(lhsJson: string): Puzzle2dFixture {
   try {
     const lhs = JSON.parse(lhsJson) as {
       pattern?: {
@@ -324,8 +324,8 @@ export function rewriteLhsJsonToGraph(lhsJson: string): Puzzle2dFixtureV1 {
       whereClause?: string;
     };
     const pattern = lhs.pattern ?? { leftVar: "a", leftKind: "Piece" };
-    const nodes: Puzzle2dFixtureCircleNodeV1[] = [];
-    const edges: Puzzle2dFixtureV1["edges"] = [];
+    const nodes: Puzzle2dFixtureCircleNode[] = [];
+    const edges: Puzzle2dFixture["edges"] = [];
     if (pattern.rightVar && pattern.rightKind) {
       nodes.push(
         rewriteGraphNode("match-left", REWRITE_NODE_MATCH, formatMatchLabel({ var: pattern.leftVar!, kind: pattern.leftKind! }), -220, 0, ["out"]),
@@ -354,17 +354,17 @@ export function rewriteLhsJsonToGraph(lhsJson: string): Puzzle2dFixtureV1 {
   }
 }
 
-export function rewriteRhsJsonToGraph(rhsJson: string): Puzzle2dFixtureV1 {
+export function rewriteRhsJsonToGraph(rhsJson: string): Puzzle2dFixture {
   try {
     const rhs = JSON.parse(rhsJson) as {
       set?: readonly { var?: string; prop?: string; value?: string }[];
-      parameters?: readonly RuleParameterV1[];
+      parameters?: readonly RuleParameter[];
       create?: readonly { leftVar?: string; leftKind?: string }[];
       delete?: readonly { leftVar?: string; leftKind?: string }[];
       merge?: readonly { leftVar?: string; leftKind?: string }[];
     };
-    const nodes: Puzzle2dFixtureCircleNodeV1[] = [];
-    const edges: Puzzle2dFixtureV1["edges"] = [];
+    const nodes: Puzzle2dFixtureCircleNode[] = [];
+    const edges: Puzzle2dFixture["edges"] = [];
     let y = -120;
     const bumpY = () => {
       y += 80;
@@ -423,7 +423,7 @@ if (import.meta.vitest) {
 
     it("default rhs graph compiles to set + parameter", () => {
       const json = rewriteRhsGraphToJson(REWRITE_DEFAULT_RHS_FIXTURE);
-      const rhs = JSON.parse(json) as { set: { var: string; prop: string; value: string }[]; parameters: RuleParameterV1[] };
+      const rhs = JSON.parse(json) as { set: { var: string; prop: string; value: string }[]; parameters: RuleParameter[] };
       expect(rhs.set[0]).toEqual({ var: "a", prop: "label", value: "$label" });
       expect(rhs.parameters[0]?.name).toBe("label");
       expect(rhs.parameters[0]?.default).toBe("nakagin-core");

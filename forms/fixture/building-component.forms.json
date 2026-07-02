@@ -1,5 +1,5 @@
 {
-  "schema": "forms.form/v1",
+  "schema": "forms.form",
   "id": "building-component",
   "version": "1",
   "title": "Building Component",

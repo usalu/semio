@@ -2,19 +2,28 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
 import { useVelloThemeSync } from "@semio-tech/ui-react";
+import { SelectionMarquee } from "@semio-tech/ui-react";
 import {
 	isDagDrawLodKind,
 	DAG_LOD_MODE_AUTOMATIC,
 	dagLodCanvasProps,
+	DagSelectionBoundsBox,
+	computeDagMarqueeOverlay,
+	parseDagPreselectJson,
+	parseDagSelectionPreviewPoints,
+	parseDagSelectionUnionBoundsScreen,
+	dagSelectionUnionBoundsEqual,
+	paintDagLabelOverlays,
 	type DagDrawLodKind,
 	type DagReorganizeRequest,
+	type DagSelectionUnionBoundsScreen,
 } from "@semio-tech/dag-react";
 import {
 	DEFAULT_SEQUENCE_FIXTURE,
 	parseSequenceFixtureJson,
 	sequenceFixtureToJson,
-	type SequenceFixtureV1,
-	type SequenceStepV1,
+	type SequenceFixture,
+	type SequenceStep,
 } from "@semio-tech/sequence-core";
 import {
 	IMPERATIVE_DOCUMENT_SCHEMA,
@@ -42,10 +51,22 @@ export async function ensureSequenceWasmLoaded(): Promise<void> {
 }
 
 export { SequenceSession, DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps };
+
+type SequenceOverlaySession = SequenceSession & {
+	labelOverlayPaintStateJson(): string;
+	hoveredNodeId(): string | null | undefined;
+	preselectNodeIdsJson(): string;
+	selectionPreviewPointsJson(): string;
+	selectionPreviewCrossing(): boolean;
+	selectionUnionBoundsScreenJson(): string;
+	setSelectionOptions(method: string, mode: string): void;
+	setGhostStep(kind: string, x: number, y: number): void;
+	clearGhostStep(): void;
+};
 export type { DagDrawLodKind, DagReorganizeRequest };
 // #endregion 🔖WasmBridge
 
-export type { SequenceFixtureV1, SequenceStepV1, EffectLogEntry, RunResult };
+export type { SequenceFixture, SequenceStep, EffectLogEntry, RunResult };
 
 export interface SequenceRunRequest {
 	readonly epoch: number;
@@ -80,12 +101,12 @@ export interface SequenceCanvasProps {
 	readonly onRunResult?: (result: RunResult) => void;
 }
 
-export const SEQUENCE_STEP_DRAG_V1_MIME = "application/x-semio-sequence-step-v1";
+export const SEQUENCE_STEP_DRAG_MIME = "application/x-semio-sequence-step";
 export const SEQUENCE_STEP_DRAG_PLAIN_MIME = "text/plain";
 
 export function sequenceStepCatalogueItemDragData(item: Pick<ImperativeCatalogueItem, "kind">): Record<string, string> {
 	const encoded = JSON.stringify({ kind: item.kind });
-	return { [SEQUENCE_STEP_DRAG_V1_MIME]: encoded, [SEQUENCE_STEP_DRAG_PLAIN_MIME]: encoded };
+	return { [SEQUENCE_STEP_DRAG_MIME]: encoded, [SEQUENCE_STEP_DRAG_PLAIN_MIME]: encoded };
 }
 
 export function decodeSequenceStepDragPayload(encoded: string): string | null {
@@ -100,7 +121,7 @@ export function decodeSequenceStepDragPayload(encoded: string): string | null {
 }
 
 export function readSequenceStepDragDataTransfer(dataTransfer: DataTransfer): string | null {
-	const custom = dataTransfer.getData(SEQUENCE_STEP_DRAG_V1_MIME);
+	const custom = dataTransfer.getData(SEQUENCE_STEP_DRAG_MIME);
 	if (custom?.trim()) return decodeSequenceStepDragPayload(custom);
 	const plain = dataTransfer.getData(SEQUENCE_STEP_DRAG_PLAIN_MIME);
 	if (plain?.trim()) return decodeSequenceStepDragPayload(plain);
@@ -108,28 +129,221 @@ export function readSequenceStepDragDataTransfer(dataTransfer: DataTransfer): st
 }
 
 export function sequenceStepDragAcceptsTransfer(types: readonly string[]): boolean {
-	return types.includes(SEQUENCE_STEP_DRAG_V1_MIME) || types.includes(SEQUENCE_STEP_DRAG_PLAIN_MIME);
+	if (sequenceStepPalettePointerDragRef.active || sequencePaletteDragRef.active) {
+		return true;
+	}
+	return types.includes(SEQUENCE_STEP_DRAG_MIME) || types.includes(SEQUENCE_STEP_DRAG_PLAIN_MIME);
 }
 
 const sequencePaletteDragRef = { active: false };
+export const sequenceStepPalettePointerDragRef = { active: false, encoded: null as string | null };
+export const sequenceStepPaletteDragEncodedRef = { current: null as string | null };
+export const sequenceStepPaletteDragClientRef = { clientX: 0, clientY: 0 };
+export const sequenceStepDropPointerToWorldRef = {
+	current: null as ((clientX: number, clientY: number) => { screen: { x: number; y: number }; world: { x: number; y: number } } | null) | null,
+};
+export const sequenceStepPaletteDragGhostRef = {
+	current: null as ((clientX: number, clientY: number, kind: string | null) => void) | null,
+};
+let sequencePaletteDragPreviewRafId: number | null = null;
+
+function sequenceStopPaletteDragPreviewLoop(): void {
+	if (sequencePaletteDragPreviewRafId !== null) {
+		globalThis.cancelAnimationFrame?.(sequencePaletteDragPreviewRafId);
+		sequencePaletteDragPreviewRafId = null;
+	}
+}
+
+function sequenceReadActivePaletteDragEncoded(): string | null {
+	const pointer = sequenceStepPalettePointerDragRef.encoded?.trim();
+	if (pointer) return pointer;
+	const shared = sequenceStepPaletteDragEncodedRef.current?.trim();
+	return shared ? shared : null;
+}
+
+function sequenceDecodeKindFromDragEncoded(encoded: string): string | null {
+	return decodeSequenceStepDragPayload(encoded);
+}
+
+function sequenceSyncPaletteDragGhostAtClient(clientX: number, clientY: number): void {
+	const sync = sequenceStepPaletteDragGhostRef.current;
+	if (!sync) return;
+	const encoded = sequenceReadActivePaletteDragEncoded();
+	if (!encoded) {
+		sync(clientX, clientY, null);
+		return;
+	}
+	sync(clientX, clientY, sequenceDecodeKindFromDragEncoded(encoded));
+}
+
+function sequenceTickPaletteDragPreview(): void {
+	const encoded = sequenceReadActivePaletteDragEncoded();
+	if (!encoded) {
+		sequenceStopPaletteDragPreviewLoop();
+		return;
+	}
+	const { clientX, clientY } = sequenceStepPaletteDragClientRef;
+	sequenceSyncPaletteDragGhostAtClient(clientX, clientY);
+	const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis);
+	if (!requestFrame) {
+		sequencePaletteDragPreviewRafId = null;
+		return;
+	}
+	sequencePaletteDragPreviewRafId = requestFrame(sequenceTickPaletteDragPreview);
+}
+
+function sequenceStartPaletteDragPreviewLoop(): void {
+	if (sequencePaletteDragPreviewRafId !== null) return;
+	sequenceTickPaletteDragPreview();
+}
+
+/** @emoji 👻 Tracks catalogue drag coordinates and mirrors the WASM ghost step. */
+export function sequenceNotePaletteStepDragClient(clientX: number, clientY: number): void {
+	sequenceStepPaletteDragClientRef.clientX = clientX;
+	sequenceStepPaletteDragClientRef.clientY = clientY;
+	if (!sequenceReadActivePaletteDragEncoded()) return;
+	sequenceSyncPaletteDragGhostAtClient(clientX, clientY);
+	sequenceStartPaletteDragPreviewLoop();
+}
+
+/** @emoji ⎋ Aborts an in-flight catalogue step drag and clears the canvas ghost. */
+export function abortSequenceStepPaletteDrag(): void {
+	const wasActive = sequenceStepPalettePointerDragRef.active || sequencePaletteDragRef.active;
+	sequenceStepPalettePointerDragRef.active = false;
+	sequenceStepPalettePointerDragRef.encoded = null;
+	sequenceStepPaletteDragEncodedRef.current = null;
+	sequencePaletteDragRef.active = false;
+	if (wasActive) {
+		sequenceStopPaletteDragPreviewLoop();
+		sequenceStepPaletteDragGhostRef.current?.(sequenceStepPaletteDragClientRef.clientX, sequenceStepPaletteDragClientRef.clientY, null);
+	}
+}
+
+/** @emoji 🖱️ Begins pointer palette drag with an encoded step kind payload. */
+export function beginSequenceStepPalettePointerDrag(encoded: string): void {
+	sequencePaletteDropCommittedRef.current = false;
+	sequenceStepPalettePointerDragRef.active = true;
+	sequenceStepPalettePointerDragRef.encoded = encoded;
+	sequenceStepPaletteDragEncodedRef.current = encoded;
+	sequencePaletteDragRef.active = true;
+	sequenceStartPaletteDragPreviewLoop();
+}
+
+/** @emoji 🖱️ Ends pointer palette drag without committing a drop. */
+export function cancelSequenceStepPalettePointerDrag(): void {
+	if (!sequenceStepPalettePointerDragRef.active && !sequencePaletteDragRef.active) return;
+	sequenceStepPalettePointerDragRef.active = false;
+	sequenceStepPalettePointerDragRef.encoded = null;
+	sequenceStepPaletteDragEncodedRef.current = null;
+	sequencePaletteDragRef.active = false;
+	sequenceStopPaletteDragPreviewLoop();
+	sequenceStepPaletteDragGhostRef.current?.(sequenceStepPaletteDragClientRef.clientX, sequenceStepPaletteDragClientRef.clientY, null);
+}
+
+/** @emoji 🎯 True when client coordinates are over the sequence drop host. */
+export function isClientPointOverSequenceStepDropHost(clientX: number, clientY: number, host: HTMLElement | null | undefined): boolean {
+	if (!host) return false;
+	const rect = host.getBoundingClientRect();
+	return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
+}
+
+/** @emoji 🖱️ Ends pointer palette drag and drops on the viewport when over the host. */
+export function endSequenceStepPalettePointerDrag(
+	clientX: number,
+	clientY: number,
+	host: HTMLElement | null | undefined,
+	onDrop: (kind: string, clientX: number, clientY: number) => void,
+): void {
+	if (!sequenceStepPalettePointerDragRef.active) return;
+	const encoded = sequenceStepPalettePointerDragRef.encoded;
+	cancelSequenceStepPalettePointerDrag();
+	if (!encoded) return;
+	const kind = sequenceDecodeKindFromDragEncoded(encoded);
+	if (!kind || !isClientPointOverSequenceStepDropHost(clientX, clientY, host)) return;
+	onDrop(kind, clientX, clientY);
+}
+
 const sequencePaletteDropCommittedRef = { current: false };
+
+function SequenceStepPaletteDragPreviewBridge(props: {
+	readonly canvasRef: React.RefObject<HTMLCanvasElement | null>;
+	readonly containerRef: React.RefObject<HTMLDivElement | null>;
+	readonly enabled: boolean;
+	readonly setFixtureDragActive: (active: boolean) => void;
+}): null {
+	useEffect(() => {
+		if (!props.enabled) return;
+		const onDragOver = (event: DragEvent): void => {
+			if (!sequenceStepDragAcceptsTransfer([...event.dataTransfer!.types]) && !sequenceReadActivePaletteDragEncoded()) return;
+			sequenceNotePaletteStepDragClient(event.clientX, event.clientY);
+		};
+		window.addEventListener("dragover", onDragOver);
+		return () => window.removeEventListener("dragover", onDragOver);
+	}, [props.enabled]);
+
+	useEffect(() => {
+		if (!props.enabled) return;
+		const dropHost = (): HTMLElement | null => props.containerRef.current ?? props.canvasRef.current;
+		const onWindowPointerMove = (event: PointerEvent): void => {
+			if (!sequenceStepPalettePointerDragRef.active) return;
+			props.setFixtureDragActive(isClientPointOverSequenceStepDropHost(event.clientX, event.clientY, dropHost()));
+			sequenceNotePaletteStepDragClient(event.clientX, event.clientY);
+		};
+		window.addEventListener("pointermove", onWindowPointerMove);
+		return () => window.removeEventListener("pointermove", onWindowPointerMove);
+	}, [props.canvasRef, props.containerRef, props.enabled, props.setFixtureDragActive]);
+
+	return null;
+}
+
+function SequenceStepPaletteDragEscapeBridge(props: { readonly enabled: boolean }): null {
+	useEffect(() => {
+		if (!props.enabled) return;
+		const onKeyDown = (event: KeyboardEvent): void => {
+			if (event.key !== "Escape") return;
+			if (!sequenceReadActivePaletteDragEncoded()) return;
+			event.preventDefault();
+			abortSequenceStepPaletteDrag();
+		};
+		window.addEventListener("keydown", onKeyDown, true);
+		return () => window.removeEventListener("keydown", onKeyDown, true);
+	}, [props.enabled]);
+	return null;
+}
 
 export function sequenceStepPaletteTreeDragController(
 	dragDataByItemId: ReadonlyMap<string, Record<string, string>>,
 ): import("@semio-tech/framework-platform-core").TreeDragAndDropController {
-	const readKind = (dragData: Record<string, string> | undefined): string | undefined => {
-		const payload = dragData?.[SEQUENCE_STEP_DRAG_V1_MIME];
-		if (!payload?.trim()) return undefined;
-		return decodeSequenceStepDragPayload(payload) ?? undefined;
+	const readEncoded = (dragData: Record<string, string> | undefined): string | undefined => {
+		const payload = dragData?.[SEQUENCE_STEP_DRAG_MIME];
+		return payload?.trim() ? payload : undefined;
 	};
 	return {
 		getDragData: ({ sourceItem }) => dragDataByItemId.get(sourceItem.id),
+		pointerPaletteDrag: {
+			readEncodedDragPayload: readEncoded,
+			begin: beginSequenceStepPalettePointerDrag,
+			cancel: cancelSequenceStepPalettePointerDrag,
+		},
 		onDragStart: ({ sourceItem }) => {
+			if (sequenceStepPalettePointerDragRef.active) return;
 			sequencePaletteDropCommittedRef.current = false;
-			sequencePaletteDragRef.active = Boolean(readKind(dragDataByItemId.get(sourceItem.id)));
+			sequencePaletteDragRef.active = Boolean(readEncoded(dragDataByItemId.get(sourceItem.id)));
+			const payload = readEncoded(dragDataByItemId.get(sourceItem.id));
+			if (payload) {
+				sequenceStepPaletteDragEncodedRef.current = payload;
+				sequenceStartPaletteDragPreviewLoop();
+			}
 		},
 		onDragEnd: () => {
+			if (sequenceStepPalettePointerDragRef.active) return;
+			sequenceStepPaletteDragEncodedRef.current = null;
 			sequencePaletteDragRef.active = false;
+			if (!sequencePaletteDropCommittedRef.current) {
+				sequenceStopPaletteDragPreviewLoop();
+				sequenceStepPaletteDragGhostRef.current?.(sequenceStepPaletteDragClientRef.clientX, sequenceStepPaletteDragClientRef.clientY, null);
+			}
+			sequencePaletteDropCommittedRef.current = false;
 		},
 	};
 }
@@ -190,6 +404,7 @@ export function SequenceCanvas({
 }: SequenceCanvasProps): React.JSX.Element {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const textOverlayRef = useRef<HTMLCanvasElement>(null);
 	const sessionRef = useRef<SequenceSession | null>(null);
 	const rafRef = useRef<number | null>(null);
 	const lastFixtureJsonRef = useRef<string | null>(null);
@@ -207,6 +422,8 @@ export function SequenceCanvas({
 	const runClientRef = useRef<ImperativeRunClient | null>(null);
 	const fixtureDragDepthRef = useRef(0);
 	const [fixtureDragActive, setFixtureDragActive] = useState(false);
+	const [selectionBounds, setSelectionBounds] = useState<DagSelectionUnionBoundsScreen | null>(null);
+	const [marqueeOverlay, setMarqueeOverlay] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
 
 	const syncVelloTheme = useCallback(() => {
 		syncSessionVelloTheme(sessionRef.current);
@@ -267,17 +484,50 @@ export function SequenceCanvas({
 		}
 	}, [syncCompiledText]);
 
+	const syncSelectionBoundsOverlay = useCallback((session: SequenceOverlaySession) => {
+		const selected = arrayToIds(session.selectedNodeIds());
+		if (!selected.length) {
+			setSelectionBounds((prev) => (prev === null ? prev : null));
+			return;
+		}
+		try {
+			const next = parseDagSelectionUnionBoundsScreen(session.selectionUnionBoundsScreenJson());
+			setSelectionBounds((prev) => (dagSelectionUnionBoundsEqual(prev, next) ? prev : next));
+		} catch {
+			setSelectionBounds((prev) => (prev === null ? prev : null));
+		}
+	}, []);
+
+	const syncMarqueeOverlay = useCallback((session: SequenceOverlaySession) => {
+		const points = parseDagSelectionPreviewPoints(session.selectionPreviewPointsJson());
+		setMarqueeOverlay(computeDagMarqueeOverlay(points, session.selectionPreviewCrossing(), "rectangle"));
+	}, []);
+
 	const renderFrame = useCallback(() => {
-		const session = sessionRef.current;
+		const session = sessionRef.current as SequenceOverlaySession | null;
 		syncLodMode();
 		try {
 			syncVelloTheme();
 			session?.renderFrame();
+			const overlay = textOverlayRef.current;
+			if (session && overlay && containerRef.current) {
+				const rect = containerRef.current.getBoundingClientRect();
+				const dpr = globalThis.devicePixelRatio || 1;
+				const width = Math.max(8, Math.round(rect.width));
+				const height = Math.max(8, Math.round(rect.height));
+				paintDagLabelOverlays(session.labelOverlayPaintStateJson(), overlay, width, height, dpr, {
+					hoveredId: session.hoveredNodeId() ?? null,
+					selectedIds: arrayToIds(session.selectedNodeIds()),
+					preselect: parseDagPreselectJson(session.preselectNodeIdsJson()),
+				});
+				syncSelectionBoundsOverlay(session);
+				syncMarqueeOverlay(session);
+			}
 			reportDrawLod();
 		} catch {
 			/* gpu not ready */
 		}
-	}, [reportDrawLod, syncLodMode, syncVelloTheme]);
+	}, [reportDrawLod, syncLodMode, syncMarqueeOverlay, syncSelectionBoundsOverlay, syncVelloTheme]);
 
 	const resetFixtureDragDepth = useCallback(() => {
 		fixtureDragDepthRef.current = 0;
@@ -319,6 +569,7 @@ export function SequenceCanvas({
 			if (!sequenceStepDragAcceptsTransfer([...event.dataTransfer.types])) return;
 			fixtureDragDepthRef.current += 1;
 			setFixtureDragActive(true);
+			sequenceNotePaletteStepDragClient(event.clientX, event.clientY);
 		},
 		[fixtureDragDrop],
 	);
@@ -343,6 +594,7 @@ export function SequenceCanvas({
 			if (!sequenceStepDragAcceptsTransfer([...event.dataTransfer.types])) return;
 			event.preventDefault();
 			event.dataTransfer.dropEffect = "copy";
+			sequenceNotePaletteStepDragClient(event.clientX, event.clientY);
 		},
 		[fixtureDragDrop],
 	);
@@ -354,11 +606,88 @@ export function SequenceCanvas({
 			if (!kind && !sequenceStepDragAcceptsTransfer([...event.dataTransfer.types])) return;
 			event.preventDefault();
 			resetFixtureDragDepth();
-			if (!kind) return;
+			sequenceStopPaletteDragPreviewLoop();
+			if (!kind) {
+				(sessionRef.current as SequenceOverlaySession | null)?.clearGhostStep();
+				renderFrame();
+				return;
+			}
 			commitStepDropAtClient(event.clientX, event.clientY, kind);
+			(sessionRef.current as SequenceOverlaySession | null)?.clearGhostStep();
+			renderFrame();
 		},
-		[commitStepDropAtClient, fixtureDragDrop, resetFixtureDragDepth],
+		[commitStepDropAtClient, fixtureDragDrop, renderFrame, resetFixtureDragDepth],
 	);
+
+	useEffect(() => {
+		if (!fixtureDragDrop) {
+			sequenceStepDropPointerToWorldRef.current = null;
+			sequenceStepPaletteDragGhostRef.current = null;
+			return;
+		}
+		sequenceStepDropPointerToWorldRef.current = (clientX, clientY) => {
+			const session = sessionRef.current;
+			const host = containerRef.current ?? canvasRef.current;
+			if (!session || !host) return null;
+			const rect = host.getBoundingClientRect();
+			const screen = { x: clientX - rect.left, y: clientY - rect.top };
+			const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
+			return { screen, world };
+		};
+		sequenceStepPaletteDragGhostRef.current = (clientX, clientY, kind) => {
+			const session = sessionRef.current as SequenceOverlaySession | null;
+			if (!session) return;
+			if (!kind) {
+				session.clearGhostStep();
+				renderFrame();
+				return;
+			}
+			const mapped = sequenceStepDropPointerToWorldRef.current?.(clientX, clientY);
+			if (!mapped) {
+				session.clearGhostStep();
+				renderFrame();
+				return;
+			}
+			try {
+				session.setGhostStep(kind, mapped.world.x, mapped.world.y);
+				renderFrame();
+			} catch {
+				session.clearGhostStep();
+				renderFrame();
+			}
+		};
+		return () => {
+			sequenceStepDropPointerToWorldRef.current = null;
+			sequenceStepPaletteDragGhostRef.current = null;
+			(sessionRef.current as SequenceOverlaySession | null)?.clearGhostStep();
+			renderFrame();
+		};
+	}, [fixtureDragDrop, renderFrame]);
+
+	useEffect(() => {
+		if (!fixtureDragDrop) return;
+		const dropHost = (): HTMLElement | null => containerRef.current ?? canvasRef.current;
+		const onWindowPointerUp = (event: PointerEvent) => {
+			if (!sequenceStepPalettePointerDragRef.active) return;
+			resetFixtureDragDepth();
+			endSequenceStepPalettePointerDrag(event.clientX, event.clientY, dropHost(), (kind, clientX, clientY) => {
+				commitStepDropAtClient(clientX, clientY, kind);
+			});
+			renderFrame();
+		};
+		const onWindowPointerCancel = () => {
+			if (!sequenceStepPalettePointerDragRef.active) return;
+			resetFixtureDragDepth();
+			cancelSequenceStepPalettePointerDrag();
+			renderFrame();
+		};
+		window.addEventListener("pointerup", onWindowPointerUp);
+		window.addEventListener("pointercancel", onWindowPointerCancel);
+		return () => {
+			window.removeEventListener("pointerup", onWindowPointerUp);
+			window.removeEventListener("pointercancel", onWindowPointerCancel);
+		};
+	}, [commitStepDropAtClient, fixtureDragDrop, renderFrame, resetFixtureDragDepth]);
 
 	useEffect(() => {
 		onFixtureChangeRef.current = onFixtureChange;
@@ -482,8 +811,9 @@ export function SequenceCanvas({
 		if (!canvas || !container) return;
 		let cancelled = false;
 		let cleanupInner: (() => void) | undefined;
-		const session = new SequenceSession();
+		const session = new SequenceSession() as SequenceOverlaySession;
 		sessionRef.current = session;
+		session.setSelectionOptions("rectangle", "default");
 		const initialJson = fixtureJson ?? sequenceFixtureToJson(DEFAULT_SEQUENCE_FIXTURE);
 		session.loadFixtureJson(initialJson);
 		lastFixtureJsonRef.current = initialJson;
@@ -623,7 +953,35 @@ export function SequenceCanvas({
 			onDragOver={onDragOver}
 			onDrop={onDrop}
 		>
-			<canvas ref={canvasRef} className="block h-full w-full touch-none" />
+			<canvas ref={canvasRef} className="absolute inset-0 z-0 block h-full w-full touch-none" />
+			<canvas
+				ref={textOverlayRef}
+				aria-hidden
+				className="pointer-events-none absolute inset-0 z-40 block h-full w-full"
+				data-testid="sequence-text-overlay"
+			/>
+			{selectionBounds ? (
+				<div className="pointer-events-none absolute inset-0 z-20 overflow-visible" aria-hidden data-testid="sequence-selection-bounds">
+					<DagSelectionBoundsBox rect={selectionBounds} />
+				</div>
+			) : null}
+			{marqueeOverlay?.shape === "rect" && marqueeOverlay.rect ? (
+				<SelectionMarquee coverage={marqueeOverlay.coverage} shape="rect" rect={marqueeOverlay.rect} />
+			) : null}
+			{marqueeOverlay?.shape === "polygon" && marqueeOverlay.points ? (
+				<SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} />
+			) : null}
+			{fixtureDragDrop ? (
+				<>
+					<SequenceStepPaletteDragPreviewBridge
+						canvasRef={canvasRef}
+						containerRef={containerRef}
+						enabled={fixtureDragDrop}
+						setFixtureDragActive={setFixtureDragActive}
+					/>
+					<SequenceStepPaletteDragEscapeBridge enabled={fixtureDragDrop} />
+				</>
+			) : null}
 		</div>
 	);
 }
@@ -638,7 +996,7 @@ if (import.meta.vitest) {
 	describe("sequenceStepCatalogueItemDragData", () => {
 		it("encodes step kind", () => {
 			const payload = sequenceStepCatalogueItemDragData({ kind: "log.print" });
-			expect(decodeSequenceStepDragPayload(payload[SEQUENCE_STEP_DRAG_V1_MIME] ?? "")).toBe("log.print");
+			expect(decodeSequenceStepDragPayload(payload[SEQUENCE_STEP_DRAG_MIME] ?? "")).toBe("log.print");
 		});
 	});
 }

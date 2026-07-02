@@ -801,7 +801,7 @@ export type CommitOperationSpec = {
 
 /** @emoji 📜 Parsed static interaction document (`spatial.interaction/v1`). */
 export interface InteractionSpec {
-  readonly schema: "spatial.interaction/v1";
+  readonly schema: "spatial.interaction";
   readonly id: string;
   readonly version: string;
   readonly label?: string;
@@ -997,7 +997,7 @@ export function mergeInteractionCallOutputs(
 export function parseInteractionSpec(raw: unknown): InteractionSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = structuredClone(raw) as Record<string, unknown>;
-  if (r.schema !== "spatial.interaction/v1") return null;
+  if (r.schema !== "spatial.interaction") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string") return null;
   const machine = r.machine;
   if (!machine || typeof machine !== "object") return null;
@@ -1173,7 +1173,7 @@ export interface SpatialObjectRecord {
 
 /** @emoji 🗺️ Serializable model (`spatial.model/v1`). */
 export interface ModelJson {
-  readonly schema: "spatial.model/v1";
+  readonly schema: "spatial.model";
   readonly revision: number;
   readonly objects: readonly SpatialObjectRecord[];
   readonly geometry: KernelGeometryJson;
@@ -1326,7 +1326,7 @@ export class Model {
   toJSON(): ModelJson {
     const meta = this.metadata.toJSON();
     return {
-      schema: "spatial.model/v1",
+      schema: "spatial.model",
       revision: this.revision,
       objects: sortedRecordValues(this.objects),
       geometry: {
@@ -1494,7 +1494,7 @@ export function hashModelVertices(model: Model): Readonly<Record<string, Geometr
 
 /** @emoji 🗺️ Serializable model space (`spatial.modelspace/v1`). */
 export interface ModelSpaceJson {
-  readonly schema: "spatial.modelspace/v1";
+  readonly schema: "spatial.modelspace";
   readonly revision: number;
   readonly models: readonly { readonly id: string; readonly model: ModelJson }[];
 }
@@ -1550,7 +1550,7 @@ export class ModelSpace {
     const models = Object.keys(this.models)
       .sort()
       .map((id) => ({ id, model: this.models[id]!.toJSON() }));
-    return { schema: "spatial.modelspace/v1", revision: this.revision, models };
+    return { schema: "spatial.modelspace", revision: this.revision, models };
   }
 
   /** @emoji 🧭 Hydrates from `ModelSpaceJson`. */
@@ -1807,7 +1807,7 @@ export function readModelEntityProperty(
 export function parseModelJson(raw: unknown): Model | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "spatial.model/v1") return null;
+  if (r.schema !== "spatial.model") return null;
   const geoKeys = ["anchors", "vertices", "edges", "wires", "faces", "shells", "solids"] as const;
   const geometry: Record<string, unknown> = r.geometry && typeof r.geometry === "object" ? { ...(r.geometry as Record<string, unknown>) } : {};
   if (!Array.isArray(geometry.solids) && Array.isArray((geometry as { cells?: unknown }).cells)) geometry.solids = (geometry as { cells: unknown[] }).cells;
@@ -1816,7 +1816,7 @@ export function parseModelJson(raw: unknown): Model | null {
     if (!Array.isArray(geometry[k])) geometry[k] = [];
   }
   const json: ModelJson = {
-    schema: "spatial.model/v1",
+    schema: "spatial.model",
     revision: typeof r.revision === "number" ? r.revision : 0,
     objects: Array.isArray(r.objects) ? (r.objects as SpatialObjectRecord[]) : [],
     geometry: geometry as KernelGeometryJson,
@@ -1832,7 +1832,7 @@ export type KernelTopologyKind = "anchor" | "vertex" | "edge" | "wire" | "face" 
 
 /** @emoji 🏷️ Parsed model-definition manifest (`spatial.modelDefinition/v1` on disk). */
 export interface ModelDefinitionManifest {
-  readonly schema: "spatial.modelDefinition/v1";
+  readonly schema: "spatial.modelDefinition";
   readonly id: string;
   readonly version: string;
   readonly label: string;
@@ -1870,12 +1870,12 @@ export function kernelTypologyIds(modelDefinitionId: string): Readonly<Partial<R
 export function parseModelDefinitionManifest(raw: unknown): ModelDefinitionManifest | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "spatial.modelDefinition/v1" && r.schema !== "spatial.extension/v1") return null;
+  if (r.schema !== "spatial.modelDefinition" && r.schema !== "spatial.extension") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   if (!Array.isArray(r.kinds) || r.kinds.length === 0) return null;
   const kernelTypologies = parseKernelTypologies(r.kernelTypologies);
   return {
-    schema: "spatial.modelDefinition/v1",
+    schema: "spatial.modelDefinition",
     id: r.id,
     version: r.version,
     label: r.label,
@@ -1935,7 +1935,7 @@ export interface ResolvedTypologyStyle {
 
 /** @emoji 🏷️ Parsed typology asset (`spatial.typology/v1`). */
 export interface TypologySpec {
-  readonly schema: "spatial.typology/v1";
+  readonly schema: "spatial.typology";
   readonly id: string;
   readonly version: string;
   readonly label: string;
@@ -2030,12 +2030,12 @@ function parseTypologyStyleSpec(raw: unknown): TypologyStyleSpec | undefined {
 export function parseTypologySpec(raw: unknown): TypologySpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "spatial.typology/v1") return null;
+  if (r.schema !== "spatial.typology") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   const actions = Array.isArray(r.actions) ? r.actions.filter((row): row is string => typeof row === "string") : [];
   const interactions = Array.isArray(r.interactions) ? r.interactions.filter((row): row is string => typeof row === "string") : [];
   return {
-    schema: "spatial.typology/v1",
+    schema: "spatial.typology",
     id: r.id,
     version: r.version,
     label: r.label,
@@ -2180,7 +2180,7 @@ export function typologyForInteraction(interactionId: string): TypologySpec | nu
 
 /** @emoji 🏷️ Parsed attribute definition (`spatial.attribute/v1`). */
 export interface AttributeDefinitionSpec {
-  readonly schema: "spatial.attribute/v1";
+  readonly schema: "spatial.attribute";
   readonly id: string;
   readonly version: string;
   readonly label: string;
@@ -2195,7 +2195,7 @@ export interface AttributeDefinitionSpec {
 export function parseAttributeDefinitionSpec(raw: unknown): AttributeDefinitionSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "spatial.attribute/v1") return null;
+  if (r.schema !== "spatial.attribute") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   if (typeof r.field !== "string" || !Array.isArray(r.targets) || r.targets.length === 0) return null;
   if (!("value" in r)) return null;
@@ -2205,7 +2205,7 @@ export function parseAttributeDefinitionSpec(raw: unknown): AttributeDefinitionS
       ? { kinds: (selector as { kinds: string[] }).kinds }
       : undefined;
   return {
-    schema: "spatial.attribute/v1",
+    schema: "spatial.attribute",
     id: r.id,
     version: r.version,
     label: r.label,
@@ -2219,7 +2219,7 @@ export function parseAttributeDefinitionSpec(raw: unknown): AttributeDefinitionS
 
 /** @emoji 🏷️ Parsed property definition (`spatial.property/v1`). */
 export interface PropertyDefinitionSpec {
-  readonly schema: "spatial.property/v1";
+  readonly schema: "spatial.property";
   readonly id: string;
   readonly version: string;
   readonly label: string;
@@ -2233,10 +2233,10 @@ export interface PropertyDefinitionSpec {
 export function parsePropertyDefinitionSpec(raw: unknown): PropertyDefinitionSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "spatial.property/v1") return null;
+  if (r.schema !== "spatial.property") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   return {
-    schema: "spatial.property/v1",
+    schema: "spatial.property",
     id: r.id,
     version: r.version,
     label: r.label,
@@ -2487,7 +2487,7 @@ export interface StatOutputSpec {
 
 /** @emoji 📊 Model-definition live stat declaration (`spatial.stat/v1`). */
 export interface StatDefinitionSpec {
-  readonly schema: "spatial.stat/v1";
+  readonly schema: "spatial.stat";
   readonly id: string;
   readonly version: string;
   readonly label: string;
@@ -2501,7 +2501,7 @@ export interface StatDefinitionSpec {
 export function parseStatDefinitionSpec(raw: unknown): StatDefinitionSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "spatial.stat/v1") return null;
+  if (r.schema !== "spatial.stat") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   if (!Array.isArray(r.outputs) || r.outputs.length === 0) return null;
   const outputs: StatOutputSpec[] = [];
@@ -2532,7 +2532,7 @@ export function parseStatDefinitionSpec(raw: unknown): StatDefinitionSpec | null
         }
       : undefined;
   return {
-    schema: "spatial.stat/v1",
+    schema: "spatial.stat",
     id: r.id,
     version: r.version,
     label: r.label,
@@ -2914,7 +2914,7 @@ export interface TransformationDeriveSpec {
 
 /** @emoji 🔄 Parsed transformation (`spatial.transformation/v1`). */
 export interface TransformationSpec {
-  readonly schema: "spatial.transformation/v1";
+  readonly schema: "spatial.transformation";
   readonly id: string;
   readonly version: string;
   readonly label: string;
@@ -3017,7 +3017,7 @@ function parseTransformationDeriveSpec(raw: unknown): TransformationDeriveSpec |
 export function parseTransformationSpec(raw: unknown, modelDefinitionId: string): TransformationSpec | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  if (r.schema !== "spatial.transformation/v1") return null;
+  if (r.schema !== "spatial.transformation") return null;
   if (typeof r.id !== "string" || typeof r.version !== "string" || typeof r.label !== "string") return null;
   const source = r.source as { modelDefinition?: unknown } | undefined;
   const target = r.target as { modelDefinition?: unknown } | undefined;
@@ -3028,7 +3028,7 @@ export function parseTransformationSpec(raw: unknown, modelDefinitionId: string)
   const derive = r.derive !== undefined ? parseTransformationDeriveSpec(r.derive) : undefined;
   if (r.derive !== undefined && !derive) return null;
   return {
-    schema: "spatial.transformation/v1",
+    schema: "spatial.transformation",
     id: r.id,
     version: r.version,
     label: r.label,
@@ -3706,7 +3706,7 @@ export function typologyConstructCommitActionForMode(kit: TypologyConstructKit, 
 /** @emoji 📄 Declarative capability action JSON for typology construction steps. */
 export function capabilityActionSpecJson(id: string, label: string): ActionSpec {
   return {
-    schema: "spatial.action/v1",
+    schema: "spatial.action",
     id,
     version: "1.0.0",
     label,
@@ -4073,7 +4073,7 @@ export type ActionStepSpec =
   | { readonly op: "return"; readonly diff?: Expr; readonly data?: Expr; readonly patch?: Expr; readonly result?: Expr };
 
 export interface ActionSpec {
-  readonly schema: "spatial.action/v1";
+  readonly schema: "spatial.action";
   readonly id: string;
   readonly version: string;
   readonly label?: string;
@@ -4122,7 +4122,7 @@ export function parseActionSpec(raw: unknown): ActionSpec | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const r = structuredClone(raw) as Record<string, unknown>;
   if (hasExecutableActionField(r)) return null;
-  if (r.schema !== "spatial.action/v1") return null;
+  if (r.schema !== "spatial.action") return null;
   if (typeof r.id !== "string" || r.id.length === 0 || typeof r.version !== "string") return null;
   if (r.args !== undefined && (!r.args || typeof r.args !== "object" || Array.isArray(r.args))) return null;
   if (!Array.isArray(r.steps) || r.steps.length === 0 || !r.steps.every(isActionStepSpec)) return null;
@@ -6878,11 +6878,11 @@ const __spatialCoreTestRuntime = import.meta.vitest ? await import("@semio-tech/
 const __spatialCoreTestKernel = import.meta.vitest ? await import("@semio-tech/cad-js-kernel-brepjs") : null;
 //#region 🧪InteractionE2EFixtures
 const CAD_E2E_LOOM_MODEL_SPACE_JSON =
-  '{"schema":"spatial.modelspace/v1","revision":1,"models":[{"id":"spatial.shape","model":{"schema":"spatial.model/v1","revision":2,"objects":[{"id":"object-edge-e11","typology":"spatial.shape.kernel.edge","primitives":[{"kind":"vertex","id":"v4","position":[1,1,1.2]},{"kind":"vertex","id":"v9","position":[2.5,0.3,2.4]},{"kind":"curve","slot":"edge","id":"e11","vertexIds":["v4","v9"]}]},{"id":"object-void-cap","typology":"spatial.shape.primitive.box","primitives":[{"kind":"vertex","id":"v0","position":[0,0,0]},{"kind":"vertex","id":"v1","position":[5,0,0]},{"kind":"vertex","id":"v2","position":[5,4,0]},{"kind":"vertex","id":"v3","position":[0,4,0]},{"kind":"curve","id":"e0","vertexIds":["v0","v1"]},{"kind":"curve","id":"e1","vertexIds":["v1","v2"]},{"kind":"curve","id":"e2","vertexIds":["v2","v3"]},{"kind":"curve","id":"e3","vertexIds":["v3","v0"]},{"kind":"curve","id":"w-deck","edgeIds":["e0","e1","e2","e3"]},{"kind":"surface","id":"stub-surface","wireIds":["w-deck"]},{"kind":"shell","id":"shell-deck","faceIds":["stub-surface"]},{"kind":"solid","slot":"solid","id":"void-cap","shellIds":["shell-deck"]}]},{"id":"object-wire-rail-upper","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"v10","position":[4.5,1.8,2.4]},{"kind":"vertex","id":"v11","position":[3.8,3.5,2.4]},{"kind":"vertex","id":"v9","position":[2.5,0.3,2.4]},{"kind":"curve","id":"e10","vertexIds":["v10","v11"]},{"kind":"curve","id":"e9","vertexIds":["v9","v10"]},{"kind":"curve","slot":"wire","id":"rail-upper","edgeIds":["e9","e10"]}]},{"id":"object-wire-stub-wire","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"v4","position":[1,1,1.2]},{"kind":"vertex","id":"v5","position":[3,2.2,1.2]},{"kind":"vertex","id":"v6","position":[4.2,0.8,1.2]},{"kind":"vertex","id":"v7","position":[2.5,3.1,1.2]},{"kind":"vertex","id":"v8","position":[0.8,2.4,1.2]},{"kind":"curve","id":"e4","vertexIds":["v4","v5"]},{"kind":"curve","id":"e5","vertexIds":["v5","v6"]},{"kind":"curve","id":"e6","vertexIds":["v6","v7"]},{"kind":"curve","id":"e7","vertexIds":["v7","v8"]},{"kind":"curve","id":"e8","vertexIds":["v8","v4"]},{"kind":"curve","slot":"wire","id":"stub-wire","edgeIds":["e4","e5","e6","e7","e8"]}]}]}}]}';
+  '{"schema":"spatial.modelspace","revision":1,"models":[{"id":"spatial.shape","model":{"schema":"spatial.model","revision":2,"objects":[{"id":"object-edge-e11","typology":"spatial.shape.kernel.edge","primitives":[{"kind":"vertex","id":"v4","position":[1,1,1.2]},{"kind":"vertex","id":"v9","position":[2.5,0.3,2.4]},{"kind":"curve","slot":"edge","id":"e11","vertexIds":["v4","v9"]}]},{"id":"object-void-cap","typology":"spatial.shape.primitive.box","primitives":[{"kind":"vertex","id":"v0","position":[0,0,0]},{"kind":"vertex","id":"v1","position":[5,0,0]},{"kind":"vertex","id":"v2","position":[5,4,0]},{"kind":"vertex","id":"v3","position":[0,4,0]},{"kind":"curve","id":"e0","vertexIds":["v0","v1"]},{"kind":"curve","id":"e1","vertexIds":["v1","v2"]},{"kind":"curve","id":"e2","vertexIds":["v2","v3"]},{"kind":"curve","id":"e3","vertexIds":["v3","v0"]},{"kind":"curve","id":"w-deck","edgeIds":["e0","e1","e2","e3"]},{"kind":"surface","id":"stub-surface","wireIds":["w-deck"]},{"kind":"shell","id":"shell-deck","faceIds":["stub-surface"]},{"kind":"solid","slot":"solid","id":"void-cap","shellIds":["shell-deck"]}]},{"id":"object-wire-rail-upper","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"v10","position":[4.5,1.8,2.4]},{"kind":"vertex","id":"v11","position":[3.8,3.5,2.4]},{"kind":"vertex","id":"v9","position":[2.5,0.3,2.4]},{"kind":"curve","id":"e10","vertexIds":["v10","v11"]},{"kind":"curve","id":"e9","vertexIds":["v9","v10"]},{"kind":"curve","slot":"wire","id":"rail-upper","edgeIds":["e9","e10"]}]},{"id":"object-wire-stub-wire","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"v4","position":[1,1,1.2]},{"kind":"vertex","id":"v5","position":[3,2.2,1.2]},{"kind":"vertex","id":"v6","position":[4.2,0.8,1.2]},{"kind":"vertex","id":"v7","position":[2.5,3.1,1.2]},{"kind":"vertex","id":"v8","position":[0.8,2.4,1.2]},{"kind":"curve","id":"e4","vertexIds":["v4","v5"]},{"kind":"curve","id":"e5","vertexIds":["v5","v6"]},{"kind":"curve","id":"e6","vertexIds":["v6","v7"]},{"kind":"curve","id":"e7","vertexIds":["v7","v8"]},{"kind":"curve","id":"e8","vertexIds":["v8","v4"]},{"kind":"curve","slot":"wire","id":"stub-wire","edgeIds":["e4","e5","e6","e7","e8"]}]}]}}]}';
 const CAD_E2E_ROUTES_MODEL_SPACE_JSON =
-  '{"schema":"spatial.modelspace/v1","revision":1,"models":[{"id":"spatial.shape","model":{"schema":"spatial.model/v1","revision":1,"objects":[{"id":"object-wire-orbit-a","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"r10","position":[6,0,0.8]},{"kind":"vertex","id":"r11","position":[7.4,0.6,0.8]},{"kind":"vertex","id":"r12","position":[8.8,0.2,0.8]},{"kind":"vertex","id":"r13","position":[9.9,1.1,0.8]},{"kind":"vertex","id":"r14","position":[10.2,2.6,0.8]},{"kind":"vertex","id":"r15","position":[9.4,3.9,0.8]},{"kind":"vertex","id":"r16","position":[7.8,4.4,0.8]},{"kind":"vertex","id":"r17","position":[6.2,4.1,0.8]},{"kind":"curve","id":"re10","vertexIds":["r10","r11"]},{"kind":"curve","id":"re11","vertexIds":["r11","r12"]},{"kind":"curve","id":"re12","vertexIds":["r12","r13"]},{"kind":"curve","id":"re13","vertexIds":["r13","r14"]},{"kind":"curve","id":"re14","vertexIds":["r14","r15"]},{"kind":"curve","id":"re15","vertexIds":["r15","r16"]},{"kind":"curve","id":"re16","vertexIds":["r16","r17"]},{"kind":"curve","id":"re17","vertexIds":["r17","r10"]},{"kind":"curve","slot":"wire","id":"orbit-a","edgeIds":["re10","re11","re12","re13","re14","re15","re16","re17"]}]},{"id":"object-wire-spine-b","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"r18","position":[2,6,1.6]},{"kind":"vertex","id":"r19","position":[3.5,6.8,1.6]},{"kind":"vertex","id":"r20","position":[5.2,6.5,1.6]},{"kind":"vertex","id":"r21","position":[6.8,7.2,1.6]},{"kind":"vertex","id":"r22","position":[7.5,8.4,1.6]},{"kind":"vertex","id":"r23","position":[6.1,9.1,1.6]},{"kind":"curve","id":"re18","vertexIds":["r18","r19"]},{"kind":"curve","id":"re19","vertexIds":["r19","r20"]},{"kind":"curve","id":"re20","vertexIds":["r20","r21"]},{"kind":"curve","id":"re21","vertexIds":["r21","r22"]},{"kind":"curve","id":"re22","vertexIds":["r22","r23"]},{"kind":"curve","slot":"wire","id":"spine-b","edgeIds":["re18","re19","re20","re21","re22"]}]},{"id":"object-wire-stub-wire","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"r0","position":[0,0,0]},{"kind":"vertex","id":"r1","position":[1.2,0.4,0]},{"kind":"vertex","id":"r2","position":[2.6,0.1,0]},{"kind":"vertex","id":"r3","position":[3.8,0.9,0]},{"kind":"vertex","id":"r4","position":[4.5,2.1,0]},{"kind":"vertex","id":"r5","position":[4.2,3.5,0]},{"kind":"vertex","id":"r6","position":[3.1,4.2,0]},{"kind":"vertex","id":"r7","position":[1.5,4.5,0]},{"kind":"vertex","id":"r8","position":[0.2,3.8,0]},{"kind":"vertex","id":"r9","position":[-0.4,2.2,0]},{"kind":"curve","id":"re0","vertexIds":["r0","r1"]},{"kind":"curve","id":"re1","vertexIds":["r1","r2"]},{"kind":"curve","id":"re2","vertexIds":["r2","r3"]},{"kind":"curve","id":"re3","vertexIds":["r3","r4"]},{"kind":"curve","id":"re4","vertexIds":["r4","r5"]},{"kind":"curve","id":"re5","vertexIds":["r5","r6"]},{"kind":"curve","id":"re6","vertexIds":["r6","r7"]},{"kind":"curve","id":"re7","vertexIds":["r7","r8"]},{"kind":"curve","id":"re8","vertexIds":["r8","r9"]},{"kind":"curve","id":"re9","vertexIds":["r9","r0"]},{"kind":"curve","slot":"wire","id":"stub-wire","edgeIds":["re0","re1","re2","re3","re4","re5","re6","re7","re8","re9"]}]}]}}]}';
+  '{"schema":"spatial.modelspace","revision":1,"models":[{"id":"spatial.shape","model":{"schema":"spatial.model","revision":1,"objects":[{"id":"object-wire-orbit-a","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"r10","position":[6,0,0.8]},{"kind":"vertex","id":"r11","position":[7.4,0.6,0.8]},{"kind":"vertex","id":"r12","position":[8.8,0.2,0.8]},{"kind":"vertex","id":"r13","position":[9.9,1.1,0.8]},{"kind":"vertex","id":"r14","position":[10.2,2.6,0.8]},{"kind":"vertex","id":"r15","position":[9.4,3.9,0.8]},{"kind":"vertex","id":"r16","position":[7.8,4.4,0.8]},{"kind":"vertex","id":"r17","position":[6.2,4.1,0.8]},{"kind":"curve","id":"re10","vertexIds":["r10","r11"]},{"kind":"curve","id":"re11","vertexIds":["r11","r12"]},{"kind":"curve","id":"re12","vertexIds":["r12","r13"]},{"kind":"curve","id":"re13","vertexIds":["r13","r14"]},{"kind":"curve","id":"re14","vertexIds":["r14","r15"]},{"kind":"curve","id":"re15","vertexIds":["r15","r16"]},{"kind":"curve","id":"re16","vertexIds":["r16","r17"]},{"kind":"curve","id":"re17","vertexIds":["r17","r10"]},{"kind":"curve","slot":"wire","id":"orbit-a","edgeIds":["re10","re11","re12","re13","re14","re15","re16","re17"]}]},{"id":"object-wire-spine-b","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"r18","position":[2,6,1.6]},{"kind":"vertex","id":"r19","position":[3.5,6.8,1.6]},{"kind":"vertex","id":"r20","position":[5.2,6.5,1.6]},{"kind":"vertex","id":"r21","position":[6.8,7.2,1.6]},{"kind":"vertex","id":"r22","position":[7.5,8.4,1.6]},{"kind":"vertex","id":"r23","position":[6.1,9.1,1.6]},{"kind":"curve","id":"re18","vertexIds":["r18","r19"]},{"kind":"curve","id":"re19","vertexIds":["r19","r20"]},{"kind":"curve","id":"re20","vertexIds":["r20","r21"]},{"kind":"curve","id":"re21","vertexIds":["r21","r22"]},{"kind":"curve","id":"re22","vertexIds":["r22","r23"]},{"kind":"curve","slot":"wire","id":"spine-b","edgeIds":["re18","re19","re20","re21","re22"]}]},{"id":"object-wire-stub-wire","typology":"spatial.shape.kernel.wire","primitives":[{"kind":"vertex","id":"r0","position":[0,0,0]},{"kind":"vertex","id":"r1","position":[1.2,0.4,0]},{"kind":"vertex","id":"r2","position":[2.6,0.1,0]},{"kind":"vertex","id":"r3","position":[3.8,0.9,0]},{"kind":"vertex","id":"r4","position":[4.5,2.1,0]},{"kind":"vertex","id":"r5","position":[4.2,3.5,0]},{"kind":"vertex","id":"r6","position":[3.1,4.2,0]},{"kind":"vertex","id":"r7","position":[1.5,4.5,0]},{"kind":"vertex","id":"r8","position":[0.2,3.8,0]},{"kind":"vertex","id":"r9","position":[-0.4,2.2,0]},{"kind":"curve","id":"re0","vertexIds":["r0","r1"]},{"kind":"curve","id":"re1","vertexIds":["r1","r2"]},{"kind":"curve","id":"re2","vertexIds":["r2","r3"]},{"kind":"curve","id":"re3","vertexIds":["r3","r4"]},{"kind":"curve","id":"re4","vertexIds":["r4","r5"]},{"kind":"curve","id":"re5","vertexIds":["r5","r6"]},{"kind":"curve","id":"re6","vertexIds":["r6","r7"]},{"kind":"curve","id":"re7","vertexIds":["r7","r8"]},{"kind":"curve","id":"re8","vertexIds":["r8","r9"]},{"kind":"curve","id":"re9","vertexIds":["r9","r0"]},{"kind":"curve","slot":"wire","id":"stub-wire","edgeIds":["re0","re1","re2","re3","re4","re5","re6","re7","re8","re9"]}]}]}}]}';
 const CAD_E2E_BUILDING_BOOLEAN_MODEL_SPACE_JSON =
-  '{"schema":"spatial.modelspace/v1","revision":1,"models":[{"id":"spatial.shape","model":{"schema":"spatial.model/v1","revision":1,"objects":[{"id":"object-small-building-cell-123052045","typology":"spatial.shape.primitive.box","primitives":[{"kind":"vertex","id":"small-building-vertex-1027259450","position":[-64.506666,41.273333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-1412665337","position":[-18.586667,41.273333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-200778251","position":[-18.586667,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-354458280","position":[-18.586667,3.553333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-560960189","position":[-64.506666,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-566043311","position":[-64.506666,41.273333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-584100920","position":[-64.506666,3.553333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-834828749","position":[-18.586667,41.273333,-9.407222]},{"kind":"curve","id":"small-building-edge-1660152326","vertexIds":["small-building-vertex-354458280","small-building-vertex-1412665337"]},{"kind":"curve","id":"small-building-edge-1943812986","vertexIds":["small-building-vertex-566043311","small-building-vertex-584100920"]},{"kind":"curve","id":"small-building-edge-2004107109","vertexIds":["small-building-vertex-200778251","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-2075229525","vertexIds":["small-building-vertex-1027259450","small-building-vertex-566043311"]},{"kind":"curve","id":"small-building-edge-224238197","vertexIds":["small-building-vertex-584100920","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-229106015","vertexIds":["small-building-vertex-1027259450","small-building-vertex-834828749"]},{"kind":"curve","id":"small-building-edge-278123677","vertexIds":["small-building-vertex-584100920","small-building-vertex-354458280"]},{"kind":"curve","id":"small-building-edge-278867947","vertexIds":["small-building-vertex-834828749","small-building-vertex-200778251"]},{"kind":"curve","id":"small-building-edge-332998341","vertexIds":["small-building-vertex-200778251","small-building-vertex-354458280"]},{"kind":"curve","id":"small-building-edge-757634469","vertexIds":["small-building-vertex-1412665337","small-building-vertex-834828749"]},{"kind":"curve","id":"small-building-edge-779379499","vertexIds":["small-building-vertex-1412665337","small-building-vertex-566043311"]},{"kind":"curve","id":"small-building-edge-951546977","vertexIds":["small-building-vertex-560960189","small-building-vertex-1027259450"]},{"kind":"curve","id":"small-building-wire-1366152152","edgeIds":["small-building-edge-278123677","small-building-edge-1943812986","small-building-edge-779379499","small-building-edge-1660152326"]},{"kind":"curve","id":"small-building-wire-1559546061","edgeIds":["small-building-edge-2075229525","small-building-edge-229106015","small-building-edge-757634469","small-building-edge-779379499"]},{"kind":"curve","id":"small-building-wire-1742634236","edgeIds":["small-building-edge-278867947","small-building-edge-332998341","small-building-edge-1660152326","small-building-edge-757634469"]},{"kind":"curve","id":"small-building-wire-456551683","edgeIds":["small-building-edge-1943812986","small-building-edge-224238197","small-building-edge-951546977","small-building-edge-2075229525"]},{"kind":"curve","id":"small-building-wire-515231130","edgeIds":["small-building-edge-224238197","small-building-edge-278123677","small-building-edge-332998341","small-building-edge-2004107109"]},{"kind":"curve","id":"small-building-wire-978200956","edgeIds":["small-building-edge-951546977","small-building-edge-2004107109","small-building-edge-278867947","small-building-edge-229106015"]},{"kind":"surface","id":"small-building-face-1071813579","wireIds":["small-building-wire-1559546061"]},{"kind":"surface","id":"small-building-face-1198070201","wireIds":["small-building-wire-456551683"]},{"kind":"surface","id":"small-building-face-1321487947","wireIds":["small-building-wire-1742634236"]},{"kind":"surface","id":"small-building-face-1833451572","wireIds":["small-building-wire-1366152152"]},{"kind":"surface","id":"small-building-face-383803774","wireIds":["small-building-wire-515231130"]},{"kind":"surface","id":"small-building-face-624717229","wireIds":["small-building-wire-978200956"]},{"kind":"shell","id":"small-building-shell-319815043","faceIds":["small-building-face-1198070201","small-building-face-1833451572","small-building-face-383803774","small-building-face-624717229","small-building-face-1071813579","small-building-face-1321487947"]},{"kind":"solid","slot":"solid","id":"small-building-cell-123052045","shellIds":["small-building-shell-319815043"]}]},{"id":"object-small-building-cell-1278694563","typology":"spatial.shape.primitive.box","primitives":[{"kind":"vertex","id":"small-building-vertex-1052483923","position":[-18.586667,-57.126666,-9.407222]},{"kind":"vertex","id":"small-building-vertex-1078954806","position":[-64.506666,-57.126666,-9.407222]},{"kind":"vertex","id":"small-building-vertex-1417750768","position":[-18.586667,3.553333,54.142777]},{"kind":"vertex","id":"small-building-vertex-1487235108","position":[-64.506666,-57.126666,25.852777]},{"kind":"vertex","id":"small-building-vertex-1653716766","position":[-64.506666,3.553333,54.142777]},{"kind":"vertex","id":"small-building-vertex-1928378833","position":[-64.506666,-7.926666,62.752777]},{"kind":"vertex","id":"small-building-vertex-200778251","position":[-18.586667,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-551332595","position":[-18.586667,-7.926666,62.752777]},{"kind":"vertex","id":"small-building-vertex-560960189","position":[-64.506666,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-945778871","position":[-18.586667,-57.126666,25.852777]},{"kind":"curve","id":"small-building-edge-1070453701","vertexIds":["small-building-vertex-945778871","small-building-vertex-1052483923"]},{"kind":"curve","id":"small-building-edge-1108121009","vertexIds":["small-building-vertex-945778871","small-building-vertex-1487235108"]},{"kind":"curve","id":"small-building-edge-1261178177","vertexIds":["small-building-vertex-560960189","small-building-vertex-1653716766"]},{"kind":"curve","id":"small-building-edge-1422159112","vertexIds":["small-building-vertex-1078954806","small-building-vertex-1487235108"]},{"kind":"curve","id":"small-building-edge-1567786765","vertexIds":["small-building-vertex-551332595","small-building-vertex-945778871"]},{"kind":"curve","id":"small-building-edge-1705326756","vertexIds":["small-building-vertex-1928378833","small-building-vertex-551332595"]},{"kind":"curve","id":"small-building-edge-2004107109","vertexIds":["small-building-vertex-200778251","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-2102926252","vertexIds":["small-building-vertex-1928378833","small-building-vertex-1653716766"]},{"kind":"curve","id":"small-building-edge-349583852","vertexIds":["small-building-vertex-1052483923","small-building-vertex-1078954806"]},{"kind":"curve","id":"small-building-edge-354613623","vertexIds":["small-building-vertex-1487235108","small-building-vertex-1928378833"]},{"kind":"curve","id":"small-building-edge-432705901","vertexIds":["small-building-vertex-200778251","small-building-vertex-1052483923"]},{"kind":"curve","id":"small-building-edge-432807106","vertexIds":["small-building-vertex-1417750768","small-building-vertex-200778251"]},{"kind":"curve","id":"small-building-edge-467629952","vertexIds":["small-building-vertex-1078954806","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-49481349","vertexIds":["small-building-vertex-1417750768","small-building-vertex-551332595"]},{"kind":"curve","id":"small-building-edge-508083477","vertexIds":["small-building-vertex-1417750768","small-building-vertex-1653716766"]},{"kind":"curve","id":"small-building-wire-1095357825","edgeIds":["small-building-edge-467629952","small-building-edge-1422159112","small-building-edge-354613623","small-building-edge-2102926252","small-building-edge-1261178177"]},{"kind":"curve","id":"small-building-wire-1399618711","edgeIds":["small-building-edge-349583852","small-building-edge-432705901","small-building-edge-2004107109","small-building-edge-467629952"]},{"kind":"curve","id":"small-building-wire-1676387167","edgeIds":["small-building-edge-1070453701","small-building-edge-432705901","small-building-edge-432807106","small-building-edge-49481349","small-building-edge-1567786765"]},{"kind":"curve","id":"small-building-wire-1755121565","edgeIds":["small-building-edge-2004107109","small-building-edge-432807106","small-building-edge-508083477","small-building-edge-1261178177"]},{"kind":"curve","id":"small-building-wire-285005499","edgeIds":["small-building-edge-349583852","small-building-edge-1070453701","small-building-edge-1108121009","small-building-edge-1422159112"]},{"kind":"curve","id":"small-building-wire-311748032","edgeIds":["small-building-edge-354613623","small-building-edge-1108121009","small-building-edge-1567786765","small-building-edge-1705326756"]},{"kind":"curve","id":"small-building-wire-924227310","edgeIds":["small-building-edge-49481349","small-building-edge-508083477","small-building-edge-2102926252","small-building-edge-1705326756"]},{"kind":"surface","id":"small-building-face-1144073303","wireIds":["small-building-wire-1755121565"]},{"kind":"surface","id":"small-building-face-1382526041","wireIds":["small-building-wire-1095357825"]},{"kind":"surface","id":"small-building-face-1891411219","wireIds":["small-building-wire-1399618711"]},{"kind":"surface","id":"small-building-face-2019874201","wireIds":["small-building-wire-311748032"]},{"kind":"surface","id":"small-building-face-2129815768","wireIds":["small-building-wire-924227310"]},{"kind":"surface","id":"small-building-face-512606747","wireIds":["small-building-wire-285005499"]},{"kind":"surface","id":"small-building-face-816291467","wireIds":["small-building-wire-1676387167"]},{"kind":"shell","id":"small-building-shell-115098816","faceIds":["small-building-face-816291467","small-building-face-512606747","small-building-face-1891411219","small-building-face-1144073303","small-building-face-2129815768","small-building-face-2019874201","small-building-face-1382526041"]},{"kind":"solid","slot":"solid","id":"small-building-cell-1278694563","shellIds":["small-building-shell-115098816"]}]}]}}]}';
+  '{"schema":"spatial.modelspace","revision":1,"models":[{"id":"spatial.shape","model":{"schema":"spatial.model","revision":1,"objects":[{"id":"object-small-building-cell-123052045","typology":"spatial.shape.primitive.box","primitives":[{"kind":"vertex","id":"small-building-vertex-1027259450","position":[-64.506666,41.273333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-1412665337","position":[-18.586667,41.273333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-200778251","position":[-18.586667,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-354458280","position":[-18.586667,3.553333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-560960189","position":[-64.506666,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-566043311","position":[-64.506666,41.273333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-584100920","position":[-64.506666,3.553333,-43.847222]},{"kind":"vertex","id":"small-building-vertex-834828749","position":[-18.586667,41.273333,-9.407222]},{"kind":"curve","id":"small-building-edge-1660152326","vertexIds":["small-building-vertex-354458280","small-building-vertex-1412665337"]},{"kind":"curve","id":"small-building-edge-1943812986","vertexIds":["small-building-vertex-566043311","small-building-vertex-584100920"]},{"kind":"curve","id":"small-building-edge-2004107109","vertexIds":["small-building-vertex-200778251","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-2075229525","vertexIds":["small-building-vertex-1027259450","small-building-vertex-566043311"]},{"kind":"curve","id":"small-building-edge-224238197","vertexIds":["small-building-vertex-584100920","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-229106015","vertexIds":["small-building-vertex-1027259450","small-building-vertex-834828749"]},{"kind":"curve","id":"small-building-edge-278123677","vertexIds":["small-building-vertex-584100920","small-building-vertex-354458280"]},{"kind":"curve","id":"small-building-edge-278867947","vertexIds":["small-building-vertex-834828749","small-building-vertex-200778251"]},{"kind":"curve","id":"small-building-edge-332998341","vertexIds":["small-building-vertex-200778251","small-building-vertex-354458280"]},{"kind":"curve","id":"small-building-edge-757634469","vertexIds":["small-building-vertex-1412665337","small-building-vertex-834828749"]},{"kind":"curve","id":"small-building-edge-779379499","vertexIds":["small-building-vertex-1412665337","small-building-vertex-566043311"]},{"kind":"curve","id":"small-building-edge-951546977","vertexIds":["small-building-vertex-560960189","small-building-vertex-1027259450"]},{"kind":"curve","id":"small-building-wire-1366152152","edgeIds":["small-building-edge-278123677","small-building-edge-1943812986","small-building-edge-779379499","small-building-edge-1660152326"]},{"kind":"curve","id":"small-building-wire-1559546061","edgeIds":["small-building-edge-2075229525","small-building-edge-229106015","small-building-edge-757634469","small-building-edge-779379499"]},{"kind":"curve","id":"small-building-wire-1742634236","edgeIds":["small-building-edge-278867947","small-building-edge-332998341","small-building-edge-1660152326","small-building-edge-757634469"]},{"kind":"curve","id":"small-building-wire-456551683","edgeIds":["small-building-edge-1943812986","small-building-edge-224238197","small-building-edge-951546977","small-building-edge-2075229525"]},{"kind":"curve","id":"small-building-wire-515231130","edgeIds":["small-building-edge-224238197","small-building-edge-278123677","small-building-edge-332998341","small-building-edge-2004107109"]},{"kind":"curve","id":"small-building-wire-978200956","edgeIds":["small-building-edge-951546977","small-building-edge-2004107109","small-building-edge-278867947","small-building-edge-229106015"]},{"kind":"surface","id":"small-building-face-1071813579","wireIds":["small-building-wire-1559546061"]},{"kind":"surface","id":"small-building-face-1198070201","wireIds":["small-building-wire-456551683"]},{"kind":"surface","id":"small-building-face-1321487947","wireIds":["small-building-wire-1742634236"]},{"kind":"surface","id":"small-building-face-1833451572","wireIds":["small-building-wire-1366152152"]},{"kind":"surface","id":"small-building-face-383803774","wireIds":["small-building-wire-515231130"]},{"kind":"surface","id":"small-building-face-624717229","wireIds":["small-building-wire-978200956"]},{"kind":"shell","id":"small-building-shell-319815043","faceIds":["small-building-face-1198070201","small-building-face-1833451572","small-building-face-383803774","small-building-face-624717229","small-building-face-1071813579","small-building-face-1321487947"]},{"kind":"solid","slot":"solid","id":"small-building-cell-123052045","shellIds":["small-building-shell-319815043"]}]},{"id":"object-small-building-cell-1278694563","typology":"spatial.shape.primitive.box","primitives":[{"kind":"vertex","id":"small-building-vertex-1052483923","position":[-18.586667,-57.126666,-9.407222]},{"kind":"vertex","id":"small-building-vertex-1078954806","position":[-64.506666,-57.126666,-9.407222]},{"kind":"vertex","id":"small-building-vertex-1417750768","position":[-18.586667,3.553333,54.142777]},{"kind":"vertex","id":"small-building-vertex-1487235108","position":[-64.506666,-57.126666,25.852777]},{"kind":"vertex","id":"small-building-vertex-1653716766","position":[-64.506666,3.553333,54.142777]},{"kind":"vertex","id":"small-building-vertex-1928378833","position":[-64.506666,-7.926666,62.752777]},{"kind":"vertex","id":"small-building-vertex-200778251","position":[-18.586667,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-551332595","position":[-18.586667,-7.926666,62.752777]},{"kind":"vertex","id":"small-building-vertex-560960189","position":[-64.506666,3.553333,-9.407222]},{"kind":"vertex","id":"small-building-vertex-945778871","position":[-18.586667,-57.126666,25.852777]},{"kind":"curve","id":"small-building-edge-1070453701","vertexIds":["small-building-vertex-945778871","small-building-vertex-1052483923"]},{"kind":"curve","id":"small-building-edge-1108121009","vertexIds":["small-building-vertex-945778871","small-building-vertex-1487235108"]},{"kind":"curve","id":"small-building-edge-1261178177","vertexIds":["small-building-vertex-560960189","small-building-vertex-1653716766"]},{"kind":"curve","id":"small-building-edge-1422159112","vertexIds":["small-building-vertex-1078954806","small-building-vertex-1487235108"]},{"kind":"curve","id":"small-building-edge-1567786765","vertexIds":["small-building-vertex-551332595","small-building-vertex-945778871"]},{"kind":"curve","id":"small-building-edge-1705326756","vertexIds":["small-building-vertex-1928378833","small-building-vertex-551332595"]},{"kind":"curve","id":"small-building-edge-2004107109","vertexIds":["small-building-vertex-200778251","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-2102926252","vertexIds":["small-building-vertex-1928378833","small-building-vertex-1653716766"]},{"kind":"curve","id":"small-building-edge-349583852","vertexIds":["small-building-vertex-1052483923","small-building-vertex-1078954806"]},{"kind":"curve","id":"small-building-edge-354613623","vertexIds":["small-building-vertex-1487235108","small-building-vertex-1928378833"]},{"kind":"curve","id":"small-building-edge-432705901","vertexIds":["small-building-vertex-200778251","small-building-vertex-1052483923"]},{"kind":"curve","id":"small-building-edge-432807106","vertexIds":["small-building-vertex-1417750768","small-building-vertex-200778251"]},{"kind":"curve","id":"small-building-edge-467629952","vertexIds":["small-building-vertex-1078954806","small-building-vertex-560960189"]},{"kind":"curve","id":"small-building-edge-49481349","vertexIds":["small-building-vertex-1417750768","small-building-vertex-551332595"]},{"kind":"curve","id":"small-building-edge-508083477","vertexIds":["small-building-vertex-1417750768","small-building-vertex-1653716766"]},{"kind":"curve","id":"small-building-wire-1095357825","edgeIds":["small-building-edge-467629952","small-building-edge-1422159112","small-building-edge-354613623","small-building-edge-2102926252","small-building-edge-1261178177"]},{"kind":"curve","id":"small-building-wire-1399618711","edgeIds":["small-building-edge-349583852","small-building-edge-432705901","small-building-edge-2004107109","small-building-edge-467629952"]},{"kind":"curve","id":"small-building-wire-1676387167","edgeIds":["small-building-edge-1070453701","small-building-edge-432705901","small-building-edge-432807106","small-building-edge-49481349","small-building-edge-1567786765"]},{"kind":"curve","id":"small-building-wire-1755121565","edgeIds":["small-building-edge-2004107109","small-building-edge-432807106","small-building-edge-508083477","small-building-edge-1261178177"]},{"kind":"curve","id":"small-building-wire-285005499","edgeIds":["small-building-edge-349583852","small-building-edge-1070453701","small-building-edge-1108121009","small-building-edge-1422159112"]},{"kind":"curve","id":"small-building-wire-311748032","edgeIds":["small-building-edge-354613623","small-building-edge-1108121009","small-building-edge-1567786765","small-building-edge-1705326756"]},{"kind":"curve","id":"small-building-wire-924227310","edgeIds":["small-building-edge-49481349","small-building-edge-508083477","small-building-edge-2102926252","small-building-edge-1705326756"]},{"kind":"surface","id":"small-building-face-1144073303","wireIds":["small-building-wire-1755121565"]},{"kind":"surface","id":"small-building-face-1382526041","wireIds":["small-building-wire-1095357825"]},{"kind":"surface","id":"small-building-face-1891411219","wireIds":["small-building-wire-1399618711"]},{"kind":"surface","id":"small-building-face-2019874201","wireIds":["small-building-wire-311748032"]},{"kind":"surface","id":"small-building-face-2129815768","wireIds":["small-building-wire-924227310"]},{"kind":"surface","id":"small-building-face-512606747","wireIds":["small-building-wire-285005499"]},{"kind":"surface","id":"small-building-face-816291467","wireIds":["small-building-wire-1676387167"]},{"kind":"shell","id":"small-building-shell-115098816","faceIds":["small-building-face-816291467","small-building-face-512606747","small-building-face-1891411219","small-building-face-1144073303","small-building-face-2129815768","small-building-face-2019874201","small-building-face-1382526041"]},{"kind":"solid","slot":"solid","id":"small-building-cell-1278694563","shellIds":["small-building-shell-115098816"]}]}]}}]}';
 
 //#endregion 🧪InteractionE2EFixtures
 
@@ -7416,7 +7416,7 @@ if (import.meta.vitest) {
 
     it("parseModelJson fills missing entity arrays with empty lists", () => {
       const model = parseModelJson({
-        schema: "spatial.model/v1",
+        schema: "spatial.model",
         revision: 1,
         objects: [],
         geometry: {
@@ -7746,7 +7746,7 @@ if (import.meta.vitest) {
   describe("@semio-tech/cad-js-core action and interaction registries", () => {
     it("rejects executable action document fields", () => {
       const base = {
-        schema: "spatial.action/v1",
+        schema: "spatial.action",
         id: "x",
         version: "1.0.0",
         steps: [{ op: "return", data: { kind: "const", value: 1 } }],
@@ -7760,9 +7760,9 @@ if (import.meta.vitest) {
       const specs = listModelDefinitionActionSpecs();
       const registry = ActionRegistry.withModelDefinitionActions();
       expect(specs.length).toBeGreaterThan(0);
-      expect(specs.every((s) => registry.get(s.id)?.spec?.schema === "spatial.action/v1")).toBe(true);
+      expect(specs.every((s) => registry.get(s.id)?.spec?.schema === "spatial.action")).toBe(true);
       expect(specs.every((s) => registry.get(s.id) !== null)).toBe(true);
-      expect(registry.get("command.finish")?.spec?.schema).toBe("spatial.action/v1");
+      expect(registry.get("command.finish")?.spec?.schema).toBe("spatial.action");
       expect(registry.get("selection.selectAll")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.selection.apply")).toBe(true);
       expect(registry.get("command.addPoint")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.action.capability")).toBe(true);
       const allowedKernelFunctions = new Set(["spatial.selection.apply", "spatial.action.capability"]);
@@ -8048,7 +8048,7 @@ if (import.meta.vitest) {
     });
     it("aborting nested interaction.call rolls back the calling transition", async () => {
       const pickChild = parseInteractionSpec({
-        schema: "spatial.interaction/v1",
+        schema: "spatial.interaction",
         id: "test.nested.pick",
         version: "1",
         invocation: "callable",
@@ -8090,7 +8090,7 @@ if (import.meta.vitest) {
         commit: { fromStates: ["committed"], operation: { kind: "action", action: "command.finish", params: {} } },
       })!;
       const host = parseInteractionSpec({
-        schema: "spatial.interaction/v1",
+        schema: "spatial.interaction",
         id: "test.nested.host",
         version: "1",
         machine: {
@@ -8156,7 +8156,7 @@ if (import.meta.vitest) {
     });
     it("interaction.call supports arbitrarily nested interaction sessions", async () => {
       const grandchild = parseInteractionSpec({
-        schema: "spatial.interaction/v1",
+        schema: "spatial.interaction",
         id: "test.pick.grandchild",
         version: "1",
         invocation: "callable",
@@ -8173,7 +8173,7 @@ if (import.meta.vitest) {
         },
       })!;
       const child = parseInteractionSpec({
-        schema: "spatial.interaction/v1",
+        schema: "spatial.interaction",
         id: "test.pick.child",
         version: "1",
         invocation: "callable",
@@ -8214,7 +8214,7 @@ if (import.meta.vitest) {
         },
       })!;
       const host = parseInteractionSpec({
-        schema: "spatial.interaction/v1",
+        schema: "spatial.interaction",
         id: "test.pick.host",
         version: "1",
         machine: {
@@ -8426,7 +8426,7 @@ if (import.meta.vitest) {
       expect(hist.entries()).toEqual([]);
     });
     it.each(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()))("registers selection command action $id", (defn) => {
-      expect(ActionRegistry.withModelDefinitionActions().get(defn.id)?.spec?.schema).toBe("spatial.action/v1");
+      expect(ActionRegistry.withModelDefinitionActions().get(defn.id)?.spec?.schema).toBe("spatial.action");
     });
     it("selection.invert honors seed targets", async () => {
       const model = new Model();
@@ -9413,7 +9413,7 @@ if (import.meta.vitest) {
     const modelFromFixture = (kind: InteractionE2EFixtureKind): Model => {
       if (kind === "empty") return new Model();
       const raw = kind === "loom" ? geometryLoomFixtureJson : kind === "routes" ? geometryRoutesFixtureJson : buildingBooleanFixtureJson;
-      if (raw && typeof raw === "object" && (raw as ModelSpaceJson).schema === "spatial.modelspace/v1") {
+      if (raw && typeof raw === "object" && (raw as ModelSpaceJson).schema === "spatial.modelspace") {
         const space = ModelSpace.fromJSON(raw as ModelSpaceJson);
         return space.models["spatial.shape"] ?? space.models[Object.keys(space.models)[0]!] ?? new Model();
       }

@@ -159,7 +159,7 @@ struct WorldVolumeProps {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct FixtureV1 {
+struct Fixture {
     #[serde(default)]
     attractions: Vec<AttractionProps>,
     #[serde(default)]
@@ -170,7 +170,7 @@ struct FixtureV1 {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct SceneConfig {
-    fixture: FixtureV1,
+    fixture: Fixture,
     #[serde(rename = "kindCatalogs", default)]
     kind_catalogs: Option<KindCatalogBundle>,
     #[serde(rename = "kindCompatibility", default)]
@@ -772,7 +772,7 @@ fn catalog_object_kind_by_id<'a>(catalogs: &'a KindCatalogBundle, id: &str) -> O
     catalogs.objects.iter().find(|k| k.id == id)
 }
 
-fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &KindCatalogBundle, fixture: &FixtureV1) -> Option<String> {
+fn resolve_object_kind_mesh_url(kind_id: &str, catalogs: &KindCatalogBundle, fixture: &Fixture) -> Option<String> {
     if let Some(kind) = catalog_object_kind_by_id(catalogs, kind_id) {
         if let Some(url) = kind.mesh_url.as_ref().filter(|u| !u.is_empty()) {
             return Some(url.clone());
@@ -836,7 +836,7 @@ fn vortex_world_from_object(obj: &FixtureObject, vortex_index: usize) -> Option<
     Some((position, direction))
 }
 
-fn enumerate_brush_fill_vortex_targets(fixture: &FixtureV1) -> Vec<BrushFillVortexTarget> {
+fn enumerate_brush_fill_vortex_targets(fixture: &Fixture) -> Vec<BrushFillVortexTarget> {
     let blocked = blocked_vortex_full_ids(&fixture.attractions);
     let mut out = Vec::new();
     for obj in &fixture.objects {
@@ -960,7 +960,7 @@ fn brush_preview_from_candidate(
     target_world_direction: Vec3,
     reference_orientation: Option<Quat>,
     catalogs: &KindCatalogBundle,
-    fixture: &FixtureV1,
+    fixture: &Fixture,
 ) -> Option<BrushPreviewState> {
     let kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)?;
     let template = kind.vortices.get(candidate.source_vortex_index)?;
@@ -972,7 +972,7 @@ fn brush_preview_from_candidate(
 }
 
 struct FillBuilder {
-    fixture: FixtureV1,
+    fixture: Fixture,
     sequence: Vec<BrushPlacePayload>,
     appended_objects: Vec<FixtureObject>,
     appended_attractions: Vec<AttractionProps>,
@@ -985,7 +985,7 @@ struct FillBuilder {
 }
 
 impl FillBuilder {
-    fn new(base: FixtureV1, seed: u32, meshes: &HashMap<String, CollisionBody>, catalogs: &KindCatalogBundle) -> Self {
+    fn new(base: Fixture, seed: u32, meshes: &HashMap<String, CollisionBody>, catalogs: &KindCatalogBundle) -> Self {
         let seed_object_ids: std::collections::HashSet<String> = base.objects.iter().map(|o| o.id.clone()).collect();
         let mut placed = Vec::new();
         for obj in &base.objects {
@@ -1278,7 +1278,7 @@ impl Puzzle3dEngine {
     }
 }
 
-fn apply_brush_placement_to_fixture(fixture: &FixtureV1, payload: &BrushPlacePayload, catalogs: &KindCatalogBundle) -> FixtureV1 {
+fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlacePayload, catalogs: &KindCatalogBundle) -> Fixture {
     let Some(kind) = catalog_object_kind_by_id(catalogs, &payload.object_kind_id) else {
         return fixture.clone();
     };
@@ -1394,7 +1394,7 @@ mod tests {
         engine.register_mesh("/test/obstacle.glb".to_string(), positions.clone(), indices.clone());
         engine.register_mesh("/test/preview.glb".to_string(), positions, indices);
         let scene = SceneConfig {
-            fixture: FixtureV1 {
+            fixture: Fixture {
                 attractions: vec![],
                 target_volumes: vec![],
                 objects: vec![
@@ -1512,7 +1512,7 @@ use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
 
-pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d/v1";
+pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

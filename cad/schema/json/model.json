@@ -6,7 +6,7 @@
   "additionalProperties": false,
   "required": ["schema", "revision", "objects"],
   "properties": {
-    "schema": { "const": "spatial.model/v1" },
+    "schema": { "const": "spatial.model" },
     "revision": { "type": "integer", "minimum": 0 },
     "objects": { "type": "array", "items": { "$ref": "#/$defs/object" } }
   },

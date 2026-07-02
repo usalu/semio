@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.interaction/v1",
+  "schema": "spatial.interaction",
   "id": "energy.energy.constructRoof",
   "version": "1.0.0",
   "label": "Construct Roof",

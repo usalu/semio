@@ -304,11 +304,11 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "imperative" | "sequence" | "trinity" | "shooting" | "forms" | "raster" | "draw" | "writer" | "semios" | "vcs" | "panel" | "editor";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "trinity" | "shooting" | "forms" | "raster" | "draw" | "writer" | "s" | "vcs" | "panel" | "editor";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "trinity", "shooting", "forms", "raster", "draw", "writer", "semios", "vcs", "editor"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "shooting", "forms", "raster", "draw", "writer", "s", "vcs", "editor"];
 
-const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "trinity", "shooting", "raster", "draw", "semios"];
+const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "shooting", "raster", "draw", "s"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -410,6 +410,17 @@ export interface UiSequenceHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
+/** @emoji 📄 Host-bound layout document surface. */
+export interface UiLayoutHostSurfaceNode {
+	readonly type: "layout";
+	readonly componentKind: "layout";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly paneId?: string;
+	readonly chromeMode?: "blueprint" | "preview";
+	readonly bindingId?: string;
+}
+
 /** @emoji 🔺 Host-bound trinity directed property port graph surface. */
 export interface UiTrinityHostSurfaceNode {
 	readonly type: "trinity";
@@ -502,10 +513,10 @@ export interface UiWriterHostSurfaceNode {
 	readonly bindingId?: string;
 }
 
-/** @emoji 🖥️ Host-bound semios studio surface (`mediaGraph` or `appHost`). */
-export interface UiSemiosHostSurfaceNode {
-	readonly type: "semios";
-	readonly componentKind: "semios";
+/** @emoji 🖥️ Host-bound s studio surface (`mediaGraph` or `appHost`). */
+export interface UiSHostSurfaceNode {
+	readonly type: "s";
+	readonly componentKind: "s";
 	readonly surfaceId: string;
 	readonly controllerId: string;
 	readonly view: "mediaGraph" | "appHost" | "launcher" | "history";
@@ -534,6 +545,7 @@ export type UiComponentHostSurfaceNode =
 	| UiDagHostSurfaceNode
 	| UiImperativeHostSurfaceNode
 	| UiSequenceHostSurfaceNode
+	| UiLayoutHostSurfaceNode
 	| UiTrinityHostSurfaceNode
 	| UiCadHostSurfaceNode
 	| UiShootingHostSurfaceNode
@@ -542,7 +554,7 @@ export type UiComponentHostSurfaceNode =
 	| UiDrawHostSurfaceNode
 	| UiVcsHostSurfaceNode
 	| UiWriterHostSurfaceNode
-	| UiSemiosHostSurfaceNode
+	| UiSHostSurfaceNode
 	| UiPanelHostSurfaceNode
 	| UiEditorHostSurfaceNode;
 
@@ -834,6 +846,25 @@ export function buildSequenceWindowBody(surfaceId: string, controllerId: string,
 	};
 }
 
+/** @emoji 📄 Canonical layout window body. */
+export function buildLayoutWindowBody(
+	surfaceId: string,
+	controllerId: string,
+	paneId?: string,
+	chromeMode: "blueprint" | "preview" = "blueprint",
+	bindingId?: string,
+): UiLayoutHostSurfaceNode {
+	return {
+		type: "layout",
+		componentKind: "layout",
+		surfaceId,
+		controllerId,
+		chromeMode,
+		...(paneId ? { paneId } : {}),
+		...(bindingId ? { bindingId } : {}),
+	};
+}
+
 /** @emoji 🔺 Canonical trinity window body. */
 export function buildTrinityWindowBody(surfaceId: string, controllerId: string, paneId?: string, bindingId?: string): UiTrinityHostSurfaceNode {
 	return {
@@ -935,17 +966,17 @@ export function buildVcsWindowBody(
 	};
 }
 
-/** @emoji 🖥️ Canonical semios window body for media graph or app host surfaces. */
-export function buildSemiosWindowBody(
+/** @emoji 🖥️ Canonical s window body for media graph or app host surfaces. */
+export function buildSWindowBody(
 	surfaceId: string,
 	controllerId: string,
 	view: "mediaGraph" | "appHost" | "launcher" | "history",
 	paneId?: string,
 	bindingId?: string,
-): UiSemiosHostSurfaceNode {
+): UiSHostSurfaceNode {
 	return {
-		type: "semios",
-		componentKind: "semios",
+		type: "s",
+		componentKind: "s",
 		surfaceId,
 		controllerId,
 		view,

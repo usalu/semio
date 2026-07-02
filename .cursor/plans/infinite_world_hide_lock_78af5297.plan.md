@@ -9,7 +9,7 @@ todos:
     content: Add WorldEntityFlags type + pure helpers (selectable/rendered/renderMode) + dim constant to infinite/world/r3f, with tests.
     status: completed
   - id: persist-puzzle
-    content: Add hidden/locked to puzzle ObjectProps/VortexProps/AttractionProps; parse/serialize in parseFixtureV1; thread through fingerprints, ObjectRecord, fixtureToRecords.
+    content: Add hidden/locked to puzzle ObjectProps/VortexProps/AttractionProps; parse/serialize in parseFixture; thread through fingerprints, ObjectRecord, fixtureToRecords.
     status: completed
   - id: persist-cad
     content: Store per-entity hidden/locked in CAD Model.metadata via AttributeStore helpers (covers object + vertex/edge/face).
@@ -39,7 +39,7 @@ isProject: false
 ---
 
 ## Decisions (from clarifications)
-- Persisted in the scene documents (puzzle `FixtureV1`, CAD `Model.metadata`).
+- Persisted in the scene documents (puzzle `Fixture`, CAD `Model.metadata`).
 - Applies to all selectable entity kinds (CAD vertex/edge/face/object; puzzle object/vortex/attraction).
 - `hidden` = not rendered, but revealed in 3D as a hovered piece while its tree row is hovered.
 - `locked` = rendered dimmed/greyed AND not selectable/hoverable/editable.
@@ -63,7 +63,7 @@ Rationale: the engine stays the generic layer; storage stays per-doc; reveal-on-
 
 ### Puzzle 3d ([puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx))
 - Add `hidden?`/`locked?` to `ObjectProps` (293), `VortexProps` (278), `AttractionProps` (321).
-- `parseFixtureV1` (~1413): read + serialize the new fields for objects, vortices, attractions.
+- `parseFixture` (~1413): read + serialize the new fields for objects, vortices, attractions.
 - Include flags in `fixtureAppearanceFingerprint` so `syncAppearanceFromFixture` picks up changes.
 - Carry flags into `ObjectRecord` (2063) via `fixtureToRecords` (2090); attractions already pass through the store.
 - Thread flags `ObjectItemById` (2806) -> `ObjectItem`/`Vortex`; `Attractions`/`CableBatch` for attraction flags.

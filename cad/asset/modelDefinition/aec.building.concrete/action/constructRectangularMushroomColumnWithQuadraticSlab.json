@@ -1,5 +1,5 @@
 {
-  "schema": "spatial.action/v1",
+  "schema": "spatial.action",
   "id": "building.mushroomcolumn.constructRectangularMushroomColumnWithQuadraticSlab",
   "version": "1.0.0",
   "label": "Construct Rectangular Mushroom Column With Quadratic Slab",

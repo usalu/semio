@@ -10,7 +10,7 @@ use std::sync::OnceLock;
 
 use dag::{
     computation_node_height, computation_node_width, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, stepper_widget_height, stepper_widget_width, would_create_cycle,
-    DagFixtureEdgeV1, DagFixtureV1, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,
+    DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,
 };
 use neural::{channel_output, cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
@@ -102,16 +102,16 @@ pub struct WidgetLayout {
 /// 🧾 Serializable flow document with authoritative neural tree and strippable UI.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowDocumentV1 {
+pub struct FlowDocument {
     pub schema: String,
     pub tree: Tree,
-    pub ui: FlowUiV1,
+    pub ui: FlowUi,
 }
 
 /// 🖼️ GUI-only flow data that can be removed without destroying logic.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowUiV1 {
+pub struct FlowUi {
     pub camera: CameraJson,
     pub nodes: BTreeMap<String, FlowNodeGui>,
     #[serde(default)]
@@ -119,7 +119,7 @@ pub struct FlowUiV1 {
 }
 
 /// 🖼️ Alias retained for cluster widget serde compatibility.
-pub type FlowGuiV1 = FlowUiV1;
+pub type FlowGui = FlowUi;
 
 /// 🧩 GUI-only node presentation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -146,7 +146,7 @@ pub enum NodeChrome {
 #[serde(rename_all = "camelCase")]
 pub struct FlowPreviewGui {
     pub id: String,
-    pub source: Option<FlowChannelRefV1>,
+    pub source: Option<FlowChannelRef>,
     pub mode: String,
     #[serde(default)] pub preview: Dictionary,
     #[serde(default)] pub expanded: BTreeSet<String>,
@@ -156,7 +156,7 @@ pub struct FlowPreviewGui {
 /// 📡 Serializable channel reference.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowChannelRefV1 {
+pub struct FlowChannelRef {
     pub neuron: String,
     pub channel: String,
 }
@@ -259,14 +259,14 @@ pub enum Widget {
         name: String,
         tree: Tree,
         #[serde(default)]
-        flow: FlowGuiV1,
+        flow: FlowGui,
     },
 }
 
 /// 🧩 Legacy fixture format still used by {@link FlowHost} retained state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowFixtureV1 {
+pub struct FlowFixture {
     pub schema: String,
     pub camera: CameraJson,
     pub widgets: Vec<Widget>,
@@ -275,10 +275,10 @@ pub struct FlowFixtureV1 {
     pub layout: BTreeMap<String, WidgetLayout>,
 }
 
-impl Default for FlowFixtureV1 {
+impl Default for FlowFixture {
     fn default() -> Self {
         Self {
-            schema: "flow.fixture/v1".into(),
+            schema: "flow.fixture".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
                 Widget::InputSlider { id: "slider".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
@@ -294,19 +294,19 @@ impl Default for FlowFixtureV1 {
     }
 }
 
-impl FlowFixtureV1 {
-    pub fn to_document(&self) -> FlowDocumentV1 {
+impl FlowFixture {
+    pub fn to_document(&self) -> FlowDocument {
         let mut nodes = BTreeMap::new();
         let mut previews = Vec::new();
         for widget in &self.widgets {
             let id = widget_id_for(widget).to_string();
             nodes.insert(id.clone(), FlowNodeGui { layout: self.layout.get(id.as_str()).cloned().unwrap_or(WidgetLayout { x: 0.0, y: 0.0 }), chrome: widget_chrome(widget) });
             if let Widget::OutputPreview { id, preview, expanded } = widget {
-                let source = self.synapses.iter().find(|synapse| synapse.to == *id).map(|synapse| FlowChannelRefV1 { neuron: synapse.from.clone(), channel: synapse.from_port.clone() });
+                let source = self.synapses.iter().find(|synapse| synapse.to == *id).map(|synapse| FlowChannelRef { neuron: synapse.from.clone(), channel: synapse.from_port.clone() });
                 previews.push(FlowPreviewGui { id: id.clone(), source, mode: "text".into(), preview: preview.clone(), expanded: expanded.clone(), layout: self.layout.get(id).cloned() });
             }
         }
-        FlowDocumentV1 { schema: "flow.document/v1".into(), tree: tree_from_fixture(self, &HashMap::new()), ui: FlowUiV1 { camera: self.camera.clone(), nodes, previews } }
+        FlowDocument { schema: "flow.document".into(), tree: tree_from_fixture(self, &HashMap::new()), ui: FlowUi { camera: self.camera.clone(), nodes, previews } }
     }
 }
 
@@ -323,7 +323,7 @@ fn widget_chrome(widget: &Widget) -> NodeChrome {
     }
 }
 
-fn tree_from_fixture(fixture: &FlowFixtureV1, kind_infos: &HashMap<String, OperatorInfo>) -> Tree {
+fn tree_from_fixture(fixture: &FlowFixture, kind_infos: &HashMap<String, OperatorInfo>) -> Tree {
     let neurons = fixture
         .widgets
         .iter()
@@ -365,10 +365,10 @@ fn tree_from_fixture(fixture: &FlowFixtureV1, kind_infos: &HashMap<String, Opera
 const FLOW_INPUT_PORTS_KEY: &str = "_flowInputPorts";
 const FLOW_OUTPUT_PORTS_KEY: &str = "_flowOutputPorts";
 
-impl Default for FlowDocumentV1 {
+impl Default for FlowDocument {
     fn default() -> Self {
         Self {
-            schema: "flow.document/v1".into(),
+            schema: "flow.document".into(),
             tree: Tree {
                 neurons: vec![
                     Neuron::with_kind("slider", INPUT_KIND, Dictionary::new().insert("channel", NeuralValue::Atom(Atom::String("number".into())))),
@@ -380,14 +380,14 @@ impl Default for FlowDocumentV1 {
                     Synapse { id: "s2".into(), from: "add".into(), to: "out_sum".into(), from_port: "sum".into(), to_port: String::new() },
                 ],
             },
-            ui: FlowUiV1 {
+            ui: FlowUi {
                 camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
                 nodes: BTreeMap::from([
                     ("slider".into(), FlowNodeGui { layout: WidgetLayout { x: 0.0, y: 0.0 }, chrome: NodeChrome::Slider { min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP, value: 3.0 } }),
                     ("add".into(), FlowNodeGui { layout: WidgetLayout { x: 200.0, y: 0.0 }, chrome: NodeChrome::Plain { preview: true } }),
                     ("out_sum".into(), FlowNodeGui { layout: WidgetLayout { x: 400.0, y: 0.0 }, chrome: NodeChrome::Plain { preview: false } }),
                 ]),
-                previews: vec![FlowPreviewGui { id: "preview".into(), source: Some(FlowChannelRefV1 { neuron: "add".into(), channel: "sum".into() }), mode: "text".into(), preview: Dictionary::new(), expanded: BTreeSet::new(), layout: Some(WidgetLayout { x: 400.0, y: 0.0 }) }],
+                previews: vec![FlowPreviewGui { id: "preview".into(), source: Some(FlowChannelRef { neuron: "add".into(), channel: "sum".into() }), mode: "text".into(), preview: Dictionary::new(), expanded: BTreeSet::new(), layout: Some(WidgetLayout { x: 400.0, y: 0.0 }) }],
             },
         }
     }
@@ -443,7 +443,7 @@ fn neuron_output_port_ids(neuron: &Neuron, kind_infos: &HashMap<String, Operator
     default_neuron_output_ports(&neuron.kind, &[], kind_infos)
 }
 
-fn neuron_preview_enabled(document: &FlowDocumentV1, neuron_id: &str) -> bool {
+fn neuron_preview_enabled(document: &FlowDocument, neuron_id: &str) -> bool {
     document.ui.nodes.get(neuron_id).map(|node| match &node.chrome {
         NodeChrome::Plain { preview } => *preview,
         _ => true,
@@ -468,7 +468,7 @@ fn chrome_for_neuron(neuron: &Neuron) -> NodeChrome {
     }
 }
 
-fn ensure_ui_node(document: &mut FlowDocumentV1, neuron_id: &str) {
+fn ensure_ui_node(document: &mut FlowDocument, neuron_id: &str) {
     if document.ui.nodes.contains_key(neuron_id) {
         return;
     }
@@ -477,16 +477,16 @@ fn ensure_ui_node(document: &mut FlowDocumentV1, neuron_id: &str) {
     document.ui.nodes.insert(neuron_id.to_string(), FlowNodeGui { layout, chrome });
 }
 
-fn dedupe_document_neurons(document: &mut FlowDocumentV1) {
+fn dedupe_document_neurons(document: &mut FlowDocument) {
     let mut seen = BTreeSet::new();
     document.tree.neurons.retain(|neuron| seen.insert(neuron.id.clone()));
 }
 
-fn node_layout(document: &FlowDocumentV1, id: &str) -> WidgetLayout {
+fn node_layout(document: &FlowDocument, id: &str) -> WidgetLayout {
     document.ui.nodes.get(id).map(|n| n.layout.clone()).or_else(|| document.ui.previews.iter().find(|p| p.id == id).and_then(|p| p.layout.clone())).unwrap_or(WidgetLayout { x: 0.0, y: 0.0 })
 }
 
-fn set_node_layout(document: &mut FlowDocumentV1, id: &str, layout: WidgetLayout) {
+fn set_node_layout(document: &mut FlowDocument, id: &str, layout: WidgetLayout) {
     if let Some(preview) = document.ui.previews.iter_mut().find(|p| p.id == id) {
         preview.layout = Some(layout.clone());
     }
@@ -1462,7 +1462,7 @@ fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
     }
 }
 
-fn build_channel_eval_json(fixture: &FlowFixtureV1, channels: &EvalChannels, kind_infos: &HashMap<String, OperatorInfo>) -> String {
+fn build_channel_eval_json(fixture: &FlowFixture, channels: &EvalChannels, kind_infos: &HashMap<String, OperatorInfo>) -> String {
     let mut widgets = serde_json::Map::new();
     for widget in &fixture.widgets {
         let id = widget_id_for(widget);
@@ -1572,16 +1572,16 @@ fn is_global_eval_error_json(json: &str) -> bool {
 // #region History
 #[derive(Default)]
 struct FlowHistory {
-    past: Vec<FlowFixtureV1>,
-    future: Vec<FlowFixtureV1>,
-    pending: Option<FlowFixtureV1>,
+    past: Vec<FlowFixture>,
+    future: Vec<FlowFixture>,
+    pending: Option<FlowFixture>,
 }
 // #endregion History
 
 // #region 🔖FlowHost
 /// 🏠 Retained flow host: fixture, dag scene, evaluation cache.
 pub struct FlowHost {
-    pub fixture: FlowFixtureV1,
+    pub fixture: FlowFixture,
     pub dag: DagHost,
     pub outputs: HashMap<String, Dictionary>,
     pub last_eval_json: String,
@@ -1602,16 +1602,16 @@ pub struct FlowHost {
 
 impl Default for FlowHost {
     fn default() -> Self {
-        Self::from_fixture(FlowFixtureV1::default())
+        Self::from_fixture(FlowFixture::default())
     }
 }
 
 impl FlowHost {
-    pub fn from_fixture(mut fixture: FlowFixtureV1) -> Self {
+    pub fn from_fixture(mut fixture: FlowFixture) -> Self {
         dedupe_fixture_widgets(&mut fixture);
         let mut host = Self {
             fixture,
-            dag: DagHost::from_fixture(DagFixtureV1 { schema: "dag.fixture/v1".into(), camera: dag::DagCameraV1 { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
+            dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
             outputs: HashMap::new(),
             last_eval_json: String::new(),
             eval_bridge: None,
@@ -1634,7 +1634,7 @@ impl FlowHost {
     }
 
     /// 📥 Replaces fixture content while keeping catalogue, operator metadata, and eval bridge.
-    pub fn replace_fixture(&mut self, mut fixture: FlowFixtureV1) {
+    pub fn replace_fixture(&mut self, mut fixture: FlowFixture) {
         dedupe_fixture_widgets(&mut fixture);
         self.fixture = fixture;
         self.outputs.clear();
@@ -1647,7 +1647,7 @@ impl FlowHost {
         self.touch_channel_eval();
     }
 
-    pub fn parse_fixture_json(json: &str) -> Result<FlowFixtureV1, String> {
+    pub fn parse_fixture_json(json: &str) -> Result<FlowFixture, String> {
         serde_json::from_str(json).map_err(|e| e.to_string())
     }
 
@@ -1655,7 +1655,7 @@ impl FlowHost {
         serde_json::to_string(&self.fixture).map_err(|e| e.to_string())
     }
 
-    pub fn document(&self) -> FlowDocumentV1 {
+    pub fn document(&self) -> FlowDocument {
         self.fixture.to_document()
     }
 
@@ -2503,19 +2503,19 @@ impl FlowHost {
         self.fixture.camera = CameraJson { x: self.dag.fixture.camera.x, y: self.dag.fixture.camera.y, zoom: self.dag.fixture.camera.zoom };
     }
 
-    fn build_dag_fixture_v1(&self) -> DagFixtureV1 {
+    fn build_dag_fixture_v1(&self) -> DagFixture {
         let mut seen = BTreeSet::new();
         let nodes: Vec<DagNodeSpec> =
             self.fixture.widgets.iter().enumerate().filter(|(_, widget)| seen.insert(widget_id_for(widget).to_string())).map(|(i, w)| widget_to_dag_node(w, i, &self.fixture.layout, &self.fixture.synapses, &self.kind_infos)).collect();
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
-        let edges: Vec<DagFixtureEdgeV1> = self
+        let edges: Vec<DagFixtureEdge> = self
             .fixture
             .synapses
             .iter()
             .filter(|syn| !would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to))
-            .map(|syn| DagFixtureEdgeV1 { id: syn.id.clone(), source: format!("{}:{}", syn.from, syn.from_port), target: format!("{}:{}", syn.to, syn.to_port) })
+            .map(|syn| DagFixtureEdge { id: syn.id.clone(), source: format!("{}:{}", syn.from, syn.from_port), target: format!("{}:{}", syn.to, syn.to_port) })
             .collect();
-        DagFixtureV1 { schema: "dag.fixture/v1".into(), camera: dag::DagCameraV1 { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
+        DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
     }
 
     fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::vello::kurbo::Point {
@@ -2835,7 +2835,7 @@ impl FlowHost {
             id: cluster_id.clone(),
             name: "Cluster".into(),
             tree: inner_tree,
-            flow: FlowGuiV1 { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: inner_layout.into_iter().map(|(id, layout)| (id, FlowNodeGui { layout, chrome: NodeChrome::Plain { preview: true } })).collect(), previews: vec![] },
+            flow: FlowGui { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: inner_layout.into_iter().map(|(id, layout)| (id, FlowNodeGui { layout, chrome: NodeChrome::Plain { preview: true } })).collect(), previews: vec![] },
         };
         self.fixture.widgets.retain(|widget| !selected.contains(&widget_id_for(widget).to_string()));
         self.fixture.widgets.push(cluster);
@@ -2946,7 +2946,7 @@ impl FlowHost {
     }
 
     // #region History
-    fn content_changed(a: &FlowFixtureV1, b: &FlowFixtureV1) -> bool {
+    fn content_changed(a: &FlowFixture, b: &FlowFixture) -> bool {
         a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout
     }
 
@@ -3006,7 +3006,7 @@ impl FlowHost {
     // #endregion History
 }
 
-fn dedupe_fixture_widgets(fixture: &mut FlowFixtureV1) {
+fn dedupe_fixture_widgets(fixture: &mut FlowFixture) {
     let mut seen = BTreeSet::new();
     fixture.widgets.retain(|widget| seen.insert(widget_id_for(widget).to_string()));
 }
@@ -3622,7 +3622,7 @@ use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
 };
 
-pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.document/v1";
+pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.document";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -4204,14 +4204,14 @@ mod tests {
         let host = FlowHost::default();
         let json = host.fixture_json().unwrap();
         let parsed = FlowHost::parse_fixture_json(&json).unwrap();
-        assert_eq!(parsed.schema, "flow.fixture/v1");
+        assert_eq!(parsed.schema, "flow.fixture");
     }
 
     #[test]
     fn flow_document_tree_is_shakable() {
         let host = host_with_test_bridge();
         let document = host.document();
-        assert_eq!(document.schema, "flow.document/v1");
+        assert_eq!(document.schema, "flow.document");
         assert!(!document.tree.neurons.is_empty());
         let registry = neural::Registry::new();
         let evaluator = Evaluator::new(&registry);
@@ -4234,8 +4234,8 @@ mod tests {
     #[test]
     fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
         let mut host = host_with_test_bridge();
-        host.replace_fixture(FlowFixtureV1 {
-            schema: "flow.fixture/v1".into(),
+        host.replace_fixture(FlowFixture {
+            schema: "flow.fixture".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![Widget::Neuron { id: "add".into(), neuronKind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true }],
             synapses: vec![],
@@ -4340,8 +4340,8 @@ mod tests {
 
     #[test]
     fn variadic_merge_evaluates_port_routed_inputs() {
-        let mut host = FlowHost::from_fixture(FlowFixtureV1 {
-            schema: "flow.fixture/v1".into(),
+        let mut host = FlowHost::from_fixture(FlowFixture {
+            schema: "flow.fixture".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
                 Widget::InputSlider { id: "a".into(), value: 1.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
@@ -5011,7 +5011,7 @@ mod tests {
             ],
             synapses: vec![],
         };
-        let widget = Widget::Cluster { id: "cluster".into(), name: "Add cluster".into(), tree: inner, flow: FlowGuiV1::default() };
+        let widget = Widget::Cluster { id: "cluster".into(), name: "Add cluster".into(), tree: inner, flow: FlowGui::default() };
         let (inputs, outputs, _, _) = widget_io_ports(&widget, &[], &HashMap::new());
         assert_eq!(inputs.len(), 1);
         assert_eq!(outputs.len(), 1);

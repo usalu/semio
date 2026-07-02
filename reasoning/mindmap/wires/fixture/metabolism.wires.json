@@ -1,5 +1,5 @@
 {
-  "schema": "reasoning.wires.fixture/v1",
+  "schema": "reasoning.wires.fixture",
   "source": {
     "kitPath": "compose/fixture/metabolism.kit.light.compose.json",
     "kitId": "f042c2a4-3ba5-44b0-b22c-0ae8f568aacc",
@@ -61,7 +61,7 @@
     { "relationshipId": 9, "sourceIdentityId": 6, "targetIdentityId": 2, "kind": "has", "edgeId": "wires-rel-has-capsule" }
   ],
   "board": {
-    "schema": "reasoning.mindmap.fixture/v1",
+    "schema": "reasoning.mindmap.fixture",
     "camera": { "x": 0, "y": 0, "zoom": 0.55 },
     "meta": {
       "kindCatalogs": {

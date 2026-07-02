@@ -187,6 +187,102 @@ pub mod geometry {
         center + out * r
     }
 
+    /// 🔺 Closed fill path for a triangle handle cap pointing in the `outward` direction.
+    pub fn handle_exterior_cap_triangle_fill_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+        let out = normalize_or_zero(outward);
+        let r = radius.max(1e-9);
+        if out.hypot() < 1e-9 {
+            return handle_exterior_cap_fill_path(center, outward, r);
+        }
+        let perp = Vec2::new(-out.y, out.x);
+        let peak = center + out * r;
+        let base_half = r * 0.65;
+        let base_left = center + perp * base_half;
+        let base_right = center - perp * base_half;
+        let mut path = BezPath::new();
+        path.move_to(base_left);
+        path.line_to(peak);
+        path.line_to(base_right);
+        path.close_path();
+        path
+    }
+
+    /// 🔺 Open stroke path for a triangle handle cap.
+    pub fn handle_exterior_cap_triangle_stroke_path(center: Point, outward: Vec2, radius: f64) -> BezPath {
+        let out = normalize_or_zero(outward);
+        let r = radius.max(1e-9);
+        if out.hypot() < 1e-9 {
+            return handle_exterior_cap_stroke_path(center, outward, r);
+        }
+        let perp = Vec2::new(-out.y, out.x);
+        let peak = center + out * r;
+        let base_half = r * 0.65;
+        let base_left = center + perp * base_half;
+        let base_right = center - perp * base_half;
+        let mut path = BezPath::new();
+        path.move_to(base_left);
+        path.line_to(peak);
+        path.line_to(base_right);
+        path
+    }
+
+    /// 🔺 Wire attachment peak for a triangle handle cap.
+    pub fn handle_exterior_cap_triangle_peak(center: Point, outward: Vec2, radius: f64) -> Point {
+        handle_exterior_cap_peak(center, outward, radius)
+    }
+
+    /// 📐 Orthogonal S/Z polyline between two port cap peaks.
+    pub fn compute_edge_sharp_sz_path(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> BezPath {
+        let out_s = normalize_or_zero(source_outward);
+        let out_t = normalize_or_zero(target_outward);
+        let stub = 20.0;
+        let p1 = source_point + out_s * stub;
+        let p4 = target_point + out_t * stub;
+        let mut path = BezPath::new();
+        path.move_to(source_point);
+        path.line_to(p1);
+        if (p1.x - p4.x).abs() >= (p1.y - p4.y).abs() {
+            let mid_x = (p1.x + p4.x) * 0.5;
+            path.line_to(Point::new(mid_x, p1.y));
+            path.line_to(Point::new(mid_x, p4.y));
+        } else {
+            let mid_y = (p1.y + p4.y) * 0.5;
+            path.line_to(Point::new(p1.x, mid_y));
+            path.line_to(Point::new(p4.x, mid_y));
+        }
+        path.line_to(p4);
+        path.line_to(target_point);
+        path
+    }
+
+    pub fn distance_point_to_polyline(point: Point, path: &BezPath, _segments: usize) -> f64 {
+        use crate::cavas::vello::kurbo::PathEl;
+        let mut smallest = f64::INFINITY;
+        let mut start: Option<Point> = None;
+        let mut previous: Option<Point> = None;
+        for el in path.elements() {
+            match el {
+                PathEl::MoveTo(p) => {
+                    start = Some(*p);
+                    previous = Some(*p);
+                }
+                PathEl::LineTo(p) => {
+                    if let Some(prev) = previous {
+                        smallest = smallest.min(distance_to_segment(point, prev, *p));
+                    }
+                    previous = Some(*p);
+                }
+                PathEl::ClosePath => {
+                    if let (Some(first), Some(prev)) = (start, previous) {
+                        smallest = smallest.min(distance_to_segment(point, prev, first));
+                    }
+                }
+                _ => {}
+            }
+        }
+        smallest
+    }
+
     pub fn compute_edge_bezier_outward(source_point: Point, target_point: Point, source_outward: Vec2, target_outward: Vec2) -> CubicBez {
         let chord = normalize_or_zero(target_point - source_point);
         let mut source_radial = normalize_or_zero(source_outward);
@@ -333,6 +429,31 @@ pub mod geometry {
             let stroke = handle_exterior_cap_stroke_path(Point::new(40.0, 0.0), Vec2::new(1.0, 0.0), radius);
             assert!(!stroke.elements().iter().any(|el| matches!(el, crate::cavas::vello::kurbo::PathEl::ClosePath)));
         }
+
+        #[test]
+        fn triangle_cap_peak_matches_outward_direction() {
+            let center = Point::new(40.0, 0.0);
+            let outward = Vec2::new(1.0, 0.0);
+            let radius = 5.0;
+            let peak = handle_exterior_cap_triangle_peak(center, outward, radius);
+            assert!((peak.x - (center.x + radius)).abs() < 1e-9);
+            let fill = handle_exterior_cap_triangle_fill_path(center, outward, radius);
+            assert!(fill.bounding_box().x1 > center.x);
+        }
+
+        #[test]
+        fn sharp_sz_path_is_orthogonal_between_peaks() {
+            let source = Point::new(0.0, 0.0);
+            let target = Point::new(120.0, 40.0);
+            let path = compute_edge_sharp_sz_path(source, target, Vec2::new(1.0, 0.0), Vec2::new(-1.0, 0.0));
+            let mut line_count = 0;
+            for el in path.elements() {
+                if matches!(el, crate::cavas::vello::kurbo::PathEl::LineTo(_)) {
+                    line_count += 1;
+                }
+            }
+            assert!(line_count >= 3, "sharp S/Z path should contain multiple straight segments");
+        }
     }
 
     pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> Scene {
@@ -423,8 +544,8 @@ pub mod scene_json {
 }
 
 pub use geometry::{
-    circle_handle_angle_toward, clamp_f64, compute_edge_bezier_outward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, encode_board_stroke_scene, handle_exterior_cap_fill_path, handle_exterior_cap_peak,
-    handle_exterior_cap_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge,
+    circle_handle_angle_toward, clamp_f64, compute_edge_bezier_outward, compute_edge_bezier_points, compute_edge_sharp_sz_path, distance_between, distance_point_to_cubic_bezier, distance_point_to_polyline, encode_board_stroke_scene, handle_exterior_cap_fill_path, handle_exterior_cap_peak,
+    handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outside_node_clip_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, normalize_or_zero, ray_from_origin_to_axis_aligned_rectangle_edge,
     rectangle_handle_angle_toward,
 };
 pub use scene_json::{board_json_locked_option, board_json_visible_option, board_json_visible_or_true, CameraJson, NodeDescJson};

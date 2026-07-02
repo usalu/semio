@@ -285,16 +285,42 @@ impl WriterHost {
         self.gutter_width() + PAD_X
     }
 
+    fn content_origin_y(&self) -> f64 {
+        if self.chrome_edgeless_scroll || self.dead_line_y <= 0.0 {
+            0.0
+        } else {
+            self.dead_line_y
+        }
+    }
+
     fn line_y(&self, line: usize) -> f64 {
-        PAD_Y + line as f64 * self.line_height + self.line_height * 0.75
+        self.content_origin_y() + PAD_Y + line as f64 * self.line_height + self.line_height * 0.75
     }
 
     fn line_top_y(&self, line: usize) -> f64 {
-        PAD_Y + line as f64 * self.line_height
+        self.content_origin_y() + PAD_Y + line as f64 * self.line_height
     }
 
     fn content_height(&self, line_count: usize) -> f64 {
-        PAD_Y * 2.0 + line_count as f64 * self.line_height
+        self.content_origin_y() + PAD_Y * 2.0 + line_count as f64 * self.line_height
+    }
+
+    fn rest_content_height(&self, line_count: usize) -> f64 {
+        let rest_origin = if self.dead_line_y > 0.0 {
+            self.dead_line_y
+        } else {
+            0.0
+        };
+        rest_origin + PAD_Y * 2.0 + line_count as f64 * self.line_height
+    }
+
+    fn scroll_overflows(&self) -> bool {
+        let line_count = self.text.matches('\n').count() + 1;
+        self.rest_content_height(line_count) > self.viewport.height as f64
+    }
+
+    pub fn chrome_edgeless_scroll(&self) -> bool {
+        self.chrome_edgeless_scroll
     }
 
     fn gutter_number_x(&self, label: &str) -> f64 {
@@ -310,9 +336,6 @@ impl WriterHost {
         let view_h = self.viewport.height as f64;
         let scroll_max = (content_h - view_h).max(0.0);
         self.camera.y = self.camera.y.clamp(0.0, scroll_max);
-        if !self.chrome_edgeless_scroll && self.dead_line_y > 0.0 {
-            self.camera.y = self.camera.y.max(self.dead_line_y);
-        }
     }
 
     fn scroll_caret_into_view(&mut self) {
@@ -512,8 +535,19 @@ impl WriterHost {
     }
 
     pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
-        if delta_y < 0.0 {
-            self.chrome_edgeless_scroll = true;
+        if !self.scroll_overflows() {
+            return;
+        }
+        let at_top = self.camera.y <= f64::EPSILON;
+        if at_top && self.dead_line_y > 0.0 {
+            if delta_y < 0.0 && !self.chrome_edgeless_scroll {
+                self.chrome_edgeless_scroll = true;
+                return;
+            }
+            if delta_y > 0.0 && self.chrome_edgeless_scroll {
+                self.chrome_edgeless_scroll = false;
+                return;
+            }
         }
         self.camera.y = (self.camera.y + delta_y * 0.5).max(0.0);
         self.clamp_camera();
@@ -901,10 +935,11 @@ impl WriterHost {
     fn hit_test_offset(&self, world: Point) -> usize {
         let rel_x = world.x;
         let rel_y = world.y;
-        if rel_y < PAD_Y {
+        let origin = self.content_origin_y();
+        if rel_y < origin + PAD_Y {
             return 0;
         }
-        let line = ((rel_y - PAD_Y) / self.line_height).floor().max(0.0) as usize;
+        let line = ((rel_y - origin - PAD_Y) / self.line_height).floor().max(0.0) as usize;
         let max_line = self.text.matches('\n').count();
         let line = line.min(max_line);
         let line_text = self.text.split('\n').nth(line).unwrap_or("");
@@ -1473,6 +1508,11 @@ impl WriterSession {
         self.state.borrow_mut().host.set_chrome_edgeless_scroll(enabled);
     }
 
+    #[wasm_bindgen(js_name = chromeEdgelessScroll)]
+    pub fn chrome_edgeless_scroll(&self) -> bool {
+        self.state.borrow().host.chrome_edgeless_scroll()
+    }
+
     #[wasm_bindgen(js_name = wheelScrollScreen)]
     pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
         self.state.borrow_mut().host.wheel_scroll_screen(delta_y);
@@ -1654,16 +1694,37 @@ mod tests {
     }
 
     #[test]
-    fn dead_line_floors_camera_until_edgeless_scroll() {
+    fn dead_line_ignores_wheel_when_content_fits() {
         let mut host = WriterHost::new();
         host.set_size(400, 300, 1.0);
         host.set_text("line one\nline two".into());
         host.set_dead_line_y(32.0);
-        assert!(host.camera.y >= 32.0);
-        host.finish_caret_update();
-        assert!(host.camera.y >= 32.0);
+        assert!(!host.scroll_overflows());
         host.wheel_scroll_screen(-40.0);
-        assert!(host.camera.y < 32.0);
+        assert!(!host.chrome_edgeless_scroll());
+    }
+
+    #[test]
+    fn dead_line_toggles_edgeless_and_restores_on_scroll_back() {
+        let mut host = WriterHost::new();
+        host.set_size(400, 120, 1.0);
+        let lines: String = (0..20).map(|i| format!("line {i}")).collect::<Vec<_>>().join("\n");
+        host.set_text(lines);
+        host.set_dead_line_y(32.0);
+        assert!(host.scroll_overflows());
+        let screen_at_rest: serde_json::Value =
+            serde_json::from_str(&host.world_to_screen_json(offset_to_world(&host, 0).0, offset_to_world(&host, 0).1)).unwrap();
+        assert!(screen_at_rest["y"].as_f64().unwrap() >= 32.0);
+        host.wheel_scroll_screen(-40.0);
+        assert!(host.chrome_edgeless_scroll());
+        let screen_edgeless: serde_json::Value =
+            serde_json::from_str(&host.world_to_screen_json(offset_to_world(&host, 0).0, offset_to_world(&host, 0).1)).unwrap();
+        assert!(screen_edgeless["y"].as_f64().unwrap() < screen_at_rest["y"].as_f64().unwrap());
+        host.wheel_scroll_screen(40.0);
+        assert!(!host.chrome_edgeless_scroll());
+        let screen_restored: serde_json::Value =
+            serde_json::from_str(&host.world_to_screen_json(offset_to_world(&host, 0).0, offset_to_world(&host, 0).1)).unwrap();
+        assert!((screen_restored["y"].as_f64().unwrap() - screen_at_rest["y"].as_f64().unwrap()).abs() < 0.5);
     }
 
     #[test]
@@ -1805,7 +1866,7 @@ pub type WriterStore = DocumentVcsStore<WriterProjection, WriterOp>;
 
 pub fn empty_writer_projection() -> WriterProjection {
     WriterProjection {
-        schema: "writer.document/v1".into(),
+        schema: "writer.document".into(),
         id: "writer".into(),
         text: String::new(),
     }
@@ -1867,7 +1928,7 @@ mod writer_vcs_tests {
     #[test]
     fn writer_document_vcs_replays_text_ops() {
         let mut store = WriterStore::new(create_document_vcs_envelope(
-            "writer.document/v1",
+            "writer.document",
             "writer",
             empty_writer_projection(),
             None,

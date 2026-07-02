@@ -68,7 +68,7 @@ flowchart LR
 ## WIRES: `[reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts)` + fixture
 
 - Drop `RelationshipKindMarker`/`relationshipKindToMarker` single-marker; add `relationshipKindTips(kind) -> { sourceTip?, targetTip? }`: is -> target `filled-arrow`; references -> target `fine-arrow` (+ dashed, already set); owns -> target `filled-diamond`; has -> target `open-diamond`.
-- `WiresRelationshipKindCatalogRowV1` + `wiresKindCatalogsToPuzzle2d`: emit `sourceTip`/`targetTip` (and `directed: true`) per relationship kind.
+- `WiresRelationshipKindCatalogRow` + `wiresKindCatalogsToPuzzle2d`: emit `sourceTip`/`targetTip` (and `directed: true`) per relationship kind.
 - `[reasoning/mindmap/wires/fixture/metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json)`: replace each `relationshipKinds[].marker` with `targetTip` (e.g. `wires.owns` -> `"targetTip": "filled-diamond"`), keep `pattern`/`stroke`.
 - Update wires vitest expectations to the new tip fields.
 
