@@ -1,0 +1,11 @@
+{
+  "title": "Horizontal Scrollable Navbar and Footer",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Make sure that the navbar and the footer are horizontally scrollable when they have more content.",
+  "summary": "Enabled horizontal scrolling with scrollbar hiding on Navbar items and Footer toolbar items by applying shrink-0 to wrapper elements and overflow-x style rules.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪9cef620fbb2441aabcf7cd914b7a0c50"
+  ]
+}

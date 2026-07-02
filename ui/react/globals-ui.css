@@ -177,3 +177,19 @@
 }
 
 /* #endregion 👻PanelGhost */
+
+/* #region ↔️ Scrollbar Hiding and Horizontal Scroll for Navbar and Footer */
+[data-slot="navbar"] > div,
+[data-slot="footer"] > div {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+
+[data-slot="navbar"] > div::-webkit-scrollbar,
+[data-slot="footer"] > div::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+/* #endregion */
+

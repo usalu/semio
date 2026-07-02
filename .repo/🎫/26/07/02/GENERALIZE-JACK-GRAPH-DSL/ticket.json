@@ -1,0 +1,11 @@
+{
+  "id": "26/07/02/GENERALIZE-JACK-GRAPH-DSL",
+  "slug": "GENERALIZE-JACK-GRAPH-DSL",
+  "title": "Generalize Jack Graph DSL",
+  "status": "open",
+  "goal": "🎯trinity",
+  "description": "Generalize Jack query DSL to mathematical/graph foundation; add writer fixture; add Jack window kind to all graph playgrounds with bidirectional hover/selection bridge.",
+  "client": "cursor-chat",
+  "llm": "composer-2.5",
+  "due": "2026-07-02"
+}

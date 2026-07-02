@@ -17,6 +17,7 @@ import {
 	enforcePlaygroundWindowEngagementInput,
 	registerWindowBody,
 	buildWriterWindowBody,
+	JackHoverBridge,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -59,6 +60,8 @@ import {
 	type SequenceFixtureV1,
 	type SequenceStepV1,
 } from "@semio-tech/sequence-core";
+import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
+import { runJackOnBoardFixture } from "@semio-tech/graph-dsl-core";
 
 export const SEQUENCE_PLAY_APP_ID = "sequence-play";
 export const SEQUENCE_PLAY_CONTROLLER_ID = "sequence-play";
@@ -68,12 +71,16 @@ export const SEQUENCE_PLAY_SURFACE_ID = "sequence.play/v1";
 export const SEQUENCE_PLAY_SCRIPT_SURFACE_ID = "sequence.play.script/v1";
 export const SEQUENCE_PLAY_WINDOW_KIND_ID = "sequence-main";
 export const SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID = "sequence-script";
+export const SEQUENCE_PLAY_WINDOW_KIND_JACK = "sequence-jack";
+export const SEQUENCE_PLAY_SURFACE_ID_JACK = "sequence.play.jack/v1";
+export const SEQUENCE_PLAY_BODY_KEY_JACK = "sequence.play.jack";
+export const SEQUENCE_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:step) RETURN n.name";
 export const SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON = sequenceFixtureToJson(DEFAULT_SEQUENCE_FIXTURE);
 export const SEQUENCE_PLAY_LAYOUT = createDefaultLayout(
-	[SEQUENCE_PLAY_WINDOW_KIND_ID, SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID],
+	[SEQUENCE_PLAY_WINDOW_KIND_ID, SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID, SEQUENCE_PLAY_WINDOW_KIND_JACK],
 	"row",
-	[65, 35],
-	["Sequence", "Compiled Script"],
+	[50, 25, 25],
+	["Sequence", "Compiled Script", "Jack"],
 );
 export const SEQUENCE_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const SEQUENCE_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
@@ -378,9 +385,12 @@ export class SequencePlayController extends Controller {
 	private effectLog: EffectLogEntry[] = [];
 	private interactionRevision = 0;
 	private readonly snapshotListeners = new Set<() => void>();
+	private readonly jackBridge = new JackHoverBridge();
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SEQUENCE_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		this.jackBridge.setJackQueryText(SEQUENCE_PLAY_DEFAULT_JACK_QUERY);
+		this.jackBridge.setFixtureJson(this.getFixtureJson());
 		this.rebuildShellMode();
 	}
 
@@ -426,7 +436,39 @@ export class SequencePlayController extends Controller {
 
 	subscribeSnapshot(listener: () => void): () => void {
 		this.snapshotListeners.add(listener);
-		return () => this.snapshotListeners.delete(listener);
+		const unsubJack = this.jackBridge.subscribe(listener);
+		return () => {
+			this.snapshotListeners.delete(listener);
+			unsubJack();
+		};
+	}
+
+	getJackQueryText(): string {
+		return this.jackBridge.getJackQueryText();
+	}
+
+	getWriterDocumentJack(): WriterDocumentV1 {
+		return createWriterDocument({ id: "sequence-jack", languageId: "jack", text: this.jackBridge.getJackQueryText() });
+	}
+
+	getJackHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		return this.jackBridge.getJackHoverOccurrences();
+	}
+
+	getJackSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		return this.jackBridge.getJackSelectOccurrences();
+	}
+
+	getHoverEpoch(): number {
+		return this.jackBridge.getHoverEpoch();
+	}
+
+	getSelectEpoch(): number {
+		return this.jackBridge.getSelectEpoch();
+	}
+
+	getGraphHighlightedNodeIds(): readonly string[] {
+		return this.jackBridge.getGraphHoveredNodeIds();
 	}
 
 	private notifySnapshot(): void {
@@ -439,6 +481,7 @@ export class SequencePlayController extends Controller {
 		const json = sequenceFixtureToJson(next);
 		if (json === this.fixtureJson) return;
 		this.fixtureJson = json;
+		this.jackBridge.setFixtureJson(this.fixtureJson);
 		this.interactionRevision += 1;
 		this.notifySnapshot();
 		this.emit();
@@ -448,6 +491,7 @@ export class SequencePlayController extends Controller {
 		const parsed = parseSequencePlayFixtureJson(json);
 		if (!parsed || sequenceFixtureToJson(parsed) === this.fixtureJson) return;
 		this.fixtureJson = sequenceFixtureToJson(parsed);
+		this.jackBridge.setFixtureJson(this.fixtureJson);
 		this.interactionRevision += 1;
 		this.notifySnapshot();
 		this.emit();
@@ -641,6 +685,7 @@ export class SequencePlayController extends Controller {
 				[],
 				this.scriptWindowEngagement(),
 			),
+			new WindowKindRuntime(SEQUENCE_PLAY_WINDOW_KIND_JACK, "Jack", SEQUENCE_PLAY_BODY_KEY_JACK),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Sequence play window "${windowKind.id}"`);
@@ -678,6 +723,46 @@ export class SequencePlayController extends Controller {
 	}
 
 	override run(command: string, args?: unknown): void {
+		if (command === "setJackQuery") {
+			const text = (args as { text?: string }).text;
+			if (typeof text === "string") {
+				this.jackBridge.setJackQueryText(text);
+				this.notifySnapshot();
+				this.emit();
+			}
+			return;
+		}
+		if (command === "setJackHover") {
+			this.jackBridge.setJackHover((args as { offset?: number | null }).offset ?? null);
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "setJackSelect") {
+			this.jackBridge.setJackSelect((args as { start: number; end: number } | null) ?? null);
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "setGraphHover") {
+			this.jackBridge.setGraphHover((args as { id?: string | null }).id ?? null);
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "setGraphSelect") {
+			const ids = (args as { ids?: readonly string[] }).ids ?? [];
+			this.jackBridge.setGraphSelect(ids);
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
+		if (command === "runJackQuery") {
+			runJackOnBoardFixture(this.getFixtureJson(), this.jackBridge.getJackQueryText());
+			this.notifySnapshot();
+			this.emit();
+			return;
+		}
 		if (command === "engagementInput") {
 			const value = (args as { value?: string }).value;
 			if (typeof value === "string" && value !== this.engagementInput) {
@@ -837,9 +922,14 @@ function buildSequencePlayScriptDeclarativeBody(_ctx: WindowBodyViewContext): Ui
 	return buildWriterWindowBody(SEQUENCE_PLAY_SCRIPT_SURFACE_ID, SEQUENCE_PLAY_CONTROLLER_ID, SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID);
 }
 
+function buildSequencePlayJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
+	return buildWriterWindowBody(SEQUENCE_PLAY_SURFACE_ID_JACK, SEQUENCE_PLAY_CONTROLLER_ID, SEQUENCE_PLAY_WINDOW_KIND_JACK);
+}
+
 export function registerSequencePlayDeclarativeBodies(): void {
 	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_MAIN, buildSequencePlayMainDeclarativeBody);
 	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_SCRIPT, buildSequencePlayScriptDeclarativeBody);
+	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_JACK, buildSequencePlayJackDeclarativeBody);
 }
 
 export function buildSequencePlayAppRuntime(controller: SequencePlayController): AppRuntime {
@@ -868,7 +958,7 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 	describe("SequencePlayController", () => {
 		it("default fixture json is valid", () => {
-			expect(SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON).toContain("sequence.fixture/v1");
+			expect(SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON).toContain("sequence.fixture");
 			expect(SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON).toContain("step-2");
 		});
 		it("addStep and run bump interaction state", () => {
@@ -886,12 +976,22 @@ if (import.meta.vitest) {
 			ctrl.run("disconnectSteps", { from: "step-1", to: "step-2" });
 			expect(ctrl.getFixtureJson()).not.toContain('"from":"step-1","to":"step-2"');
 		});
-		it("layout exposes sequence and compiled script windows", () => {
+		it("layout exposes sequence, compiled script, and jack windows", () => {
 			expect(SEQUENCE_PLAY_LAYOUT.root.kind).toBe("row");
 			expect(SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID).toBe("sequence-script");
+			expect(SEQUENCE_PLAY_WINDOW_KIND_JACK).toBe("sequence-jack");
 		});
 	});
 }
+
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for sequence. */
+export function buildSequenceProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("sequence", "Sequence", "sequence", "Sequence", SEQUENCE_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
 
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && import.meta.env.PUZZLE_PLAY_ENTRY === "sequence") {
 	bootstrapElementsSurfaceChromeDocument("system");

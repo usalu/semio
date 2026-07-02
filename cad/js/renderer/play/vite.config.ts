@@ -20,9 +20,7 @@ const aecBuildingModuleEntry = resolve(dir, "../../module/aec-building/index.ts"
 const aecBuildingEnergyModuleEntry = resolve(dir, "../../module/aec-building-energy/index.ts");
 const aecBuildingStructureModuleEntry = resolve(dir, "../../module/aec-building-structure/index.ts");
 
-export default createPlaygroundPlayViteConfig({
-	playDir: dir,
-	repoRoot,
+	playEntryKind: "cad",
 	extraAliases: [
 		{ find: "@semio-tech/cad-js-core", replacement: coreEntry },
 		{ find: "@semio-tech/cad-js-kernel-brepjs", replacement: kernelEntry },

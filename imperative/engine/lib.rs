@@ -373,14 +373,11 @@ mod tests {
     #[test]
     fn composed_registry_runs_text_operators() {
         let registry = imperative_module_registry();
-        let input = Dictionary::new().insert("text", Value::Atom(Atom::String("abc".into())));
+        let input = Dictionary::new()
+            .insert("text", Value::Atom(Atom::String("abc".into())))
+            .insert("into", Value::Atom(Atom::String("upper".into())));
         let output = registry.dispatch("text.uppercase", &input).expect("dispatch");
-        let value = output
-            .get("text")
-            .and_then(|v| v.as_dictionary())
-            .and_then(|dict| dict.get("value"))
-            .and_then(|v| v.as_atom())
-            .and_then(|a| a.as_str());
+        let value = output.get("upper").and_then(|v| v.as_atom()).and_then(|a| a.as_str());
         assert_eq!(value, Some("ABC"));
     }
 

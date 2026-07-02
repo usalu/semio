@@ -282,7 +282,7 @@ export function filterVisiblePreviewItems(
 		if (targets.length === 0) return [];
 		return items.filter((entry) => geometryTargetMatches(entry, targets));
 	}
-	return items.filter((entry) => entry.direction === "out");
+	return items.filter((entry) => entry.direction === "out" || (entry.direction === "in" && entry.kind === "drawing"));
 }
 
 /** @emoji 🔍 Collects drawing preview items from channel-structured flow eval JSON. */
@@ -853,6 +853,28 @@ if (import.meta.vitest) {
 			});
 			expect(filtered).toHaveLength(1);
 			expect(filtered[0]?.widgetId).toBe("a");
+		});
+
+		it("evaluates default draw fixture and renders a filled scene", async () => {
+			const { FlowSession } = await import("@semio-tech/flow-react");
+			const session = new FlowSession();
+			session.loadFixtureJson(proceduralFixtureToJson());
+			const outputsJson = await session.evaluate();
+			expect(outputsJson).not.toMatch(/^\{"error":/);
+			expect(outputsJson).not.toContain("unknown kind");
+			const parsed = JSON.parse(outputsJson) as Record<string, { out?: Record<string, unknown>; error?: string }>;
+			expect(parsed.fill?.error).toBeUndefined();
+			expect(parsed.fill?.out?.["draw.drawing"]).toBeTruthy();
+			const items = extractChannelPreviewItems(outputsJson);
+			expect(items.some((item) => item.kind === "drawing")).toBe(true);
+			const bridge = await ensureProcedural2dDrawingBridge();
+			const handle =
+				items.find((item) => item.widgetId === "fill" && item.direction === "out" && item.kind === "drawing")?.handle ??
+				items.find((item) => item.widgetId === "preview" && item.direction === "in" && item.kind === "drawing")?.handle;
+			expect(handle).toBeTruthy();
+			const scene = bridge.renderScene(handle!);
+			expect(scene.nodes.length).toBeGreaterThan(0);
+			expect(scene.nodes.some((node) => node.fill?.kind === "solid")).toBe(true);
 		});
 	});
 }

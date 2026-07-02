@@ -33,16 +33,30 @@ import {
 	type WindowMeasure,
 	toolCollection,
 } from "@semio-tech/framework-playground-core";
-import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
+import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds } from "@semio-tech/ui-react";
 import {
 	DEFAULT_LOWPOLY_SELECTION,
 	LOWPOLY_FIXTURE_SCHEMA,
 	type LowpolyFixture,
 	type LowpolySelectionMode,
+	type LowpolyTarget,
+	lowpolyTopologyFromMeshJson,
 	lowpolyFixtureToJson,
 	parseLowpolyFixtureJson,
 } from "@semio-tech/lowpoly-core";
-import type { LowpolyTransformTool } from "@semio-tech/lowpoly-react";
+import type { LowpolyPaintTool, LowpolyTransformTool } from "@semio-tech/lowpoly-react";
+import {
+	DocumentVcsStore,
+	createDocumentVcsId,
+	type DocumentVcsCommand,
+} from "@semio-tech/vcs-core";
+import {
+	applyLowpolyPaintEditOp,
+	backwardsLowpolyPaintEditOp,
+	createLowpolyPaintVcsEnvelope,
+	type LowpolyPaintDocument,
+  type LowpolyPaintEditOp,
+} from "@semio-tech/lowpoly-core";
 
 export const LOWPOLY_PLAY_APP_ID = "lowpoly-play";
 export const LOWPOLY_PLAY_CONTROLLER_ID = "lowpoly-play";
@@ -52,6 +66,10 @@ export const LOWPOLY_PLAY_WINDOW_KIND_ID = "lowpoly-main";
 export const LOWPOLY_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const LOWPOLY_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const LOWPOLY_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const LOWPOLY_PLAY_BODY_KEY_UV = "lowpoly.play.uv";
+export const LOWPOLY_PLAY_UV_SURFACE_ID = "lowpoly.play/uv";
+export const LOWPOLY_PLAY_UV_WINDOW_KIND_ID = "lowpoly-uv";
+export const LOWPOLY_PLAY_LAYERS_TAB_ID = "framework.panel.layers";
 
 const EMPTY_FIXTURE: LowpolyFixture = {
 	schema: LOWPOLY_FIXTURE_SCHEMA,
@@ -61,7 +79,13 @@ const EMPTY_FIXTURE: LowpolyFixture = {
 };
 
 export const LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON = lowpolyFixtureToJson(EMPTY_FIXTURE);
-export const LOWPOLY_PLAY_LAYOUT = createDefaultLayout([LOWPOLY_PLAY_WINDOW_KIND_ID], "row", [100], ["Lowpoly"]);
+export const LOWPOLY_PLAY_LAYOUT = createDefaultLayout([LOWPOLY_PLAY_WINDOW_KIND_ID], "row", [100], ["Model"]);
+export const LOWPOLY_PLAY_PAINT_LAYOUT = createDefaultLayout(
+	[LOWPOLY_PLAY_WINDOW_KIND_ID, LOWPOLY_PLAY_UV_WINDOW_KIND_ID],
+	"row",
+	[60, 40],
+	["Paint", "UV"],
+);
 
 export type LowpolyEditTool =
 	| "extrude"
@@ -120,6 +144,7 @@ export function buildLowpolyPlayToolbarTools(
 		toolCollection("edit", "pen-tool", [
 			{ kind: "button", id: "lowpoly.extrude", label: "Extrude", iconId: "box", controllerId, command: "extrude" },
 			{ kind: "button", id: "lowpoly.inset", label: "Inset", iconId: "square", controllerId, command: "inset" },
+			{ kind: "button", id: "lowpoly.flip-faces", label: "Flip Normals", iconId: "flip-vertical", controllerId, command: "flipFaces" },
 			{ kind: "button", id: "lowpoly.bevel", label: "Bevel", iconId: "git-branch", controllerId, command: "bevel" },
 			{ kind: "button", id: "lowpoly.loop_cut", label: "Loop Cut", iconId: "git-commit", controllerId, command: "loopCut" },
 			{ kind: "button", id: "lowpoly.merge", label: "Merge", iconId: "git-merge", controllerId, command: "merge" },
@@ -136,9 +161,55 @@ export function buildLowpolyPlayToolbarTools(
 	];
 }
 
+/** @emoji 🎨 Lowpoly paint toolbar. */
+export function buildLowpolyPlayPaintToolbarTools(controllerId: string, paintTool: LowpolyPaintTool): AppTools {
+	const paintToggle = (id: string, label: string, tool: LowpolyPaintTool): ToolLeaf => ({
+		id,
+		kind: "toggle",
+		label,
+		iconId: tool === "brush" ? "paintbrush" : tool === "eraser" ? "eraser" : tool === "fill" ? "paint-bucket" : "pipette",
+		pressed: paintTool === tool,
+		controllerId,
+		command: "setPaintTool",
+		args: { tool },
+	});
+	return [
+		toolCollection("paint", "paintbrush", [
+			paintToggle("lowpoly.paint.brush", "Brush", "brush"),
+			paintToggle("lowpoly.paint.eraser", "Eraser", "eraser"),
+			paintToggle("lowpoly.paint.fill", "Fill", "fill"),
+			paintToggle("lowpoly.paint.eyedropper", "Eyedropper", "eyedropper"),
+		]),
+		toolCollection("uv", "grid-3x3", [
+			{ kind: "button", id: "lowpoly.unwrap", label: "Unwrap", iconId: "grid-3x3", controllerId, command: "unwrapActive" },
+			{ kind: "button", id: "lowpoly.seam.mark", label: "Mark Seam", iconId: "scissors", controllerId, command: "markUvSeam", args: { seam: true } },
+			{ kind: "button", id: "lowpoly.seam.clear", label: "Clear Seam", iconId: "unlink", controllerId, command: "markUvSeam", args: { seam: false } },
+		]),
+		toolCollection("history", "undo", [
+			{ kind: "button", id: "lowpoly.undo", label: "Undo", iconId: "undo", controllerId, command: "paintUndo" },
+			{ kind: "button", id: "lowpoly.redo", label: "Redo", iconId: "redo", controllerId, command: "paintRedo" },
+		]),
+	];
+}
+
 //#region Panels
 
-export function buildLowpolyPlayHierarchyTree(fixtureJson: string, selectedObjectIndex: number | null): UiNode {
+export function lowpolyHierarchyTargetRowId(target: LowpolyTarget): string {
+	return `lowpoly-hierarchy.${target.objectId}.${target.mode}.${target.id}`;
+}
+
+export type LowpolyHierarchyTreeOptions = {
+	readonly hoveredTarget?: LowpolyTarget | null;
+	readonly onHover?: (target: LowpolyTarget | null) => void;
+	readonly onFlipFace?: (objectId: string, faceId: number) => void;
+};
+
+export function buildLowpolyPlayHierarchyTree(
+	fixtureJson: string,
+	selectionMode: LowpolySelectionMode,
+	selectedIds: readonly number[],
+	options?: LowpolyHierarchyTreeOptions,
+): UiNode {
 	const fixture = parseLowpolyFixtureJson(fixtureJson);
 	if (!fixture) {
 		return {
@@ -146,12 +217,66 @@ export function buildLowpolyPlayHierarchyTree(fixtureJson: string, selectedObjec
 			sections: [{ id: "lowpoly-hierarchy.invalid", label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, defaultOpen: true, items: [{ id: "lowpoly-hierarchy.invalid.msg", label: "Invalid fixture" }] }],
 		};
 	}
-	const items: UiTreeItemNode[] = fixture.objects.map((obj, index) => ({
-		id: `lowpoly-hierarchy.obj.${obj.id}`,
-		label: obj.name,
-		description: obj.id,
-		command: lowpolyPlayCmd("selectObject", { objectId: obj.id, index }),
-	}));
+	const targetItem = (target: LowpolyTarget, label: string, icon: string, actions?: UiTreeItemNode["actions"]): UiTreeItemNode => ({
+		id: lowpolyHierarchyTargetRowId(target),
+		label,
+		icon,
+		command: lowpolyPlayCmd("toggleSelectionTarget", { target }),
+		onPointerEnter: options?.onHover ? () => options.onHover?.(target) : undefined,
+		onPointerLeave: options?.onHover ? () => options.onHover?.(null) : undefined,
+		actions,
+	});
+	const items: UiTreeItemNode[] = fixture.objects.map((object, objectIndex) => {
+		const objectTarget: LowpolyTarget = { objectId: object.id, objectIndex, mode: "object", id: objectIndex };
+		const topology = lowpolyTopologyFromMeshJson(object.meshJson);
+		const componentGroup = (mode: Exclude<LowpolySelectionMode, "object">, ids: readonly number[], icon: string): UiTreeItemNode => ({
+			id: `lowpoly-hierarchy.${object.id}.${mode}`,
+			label: mode === "vertex" ? "Vertices" : mode === "edge" ? "Edges" : "Faces",
+			description: String(ids.length),
+			icon,
+			items: ids.map((id) => {
+				const target: LowpolyTarget = { objectId: object.id, objectIndex, mode, id };
+				return targetItem(
+					target,
+					`${mode[0]!.toUpperCase()}${mode.slice(1)} ${id}`,
+					icon,
+					mode === "face"
+						? [{
+								id: `lowpoly-hierarchy.${object.id}.face.${id}.flip`,
+								icon: "flip-vertical",
+								title: "Flip normal",
+								revealOnHover: true,
+								onClick: () => options?.onFlipFace?.(object.id, id),
+							}]
+						: undefined,
+				);
+			}),
+		});
+		return {
+			...targetItem(objectTarget, object.name, "box"),
+			description: object.id,
+			defaultOpen: object.id === fixture.activeObjectId,
+			items: [
+				componentGroup("vertex", topology.vertexIds, "circle"),
+				componentGroup("edge", topology.edgeIds, "minus"),
+				componentGroup("face", topology.faceIds, "square"),
+			],
+		};
+	});
+	const selectedRowIds =
+		selectionMode === "object"
+			? selectedIds.flatMap((id) => {
+					const object = fixture.objects[id];
+					return object ? [lowpolyHierarchyTargetRowId({ objectId: object.id, objectIndex: id, mode: "object", id })] : [];
+				})
+			: selectedIds.map((id) =>
+					lowpolyHierarchyTargetRowId({
+						objectId: fixture.activeObjectId,
+						objectIndex: Math.max(0, fixture.objects.findIndex((object) => object.id === fixture.activeObjectId)),
+						mode: selectionMode,
+						id,
+					}),
+				);
 	return {
 		type: "tree",
 		sections: [
@@ -162,7 +287,8 @@ export function buildLowpolyPlayHierarchyTree(fixtureJson: string, selectedObjec
 				items: items.length ? items : [{ id: "lowpoly-hierarchy.empty", label: "(none)" }],
 			},
 		],
-		selectedIds: selectedObjectIndex != null ? [`lowpoly-hierarchy.obj.${fixture.objects[selectedObjectIndex]?.id}`] : [],
+		selectedIds: selectedRowIds,
+		highlightedIds: options?.hoveredTarget ? [lowpolyHierarchyTargetRowId(options.hoveredTarget)] : [],
 	};
 }
 
@@ -297,21 +423,88 @@ export function buildLowpolyPlayInspectorTree(fixtureJson: string, toolParams: R
 						onChange: lowpolyPlayCmd("setToolParam", { field: "decimateRatio" }),
 					},
 				},
+				{
+					type: "field",
+					id: "lowpoly-inspector.brushSize",
+					label: "Brush size",
+					child: {
+						type: "input",
+						id: "lowpoly-inspector.brushSize.input",
+						inputKind: "number",
+						value: String(toolParams.brushSize ?? 16),
+						onChange: lowpolyPlayCmd("setToolParam", { field: "brushSize" }),
+					},
+				},
+				{
+					type: "field",
+					id: "lowpoly-inspector.brushOpacity",
+					label: "Brush opacity",
+					child: {
+						type: "input",
+						id: "lowpoly-inspector.brushOpacity.input",
+						inputKind: "number",
+						value: String(toolParams.brushOpacity ?? 1),
+						onChange: lowpolyPlayCmd("setToolParam", { field: "brushOpacity" }),
+					},
+				},
+				{
+					type: "field",
+					id: "lowpoly-inspector.brushHardness",
+					label: "Brush hardness",
+					child: {
+						type: "input",
+						id: "lowpoly-inspector.brushHardness.input",
+						inputKind: "number",
+						value: String(toolParams.brushHardness ?? 0.5),
+						onChange: lowpolyPlayCmd("setToolParam", { field: "brushHardness" }),
+					},
+				},
 			],
 		},
 	];
 	return uiInspectorGroupsToTree(groups);
 }
 
+export function buildLowpolyPlayLayersTree(fixtureJson: string, activeLayerIndex: number): UiNode {
+	const fixture = parseLowpolyFixtureJson(fixtureJson);
+	const active = fixture?.objects.find((object) => object.id === fixture.activeObjectId) ?? fixture?.objects[0];
+	const layers = active?.paintLayers ?? [];
+	return {
+		type: "tree",
+		sections: [
+			{
+				id: "lowpoly-layers.stack",
+				label: "Layers",
+				defaultOpen: true,
+				items: layers.length
+					? layers.map((layer, index) => ({
+							id: `lowpoly-layer.${index}`,
+							label: layer.name,
+							description: `${Math.round(layer.opacity * 100)}% · ${layer.blendMode}`,
+							command: lowpolyPlayCmd("setActivePaintLayer", { layerIndex: index }),
+						}))
+					: [{ id: "lowpoly-layer.empty", label: "(none)" }],
+			},
+		],
+		selectedIds: [`lowpoly-layer.${activeLayerIndex}`],
+	};
+}
+
 //#endregion Panels
 
 /** @emoji 🎮 Lowpoly play controller. */
 export class LowpolyPlayController extends Controller {
-	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
+	readonly mainMode = new ModeRuntime("main", "Model", undefined);
+	readonly paintMode = new ModeRuntime("paint", "Paint", undefined);
 	private fixtureJson = LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
 	private selectionMode: LowpolySelectionMode = "object";
 	private selectedIds: number[] = [];
+	private hoveredTarget: LowpolyTarget | null = null;
 	private transformTool: LowpolyTransformTool = "move";
+	private paintTool: LowpolyPaintTool = "brush";
+	private activePaintLayerIndex = 0;
+	private paintColor: [number, number, number, number] = [255, 64, 64, 255];
+	private paintVcs: DocumentVcsStore<LowpolyPaintDocument, LowpolyPaintEditOp>;
 	private toolParams: Record<string, number> = {
 		extrudeDistance: 0.25,
 		insetAmount: 0.1,
@@ -321,16 +514,29 @@ export class LowpolyPlayController extends Controller {
 		decimateRatio: 0.5,
 		snapGrid: 0.25,
 		mirrorAxis: 0,
+		brushSize: 16,
+		brushOpacity: 1,
+		brushHardness: 0.5,
 	};
 	private smoothShading = false;
 	private meshCommandEpoch = 0;
 	private pendingMeshCommand: string | null = null;
+	private pendingPaintCommand: { command: string; args?: Record<string, unknown> } | null = null;
 	private interactionRevision = 0;
+	private hoverRevision = 0;
 	private readonly snapshotListeners = new Set<() => void>();
+	private readonly hoverListeners = new Set<() => void>();
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(LOWPOLY_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+		this.paintVcs = new DocumentVcsStore({
+			envelope: createLowpolyPaintVcsEnvelope(createDocumentVcsId("lowpoly-paint")),
+			applyOp: applyLowpolyPaintEditOp,
+			backwardsOp: backwardsLowpolyPaintEditOp,
+			diffOp: () => null,
+		});
 		this.rebuildShellMode();
+		this.rebuildPaintMode();
 	}
 
 	getFixtureJson(): string {
@@ -345,8 +551,51 @@ export class LowpolyPlayController extends Controller {
 		return this.selectedIds;
 	}
 
+	getHoveredTarget(): LowpolyTarget | null {
+		return this.hoveredTarget;
+	}
+
 	getTransformTool(): LowpolyTransformTool {
 		return this.transformTool;
+	}
+
+	getPaintTool(): LowpolyPaintTool {
+		return this.paintTool;
+	}
+
+	getActivePaintLayerIndex(): number {
+		return this.activePaintLayerIndex;
+	}
+
+	getPaintColor(): readonly [number, number, number, number] {
+		return this.paintColor;
+	}
+
+	getPendingPaintCommand(): { command: string; args?: Record<string, unknown> } | null {
+		return this.pendingPaintCommand;
+	}
+
+	clearPendingPaintCommand(): void {
+		this.pendingPaintCommand = null;
+	}
+
+	dispatchPaintVcs(command: DocumentVcsCommand<LowpolyPaintEditOp>): void {
+		this.paintVcs.dispatch(command);
+		this.interactionRevision += 1;
+		this.notifySnapshot();
+		this.emit();
+	}
+
+	getPaintVcsGeneration(): number {
+		return this.paintVcs.getGeneration();
+	}
+
+	subscribePaintVcs(listener: () => void): () => void {
+		return this.paintVcs.subscribe(listener);
+	}
+
+	getPaintProjection(): LowpolyPaintDocument {
+		return this.paintVcs.projection();
 	}
 
 	getToolParams(): Readonly<Record<string, number>> {
@@ -371,6 +620,25 @@ export class LowpolyPlayController extends Controller {
 
 	getInteractionRevision(): number {
 		return this.interactionRevision;
+	}
+
+	getHoverRevision(): number {
+		return this.hoverRevision;
+	}
+
+	getHoveredTargetSnapshot(): LowpolyTarget | null {
+		return this.hoveredTarget;
+	}
+
+	subscribeHover(listener: () => void): () => void {
+		this.hoverListeners.add(listener);
+		return () => this.hoverListeners.delete(listener);
+	}
+
+	private notifyHover(): void {
+		for (const listener of this.hoverListeners) {
+			listener();
+		}
 	}
 
 	subscribeSnapshot(listener: () => void): () => void {
@@ -421,10 +689,22 @@ export class LowpolyPlayController extends Controller {
 	private rebuildShellMode(): void {
 		this.mainMode.tools = buildLowpolyPlayToolbarTools(LOWPOLY_PLAY_CONTROLLER_ID, this.selectionMode, this.transformTool);
 		this.mainMode.windowKinds = [
-			new WindowKindRuntime(LOWPOLY_PLAY_WINDOW_KIND_ID, "Lowpoly", LOWPOLY_PLAY_BODY_KEY_MAIN, undefined, [], this.windowEngagement()),
+			new WindowKindRuntime(LOWPOLY_PLAY_WINDOW_KIND_ID, "Model", LOWPOLY_PLAY_BODY_KEY_MAIN, undefined, [], this.windowEngagement()),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Lowpoly play window "${windowKind.id}"`);
+		}
+	}
+
+	private rebuildPaintMode(): void {
+		this.paintMode.tools = buildLowpolyPlayPaintToolbarTools(LOWPOLY_PLAY_CONTROLLER_ID, this.paintTool);
+		this.paintMode.defaultLayout = LOWPOLY_PLAY_PAINT_LAYOUT;
+		this.paintMode.windowKinds = [
+			new WindowKindRuntime(LOWPOLY_PLAY_WINDOW_KIND_ID, "Paint", LOWPOLY_PLAY_BODY_KEY_MAIN, undefined, [], this.windowEngagement()),
+			new WindowKindRuntime(LOWPOLY_PLAY_UV_WINDOW_KIND_ID, "UV", LOWPOLY_PLAY_BODY_KEY_UV, undefined, [], this.windowEngagement()),
+		];
+		for (const windowKind of this.paintMode.windowKinds) {
+			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Lowpoly paint window "${windowKind.id}"`);
 		}
 	}
 
@@ -438,21 +718,80 @@ export class LowpolyPlayController extends Controller {
 			const mode = (args as { mode?: LowpolySelectionMode }).mode;
 			if (mode) {
 				this.selectionMode = mode;
+				this.selectedIds = [];
 				this.rebuildShellMode();
-				this.interactionRevision += 1;
-				this.notifySnapshot();
-				this.emit();
+				const fixture = parseLowpolyFixtureJson(this.fixtureJson);
+				if (fixture) this.commitFixture(lowpolyFixtureToJson({ ...fixture, selection: { mode, ids: [] } }));
 			}
 			return;
 		}
 		if (command === "setSelection") {
 			const mode = (args as { mode?: LowpolySelectionMode }).mode;
 			const ids = (args as { ids?: number[] }).ids;
+			const activeObjectId = (args as { activeObjectId?: string }).activeObjectId;
 			if (mode) this.selectionMode = mode;
 			if (Array.isArray(ids)) this.selectedIds = [...ids];
+			if (typeof activeObjectId === "string") {
+				const fixture = parseLowpolyFixtureJson(this.fixtureJson);
+				if (fixture) {
+					this.commitFixture(
+						lowpolyFixtureToJson({
+							...fixture,
+							activeObjectId,
+							selection: { mode: this.selectionMode, ids: this.selectedIds },
+						}),
+					);
+					return;
+				}
+			}
 			this.interactionRevision += 1;
 			this.notifySnapshot();
 			this.emit();
+			return;
+		}
+		if (command === "setHover") {
+			const target = (args as { target?: LowpolyTarget | null }).target ?? null;
+			const unchanged =
+				target?.objectId === this.hoveredTarget?.objectId &&
+				target?.mode === this.hoveredTarget?.mode &&
+				target?.id === this.hoveredTarget?.id;
+			if (!unchanged) {
+				this.hoveredTarget = target;
+				this.hoverRevision += 1;
+				this.notifyHover();
+			}
+			return;
+		}
+		if (command === "setPaintTool") {
+			const tool = (args as { tool?: LowpolyPaintTool }).tool;
+			if (tool) {
+				this.paintTool = tool;
+				this.rebuildPaintMode();
+				this.emit();
+			}
+			return;
+		}
+		if (command === "setActivePaintLayer") {
+			const layerIndex = (args as { layerIndex?: number }).layerIndex;
+			if (typeof layerIndex === "number") {
+				this.activePaintLayerIndex = layerIndex;
+				this.interactionRevision += 1;
+				this.notifySnapshot();
+				this.emit();
+			}
+			return;
+		}
+		if (command === "paintUndo") {
+			this.dispatchPaintVcs({ kind: "undo" });
+			return;
+		}
+		if (command === "paintRedo") {
+			this.dispatchPaintVcs({ kind: "redo" });
+			return;
+		}
+		if (command === "unwrapActive" || command === "markUvSeam") {
+			this.pendingPaintCommand = { command, args: args as Record<string, unknown> };
+			this.bumpMeshCommand();
 			return;
 		}
 		if (command === "setTransformTool") {
@@ -475,22 +814,22 @@ export class LowpolyPlayController extends Controller {
 			}
 			return;
 		}
-		if (command === "selectObject") {
-			const objectId = (args as { objectId?: string; index?: number }).objectId;
-			const index = (args as { index?: number }).index;
-			if (typeof objectId === "string") {
-				const fixture = parseLowpolyFixtureJson(this.fixtureJson);
-				if (fixture) {
-					const next = {
-						...fixture,
-						activeObjectId: objectId,
-						selection: { mode: "object" as const, ids: typeof index === "number" ? [index] : [] },
-					};
-					this.selectionMode = "object";
-					this.selectedIds = typeof index === "number" ? [index] : [];
-					this.commitFixture(lowpolyFixtureToJson(next));
-				}
-			}
+		if (command === "toggleSelectionTarget") {
+			const target = (args as { target?: LowpolyTarget }).target;
+			const fixture = parseLowpolyFixtureJson(this.fixtureJson);
+			if (!target || !fixture) return;
+			const sameSelection = this.selectionMode === target.mode && (target.mode === "object" || fixture.activeObjectId === target.objectId);
+			const current = sameSelection ? this.selectedIds : [];
+			this.selectionMode = target.mode;
+			this.selectedIds = selectionMergeIds("invertive", current.map(String), [String(target.id)]).map(Number);
+			this.rebuildShellMode();
+			this.commitFixture(
+				lowpolyFixtureToJson({
+					...fixture,
+					activeObjectId: target.objectId,
+					selection: { mode: target.mode, ids: this.selectedIds },
+				}),
+			);
 			return;
 		}
 		if (command === "addPrimitive") {
@@ -499,7 +838,16 @@ export class LowpolyPlayController extends Controller {
 			this.bumpMeshCommand();
 			return;
 		}
-		const meshCommands = ["extrude", "inset", "bevel", "loopCut", "merge", "dissolve", "subdivide", "triangulate", "mirror", "decimate", "snap", "toggleSmooth"];
+		if (command === "flipFace") {
+			const objectId = (args as { objectId?: string }).objectId;
+			const faceId = (args as { faceId?: number }).faceId;
+			if (objectId && typeof faceId === "number") {
+				this.pendingMeshCommand = `flipFace:${objectId}:${faceId}`;
+				this.bumpMeshCommand();
+			}
+			return;
+		}
+		const meshCommands = ["extrude", "inset", "flipFaces", "bevel", "loopCut", "merge", "dissolve", "subdivide", "triangulate", "mirror", "decimate", "snap", "toggleSmooth"];
 		if (meshCommands.includes(command)) {
 			this.pendingMeshCommand = command;
 			this.bumpMeshCommand();
@@ -516,12 +864,19 @@ function buildLowpolyPlayMainDeclarativeBody(_ctx: WindowBodyViewContext): UiNod
 	return buildPuzzle3dWindowBody(LOWPOLY_PLAY_SURFACE_ID, LOWPOLY_PLAY_CONTROLLER_ID, LOWPOLY_PLAY_WINDOW_KIND_ID);
 }
 
+function buildLowpolyPlayUvDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
+	return buildPuzzle3dWindowBody(LOWPOLY_PLAY_UV_SURFACE_ID, LOWPOLY_PLAY_CONTROLLER_ID, LOWPOLY_PLAY_UV_WINDOW_KIND_ID);
+}
+
 export function registerLowpolyPlayDeclarativeBodies(): void {
 	registerWindowBody(LOWPOLY_PLAY_BODY_KEY_MAIN, buildLowpolyPlayMainDeclarativeBody);
+	registerWindowBody(LOWPOLY_PLAY_BODY_KEY_UV, buildLowpolyPlayUvDeclarativeBody);
 }
 
 export function buildLowpolyPlayAppRuntime(controller: LowpolyPlayController): AppRuntime {
-	return createPlayAppRuntime(LOWPOLY_PLAY_APP_ID, "Lowpoly", controller, LOWPOLY_PLAY_LAYOUT, controller.mainMode);
+	const app = createPlayAppRuntime(LOWPOLY_PLAY_APP_ID, "Lowpoly", controller, LOWPOLY_PLAY_LAYOUT, controller.mainMode);
+	app.addMode(controller.paintMode);
+	return app;
 }
 
 /** @emoji 🛝 Lowpoly playground app. */
@@ -555,8 +910,63 @@ if (import.meta.vitest) {
 			ctrl.run("extrude");
 			expect(ctrl.getMeshCommandEpoch()).toBeGreaterThan(before);
 		});
-	});
+			it("registers model and paint modes", () => {
+				const bus = new CommandBus();
+				const ctrl = new LowpolyPlayController(bus, () => {});
+				const app = buildLowpolyPlayAppRuntime(ctrl);
+				expect(app.modes.length).toBe(2);
+				expect(ctrl.paintMode.windowKinds.length).toBe(2);
+			});
+			it("lists and composes mesh topology selections", () => {
+				const fixtureJson = lowpolyFixtureToJson({
+					...EMPTY_FIXTURE,
+					activeObjectId: "obj-1",
+					objects: [{
+						id: "obj-1",
+						name: "Triangle",
+						transform: { position: [0, 0, 0], rotation: [0, 0, 0], scale: [1, 1, 1] },
+						smoothShading: false,
+						meshJson: JSON.stringify({
+							vertices: [{}, {}, {}],
+							halfedges: [{ twin: null }, { twin: null }, { twin: null }],
+							faces: [{}],
+						}),
+					}],
+				});
+				let hovered: LowpolyTarget | null = null;
+				let flipped: number | null = null;
+				const tree = buildLowpolyPlayHierarchyTree(fixtureJson, "face", [0], {
+					onHover: (target) => {
+						hovered = target;
+					},
+					onFlipFace: (_objectId, faceId) => {
+						flipped = faceId;
+					},
+				});
+				expect(tree.sections[0]?.items[0]?.items?.map((item) => item.label)).toEqual(["Vertices", "Edges", "Faces"]);
+				const faceItem = tree.sections[0]?.items[0]?.items?.[2]?.items?.[0];
+				faceItem?.onPointerEnter?.();
+				faceItem?.actions?.[0]?.onClick();
+				expect(hovered).toMatchObject({ mode: "face", id: 0 });
+				expect(flipped).toBe(0);
+				const bus = new CommandBus();
+				const ctrl = new LowpolyPlayController(bus, () => {});
+				ctrl.run("setFixtureJson", { json: fixtureJson });
+				ctrl.run("toggleSelectionTarget", { target: { objectId: "obj-1", objectIndex: 0, mode: "vertex", id: 0 } });
+				ctrl.run("toggleSelectionTarget", { target: { objectId: "obj-1", objectIndex: 0, mode: "vertex", id: 1 } });
+				expect(ctrl.getSelectedIds()).toEqual([0, 1]);
+			});
+		});
+	}
+
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for lowpoly. */
+export function buildLowpolyProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("lowpoly", "Lowpoly", "lowpoly", "Lowpoly", LOWPOLY_PLAY_CONTROLLER_ID);
 }
+//#endregion 🔖SExtension
 
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && import.meta.env.PUZZLE_PLAY_ENTRY === "lowpoly") {
 	bootstrapElementsSurfaceChromeDocument("system");

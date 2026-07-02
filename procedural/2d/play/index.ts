@@ -92,7 +92,7 @@ function previewItemsWithScenes(
 ): ProceduralPreviewItem[] {
 	const previousByKey = new Map(previous.map((item) => [previewItemKey(item), item]));
 	return items.map((item) => {
-		if (item.kind !== "drawing" || item.direction !== "out") return item;
+		if (item.kind !== "drawing") return item;
 		const previousItem = previousByKey.get(previewItemKey(item));
 		const scene =
 			drawingSceneFromPreviewPayload(previewMeshes?.[item.handle]) ??
@@ -572,12 +572,12 @@ export function procedural2dPlayFixtureJson(fixtureId: string = PROCEDURAL_2D_PL
 export class Procedural2dPlayController extends Controller implements PlaygroundFixtureHost {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
-	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
+	private activeFixtureId = playgroundResolvedFixtureId(PROCEDURAL_2D_PLAY_FIXTURE_DEFAULT_ID);
 	private readonly docStore = new DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp>({
 		envelope: createDocumentVcsEnvelope(
 			"flow.fixture/v1",
 			"procedural-2d-play",
-			parseFlowPlayFixtureJson(proceduralFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID))) ?? PROCEDURAL_2D_PLAY_EMPTY_FIXTURE,
+			parseFlowPlayFixtureJson(proceduralFixtureJsonForId(PROCEDURAL_2D_PLAY_FIXTURE_DEFAULT_ID)) ?? PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE,
 		),
 		applyOp: applyFlowFixtureEditOp,
 		backwardsOp: backwardsFlowFixtureEditOp,
@@ -1451,11 +1451,11 @@ if (import.meta.vitest) {
 			expect(PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE_JSON).toContain("flow.fixture/v1");
 		});
 
-		it("starts with no fixture selected", () => {
+		it("starts with the default draw fixture selected", () => {
 			const bus = new CommandBus();
 			const ctrl = new Procedural2dPlayController(bus, () => {});
-			expect(ctrl.getFixtureCatalog().activeFixtureId).toBe(PLAYGROUND_NO_FIXTURE_ID);
-			expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
+			expect(ctrl.getFixtureCatalog().activeFixtureId).toBe(PROCEDURAL_2D_PLAY_FIXTURE_DEFAULT_ID);
+			expect(ctrl.getFixtureJson()).toContain("draw.shape.rect");
 		});
 
 		it("does not auto-load stored fixture on startup", () => {
@@ -1469,10 +1469,11 @@ if (import.meta.vitest) {
 					backing.delete(k);
 				},
 			});
-			store.save(PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE_JSON);
+			store.save('{"schema":"flow.fixture/v1","camera":{"x":0,"y":0,"zoom":1},"widgets":[{"kind":"neuron","id":"stored","neuronKind":"draw.shape.circle"}],"synapses":[]}');
 			const bus = new CommandBus();
 			const ctrl = new Procedural2dPlayController(bus, () => {}, store);
-			expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
+			expect(ctrl.getFixtureJson()).toContain("draw.shape.rect");
+			expect(ctrl.getFixtureJson()).not.toContain("draw.shape.circle");
 		});
 
 		it("controller stores fixture json", () => {
@@ -1860,6 +1861,15 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for procedural 2d. */
+export function buildProcedural2dProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("procedural.2d", "Procedural 2D", "procedural2d", "Procedural 2D", PROCEDURAL_2D_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
 
 // #region 🔖Boot
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && import.meta.env.PUZZLE_PLAY_ENTRY === "procedural-2d") {

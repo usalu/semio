@@ -1,0 +1,10 @@
+{
+  "schema": "writer.document",
+  "id": "dag-jack",
+  "languageId": "jack",
+  "graphDomain": "dag",
+  "fixtureRef": "fixture:demo.dag.json",
+  "uri": "writer://dag-jack",
+  "text": "MATCH (n:computation) RETURN n.name, n.kind\nMATCH (n:slider) RETURN n.name",
+  "camera": { "x": 0, "y": 0, "zoom": 1 }
+}

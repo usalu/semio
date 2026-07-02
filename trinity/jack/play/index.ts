@@ -639,6 +639,25 @@ export class PlaygroundTrinityJack extends Playground {
 export { buildTrinityPlayHierarchyTree, buildTrinityPlayInspectorTree, parseTrinityFixtureJson, trinityFixtureToJson };
 export type { TrinityFixtureV1 };
 
+//#region 🔖SExtension
+import { type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for trinity. */
+export function buildTrinityProgramDefinition(): PlatformDefinition {
+	return {
+		id: "trinity",
+		name: "Trinity",
+		apiVersion: "1",
+		apps: [
+			{ id: "trinity", label: "Trinity", controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" },
+			{ id: "jack", label: "Jack", controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, modes: [{ id: "query", label: "Query" }], defaultModeId: "query" },
+			{ id: "rewrite", label: "Rewrite", controllerId: "trinity-rewrite-play", modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" },
+		],
+		createPlatformApi: () => ({}),
+	};
+}
+//#endregion 🔖SExtension
+
 if (
   typeof document !== "undefined" &&
   document.getElementById("root") != null &&

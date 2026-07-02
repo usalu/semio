@@ -54,7 +54,7 @@ import {
   type Puzzle2dPlayToolbarState,
 } from "../../2d/play/index.ts";
 import {
-  PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
+  PUZZLE_2D_FIXTURE_DRAG_MIME,
   beginPuzzle2dFixturePalettePointerDrag,
   cancelPuzzle2dFixturePalettePointerDrag,
   puzzle2dFixturePaletteTreeDragController,
@@ -64,10 +64,10 @@ import {
   puzzle2dLodAutomaticSelectLabel,
   puzzle2dLodCanvasProps,
   isPuzzle2dDrawLodKind,
-  parsePuzzle2dFixtureV1,
+  parsePuzzle2dFixture,
   DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
   type Puzzle2dDrawLodKind,
-  type Puzzle2dFixtureV1,
+  type Puzzle2dFixture,
   type Puzzle2dLodModeKind,
   type CameraState,
   type Puzzle2dSelectionMethod,
@@ -78,7 +78,7 @@ import {
 import { bootstrapElementsSurfaceChromeDocument, type GumballConfig } from "@semio-tech/ui-react";
 import { PUZZLE_3D_GUMBALL_CONFIG, PUZZLE_3D_GUMBALL_GROUPS, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
 import {
-  FIXTURE_DRAG_V1_MIME,
+  FIXTURE_DRAG_MIME,
   beginPuzzle3dFixturePalettePointerDrag,
   cancelPuzzle3dFixturePalettePointerDrag,
   puzzle3dFixturePaletteTreeDragController,
@@ -89,10 +89,10 @@ import {
   PUZZLE_3D_LOD_SLIDER_MIN,
   formatLod,
   lodFromSliderValue,
-  parseFixtureV1,
+  parseFixture,
   puzzle3dLodCanvasProps,
   sliderValueFromLod,
-  type FixtureV1 as Puzzle3dFixtureV1,
+  type Fixture as Puzzle3dFixture,
   DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
   BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX,
   BRUSH_PLACEMENT_OVERLAP_BUDGET_STEP,
@@ -334,7 +334,7 @@ function puzzle5dPlayKindCatalogSection(
   gripKinds?: readonly GripKind[],
   sectionDefaultOpen = false,
   bundle?: Puzzle5dKindCatalogBundle,
-  fixture3d?: Puzzle3dFixtureV1 | null,
+  fixture3d?: Puzzle3dFixture | null,
 ): UiTreeSectionNode | null {
   if (!entries?.length) {
     return null;
@@ -782,10 +782,10 @@ function puzzle5dPaletteDragDomainFromDragData(dragData: Record<string, string> 
   if (!dragData) {
     return null;
   }
-  if (dragData[PUZZLE_2D_FIXTURE_DRAG_V1_MIME]?.trim()) {
+  if (dragData[PUZZLE_2D_FIXTURE_DRAG_MIME]?.trim()) {
     return "2d";
   }
-  if (dragData[FIXTURE_DRAG_V1_MIME]?.trim()) {
+  if (dragData[FIXTURE_DRAG_MIME]?.trim()) {
     return "3d";
   }
   return null;
@@ -806,7 +806,7 @@ export function puzzle5dFixturePaletteTreeDragController(dragDataByItemId: Reado
   const flatController = puzzle2dFixturePaletteTreeDragController(flatDragByItemId);
   const volumeController = puzzle3dFixturePaletteTreeDragController(volumeDragByItemId);
   const readEncoded = (dragData: Record<string, string>): string | undefined =>
-    dragData[PUZZLE_2D_FIXTURE_DRAG_V1_MIME]?.trim() || dragData[FIXTURE_DRAG_V1_MIME]?.trim() || undefined;
+    dragData[PUZZLE_2D_FIXTURE_DRAG_MIME]?.trim() || dragData[FIXTURE_DRAG_MIME]?.trim() || undefined;
   return {
     getDragData: ({ sourceItem }: { readonly sourceItem: { readonly id: string } }) => dragDataByItemId.get(sourceItem.id),
     pointerPaletteDrag: {
@@ -869,8 +869,8 @@ export interface Puzzle5dPlaySnapshot {
   readonly model: Puzzle5dModel;
   readonly selection: Puzzle5dSelectionSnapshot;
   readonly manifestLabel: string | undefined;
-  readonly fixture2d: Puzzle2dFixtureV1 | null;
-  readonly fixture3d: Puzzle3dFixtureV1 | null;
+  readonly fixture2d: Puzzle2dFixture | null;
+  readonly fixture3d: Puzzle3dFixture | null;
   readonly selected2d: ReadonlySet<string>;
   readonly camera2d: CameraState | null;
   readonly camera3d: CameraState | null;
@@ -1807,7 +1807,7 @@ if (import.meta.vitest) {
       const tree = buildPuzzle5dPlayKindsTree(snapshot);
       expect(tree.type).toBe("tree");
       const parts = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.parts");
-      expect(parts?.items?.some((row) => row.draggable === true && row.dragData?.[PUZZLE_2D_FIXTURE_DRAG_V1_MIME] && row.dragData?.[FIXTURE_DRAG_V1_MIME])).toBe(true);
+      expect(parts?.items?.some((row) => row.draggable === true && row.dragData?.[PUZZLE_2D_FIXTURE_DRAG_MIME] && row.dragData?.[FIXTURE_DRAG_MIME])).toBe(true);
     });
 
     it("puzzle5dFixturePaletteTreeDragController routes flat and volume palette rows", async () => {
@@ -1818,8 +1818,8 @@ if (import.meta.vitest) {
       const dragByItemId = collectUiTreeItemDragData(tree.sections);
       const dragController = puzzle5dFixturePaletteTreeDragController(dragByItemId);
       const partRow = tree.sections.find((section) => section.id === "puzzle-5d-play-kinds.parts")?.items?.find((row) => row.dragData);
-      expect(partRow?.dragData?.[PUZZLE_2D_FIXTURE_DRAG_V1_MIME]).toBeTruthy();
-      expect(partRow?.dragData?.[FIXTURE_DRAG_V1_MIME]).toBeTruthy();
+      expect(partRow?.dragData?.[PUZZLE_2D_FIXTURE_DRAG_MIME]).toBeTruthy();
+      expect(partRow?.dragData?.[FIXTURE_DRAG_MIME]).toBeTruthy();
       expect(dragController.pointerPaletteDrag?.readEncodedDragPayload(partRow!.dragData!)).toBeTruthy();
     });
 
@@ -1902,8 +1902,8 @@ if (import.meta.vitest) {
         import("../../2d/fixture/nakagin-capsule-tower.2d.json"),
         import("../../3d/fixture/nakagin-capsule-tower.3d.json"),
       ]);
-      const fixture2d = parsePuzzle2dFixtureV1(nakagin2dJson as unknown);
-      const fixture3d = parseFixtureV1(nakagin3dJson as unknown);
+      const fixture2d = parsePuzzle2dFixture(nakagin2dJson as unknown);
+      const fixture3d = parseFixture(nakagin3dJson as unknown);
       expect(fixture2d?.nodes.length).toBeGreaterThan(0);
       expect(fixture3d?.objects.length).toBeGreaterThan(0);
     });
@@ -1919,8 +1919,8 @@ if (import.meta.vitest) {
         import("../../3d/fixture/concrete-forest.3d.json"),
         import("../fixture/concrete-forest.5d.json"),
       ]);
-      const fixture2d = parsePuzzle2dFixtureV1(concreteForest2dJson as unknown);
-      const fixture3d = parseFixtureV1(concreteForest3dJson as unknown);
+      const fixture2d = parsePuzzle2dFixture(concreteForest2dJson as unknown);
+      const fixture3d = parseFixture(concreteForest3dJson as unknown);
       const model = parseModel(concreteForest5dJson as unknown);
       expect(fixture2d?.nodes.some((node) => node.id === "seed-left-001")).toBe(true);
       expect(fixture3d?.objects.some((object) => object.id === "seed-left-001")).toBe(true);
@@ -1940,8 +1940,8 @@ if (import.meta.vitest) {
         import("../../2d/fixture/nakagin-capsule-tower.2d.json"),
         import("../../3d/fixture/nakagin-capsule-tower.3d.json"),
       ]);
-      const fixture2d = parsePuzzle2dFixtureV1(nakagin2dJson as unknown);
-      const fixture3d = parseFixtureV1(nakagin3dJson as unknown);
+      const fixture2d = parsePuzzle2dFixture(nakagin2dJson as unknown);
+      const fixture3d = parseFixture(nakagin3dJson as unknown);
       expect(fixture2d).toBeTruthy();
       expect(fixture3d).toBeTruthy();
       const model = {
@@ -1963,8 +1963,8 @@ if (import.meta.vitest) {
         import("../../2d/fixture/concrete-forest.2d.json"),
         import("../../3d/fixture/concrete-forest.3d.json"),
       ]);
-      const fixture2d = parsePuzzle2dFixtureV1(concreteForest2dJson as unknown);
-      const fixture3d = parseFixtureV1(concreteForest3dJson as unknown);
+      const fixture2d = parsePuzzle2dFixture(concreteForest2dJson as unknown);
+      const fixture3d = parseFixture(concreteForest3dJson as unknown);
       expect(fixture2d).toBeTruthy();
       expect(fixture3d).toBeTruthy();
       const model = {

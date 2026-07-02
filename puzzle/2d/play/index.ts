@@ -51,12 +51,12 @@ import {
 	puzzle2dHandleKindOverlayLabel,
 	puzzle2dLodAutomaticSelectLabel,
 	puzzle2dNodeKindOverlayLabel,
-	decodePuzzle2dFixtureFromDragV1,
+	decodePuzzle2dFixtureFromDrag,
 	puzzle2dPlayNodeKindDragData,
 	puzzle2dNodeKindCatalogIcon,
 	isPuzzle2dDrawLodKind,
 	getPuzzle2dLodScale,
-	parsePuzzle2dFixtureV1,
+	parsePuzzle2dFixture,
 	PUZZLE_2D_CAMERA_ZOOM_MAX,
 	PUZZLE_2D_CAMERA_ZOOM_MIN,
 	DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
@@ -69,8 +69,8 @@ import {
 	type WireKind,
 	type Puzzle2dActiveTool,
 	type Puzzle2dDrawLodKind,
-	type Puzzle2dFixtureNodeV1,
-	type Puzzle2dFixtureV1,
+	type Puzzle2dFixtureNode,
+	type Puzzle2dFixture,
 	type Puzzle2dLodModeKind,
 	type Puzzle2dSelectionMethod,
 	type Puzzle2dSelectionMode,
@@ -80,7 +80,7 @@ import {
 	type Puzzle2dHoverPayload,
 	type CameraState,
 	applyBrushFillPlacementsToFixture,
-	clonePuzzle2dFixtureV1,
+	clonePuzzle2dFixture,
 	PUZZLE_2D_FILL_BUILD_CHUNK_BUDGET,
 	PUZZLE_2D_FILL_COUNT_MAX,
 	type Puzzle2dBrushPlacePayload,
@@ -134,10 +134,10 @@ const PUZZLE_2D_FILL_COUNT_SLIDER_STEP = 1;
 
 /** @emoji 🪣 Cached fill session for O(1) prefix application on the play host. */
 export type Puzzle2dFillSessionState = {
-	readonly baseFixture: Puzzle2dFixtureV1 | null;
+	readonly baseFixture: Puzzle2dFixture | null;
 	readonly sequence: readonly Puzzle2dBrushPlacePayload[];
-	readonly appendedNodes: readonly Puzzle2dFixtureNodeV1[];
-	readonly appendedEdges: readonly Puzzle2dFixtureV1["edges"][number][];
+	readonly appendedNodes: readonly Puzzle2dFixtureNode[];
+	readonly appendedEdges: readonly Puzzle2dFixture["edges"][number][];
 	readonly seed: number;
 };
 
@@ -186,7 +186,7 @@ function nextPuzzle2dFillSeed(): number {
 }
 
 function puzzle2dFillAppendedSlice(
-	core: Puzzle2dFixtureV1,
+	core: Puzzle2dFixture,
 	sequence: readonly Puzzle2dBrushPlacePayload[],
 	catalogs?: KindCatalogBundle,
 ): Pick<Puzzle2dFillSessionState, "appendedNodes" | "appendedEdges"> {
@@ -201,11 +201,11 @@ function puzzle2dFillAppendedSlice(
 }
 
 function composePuzzle2dFillFixture(
-	base: Puzzle2dFixtureV1,
-	appendedNodes: readonly Puzzle2dFixtureNodeV1[],
-	appendedEdges: readonly Puzzle2dFixtureV1["edges"][number][],
+	base: Puzzle2dFixture,
+	appendedNodes: readonly Puzzle2dFixtureNode[],
+	appendedEdges: readonly Puzzle2dFixture["edges"][number][],
 	count: number,
-): Puzzle2dFixtureV1 {
+): Puzzle2dFixture {
 	if (count <= 0) {
 		return base;
 	}
@@ -217,7 +217,7 @@ function composePuzzle2dFillFixture(
 }
 
 /** @emoji 🪣 Applies a fill prefix count onto the cached base fixture. */
-export function applyPuzzle2dFillCount(count: number, catalogs?: KindCatalogBundle): Puzzle2dFixtureV1 | null {
+export function applyPuzzle2dFillCount(count: number, catalogs?: KindCatalogBundle): Puzzle2dFixture | null {
 	const session = puzzle2dFillSessionRef.current;
 	if (!session.baseFixture) {
 		return null;
@@ -228,7 +228,7 @@ export function applyPuzzle2dFillCount(count: number, catalogs?: KindCatalogBund
 }
 
 /** @emoji 🪣 Clears the cached fill session and returns the base fixture when present. */
-export function clearPuzzle2dFillSession(renderer?: Puzzle2dRenderer | null): Puzzle2dFixtureV1 | null {
+export function clearPuzzle2dFillSession(renderer?: Puzzle2dRenderer | null): Puzzle2dFixture | null {
 	cancelPuzzle2dFillBuild();
 	renderer?.endBrushFillSession();
 	const base = puzzle2dFillSessionRef.current.baseFixture;
@@ -240,7 +240,7 @@ export function clearPuzzle2dFillSession(renderer?: Puzzle2dRenderer | null): Pu
 
 /** @emoji 🪣 Starts a chunked fill session build against a fixture snapshot. */
 export function preparePuzzle2dFillSession(
-	baseFixture: Puzzle2dFixtureV1,
+	baseFixture: Puzzle2dFixture,
 	renderer: Puzzle2dRenderer | null | undefined,
 	kindCatalogs?: KindCatalogBundle,
 ): void {
@@ -248,7 +248,7 @@ export function preparePuzzle2dFillSession(
 	if (!renderer) {
 		return;
 	}
-	const core = clonePuzzle2dFixtureV1(baseFixture);
+	const core = clonePuzzle2dFixture(baseFixture);
 	const seed = nextPuzzle2dFillSeed();
 	puzzle2dFillSessionRef.current = {
 		baseFixture: core,
@@ -370,13 +370,13 @@ export function puzzle2dPlayFixtureJson(fixtureId: string = PUZZLE_2D_PLAY_FIXTU
 }
 
 /** @emoji 📋 Parses a puzzle 2d play fixture by catalog id. */
-export function puzzle2dPlayFixtureForId(fixtureId: string): Puzzle2dFixtureV1 {
-	const parsed = parsePuzzle2dFixtureV1(puzzle2dPlayFixtureJson(fixtureId) as unknown);
+export function puzzle2dPlayFixtureForId(fixtureId: string): Puzzle2dFixture {
+	const parsed = parsePuzzle2dFixture(puzzle2dPlayFixtureJson(fixtureId) as unknown);
 	if (!parsed) throw new Error(`puzzle 2d fixture "${fixtureId}" is invalid`);
 	return parsed;
 }
 
-export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixture = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
 
 const PUZZLE_2D_PLAY_VIEWPORT_REF_SHORT_PX = 640;
 const PUZZLE_2D_PLAY_VIEWPORT_MARGIN = 0.18;
@@ -437,7 +437,7 @@ function puzzle2dPlayFixtureWorldBoundsFromNodeRecords(nodes: readonly Record<st
 	return { cx, cy, halfSpan };
 }
 
-function puzzle2dPlayFixtureWorldBounds(fixture: Puzzle2dFixtureV1): { cx: number; cy: number; halfSpan: number } {
+function puzzle2dPlayFixtureWorldBounds(fixture: Puzzle2dFixture): { cx: number; cy: number; halfSpan: number } {
 	return puzzle2dPlayFixtureWorldBoundsFromNodeRecords(fixture.nodes as unknown as Record<string, unknown>[]);
 }
 
@@ -451,7 +451,7 @@ function puzzle2dPlayFixtureWorldBoundsFromJson(raw: unknown): { cx: number; cy:
 }
 
 function puzzle2dPlayViewportCameraFromBounds(
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	bounds: { cx: number; cy: number; halfSpan: number },
 ): CameraState {
 	const usable = PUZZLE_2D_PLAY_VIEWPORT_REF_SHORT_PX * (1 - 2 * PUZZLE_2D_PLAY_VIEWPORT_MARGIN);
@@ -465,7 +465,7 @@ function puzzle2dPlayViewportCameraFromBounds(
 }
 
 /** @emoji 📷 Viewport camera centered on fixture node bounds with zoom fitted for growth. */
-export function puzzle2dPlayViewportCameraFromFixture(fixture: Puzzle2dFixtureV1, rawFixture?: unknown): CameraState {
+export function puzzle2dPlayViewportCameraFromFixture(fixture: Puzzle2dFixture, rawFixture?: unknown): CameraState {
 	const bounds = (rawFixture ? puzzle2dPlayFixtureWorldBoundsFromJson(rawFixture) : null) ?? puzzle2dPlayFixtureWorldBounds(fixture);
 	return puzzle2dPlayViewportCameraFromBounds(fixture, bounds);
 }
@@ -478,7 +478,7 @@ export function puzzle2dPlayViewportCameraForFixtureId(fixtureId: string): Camer
 
 function puzzle2dPlayTriptychCameraForPane(
 	pane: Puzzle2dPlayPaneId,
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	bounds: { cx: number; cy: number; halfSpan: number },
 	baseZoom: number,
 ): CameraState {
@@ -504,7 +504,7 @@ function puzzle2dPlayTriptychCameraForPane(
 }
 
 /** @emoji 📷 Default cameras for all puzzle 2d play panes (wide overview, tight detail, regional selection). */
-export function puzzle2dPlayTriptychCamerasFromFixture(fixture: Puzzle2dFixtureV1, rawFixture?: unknown): Record<Puzzle2dPlayPaneId, CameraState> {
+export function puzzle2dPlayTriptychCamerasFromFixture(fixture: Puzzle2dFixture, rawFixture?: unknown): Record<Puzzle2dPlayPaneId, CameraState> {
 	const bounds = (rawFixture ? puzzle2dPlayFixtureWorldBoundsFromJson(rawFixture) : null) ?? puzzle2dPlayFixtureWorldBounds(fixture);
 	const base = puzzle2dPlayViewportCameraFromBounds(fixture, bounds);
 	return {
@@ -514,7 +514,7 @@ export function puzzle2dPlayTriptychCamerasFromFixture(fixture: Puzzle2dFixtureV
 	};
 }
 
-export const PUZZLE_2D_PLAY_EMPTY_FIXTURE: Puzzle2dFixtureV1 = {
+export const PUZZLE_2D_PLAY_EMPTY_FIXTURE: Puzzle2dFixture = {
 	schema: "puzzle.2d.fixture/v1",
 	camera: { x: 0, y: 0, zoom: 1 },
 	nodes: [],
@@ -544,7 +544,7 @@ export const PUZZLE_2D_PLAY_LAYOUT: WindowLayout = {
 //#endregion 🔖Ids
 
 //#region 🔖Puzzle2dPlayHover
-function puzzle2dPlayHoverPayloadFromGraphId(fixture: Puzzle2dFixtureV1, graphId: string | null): Puzzle2dHoverPayload {
+function puzzle2dPlayHoverPayloadFromGraphId(fixture: Puzzle2dFixture, graphId: string | null): Puzzle2dHoverPayload {
 	if (!graphId) {
 		return { clientX: 0, clientY: 0, id: null, kind: null, screenX: 0, screenY: 0, worldX: 0, worldY: 0 };
 	}
@@ -581,7 +581,7 @@ function puzzle2dPlayKindRowHoverHandlers(
 
 /** @emoji 🌳 Maps transitive kind hover to workbench hierarchy tree item ids. */
 export function puzzle2dPlayHierarchyTreeHighlightedIdsForKind(
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	kindHover: Puzzle2dKindHover | null,
 ): readonly string[] {
 	if (!kindHover?.kindId) {
@@ -671,7 +671,7 @@ function puzzle2dPlayKindSectionTreeIcon(sectionId: string): string | undefined 
 	return undefined;
 }
 
-function puzzle2dPlayNodeHierarchyTreeIcon(node: Puzzle2dFixtureNodeV1, kindCatalogs: KindCatalogBundle): string {
+function puzzle2dPlayNodeHierarchyTreeIcon(node: Puzzle2dFixtureNode, kindCatalogs: KindCatalogBundle): string {
 	const kindId = node.nodeKind?.trim();
 	if (!kindId) {
 		return puzzle2dPlayEntityTreeIcon("node");
@@ -679,7 +679,7 @@ function puzzle2dPlayNodeHierarchyTreeIcon(node: Puzzle2dFixtureNodeV1, kindCata
 	return puzzle2dNodeKindCatalogIcon(kindCatalogs.nodes?.find((row) => row.id === kindId)) ?? puzzle2dPlayEntityTreeIcon("node");
 }
 
-function puzzle2dFixtureHandleToNodeId(fixture: Puzzle2dFixtureV1): ReadonlyMap<string, string> {
+function puzzle2dFixtureHandleToNodeId(fixture: Puzzle2dFixture): ReadonlyMap<string, string> {
 	const out = new Map<string, string>();
 	for (const node of fixture.nodes) {
 		for (const handle of node.handles) {
@@ -690,7 +690,7 @@ function puzzle2dFixtureHandleToNodeId(fixture: Puzzle2dFixtureV1): ReadonlyMap<
 }
 
 function puzzle2dFixtureEdgeEndpointNodeId(
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	endpointId: string,
 	handleToNode: ReadonlyMap<string, string>,
 ): string | undefined {
@@ -701,7 +701,7 @@ function puzzle2dFixtureEdgeEndpointNodeId(
 	return fixture.nodes.some((node) => node.id === endpointId) ? endpointId : undefined;
 }
 
-function puzzle2dFixtureChildrenByNodeId(fixture: Puzzle2dFixtureV1): ReadonlyMap<string, readonly string[]> {
+function puzzle2dFixtureChildrenByNodeId(fixture: Puzzle2dFixture): ReadonlyMap<string, readonly string[]> {
 	const handleToNode = puzzle2dFixtureHandleToNodeId(fixture);
 	const out = new Map<string, string[]>();
 	for (const edge of fixture.edges) {
@@ -723,7 +723,7 @@ function puzzle2dFixtureChildrenByNodeId(fixture: Puzzle2dFixtureV1): ReadonlyMa
 	return out;
 }
 
-function puzzle2dFixtureRootNodeIds(fixture: Puzzle2dFixtureV1, childrenByParent: ReadonlyMap<string, readonly string[]>): readonly string[] {
+function puzzle2dFixtureRootNodeIds(fixture: Puzzle2dFixture, childrenByParent: ReadonlyMap<string, readonly string[]>): readonly string[] {
 	const explicitRoots = fixture.nodes.filter((node) => node.root).map((node) => node.id);
 	if (explicitRoots.length > 0) {
 		return [...new Set(explicitRoots)].sort((a, b) => a.localeCompare(b));
@@ -739,7 +739,7 @@ function puzzle2dFixtureRootNodeIds(fixture: Puzzle2dFixtureV1, childrenByParent
 }
 
 /** @emoji ⌨️ Select-all ids for the fixture honoring playground node/edge/handle target toggles. */
-export function puzzle2dPlayAllSelectionFromFixture(fixture: Puzzle2dFixtureV1, targets: Puzzle2dSelectionTargets): readonly string[] {
+export function puzzle2dPlayAllSelectionFromFixture(fixture: Puzzle2dFixture, targets: Puzzle2dSelectionTargets): readonly string[] {
 	const ids: string[] = [];
 	if (targets.nodes) {
 		for (const node of fixture.nodes) {
@@ -762,7 +762,7 @@ export function puzzle2dPlayAllSelectionFromFixture(fixture: Puzzle2dFixtureV1, 
 }
 
 /** @emoji 🌳 Maps committed graph selection ids to workbench hierarchy tree item ids. */
-export function puzzle2dPlayHierarchyTreeSelectedIds(fixture: Puzzle2dFixtureV1, graphSelectionIds: readonly string[]): string[] {
+export function puzzle2dPlayHierarchyTreeSelectedIds(fixture: Puzzle2dFixture, graphSelectionIds: readonly string[]): string[] {
 	const out: string[] = [];
 	for (const id of graphSelectionIds) {
 		if (fixture.nodes.some((node) => node.id === id)) {
@@ -807,7 +807,7 @@ export type Puzzle2dPlayHierarchyBuildOptions = {
 };
 
 /** @emoji 🎯 Reads hidden/locked flags for a fixture graph id. */
-export function puzzle2dPlayEntityFlagsFromFixture(fixture: Puzzle2dFixtureV1, graphId: string): { hidden: boolean; locked: boolean } {
+export function puzzle2dPlayEntityFlagsFromFixture(fixture: Puzzle2dFixture, graphId: string): { hidden: boolean; locked: boolean } {
 	for (const node of fixture.nodes) {
 		if (node.id === graphId) {
 			return { hidden: node.hidden === true, locked: node.locked === true };
@@ -827,11 +827,11 @@ export function puzzle2dPlayEntityFlagsFromFixture(fixture: Puzzle2dFixtureV1, g
 
 /** @emoji 🙈 Sets hidden/locked on every selected fixture row. */
 export function puzzle2dPlayApplySelectionFlag(
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	selectionIds: readonly string[],
 	flag: "hidden" | "locked",
 	value: boolean,
-): Puzzle2dFixtureV1 {
+): Puzzle2dFixture {
 	const selected = new Set(selectionIds);
 	return {
 		...fixture,
@@ -852,13 +852,13 @@ export function puzzle2dPlayApplySelectionFlag(
 }
 
 /** @emoji 🔁 Toggles hidden/locked on one hierarchy row. */
-export function puzzle2dPlayToggleEntityFlag(fixture: Puzzle2dFixtureV1, graphId: string, flag: "hidden" | "locked"): Puzzle2dFixtureV1 {
+export function puzzle2dPlayToggleEntityFlag(fixture: Puzzle2dFixture, graphId: string, flag: "hidden" | "locked"): Puzzle2dFixture {
 	const flags = puzzle2dPlayEntityFlagsFromFixture(fixture, graphId);
 	return puzzle2dPlayApplySelectionFlag(fixture, [graphId], flag, !(flags[flag] === true));
 }
 
 /** @emoji 🗑️ Removes selected nodes, handles, and edges from a fixture. */
-export function puzzle2dPlayDeleteSelectionFromFixture(fixture: Puzzle2dFixtureV1, selectionIds: readonly string[]): Puzzle2dFixtureV1 {
+export function puzzle2dPlayDeleteSelectionFromFixture(fixture: Puzzle2dFixture, selectionIds: readonly string[]): Puzzle2dFixture {
 	const nodeIds = selectionIds.filter((id) => fixture.nodes.some((node) => node.id === id));
 	const edgeIds = new Set(selectionIds.filter((id) => fixture.edges.some((edge) => edge.id === id)));
 	const handleIds = new Set(
@@ -878,15 +878,15 @@ export function puzzle2dPlayDeleteSelectionFromFixture(fixture: Puzzle2dFixtureV
 
 /** @emoji 📋 Clones selected nodes with fresh ids and offset positions. */
 export function puzzle2dPlayDuplicateSelection(
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	selectionIds: readonly string[],
-): { fixture: Puzzle2dFixtureV1; newIds: readonly string[] } {
+): { fixture: Puzzle2dFixture; newIds: readonly string[] } {
 	const nodeIds = selectionIds.filter((id) => fixture.nodes.some((node) => node.id === id));
 	if (nodeIds.length === 0) {
 		return { fixture, newIds: [] };
 	}
 	const existingIds = new Set(fixture.nodes.map((node) => node.id));
-	const clones: Puzzle2dFixtureNodeV1[] = [];
+	const clones: Puzzle2dFixtureNode[] = [];
 	const newIds: string[] = [];
 	for (const nodeId of nodeIds) {
 		const node = fixture.nodes.find((row) => row.id === nodeId);
@@ -917,7 +917,7 @@ export function puzzle2dPlayDuplicateSelection(
 }
 
 /** @emoji 🧩 Expands selection to every entity sharing a kind id with the current selection. */
-export function puzzle2dPlaySelectSameKindIds(fixture: Puzzle2dFixtureV1, selectionIds: readonly string[]): readonly string[] {
+export function puzzle2dPlaySelectSameKindIds(fixture: Puzzle2dFixture, selectionIds: readonly string[]): readonly string[] {
 	const out = new Set<string>();
 	for (const id of selectionIds) {
 		const node = fixture.nodes.find((row) => row.id === id);
@@ -1012,7 +1012,7 @@ function puzzle2dPlayHierarchyEntityChrome(
 
 function puzzle2dPlayHierarchyHoverHandlers(
 	onHover: ((payload: Puzzle2dHoverPayload) => void) | undefined,
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	graphId: string,
 ): Pick<UiTreeItemNode, "onPointerEnter" | "onPointerLeave"> {
 	if (!onHover) {
@@ -1025,7 +1025,7 @@ function puzzle2dPlayHierarchyHoverHandlers(
 }
 
 function buildPuzzle2dFixtureNodeHierarchyItem(
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	kindCatalogs: KindCatalogBundle,
 	nodeId: string,
 	childrenByParent: ReadonlyMap<string, readonly string[]>,
@@ -1075,7 +1075,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
 }
 
 /** @emoji 🎯 Resolves catalog kind from a hovered graph element id. */
-export function puzzle2dKindHoverFromGraphId(fixture: Puzzle2dFixtureV1, graphId: string): Puzzle2dKindHover | null {
+export function puzzle2dKindHoverFromGraphId(fixture: Puzzle2dFixture, graphId: string): Puzzle2dKindHover | null {
 	return puzzle2dPlayHoverPayloadFromGraphId(fixture, graphId).kind;
 }
 
@@ -1126,7 +1126,7 @@ export function puzzle2dPlayKindsTreeRowId(catalogs: KindCatalogBundle | undefin
 /** @emoji 🏷️ Maps hover focus to kinds-tab row ids (kind→object and object→kind, not instance→instance). */
 export function puzzle2dPlayKindsTreeHighlightedIds(
 	catalogs: KindCatalogBundle | undefined,
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	graphHoverId: string | null,
 	kindHover: Puzzle2dKindHover | null,
 ): readonly string[] {
@@ -1140,7 +1140,7 @@ export function puzzle2dPlayKindsTreeHighlightedIds(
 
 /** @emoji 🌳 Maps committed graph hover ids to workbench hierarchy tree item ids. */
 export function puzzle2dPlayHierarchyTreeHighlightedIds(
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	graphHoverId: string | null,
 	kindHover: Puzzle2dKindHover | null = null,
 ): readonly string[] {
@@ -1155,7 +1155,7 @@ export function puzzle2dPlayHierarchyTreeHighlightedIds(
 
 /** @emoji 🌳 Workbench hierarchy: Nodes and Edges sections. */
 export function buildPuzzle2dPlayHierarchySections(
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	selectionIds: readonly string[],
 	kindCatalogs: KindCatalogBundle = puzzle2dFixtureMergedKindCatalogs(fixture),
 	options?: Puzzle2dPlayHierarchyBuildOptions,
@@ -2233,7 +2233,7 @@ export function puzzle2dPlayForwardsCanvasStructuralDelete(kind: "edge" | "node"
 }
 
 /** @emoji 🗑️ Removes a node and every edge anchored on that node id or its handles. */
-export function puzzle2dPlayApplyNodeStructuralDeleteToFixture(fixture: Puzzle2dFixtureV1, nodeId: string): Puzzle2dFixtureV1 {
+export function puzzle2dPlayApplyNodeStructuralDeleteToFixture(fixture: Puzzle2dFixture, nodeId: string): Puzzle2dFixture {
 	const node = fixture.nodes.find((row) => row.id === nodeId);
 	if (!node) {
 		return fixture;
@@ -2249,7 +2249,7 @@ export function puzzle2dPlayApplyNodeStructuralDeleteToFixture(fixture: Puzzle2d
 }
 
 /** @emoji 🪢 Restores fixture edges from a seed when WASM/resync drained them (nakagin play recovery). */
-export function puzzle2dPlayRehydrateFixtureEdgesIfMissing(fixture: Puzzle2dFixtureV1, seed: Puzzle2dFixtureV1): Puzzle2dFixtureV1 {
+export function puzzle2dPlayRehydrateFixtureEdgesIfMissing(fixture: Puzzle2dFixture, seed: Puzzle2dFixture): Puzzle2dFixture {
 	if (fixture.edges.length > 0 || seed.edges.length === 0 || fixture.nodes.length === 0) {
 		return fixture;
 	}
@@ -2270,7 +2270,7 @@ export function puzzle2dPlayRehydrateFixtureEdgesIfMissing(fixture: Puzzle2dFixt
 /** @emoji 🗑️ Dedupes authoritative canvas structural deletes and drops ids absent from the fixture (renderer only emits user deletes). */
 export function filterPuzzle2dPlayStructuralDeleteBatch(
 	batch: readonly Puzzle2dPlayStructuralDeleteItem[],
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 ): Puzzle2dPlayStructuralDeleteItem[] {
 	const seen = new Set<string>();
 	const out: Puzzle2dPlayStructuralDeleteItem[] = [];
@@ -2293,7 +2293,7 @@ export function filterPuzzle2dPlayStructuralDeleteBatch(
 /** @emoji 🗑️ Applies a queued structural-delete batch immediately (brush activation must flush before fixture resync). */
 export function flushPuzzle2dPlayStructuralDeleteBatch(
 	batch: readonly Puzzle2dPlayStructuralDeleteItem[],
-	fixture: Puzzle2dFixtureV1,
+	fixture: Puzzle2dFixture,
 	apply: (kind: "edge" | "node", id: string) => void,
 ): readonly Puzzle2dPlayStructuralDeleteItem[] {
 	const pending = filterPuzzle2dPlayStructuralDeleteBatch(batch, fixture);
@@ -2409,7 +2409,7 @@ if (import.meta.vitest) {
 			const nakagin = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID);
 			expect(nakagin.nodes.length).toBeGreaterThan(0);
 			expect(nakagin.edges.length).toBeGreaterThan(0);
-			expect(parsePuzzle2dFixtureV1(nakaginFixtureJson as unknown)?.nodes.length).toBe(nakagin.nodes.length);
+			expect(parsePuzzle2dFixture(nakaginFixtureJson as unknown)?.nodes.length).toBe(nakagin.nodes.length);
 		});
 
 		it("fixture catalog lists concrete forest and nakagin", () => {
@@ -2471,7 +2471,7 @@ if (import.meta.vitest) {
 			const capsuleJ = nodes?.items?.find((item) => item.label === "Capsule J");
 			expect(capsuleJ?.draggable).toBe(true);
 			expect(capsuleJ?.dragData?.["application/x-puzzle-2d-fixture-v1"]).toBeTruthy();
-			const dragFixture = decodePuzzle2dFixtureFromDragV1(capsuleJ!.dragData!["application/x-puzzle-2d-fixture-v1"]!);
+			const dragFixture = decodePuzzle2dFixtureFromDrag(capsuleJ!.dragData!["application/x-puzzle-2d-fixture-v1"]!);
 			expect(dragFixture?.nodes[0]?.iconKind).toBe("capsule_J");
 			const handles = tree.sections.find((section) => section.id === "puzzle-2d-play-kinds.handles");
 			expect(handles?.defaultOpen).toBe(false);
@@ -2490,7 +2490,7 @@ if (import.meta.vitest) {
 		});
 
 		it("puzzle2dPlayHierarchyTreeHighlightedIds maps graph ids to tree row ids", () => {
-			const fixture = parsePuzzle2dFixtureV1({
+			const fixture = parsePuzzle2dFixture({
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -2515,7 +2515,7 @@ if (import.meta.vitest) {
 		});
 
 		it("puzzle2dPlayHierarchyTreeHighlightedIds prefers direct instance hover over kind hover", () => {
-			const fixture = parsePuzzle2dFixtureV1({
+			const fixture = parsePuzzle2dFixture({
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -2548,7 +2548,7 @@ if (import.meta.vitest) {
 		});
 
 		it("puzzle2dPlayHierarchyTreeHighlightedIdsForKind expands transitive handle kind hover", () => {
-			const fixture = parsePuzzle2dFixtureV1({
+			const fixture = parsePuzzle2dFixture({
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -2585,7 +2585,7 @@ if (import.meta.vitest) {
 		});
 
 		it("puzzle2dPlayHierarchyTreeSelectedIds maps graph ids to tree row ids", () => {
-			const fixture = parsePuzzle2dFixtureV1({
+			const fixture = parsePuzzle2dFixture({
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -2610,7 +2610,7 @@ if (import.meta.vitest) {
 		});
 
 		it("buildPuzzle2dPlayHierarchySections nests children for node-id edges (normal graph)", () => {
-			const fixture = parsePuzzle2dFixtureV1({
+			const fixture = parsePuzzle2dFixture({
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -2628,7 +2628,7 @@ if (import.meta.vitest) {
 		});
 
 		it("buildPuzzle2dPlayHierarchySections nests root nodes, handles, and child nodes", () => {
-			const fixture = parsePuzzle2dFixtureV1({
+			const fixture = parsePuzzle2dFixture({
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -2910,7 +2910,7 @@ if (import.meta.vitest) {
 
 	describe("puzzle2dPlayApplyNodeStructuralDeleteToFixture", () => {
 		it("removes node-id and handle-id edges when deleting a node", () => {
-			const fixture: Puzzle2dFixtureV1 = {
+			const fixture: Puzzle2dFixture = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -2930,7 +2930,7 @@ if (import.meta.vitest) {
 
 	describe("puzzle2dPlayRehydrateFixtureEdgesIfMissing", () => {
 		it("restores seed edges only when fixture nodes still exist", () => {
-			const seed: Puzzle2dFixtureV1 = {
+			const seed: Puzzle2dFixture = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -2939,12 +2939,12 @@ if (import.meta.vitest) {
 				],
 				edges: [{ id: "e0", source: "a:h0", target: "b:h0" }],
 			};
-			const drained = { ...seed, edges: [] as Puzzle2dFixtureV1["edges"] };
+			const drained = { ...seed, edges: [] as Puzzle2dFixture["edges"] };
 			expect(puzzle2dPlayRehydrateFixtureEdgesIfMissing(drained, seed).edges).toEqual(seed.edges);
 		});
 
 		it("does not restore edges after delete-all leaves no fixture nodes", () => {
-			const seed: Puzzle2dFixtureV1 = {
+			const seed: Puzzle2dFixture = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [] }],
@@ -2957,7 +2957,7 @@ if (import.meta.vitest) {
 
 	describe("filterPuzzle2dPlayStructuralDeleteBatch", () => {
 		it("keeps real multi-edge node deletes and drops resync-only ghost ids", () => {
-			const fixture: Puzzle2dFixtureV1 = {
+			const fixture: Puzzle2dFixture = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -2996,7 +2996,7 @@ if (import.meta.vitest) {
 		});
 
 		it("keeps mass node deletes from authoritative canvas delete", () => {
-			const fixture: Puzzle2dFixtureV1 = {
+			const fixture: Puzzle2dFixture = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -3015,7 +3015,7 @@ if (import.meta.vitest) {
 		});
 
 		it("keeps sequential and mass edge deletes from authoritative canvas delete", () => {
-			const fixture: Puzzle2dFixtureV1 = {
+			const fixture: Puzzle2dFixture = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -3038,7 +3038,7 @@ if (import.meta.vitest) {
 		});
 
 		it("keeps paired edge deletes on large nakagin-scale fixtures", () => {
-			const fixture: Puzzle2dFixtureV1 = {
+			const fixture: Puzzle2dFixture = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [{ id: "a", x: 0, y: 0, radius: 10, handles: [{ id: "a.h0", angle: 0 }] }],
@@ -3054,7 +3054,7 @@ if (import.meta.vitest) {
 
 	describe("flushPuzzle2dPlayStructuralDeleteBatch", () => {
 		it("applies filtered edge deletes before brush fixture resync", () => {
-			const fixture: Puzzle2dFixtureV1 = {
+			const fixture: Puzzle2dFixture = {
 				schema: "puzzle.2d.fixture/v1",
 				camera: { x: 0, y: 0, zoom: 1 },
 				nodes: [
@@ -3131,7 +3131,7 @@ if (import.meta.vitest) {
 		});
 
 		it("selectSameKindIds expands nodeKind matches", () => {
-			const fixture: Puzzle2dFixtureV1 = {
+			const fixture: Puzzle2dFixture = {
 				...baseFixture,
 				nodes: baseFixture.nodes.map((node, index) => ({ ...node, nodeKind: index === 0 ? "kind-a" : node.nodeKind })),
 			};
@@ -3141,6 +3141,15 @@ if (import.meta.vitest) {
 	});
 }
 //#endregion 🧪Tests
+
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for puzzle 2d. */
+export function buildPuzzle2dProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("puzzle.2d", "Puzzle 2D", "puzzle2d", "Puzzle 2D", PUZZLE_2D_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
 
 //#region 🔖Boot
 if (

@@ -1,4 +1,4 @@
-//! 🔩 Brepkit-backed implementation of [`geometry_brep_engine::BrepKernel`].
+//! 🔩 Brepkit-backed implementation of [`kernel_3d_engine::BrepKernel`].
 
 use std::f64::consts::TAU;
 
@@ -54,7 +54,7 @@ use brepkit_topology::solid::SolidId;
 use brepkit_topology::vertex::{Vertex, VertexId};
 use brepkit_topology::wire::{OrientedEdge, Wire, WireId};
 use brepkit_topology::{Topology, TopologyError};
-use geometry_brep_engine::{BrepError, BrepKernel, BrepTopology, ClosestPoint, FaceGroup, GeometryHandle, GeometryKind, MeshTransfer, ParamDomain, PointClassification, Vec3};
+use kernel_3d_engine::{BrepError, BrepKernel, BrepTopology, ClosestPoint, FaceGroup, GeometryHandle, GeometryKind, MeshTransfer, ParamDomain, PointClassification, Vec3};
 
 // #region Helpers
 const TOL: f64 = 1e-6;

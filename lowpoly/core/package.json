@@ -16,6 +16,9 @@
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.17"
 	},
+	"dependencies": {
+		"@semio-tech/vcs-core": "workspace:*"
+	},
 	"license": "LGPL-3.0-or-later",
 	"repository": {
 		"type": "git",

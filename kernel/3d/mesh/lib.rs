@@ -1,7 +1,7 @@
 //! 🔷 Half-edge mesh kernel for low-poly editing.
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 //#region Types
 
@@ -110,18 +110,26 @@ pub struct MeshVertex {
     halfedge: Option<u32>,
 }
 
+fn default_uv() -> [f32; 2] {
+    [0.0, 0.0]
+}
+
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct HalfEdge {
     vertex: u32,
     twin: Option<u32>,
     next: u32,
     face: Option<u32>,
+    #[serde(default = "default_uv")]
+    uv: [f32; 2],
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct MeshFace {
     halfedge: u32,
     smooth: bool,
+    #[serde(default)]
+    flipped: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -130,6 +138,14 @@ pub struct MeshTransfer {
     pub normals: Vec<f32>,
     pub indices: Vec<u32>,
     pub edge_positions: Vec<f32>,
+    #[serde(default)]
+    pub face_ids: Vec<u32>,
+    #[serde(default)]
+    pub vertex_ids: Vec<u32>,
+    #[serde(default)]
+    pub edge_ids: Vec<u32>,
+    #[serde(default)]
+    pub uvs: Vec<f32>,
 }
 
 //#endregion Types
@@ -141,6 +157,8 @@ pub struct HalfedgeMesh {
     vertices: Vec<MeshVertex>,
     halfedges: Vec<HalfEdge>,
     faces: Vec<MeshFace>,
+    #[serde(default)]
+    uv_seams: HashSet<u32>,
 }
 
 impl HalfedgeMesh {
@@ -149,6 +167,7 @@ impl HalfedgeMesh {
             vertices: Vec::new(),
             halfedges: Vec::new(),
             faces: Vec::new(),
+            uv_seams: HashSet::new(),
         }
     }
 
@@ -193,6 +212,9 @@ impl HalfedgeMesh {
                 break;
             }
         }
+        if f.flipped {
+            out.reverse();
+        }
         Ok(out)
     }
 
@@ -213,6 +235,32 @@ impl HalfedgeMesh {
         let next = &self.halfedges[he.next as usize];
         let v1 = VertexId(next.vertex);
         Ok((v0, v1))
+    }
+
+    pub fn face_halfedge_ids(&self, face: FaceId) -> MeshResult<Vec<u32>> {
+        let f = self.faces.get(face.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
+        let mut out = Vec::new();
+        let start = f.halfedge;
+        let mut he = start;
+        loop {
+            out.push(he);
+            he = self.halfedges[he as usize].next;
+            if he == start {
+                break;
+            }
+        }
+        Ok(out)
+    }
+
+    pub fn flip_faces(&mut self, faces: &[FaceId]) -> MeshResult<()> {
+        if faces.is_empty() {
+            return Err(MeshKernelError::EmptySelection);
+        }
+        for face in faces {
+            let entry = self.faces.get_mut(face.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
+            entry.flipped = !entry.flipped;
+        }
+        self.recompute_normals()
     }
 
     pub fn from_faces(positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshResult<Self> {
@@ -243,6 +291,7 @@ impl HalfedgeMesh {
                     twin: None,
                     next: 0,
                     face: Some(face_id),
+                    uv: [0.0, 0.0],
                 });
                 face_hes.push(he_id);
                 if let Some(&twin_id) = edge_map.get(&(v1, v0)) {
@@ -259,6 +308,7 @@ impl HalfedgeMesh {
             mesh.faces.push(MeshFace {
                 halfedge: start_he,
                 smooth: false,
+                flipped: false,
             });
             let v0 = mesh.halfedges[start_he as usize].vertex;
             mesh.vertices[v0 as usize].halfedge = Some(start_he);
@@ -302,6 +352,7 @@ impl HalfedgeMesh {
                 twin,
                 next: 0,
                 face: Some(face_id),
+                uv: [0.0, 0.0],
             });
             if let Some(t) = twin {
                 self.halfedges[t as usize].twin = Some(he_id);
@@ -315,6 +366,7 @@ impl HalfedgeMesh {
         self.faces.push(MeshFace {
             halfedge: start,
             smooth: false,
+            flipped: false,
         });
         self.vertices[vert_ids[0] as usize].halfedge = Some(start);
         Ok(FaceId(face_id))
@@ -1030,6 +1082,278 @@ fn segment_plane_intersect(a: Vec3, b: Vec3, plane_point: Vec3, plane_normal: Ve
 
 //#endregion Edit
 
+//#region Uv
+
+fn cot_angle(a: Vec3, b: Vec3, c: Vec3) -> f32 {
+    let ab = b.sub(a);
+    let ac = c.sub(a);
+    let cross_len = ab.cross(ac).length();
+    if cross_len < 1e-8 {
+        return 0.0;
+    }
+    ab.dot(ac) / cross_len
+}
+
+fn solve_lscm_1d(n: usize, triplets: &[(usize, usize, f64)], rhs: &[f64], pin_a: usize, pin_b: usize, val_a: f64, val_b: f64) -> Vec<f64> {
+    let free: Vec<usize> = (0..n).filter(|&i| i != pin_a && i != pin_b).collect();
+    let m = free.len();
+    if m == 0 {
+        let mut out = vec![0.0; n];
+        out[pin_a] = val_a;
+        out[pin_b] = val_b;
+        return out;
+    }
+    let mut a = vec![0.0f64; m * m];
+    let mut b = vec![0.0f64; m];
+    let idx = |v: usize| -> Option<usize> {
+        if v == pin_a || v == pin_b {
+            None
+        } else {
+            free.iter().position(|&x| x == v)
+        }
+    };
+    for &(i, j, w) in triplets {
+        if i == j {
+            if let Some(ii) = idx(i) {
+                a[ii * m + ii] += w;
+            }
+        } else {
+            if let Some(ii) = idx(i) {
+                if let Some(jj) = idx(j) {
+                    a[ii * m + jj] -= w;
+                } else if j == pin_a {
+                    b[ii] += w * val_a;
+                } else if j == pin_b {
+                    b[ii] += w * val_b;
+                }
+            }
+            if let Some(jj) = idx(j) {
+                if let Some(ii) = idx(i) {
+                    a[jj * m + ii] -= w;
+                } else if i == pin_a {
+                    b[jj] += w * val_a;
+                } else if i == pin_b {
+                    b[jj] += w * val_b;
+                }
+            }
+        }
+    }
+    for row in 0..m {
+        let mut pivot = row;
+        for r in (row + 1)..m {
+            if a[r * m + row].abs() > a[pivot * m + row].abs() {
+                pivot = r;
+            }
+        }
+        if a[pivot * m + row].abs() < 1e-12 {
+            continue;
+        }
+        if pivot != row {
+            for c in 0..m {
+                a.swap(row * m + c, pivot * m + c);
+            }
+            b.swap(row, pivot);
+        }
+        let div = a[row * m + row];
+        for c in row..m {
+            a[row * m + c] /= div;
+        }
+        b[row] /= div;
+        for r in 0..m {
+            if r == row {
+                continue;
+            }
+            let factor = a[r * m + row];
+            if factor.abs() < 1e-12 {
+                continue;
+            }
+            for c in row..m {
+                a[r * m + c] -= factor * a[row * m + c];
+            }
+            b[r] -= factor * b[row];
+        }
+    }
+    let mut out = vec![0.0; n];
+    out[pin_a] = val_a;
+    out[pin_b] = val_b;
+    for (fi, &vi) in free.iter().enumerate() {
+        out[vi] = b[fi];
+    }
+    out
+}
+
+impl HalfedgeMesh {
+    pub fn mark_uv_seam(&mut self, edges: &[EdgeId], seam: bool) {
+        for &edge in edges {
+            self.uv_seams.insert(edge.0);
+            if !seam {
+                self.uv_seams.remove(&edge.0);
+            }
+        }
+    }
+
+    pub fn is_uv_seam(&self, edge: EdgeId) -> bool {
+        self.uv_seams.contains(&edge.0)
+    }
+
+    fn uv_island_faces(&self) -> Vec<Vec<usize>> {
+        let mut visited = vec![false; self.faces.len()];
+        let mut islands = Vec::new();
+        for start in 0..self.faces.len() {
+            if visited[start] {
+                continue;
+            }
+            let mut stack = vec![start];
+            let mut island = Vec::new();
+            visited[start] = true;
+            while let Some(fi) = stack.pop() {
+                island.push(fi);
+                let hes = self.face_halfedge_ids(FaceId(fi as u32)).unwrap_or_default();
+                for he_id in hes {
+                    let he = &self.halfedges[he_id as usize];
+                    if self.uv_seams.contains(&he_id) {
+                        continue;
+                    }
+                    if let Some(twin_id) = he.twin {
+                        let twin = &self.halfedges[twin_id as usize];
+                        if let Some(adj) = twin.face {
+                            let adj = adj as usize;
+                            if !visited[adj] {
+                                visited[adj] = true;
+                                stack.push(adj);
+                            }
+                        }
+                    }
+                }
+            }
+            if !island.is_empty() {
+                islands.push(island);
+            }
+        }
+        islands
+    }
+
+    fn solve_island_uv(&self, island_faces: &[usize]) -> HashMap<u32, [f32; 2]> {
+        let mut vert_set: HashSet<u32> = HashSet::new();
+        let mut triangles: Vec<[u32; 3]> = Vec::new();
+        for &fi in island_faces {
+            let verts = self.face_vertex_ids(FaceId(fi as u32)).unwrap_or_default();
+            if verts.len() < 3 {
+                continue;
+            }
+            for i in 1..verts.len() - 1 {
+                triangles.push([verts[0].0, verts[i].0, verts[i + 1].0]);
+            }
+            for v in verts {
+                vert_set.insert(v.0);
+            }
+        }
+        let verts: Vec<u32> = vert_set.into_iter().collect();
+        let n = verts.len();
+        if n < 3 {
+            return HashMap::new();
+        }
+        let index: HashMap<u32, usize> = verts.iter().enumerate().map(|(i, &v)| (v, i)).collect();
+        let pos = |vid: u32| Vec3(self.vertices[vid as usize].position);
+        let mut triplets: Vec<(usize, usize, f64)> = Vec::new();
+        for tri in &triangles {
+            let (a, b, c) = (tri[0], tri[1], tri[2]);
+            let ia = index[&a];
+            let ib = index[&b];
+            let ic = index[&c];
+            let pa = pos(a);
+            let pb = pos(b);
+            let pc = pos(c);
+            let cot_a = cot_angle(pb, pa, pc) as f64;
+            let cot_b = cot_angle(pa, pb, pc) as f64;
+            let cot_c = cot_angle(pa, pc, pb) as f64;
+            let pairs = [(ia, ib, cot_c), (ib, ia, cot_c), (ib, ic, cot_a), (ic, ib, cot_a), (ia, ic, cot_b), (ic, ia, cot_b)];
+            for (i, j, w) in pairs {
+                if w.abs() < 1e-12 {
+                    continue;
+                }
+                triplets.push((i, i, w));
+                triplets.push((i, j, -w));
+            }
+        }
+        let pin_a = 0;
+        let mut pin_b = 1;
+        let mut max_dist = 0.0f32;
+        let p0 = pos(verts[pin_a]);
+        for (i, &v) in verts.iter().enumerate().skip(1) {
+            let d = p0.sub(pos(v)).length();
+            if d > max_dist {
+                max_dist = d;
+                pin_b = i;
+            }
+        }
+        let u = solve_lscm_1d(n, &triplets, &vec![0.0; n], pin_a, pin_b, 0.0, 1.0);
+        let v = solve_lscm_1d(n, &triplets, &vec![0.0; n], pin_a, pin_b, 0.0, 0.0);
+        verts
+            .into_iter()
+            .enumerate()
+            .map(|(i, vid)| (vid, [u[i] as f32, v[i] as f32]))
+            .collect()
+    }
+
+    fn pack_island_uvs(&self, islands: &[Vec<usize>]) -> HashMap<u32, [f32; 2]> {
+        let mut packed = HashMap::new();
+        let mut shelf_y = 0.0f32;
+        let mut shelf_height = 0.0f32;
+        let mut shelf_x = 0.0f32;
+        const PAD: f32 = 0.01;
+        for island in islands {
+            let local = self.solve_island_uv(island);
+            if local.is_empty() {
+                continue;
+            }
+            let mut min_u = f32::INFINITY;
+            let mut min_v = f32::INFINITY;
+            let mut max_u = f32::NEG_INFINITY;
+            let mut max_v = f32::NEG_INFINITY;
+            for uv in local.values() {
+                min_u = min_u.min(uv[0]);
+                min_v = min_v.min(uv[1]);
+                max_u = max_u.max(uv[0]);
+                max_v = max_v.max(uv[1]);
+            }
+            let w = (max_u - min_u).max(1e-4);
+            let h = (max_v - min_v).max(1e-4);
+            if shelf_x + w + PAD > 1.0 {
+                shelf_x = 0.0;
+                shelf_y += shelf_height + PAD;
+                shelf_height = 0.0;
+            }
+            shelf_height = shelf_height.max(h);
+            let scale = (w.max(h)).min(0.45);
+            for (vid, uv) in local {
+                let nu = shelf_x + (uv[0] - min_u) / w * scale;
+                let nv = shelf_y + (uv[1] - min_v) / h * scale;
+                packed.insert(vid, [nu, nv]);
+            }
+            shelf_x += scale + PAD;
+        }
+        packed
+    }
+
+    pub fn unwrap_uv(&mut self) -> MeshResult<()> {
+        let islands = self.uv_island_faces();
+        let packed = self.pack_island_uvs(&islands);
+        for fi in 0..self.faces.len() {
+            let hes = self.face_halfedge_ids(FaceId(fi as u32))?;
+            for he_id in hes {
+                let he = &mut self.halfedges[he_id as usize];
+                if let Some(uv) = packed.get(&he.vertex) {
+                    he.uv = *uv;
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+//#endregion Uv
+
 //#region Export
 
 impl HalfedgeMesh {
@@ -1038,11 +1362,24 @@ impl HalfedgeMesh {
         let mut normals = Vec::new();
         let mut indices = Vec::new();
         let mut edge_positions = Vec::new();
+        let mut face_ids = Vec::new();
+        let mut vertex_ids = Vec::new();
+        let mut edge_ids = Vec::new();
+        let mut uvs = Vec::new();
         let mut edge_seen: HashMap<(u32, u32), bool> = HashMap::new();
 
         for fi in 0..self.faces.len() {
             let face = &self.faces[fi];
             let smooth = face.smooth;
+            let topology_hes = self.face_halfedge_ids(FaceId(fi as u32))?;
+            let topology_verts: Vec<VertexId> = topology_hes
+                .iter()
+                .map(|halfedge| VertexId(self.halfedges[*halfedge as usize].vertex))
+                .collect();
+            let mut hes = topology_hes.clone();
+            if face.flipped {
+                hes.reverse();
+            }
             let verts = self.face_vertex_ids(FaceId(fi as u32))?;
             if verts.len() < 3 {
                 continue;
@@ -1050,35 +1387,47 @@ impl HalfedgeMesh {
             let face_normal = self.face_normal(FaceId(fi as u32))?;
             let base = positions.len() as u32 / 3;
 
+            let push_corner = |he_id: u32, positions: &mut Vec<f32>, normals: &mut Vec<f32>, vertex_ids: &mut Vec<u32>, uvs: &mut Vec<f32>, normal: Vec3| {
+                let he = &self.halfedges[he_id as usize];
+                let vert = &self.vertices[he.vertex as usize];
+                let n = if smooth {
+                    vert.normal.map(Vec3).unwrap_or(normal)
+                } else {
+                    normal
+                };
+                positions.extend_from_slice(&vert.position);
+                normals.extend_from_slice(&n.0);
+                vertex_ids.push(he.vertex);
+                uvs.push(he.uv[0]);
+                uvs.push(he.uv[1]);
+            };
+
             if smooth {
-                for v in &verts {
-                    let vert = &self.vertices[v.0 as usize];
-                    let n = vert.normal.map(Vec3).unwrap_or(face_normal);
-                    positions.extend_from_slice(&vert.position);
-                    normals.extend_from_slice(&n.0);
+                for &he_id in &hes {
+                    push_corner(he_id, &mut positions, &mut normals, &mut vertex_ids, &mut uvs, face_normal);
                 }
                 for i in 1..verts.len() - 1 {
                     indices.push(base);
                     indices.push(base + i as u32);
                     indices.push(base + i as u32 + 1);
+                    face_ids.push(fi as u32);
                 }
             } else {
                 for i in 1..verts.len() - 1 {
-                    for &vi in &[verts[0], verts[i], verts[i + 1]] {
-                        let vert = &self.vertices[vi.0 as usize];
-                        positions.extend_from_slice(&vert.position);
-                        normals.extend_from_slice(&face_normal.0);
+                    for he_id in [hes[0], hes[i], hes[i + 1]] {
+                        push_corner(he_id, &mut positions, &mut normals, &mut vertex_ids, &mut uvs, face_normal);
                     }
                     let tri_base = (positions.len() / 3 - 3) as u32;
                     indices.push(tri_base);
                     indices.push(tri_base + 1);
                     indices.push(tri_base + 2);
+                    face_ids.push(fi as u32);
                 }
             }
 
-            for i in 0..verts.len() {
-                let v0 = verts[i].0;
-                let v1 = verts[(i + 1) % verts.len()].0;
+            for i in 0..topology_verts.len() {
+                let v0 = topology_verts[i].0;
+                let v1 = topology_verts[(i + 1) % topology_verts.len()].0;
                 let key = if v0 < v1 { (v0, v1) } else { (v1, v0) };
                 if edge_seen.contains_key(&key) {
                     continue;
@@ -1088,6 +1437,7 @@ impl HalfedgeMesh {
                 let p1 = self.vertices[v1 as usize].position;
                 edge_positions.extend_from_slice(&p0);
                 edge_positions.extend_from_slice(&p1);
+                edge_ids.push(topology_hes[i]);
             }
         }
 
@@ -1096,6 +1446,10 @@ impl HalfedgeMesh {
             normals,
             indices,
             edge_positions,
+            face_ids,
+            vertex_ids,
+            edge_ids,
+            uvs,
         })
     }
 
@@ -1104,11 +1458,31 @@ impl HalfedgeMesh {
         for v in &self.vertices {
             out.push_str(&format!("v {} {} {}\n", v.position[0], v.position[1], v.position[2]));
         }
+        let mut vt_written = false;
+        for he in &self.halfedges {
+            if he.uv[0] != 0.0 || he.uv[1] != 0.0 {
+                vt_written = true;
+                break;
+            }
+        }
+        if vt_written {
+            for he in &self.halfedges {
+                out.push_str(&format!("vt {} {}\n", he.uv[0], he.uv[1]));
+            }
+        }
         for fi in 0..self.faces.len() {
-            let verts = self.face_vertex_ids(FaceId(fi as u32))?;
-            out.push_str("f");
-            for v in verts {
-                out.push_str(&format!(" {}", v.0 + 1));
+            let mut hes = self.face_halfedge_ids(FaceId(fi as u32))?;
+            if self.faces[fi].flipped {
+                hes.reverse();
+            }
+            out.push('f');
+            for he_id in hes {
+                let he = &self.halfedges[he_id as usize];
+                if vt_written {
+                    out.push_str(&format!(" {}/{}", he.vertex + 1, he_id as usize + 1));
+                } else {
+                    out.push_str(&format!(" {}", he.vertex + 1));
+                }
             }
             out.push('\n');
         }
@@ -1178,6 +1552,35 @@ mod tests {
         assert!(!transfer.positions.is_empty());
         assert!(!transfer.indices.is_empty());
         assert!(!transfer.edge_positions.is_empty());
+        assert_eq!(transfer.face_ids.len(), transfer.indices.len() / 3);
+        assert_eq!(transfer.vertex_ids.len(), transfer.positions.len() / 3);
+        assert_eq!(transfer.edge_ids.len() * 2, transfer.edge_positions.len() / 3);
+        assert_eq!(transfer.uvs.len(), transfer.positions.len() / 3 * 2);
+    }
+
+    #[test]
+    fn flip_faces_reverses_only_requested_normals() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        let before = mesh.face_normal(FaceId(0)).unwrap();
+        let edge_ids = mesh.tessellate().unwrap().edge_ids;
+        mesh.flip_faces(&[FaceId(0)]).unwrap();
+        let after = mesh.face_normal(FaceId(0)).unwrap();
+        assert!(before.dot(after) < -0.99);
+        assert_eq!(mesh.tessellate().unwrap().edge_ids, edge_ids);
+    }
+
+    #[test]
+    fn unwrap_uv_produces_bounded_coordinates() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        mesh.unwrap_uv().unwrap();
+        let transfer = mesh.tessellate().unwrap();
+        assert!(!transfer.uvs.is_empty());
+        for chunk in transfer.uvs.chunks(2) {
+            assert!(chunk[0].is_finite());
+            assert!(chunk[1].is_finite());
+            assert!(chunk[0] >= -0.01 && chunk[0] <= 1.01);
+            assert!(chunk[1] >= -0.01 && chunk[1] <= 1.01);
+        }
     }
 
     #[test]

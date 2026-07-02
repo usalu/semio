@@ -62,6 +62,7 @@ type SequenceOverlaySession = SequenceSession & {
 	setSelectionOptions(method: string, mode: string): void;
 	setGhostStep(kind: string, x: number, y: number): void;
 	clearGhostStep(): void;
+	addStepDropped(kind: string, x: number, y: number, pickedStepId?: string | null): string;
 };
 export type { DagDrawLodKind, DagReorganizeRequest };
 // #endregion 🔖WasmBridge
@@ -536,7 +537,7 @@ export function SequenceCanvas({
 
 	const commitStepDropAtClient = useCallback(
 		(clientX: number, clientY: number, kind: string) => {
-			const session = sessionRef.current;
+			const session = sessionRef.current as SequenceOverlaySession | null;
 			const host = containerRef.current ?? canvasRef.current;
 			if (!session || !host) return false;
 			const rect = host.getBoundingClientRect();
@@ -544,15 +545,16 @@ export function SequenceCanvas({
 			const sy = clientY - rect.top;
 			try {
 				const world = JSON.parse(session.worldFromScreen(sx, sy)) as { x: number; y: number };
-				const pickedId = session.pickStepIdAtScreen(sx, sy) ?? undefined;
-				const fixture = parseSequenceFixtureJson(session.fixtureJson());
-				const owner = pickedId ? fixture?.steps.find((step) => step.id === pickedId) : undefined;
-				if (owner && isControlKind(owner.kind) && !owner.collapsed) {
-					session.addStepToSlot(kind, world.x, world.y, owner.id, defaultControlSlot(owner.kind));
-				} else {
-					session.addStep(kind, world.x, world.y);
+				let pickedId: string | null = null;
+				try {
+					pickedId = session.pickStepIdAtScreen(sx, sy) ?? null;
+				} catch {
+					pickedId = null;
 				}
+				const id = session.addStepDropped(kind, world.x, world.y, pickedId);
 				sequencePaletteDropCommittedRef.current = true;
+				lastSelectionRef.current = id;
+				onSelectionChangeRef.current?.([id]);
 				emitFixtureChange();
 				renderFrame();
 				return true;
@@ -790,16 +792,24 @@ export function SequenceCanvas({
 		const session = sessionRef.current;
 		if (!session) return;
 		const nextFixture = fixtureJson ?? sequenceFixtureToJson(DEFAULT_SEQUENCE_FIXTURE);
+		const canonicalNext = (() => {
+			const parsed = parseSequenceFixtureJson(nextFixture);
+			return parsed ? sequenceFixtureToJson(parsed) : nextFixture;
+		})();
 		try {
-			if (session.fixtureJson() !== nextFixture) {
-				session.loadFixtureJson(nextFixture);
-				lastFixtureJsonRef.current = nextFixture;
-				syncCompiledText();
-				renderFrame();
-			}
+			const currentJson = session.fixtureJson();
+			const canonicalCurrent = (() => {
+				const parsed = parseSequenceFixtureJson(currentJson);
+				return parsed ? sequenceFixtureToJson(parsed) : currentJson;
+			})();
+			if (canonicalCurrent === canonicalNext) return;
+			session.loadFixtureJson(nextFixture);
+			lastFixtureJsonRef.current = canonicalNext;
+			syncCompiledText();
+			renderFrame();
 		} catch {
 			session.loadFixtureJson(nextFixture);
-			lastFixtureJsonRef.current = nextFixture;
+			lastFixtureJsonRef.current = canonicalNext;
 			syncCompiledText();
 			renderFrame();
 		}

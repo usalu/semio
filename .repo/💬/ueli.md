@@ -425,7 +425,7 @@ Something in the repo is spuriously stashing.
 It creates messages that have partially the commit sha and the commit message e.g. `5a1a2ef1e 16`
 This MUST NOT happen.
 
-## 🖱️ui
+## ui
 
 ###
 

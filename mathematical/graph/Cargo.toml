@@ -11,6 +11,7 @@ path = "lib.rs"
 [dependencies]
 ui_styling = { path = "../../ui/styling/rs" }
 mathematical_core = { path = "../core" }
+mathematical_graph_manifest = { path = "manifest" }
 infinite_cavas = { path = "../../infinite/cavas/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

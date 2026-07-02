@@ -127,6 +127,7 @@ export const TEXT_MODULE_CATALOGUE_SECTION: ImperativeCatalogueSection = {
 			inputs: [
 				{ name: "left", code: "S" },
 				{ name: "right", code: "S" },
+				{ name: "into", code: "S" },
 			],
 		},
 		{
@@ -136,7 +137,10 @@ export const TEXT_MODULE_CATALOGUE_SECTION: ImperativeCatalogueSection = {
 			icon: "emoji:📝",
 			summary: "Uppercases a string.",
 			module: "text",
-			inputs: [{ name: "text", code: "S" }],
+			inputs: [
+				{ name: "text", code: "S" },
+				{ name: "into", code: "S" },
+			],
 		},
 		{
 			kind: "text.length",
@@ -145,7 +149,10 @@ export const TEXT_MODULE_CATALOGUE_SECTION: ImperativeCatalogueSection = {
 			icon: "emoji:📝",
 			summary: "Returns the character length of a string.",
 			module: "text",
-			inputs: [{ name: "text", code: "S" }],
+			inputs: [
+				{ name: "text", code: "S" },
+				{ name: "into", code: "S" },
+			],
 		},
 	],
 };

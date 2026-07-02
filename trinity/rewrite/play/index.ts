@@ -29,7 +29,7 @@ import {
 } from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import { createWriterDocument, jackSymbolAtOffset, jackVariableOccurrences, type WriterDocumentV1 } from "@semio-tech/writer-core";
-import type { Puzzle2dFixtureV1, Puzzle2dPreselectSnapshot } from "@semio-tech/puzzle-2d-react";
+import type { Puzzle2dFixture, Puzzle2dPreselectSnapshot } from "@semio-tech/puzzle-2d-react";
 import {
   REWRITE_DEFAULT_LHS_FIXTURE,
   REWRITE_DEFAULT_LHS_FIXTURE_JSON,
@@ -244,8 +244,8 @@ export function registerTrinityRewritePlayDeclarativeBodies(): void {
 export class TrinityRewritePlayController extends Controller {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
   private beforeFixtureJson = TRINITY_DEFAULT_FIXTURE_JSON;
-  private lhsFixture: Puzzle2dFixtureV1 = REWRITE_DEFAULT_LHS_FIXTURE;
-  private rhsFixture: Puzzle2dFixtureV1 = REWRITE_DEFAULT_RHS_FIXTURE;
+  private lhsFixture: Puzzle2dFixture = REWRITE_DEFAULT_LHS_FIXTURE;
+  private rhsFixture: Puzzle2dFixture = REWRITE_DEFAULT_RHS_FIXTURE;
   private parameterValues: FormValues = parameterDefaultValues(parseRhsParameters(TRINITY_REWRITE_PLAY_DEFAULT_RHS_JSON));
   private jackQueryText = "";
   private afterFixtureJson = TRINITY_DEFAULT_FIXTURE_JSON;

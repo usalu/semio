@@ -17,7 +17,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
     handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
-    normalize_selection_mode, pick_merge_mode_for_modifiers, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveTool, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
+    normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, property_bag_to_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveTool, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
     EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate,
     NodeShape, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
 };
@@ -3398,6 +3398,7 @@ impl BoardHost {
                     edge_kind: String::new(),
                     source_tip: None,
                     target_tip: None,
+                    properties: w.properties.clone(),
                 });
             }
             _ => return None,
@@ -3738,6 +3739,7 @@ impl BoardHost {
                 NodeShape::Rectangle => (0.0, n.width.unwrap_or(0.0), n.height.unwrap_or(0.0)),
             };
             let node_kind = n.node_kind.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default();
+            let properties = n.user_data.as_ref().map(property_bag_from_json).unwrap_or_default();
             self.nodes.insert(
                 n.id.clone(),
                 NodeData {
@@ -3758,6 +3760,7 @@ impl BoardHost {
                     text: n.text.clone(),
                     icon_kind: n.icon_kind.clone(),
                     node_kind,
+                    properties,
                 },
             );
         }
@@ -3768,6 +3771,7 @@ impl BoardHost {
                 Some(s) => Some(Self::parse_css_color(s).ok_or_else(|| format!("invalid color on handle {}: {s:?}", h.id))?),
             };
             let icon_kind = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
+            let properties = h.user_data.as_ref().map(property_bag_from_json).unwrap_or_default();
             self.handles.insert(
                 h.id.clone(),
                 HandleData {
@@ -3783,6 +3787,7 @@ impl BoardHost {
                     handle_kind: kind,
                     color_fill,
                     icon_kind,
+                    properties,
                 },
             );
         }
@@ -3791,6 +3796,7 @@ impl BoardHost {
             let edge_kind = e.edge_kind.as_ref().map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).unwrap_or_default();
             let source_tip = Self::parse_catalog_tip_slot(e.source_tip.as_deref());
             let target_tip = Self::parse_catalog_tip_slot(e.target_tip.as_deref());
+            let properties = e.user_data.as_ref().map(property_bag_from_json).unwrap_or_default();
             self.edges.insert(
                 e.id.clone(),
                 EdgeData {
@@ -3804,6 +3810,7 @@ impl BoardHost {
                     edge_kind,
                     source_tip,
                     target_tip,
+                    properties,
                 },
             );
             if !existed {
@@ -3836,9 +3843,10 @@ impl BoardHost {
                 .filter(|s| !s.is_empty())
                 .or_else(|| self.handles.get(w.source.as_str()).map(|h| self.resolve_default_wire_kind_for_handle(h)))
                 .unwrap_or_else(|| DEFAULT_WIRE_KIND_ID.to_string());
+            let properties = w.user_data.as_ref().map(property_bag_from_json).unwrap_or_default();
             self.wires.insert(
                 w.id.clone(),
-                WireData { id: w.id.clone(), source: w.source.clone(), target, end_x, end_y, selected: w.selected.unwrap_or(false), visible: w.visible.unwrap_or(true), locked: w.locked.unwrap_or(false), style: w.style.clone(), wire_kind },
+                WireData { id: w.id.clone(), source: w.source.clone(), target, end_x, end_y, selected: w.selected.unwrap_or(false), visible: w.visible.unwrap_or(true), locked: w.locked.unwrap_or(false), style: w.style.clone(), wire_kind, properties },
             );
         }
         if !self.is_preselect_active() {
@@ -5102,7 +5110,7 @@ impl BoardHost {
         };
         let edge_kind = self.default_edge_kind_for_created_link(source_row, target_row);
         self.edges
-            .insert(id.clone(), EdgeData { id: id.clone(), source: source_handle_id.to_string(), target: target_handle_id.to_string(), selected: false, visible: true, locked: false, style: None, edge_kind, source_tip: None, target_tip: None });
+            .insert(id.clone(), EdgeData { id: id.clone(), source: source_handle_id.to_string(), target: target_handle_id.to_string(), selected: false, visible: true, locked: false, style: None, edge_kind, source_tip: None, target_tip: None, properties: crate::PropertyBag::new() });
         self.push_event("edgeCreate", json!({ "id": id, "source": source_handle_id, "target": target_handle_id }));
         if let Some(name) = also_emit {
             self.push_event(name, json!({ "id": id, "source": source_handle_id, "target": target_handle_id }));

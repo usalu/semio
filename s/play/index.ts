@@ -48,7 +48,8 @@ import {
 	createPresentationDeckAppVcsHandler,
 	createPuzzle2dAppVcsHandler,
 	createPuzzle3dAppVcsHandler,
-	createPuzzle5dAppVcsHandler,
+	createCatalogueKindsAppVcsHandler,
+	createTypedAppVcsHandler,
 	StudioStore,
 	type SAppInstance,
 	type SMediaGraphNode,
@@ -60,7 +61,15 @@ import { createFormsAppVcsHandler } from "@semio-tech/forms-core";
 import { createPresentationAppVcsHandler } from "@semio-tech/framework-presentation-core";
 import { createRasterAppVcsHandler } from "@semio-tech/raster-core";
 import { createWriterAppVcsHandler } from "@semio-tech/writer-core";
-import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
+import { DEFAULT_SHOOTING_FIXTURE, type ShootingFixture } from "@semio-tech/shooting-react";
+import {
+	parseModel,
+	project2d,
+	project3d,
+	puzzle5dDefaultManifestCatalogBundle,
+	type KindCatalogBundle,
+	type Model,
+} from "@semio-tech/puzzle-5d-react";
 import { S_PLAY_FIXTURE_DEFAULT_ID, resolveSPlayFixtureSlug } from "./fixture-slugs.ts";
 
 export const S_PLAY_APP_ID = "s-play";
@@ -115,6 +124,46 @@ export const S_PLAY_FIXTURE_OPTIONS = Object.keys(S_PLAY_FIXTURE_JSON_BY_ID)
 	.sort()
 	.map((id) => ({ id, label: id }));
 
+function meshUrlFromModel(model: Model): string | null {
+	const fixture3d = project3d(model);
+	for (const object of fixture3d.objects) {
+		if (object.meshUrl) return object.meshUrl;
+	}
+	return null;
+}
+
+function createSPlayPuzzle5dAppVcsHandler() {
+	return createTypedAppVcsHandler<Model, { readonly op: "setRevision"; readonly revision: number }>(
+		"puzzle.5d",
+		"puzzle.5d",
+		() => ({
+			schema: "puzzle.5d",
+			domain: "architecture",
+			camera2d: { x: 0, y: 0, zoom: 1 },
+			camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+			parts: [],
+			fasteners: [],
+		}),
+		(doc, op) => doc,
+		undefined,
+		{
+			applyInputBindings: (model, inputBindings) => {
+				const catalogue = inputBindings.catalogue as KindCatalogBundle | undefined;
+				if (!catalogue) return model;
+				return { ...model, kindCatalogs: catalogue };
+			},
+			projectOutput: (model, portId) => {
+				if (portId === "graph2d") return project2d(model);
+				if (portId === "mesh3d") {
+					const url = meshUrlFromModel(model);
+					return { url: url ?? "/mesh/base.glb" };
+				}
+				return model;
+			},
+		},
+	);
+}
+
 function registerSTechnologyAppVcsHandlers(): void {
 	registerAppVcsHandler(createDrawAppVcsHandler());
 	registerAppVcsHandler(createWriterAppVcsHandler());
@@ -124,14 +173,35 @@ function registerSTechnologyAppVcsHandlers(): void {
 	registerAppVcsHandler(createFlowDagAppVcsHandler());
 	registerAppVcsHandler(createProcedural2dAppVcsHandler());
 	registerAppVcsHandler(createProcedural3dAppVcsHandler());
-	registerAppVcsHandler(createShootingAppVcsHandler());
+	registerAppVcsHandler(
+		createTypedAppVcsHandler<ShootingFixture, { readonly op: "noop" }>(
+			"shooting.scene",
+			"shooting.fixture",
+			() => DEFAULT_SHOOTING_FIXTURE,
+			(fixture) => fixture,
+			undefined,
+			{
+				applyInputBindings: (fixture, inputBindings) => {
+					const mesh = inputBindings.mesh as { readonly url?: string } | undefined;
+					if (!mesh?.url) return fixture;
+					const activeId = fixture.activeAssetId ?? fixture.assets[0]?.id;
+					if (!activeId) return fixture;
+					return {
+						...fixture,
+						assets: fixture.assets.map((asset) => (asset.id === activeId ? { ...asset, url: mesh.url! } : asset)),
+					};
+				},
+			},
+		),
+	);
 	registerAppVcsHandler(createTrinityGraphAppVcsHandler());
 	registerAppVcsHandler(createGisMapAppVcsHandler());
 	registerAppVcsHandler(createPresentationDeckAppVcsHandler());
 	registerAppVcsHandler(createPresentationAppVcsHandler());
 	registerAppVcsHandler(createPuzzle2dAppVcsHandler());
 	registerAppVcsHandler(createPuzzle3dAppVcsHandler());
-	registerAppVcsHandler(createPuzzle5dAppVcsHandler());
+	registerAppVcsHandler(createSPlayPuzzle5dAppVcsHandler());
+	registerAppVcsHandler(createCatalogueKindsAppVcsHandler(() => puzzle5dDefaultManifestCatalogBundle() ?? {}));
 }
 
 registerSTechnologyAppVcsHandlers();
@@ -167,6 +237,7 @@ export class SPlayController extends Controller {
 	private launcherEngagementInput = "";
 	private historyEngagementInput = "";
 	private appHostEngagementInput = "";
+	private focusedInstanceId: string | null = null;
 	private mediaGraphEngagementInput = "";
 	readonly mainMode = new ModeRuntime("main", "S", undefined);
 
@@ -176,6 +247,10 @@ export class SPlayController extends Controller {
 		const projection = this.store.projection();
 		this.activeInstanceId = projection.appInstances[0]?.id ?? null;
 		this.rebuildShellMode();
+	}
+
+	getFocusedInstanceId(): string | null {
+		return this.focusedInstanceId;
 	}
 
 	private mediaGraphMeasures(): readonly WindowMeasure[] {
@@ -197,11 +272,10 @@ export class SPlayController extends Controller {
 		return {
 			sessionActive: false,
 			input: {
-				id: "s-media-spawn",
-				value: "",
-				placeholder: "programId appId",
+				id: "s-media-catalogue-hint",
+				value: this.mediaGraphEngagementInput,
+				placeholder: "Drag apps from Catalogue workbench tab",
 				onChange: sPlayCmd("mediaGraphEngagementInput"),
-				onSubmit: sPlayCmd("mediaGraphEngagementSubmit"),
 			},
 			status: [{ id: "s-media-count", text: `${projection.mediaGraph.nodes.length} nodes · ${projection.appInstances.length} apps` }],
 		};
@@ -517,9 +591,26 @@ export class SPlayController extends Controller {
 				const programId = String(args?.programId ?? "");
 				const appId = String(args?.appId ?? "");
 				if (!programId || !appId) return;
-				this.store.dispatch({ kind: "spawnAppInstance", programId, appId, position: { x: 80, y: 80 } });
+				const position =
+					args?.position && typeof args.position === "object"
+						? { x: Number((args.position as { x?: number }).x ?? 80), y: Number((args.position as { y?: number }).y ?? 80) }
+						: { x: 80, y: 80 };
+				this.store.dispatch({ kind: "spawnAppInstance", programId, appId, position });
 				const created = this.store.projection().appInstances.at(-1);
 				if (created) this.activeInstanceId = created.id;
+				this.rebuildShellMode();
+				this.emit();
+				return;
+			}
+			case "openInstance": {
+				this.focusedInstanceId = typeof args?.instanceId === "string" ? args.instanceId : null;
+				if (this.focusedInstanceId) this.activeInstanceId = this.focusedInstanceId;
+				this.rebuildShellMode();
+				this.emit();
+				return;
+			}
+			case "closeFocusedInstance": {
+				this.focusedInstanceId = null;
 				this.rebuildShellMode();
 				this.emit();
 				return;
@@ -812,6 +903,30 @@ if (import.meta.vitest) {
 				drawInstance!.id,
 			);
 			expect(bundle?.projection).toBeTruthy();
+		});
+
+		it("openInstance and closeFocusedInstance toggle drill-in focus", () => {
+			const runtime = createProductPlaygroundPlatform("s-test");
+			const ctrl = new SPlayController(runtime.commandBus, () => runtime.notify());
+			ctrl.run("setActiveFixture", { fixtureId: "demo" });
+			const instanceId = ctrl.getStore().projection().appInstances[0]?.id;
+			expect(instanceId).toBeTruthy();
+			ctrl.run("openInstance", { instanceId });
+			expect(ctrl.getFocusedInstanceId()).toBe(instanceId);
+			ctrl.run("closeFocusedInstance");
+			expect(ctrl.getFocusedInstanceId()).toBeNull();
+		});
+
+		it("spawns puzzle5d and shooting with multi-port registrations", () => {
+			const runtime = createProductPlaygroundPlatform("s-test");
+			const ctrl = new SPlayController(runtime.commandBus, () => runtime.notify());
+			ctrl.run("spawnApp", { programId: "puzzle.5d", appId: "puzzle5d", position: { x: 100, y: 100 } });
+			ctrl.run("spawnApp", { programId: "shooting", appId: "shooting", position: { x: 300, y: 100 } });
+			const projection = ctrl.getStore().projection();
+			const puzzleNode = projection.mediaGraph.nodes.find((node) => node.instanceId === projection.appInstances.at(-2)?.id);
+			const shootingNode = projection.mediaGraph.nodes.find((node) => node.instanceId === projection.appInstances.at(-1)?.id);
+			expect(puzzleNode?.outputs.length).toBe(2);
+			expect(shootingNode?.inputs.length).toBe(1);
 		});
 
 		it("buildSPlayInspectorTree exposes batch label editing for selected instances", () => {

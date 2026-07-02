@@ -102,6 +102,15 @@ if (import.meta.vitest) {
 	});
 }
 
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for imperative. */
+export function buildImperativeProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("imperative", "Imperative", "imperative", "Imperative", IMPERATIVE_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
+
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && import.meta.env.PUZZLE_PLAY_ENTRY === "imperative") {
 	bootstrapElementsSurfaceChromeDocument("system");
 	void (async () => {

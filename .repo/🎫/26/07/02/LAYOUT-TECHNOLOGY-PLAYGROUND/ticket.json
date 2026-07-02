@@ -1,8 +1,9 @@
 {
   "title": "Layout Technology Playground",
   "emoji": "📄",
-  "status": "open",
+  "status": "closed",
   "description": "Build layout technology: document model, WebGPU engine, 2-window playground, preflight, export/package.",
+  "summary": "Built the full `layout` technology: TS document model (`layout/core`) with commands/undo, parent-page inheritance, style cascade, snap, linked-asset states, and preflight validators; Rust/WASM engine (`layout/rs`) with Parley+Swash text shaping, display list, blueprint/preview GPU render via infinite/cavas, hit testing, and PNG/SVG/PDF/package export; React bindings (`layout/react`); 2-window playground (`layout/play`) on framework playground shell with hierarchy/preflight/inspector panels and export toolbar; framework renderer `LayoutPlayHost` integration; vite aliases, launch.json `🛠️dev📄layout` on port 6079; sample fixture/manifest. All layout tests pass (core 8, react 2, play 4, rust 3); production build succeeds with layout_rs wasm bundle.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1792"
   },
@@ -10,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "909ea83f",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/layout_technology_playground_909ea83f.plan.md"
+    "local": "layout_technology_playground_909ea83f.plan.md"
   },
   "sessions": [
     "⚪4c517ff9f4cb4294b8331ff8658fd0c5"

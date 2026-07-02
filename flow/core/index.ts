@@ -54,3 +54,12 @@ export function createFlowAppVcsHandler() {
 	};
 }
 //#endregion 🔖DocumentVcs
+
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for flow. */
+export function buildFlowProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("flow", "Flow", "flow", "Flow", "flow-play");
+}
+//#endregion 🔖SExtension

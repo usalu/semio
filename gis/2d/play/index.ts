@@ -1444,6 +1444,15 @@ export class PlaygroundMap extends Playground {
   }
 }
 
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for gis map. */
+export function buildGisMapProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("gis.map", "GIS Map", "map", "Map", GIS_MAP_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
+
 if (
   typeof document !== "undefined" &&
   document.getElementById("root") != null &&

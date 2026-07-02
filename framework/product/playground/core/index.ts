@@ -171,6 +171,7 @@ import {
   buildWriterWindowBody,
   buildEditorWindowBody,
   buildTableWindowBody,
+  JackHoverBridge,
   isCanvasOnlyWindowBody,
 } from "@semio-tech/framework-platform-core";
 
@@ -196,6 +197,7 @@ export {
   buildEditorWindowBody,
   buildTableWindowBody,
   buildPanelWindowBody,
+  JackHoverBridge,
   isCanvasOnlyWindowBody,
   isEdgelessWindowBody,
 } from "@semio-tech/framework-platform-core";

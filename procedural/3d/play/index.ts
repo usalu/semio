@@ -2663,6 +2663,15 @@ if (import.meta.vitest) {
 }
 // #endregion 🧪Tests
 
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for procedural 3d. */
+export function buildProcedural3dProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("procedural.3d", "Procedural 3D", "procedural3d", "Procedural 3D", PROCEDURAL_3D_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
+
 // #region 🔖Boot
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && import.meta.env.PUZZLE_PLAY_ENTRY === "procedural-3d") {
 	bootstrapElementsSurfaceChromeDocument("system");

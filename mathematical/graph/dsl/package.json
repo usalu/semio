@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/graph-dsl",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "nx run @semio-tech/graph-dsl:test"
+  }
+}

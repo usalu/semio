@@ -379,12 +379,14 @@ export interface DagCanvasProps {
   readonly className?: string;
   readonly reorganize?: DagReorganizeRequest;
   readonly onFixtureChange?: (fixtureJson: string) => void;
+  readonly onSessionReady?: (session: DagSession) => void;
+  readonly onAfterPointerUp?: () => void;
   readonly automaticLod?: boolean;
   readonly lod?: DagDrawLodKind;
   readonly onLodChange?: (lod: DagDrawLodKind) => void;
 }
 
-export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange, automaticLod = true, lod, onLodChange }: DagCanvasProps): React.JSX.Element {
+export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange, onSessionReady, onAfterPointerUp, automaticLod = true, lod, onLodChange }: DagCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -392,6 +394,8 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange,
   const overlayElementsRef = useRef(new Map<string, HTMLElement>());
   const rafRef = useRef<number | null>(null);
   const onFixtureChangeRef = useRef(onFixtureChange);
+  const onSessionReadyRef = useRef(onSessionReady);
+  const onAfterPointerUpRef = useRef(onAfterPointerUp);
   const onLodChangeRef = useRef(onLodChange);
   const lastAutomaticLodRef = useRef<boolean | null>(null);
   const lastForcedLodRef = useRef<string | null>(null);
@@ -457,6 +461,14 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange,
   }, [onFixtureChange]);
 
   useEffect(() => {
+    onSessionReadyRef.current = onSessionReady;
+  }, [onSessionReady]);
+
+  useEffect(() => {
+    onAfterPointerUpRef.current = onAfterPointerUp;
+  }, [onAfterPointerUp]);
+
+  useEffect(() => {
     onLodChangeRef.current = onLodChange;
   }, [onLodChange]);
 
@@ -485,6 +497,7 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange,
     if (!canvas || !container) return;
     const session = new DagSession();
     sessionRef.current = session;
+    onSessionReadyRef.current?.(session);
     const json = fixtureJson ?? dagFixtureToJson(DAG_DEFAULT_FIXTURE);
     session.loadFixtureJson(json);
     console.log("[DEBUG] dag canvas loaded fixture");
@@ -534,6 +547,7 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange,
         const sx = ev.clientX - r.left;
         const sy = ev.clientY - r.top;
         session.pointerUp(sx, sy);
+        onAfterPointerUpRef.current?.();
         try {
           console.log("[DEBUG] dag fixture after pointer:", session.fixtureJson());
         } catch {

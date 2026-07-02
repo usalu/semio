@@ -552,8 +552,25 @@ pub use scene_json::{board_json_locked_option, board_json_visible_option, board_
 
 pub use infinite_cavas as cavas;
 pub use mathematical_core::{self as core, Directed, Directedness, Edge as CoreEdge, EdgeId, HandleId, NodeId, Normal, PortModel, Ported, Undirected};
+pub use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 
 pub use core::orient_endpoints;
+
+// #region 🔖PropertyJson
+/// 🧾 Converts JSON fixture `userData` into a typed property bag.
+pub fn property_bag_from_json(value: &serde_json::Value) -> PropertyBag {
+    serde_json::from_value(value.clone()).unwrap_or_default()
+}
+
+/// 🧾 Serializes a property bag back to JSON for fixture export.
+pub fn property_bag_to_json(bag: &PropertyBag) -> Option<serde_json::Value> {
+    if bag.is_empty() {
+        None
+    } else {
+        serde_json::to_value(bag).ok()
+    }
+}
+// #endregion 🔖PropertyJson
 
 // #region 🔖GraphExtension
 /// 🧩 Extension hook for domain-specific graph behavior.
@@ -596,6 +613,13 @@ pub enum HandleRole {
     Any,
 }
 
+/// 🏷️ Semantic kind and property payload shared by graph elements.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ElementSemantics {
+    pub kind: Option<String>,
+    pub properties: PropertyBag,
+}
+
 /// 🟠 Retained node state with world-space center and shape extents.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Node {
@@ -606,6 +630,9 @@ pub struct Node {
     pub height: f64,
     pub shape: NodeShape,
     pub draggable: bool,
+    pub kind: Option<String>,
+    pub label: Option<String>,
+    pub properties: PropertyBag,
 }
 
 /// 🟣 Tangent handle anchored to a node at a polar angle.
@@ -616,6 +643,8 @@ pub struct Handle {
     pub node_id: NodeId,
     pub radius: f64,
     pub role: HandleRole,
+    pub kind: Option<String>,
+    pub properties: PropertyBag,
 }
 
 /// 🪢 Retained edge with typed endpoints.
@@ -960,6 +989,7 @@ impl Default for EngineSelectionOptions {
 pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     pub camera: Camera,
     pub edges: BTreeMap<EdgeId, GraphEdge<P::Endpoint>>,
+    pub edge_semantics: BTreeMap<EdgeId, ElementSemantics>,
     pub enforce_acyclic: bool,
     pub events: Vec<BoardEvent>,
     pub handles: BTreeMap<HandleId, Handle>,
@@ -990,6 +1020,7 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
         Self {
             camera: Camera::default(),
             edges: BTreeMap::new(),
+            edge_semantics: BTreeMap::new(),
             enforce_acyclic: false,
             events: Vec::new(),
             handles: BTreeMap::new(),
@@ -1027,13 +1058,41 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     pub fn create_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64, draggable: bool) {
-        self.nodes.insert(id, Node { center: Point::new(x, y), draggable, height: radius * 2.0, id, radius, shape: NodeShape::Circle, width: radius * 2.0 });
+        self.nodes.insert(
+            id,
+            Node {
+                center: Point::new(x, y),
+                draggable,
+                height: radius * 2.0,
+                id,
+                radius,
+                shape: NodeShape::Circle,
+                width: radius * 2.0,
+                kind: None,
+                label: None,
+                properties: PropertyBag::new(),
+            },
+        );
     }
 
     pub fn create_rect_node(&mut self, id: NodeId, x: f64, y: f64, width: f64, height: f64, draggable: bool) {
         let hw = width * 0.5;
         let hh = height * 0.5;
-        self.nodes.insert(id, Node { center: Point::new(x, y), draggable, height, id, radius: hw.max(hh).max(ui_styling::radii::NODE_MIN), shape: NodeShape::Rectangle, width });
+        self.nodes.insert(
+            id,
+            Node {
+                center: Point::new(x, y),
+                draggable,
+                height,
+                id,
+                radius: hw.max(hh).max(ui_styling::radii::NODE_MIN),
+                shape: NodeShape::Rectangle,
+                width,
+                kind: None,
+                label: None,
+                properties: PropertyBag::new(),
+            },
+        );
     }
 
     pub fn update_node(&mut self, id: NodeId, x: f64, y: f64, radius: f64) {
@@ -1071,7 +1130,18 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn create_handle(&mut self, id: HandleId, node_id: NodeId, angle: f64) {
         if P::HAS_PORTS {
-            self.handles.insert(id, Handle { angle, id, node_id, radius: ui_styling::radii::HANDLE_DEFAULT, role: HandleRole::Any });
+            self.handles.insert(
+                id,
+                Handle {
+                    angle,
+                    id,
+                    node_id,
+                    radius: ui_styling::radii::HANDLE_DEFAULT,
+                    role: HandleRole::Any,
+                    kind: None,
+                    properties: PropertyBag::new(),
+                },
+            );
         }
     }
 
@@ -1091,9 +1161,14 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
 
     pub fn remove_edge(&mut self, id: EdgeId) {
         if self.edges.remove(&id).is_some() {
+            self.edge_semantics.remove(&id);
             self.selection.edge_ids.remove(&id);
             self.events.push(BoardEvent::EdgeRemoved { id });
         }
+    }
+
+    pub fn set_edge_semantics(&mut self, id: EdgeId, kind: Option<String>, properties: PropertyBag) {
+        self.edge_semantics.insert(id, ElementSemantics { kind, properties });
     }
 
     pub fn set_selection_options(&mut self, method: &str, mode: &str, select_nodes: bool, select_handles: bool, select_edges: bool) {

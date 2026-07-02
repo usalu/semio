@@ -6595,6 +6595,7 @@ import {
     FLOW_PLAY_INSPECTION_TAB_ID,
     FLOW_PLAY_SURFACE_ID,
     FLOW_PLAY_SURFACE_ID_GENERATE,
+    FLOW_PLAY_SURFACE_ID_JACK,
     FLOW_PLAY_WINDOW_KIND_ID,
     FlowPlayController,
     buildFlowPlayCanvasContextMenu,
@@ -6614,6 +6615,8 @@ import {
 import { FlowGenerateSurface } from "@semio-tech/forms-react";
 import { parseFormSpec } from "@semio-tech/forms-core";
 import type { UiFlowHostSurfaceNode, UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
 
 let flowPlayChromeRegistered = false;
 const flowPlayControllerRef: { current: FlowPlayController | null } = { current: null };
@@ -6729,6 +6732,31 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
   );
 }
 
+function FlowPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = useFlowPlayController();
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
+  const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "flow-jack", languageId: "jack", text: "" });
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    flowPlayControllerRef.current?.run("setJackHover", { offset });
+  }, []);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    flowPlayControllerRef.current?.run("setJackSelect", range);
+  }, []);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={ctrl?.getJackHoverOccurrences()}
+      externalHoverOccurrencesSignal={ctrl?.getHoverEpoch()}
+      externalSelectionOccurrences={ctrl?.getJackSelectOccurrences()}
+      externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
+    />
+  );
+}
+
 class FlowPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
@@ -6832,6 +6860,7 @@ export function registerFlowPlaySurfaceHosts(): void {
   flowPlayChromeRegistered = true;
   registerUiFlowSurfaceHost(FLOW_PLAY_SURFACE_ID, FlowPlayPaneSurfaceHost);
   registerUiFormsSurfaceHost(FLOW_PLAY_SURFACE_ID_GENERATE, FlowPlayGenerateSurfaceHost);
+  registerUiWriterSurfaceHost(FLOW_PLAY_SURFACE_ID_JACK, FlowPlayJackSurfaceHost);
   registerFlowPlayDeclarativeBodies();
 }
 
@@ -6861,6 +6890,7 @@ import {
     DAG_PLAY_HIERARCHY_TAB_ID,
     DAG_PLAY_INSPECTION_TAB_ID,
     DAG_PLAY_SURFACE_ID,
+    DAG_PLAY_SURFACE_ID_JACK,
     DAG_PLAY_WINDOW_KIND_ID,
     DagPlayController,
     buildDagPlayCatalogueTree,
@@ -6870,6 +6900,8 @@ import {
 } from "@semio-tech/dag-play";
 import { DAG_LOD_MODE_AUTOMATIC as DAG_HOST_LOD_AUTOMATIC, DagCanvas } from "@semio-tech/dag-react";
 import type { UiDagHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
 
 let dagPlayChromeRegistered = false;
 const dagPlayControllerRef: { current: DagPlayController | null } = { current: null };
@@ -6932,10 +6964,36 @@ function DagPlayPaneSurfaceHost({ node }: { readonly node: UiDagHostSurfaceNode 
   );
 }
 
+function DagPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = useDagPlayController();
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
+  const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "dag-jack", languageId: "jack", text: "" });
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    dagPlayControllerRef.current?.run("setJackHover", { offset });
+  }, []);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    dagPlayControllerRef.current?.run("setJackSelect", range);
+  }, []);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={ctrl?.getJackHoverOccurrences()}
+      externalHoverOccurrencesSignal={ctrl?.getHoverEpoch()}
+      externalSelectionOccurrences={ctrl?.getJackSelectOccurrences()}
+      externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
+    />
+  );
+}
+
 export function registerDagPlaySurfaceHosts(): void {
   if (dagPlayChromeRegistered) return;
   dagPlayChromeRegistered = true;
   registerUiDagSurfaceHost(DAG_PLAY_SURFACE_ID, DagPlayPaneSurfaceHost);
+  registerUiWriterSurfaceHost(DAG_PLAY_SURFACE_ID_JACK, DagPlayJackSurfaceHost);
   registerDagPlayDeclarativeBodies();
 }
 
@@ -7106,6 +7164,7 @@ import {
   SEQUENCE_PLAY_SCRIPT_SURFACE_ID,
   SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID,
   SEQUENCE_PLAY_SURFACE_ID,
+  SEQUENCE_PLAY_SURFACE_ID_JACK,
   SEQUENCE_PLAY_WINDOW_KIND_ID,
   SequencePlayController,
   buildSequencePlayCatalogueTree,
@@ -7223,11 +7282,37 @@ function SequencePlayScriptSurfaceHost({ node: _node }: { readonly node: import(
   return <WriterCanvas document={document} className="h-full min-h-0" />;
 }
 
+function SequencePlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = useSequencePlayController();
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
+  const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "sequence-jack", languageId: "jack", text: "" });
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    sequencePlayControllerRef.current?.run("setJackHover", { offset });
+  }, []);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    sequencePlayControllerRef.current?.run("setJackSelect", range);
+  }, []);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={ctrl?.getJackHoverOccurrences()}
+      externalHoverOccurrencesSignal={ctrl?.getHoverEpoch()}
+      externalSelectionOccurrences={ctrl?.getJackSelectOccurrences()}
+      externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
+    />
+  );
+}
+
 export function registerSequencePlaySurfaceHosts(): void {
   if (sequencePlayChromeRegistered) return;
   sequencePlayChromeRegistered = true;
   registerUiSequenceSurfaceHost(SEQUENCE_PLAY_SURFACE_ID, SequencePlayPaneSurfaceHost);
   registerUiWriterSurfaceHost(SEQUENCE_PLAY_SCRIPT_SURFACE_ID, SequencePlayScriptSurfaceHost);
+  registerUiWriterSurfaceHost(SEQUENCE_PLAY_SURFACE_ID_JACK, SequencePlayJackSurfaceHost);
   registerSequencePlayDeclarativeBodies();
 }
 
@@ -7497,24 +7582,27 @@ import {
   LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON,
   LOWPOLY_PLAY_HIERARCHY_TAB_ID,
   LOWPOLY_PLAY_INSPECTION_TAB_ID,
+  LOWPOLY_PLAY_LAYERS_TAB_ID,
   LOWPOLY_PLAY_SURFACE_ID,
+  LOWPOLY_PLAY_UV_SURFACE_ID,
   LOWPOLY_PLAY_WINDOW_KIND_ID,
   LowpolyPlayController,
   buildLowpolyPlayCatalogueTree,
   buildLowpolyPlayHierarchyTree,
   buildLowpolyPlayInspectorTree,
+  buildLowpolyPlayLayersTree,
   registerLowpolyPlayDeclarativeBodies,
 } from "@semio-tech/lowpoly-play";
 import {
   LowpolyCanvas,
+  LowpolyUvCanvas,
   createLowpolySession,
   loadDefaultLowpolyFixtureJson,
   safeLoadLowpolyFixture,
-  tessellateLowpolySession,
+  tessellateAllLowpolySession,
   type LowpolySessionWasm,
 } from "@semio-tech/lowpoly-react";
-import { isLowpolyFixtureReady, parseLowpolyFixtureJson } from "@semio-tech/lowpoly-core";
-import type { LowpolyTessellation } from "@semio-tech/lowpoly-core";
+import { isLowpolyFixtureReady, parseLowpolyFixtureJson, type LowpolySceneObject } from "@semio-tech/lowpoly-core";
 
 let lowpolyPlayChromeRegistered = false;
 const lowpolyPlayControllerRef: { current: LowpolyPlayController | null } = { current: null };
@@ -7549,6 +7637,18 @@ function useLowpolyPlayInteractionRevision(runtime: Platform): number {
   );
 }
 
+function useLowpolyPlayHoverTarget(runtime: Platform): import("@semio-tech/lowpoly-core").LowpolyTarget | null {
+	return reactHostPort.useSyncExternalStore(
+		(listener) => {
+			const ctrl = runtime.getActiveApp()?.controller as LowpolyPlayController | undefined;
+			lowpolyPlayControllerRef.current = ctrl ?? null;
+			return ctrl?.subscribeHover(listener) ?? (() => {});
+		},
+		() => (runtime.getActiveApp()?.controller as LowpolyPlayController | undefined)?.getHoveredTargetSnapshot() ?? null,
+		() => null,
+	);
+}
+
 function syncLowpolyControllerFromSession(ctrl: LowpolyPlayController, session: LowpolySessionWasm): void {
   const json = session.fixtureJson();
   ctrl.run("setFixtureJson", { json });
@@ -7565,8 +7665,10 @@ function lowpolyMirrorAxis(toolParams: Record<string, number>): string {
 
 function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSurfaceNode }): ReactElement {
   const ctrl = useLowpolyPlayController();
+  const { activeModeId, runtime } = useApp();
+  const hoveredTarget = useLowpolyPlayHoverTarget(runtime);
   const [session, setSession] = reactHostPort.useState<LowpolySessionWasm | null>(null);
-  const [tessellation, setTessellation] = reactHostPort.useState<LowpolyTessellation | null>(null);
+  const [sceneObjects, setSceneObjects] = reactHostPort.useState<readonly LowpolySceneObject[]>([]);
   const meshEpoch = ctrl?.getMeshCommandEpoch() ?? 0;
   const toolParams = ctrl?.getToolParams() ?? {};
   const controllerFixtureJson = ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
@@ -7574,6 +7676,9 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
     session && isLowpolyFixtureReady(controllerFixtureJson)
       ? controllerFixtureJson
       : session?.fixtureJson() ?? controllerFixtureJson;
+  const interactionMode = activeModeId === "paint" ? "paint" : "model";
+  const paintStrokeBeforeRef = reactHostPort.useRef<Uint8Array | null>(null);
+  const activeObjectId = sceneObjects.find((object) => object.active)?.id;
 
   reactHostPort.useEffect(() => {
     let cancelled = false;
@@ -7589,7 +7694,7 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
         if (ctrl) syncLowpolyControllerFromSession(ctrl, s);
       }
       setSession(s);
-      setTessellation(tessellateLowpolySession(s));
+      setSceneObjects(tessellateAllLowpolySession(s));
     })();
     return () => {
       cancelled = true;
@@ -7602,19 +7707,27 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
     if (!isLowpolyFixtureReady(json)) return;
     safeLoadLowpolyFixture(session, json);
     session.setSelection(ctrl.getSelectionMode(), [...ctrl.getSelectedIds()]);
-    setTessellation(tessellateLowpolySession(session));
+    setSceneObjects(tessellateAllLowpolySession(session));
   }, [session, ctrl, ctrl?.getFixtureJson(), ctrl?.getSelectionMode(), ctrl?.getSelectedIds()]);
 
   reactHostPort.useEffect(() => {
     if (!session || !ctrl || meshEpoch === 0) return;
     const pending = ctrl.getPendingMeshCommand();
-    if (!pending) return;
+    const paintPending = ctrl.getPendingPaintCommand();
+    if (!pending && !paintPending) return;
     try {
-      if (pending.startsWith("addPrimitive:")) {
+      if (pending?.startsWith("addPrimitive:")) {
         const kind = pending.slice("addPrimitive:".length);
         session.addPrimitive(kind);
+      } else if (pending?.startsWith("flipFace:")) {
+        const [, objectId, faceId] = pending.split(":");
+        if (objectId && faceId != null) {
+          session.setActiveObject(objectId);
+          session.flipFaces([Number(faceId)]);
+        }
       } else if (pending === "extrude") session.extrudeFaces(toolParams.extrudeDistance ?? 0.25);
       else if (pending === "inset") session.insetFaces(toolParams.insetAmount ?? 0.1);
+      else if (pending === "flipFaces") session.flipFaces([...ctrl.getSelectedIds()]);
       else if (pending === "bevel") session.bevelEdges(toolParams.bevelAmount ?? 0.05, toolParams.bevelSegments ?? 1);
       else if (pending === "loopCut") session.loopCut(toolParams.loopCuts ?? 1);
       else if (pending === "merge") session.mergeVertices();
@@ -7625,12 +7738,17 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
       else if (pending === "decimate") session.decimate(toolParams.decimateRatio ?? 0.5);
       else if (pending === "snap") session.snapToGrid(toolParams.snapGrid ?? 0.25);
       else if (pending === "toggleSmooth") session.setSmoothShading(!ctrl.getSmoothShading());
+      else if (paintPending?.command === "unwrapActive") session.unwrapActive();
+      else if (paintPending?.command === "markUvSeam") {
+        session.markUvSeam(Boolean(paintPending.args?.seam), [...ctrl.getSelectedIds()]);
+      }
       syncLowpolyControllerFromSession(ctrl, session);
-      setTessellation(tessellateLowpolySession(session));
+      setSceneObjects(tessellateAllLowpolySession(session));
     } catch {
       /* mesh command may fail on empty selection */
     } finally {
       ctrl.clearPendingMeshCommand();
+      ctrl.clearPendingPaintCommand();
     }
   }, [meshEpoch, session, ctrl, toolParams]);
 
@@ -7641,27 +7759,126 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
     [ctrl],
   );
   const onSelectionChange = reactHostPort.useCallback(
-    (mode: import("@semio-tech/lowpoly-core").LowpolySelectionMode, ids: readonly number[]) => {
-      ctrl?.run("setSelection", { mode, ids: [...ids] });
+    (mode: import("@semio-tech/lowpoly-core").LowpolySelectionMode, ids: readonly number[], activeObjectId?: string) => {
+      if (activeObjectId && session) {
+        session.setActiveObject(activeObjectId);
+      }
+      ctrl?.run("setSelection", { mode, ids: [...ids], activeObjectId });
     },
-    [ctrl],
+    [ctrl, session],
   );
-  const onTessellationChange = reactHostPort.useCallback((tess: LowpolyTessellation) => {
-    setTessellation(tess);
-  }, []);
+  const onPaintStrokeBegin = reactHostPort.useCallback(() => {
+    if (!session || !activeObjectId) return;
+    const layerIndex = ctrl?.getActivePaintLayerIndex() ?? 0;
+    paintStrokeBeforeRef.current = new Uint8Array(session.paintLayerPixels(activeObjectId, layerIndex));
+  }, [activeObjectId, ctrl, session]);
+
+  const onPaintStrokeEnd = reactHostPort.useCallback(() => {
+    if (!session || !ctrl || !activeObjectId) return;
+    const layerIndex = ctrl.getActivePaintLayerIndex();
+    const before = paintStrokeBeforeRef.current;
+    const after = session.paintLayerPixels(activeObjectId, layerIndex);
+    if (before) {
+      ctrl.dispatchPaintVcs({
+        kind: "apply",
+        operations: [
+          {
+            kind: "layerPixels",
+            objectId: activeObjectId,
+            layerIndex,
+            before: [...before],
+            after: [...after],
+          },
+        ],
+      });
+    }
+    paintStrokeBeforeRef.current = null;
+  }, [activeObjectId, ctrl, session]);
+
+  const paintVcsGeneration = reactHostPort.useSyncExternalStore(
+    (listener) => ctrl?.subscribePaintVcs(listener) ?? (() => {}),
+    () => ctrl?.getPaintVcsGeneration() ?? 0,
+    () => 0,
+  );
+
+  reactHostPort.useEffect(() => {
+    if (!session || !ctrl) return;
+    const projection = ctrl.getPaintProjection();
+    const expected = 1024 * 1024 * 4;
+    if (projection.pixels.length !== expected) return;
+    session.setPaintLayerPixels(projection.objectId, projection.layerIndex, new Uint8Array(projection.pixels));
+  }, [paintVcsGeneration, ctrl, session]);
 
   return (
     <div className="absolute inset-0 min-h-0 min-w-0">
       <LowpolyCanvas
         fixtureJson={fixtureJson}
+        sceneObjects={sceneObjects}
         selectionMode={ctrl?.getSelectionMode() ?? "object"}
         selectedIds={ctrl?.getSelectedIds() ?? []}
+        hoveredTarget={hoveredTarget}
         transformTool={ctrl?.getTransformTool() ?? "move"}
         session={session}
-        tessellation={tessellation}
+        interactionMode={interactionMode}
+        paintTool={ctrl?.getPaintTool() ?? "brush"}
+        paintLayerIndex={ctrl?.getActivePaintLayerIndex() ?? 0}
+        paintColor={ctrl?.getPaintColor() ?? [255, 64, 64, 255]}
+        paintBrushSize={toolParams.brushSize ?? 16}
+        paintBrushOpacity={toolParams.brushOpacity ?? 1}
+        paintBrushHardness={toolParams.brushHardness ?? 0.5}
         onFixtureChange={onFixtureChange}
         onSelectionChange={onSelectionChange}
-        onTessellationChange={onTessellationChange}
+        onHoverChange={(target) => ctrl?.run("setHover", { target })}
+        onSceneChange={(objects) => setSceneObjects(objects)}
+        onPaintStrokeBegin={onPaintStrokeBegin}
+        onPaintStrokeEnd={onPaintStrokeEnd}
+        className="h-full w-full"
+      />
+    </div>
+  );
+}
+
+function LowpolyUvSurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSurfaceNode }): ReactElement {
+  const ctrl = useLowpolyPlayController();
+  const [session, setSession] = reactHostPort.useState<LowpolySessionWasm | null>(null);
+  const [sceneObjects, setSceneObjects] = reactHostPort.useState<readonly LowpolySceneObject[]>([]);
+  const toolParams = ctrl?.getToolParams() ?? {};
+  const fixtureJson = ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
+  const activeObject = sceneObjects.find((object) => object.active) ?? sceneObjects[0] ?? null;
+
+  reactHostPort.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const s = await createLowpolySession();
+      if (cancelled) return;
+      if (isLowpolyFixtureReady(fixtureJson)) safeLoadLowpolyFixture(s, fixtureJson);
+      setSession(s);
+      setSceneObjects(tessellateAllLowpolySession(s));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  reactHostPort.useEffect(() => {
+    if (!session || !isLowpolyFixtureReady(fixtureJson)) return;
+    safeLoadLowpolyFixture(session, fixtureJson);
+    setSceneObjects(tessellateAllLowpolySession(session));
+  }, [fixtureJson, session, ctrl?.getInteractionRevision()]);
+
+  return (
+    <div className="absolute inset-0 min-h-0 min-w-0">
+      <LowpolyUvCanvas
+        sceneObject={activeObject}
+        session={session}
+        paintTool={ctrl?.getPaintTool() ?? "brush"}
+        paintLayerIndex={ctrl?.getActivePaintLayerIndex() ?? 0}
+        paintColor={ctrl?.getPaintColor() ?? [255, 64, 64, 255]}
+        paintBrushSize={toolParams.brushSize ?? 16}
+        paintBrushOpacity={toolParams.brushOpacity ?? 1}
+        paintBrushHardness={toolParams.brushHardness ?? 0.5}
+        onFixtureChange={(json) => ctrl?.run("setFixtureJson", { json })}
+        onPaintStrokeEnd={() => ctrl?.run("setFixtureJson", { json: session?.fixtureJson() ?? fixtureJson })}
         className="h-full w-full"
       />
     </div>
@@ -7672,6 +7889,7 @@ export function registerLowpolyPlaySurfaceHosts(): void {
   if (lowpolyPlayChromeRegistered) return;
   lowpolyPlayChromeRegistered = true;
   registerUiPuzzle3dSurfaceHost(LOWPOLY_PLAY_SURFACE_ID, LowpolyPlaySurfaceHost);
+  registerUiPuzzle3dSurfaceHost(LOWPOLY_PLAY_UV_SURFACE_ID, LowpolyUvSurfaceHost);
   registerLowpolyPlayDeclarativeBodies();
 }
 
@@ -7684,11 +7902,19 @@ class LowpolyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = lowpolyPlayControllerRef.current;
-        const bus = new CommandBus();
+        const bus = ctrl?.commandBus ?? new CommandBus();
         const fixture = ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
-        const selected = ctrl?.getSelectedIds()[0] ?? null;
-        const treeNode = buildLowpolyPlayHierarchyTree(fixture, selected);
-        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+        const treeNode = buildLowpolyPlayHierarchyTree(
+          fixture,
+          ctrl?.getSelectionMode() ?? "object",
+          ctrl?.getSelectedIds() ?? [],
+          {
+            hoveredTarget: ctrl?.getHoveredTarget() ?? null,
+            onHover: (target) => ctrl?.run("setHover", { target }),
+            onFlipFace: (objectId, faceId) => ctrl?.run("flipFace", { objectId, faceId }),
+          },
+        );
+        return { ...uiTreeNodeToTreePanelConfig(treeNode, bus), selectionMode: "multiple" };
       }),
     };
   }
@@ -7702,7 +7928,7 @@ class LowpolyPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
       name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
       order: 1,
       tree: new CallbackTreePanelDefinition(() => {
-        const bus = new CommandBus();
+        const bus = lowpolyPlayControllerRef.current?.commandBus ?? new CommandBus();
         const treeNode = buildLowpolyPlayCatalogueTree();
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
@@ -7719,8 +7945,25 @@ class LowpolyPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
       order: 0,
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = lowpolyPlayControllerRef.current;
-        const bus = new CommandBus();
+        const bus = ctrl?.commandBus ?? new CommandBus();
         const treeNode = buildLowpolyPlayInspectorTree(ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON, { ...(ctrl?.getToolParams() ?? {}) });
+        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+      }),
+    };
+  }
+}
+
+class LowpolyPlayLayersPanelDefinition extends PureSidePanelTabDefinition {
+  buildTab(): SidePanelTabConfig {
+    return {
+      id: LOWPOLY_PLAY_LAYERS_TAB_ID,
+      icon: shellTabIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, "details"),
+      name: "Layers",
+      order: 1,
+      tree: new CallbackTreePanelDefinition(() => {
+        const ctrl = lowpolyPlayControllerRef.current;
+        const bus = ctrl?.commandBus ?? new CommandBus();
+        const treeNode = buildLowpolyPlayLayersTree(ctrl?.getFixtureJson() ?? LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON, ctrl?.getActivePaintLayerIndex() ?? 0);
         return uiTreeNodeToTreePanelConfig(treeNode, bus);
       }),
     };
@@ -7733,12 +7976,13 @@ function LowpolyPlayInner({ runtime }: { readonly runtime: Platform }): ReactEle
   const hierarchyPanel = reactHostPort.useMemo(() => new LowpolyPlayHierarchyPanelDefinition(), []);
   const cataloguePanel = reactHostPort.useMemo(() => new LowpolyPlayCataloguePanelDefinition(), []);
   const inspectionPanel = reactHostPort.useMemo(() => new LowpolyPlayInspectionPanelDefinition(), []);
+  const layersPanel = reactHostPort.useMemo(() => new LowpolyPlayLayersPanelDefinition(), []);
   const augmentPanelTabs = reactHostPort.useMemo(
     () => ({
       workbench: [hierarchyPanel, cataloguePanel],
-      details: [inspectionPanel],
+      details: [inspectionPanel, layersPanel],
     }),
-    [interactionRevision, cataloguePanel, hierarchyPanel, inspectionPanel],
+    [interactionRevision, cataloguePanel, hierarchyPanel, inspectionPanel, layersPanel],
   );
   return <PlaygroundView runtime={runtime} defaultAppId={LOWPOLY_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
 }
@@ -11423,6 +11667,7 @@ import {
 	SProgramLauncherPanel,
 	SStudioHistoryPanel,
 	SStudioProvider,
+	buildSPlayCatalogueTree,
 } from "@semio-tech/s-react";
 import {
 	appInstanceResourceProjection,
@@ -11543,12 +11788,15 @@ function SMediaGraphSurfaceHost({ node: _node }: { readonly node: UiSHostSurface
 			instances={projection.appInstances}
 			activeInstanceId={activeInstanceId}
 			onSelectInstance={onSelect}
+			onOpenInstance={(instanceId) => sPlayControllerRef.current?.run("openInstance", { instanceId })}
 			editable
 			onMoveNode={(nodeId, x, y) => store?.dispatch({ kind: "moveMediaNode", nodeId, x, y })}
 			onConnectPorts={(sourceNodeId, sourcePortId, targetNodeId, targetPortId) =>
 				store?.dispatch({ kind: "connectMediaPorts", sourceNodeId, sourcePortId, targetNodeId, targetPortId })
 			}
+			onDisconnectEdge={(edgeId) => store?.dispatch({ kind: "disconnectMediaEdge", edgeId })}
 			onRemoveInstance={(instanceId) => store?.dispatch({ kind: "removeAppInstance", instanceId })}
+			onSpawnApp={(programId, appId, position) => sPlayControllerRef.current?.run("spawnApp", { programId, appId, position })}
 		/>
 	);
 }
@@ -11559,6 +11807,10 @@ function SLauncherSurfaceHost({ node: _node }: { readonly node: UiSHostSurfaceNo
 
 function SHistorySurfaceHost({ node: _node }: { readonly node: UiSHostSurfaceNode }): ReactElement {
 	return <SStudioHistoryPanel />;
+}
+
+function SAppHostContent({ instance }: { readonly instance: import("@semio-tech/s-core").SAppInstance | null }): ReactElement {
+	return <SAppHostRouter instance={instance} />;
 }
 
 function SAppHostRouter({ instance }: { readonly instance: import("@semio-tech/s-core").SAppInstance | null }): ReactElement {
@@ -11819,6 +12071,7 @@ function SSSurfaceHost({ node }: { readonly node: UiSHostSurfaceNode }): ReactEl
 function SPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
 	const ctrl = useSPlayController(playground.runtime);
 	const bus = playground.runtime.commandBus;
+	const focusedInstanceId = ctrl?.getFocusedInstanceId() ?? null;
 	const detailTabs = reactHostPort.useMemo(
 		() =>
 			ctrl
@@ -11828,13 +12081,55 @@ function SPlayInner({ playground }: { readonly playground: Playground }): ReactE
 				: [],
 		[ctrl, bus],
 	);
-	const augmentPanelTabs = reactHostPort.useMemo(() => ({ details: detailTabs }), [detailTabs]);
+	const catalogueTabs = reactHostPort.useMemo(
+		() => (ctrl ? [new SPlayCataloguePanelDefinition(() => buildSPlayCatalogueTree(), bus).resolveTab()] : []),
+		[ctrl, bus],
+	);
+	const augmentPanelTabs = reactHostPort.useMemo(() => ({ details: detailTabs, workbench: catalogueTabs }), [detailTabs, catalogueTabs]);
 	if (!ctrl) return <PlaygroundView runtime={playground.runtime} defaultAppId={S_PLAY_APP_ID} />;
+	if (focusedInstanceId) {
+		const instance = ctrl.getStore().projection().appInstances.find((entry) => entry.id === focusedInstanceId) ?? null;
+		return (
+			<SStudioProvider store={ctrl.getStore()}>
+				<div className="flex h-full min-h-0 flex-col bg-background">
+					<button
+						type="button"
+						className="border-b border-border px-3 py-2 text-left text-sm font-medium hover:bg-muted/50"
+						onClick={() => ctrl.run("closeFocusedInstance")}
+					>
+						← Back to Media Graph · {instance?.label ?? focusedInstanceId}
+					</button>
+					<div className="min-h-0 flex-1">
+						<SAppHostContent instance={instance} />
+					</div>
+				</div>
+			</SStudioProvider>
+		);
+	}
 	return (
 		<SStudioProvider store={ctrl.getStore()}>
 			<PlaygroundView runtime={playground.runtime} defaultAppId={S_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
 		</SStudioProvider>
 	);
+}
+
+class SPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
+	constructor(
+		private readonly buildTree: () => UiTreeNode,
+		private readonly commandBus: CommandBus,
+	) {
+		super();
+	}
+
+	buildTab(): SidePanelTabConfig {
+		return {
+			id: "s-play-catalogue",
+			icon: createIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID),
+			name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+			order: 1,
+			tree: new CallbackTreePanelDefinition(() => uiTreeNodeToTreePanelConfig(this.buildTree(), this.commandBus)),
+		};
+	}
 }
 
 class SPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {

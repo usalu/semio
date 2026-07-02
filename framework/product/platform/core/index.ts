@@ -304,11 +304,11 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "trinity" | "shooting" | "forms" | "raster" | "draw" | "writer" | "s" | "vcs" | "panel" | "editor";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "trinity" | "trinityRewrite" | "shooting" | "forms" | "raster" | "draw" | "writer" | "s" | "vcs" | "panel" | "editor" | "mesh" | "catalogue" | "lowpoly";
 
-const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "shooting", "forms", "raster", "draw", "writer", "s", "vcs", "editor"];
+const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "trinityRewrite", "shooting", "forms", "raster", "draw", "writer", "s", "vcs", "editor", "mesh", "catalogue", "lowpoly"];
 
-const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "shooting", "raster", "draw", "s"];
+const EDGELESS_WINDOW_COMPONENT_KINDS: readonly ComponentKind[] = ["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "trinityRewrite", "shooting", "raster", "draw", "s", "lowpoly"];
 //#endregion 🔖ComponentKind
 
 /** @emoji 📊 Host-bound tabular surface; `paneId` disambiguates multiple table slots in one app. */
@@ -2270,6 +2270,24 @@ export interface PlatformDefinition<TProductApi = unknown> {
 	readonly apps: readonly AppDefinition[];
 	createPlatformApi(ctx: PluginContext): TProductApi;
 }
+
+/** @emoji 🧩 Minimal single-app {@link PlatformDefinition} for s extension registration. */
+export function baselineSingleAppPlatformDefinition(
+	programId: string,
+	programName: string,
+	appId: string,
+	appLabel: string,
+	controllerId: string,
+	modes: readonly { readonly id: string; readonly label: string }[] = [{ id: "edit", label: "Edit" }],
+): PlatformDefinition {
+	return {
+		id: programId,
+		name: programName,
+		apiVersion: "1",
+		apps: [{ id: appId, label: appLabel, controllerId, modes, defaultModeId: modes[0]?.id }],
+		createPlatformApi: () => ({}),
+	};
+}
 //#endregion 🔖PlatformDefinition
 
 //#region 🔖SurfaceContext
@@ -2744,6 +2762,102 @@ export class PlatformPluginActivationHost<TProductApi = unknown> {
 	}
 }
 //#endregion 🔖PlatformPluginActivationHost
+
+//#region 🔖JackHoverBridge
+import { jackHoverOccurrencesForQuery, jackVarAtOffset, jackVarForBoardNodeId, nodeIdsForJackVar } from "@semio-tech/graph-dsl-core";
+import { jackVariableOccurrences } from "@semio-tech/writer-core";
+
+/** 🃏 Shared variable-centric hover/selection bridge between graph canvases and Jack query editors. */
+export class JackHoverBridge {
+	private activeHoverVar: string | null = null;
+	private activeSelectVar: string | null = null;
+	private hoverEpoch = 0;
+	private selectEpoch = 0;
+	private jackQueryText = "";
+	private fixtureJson = "";
+	private readonly listeners = new Set<() => void>();
+
+	subscribe(listener: () => void): () => void {
+		this.listeners.add(listener);
+		return () => this.listeners.delete(listener);
+	}
+
+	private notify(): void {
+		for (const listener of this.listeners) {
+			listener();
+		}
+	}
+
+	setFixtureJson(fixtureJson: string): void {
+		this.fixtureJson = fixtureJson;
+	}
+
+	setJackQueryText(text: string): void {
+		this.jackQueryText = text;
+	}
+
+	getJackQueryText(): string {
+		return this.jackQueryText;
+	}
+
+	getHoverEpoch(): number {
+		return this.hoverEpoch;
+	}
+
+	getSelectEpoch(): number {
+		return this.selectEpoch;
+	}
+
+	getActiveHoverVar(): string | null {
+		return this.activeHoverVar;
+	}
+
+	getActiveSelectVar(): string | null {
+		return this.activeSelectVar;
+	}
+
+	getJackHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		if (!this.activeHoverVar) return [];
+		return jackVariableOccurrences(this.jackQueryText, this.activeHoverVar);
+	}
+
+	getJackSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		if (!this.activeSelectVar) return [];
+		return jackVariableOccurrences(this.jackQueryText, this.activeSelectVar);
+	}
+
+	getGraphHoveredNodeIds(): readonly string[] {
+		const active = this.activeHoverVar ?? this.activeSelectVar;
+		if (!active) return [];
+		return nodeIdsForJackVar(this.fixtureJson, this.jackQueryText, active);
+	}
+
+	setGraphHover(nodeId: string | null): void {
+		this.activeHoverVar = nodeId ? jackVarForBoardNodeId(this.fixtureJson, this.jackQueryText, nodeId) : null;
+		this.hoverEpoch += 1;
+		this.notify();
+	}
+
+	setJackHover(offset: number | null): void {
+		this.activeHoverVar = jackVarAtOffset(this.jackQueryText, offset);
+		this.hoverEpoch += 1;
+		this.notify();
+	}
+
+	setGraphSelect(nodeIds: readonly string[]): void {
+		const first = nodeIds[0] ?? null;
+		this.activeSelectVar = first ? jackVarForBoardNodeId(this.fixtureJson, this.jackQueryText, first) : null;
+		this.selectEpoch += 1;
+		this.notify();
+	}
+
+	setJackSelect(range: { start: number; end: number } | null): void {
+		this.activeSelectVar = range ? jackVarAtOffset(this.jackQueryText, range.start) : null;
+		this.selectEpoch += 1;
+		this.notify();
+	}
+}
+//#endregion 🔖JackHoverBridge
 
 //#region 🧪Tests
 if (import.meta.vitest) {

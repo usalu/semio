@@ -30,7 +30,7 @@ export {
 } from "../react/index.ts";
 
 import { Playground2d, type Puzzle2dPlayHierarchyBuildOptions } from "@semio-tech/puzzle-2d-play";
-import type { KindCatalogBundle, Puzzle2dFixtureV1 } from "@semio-tech/puzzle-2d-react";
+import type { KindCatalogBundle, Puzzle2dFixture } from "@semio-tech/puzzle-2d-react";
 import { type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@semio-tech/framework-playground-core";
 import { puzzle2dFixtureMergedKindCatalogs } from "@semio-tech/puzzle-2d-react";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
@@ -48,7 +48,7 @@ import {
 export type WiresPlayHierarchyBuildOptions = Puzzle2dPlayHierarchyBuildOptions;
 
 export const WIRES_PLAY_FIXTURE: WiresFixtureV1 = METABOLISM_WIRES_FIXTURE;
-export const WIRES_PLAY_DEFAULT_FIXTURE: Puzzle2dFixtureV1 = wiresFixtureBoard(METABOLISM_WIRES_FIXTURE);
+export const WIRES_PLAY_DEFAULT_FIXTURE: Puzzle2dFixture = wiresFixtureBoard(METABOLISM_WIRES_FIXTURE);
 
 export const WIRES_PLAY_FIXTURE_METABOLISM_ID = "metabolism";
 
@@ -134,7 +134,7 @@ export function buildWiresPlayKindsTree(catalogs: WiresFixtureKindCatalogsV1 | u
 }
 
 /** @emoji 🌳 Maps graph selection ids to WIRES hierarchy tree row ids. */
-export function wiresPlayHierarchyTreeSelectedIds(fixture: Puzzle2dFixtureV1, graphSelectionIds: readonly string[]): string[] {
+export function wiresPlayHierarchyTreeSelectedIds(fixture: Puzzle2dFixture, graphSelectionIds: readonly string[]): string[] {
   const out: string[] = [];
   for (const id of graphSelectionIds) {
     if (fixture.nodes.some((node) => node.id === id)) {
@@ -160,7 +160,7 @@ export function wiresPlayHierarchyGraphIdFromTreeItemId(treeItemId: string): str
 }
 
 /** @emoji 🌳 Maps graph hover ids to WIRES hierarchy tree row ids. */
-export function wiresPlayHierarchyTreeHighlightedIds(fixture: Puzzle2dFixtureV1, graphHoverId: string | null): readonly string[] {
+export function wiresPlayHierarchyTreeHighlightedIds(fixture: Puzzle2dFixture, graphHoverId: string | null): readonly string[] {
   if (!graphHoverId) {
     return [];
   }
@@ -183,7 +183,7 @@ function wiresHierarchyHoverHandlers(
 /** @emoji 🌳 WIRES workbench hierarchy: Identities and Relationships (not puzzle Nodes/Edges). */
 export function buildWiresPlayHierarchySections(
   wiresFixture: WiresFixtureV1,
-  puzzleFixture: Puzzle2dFixtureV1,
+  puzzleFixture: Puzzle2dFixture,
   selectionIds: readonly string[],
   options?: WiresPlayHierarchyBuildOptions,
 ): UiTreeNode {
@@ -228,6 +228,15 @@ export function buildWiresPlayHierarchySections(
     ],
   } as UiTreeNode;
 }
+
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for reasoning wires. */
+export function buildReasoningWiresProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("reasoning.wires", "Reasoning Wires", "wires", "Wires", WIRES_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
 
 //#region 🔖Boot
 if (

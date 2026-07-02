@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*"
   },
   "devDependencies": {

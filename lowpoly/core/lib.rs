@@ -1,7 +1,9 @@
 //! 🔷 Lowpoly core: mesh editing session wrapping kernel_3d_mesh.
 
+use std::collections::HashMap;
+
 use kernel_3d_mesh::{
-    FaceId, HalfedgeMesh, MeshKernelError, MirrorAxis, Vec3, VertexId, WeldMode,
+    EdgeId, FaceId, HalfedgeMesh, MeshKernelError, MirrorAxis, Vec3, VertexId, WeldMode,
 };
 use serde::{Deserialize, Serialize};
 
@@ -41,6 +43,32 @@ impl Default for LowpolySelection {
     }
 }
 
+pub const LOWPOLY_PAINT_TEXTURE_SIZE: usize = 1024;
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LowpolyPaintLayer {
+    pub name: String,
+    pub visible: bool,
+    pub opacity: f32,
+    pub blend_mode: String,
+}
+
+impl LowpolyPaintLayer {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.into(),
+            visible: true,
+            opacity: 1.0,
+            blend_mode: "normal".into(),
+        }
+    }
+}
+
+fn empty_paint_pixels() -> Vec<u8> {
+    vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4]
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LowpolyObject {
@@ -49,6 +77,8 @@ pub struct LowpolyObject {
     pub transform: LowpolyTransform,
     pub smooth_shading: bool,
     pub mesh_json: String,
+    #[serde(default)]
+    pub paint_layers: Vec<LowpolyPaintLayer>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -78,6 +108,7 @@ pub fn default_fixture() -> LowpolyFixture {
             transform: LowpolyTransform::default(),
             smooth_shading: false,
             mesh_json,
+            paint_layers: vec![LowpolyPaintLayer::new("Base")],
         }],
         active_object_id: "obj-1".into(),
         selection: LowpolySelection {
@@ -95,6 +126,7 @@ struct LowpolyDocument {
     fixture: LowpolyFixture,
     meshes: Vec<HalfedgeMesh>,
     next_object_serial: u32,
+    paint_pixels: HashMap<String, Vec<Vec<u8>>>,
 }
 
 impl LowpolyDocument {
@@ -103,9 +135,58 @@ impl LowpolyDocument {
             fixture,
             meshes: Vec::new(),
             next_object_serial: 100,
+            paint_pixels: HashMap::new(),
         };
         doc.reload_meshes()?;
+        doc.ensure_all_paint_buffers();
         Ok(doc)
+    }
+
+    fn replace_fixture(&mut self, fixture: LowpolyFixture, preserved_pixels: HashMap<String, Vec<Vec<u8>>>) -> Result<(), String> {
+        self.fixture = fixture;
+        self.reload_meshes()?;
+        self.paint_pixels = preserved_pixels;
+        self.ensure_all_paint_buffers();
+        Ok(())
+    }
+
+    fn ensure_all_paint_buffers(&mut self) {
+        for obj in &self.fixture.objects {
+            self.ensure_object_paint_buffers(&obj.id, obj.paint_layers.len());
+        }
+    }
+
+    fn ensure_object_paint_buffers(&mut self, object_id: &str, layer_count: usize) {
+        let layers = self.paint_pixels.entry(object_id.to_string()).or_default();
+        while layers.len() < layer_count {
+            layers.push(empty_paint_pixels());
+        }
+        layers.truncate(layer_count.max(1));
+        if layers.is_empty() {
+            layers.push(empty_paint_pixels());
+        }
+    }
+
+    fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], String> {
+        self.paint_pixels
+            .get(object_id)
+            .and_then(|layers| layers.get(layer_index))
+            .map(|pixels| pixels.as_slice())
+            .ok_or_else(|| "layer index out of range".into())
+    }
+
+    fn layer_pixels_mut(&mut self, object_id: &str, layer_index: usize) -> Result<&mut Vec<u8>, String> {
+        let layer_count = self
+            .object_index(object_id)
+            .ok()
+            .and_then(|idx| self.fixture.objects.get(idx))
+            .map(|obj| obj.paint_layers.len().max(1))
+            .unwrap_or(1);
+        self.ensure_object_paint_buffers(object_id, layer_count);
+        self.paint_pixels
+            .get_mut(object_id)
+            .and_then(|layers| layers.get_mut(layer_index))
+            .ok_or_else(|| "layer index out of range".into())
     }
 
     fn reload_meshes(&mut self) -> Result<(), String> {
@@ -181,14 +262,210 @@ impl LowpolyDocument {
             transform: LowpolyTransform::default(),
             smooth_shading: false,
             mesh_json,
+            paint_layers: vec![LowpolyPaintLayer::new("Base")],
         });
         self.meshes.push(mesh);
+        self.ensure_object_paint_buffers(&id, 1);
         self.fixture.active_object_id = id.clone();
         self.fixture.selection = LowpolySelection {
             mode: "object".into(),
             ids: vec![(self.fixture.objects.len() - 1) as u32],
         };
         Ok(id)
+    }
+
+    fn object_index(&self, object_id: &str) -> Result<usize, String> {
+        self.fixture
+            .objects
+            .iter()
+            .position(|o| o.id == object_id)
+            .ok_or_else(|| "object not found".to_string())
+    }
+
+    fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<serde_json::Value, String> {
+        let transfer = mesh.tessellate().map_err(|e| format!("{e:?}"))?;
+        Ok(serde_json::json!({
+            "positions": transfer.positions,
+            "normals": transfer.normals,
+            "indices": transfer.indices,
+            "edgePositions": transfer.edge_positions,
+            "faceIds": transfer.face_ids,
+            "vertexIds": transfer.vertex_ids,
+            "edgeIds": transfer.edge_ids,
+            "uvs": transfer.uvs,
+        }))
+    }
+
+    fn tessellate_all_json(&self) -> Result<String, String> {
+        let active = self.fixture.active_object_id.clone();
+        let mut items = Vec::new();
+        for (idx, obj) in self.fixture.objects.iter().enumerate() {
+            let mesh = self.meshes.get(idx).ok_or_else(|| "mesh missing".to_string())?;
+            items.push(serde_json::json!({
+                "id": obj.id,
+                "index": idx,
+                "name": obj.name,
+                "transform": obj.transform,
+                "smoothShading": obj.smooth_shading,
+                "active": obj.id == active,
+                "tessellation": Self::tessellate_transfer_json(mesh)?,
+            }));
+        }
+        serde_json::to_string(&items).map_err(|e| e.to_string())
+    }
+
+    fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), String> {
+        let idx = self.object_index(object_id)?;
+        if self.fixture.objects[idx].paint_layers.is_empty() {
+            self.fixture.objects[idx].paint_layers.push(LowpolyPaintLayer::new("Base"));
+        }
+        if layer_index >= self.fixture.objects[idx].paint_layers.len() {
+            return Err("layer index out of range".into());
+        }
+        Ok(())
+    }
+
+    fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, String> {
+        let idx = self.object_index(object_id)?;
+        let layers = &self.fixture.objects[idx].paint_layers;
+        let mut out = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
+        for (layer_index, layer) in layers.iter().enumerate() {
+            if !layer.visible {
+                continue;
+            }
+            let pixels = self.layer_pixels(object_id, layer_index)?;
+            let opacity = layer.opacity.clamp(0.0, 1.0);
+            for (dst, src) in out.chunks_mut(4).zip(pixels.chunks(4)) {
+                let sa = (src.get(3).copied().unwrap_or(255) as f32 / 255.0) * opacity;
+                let da = dst[3] as f32 / 255.0;
+                let out_a = sa + da * (1.0 - sa);
+                if out_a < 1e-6 {
+                    continue;
+                }
+                for c in 0..3 {
+                    let sc = src.get(c).copied().unwrap_or(0) as f32 / 255.0;
+                    let dc = dst[c] as f32 / 255.0;
+                    dst[c] = ((sc * sa + dc * da * (1.0 - sa)) / out_a * 255.0).round().clamp(0.0, 255.0) as u8;
+                }
+                dst[3] = (out_a * 255.0).round().clamp(0.0, 255.0) as u8;
+            }
+        }
+        Ok(out)
+    }
+
+    fn paint_stroke(
+        &mut self,
+        object_id: &str,
+        layer_index: usize,
+        u: f32,
+        v: f32,
+        radius: f32,
+        color: [u8; 4],
+        hardness: f32,
+        opacity: f32,
+        eraser: bool,
+    ) -> Result<(), String> {
+        self.ensure_paint_layer(object_id, layer_index)?;
+        let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
+        let size = LOWPOLY_PAINT_TEXTURE_SIZE as f32;
+        let cx = (u.clamp(0.0, 1.0) * (size - 1.0)).round() as i32;
+        let cy = ((1.0 - v.clamp(0.0, 1.0)) * (size - 1.0)).round() as i32;
+        let r = radius.max(0.5);
+        let r_i = r.ceil() as i32;
+        let hard = hardness.clamp(0.0, 1.0);
+        let alpha_scale = opacity.clamp(0.0, 1.0);
+        for y in (cy - r_i)..=(cy + r_i) {
+            for x in (cx - r_i)..=(cx + r_i) {
+                if x < 0 || y < 0 || x >= size as i32 || y >= size as i32 {
+                    continue;
+                }
+                let dx = x as f32 - cx as f32;
+                let dy = y as f32 - cy as f32;
+                let dist = (dx * dx + dy * dy).sqrt();
+                if dist > r {
+                    continue;
+                }
+                let t = 1.0 - dist / r;
+                let falloff = hard + (1.0 - hard) * t;
+                let stamp = (falloff * alpha_scale * 255.0).round().clamp(0.0, 255.0) as u8;
+                let offset = (y as usize * LOWPOLY_PAINT_TEXTURE_SIZE + x as usize) * 4;
+                if eraser {
+                    let current = layer_pixels[offset + 3];
+                    layer_pixels[offset + 3] = current.saturating_sub(stamp);
+                } else {
+                    for c in 0..3 {
+                        layer_pixels[offset + c] = color[c];
+                    }
+                    let current = layer_pixels[offset + 3];
+                    layer_pixels[offset + 3] = current.saturating_add(stamp).min(255);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), String> {
+        self.ensure_paint_layer(object_id, layer_index)?;
+        let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
+        let size = LOWPOLY_PAINT_TEXTURE_SIZE;
+        let sx = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
+        let sy = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
+        let start = (sy * size + sx) * 4;
+        let target = [
+            layer_pixels[start],
+            layer_pixels[start + 1],
+            layer_pixels[start + 2],
+            layer_pixels[start + 3],
+        ];
+        let mut stack = vec![(sx, sy)];
+        let mut visited = vec![false; size * size];
+        while let Some((x, y)) = stack.pop() {
+            let pi = y * size + x;
+            if visited[pi] {
+                continue;
+            }
+            visited[pi] = true;
+            let offset = pi * 4;
+            let pixel = [
+                layer_pixels[offset],
+                layer_pixels[offset + 1],
+                layer_pixels[offset + 2],
+                layer_pixels[offset + 3],
+            ];
+            if pixel != target {
+                continue;
+            }
+            for c in 0..4 {
+                layer_pixels[offset + c] = color[c];
+            }
+            if x > 0 {
+                stack.push((x - 1, y));
+            }
+            if x + 1 < size {
+                stack.push((x + 1, y));
+            }
+            if y > 0 {
+                stack.push((x, y - 1));
+            }
+            if y + 1 < size {
+                stack.push((x, y + 1));
+            }
+        }
+        Ok(())
+    }
+
+    fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], String> {
+        let composite = self.composite_layers(object_id)?;
+        let size = LOWPOLY_PAINT_TEXTURE_SIZE;
+        let x = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
+        let y = (((1.0 - v.clamp(0.0, 1.0)) * (size as f32 - 1.0)).round() as usize).min(size - 1);
+        let offset = (y * size + x) * 4;
+        Ok([
+            composite[offset],
+            composite[offset + 1],
+            composite[offset + 2],
+            composite[offset + 3],
+        ])
     }
 }
 
@@ -236,8 +513,8 @@ impl LowpolySession {
     #[wasm_bindgen(js_name = loadFixtureJson)]
     pub fn load_fixture_json(&mut self, json: &str) -> Result<(), JsValue> {
         let fixture: LowpolyFixture = serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        self.doc = LowpolyDocument::new(fixture).map_err(|e| JsValue::from_str(&e))?;
-        Ok(())
+        let preserved_pixels = std::mem::take(&mut self.doc.paint_pixels);
+        self.doc.replace_fixture(fixture, preserved_pixels).map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = addPrimitive)]
@@ -266,14 +543,145 @@ impl LowpolySession {
     #[wasm_bindgen(js_name = tessellateActive)]
     pub fn tessellate_active(&self) -> Result<String, JsValue> {
         let mesh = self.doc.active_mesh().map_err(|e| JsValue::from_str(&e))?;
-        let transfer = mesh.tessellate().map_err(|e| JsValue::from_str(&map_err(e)))?;
-        serde_json::to_string(&serde_json::json!({
-            "positions": transfer.positions,
-            "normals": transfer.normals,
-            "indices": transfer.indices,
-            "edgePositions": transfer.edge_positions,
-        }))
-        .map_err(|e| JsValue::from_str(&e.to_string()))
+        LowpolyDocument::tessellate_transfer_json(mesh).map_err(|e| JsValue::from_str(&e)).and_then(|v| {
+            serde_json::to_string(&v).map_err(|e| JsValue::from_str(&e.to_string()))
+        })
+    }
+
+    #[wasm_bindgen(js_name = tessellateAll)]
+    pub fn tessellate_all(&self) -> Result<String, JsValue> {
+        self.doc.tessellate_all_json().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = markUvSeam)]
+    pub fn mark_uv_seam(&mut self, seam: bool, edge_ids: Vec<u32>) -> Result<(), JsValue> {
+        let edges: Vec<EdgeId> = edge_ids.into_iter().map(EdgeId).collect();
+        let mesh = self.doc.active_mesh_mut().map_err(|e| JsValue::from_str(&e))?;
+        mesh.mark_uv_seam(&edges, seam);
+        self.doc.sync_meshes_to_fixture().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = unwrapActive)]
+    pub fn unwrap_active(&mut self) -> Result<(), JsValue> {
+        let mesh = self.doc.active_mesh_mut().map_err(|e| JsValue::from_str(&e))?;
+        mesh.unwrap_uv().map_err(|e| JsValue::from_str(&map_err(e)))?;
+        self.doc.sync_meshes_to_fixture().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = compositePaintTexture)]
+    pub fn composite_paint_texture(&self, object_id: &str) -> Result<Vec<u8>, JsValue> {
+        self.doc.composite_layers(object_id).map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = paintLayerPixels)]
+    pub fn paint_layer_pixels(&self, object_id: &str, layer_index: u32) -> Result<Vec<u8>, JsValue> {
+        self.doc
+            .layer_pixels(object_id, layer_index as usize)
+            .map(|pixels| pixels.to_vec())
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = setPaintLayerPixels)]
+    pub fn set_paint_layer_pixels(&mut self, object_id: &str, layer_index: u32, pixels: Vec<u8>) -> Result<(), JsValue> {
+        let buffer = self
+            .doc
+            .layer_pixels_mut(object_id, layer_index as usize)
+            .map_err(|e| JsValue::from_str(&e))?;
+        if pixels.len() != buffer.len() {
+            return Err(JsValue::from_str("pixel buffer length mismatch"));
+        }
+        buffer.copy_from_slice(&pixels);
+        Ok(())
+    }
+
+    #[wasm_bindgen(js_name = paintStroke)]
+    pub fn paint_stroke(
+        &mut self,
+        object_id: &str,
+        layer_index: u32,
+        u: f32,
+        v: f32,
+        radius: f32,
+        r: u8,
+        g: u8,
+        b: u8,
+        a: u8,
+        hardness: f32,
+        opacity: f32,
+        eraser: bool,
+    ) -> Result<(), JsValue> {
+        self.doc
+            .paint_stroke(object_id, layer_index as usize, u, v, radius, [r, g, b, a], hardness, opacity, eraser)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = fillBucket)]
+    pub fn fill_bucket(&mut self, object_id: &str, layer_index: u32, u: f32, v: f32, r: u8, g: u8, b: u8, a: u8) -> Result<(), JsValue> {
+        self.doc
+            .fill_bucket(object_id, layer_index as usize, u, v, [r, g, b, a])
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = samplePixel)]
+    pub fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<Vec<u8>, JsValue> {
+        self.doc
+            .sample_pixel(object_id, u, v)
+            .map(|pixel| pixel.to_vec())
+            .map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = addPaintLayer)]
+    pub fn add_paint_layer(&mut self, object_id: &str, name: &str) -> Result<u32, JsValue> {
+        let idx = self.doc.object_index(object_id).map_err(|e| JsValue::from_str(&e))?;
+        self.doc.fixture.objects[idx].paint_layers.push(LowpolyPaintLayer::new(name));
+        let layer_index = self.doc.fixture.objects[idx].paint_layers.len() - 1;
+        self.doc.ensure_object_paint_buffers(object_id, layer_index + 1);
+        Ok(layer_index as u32)
+    }
+
+    #[wasm_bindgen(js_name = removePaintLayer)]
+    pub fn remove_paint_layer(&mut self, object_id: &str, layer_index: u32) -> Result<(), JsValue> {
+        let idx = self.doc.object_index(object_id).map_err(|e| JsValue::from_str(&e))?;
+        let li = layer_index as usize;
+        if li >= self.doc.fixture.objects[idx].paint_layers.len() {
+            return Err(JsValue::from_str("layer index out of range"));
+        }
+        self.doc.fixture.objects[idx].paint_layers.remove(li);
+        if let Some(layers) = self.doc.paint_pixels.get_mut(object_id) {
+            if li < layers.len() {
+                layers.remove(li);
+            }
+        }
+        self.doc.ensure_object_paint_buffers(object_id, self.doc.fixture.objects[idx].paint_layers.len().max(1));
+        Ok(())
+    }
+
+    #[wasm_bindgen(js_name = setLayerVisible)]
+    pub fn set_layer_visible(&mut self, object_id: &str, layer_index: u32, visible: bool) -> Result<(), JsValue> {
+        let idx = self.doc.object_index(object_id).map_err(|e| JsValue::from_str(&e))?;
+        let layer = self
+            .doc
+            .fixture
+            .objects
+            .get_mut(idx)
+            .and_then(|o| o.paint_layers.get_mut(layer_index as usize))
+            .ok_or_else(|| JsValue::from_str("layer index out of range"))?;
+        layer.visible = visible;
+        Ok(())
+    }
+
+    #[wasm_bindgen(js_name = setLayerOpacity)]
+    pub fn set_layer_opacity(&mut self, object_id: &str, layer_index: u32, opacity: f32) -> Result<(), JsValue> {
+        let idx = self.doc.object_index(object_id).map_err(|e| JsValue::from_str(&e))?;
+        let layer = self
+            .doc
+            .fixture
+            .objects
+            .get_mut(idx)
+            .and_then(|o| o.paint_layers.get_mut(layer_index as usize))
+            .ok_or_else(|| JsValue::from_str("layer index out of range"))?;
+        layer.opacity = opacity;
+        Ok(())
     }
 
     #[wasm_bindgen(js_name = exportObjActive)]
@@ -298,6 +706,14 @@ impl LowpolySession {
         let faces = self.doc.selected_face_ids();
         let mesh = self.doc.active_mesh_mut().map_err(|e| JsValue::from_str(&e))?;
         mesh.inset_faces(&faces, amount).map_err(|e| JsValue::from_str(&map_err(e)))?;
+        self.doc.sync_meshes_to_fixture().map_err(|e| JsValue::from_str(&e))
+    }
+
+    #[wasm_bindgen(js_name = flipFaces)]
+    pub fn flip_faces(&mut self, face_ids: Vec<u32>) -> Result<(), JsValue> {
+        let faces: Vec<FaceId> = face_ids.into_iter().map(FaceId).collect();
+        let mesh = self.doc.active_mesh_mut().map_err(|e| JsValue::from_str(&e))?;
+        mesh.flip_faces(&faces).map_err(|e| JsValue::from_str(&map_err(e)))?;
         self.doc.sync_meshes_to_fixture().map_err(|e| JsValue::from_str(&e))
     }
 
@@ -459,6 +875,48 @@ mod tests {
         let id = doc.add_primitive("box").unwrap();
         assert!(doc.fixture.objects.iter().any(|o| o.id == id));
         assert_eq!(doc.meshes.len(), 2);
+    }
+
+    #[test]
+    fn tessellate_all_returns_every_object() {
+        let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
+        let _ = doc.add_primitive("box").unwrap();
+        let json = doc.tessellate_all_json().unwrap();
+        let items: Vec<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(items.len(), 2);
+    }
+
+    #[test]
+    fn fixture_json_excludes_paint_pixels() {
+        let doc = LowpolyDocument::new(default_fixture()).unwrap();
+        let json = serde_json::to_string(&doc.fixture).unwrap();
+        assert!(json.len() < 100_000);
+        assert!(!json.contains("\"pixels\""));
+    }
+
+    #[test]
+    fn painted_pixels_survive_fixture_reload() {
+        let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
+        let object_id = doc.fixture.active_object_id.clone();
+        doc.paint_stroke(&object_id, 0, 0.5, 0.5, 4.0, [255, 0, 0, 255], 0.5, 1.0, false).unwrap();
+        let before = doc.layer_pixels(&object_id, 0).unwrap().to_vec();
+        let json = serde_json::to_string(&doc.fixture).unwrap();
+        let fixture: LowpolyFixture = serde_json::from_str(&json).unwrap();
+        let preserved = std::mem::take(&mut doc.paint_pixels);
+        doc.replace_fixture(fixture, preserved).unwrap();
+        let after = doc.layer_pixels(&object_id, 0).unwrap();
+        assert_eq!(before, after);
+    }
+
+    #[test]
+    fn paint_stroke_writes_pixels() {
+        let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
+        let object_id = doc.fixture.active_object_id.clone();
+        doc.paint_stroke(&object_id, 0, 0.5, 0.5, 4.0, [255, 0, 0, 255], 0.5, 1.0, false).unwrap();
+        let composite = doc.composite_layers(&object_id).unwrap();
+        let size = LOWPOLY_PAINT_TEXTURE_SIZE;
+        let center = (size / 2 * size + size / 2) * 4;
+        assert!(composite[center] > 200);
     }
 }
 

@@ -72,8 +72,8 @@
             "y": 80,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-draw-1:in", "resourceKind": "2d.drawing", "direction": "in" }],
-            "outputs": [{ "id": "app-draw-1:out", "resourceKind": "2d.drawing", "direction": "out" }]
+            "inputs": [{ "id": "app-draw-1:out:in", "resourceKind": "2d.drawing", "direction": "in" }],
+            "outputs": [{ "id": "app-draw-1:out:out", "resourceKind": "2d.drawing", "direction": "out" }]
           },
           {
             "id": "node-app-draw-2",
@@ -82,8 +82,8 @@
             "y": 80,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-draw-2:in", "resourceKind": "2d.drawing", "direction": "in" }],
-            "outputs": [{ "id": "app-draw-2:out", "resourceKind": "2d.drawing", "direction": "out" }]
+            "inputs": [{ "id": "app-draw-2:out:in", "resourceKind": "2d.drawing", "direction": "in" }],
+            "outputs": [{ "id": "app-draw-2:out:out", "resourceKind": "2d.drawing", "direction": "out" }]
           },
           {
             "id": "node-app-writer-1",
@@ -92,8 +92,8 @@
             "y": 80,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-writer-1:in", "resourceKind": "text.document", "direction": "in" }],
-            "outputs": [{ "id": "app-writer-1:out", "resourceKind": "text.document", "direction": "out" }]
+            "inputs": [{ "id": "app-writer-1:out:in", "resourceKind": "text.document", "direction": "in" }],
+            "outputs": [{ "id": "app-writer-1:out:out", "resourceKind": "text.document", "direction": "out" }]
           },
           {
             "id": "node-app-raster-1",
@@ -102,8 +102,8 @@
             "y": 200,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-raster-1:in", "resourceKind": "2d.raster", "direction": "in" }],
-            "outputs": [{ "id": "app-raster-1:out", "resourceKind": "2d.raster", "direction": "out" }]
+            "inputs": [{ "id": "app-raster-1:out:in", "resourceKind": "2d.raster", "direction": "in" }],
+            "outputs": [{ "id": "app-raster-1:out:out", "resourceKind": "2d.raster", "direction": "out" }]
           },
           {
             "id": "node-app-sketchpad-1",
@@ -112,17 +112,17 @@
             "y": 220,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-sketchpad-1:in", "resourceKind": "kit.compose", "direction": "in" }],
-            "outputs": [{ "id": "app-sketchpad-1:out", "resourceKind": "kit.compose", "direction": "out" }]
+            "inputs": [{ "id": "app-sketchpad-1:out:in", "resourceKind": "kit.compose", "direction": "in" }],
+            "outputs": [{ "id": "app-sketchpad-1:out:out", "resourceKind": "kit.compose", "direction": "out" }]
           }
         ],
         "edges": [
           {
             "id": "edge-draw-1-to-draw-2",
             "sourceNodeId": "node-app-draw-1",
-            "sourcePortId": "app-draw-1:out",
+            "sourcePortId": "app-draw-1:out:out",
             "targetNodeId": "node-app-draw-2",
-            "targetPortId": "app-draw-2:in"
+            "targetPortId": "app-draw-2:out:in"
           }
         ]
       }

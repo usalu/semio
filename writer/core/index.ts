@@ -1281,6 +1281,15 @@ export function createWriterAppVcsHandler() {
 }
 //#endregion 🔖DocumentVcs
 
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for writer. */
+export function buildWriterProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("writer", "Writer", "writer", "Writer", "writer-play");
+}
+//#endregion 🔖SExtension
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;

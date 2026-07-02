@@ -1,0 +1,14 @@
+{
+  "title": "Lowpoly Model Paint Overhaul",
+  "emoji": "🔷",
+  "status": "closed",
+  "description": "Implement Lowpoly Model/Paint Overhaul: fix camera/selection, multi-object scene, Model/Paint modes, UV unwrap, texture painting with layers and VCS undo.",
+  "summary": "Implemented Lowpoly Model/Paint overhaul: fixed camera controlsGate bug; multi-object tessellateAll scene rendering; topological selection IDs (face/vertex/edge) with marquee box-select and modifier-key merge; Model/Paint ModeRuntime split with two-window paint layout (3D + UV); LSCM-style UV unwrap with seam marking; layered texture paint engine with brush/eraser/fill/eyedropper; VCS-backed paint undo/redo; Layers panel and paint toolbar. All lowpoly-core/react/play Rust and vitest suites pass; WASM rebuilt.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1793"
+  },
+  "goal": "🎯playground🎯lowpoly",
+  "sessions": [
+    "⚪36caa575273d4d80ac69d909fa9f98a5"
+  ]
+}

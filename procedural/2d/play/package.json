@@ -18,6 +18,7 @@
     "@semio-tech/flow-react": "workspace:*",
     "@semio-tech/forms-react": "workspace:*",
     "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*",
     "@semio-tech/procedural-2d-react": "workspace:*"
   },

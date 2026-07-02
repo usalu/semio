@@ -27,7 +27,9 @@ You MUST follow the following rules unless explicitly asked to do otherwise:
     - There are no users yet.
     - You MUST get everything working.
     - There are many inconsistencies that you MUST refactor.
-      - You MUST use clean mechanisms that might require large refactorings.
+      - You MUST aim for clean long term solution.
+        - You MUST NOT be pragmatic.
+          - You MUST NOT care for implementation effort.
     - You MUST not leave any migration scripts.
       - You MUST handcraft all assets, names, code without any ugly migrations, adapters, etc.
       - You MUST manually fix all assets, fixtures, etc all at once.

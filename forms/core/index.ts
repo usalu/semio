@@ -1150,6 +1150,15 @@ export function createFormsAppVcsHandler() {
 }
 //#endregion 🔖DocumentVcs
 
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for forms. */
+export function buildFormsProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("forms", "Forms", "forms", "Forms", "forms-play");
+}
+//#endregion 🔖SExtension
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;

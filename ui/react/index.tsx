@@ -4637,7 +4637,7 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
             </ActionGroup>
           </div>
         ) : null}
-        {toolbar ? <div data-slot="toolbar-anchor">{toolbar}</div> : null}
+        {toolbar ? <div data-slot="toolbar-anchor" className="shrink-0">{toolbar}</div> : null}
       </div>
     </footer>
   );
@@ -9018,7 +9018,7 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0 h-full">
           {normalItems.map((item, index) => (
-            <div key={item.key ?? index} className={cn("h-medium flex items-center min-w-0", item.className)}>
+            <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
               {item.content}
             </div>
           ))}

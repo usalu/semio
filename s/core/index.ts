@@ -59,6 +59,13 @@ export interface SMediaPort {
 	readonly direction: "in" | "out";
 }
 
+export interface SPortSpec {
+	readonly id: string;
+	readonly label: string;
+	readonly resourceKind: SResourceKindId;
+	readonly required?: boolean;
+}
+
 export interface SMediaGraphNode {
 	readonly id: string;
 	readonly instanceId: string;
@@ -150,10 +157,33 @@ export interface SStudioDocument {
 export interface SAppRegistration {
 	readonly id: string;
 	readonly label: string;
-	readonly yields: SResourceKindId;
+	readonly inputs: readonly SPortSpec[];
+	readonly outputs: readonly SPortSpec[];
 	readonly sourceFormat: string;
 	readonly componentKind: ComponentKind;
 	readonly defaultModeId?: string;
+}
+
+export function sAppPrimaryOutputKind(registration: Pick<SAppRegistration, "outputs">): SResourceKindId {
+	return registration.outputs[0]?.resourceKind ?? "graph.dag";
+}
+
+function sOutPort(resourceKind: SResourceKindId, id = "out", label = "Out"): SPortSpec {
+	return { id, label, resourceKind };
+}
+
+function sInPort(resourceKind: SResourceKindId, id: string, label: string, required = false): SPortSpec {
+	return { id, label, resourceKind, required };
+}
+
+export function mediaPortIdForSpec(instanceId: string, specId: string, direction: "in" | "out"): string {
+	return `${instanceId}:${specId}:${direction}`;
+}
+
+export function mediaPortSpecId(portId: string): string | null {
+	const parts = portId.split(":");
+	if (parts.length < 3) return null;
+	return parts.slice(1, -1).join(":");
 }
 
 export interface SProgramDefinition extends PlatformDefinition {
@@ -200,150 +230,131 @@ const S_SYSTEM_PROGRAM: SProgramDefinition = {
 		{
 			id: "studio",
 			label: "Studio",
-			yields: "graph.dag",
+			inputs: [],
+			outputs: [sOutPort("graph.dag")],
 			sourceFormat: "s.studio",
 			componentKind: "s",
 			modes: [{ id: "edit", label: "Edit" }],
 			defaultModeId: "edit",
 		},
+		{
+			id: "kit-catalogue",
+			label: "Kit Catalogue",
+			inputs: [],
+			outputs: [sOutPort("catalogue.kinds", "out", "Kinds")],
+			sourceFormat: "catalogue.kinds",
+			componentKind: "catalogue",
+			modes: [{ id: "browse", label: "Browse" }],
+			defaultModeId: "browse",
+		},
 	],
 	createPlatformApi: (_ctx: PluginContext) => ({}),
 };
 
-const TECHNOLOGY_PLAY_PROGRAMS: readonly SProgramDefinition[] = [
-	{
-		id: "draw",
-		name: "Draw",
-		apiVersion: "1",
-		apps: [{ id: "draw", label: "Draw", yields: "2d.drawing", sourceFormat: "draw.document", componentKind: "draw", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "writer",
-		name: "Writer",
-		apiVersion: "1",
-		apps: [{ id: "writer", label: "Writer", yields: "text.document", sourceFormat: "writer.document", componentKind: "writer", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "raster",
-		name: "Raster",
-		apiVersion: "1",
-		apps: [{ id: "raster", label: "Raster", yields: "2d.raster", sourceFormat: "raster.document", componentKind: "raster", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "flow",
-		name: "Flow",
-		apiVersion: "1",
-		apps: [{ id: "flow", label: "Flow", yields: "computation.flow", sourceFormat: "flow.document", componentKind: "flow", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "puzzle.2d",
-		name: "Puzzle 2D",
-		apiVersion: "1",
-		apps: [{ id: "puzzle2d", label: "Puzzle 2D", yields: "2d.puzzle", sourceFormat: "puzzle.2d", componentKind: "puzzle2d", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "puzzle.3d",
-		name: "Puzzle 3D",
-		apiVersion: "1",
-		apps: [{ id: "puzzle3d", label: "Puzzle 3D", yields: "3d.puzzle", sourceFormat: "puzzle.3d", componentKind: "puzzle3d", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "puzzle.5d",
-		name: "Puzzle 5D",
-		apiVersion: "1",
-		apps: [{ id: "puzzle5d", label: "Puzzle 5D", yields: "5d.puzzle", sourceFormat: "puzzle.5d", componentKind: "puzzle5d", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "trinity",
-		name: "Trinity",
-		apiVersion: "1",
-		apps: [{ id: "trinity", label: "Trinity", yields: "graph.trinity", sourceFormat: "trinity.graph", componentKind: "trinity", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "forms",
-		name: "Forms",
-		apiVersion: "1",
-		apps: [{ id: "forms", label: "Forms", yields: "form.dictionary", sourceFormat: "forms.form", componentKind: "forms", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "shooting",
-		name: "Shooting",
-		apiVersion: "1",
-		apps: [{ id: "shooting", label: "Shooting", yields: "2d.shooting", sourceFormat: "shooting.scene", componentKind: "shooting", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "gis.map",
-		name: "GIS Map",
-		apiVersion: "1",
-		apps: [{ id: "map", label: "Map", yields: "2d.map", sourceFormat: "gis.map", componentKind: "gismap", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "cad",
-		name: "CAD",
-		apiVersion: "1",
-		apps: [{ id: "cad", label: "CAD", yields: "3d.cad", sourceFormat: "cad.scene", componentKind: "cad", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "dag",
-		name: "DAG",
-		apiVersion: "1",
-		apps: [{ id: "dag", label: "DAG", yields: "graph.dag", sourceFormat: "flow.dag", componentKind: "dag", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "procedural.2d",
-		name: "Procedural 2D",
-		apiVersion: "1",
-		apps: [{ id: "procedural2d", label: "Procedural 2D", yields: "2d.procedural", sourceFormat: "procedural.2d", componentKind: "puzzle2d", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "procedural.3d",
-		name: "Procedural 3D",
-		apiVersion: "1",
-		apps: [{ id: "procedural3d", label: "Procedural 3D", yields: "3d.procedural", sourceFormat: "procedural.3d", componentKind: "puzzle3d", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "reasoning.wires",
-		name: "Reasoning Wires",
-		apiVersion: "1",
-		apps: [{ id: "wires", label: "Wires", yields: "2d.puzzle", sourceFormat: "puzzle.2d", componentKind: "puzzle2d", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-	{
-		id: "presentation",
-		name: "Presentation",
-		apiVersion: "1",
-		apps: [{ id: "presentation", label: "Presentation", yields: "presentation.deck", sourceFormat: "presentation.deck", componentKind: "panel", modes: [{ id: "edit", label: "Edit" }] }],
-		createPlatformApi: () => ({}),
-	},
-];
+function sBaselineResource(
+	resourceKind: SResourceKindId,
+	sourceFormat: string,
+	componentKind: ComponentKind,
+	modes: readonly { readonly id: string; readonly label: string }[] = [{ id: "edit", label: "Edit" }],
+): Omit<SAppRegistration, "id" | "label"> & { readonly modes: readonly { readonly id: string; readonly label: string }[] } {
+	return { inputs: [], outputs: [sOutPort(resourceKind)], sourceFormat, componentKind, modes };
+}
 
-const SKETCHPAD_APP_RESOURCE: Readonly<Record<string, Omit<SAppRegistration, "id" | "label"> & { readonly modes: readonly { readonly id: string; readonly label: string }[] }>> = {
-	home: { yields: "kit.compose", sourceFormat: "compose.kit", componentKind: "virtualFileSystem", modes: [{ id: "explore", label: "Explore" }] },
-	kit: { yields: "kit.compose", sourceFormat: "compose.kit", componentKind: "virtualFileSystem", modes: [{ id: "explore", label: "Explore" }] },
-	design: { yields: "5d.puzzle", sourceFormat: "compose.design", componentKind: "puzzle5d", modes: [{ id: "edit", label: "Edit" }] },
-	type: { yields: "3d.puzzle", sourceFormat: "compose.type", componentKind: "puzzle3d", modes: [{ id: "edit", label: "Edit" }] },
-	docs: { yields: "text.document", sourceFormat: "writer.document", componentKind: "panel", modes: [{ id: "explore", label: "Explore" }] },
-	feedback: { yields: "form.dictionary", sourceFormat: "forms.dictionary", componentKind: "panel", modes: [{ id: "explore", label: "Explore" }] },
-};
-
-let composeSketchpadProgramOverride: SProgramDefinition | null = null;
+export type SAppResourceSpec = Omit<SAppRegistration, "id" | "label"> & { readonly modes: readonly { readonly id: string; readonly label: string }[] };
 
 export const COMPOSE_SKETCHPAD_PROGRAM_ID = "compose.sketchpad" as const;
+
+const SKETCHPAD_APP_RESOURCE: Readonly<Record<string, SAppResourceSpec>> = {
+	home: { inputs: [], outputs: [sOutPort("kit.compose")], sourceFormat: "compose.kit", componentKind: "virtualFileSystem", modes: [{ id: "explore", label: "Explore" }] },
+	kit: { inputs: [], outputs: [sOutPort("kit.compose")], sourceFormat: "compose.kit", componentKind: "virtualFileSystem", modes: [{ id: "explore", label: "Explore" }] },
+	design: { inputs: [], outputs: [sOutPort("5d.puzzle")], sourceFormat: "compose.design", componentKind: "puzzle5d", modes: [{ id: "edit", label: "Edit" }] },
+	type: { inputs: [], outputs: [sOutPort("3d.puzzle")], sourceFormat: "compose.type", componentKind: "puzzle3d", modes: [{ id: "edit", label: "Edit" }] },
+	docs: { inputs: [], outputs: [sOutPort("text.document")], sourceFormat: "writer.document", componentKind: "panel", modes: [{ id: "explore", label: "Explore" }] },
+	feedback: { inputs: [], outputs: [sOutPort("form.dictionary")], sourceFormat: "forms.dictionary", componentKind: "panel", modes: [{ id: "explore", label: "Explore" }] },
+};
+
+export const TECHNOLOGY_APP_RESOURCE_BY_PROGRAM: Readonly<Record<string, Readonly<Record<string, SAppResourceSpec>>>> = {
+	draw: { draw: sBaselineResource("2d.drawing", "draw.document", "draw") },
+	writer: { writer: sBaselineResource("text.document", "writer.document", "writer") },
+	raster: { raster: sBaselineResource("2d.raster", "raster.document", "raster") },
+	flow: { flow: sBaselineResource("computation.flow", "flow.document", "flow") },
+	"puzzle.2d": { puzzle2d: sBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d") },
+	"puzzle.3d": { puzzle3d: sBaselineResource("3d.puzzle", "puzzle.3d", "puzzle3d") },
+	"puzzle.5d": {
+		puzzle5d: {
+			inputs: [sInPort("catalogue.kinds", "catalogue", "Catalogue")],
+			outputs: [sOutPort("2d.puzzle", "graph2d", "2D Graph"), sOutPort("3d.mesh", "mesh3d", "3D Mesh")],
+			sourceFormat: "puzzle.5d",
+			componentKind: "puzzle5d",
+			modes: [{ id: "edit", label: "Edit" }],
+		},
+	},
+	trinity: {
+		trinity: sBaselineResource("graph.trinity", "trinity.graph", "trinity"),
+		jack: sBaselineResource("graph.trinity", "trinity.graph", "trinity", [{ id: "query", label: "Query" }]),
+		rewrite: sBaselineResource("graph.trinity", "trinity.graph", "trinityRewrite", [{ id: "edit", label: "Edit" }]),
+	},
+	forms: { forms: sBaselineResource("form.dictionary", "forms.form", "forms") },
+	shooting: {
+		shooting: {
+			inputs: [sInPort("3d.mesh", "mesh", "Mesh")],
+			outputs: [sOutPort("2d.shooting")],
+			sourceFormat: "shooting.scene",
+			componentKind: "shooting",
+			modes: [{ id: "edit", label: "Edit" }],
+		},
+	},
+	"gis.map": { map: sBaselineResource("2d.map", "gis.map", "gismap") },
+	cad: { cad: sBaselineResource("3d.cad", "cad.scene", "cad") },
+	dag: { dag: sBaselineResource("graph.dag", "flow.dag", "dag") },
+	"procedural.2d": { procedural2d: sBaselineResource("2d.procedural", "procedural.2d", "puzzle2d") },
+	"procedural.3d": { procedural3d: sBaselineResource("3d.procedural", "procedural.3d", "puzzle3d") },
+	"reasoning.wires": { wires: sBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d") },
+	"reasoning.mindmap": { mindmap: sBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d", [{ id: "explore", label: "Explore" }]) },
+	presentation: { presentation: sBaselineResource("presentation.deck", "presentation.deck", "panel", [{ id: "edit", label: "Edit" }]) },
+	[COMPOSE_SKETCHPAD_PROGRAM_ID]: SKETCHPAD_APP_RESOURCE,
+	lowpoly: { lowpoly: sBaselineResource("3d.lowpoly", "lowpoly.fixture", "lowpoly") },
+	sequence: { sequence: sBaselineResource("computation.sequence", "sequence.fixture", "sequence") },
+	layout: { layout: sBaselineResource("2d.layout", "layout.fixture/v1", "layout") },
+	imperative: { imperative: sBaselineResource("computation.imperative", "imperative.document", "imperative") },
+	vcs: { vcs: sBaselineResource("vcs.document", "vcs.demo/v1", "vcs", [{ id: "explore", label: "Explore" }]) },
+};
+
+const sProgramExtensionRegistry = new Map<string, SProgramDefinition>();
+
+/** @emoji 📚 Registers a fully materialized s program definition. */
+export function registerSProgramDefinition(program: SProgramDefinition): void {
+	sProgramExtensionRegistry.set(program.id, program);
+}
+
+/** @emoji 🧩 Merges a technology {@link PlatformDefinition} into the s program registry with port metadata. */
+export function mergeSProgramDefinition(
+	programId: string,
+	definition: PlatformDefinition,
+	resourceByAppId?: Readonly<Record<string, SAppResourceSpec>>,
+): void {
+	const resources = resourceByAppId ?? TECHNOLOGY_APP_RESOURCE_BY_PROGRAM[programId] ?? {};
+	const fallbackResource = Object.values(resources)[0];
+	registerSProgramDefinition({
+		id: programId,
+		name: definition.name,
+		apiVersion: definition.apiVersion ?? "1",
+		apps: definition.apps.map((app) => {
+			const resource = resources[app.id] ?? fallbackResource!;
+			return {
+				id: app.id,
+				label: app.label,
+				inputs: resource.inputs,
+				outputs: resource.outputs,
+				sourceFormat: resource.sourceFormat,
+				componentKind: resource.componentKind,
+				modes: app.modes.length > 0 ? app.modes : resource.modes,
+				defaultModeId: app.defaultModeId ?? resource.defaultModeId,
+			};
+		}),
+		createPlatformApi: () => ({}),
+	});
+}
 
 export const COMPOSE_SKETCHPAD_PROGRAM: SProgramDefinition = {
 	id: COMPOSE_SKETCHPAD_PROGRAM_ID,
@@ -357,35 +368,12 @@ export const COMPOSE_SKETCHPAD_PROGRAM: SProgramDefinition = {
 	createPlatformApi: () => ({}),
 };
 
-/** @emoji 🧩 Merges compose sketchpad {@link PlatformDefinition} apps into the s program registry. */
-export function mergeComposeSketchpadProgramDefinition(definition: PlatformDefinition): void {
-	composeSketchpadProgramOverride = {
-		id: COMPOSE_SKETCHPAD_PROGRAM_ID,
-		name: definition.name ?? COMPOSE_SKETCHPAD_PROGRAM.name,
-		apiVersion: definition.apiVersion ?? "1",
-		apps: definition.apps.map((app) => {
-			const resource = SKETCHPAD_APP_RESOURCE[app.id] ?? SKETCHPAD_APP_RESOURCE.home!;
-			return {
-				id: app.id,
-				label: app.label,
-				yields: resource.yields,
-				sourceFormat: resource.sourceFormat,
-				componentKind: resource.componentKind,
-				modes: app.modes.length > 0 ? app.modes : resource.modes,
-			};
-		}),
-		createPlatformApi: () => ({}),
-	};
+export function sExtensionRegistrySize(): number {
+	return sProgramExtensionRegistry.size;
 }
-
-function composeSketchpadProgram(): SProgramDefinition {
-	return composeSketchpadProgramOverride ?? COMPOSE_SKETCHPAD_PROGRAM;
-}
-
-const PROGRAMS: readonly SProgramDefinition[] = [S_SYSTEM_PROGRAM, ...TECHNOLOGY_PLAY_PROGRAMS];
 
 export function listSPrograms(): readonly SProgramDefinition[] {
-	return [S_SYSTEM_PROGRAM, composeSketchpadProgram(), ...TECHNOLOGY_PLAY_PROGRAMS];
+	return [S_SYSTEM_PROGRAM, ...sProgramExtensionRegistry.values()];
 }
 
 export function sProgramById(programId: string): SProgramDefinition | undefined {
@@ -399,6 +387,14 @@ export function sAppRegistration(programId: string, appId: string): SAppRegistra
 //#endregion 🔖ProgramRegistry
 
 //#region 🔖AppVcsRegistry
+export interface AppMaterializeContext {
+	readonly resolveFixtureJson?: (slug: string) => string | null;
+	readonly graph?: SMediaGraph;
+	readonly instances?: readonly SAppInstance[];
+	readonly inputBindings?: Readonly<Record<string, unknown>>;
+	readonly outputPortId?: string;
+}
+
 export interface AppVcsHandler<TProjection = unknown, TOp = unknown> {
 	readonly format: string;
 	readonly createEnvelope: (id: string) => DocumentVcsEnvelope<TProjection, TOp>;
@@ -406,7 +402,9 @@ export interface AppVcsHandler<TProjection = unknown, TOp = unknown> {
 	readonly backwardsOp?: (projection: TProjection, operation: TOp) => readonly TOp[];
 	readonly serializeEnvelope: (envelope: DocumentVcsEnvelope<TProjection, TOp>) => string;
 	readonly deserializeEnvelope: (json: string) => DocumentVcsEnvelope<TProjection, TOp>;
-	readonly materializeProjection: (source: SSourceDocument) => TProjection;
+	readonly materializeProjection: (source: SSourceDocument, context?: AppMaterializeContext) => TProjection;
+	readonly applyInputBindings?: (projection: TProjection, inputBindings: Readonly<Record<string, unknown>>, context: AppMaterializeContext) => TProjection;
+	readonly projectOutput?: (projection: TProjection, outputPortId: string, context: AppMaterializeContext) => unknown;
 }
 
 const appVcsHandlers = new Map<string, AppVcsHandler>();
@@ -427,38 +425,99 @@ export function createTypedAppVcsHandler<TProjection, TOp>(
 	empty: () => TProjection,
 	applyOp: (projection: TProjection, operation: TOp) => TProjection,
 	backwardsOp?: (projection: TProjection, operation: TOp) => readonly TOp[],
+	hooks?: {
+		readonly applyInputBindings?: AppVcsHandler<TProjection, TOp>["applyInputBindings"];
+		readonly projectOutput?: AppVcsHandler<TProjection, TOp>["projectOutput"];
+	},
 ): AppVcsHandler<TProjection, TOp> {
+	const applyInputBindings = hooks?.applyInputBindings;
+	const projectOutput = hooks?.projectOutput;
 	return {
 		format,
 		createEnvelope: (id) => createDocumentVcsEnvelope<TProjection, TOp>(schema, id, empty()),
 		applyOp,
 		serializeEnvelope: (envelope) => JSON.stringify(envelope),
 		deserializeEnvelope: (json) => JSON.parse(json) as DocumentVcsEnvelope<TProjection, TOp>,
-		materializeProjection: (source) => {
+		materializeProjection: (source, context) => {
+			const mergeInputs = (projection: TProjection) => {
+				if (!context?.inputBindings || !applyInputBindings) return projection;
+				return applyInputBindings(projection, context.inputBindings, context);
+			};
 			if (source.vcsJson) {
 				const envelope = JSON.parse(source.vcsJson) as DocumentVcsEnvelope<TProjection, TOp>;
 				const appliedIds = envelope.vcs.edits.map((edit) => edit.id);
-				return materializeDocumentProjection(envelope, appliedIds, applyOp);
+				return mergeInputs(materializeDocumentProjection(envelope, appliedIds, applyOp));
 			}
-			if (source.inline) return JSON.parse(source.inline) as TProjection;
-			return empty();
+			if (source.inline) return mergeInputs(JSON.parse(source.inline) as TProjection);
+			return mergeInputs(empty());
 		},
 		...(backwardsOp ? { backwardsOp } : {}),
+		...(applyInputBindings ? { applyInputBindings } : {}),
+		...(projectOutput ? { projectOutput } : {}),
 	};
 }
 
-type ShootingScene = { readonly schema: string; readonly id: string; readonly entities: readonly { readonly id: string; readonly label: string }[] };
+type ShootingAsset = { readonly id: string; readonly name: string; readonly url: string; readonly format: "glb" };
+type ShootingFixture = {
+	readonly schema: "shooting.fixture";
+	readonly assets: readonly ShootingAsset[];
+	readonly camera: { readonly position: readonly [number, number, number]; readonly target: readonly [number, number, number]; readonly zoom: number };
+	readonly savedCameras: readonly unknown[];
+	readonly scene: Record<string, unknown>;
+	readonly shots: readonly unknown[];
+	readonly activeShotId?: string;
+	readonly activeAssetId?: string;
+};
 type ShootingOp =
-	| { readonly op: "addEntity"; readonly entity: { readonly id: string; readonly label: string } }
-	| { readonly op: "removeEntity"; readonly entityId: string };
+	| { readonly op: "addAsset"; readonly asset: ShootingAsset }
+	| { readonly op: "removeAsset"; readonly assetId: string }
+	| { readonly op: "setActiveAsset"; readonly assetId: string };
 
-function applyShootingOp(scene: ShootingScene, op: ShootingOp): ShootingScene {
+function defaultShootingFixture(): ShootingFixture {
+	return {
+		schema: "shooting.fixture",
+		assets: [{ id: "base", name: "Base", url: "/mesh/base.glb", format: "glb" }],
+		camera: { position: [420, -420, 320], target: [0, 0, 40], zoom: 1 },
+		savedCameras: [],
+		scene: {},
+		shots: [{ id: "overview-svg", label: "Overview", width: 256, height: 256, format: "svg" }],
+		activeShotId: "overview-svg",
+		activeAssetId: "base",
+	};
+}
+
+function applyShootingOp(fixture: ShootingFixture, op: ShootingOp): ShootingFixture {
 	switch (op.op) {
-		case "addEntity":
-			return { ...scene, entities: [...scene.entities, op.entity] };
-		case "removeEntity":
-			return { ...scene, entities: scene.entities.filter((entity) => entity.id !== op.entityId) };
+		case "addAsset":
+			return { ...fixture, assets: [...fixture.assets, op.asset] };
+		case "removeAsset":
+			return { ...fixture, assets: fixture.assets.filter((asset) => asset.id !== op.assetId) };
+		case "setActiveAsset":
+			return { ...fixture, activeAssetId: op.assetId };
 	}
+}
+
+/** @emoji 📸 S app VCS handler for shooting scene documents. */
+export function createShootingAppVcsHandler() {
+	return createTypedAppVcsHandler<ShootingFixture, ShootingOp>(
+		"shooting.scene",
+		"shooting.fixture",
+		defaultShootingFixture,
+		applyShootingOp,
+		undefined,
+		{
+			applyInputBindings: (fixture, inputBindings) => {
+				const mesh = inputBindings.mesh as { readonly url?: string } | undefined;
+				if (!mesh?.url) return fixture;
+				const activeId = fixture.activeAssetId ?? fixture.assets[0]?.id;
+				if (!activeId) return fixture;
+				return {
+					...fixture,
+					assets: fixture.assets.map((asset) => (asset.id === activeId ? { ...asset, url: mesh.url! } : asset)),
+				};
+			},
+		},
+	);
 }
 
 /** @emoji 🌊 S app VCS handler for flow documents. */
@@ -491,16 +550,6 @@ export function createProcedural3dAppVcsHandler() {
 	type Doc = { readonly revision: number };
 	type Op = { readonly op: "setRevision"; readonly revision: number };
 	return createTypedAppVcsHandler<Doc, Op>("procedural.3d", "procedural.3d", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
-}
-
-/** @emoji 📸 S app VCS handler for shooting scene documents. */
-export function createShootingAppVcsHandler() {
-	return createTypedAppVcsHandler<ShootingScene, ShootingOp>(
-		"shooting.scene",
-		"shooting.scene",
-		() => ({ schema: "shooting.scene", id: "shooting", entities: [] }),
-		applyShootingOp,
-	);
 }
 
 /** @emoji 🔺 S app VCS handler for trinity graph documents. */
@@ -548,6 +597,74 @@ export function createPuzzle3dAppVcsHandler() {
 	type Doc = { readonly revision: number };
 	type Op = { readonly op: "setRevision"; readonly revision: number };
 	return createTypedAppVcsHandler<Doc, Op>("puzzle.3d", "puzzle.3d", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
+}
+
+/** @emoji 📜 S app VCS handler for sequence documents. */
+export function createSequenceAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly steps: readonly unknown[]; readonly edges: readonly unknown[] };
+	type Op = { readonly op: "setDocument"; readonly document: Doc };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"sequence.fixture",
+		"sequence.fixture",
+		() => ({ schema: "sequence.fixture", steps: [], edges: [] }),
+		(doc, op) => (op.op === "setDocument" ? op.document : doc),
+	);
+}
+
+/** @emoji 📄 S app VCS handler for layout documents. */
+export function createLayoutAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly pages: readonly unknown[] };
+	type Op = { readonly op: "setDocument"; readonly document: Doc };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"layout.fixture/v1",
+		"layout.fixture/v1",
+		() => ({ schema: "layout.fixture/v1", pages: [] }),
+		(doc, op) => (op.op === "setDocument" ? op.document : doc),
+	);
+}
+
+/** @emoji ⚙️ S app VCS handler for imperative documents. */
+export function createImperativeAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly path: { readonly steps: readonly unknown[] } };
+	type Op = { readonly op: "setDocument"; readonly document: Doc };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"imperative.document",
+		"imperative.document",
+		() => ({ schema: "imperative.document", path: { steps: [] } }),
+		(doc, op) => (op.op === "setDocument" ? op.document : doc),
+	);
+}
+
+/** @emoji 🔷 S app VCS handler for lowpoly fixtures. */
+export function createLowpolyAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly objects: readonly unknown[] };
+	type Op = { readonly op: "setDocument"; readonly document: Doc };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"lowpoly.fixture",
+		"lowpoly.fixture",
+		() => ({ schema: "lowpoly.fixture", objects: [] }),
+		(doc, op) => (op.op === "setDocument" ? op.document : doc),
+	);
+}
+
+/** @emoji 🗄️ S app VCS handler for vcs demo documents. */
+export function createVcsDemoAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly title: string; readonly counter: number };
+	type Op = { readonly op: "setDocument"; readonly document: Doc } | { readonly op: "setCounter"; readonly counter: number };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"vcs.demo/v1",
+		"vcs.demo/v1",
+		() => ({ schema: "vcs.demo/v1", title: "VCS Demo", counter: 0 }),
+		(doc, op) => {
+			if (op.op === "setDocument") return op.document;
+			return { ...doc, counter: op.counter };
+		},
+	);
+}
+
+/** @emoji 📚 Registers a catalogue.kinds VCS handler backed by a bundle factory. */
+export function createCatalogueKindsAppVcsHandler(bundle: () => unknown) {
+	return createTypedAppVcsHandler("catalogue.kinds", "catalogue.kinds", bundle, (doc) => doc);
 }
 
 /** @emoji 👯 S app VCS handler for puzzle 5d documents. */
@@ -609,12 +726,6 @@ export function resolvePayloadRef(payloadRef: string): string | null {
 	return null;
 }
 
-export interface AppMaterializeContext {
-	readonly resolveFixtureJson?: (slug: string) => string | null;
-	readonly graph?: SMediaGraph;
-	readonly instances?: readonly SAppInstance[];
-}
-
 let sFixtureJsonResolver: ((slug: string) => string | null) | null = null;
 
 /** @emoji 📎 Registers bundled fixture JSON lookup for payloadRef materialization. */
@@ -659,7 +770,9 @@ export function materializeAppInstanceProjection(instance: SAppInstance, context
 		if (source.inline) return JSON.parse(source.inline);
 		return null;
 	}
-	return handler.materializeProjection(source);
+	const projection = handler.materializeProjection(source, context);
+	if (context?.outputPortId && handler.projectOutput) return handler.projectOutput(projection, context.outputPortId, context);
+	return projection;
 }
 
 export function applyAppOperationToSource(
@@ -733,66 +846,243 @@ export function validateMediaGraph(graph: SMediaGraph): SMediaGraphValidation {
 
 export function mediaGraphNodeForInstance(instance: SAppInstance, position: { readonly x: number; readonly y: number }): SMediaGraphNode {
 	const registration = sAppRegistration(instance.programId, instance.appId);
-	const resource = registration?.yields ?? "graph.dag";
+	const inputs = (registration?.inputs ?? []).map((spec) => ({
+		id: mediaPortIdForSpec(instance.id, spec.id, "in"),
+		resourceKind: spec.resourceKind,
+		direction: "in" as const,
+	}));
+	const outputs = (registration?.outputs ?? [sOutPort("graph.dag")]).map((spec) => ({
+		id: mediaPortIdForSpec(instance.id, spec.id, "out"),
+		resourceKind: spec.resourceKind,
+		direction: "out" as const,
+	}));
+	const portCount = Math.max(inputs.length, outputs.length, 1);
 	return {
 		id: `node-${instance.id}`,
 		instanceId: instance.id,
 		x: position.x,
 		y: position.y,
-		width: 160,
-		height: 72,
-		inputs: [{ id: `${instance.id}:in`, resourceKind: resource, direction: "in" }],
-		outputs: [{ id: `${instance.id}:out`, resourceKind: resource, direction: "out" }],
+		width: 180,
+		height: 56 + portCount * 18,
+		inputs,
+		outputs,
 	};
+}
+
+export interface SMediaInputBinding {
+	readonly inputPortId: string;
+	readonly inputSpecId: string;
+	readonly upstreamInstanceId: string;
+	readonly upstreamPortId: string;
+	readonly resourceKind: SResourceKindId;
+}
+
+export function resolveInputBindingsForInstance(
+	graph: SMediaGraph,
+	instances: readonly SAppInstance[],
+	targetInstanceId: string,
+): readonly SMediaInputBinding[] {
+	const node = graph.nodes.find((entry) => entry.instanceId === targetInstanceId);
+	if (!node) return [];
+	const bindings: SMediaInputBinding[] = [];
+	for (const edge of graph.edges.filter((entry) => entry.targetNodeId === node.id)) {
+		const inPort = node.inputs.find((port) => port.id === edge.targetPortId);
+		if (!inPort) continue;
+		const specId = mediaPortSpecId(inPort.id);
+		if (!specId) continue;
+		const sourceNode = graph.nodes.find((entry) => entry.id === edge.sourceNodeId);
+		if (!sourceNode) continue;
+		const upstream = instances.find((entry) => entry.id === sourceNode.instanceId);
+		if (!upstream) continue;
+		bindings.push({
+			inputPortId: inPort.id,
+			inputSpecId: specId,
+			upstreamInstanceId: upstream.id,
+			upstreamPortId: edge.sourcePortId,
+			resourceKind: inPort.resourceKind,
+		});
+	}
+	return bindings;
 }
 
 export function resolveUpstreamResourceHandle(
 	graph: SMediaGraph,
 	instances: readonly SAppInstance[],
 	targetInstanceId: string,
+	inputPortId?: string,
 ): string | null {
-	const node = graph.nodes.find((entry) => entry.instanceId === targetInstanceId);
-	if (!node) return null;
-	const edge = graph.edges.find((entry) => entry.targetNodeId === node.id);
-	if (!edge) return null;
-	const sourceNode = graph.nodes.find((entry) => entry.id === edge.sourceNodeId);
-	if (!sourceNode) return null;
-	const source = instances.find((entry) => entry.id === sourceNode.instanceId);
-	return source?.id ?? null;
+	const bindings = resolveInputBindingsForInstance(graph, instances, targetInstanceId);
+	if (inputPortId) {
+		const binding = bindings.find((entry) => entry.inputPortId === inputPortId);
+		return binding?.upstreamInstanceId ?? null;
+	}
+	return bindings[0]?.upstreamInstanceId ?? null;
 }
 
 export function appInstanceResourceProjection(
 	graph: SMediaGraph,
 	instances: readonly SAppInstance[],
 	instanceId: string,
-	context?: Omit<AppMaterializeContext, "graph" | "instances">,
+	options?: {
+		readonly outputPortId?: string;
+		readonly context?: Omit<AppMaterializeContext, "graph" | "instances">;
+	},
 ): {
 	readonly kind: SResourceKindId;
 	readonly projection: unknown;
 	readonly upstreamInstanceId: string | null;
 	readonly upstreamProjection: unknown | null;
+	readonly inputBindings: Readonly<Record<string, unknown>>;
+	readonly outputProjections: Readonly<Record<string, unknown>>;
 } | null {
 	const instance = instances.find((entry) => entry.id === instanceId);
 	if (!instance) return null;
-	const materializeContext: AppMaterializeContext = { ...context, graph, instances };
-	const upstreamInstanceId = resolveUpstreamResourceHandle(graph, instances, instanceId);
+	const registration = sAppRegistration(instance.programId, instance.appId);
+	const bindings = resolveInputBindingsForInstance(graph, instances, instanceId);
+	const inputProjections: Record<string, unknown> = {};
+	for (const binding of bindings) {
+		const upstreamSpecId = mediaPortSpecId(binding.upstreamPortId);
+		const upstreamProjection = appInstanceResourceProjection(graph, instances, binding.upstreamInstanceId, {
+			outputPortId: upstreamSpecId ?? undefined,
+			context: options?.context,
+		});
+		if (upstreamProjection) inputProjections[binding.inputSpecId] = upstreamProjection.projection;
+	}
+	const materializeContext: AppMaterializeContext = {
+		...options?.context,
+		graph,
+		instances,
+		inputBindings: inputProjections,
+		outputPortId: options?.outputPortId,
+	};
 	let projection = materializeAppInstanceProjection(instance, materializeContext);
+	const upstreamInstanceId = bindings[0]?.upstreamInstanceId ?? null;
 	let upstreamProjection: unknown | null = null;
 	if (upstreamInstanceId) {
-		const upstream = instances.find((entry) => entry.id === upstreamInstanceId);
-		if (upstream) {
-			upstreamProjection = materializeAppInstanceProjection(upstream, materializeContext);
-			if (!instance.sourceDocument.inline && !instance.sourceDocument.vcsJson && projection == null) {
-				projection = upstreamProjection;
-			}
+		const upstreamBundle = appInstanceResourceProjection(graph, instances, upstreamInstanceId, { context: options?.context });
+		upstreamProjection = upstreamBundle?.projection ?? null;
+		if (!instance.sourceDocument.inline && !instance.sourceDocument.vcsJson && projection == null) {
+			projection = upstreamProjection;
 		}
 	}
+	const outputProjections: Record<string, unknown> = {};
+	for (const spec of registration?.outputs ?? []) {
+		outputProjections[spec.id] = materializeAppInstanceProjection(instance, {
+			...materializeContext,
+			outputPortId: spec.id,
+		});
+	}
+	const outputPortId = options?.outputPortId ?? registration?.outputs[0]?.id ?? "out";
+	const kind = registration?.outputs.find((spec) => spec.id === outputPortId)?.resourceKind ?? instance.yields;
 	return {
-		kind: instance.yields,
-		projection,
+		kind,
+		projection: options?.outputPortId ? outputProjections[outputPortId] : projection,
 		upstreamInstanceId,
 		upstreamProjection,
+		inputBindings: inputProjections,
+		outputProjections,
 	};
+}
+
+/** @emoji 🌉 Converts an S media graph into a DAG fixture for the WASM canvas. */
+export function sMediaGraphToDagFixture(
+	graph: SMediaGraph,
+	instances: readonly SAppInstance[],
+	camera: { readonly x: number; readonly y: number; readonly zoom: number } = { x: 0, y: 0, zoom: 1 },
+): {
+	readonly schema: "dag.fixture";
+	readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
+	readonly nodes: readonly Record<string, unknown>[];
+	readonly edges: readonly { readonly id: string; readonly source: string; readonly target: string }[];
+} {
+	const instanceById = new Map(instances.map((instance) => [instance.id, instance]));
+	const nodes = graph.nodes.map((node) => {
+		const instance = instanceById.get(node.instanceId);
+		const registration = instance ? sAppRegistration(instance.programId, instance.appId) : undefined;
+		return {
+			id: node.id,
+			name: instance?.label ?? node.instanceId,
+			abbreviation: instance?.appId.slice(0, 3) ?? "app",
+			icon: `emoji:${registration?.componentKind ?? "s"}`,
+			x: node.x + node.width / 2,
+			y: node.y + node.height / 2,
+			width: node.width,
+			height: node.height,
+			kind: "appInstance",
+			instanceId: node.instanceId,
+			programId: instance?.programId ?? "",
+			appId: instance?.appId ?? "",
+			inputs: node.inputs.map((port) => ({
+				id: port.id,
+				label: mediaPortSpecId(port.id) ?? port.id,
+				resourceKind: port.resourceKind,
+			})),
+			outputs: node.outputs.map((port) => ({
+				id: port.id,
+				label: mediaPortSpecId(port.id) ?? port.id,
+				resourceKind: port.resourceKind,
+			})),
+		};
+	});
+	const edges = graph.edges.map((edge) => ({
+		id: edge.id,
+		source: `${edge.sourceNodeId}:${edge.sourcePortId}`,
+		target: `${edge.targetNodeId}:${edge.targetPortId}`,
+	}));
+	return { schema: "dag.fixture", camera, nodes, edges };
+}
+
+export function sMediaGraphToDagFixtureJson(
+	graph: SMediaGraph,
+	instances: readonly SAppInstance[],
+	camera?: { readonly x: number; readonly y: number; readonly zoom: number },
+): string {
+	return JSON.stringify(sMediaGraphToDagFixture(graph, instances, camera));
+}
+
+/** @emoji 🔁 Applies structural DAG fixture edits back onto the studio media graph. */
+export function applyDagFixtureJsonToSMediaGraph(
+	graph: SMediaGraph,
+	fixtureJson: string,
+	dispatch: (command: StudioCommand) => void,
+): void {
+	const fixture = JSON.parse(fixtureJson) as {
+		readonly nodes?: readonly {
+			readonly id: string;
+			readonly x?: number;
+			readonly y?: number;
+			readonly width?: number;
+			readonly height?: number;
+		}[];
+		readonly edges?: readonly { readonly id: string; readonly source: string; readonly target: string }[];
+	};
+	for (const dagNode of fixture.nodes ?? []) {
+		const node = graph.nodes.find((entry) => entry.id === dagNode.id);
+		if (!node || dagNode.x == null || dagNode.y == null) continue;
+		const width = dagNode.width ?? node.width;
+		const height = dagNode.height ?? node.height;
+		const x = dagNode.x - width / 2;
+		const y = dagNode.y - height / 2;
+		if (Math.abs(node.x - x) > 0.5 || Math.abs(node.y - y) > 0.5) {
+			dispatch({ kind: "moveMediaNode", nodeId: node.id, x, y });
+		}
+	}
+	const edgeKey = (source: string, target: string) => `${source}→${target}`;
+	const beforeKeys = new Set(graph.edges.map((edge) => edgeKey(`${edge.sourceNodeId}:${edge.sourcePortId}`, `${edge.targetNodeId}:${edge.targetPortId}`)));
+	const afterKeys = new Set((fixture.edges ?? []).map((edge) => edgeKey(edge.source, edge.target)));
+	for (const edge of fixture.edges ?? []) {
+		if (beforeKeys.has(edgeKey(edge.source, edge.target))) continue;
+		const [sourceNodeId, ...sourcePortParts] = edge.source.split(":");
+		const [targetNodeId, ...targetPortParts] = edge.target.split(":");
+		const sourcePortId = sourcePortParts.join(":");
+		const targetPortId = targetPortParts.join(":");
+		if (!sourceNodeId || !targetNodeId || !sourcePortId || !targetPortId) continue;
+		dispatch({ kind: "connectMediaPorts", sourceNodeId, sourcePortId, targetNodeId, targetPortId });
+	}
+	for (const edge of graph.edges) {
+		const key = edgeKey(`${edge.sourceNodeId}:${edge.sourcePortId}`, `${edge.targetNodeId}:${edge.targetPortId}`);
+		if (!afterKeys.has(key)) dispatch({ kind: "disconnectMediaEdge", edgeId: edge.id });
+	}
 }
 //#endregion 🔖MediaGraphEngine
 
@@ -1009,7 +1299,7 @@ export class StudioStore {
 	appInstanceResource(instanceId: string): SResourceKindId | null {
 		const instance = this.projection().appInstances.find((entry) => entry.id === instanceId);
 		if (!instance) return null;
-		return sAppRegistration(instance.programId, instance.appId)?.yields ?? null;
+		return sAppRegistration(instance.programId, instance.appId) ? sAppPrimaryOutputKind(sAppRegistration(instance.programId, instance.appId)!) : null;
 	}
 
 	dispatch(command: StudioCommand): void {
@@ -1156,7 +1446,7 @@ export class StudioStore {
 					programId: command.programId,
 					appId: command.appId,
 					label: command.label ?? registration.label,
-					yields: registration.yields,
+					yields: sAppPrimaryOutputKind(registration),
 					sourceDocument: createAppSourceDocument(registration.sourceFormat, createSId("app-doc"), {
 						inline: command.sourceInline,
 						payloadRef: command.payloadRef,

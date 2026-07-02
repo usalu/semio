@@ -11,10 +11,12 @@ import {
   Playground,
   WindowKindRuntime,
   buildDagWindowBody,
+  buildWriterWindowBody,
   createPlayAppRuntime,
   createProductPlaygroundPlatform,
   createStackLayout,
   enforcePlaygroundWindowEngagementInput,
+  JackHoverBridge,
   registerWindowBody,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
   FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
@@ -58,12 +60,18 @@ import {
   type DagReorganizeRequest,
 } from "@semio-tech/dag-react";
 import type { WindowMeasure } from "@semio-tech/framework-playground-core";
+import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
+import { runJackOnBoardFixture } from "@semio-tech/graph-dsl-core";
 
 export const DAG_PLAY_APP_ID = "dag-play";
 export const DAG_PLAY_CONTROLLER_ID = "dag-play";
 export const DAG_PLAY_SURFACE_ID = "dag.play/v1";
 export const DAG_PLAY_BODY_KEY_MAIN = "dag.play.main";
 export const DAG_PLAY_WINDOW_KIND_ID = "dag-main";
+export const DAG_PLAY_WINDOW_KIND_JACK = "dag-jack";
+export const DAG_PLAY_SURFACE_ID_JACK = "dag.play.jack/v1";
+export const DAG_PLAY_BODY_KEY_JACK = "dag.play.jack";
+export const DAG_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:computation) RETURN n.name";
 
 export const DAG_ENGAGEMENT_REORGANIZE_ID = "dag.tool.reorganize";
 export const DAG_ENGAGEMENT_ORIENTATION_LR_ID = "dag.layout.leftRight";
@@ -77,7 +85,7 @@ const DEFAULT_SIBLING_GAP = 40;
 export const DAG_PLAY_DEFAULT_FIXTURE: DagFixtureV1 = DAG_DEFAULT_FIXTURE;
 export const DAG_PLAY_DEFAULT_FIXTURE_JSON = dagFixtureToJson(DAG_PLAY_DEFAULT_FIXTURE);
 
-export const DAG_PLAY_LAYOUT = createStackLayout([DAG_PLAY_WINDOW_KIND_ID], ["DAG"]);
+export const DAG_PLAY_LAYOUT = createStackLayout([DAG_PLAY_WINDOW_KIND_ID, DAG_PLAY_WINDOW_KIND_JACK], ["DAG", "Jack"]);
 export const DAG_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const DAG_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const DAG_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
@@ -346,10 +354,13 @@ export class DagPlayController extends Controller {
   private effectiveLod: DagDrawLodKind = "normal";
   private selectedNodeIds: string[] = [];
   private interactionRevision = 0;
+  private readonly jackBridge = new JackHoverBridge();
   private readonly snapshotListeners = new Set<() => void>();
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(DAG_PLAY_CONTROLLER_ID, commandBus, hostNotify);
+    this.jackBridge.setJackQueryText(DAG_PLAY_DEFAULT_JACK_QUERY);
+    this.jackBridge.setFixtureJson(this.getFixtureJson());
     this.rebuildShellMode();
   }
 
@@ -391,7 +402,39 @@ export class DagPlayController extends Controller {
 
   subscribeSnapshot(listener: () => void): () => void {
     this.snapshotListeners.add(listener);
-    return () => this.snapshotListeners.delete(listener);
+    const unsubJack = this.jackBridge.subscribe(listener);
+    return () => {
+      this.snapshotListeners.delete(listener);
+      unsubJack();
+    };
+  }
+
+  getJackQueryText(): string {
+    return this.jackBridge.getJackQueryText();
+  }
+
+  getWriterDocumentJack(): WriterDocumentV1 {
+    return createWriterDocument({ id: "dag-jack", languageId: "jack", text: this.jackBridge.getJackQueryText() });
+  }
+
+  getJackHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+    return this.jackBridge.getJackHoverOccurrences();
+  }
+
+  getJackSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+    return this.jackBridge.getJackSelectOccurrences();
+  }
+
+  getHoverEpoch(): number {
+    return this.jackBridge.getHoverEpoch();
+  }
+
+  getSelectEpoch(): number {
+    return this.jackBridge.getSelectEpoch();
+  }
+
+  getGraphHighlightedNodeIds(): readonly string[] {
+    return this.jackBridge.getGraphHoveredNodeIds();
   }
 
   private notifySnapshot(): void {
@@ -404,6 +447,7 @@ export class DagPlayController extends Controller {
     const parsed = parseDagPlayFixtureJson(json);
     if (!parsed || dagFixtureToJson(parsed) === this.getFixtureJson()) return;
     this.applyFixtureEdit({ op: "setDocument", document: parsed });
+    this.jackBridge.setFixtureJson(this.getFixtureJson());
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
@@ -502,6 +546,7 @@ export class DagPlayController extends Controller {
     this.mainMode.tools = buildDagPlayToolbarTools(DAG_PLAY_CONTROLLER_ID, this.orientation);
     this.mainMode.windowKinds = [
       new WindowKindRuntime(DAG_PLAY_WINDOW_KIND_ID, "DAG", DAG_PLAY_BODY_KEY_MAIN, undefined, this.windowMeasures(), this.windowEngagement()),
+      new WindowKindRuntime(DAG_PLAY_WINDOW_KIND_JACK, "Jack", DAG_PLAY_BODY_KEY_JACK),
     ];
     for (const windowKind of this.mainMode.windowKinds) {
       enforcePlaygroundWindowEngagementInput(windowKind.engagement, `DAG play window "${windowKind.id}"`);
@@ -509,6 +554,46 @@ export class DagPlayController extends Controller {
   }
 
   override run(command: string, args?: unknown): void {
+    if (command === "setJackQuery") {
+      const text = (args as { text?: string }).text;
+      if (typeof text === "string") {
+        this.jackBridge.setJackQueryText(text);
+        this.notifySnapshot();
+        this.emit();
+      }
+      return;
+    }
+    if (command === "setJackHover") {
+      this.jackBridge.setJackHover((args as { offset?: number | null }).offset ?? null);
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
+    if (command === "setJackSelect") {
+      this.jackBridge.setJackSelect((args as { start: number; end: number } | null) ?? null);
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
+    if (command === "setGraphHover") {
+      this.jackBridge.setGraphHover((args as { id?: string | null }).id ?? null);
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
+    if (command === "setGraphSelect") {
+      const ids = (args as { ids?: readonly string[] }).ids ?? [];
+      this.jackBridge.setGraphSelect(ids);
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
+    if (command === "runJackQuery") {
+      runJackOnBoardFixture(this.getFixtureJson(), this.jackBridge.getJackQueryText());
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
     if (command === "engagementInput") {
       const value = (args as { value?: string }).value;
       if (typeof value === "string" && value !== this.engagementInput) {
@@ -651,8 +736,13 @@ function buildDagPlayMainDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
   return buildDagWindowBody(DAG_PLAY_SURFACE_ID, DAG_PLAY_CONTROLLER_ID, DAG_PLAY_WINDOW_KIND_ID);
 }
 
+function buildDagPlayJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
+  return buildWriterWindowBody(DAG_PLAY_SURFACE_ID_JACK, DAG_PLAY_CONTROLLER_ID, DAG_PLAY_WINDOW_KIND_JACK);
+}
+
 export function registerDagPlayDeclarativeBodies(): void {
   registerWindowBody(DAG_PLAY_BODY_KEY_MAIN, buildDagPlayMainDeclarativeBody);
+  registerWindowBody(DAG_PLAY_BODY_KEY_JACK, buildDagPlayJackDeclarativeBody);
 }
 
 export function buildDagPlayAppRuntime(controller: DagPlayController): AppRuntime {
@@ -741,6 +831,15 @@ if (import.meta.vitest) {
   });
 }
 // #endregion 🧪Tests
+
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for dag. */
+export function buildDagProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("dag", "DAG", "dag", "DAG", DAG_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
 
 // #region 🔖Boot
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && import.meta.env.PUZZLE_PLAY_ENTRY === "dag") {

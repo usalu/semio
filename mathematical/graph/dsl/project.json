@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/graph-dsl",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "mathematical/graph/dsl",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "mathematical/graph/dsl",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
+}

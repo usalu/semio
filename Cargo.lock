@@ -3734,9 +3734,21 @@ version = "0.1.0"
 dependencies = [
  "infinite_cavas",
  "mathematical_core",
+ "mathematical_graph_manifest",
  "serde",
  "serde_json",
  "ui_styling",
+]
+
+[[package]]
+name = "mathematical_graph_dsl"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph_manifest",
+ "mathematical_graph_port_directed",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
 ]
 
 [[package]]

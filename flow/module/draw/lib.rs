@@ -462,7 +462,7 @@ pub fn register(registry: &mut Registry) {
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.style.fill", "Fill", "Fil", "emoji:🪣", "Solid fill", vec![drawing_channel("drawing", "draw.style.fill"), number_channel("colorR", "draw.style.fill", 0.0), number_channel("colorG", "draw.style.fill", 0.0), number_channel("colorB", "draw.style.fill", 0.0), number_channel("colorA", "draw.style.fill", 1.0)], vec![out_drawing("FilledDrawing")], style),
+        operator_info("draw.style.fill", "Fill", "Fil", "emoji:🪣", "Solid fill", vec![drawing_channel("drawing", "draw.style.fill"), number_channel("colorR", "draw.style.fill", 1.0), number_channel("colorG", "draw.style.fill", 1.0), number_channel("colorB", "draw.style.fill", 1.0), number_channel("colorA", "draw.style.fill", 1.0)], vec![out_drawing("FilledDrawing")], style),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(StyleFill) }],
         &["draw.drawing"],
     );

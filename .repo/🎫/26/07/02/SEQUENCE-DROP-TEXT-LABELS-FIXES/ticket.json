@@ -1,0 +1,19 @@
+{
+  "title": "Sequence Drop Text Labels Fixes",
+  "emoji": "📜",
+  "status": "closed",
+  "description": "Fix destructive reload in Sequence WASM host (replace_fixture, next_serial), canonicalize fixture JSON comparison in React, give text module into-scope-write parity with math/logic, extend is_function_kind for text.*, update TS catalogue.",
+  "summary": "Fixed three reported Sequence playground issues at the root.\n\n1. Destructive reload: added SequenceHost::replace_fixture with monotonic next_serial from fixture ids, collision-safe next_step_id/next_edge_id, and wired WASM loadFixtureJson to replace in place instead of rebuilding the host (which reset next_serial to 100 and caused duplicate step-101 ids on second drop).\n\n2. React fixture round-trip: canonicalize fixture JSON via parseSequenceFixtureJson/sequenceFixtureToJson before comparing session vs prop, avoiding spurious reloads from Rust 40.0 vs JS 40 formatting.\n\n3. Text module parity: text.concat/uppercase/length now write results into scope via an into key (matching math/logic); TS catalogue exposes into in inspector; is_function_kind includes text.* so text steps render data ports with hidden flow pins.\n\nTests: cargo test sequence_core (13), imperative_module_text (4), imperative_engine (6); wasm rebuild; vitest sequence-core, sequence-react, sequence-play, imperative-core all pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1794"
+  },
+  "goal": "🎯framework🎯platform",
+  "plan": {
+    "client": "cursor",
+    "id": "21801f43",
+    "local": "sequ_21801f43.plan.md"
+  },
+  "sessions": [
+    "⚪089b2a4bc7e04002a97a7578b4c42ed9"
+  ]
+}

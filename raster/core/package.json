@@ -12,6 +12,7 @@
     "test": "bun nx run @semio-tech/raster-core:test"
   },
   "dependencies": {
+    "@semio-tech/framework-platform-core": "workspace:*",
     "@semio-tech/vcs-core": "workspace:*"
   },
   "devDependencies": {

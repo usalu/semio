@@ -1377,6 +1377,15 @@ export function createDrawAppVcsHandler() {
 }
 //#endregion 🔖DocumentVcs
 
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for draw. */
+export function buildDrawProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("draw", "Draw", "draw", "Draw", "draw-play");
+}
+//#endregion 🔖SExtension
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;

@@ -6,6 +6,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@semio-tech/framework-platform-core": "workspace:*",
     "@semio-tech/puzzle-2d-react": "workspace:*",
     "@semio-tech/reasoning-mindmap-react": "workspace:*"
   },

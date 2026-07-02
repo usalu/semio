@@ -2151,6 +2151,15 @@ export function createPresentationAppVcsHandler() {
 }
 //#endregion 🔖DocumentVcs
 
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for presentation. */
+export function buildPresentationProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("presentation", "Presentation", "presentation", "Presentation", "presentation-play");
+}
+//#endregion 🔖SExtension
+
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;

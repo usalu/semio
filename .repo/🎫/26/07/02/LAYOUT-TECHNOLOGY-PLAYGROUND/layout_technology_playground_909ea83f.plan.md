@@ -16,16 +16,16 @@ todos:
     status: completed
   - id: react-bindings
     content: "Build layout/react: LayoutEngineSession wasm wrapper and LayoutCanvas component (blueprint/preview modes, resize/DPR/pointer routing)"
-    status: in_progress
+    status: completed
   - id: play-app
     content: "Build layout/play: Controller, 2-window (blueprint+preview) layout via createDefaultLayout, side panel tree (Document/Spreads/Pages/Parent Pages/Layers/Stories/Links/Styles/Preflight), toolbar tools, options window, preflight panel, export/package commands"
-    status: in_progress
+    status: completed
   - id: fixture-and-verify
     content: Author sample fixture/manifest (parent page, threaded text, linked image, seeded preflight issue); run dev server, verify both windows render via WebGPU, undo/redo works, one export path succeeds, preflight panel surfaces the seeded issue
-    status: pending
+    status: completed
   - id: ticket
     content: Read repo://goals, open/associate a repo ticket for this build, keep scratch files inside the ticket folder, close ticket with summary of all created/updated files
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

@@ -453,6 +453,15 @@ if (import.meta.vitest) {
 	});
 }
 
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for layout. */
+export function buildLayoutProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("layout", "Layout", "layout", "Layout", LAYOUT_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
+
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && import.meta.env.PUZZLE_PLAY_ENTRY === "layout") {
 	bootstrapElementsSurfaceChromeDocument("system");
 	void (async () => {

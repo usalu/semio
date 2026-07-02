@@ -12,6 +12,7 @@
     "test": "bun nx run @semio-tech/s-react:test"
   },
   "dependencies": {
+    "@semio-tech/dag-react": "workspace:*",
     "@semio-tech/s-core": "workspace:*",
     "@semio-tech/ui-react": "workspace:*"
   },

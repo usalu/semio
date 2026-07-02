@@ -11,6 +11,7 @@
 	},
 	"dependencies": {
 		"@semio-tech/dag-react": "workspace:*",
+		"@semio-tech/framework-platform-core": "workspace:*",
 		"@semio-tech/framework-playground-core": "workspace:*",
 		"@semio-tech/imperative-core": "workspace:*",
 		"@semio-tech/sequence-core": "workspace:*",

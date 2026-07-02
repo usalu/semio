@@ -8,7 +8,7 @@ use dag::{
     would_create_cycle, DagCamera, DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape,
 };
 use imperative_engine::compile_to_text as imperative_compile_to_text;
-use neural_engine::{Atom, Dictionary, Registry, Value};
+use neural_engine::{Atom, ChannelSpec, Dictionary, Registry, Value};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
 
@@ -17,6 +17,94 @@ const FLOW_OUTPUT_PORT: &str = "next";
 
 fn is_control_kind(kind: &str) -> bool {
     matches!(kind, "control.if" | "control.while" | "control.repeat")
+}
+
+fn is_function_kind(kind: &str) -> bool {
+    kind.starts_with("math.") || kind.starts_with("logic.") || kind.starts_with("text.")
+}
+
+fn parse_serial_suffix(prefix: &str, id: &str) -> Option<u64> {
+    id.strip_prefix(prefix)?.parse().ok()
+}
+
+fn max_serial_in_fixture(fixture: &SequenceFixture) -> u64 {
+    let mut max = 0u64;
+    for step in &fixture.steps {
+        if let Some(serial) = parse_serial_suffix("step-", &step.id) {
+            max = max.max(serial);
+        }
+    }
+    for edge in &fixture.edges {
+        if let Some(serial) = parse_serial_suffix("edge-", &edge.id) {
+            max = max.max(serial);
+        }
+    }
+    max
+}
+
+fn default_control_slot(kind: &str) -> &'static str {
+    if kind == "control.if" { "then" } else { "body" }
+}
+
+fn neural_value_to_json_value(value: &Value) -> serde_json::Value {
+    serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
+}
+
+fn channel_spec_value_type(spec: &ChannelSpec) -> Option<String> {
+    if spec.operators.is_empty() {
+        Some("value".into())
+    } else {
+        Some(spec.operators.join(","))
+    }
+}
+
+fn channel_spec_to_output_port(spec: &ChannelSpec) -> IoPortSpec {
+    let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
+    port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
+    port.value_type = channel_spec_value_type(spec);
+    port.default = spec.default.as_ref().map(neural_value_to_json_value);
+    port.cardinality = spec.cardinality.symbol();
+    port
+}
+
+fn input_spec_to_port(spec: &ChannelSpec, params: &Dictionary) -> IoPortSpec {
+    let value = params.get(&spec.name).or(spec.default.as_ref()).map(neural_value_to_json_value);
+    let mut port = IoPortSpec::named(&spec.code, &spec.abbreviation, &spec.name, &spec.full_name);
+    port.label = spec.label.clone().unwrap_or_else(|| spec.code.clone());
+    port.value_type = channel_spec_value_type(spec);
+    port.default = spec.default.as_ref().map(neural_value_to_json_value);
+    port.value = value;
+    port.connected = Some(false);
+    port.cardinality = spec.cardinality.symbol();
+    port
+}
+
+fn hidden_flow_input_port() -> IoPortSpec {
+    let mut port = IoPortSpec::named("", "", FLOW_INPUT_PORT, "");
+    port.cardinality = String::new();
+    port.visible = false;
+    port
+}
+
+fn hidden_flow_output_port() -> IoPortSpec {
+    let mut port = IoPortSpec::named("", "", FLOW_OUTPUT_PORT, "");
+    port.cardinality = String::new();
+    port.visible = false;
+    port
+}
+
+fn visible_flow_input_port() -> IoPortSpec {
+    let mut port = IoPortSpec::named("", "", FLOW_INPUT_PORT, "Previous");
+    port.shape = PortShape::Triangle;
+    port.cardinality = String::new();
+    port
+}
+
+fn visible_flow_output_port() -> IoPortSpec {
+    let mut port = IoPortSpec::named("", "", FLOW_OUTPUT_PORT, "Next");
+    port.shape = PortShape::Triangle;
+    port.cardinality = String::new();
+    port
 }
 
 fn control_slots(kind: &str) -> &'static [&'static str] {
@@ -126,6 +214,7 @@ impl Default for SequenceHost {
 
 impl SequenceHost {
     pub fn from_fixture(fixture: SequenceFixture) -> Self {
+        let next_serial = max_serial_in_fixture(&fixture).max(100);
         let mut host = Self {
             fixture,
             dag: DagHost::from_fixture_without_layout(DagFixture {
@@ -135,10 +224,20 @@ impl SequenceHost {
                 edges: vec![],
             }),
             registry: imperative_module_registry(),
-            next_serial: 100,
+            next_serial,
         };
         host.rebuild_dag();
         host
+    }
+
+    pub fn replace_fixture(&mut self, fixture: SequenceFixture) -> Result<(), String> {
+        if fixture.schema != "sequence.fixture" {
+            return Err(format!("unsupported schema: {}", fixture.schema));
+        }
+        self.next_serial = self.next_serial.max(max_serial_in_fixture(&fixture));
+        self.fixture = fixture;
+        self.rebuild_dag();
+        Ok(())
     }
 
     pub fn load_json(json: &str) -> Result<Self, String> {
@@ -185,10 +284,48 @@ impl SequenceHost {
         self.add_step_in_slot(kind, x, y, None)
     }
 
+    pub fn add_step_dropped(&mut self, kind: &str, x: f64, y: f64, picked_step_id: Option<&str>) -> String {
+        if let Some(owner_id) = picked_step_id {
+            if let Some(owner) = self.fixture.steps.iter().find(|step| step.id == owner_id) {
+                if is_control_kind(&owner.kind) && !owner.collapsed {
+                    return self.add_step_in_slot(
+                        kind,
+                        x,
+                        y,
+                        Some(SlotRef {
+                            owner: owner_id.into(),
+                            name: default_control_slot(&owner.kind).into(),
+                        }),
+                    );
+                }
+            }
+        }
+        self.add_step(kind, x, y)
+    }
+
+    fn next_step_id(&mut self) -> String {
+        loop {
+            self.next_serial += 1;
+            let id = format!("step-{}", self.next_serial);
+            if !self.fixture.steps.iter().any(|step| step.id == id) {
+                return id;
+            }
+        }
+    }
+
+    fn next_edge_id(&mut self) -> String {
+        loop {
+            self.next_serial += 1;
+            let id = format!("edge-{}", self.next_serial);
+            if !self.fixture.edges.iter().any(|edge| edge.id == id) {
+                return id;
+            }
+        }
+    }
+
     pub fn add_step_in_slot(&mut self, kind: &str, x: f64, y: f64, slot: Option<SlotRef>) -> String {
         self.clear_ghost_step();
-        self.next_serial += 1;
-        let id = format!("step-{}", self.next_serial);
+        let id = self.next_step_id();
         self.fixture.steps.push(SequenceStep {
             id: id.clone(),
             kind: kind.into(),
@@ -276,8 +413,7 @@ impl SequenceHost {
         if self.fixture.edges.iter().any(|edge| edge.to == to_id) {
             self.fixture.edges.retain(|edge| edge.to != to_id);
         }
-        self.next_serial += 1;
-        let id = format!("edge-{}", self.next_serial);
+        let id = self.next_edge_id();
         self.fixture.edges.push(SequenceEdge { id: id.clone(), from: from_id.into(), to: to_id.into() });
         self.rebuild_dag();
         Ok(id)
@@ -294,24 +430,30 @@ impl SequenceHost {
     }
 
     pub fn sync_edges_from_dag(&mut self) {
+        let dag_pairs: Vec<(String, String)> = self
+            .dag
+            .fixture
+            .edges
+            .iter()
+            .filter_map(|dag_edge| {
+                let from = dag_edge.source.split(':').next()?;
+                let to = dag_edge.target.split(':').next()?;
+                if from == to {
+                    return None;
+                }
+                Some((from.into(), to.into()))
+            })
+            .collect();
         let mut edges = Vec::new();
-        for dag_edge in &self.dag.fixture.edges {
-            let Some(from) = dag_edge.source.split(':').next() else { continue };
-            let Some(to) = dag_edge.target.split(':').next() else { continue };
-            if from == to {
-                continue;
-            }
+        for (from, to) in dag_pairs {
             let id = self
                 .fixture
                 .edges
                 .iter()
                 .find(|edge| edge.from == from && edge.to == to)
                 .map(|edge| edge.id.clone())
-                .unwrap_or_else(|| {
-                    self.next_serial += 1;
-                    format!("edge-{}", self.next_serial)
-                });
-            edges.push(SequenceEdge { id, from: from.into(), to: to.into() });
+                .unwrap_or_else(|| self.next_edge_id());
+            edges.push(SequenceEdge { id, from, to });
         }
         self.fixture.edges = edges;
     }
@@ -511,6 +653,7 @@ impl SequenceHost {
     fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
         let info = self.registry.operator_info(&step.kind);
         let (name, mut abbreviation, icon) = info
+            .as_ref()
             .map(|entry| (entry.name.clone(), entry.abbreviation.clone(), entry.icon.clone()))
             .unwrap_or_else(|| (step.kind.clone(), step.kind.clone(), "emoji:⚡".into()));
         if is_control_kind(&step.kind) {
@@ -521,12 +664,22 @@ impl SequenceHost {
                 format!("▾ {count}")
             };
         }
-        let mut inputs = vec![IoPortSpec::named("", "", FLOW_INPUT_PORT, "Previous")];
-        inputs[0].shape = PortShape::Triangle;
-        inputs[0].cardinality = String::new();
-        let mut outputs = vec![IoPortSpec::named("", "", FLOW_OUTPUT_PORT, "Next")];
-        outputs[0].shape = PortShape::Triangle;
-        outputs[0].cardinality = String::new();
+        let (inputs, outputs) = if is_function_kind(&step.kind) {
+            let info = info.expect("function step must resolve operator info");
+            let mut inputs: Vec<IoPortSpec> = info.inputs.iter().map(|spec| input_spec_to_port(spec, &step.params)).collect();
+            let mut outputs: Vec<IoPortSpec> = info.outputs.iter().map(channel_spec_to_output_port).collect();
+            if outputs.is_empty() {
+                outputs.push(channel_spec_to_output_port(&ChannelSpec::wildcard()));
+            }
+            inputs.push(hidden_flow_input_port());
+            outputs.push(hidden_flow_output_port());
+            (inputs, outputs)
+        } else {
+            (
+                vec![visible_flow_input_port()],
+                vec![visible_flow_output_port()],
+            )
+        };
         let width = dag::computation_node_width(&name, &inputs, &outputs);
         let height = dag::computation_node_height(inputs.len(), outputs.len(), false, false);
         DagNodeSpec::computation(step.id.clone(), name, abbreviation, icon, inputs, outputs, false, false, step.x, step.y, width, height)
@@ -598,9 +751,12 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = loadFixtureJson)]
         pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
-            let host = SequenceHost::load_json(json).map_err(|err| JsValue::from_str(&err))?;
-            self.state.borrow_mut().host = host;
-            Ok(())
+            let fixture: SequenceFixture = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+            self.state
+                .borrow_mut()
+                .host
+                .replace_fixture(fixture)
+                .map_err(|err| JsValue::from_str(&err))
         }
 
         #[wasm_bindgen(js_name = fixtureJson)]
@@ -617,6 +773,14 @@ mod wasm_session {
         #[wasm_bindgen(js_name = addStep)]
         pub fn add_step(&self, kind: &str, x: f64, y: f64) -> String {
             self.state.borrow_mut().host.add_step(kind, x, y)
+        }
+
+        #[wasm_bindgen(js_name = addStepDropped)]
+        pub fn add_step_dropped(&self, kind: &str, x: f64, y: f64, picked_step_id: Option<String>) -> String {
+            self.state
+                .borrow_mut()
+                .host
+                .add_step_dropped(kind, x, y, picked_step_id.as_deref())
         }
 
         #[wasm_bindgen(js_name = addStepToSlot)]
@@ -1008,9 +1172,92 @@ mod tests {
     #[test]
     fn execution_ports_use_triangle_shape() {
         let host = SequenceHost::default();
-        let node = host.step_to_dag_node(&host.fixture.steps[0]);
+        let node = host.step_to_dag_node(&host.fixture.steps[1]);
         assert_eq!(node.inputs()[0].shape, dag::PortShape::Triangle);
         assert_eq!(node.outputs()[0].shape, dag::PortShape::Triangle);
+    }
+
+    #[test]
+    fn function_steps_use_data_ports_without_visible_execution_pins() {
+        let host = SequenceHost::default();
+        let step = SequenceStep {
+            id: "step-fn".into(),
+            kind: "math.add".into(),
+            params: Dictionary::new(),
+            x: 0.0,
+            y: 0.0,
+            slot: None,
+            collapsed: false,
+        };
+        let node = host.step_to_dag_node(&step);
+        assert!(node.inputs().iter().any(|port| port.id == "a" && port.visible));
+        assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
+        assert!(node.outputs().iter().any(|port| port.id == "next" && !port.visible));
+        assert!(!node.inputs().iter().any(|port| port.shape == dag::PortShape::Triangle && port.visible));
+    }
+
+    #[test]
+    fn text_steps_use_data_ports_without_visible_execution_pins() {
+        let host = SequenceHost::default();
+        let step = SequenceStep {
+            id: "step-txt".into(),
+            kind: "text.concat".into(),
+            params: Dictionary::new(),
+            x: 0.0,
+            y: 0.0,
+            slot: None,
+            collapsed: false,
+        };
+        let node = host.step_to_dag_node(&step);
+        assert!(node.inputs().iter().any(|port| port.id == "left" && port.visible));
+        assert!(node.inputs().iter().any(|port| port.id == "into" && port.visible));
+        assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
+        assert!(node.outputs().iter().any(|port| port.id == "next" && !port.visible));
+        assert!(!node.inputs().iter().any(|port| port.shape == dag::PortShape::Triangle && port.visible));
+    }
+
+    #[test]
+    fn replace_fixture_preserves_next_serial_and_selection() {
+        let mut host = SequenceHost::default();
+        let first = host.add_step("math.add", 40.0, 40.0);
+        host.dag.set_selection(&[first.clone()]);
+        let json = host.to_json().expect("fixture json");
+        let round_trip: SequenceFixture = serde_json::from_str(&json).expect("parse");
+        host.replace_fixture(round_trip).expect("replace");
+        let second = host.add_step("math.add", 80.0, 80.0);
+        assert_ne!(first, second);
+        assert!(host.fixture.steps.iter().any(|step| step.id == first));
+        assert!(host.fixture.steps.iter().any(|step| step.id == second));
+        assert!(host.dag.selected_node_ids().contains(&first));
+    }
+
+    #[test]
+    fn repeated_drops_after_replace_fixture_use_distinct_ids() {
+        let mut host = SequenceHost::default();
+        let first = host.add_step_dropped("math.add", 10.0, 10.0, None);
+        let json = host.to_json().expect("fixture json");
+        let round_trip: SequenceFixture = serde_json::from_str(&json).expect("parse");
+        host.replace_fixture(round_trip).expect("replace");
+        let second = host.add_step_dropped("math.add", 20.0, 20.0, None);
+        assert_ne!(first, second);
+        assert_eq!(host.fixture.steps.iter().filter(|step| step.kind == "math.add").count(), 2);
+    }
+
+    #[test]
+    fn add_step_dropped_targets_expanded_control_slot() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep {
+            id: "step-3".into(),
+            kind: "control.if".into(),
+            params: Dictionary::new(),
+            x: 560.0,
+            y: 0.0,
+            slot: None,
+            collapsed: false,
+        });
+        let id = host.add_step_dropped("log.print", 600.0, 180.0, Some("step-3"));
+        let step = host.fixture.steps.iter().find(|entry| entry.id == id).expect("added step");
+        assert_eq!(step.slot.as_ref().map(|slot| slot.name.as_str()), Some("then"));
     }
 
     #[test]

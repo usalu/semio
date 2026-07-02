@@ -2,17 +2,20 @@
 /** @emoji 🖥️ `@semio-tech/s-react` — studio provider, media graph canvas, app host surfaces. */
 // #endregion 🧲Header
 
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { DagCanvas, type DagSession } from "@semio-tech/dag-react";
 import {
 	type SAppInstance,
-	type SMediaGraphEdge,
-	type SMediaGraphNode,
 	type SMediaGraph,
 	type StudioCommand,
 	type StudioStore,
+	applyDagFixtureJsonToSMediaGraph,
 	listSPrograms,
+	sAppRegistration,
+	sMediaGraphToDagFixtureJson,
 	sResourceDescriptor,
 } from "@semio-tech/s-core";
+import { CATALOGUE_DRAG_MIME } from "@semio-tech/ui-react";
 
 //#region 🔖StudioContext
 const StudioStoreContext = createContext<StudioStore | null>(null);
@@ -56,9 +59,12 @@ export interface SMediaGraphCanvasProps {
 	readonly instances: readonly SAppInstance[];
 	readonly activeInstanceId?: string | null;
 	readonly onSelectInstance?: (instanceId: string) => void;
+	readonly onOpenInstance?: (instanceId: string) => void;
 	readonly onMoveNode?: (nodeId: string, x: number, y: number) => void;
 	readonly onConnectPorts?: (sourceNodeId: string, sourcePortId: string, targetNodeId: string, targetPortId: string) => void;
 	readonly onRemoveInstance?: (instanceId: string) => void;
+	readonly onDisconnectEdge?: (edgeId: string) => void;
+	readonly onSpawnApp?: (programId: string, appId: string, position: { readonly x: number; readonly y: number }) => void;
 	readonly editable?: boolean;
 }
 
@@ -67,126 +73,120 @@ export function SMediaGraphCanvas({
 	instances,
 	activeInstanceId,
 	onSelectInstance,
+	onOpenInstance,
 	onMoveNode,
 	onConnectPorts,
 	onRemoveInstance,
+	onSpawnApp,
+	onDisconnectEdge,
 	editable = false,
 }: SMediaGraphCanvasProps): React.ReactElement {
-	const instanceById = useMemo(() => new Map(instances.map((instance) => [instance.id, instance])), [instances]);
-	const [pendingSource, setPendingSource] = useState<{ nodeId: string; portId: string } | null>(null);
-	const dragRef = useRef<{ nodeId: string; offsetX: number; offsetY: number } | null>(null);
+	const sessionRef = useRef<DagSession | null>(null);
+	const lastFixtureRef = useRef<string>("");
+	const cameraRef = useRef({ x: 0, y: 0, zoom: 1 });
+	const dispatchProxy = useCallback(
+		(command: StudioCommand) => {
+			if (command.kind === "moveMediaNode") onMoveNode?.(command.nodeId, command.x, command.y);
+			if (command.kind === "connectMediaPorts") {
+				onConnectPorts?.(command.sourceNodeId, command.sourcePortId, command.targetNodeId, command.targetPortId);
+			}
+			if (command.kind === "disconnectMediaEdge") onDisconnectEdge?.(command.edgeId);
+		},
+		[onConnectPorts, onDisconnectEdge, onMoveNode],
+	);
 
-	const handleNodePointerDown = (node: SMediaGraphNode, event: React.PointerEvent<SVGGElement>) => {
-		if (!editable || !onMoveNode) return;
-		const target = event.currentTarget;
-		target.setPointerCapture(event.pointerId);
-		dragRef.current = { nodeId: node.id, offsetX: event.clientX - node.x, offsetY: event.clientY - node.y };
-	};
+	const fixtureJson = useMemo(() => sMediaGraphToDagFixtureJson(graph, instances, cameraRef.current), [graph, instances]);
 
-	const handleNodePointerMove = (event: React.PointerEvent<SVGGElement>) => {
-		const drag = dragRef.current;
-		if (!drag || !onMoveNode) return;
-		onMoveNode(drag.nodeId, event.clientX - drag.offsetX, event.clientY - drag.offsetY);
-	};
+	useEffect(() => {
+		lastFixtureRef.current = fixtureJson;
+	}, [fixtureJson]);
 
-	const handleNodePointerUp = (event: React.PointerEvent<SVGGElement>) => {
-		if (dragRef.current) {
-			event.currentTarget.releasePointerCapture(event.pointerId);
-			dragRef.current = null;
+	const handleFixtureChange = useCallback(
+		(nextJson: string) => {
+			if (!editable) return;
+			const before = JSON.parse(lastFixtureRef.current) as { readonly camera?: { readonly x: number; readonly y: number; readonly zoom: number } };
+			if (before.camera) cameraRef.current = before.camera;
+			applyDagFixtureJsonToSMediaGraph(graph, nextJson, dispatchProxy);
+			lastFixtureRef.current = nextJson;
+		},
+		[dispatchProxy, editable, graph],
+	);
+
+	const handlePointerUp = useCallback(() => {
+		const session = sessionRef.current;
+		if (!session || !onOpenInstance) return;
+		try {
+			const instanceId = session.takePendingOpenInstanceId?.();
+			if (instanceId) onOpenInstance(instanceId);
+		} catch {
+			/* wasm export unavailable */
 		}
-	};
+	}, [onOpenInstance]);
 
-	const handleOutputClick = (node: SMediaGraphNode, portId: string, event: React.MouseEvent) => {
-		event.stopPropagation();
-		if (!editable) return;
-		setPendingSource({ nodeId: node.id, portId });
-	};
-
-	const handleInputClick = (node: SMediaGraphNode, portId: string, event: React.MouseEvent) => {
-		event.stopPropagation();
-		if (!editable || !pendingSource || !onConnectPorts) return;
-		onConnectPorts(pendingSource.nodeId, pendingSource.portId, node.id, portId);
-		setPendingSource(null);
-	};
+	const handleDrop = useCallback(
+		(event: React.DragEvent<HTMLDivElement>) => {
+			if (!editable || !onSpawnApp) return;
+			event.preventDefault();
+			const raw = event.dataTransfer.getData(CATALOGUE_DRAG_MIME);
+			if (!raw) return;
+			let payload: { readonly programId?: string; readonly appId?: string };
+			try {
+				payload = JSON.parse(raw) as { readonly programId?: string; readonly appId?: string };
+			} catch {
+				return;
+			}
+			if (!payload.programId || !payload.appId) return;
+			const rect = event.currentTarget.getBoundingClientRect();
+			const sx = event.clientX - rect.left;
+			const sy = event.clientY - rect.top;
+			const session = sessionRef.current;
+			let position = { x: sx, y: sy };
+			try {
+				const world = session?.screenToWorld?.(sx, sy);
+				if (world && world.length >= 2) position = { x: world[0]!, y: world[1]! };
+			} catch {
+				/* fallback screen coords */
+			}
+			onSpawnApp(payload.programId, payload.appId, position);
+		},
+		[editable, onSpawnApp],
+	);
 
 	return (
-		<svg
-			className="h-full w-full bg-[var(--semio-surface-canvas)]"
-			role="img"
-			aria-label="Studio media graph"
-			onPointerMove={handleNodePointerMove}
-			onPointerUp={handleNodePointerUp}
+		<div
+			className="relative h-full w-full"
+			onDragOver={(event) => {
+				if (editable && onSpawnApp) event.preventDefault();
+			}}
+			onDrop={handleDrop}
 		>
-			{graph.edges.map((edge: SMediaGraphEdge) => {
-				const source = graph.nodes.find((node) => node.id === edge.sourceNodeId);
-				const target = graph.nodes.find((node) => node.id === edge.targetNodeId);
-				if (!source || !target) return null;
-				const x1 = source.x + source.width;
-				const y1 = source.y + source.height / 2;
-				const x2 = target.x;
-				const y2 = target.y + target.height / 2;
-				return <line key={edge.id} x1={x1} y1={y1} x2={x2} y2={y2} stroke="var(--semio-edge-default)" strokeWidth={2} />;
-			})}
-			{graph.nodes.map((node) => {
-				const instance = instanceById.get(node.instanceId);
-				const resource = instance ? sResourceDescriptor(instance.yields) : null;
-				const active = activeInstanceId === node.instanceId;
-				return (
-					<g
-						key={node.id}
-						transform={`translate(${node.x} ${node.y})`}
-						onClick={() => onSelectInstance?.(node.instanceId)}
-						onPointerDown={(event) => handleNodePointerDown(node, event)}
-						style={{ cursor: editable ? "grab" : "pointer" }}
-					>
-						<rect
-							width={node.width}
-							height={node.height}
-							rx={8}
-							fill={active ? "var(--semio-accent-subtle)" : "var(--semio-surface-raised)"}
-							stroke={active ? "var(--semio-accent)" : "var(--semio-border-default)"}
-							strokeWidth={active ? 2 : 1}
-						/>
-						<text x={12} y={24} fill="var(--semio-text-primary)" fontSize={13} fontWeight={600}>
+			<DagCanvas
+				className="h-full w-full"
+				fixtureJson={fixtureJson}
+				onFixtureChange={editable ? handleFixtureChange : undefined}
+				onSessionReady={(session) => {
+					sessionRef.current = session;
+				}}
+				onAfterPointerUp={handlePointerUp}
+				automaticLod
+			/>
+			<div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap gap-2 p-2">
+				{graph.nodes.map((node) => {
+					const instance = instances.find((entry) => entry.id === node.instanceId);
+					const active = activeInstanceId === node.instanceId;
+					return (
+						<button
+							key={node.id}
+							type="button"
+							className={`pointer-events-auto rounded border px-2 py-1 text-xs ${active ? "border-[var(--semio-accent)] bg-[var(--semio-accent-subtle)]" : "border-[var(--semio-border-default)] bg-[var(--semio-surface-raised)]"}`}
+							onClick={() => onSelectInstance?.(node.instanceId)}
+						>
 							{instance?.label ?? node.instanceId}
-						</text>
-						<text x={12} y={44} fill="var(--semio-text-secondary)" fontSize={11}>
-							{resource?.kind ?? "resource"}
-						</text>
-						<text x={12} y={60} fill="var(--semio-text-tertiary)" fontSize={10}>
-							{instance?.programId}/{instance?.appId}
-						</text>
-						{editable ? (
-							<>
-								<circle cx={0} cy={node.height / 2} r={5} fill="var(--semio-accent)" onClick={(event) => handleInputClick(node, node.inputs[0]?.id ?? "", event)} />
-								<circle
-									cx={node.width}
-									cy={node.height / 2}
-									r={5}
-									fill={pendingSource?.nodeId === node.id ? "var(--semio-accent)" : "var(--semio-border-strong)"}
-									onClick={(event) => handleOutputClick(node, node.outputs[0]?.id ?? "", event)}
-								/>
-								{onRemoveInstance ? (
-									<text
-										x={node.width - 12}
-										y={14}
-										textAnchor="end"
-										fill="var(--semio-text-tertiary)"
-										fontSize={10}
-										onClick={(event) => {
-											event.stopPropagation();
-											onRemoveInstance(node.instanceId);
-										}}
-									>
-										×
-									</text>
-								) : null}
-							</>
-						) : null}
-					</g>
-				);
-			})}
-		</svg>
+						</button>
+					);
+				})}
+			</div>
+		</div>
 	);
 }
 //#endregion 🔖MediaGraphCanvas
@@ -199,24 +199,17 @@ export function SProgramLauncherPanel(): React.ReactElement {
 		<div className="flex h-full flex-col gap-2 overflow-auto p-3">
 			<div className="text-xs font-semibold uppercase tracking-wide text-[var(--semio-text-secondary)]">Programs</div>
 			{programs.map((program) => (
-				<div key={program.id} className="rounded border border-[var(--semio-border-subtle)] p-2">
-					<div className="text-sm font-medium text-[var(--semio-text-primary)]">{program.name}</div>
+				<div key={program.id} className="rounded border border-[var(--semio-border-default)] p-2">
+					<div className="text-sm font-semibold text-[var(--semio-text-primary)]">{program.name}</div>
 					<div className="mt-2 flex flex-col gap-1">
 						{program.apps.map((app) => (
 							<button
-								key={`${program.id}/${app.id}`}
+								key={app.id}
 								type="button"
-								className="rounded bg-[var(--semio-surface-raised)] px-2 py-1 text-left text-xs text-[var(--semio-text-primary)] hover:bg-[var(--semio-accent-subtle)]"
-								onClick={() =>
-									dispatch({
-										kind: "spawnAppInstance",
-										programId: program.id,
-										appId: app.id,
-										position: { x: 40 + Math.random() * 120, y: 40 + Math.random() * 120 },
-									})
-								}
+								className="rounded px-2 py-1 text-left text-xs hover:bg-[var(--semio-surface-muted)]"
+								onClick={() => dispatch({ kind: "spawnAppInstance", programId: program.id, appId: app.id })}
 							>
-								Spawn {app.label}
+								{app.label}
 							</button>
 						))}
 					</div>
@@ -227,85 +220,58 @@ export function SProgramLauncherPanel(): React.ReactElement {
 }
 //#endregion 🔖ProgramLauncher
 
-//#region 🔖StudioHistory
+//#region 🔖Catalogue
+export function buildSPlayCatalogueTree(): import("@semio-tech/framework-playground-core").UiTreeNode {
+	const programs = listSPrograms().filter((program) => program.id !== "s.system");
+	return {
+		type: "section",
+		label: "Apps",
+		children: programs.map((program) => ({
+			type: "section",
+			label: program.name,
+			children: program.apps.map((app) => ({
+				type: "item",
+				label: app.label,
+				dragData: { [CATALOGUE_DRAG_MIME]: JSON.stringify({ programId: program.id, appId: app.id }) },
+				meta: sAppRegistration(program.id, app.id)?.outputs.map((port) => port.resourceKind).join(", ") ?? "",
+			})),
+		})),
+	};
+}
+//#endregion 🔖Catalogue
+
+//#region 🔖History
 export function SStudioHistoryPanel(): React.ReactElement {
 	const store = useStudioStore();
-	const dispatch = useDispatchStudioCommand();
-	const document = useSyncExternalStore(store.subscribe.bind(store), () => store.getDocument(), () => store.getDocument());
-	const projection = useStudioProjection();
+	const generation = useStudioGeneration();
+	void generation;
+	const document = store.getDocument();
 	return (
-		<div className="flex h-full flex-col gap-3 overflow-auto p-3 text-xs text-[var(--semio-text-primary)]">
-			<div className="font-semibold uppercase tracking-wide text-[var(--semio-text-secondary)]">Studio</div>
-			<div>{document.name}</div>
-			<div className="text-[var(--semio-text-secondary)]">Instances: {projection.appInstances.length}</div>
-			<div className="text-[var(--semio-text-secondary)]">Edges: {projection.mediaGraph.edges.length}</div>
-			<div className="text-[var(--semio-text-secondary)]">Backbone: {document.backbone?.uri ?? "none"}</div>
-			<div className="flex gap-2">
-				<button type="button" className="rounded border px-2 py-1" onClick={() => dispatch({ kind: "undo" })}>
-					Undo
-				</button>
-				<button type="button" className="rounded border px-2 py-1" onClick={() => dispatch({ kind: "redo" })}>
-					Redo
-				</button>
-				<button type="button" className="rounded border px-2 py-1" onClick={() => dispatch({ kind: "commitCheckpoint", message: "snapshot" })}>
-					Checkpoint
-				</button>
-			</div>
-			<div className="font-semibold uppercase tracking-wide text-[var(--semio-text-secondary)]">Checkpoints</div>
-			{document.vcs.checkpoints.length === 0 ? <div className="text-[var(--semio-text-tertiary)]">No checkpoints</div> : null}
-			{document.vcs.checkpoints.map((checkpoint) => (
-				<div key={checkpoint.id} className="rounded border border-[var(--semio-border-subtle)] p-2">
-					<div>{checkpoint.message ?? checkpoint.id}</div>
-					<div className="text-[var(--semio-text-tertiary)]">{checkpoint.savedAt}</div>
+		<div className="flex h-full flex-col gap-2 overflow-auto p-3 text-xs">
+			<div className="font-semibold uppercase tracking-wide text-[var(--semio-text-secondary)]">History</div>
+			{document.vcs.operations.map((change) => (
+				<div key={change.id} className="rounded border border-[var(--semio-border-default)] px-2 py-1">
+					{change.description ?? change.id}
 				</div>
 			))}
-			<div className="font-semibold uppercase tracking-wide text-[var(--semio-text-secondary)]">Alternatives</div>
-			{document.vcs.alternatives.length === 0 ? <div className="text-[var(--semio-text-tertiary)]">No alternatives</div> : null}
-			{document.vcs.alternatives.map((alternative) => (
-				<button
-					key={alternative.id}
-					type="button"
-					className="rounded border border-[var(--semio-border-subtle)] p-2 text-left hover:bg-[var(--semio-accent-subtle)]"
-					onClick={() => dispatch({ kind: "switchAlternative", alternativeId: alternative.id })}
-				>
-					<div>{alternative.name}</div>
-					<div className="text-[var(--semio-text-tertiary)]">
-						{projection.activeAlternativeId === alternative.id ? "active" : `${alternative.checkpointIds.length} checkpoint(s)`}
-					</div>
-				</button>
-			))}
-			<button
-				type="button"
-				className="rounded border px-2 py-1"
-				onClick={() => dispatch({ kind: "createAlternative", name: `Branch ${document.vcs.alternatives.length + 1}` })}
-			>
-				New alternative
-			</button>
 		</div>
 	);
 }
-//#endregion 🔖StudioHistory
+//#endregion 🔖History
 
 //#region 🔖AppHost
-export interface SAppHostSurfaceProps {
-	readonly instance: SAppInstance | null;
-	readonly children: React.ReactNode;
-}
-
-export function SAppHostSurface({ instance, children }: SAppHostSurfaceProps): React.ReactElement {
-	if (!instance) {
-		return (
-			<div className="flex h-full items-center justify-center text-sm text-[var(--semio-text-secondary)]">
-				Select an app instance in the media graph
-			</div>
-		);
-	}
+export function SAppHostSurface({ instanceId }: { readonly instanceId: string | null }): React.ReactElement {
+	const projection = useStudioProjection();
+	const instance = projection.appInstances.find((entry) => entry.id === instanceId) ?? null;
+	const resource = instance ? sResourceDescriptor(instance.yields) : null;
 	return (
-		<div className="flex h-full min-h-0 flex-col" data-s-instance-id={instance.id} data-s-program-id={instance.programId}>
-			<div className="border-b border-[var(--semio-border-subtle)] px-3 py-2 text-sm font-medium text-[var(--semio-text-primary)]">
-				{instance.label} · {instance.programId}
+		<div className="flex h-full flex-col">
+			<div className="border-b border-[var(--semio-border-default)] px-3 py-2 text-sm font-semibold">
+				{instance?.label ?? "No app selected"}
 			</div>
-			<div className="min-h-0 flex-1">{children}</div>
+			<div className="px-3 py-1 text-xs text-[var(--semio-text-secondary)]">
+				{instance ? `${instance.programId}/${instance.appId} · ${resource?.name ?? instance.yields}` : "Spawn or select an app instance."}
+			</div>
 		</div>
 	);
 }

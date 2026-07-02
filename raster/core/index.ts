@@ -1209,6 +1209,15 @@ export function createRasterAppVcsHandler() {
 }
 //#endregion 🔖DocumentVcs
 
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for raster. */
+export function buildRasterProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("raster", "Raster", "raster", "Raster", "raster-play");
+}
+//#endregion 🔖SExtension
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;

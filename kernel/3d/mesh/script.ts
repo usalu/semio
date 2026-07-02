@@ -4,7 +4,12 @@ import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../repo/l
 
 class TestScript extends BundleScript {
   run(): void {
-    Bun.spawnSync(["cargo", "test", "-p", "kernel_3d_mesh"], { cwd: this.repoRoot, stdio: "inherit" });
+    Bun.spawnSync(["cargo", "test", "-p", "kernel_3d_mesh"], {
+      cwd: this.repoRoot,
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+    });
   }
 }
 

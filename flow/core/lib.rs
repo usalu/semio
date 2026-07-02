@@ -10,7 +10,7 @@ use std::sync::OnceLock;
 
 use dag::{
     computation_node_height, computation_node_width, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, stepper_widget_height, stepper_widget_width, would_create_cycle,
-    DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,
+    DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, EdgeRouteStyle, IoPortSpec,
 };
 use neural::{channel_output, cluster_operator_info, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
 use serde::{Deserialize, Serialize};
@@ -1182,6 +1182,7 @@ fn flow_registry() -> &'static neural::Registry {
         flow_module_dictionary::register(&mut registry);
         flow_module_list::register(&mut registry);
         flow_module_brep::register(&mut registry);
+        flow_module_draw::register(&mut registry);
         flow_module_bim::register(&mut registry);
         registry
     })
@@ -2513,7 +2514,12 @@ impl FlowHost {
             .synapses
             .iter()
             .filter(|syn| !would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to))
-            .map(|syn| DagFixtureEdge { id: syn.id.clone(), source: format!("{}:{}", syn.from, syn.from_port), target: format!("{}:{}", syn.to, syn.to_port) })
+            .map(|syn| DagFixtureEdge {
+                id: syn.id.clone(),
+                source: format!("{}:{}", syn.from, syn.from_port),
+                target: format!("{}:{}", syn.to, syn.to_port),
+                route_style: EdgeRouteStyle::default(),
+            })
             .collect();
         DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
     }
@@ -3626,7 +3632,7 @@ pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.document";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct FlowDocument {
+pub struct FlowVcsProjection {
     pub flow: serde_json::Value,
     pub tree: serde_json::Value,
 }
@@ -3638,9 +3644,9 @@ pub struct FlowDiff {
     pub tree: Option<serde_json::Value>,
 }
 
-impl OperationDiff<FlowDocument> for FlowDiff {
-    fn apply(&self, projection: &FlowDocument) -> FlowDocument {
-        FlowDocument {
+impl OperationDiff<FlowVcsProjection> for FlowDiff {
+    fn apply(&self, projection: &FlowVcsProjection) -> FlowVcsProjection {
+        FlowVcsProjection {
             flow: self.flow.clone().unwrap_or_else(|| projection.flow.clone()),
             tree: self.tree.clone().unwrap_or_else(|| projection.tree.clone()),
         }
@@ -3663,10 +3669,10 @@ pub enum FlowOp {
     SetTree { tree: serde_json::Value },
 }
 
-impl Operation<FlowDocument> for FlowOp {
+impl Operation<FlowVcsProjection> for FlowOp {
     type Diff = FlowDiff;
 
-    fn diff(&self, _projection: &FlowDocument) -> FlowDiff {
+    fn diff(&self, _projection: &FlowVcsProjection) -> FlowDiff {
         match self {
             FlowOp::SetFlow { flow } => FlowDiff {
                 flow: Some(flow.clone()),
@@ -3679,7 +3685,7 @@ impl Operation<FlowDocument> for FlowOp {
         }
     }
 
-    fn backwards(&self, projection: &FlowDocument) -> Vec<Self> {
+    fn backwards(&self, projection: &FlowVcsProjection) -> Vec<Self> {
         match self {
             FlowOp::SetFlow { .. } => vec![FlowOp::SetFlow {
                 flow: projection.flow.clone(),
@@ -3691,11 +3697,11 @@ impl Operation<FlowDocument> for FlowOp {
     }
 }
 
-pub type FlowEnvelope = DocumentVcsEnvelope<FlowDocument, FlowOp>;
-pub type FlowStore = DocumentVcsStore<FlowDocument, FlowOp>;
+pub type FlowEnvelope = DocumentVcsEnvelope<FlowVcsProjection, FlowOp>;
+pub type FlowStore = DocumentVcsStore<FlowVcsProjection, FlowOp>;
 
-pub fn empty_flow_projection() -> FlowDocument {
-    FlowDocument {
+pub fn empty_flow_projection() -> FlowVcsProjection {
+    FlowVcsProjection {
         flow: serde_json::json!({}),
         tree: serde_json::json!({}),
     }

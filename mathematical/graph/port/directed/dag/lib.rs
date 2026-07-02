@@ -249,10 +249,18 @@ pub struct IoPortSpec {
     pub value: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub connected: Option<bool>,
+    #[serde(rename = "resourceKind", skip_serializing_if = "Option::is_none")]
+    pub resource_kind: Option<String>,
     #[serde(default = "default_port_cardinality")]
     pub cardinality: String,
     #[serde(default)]
     pub shape: PortShape,
+    #[serde(default = "default_port_visible")]
+    pub visible: bool,
+}
+
+fn default_port_visible() -> bool {
+    true
 }
 
 fn default_port_cardinality() -> String {
@@ -261,7 +269,7 @@ fn default_port_cardinality() -> String {
 
 impl Default for IoPortSpec {
     fn default() -> Self {
-        Self { id: String::new(), label: String::new(), code: String::new(), abbreviation: String::new(), full_name: String::new(), value_type: None, default: None, value: None, connected: None, cardinality: default_port_cardinality(), shape: PortShape::default() }
+        Self { id: String::new(), label: String::new(), code: String::new(), abbreviation: String::new(), full_name: String::new(), value_type: None, default: None, value: None, connected: None, resource_kind: None, cardinality: default_port_cardinality(), shape: PortShape::default(), visible: true }
     }
 }
 
@@ -585,6 +593,18 @@ pub enum DagNodeKind {
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
     },
+    AppInstance {
+        #[serde(rename = "instanceId")]
+        instance_id: String,
+        #[serde(rename = "programId")]
+        program_id: String,
+        #[serde(rename = "appId")]
+        app_id: String,
+        #[serde(default)]
+        icon: String,
+        inputs: Vec<IoPortSpec>,
+        outputs: Vec<IoPortSpec>,
+    },
 }
 
 /// 🏷️ Serialized `kind` tag for a {@link DagNodeKind} variant.
@@ -600,6 +620,7 @@ pub fn dag_node_kind_tag(kind: &DagNodeKind) -> &'static str {
         DagNodeKind::Preview { .. } => "preview",
         DagNodeKind::Action { .. } => "action",
         DagNodeKind::Cluster { .. } => "cluster",
+        DagNodeKind::AppInstance { .. } => "appInstance",
     }
 }
 
@@ -692,7 +713,7 @@ impl DagNodeSpec {
     /// ⬅ Effective input ports for the node kind.
     pub fn inputs(&self) -> &[IoPortSpec] {
         match &self.kind {
-            DagNodeKind::Computation { inputs, .. } | DagNodeKind::Cluster { inputs, .. } => inputs,
+            DagNodeKind::Computation { inputs, .. } | DagNodeKind::Cluster { inputs, .. } | DagNodeKind::AppInstance { inputs, .. } => inputs,
             DagNodeKind::Screen { input, .. } | DagNodeKind::Preview { input, .. } | DagNodeKind::Action { input, .. } => std::slice::from_ref(input),
             _ => EMPTY_PORTS,
         }
@@ -701,7 +722,7 @@ impl DagNodeSpec {
     /// ➡ Effective output ports for the node kind.
     pub fn outputs(&self) -> &[IoPortSpec] {
         match &self.kind {
-            DagNodeKind::Computation { outputs, .. } | DagNodeKind::Cluster { outputs, .. } => outputs,
+            DagNodeKind::Computation { outputs, .. } | DagNodeKind::Cluster { outputs, .. } | DagNodeKind::AppInstance { outputs, .. } => outputs,
             DagNodeKind::Slider { output, .. } | DagNodeKind::Select { output, .. } | DagNodeKind::Note { output, .. } | DagNodeKind::Image { output, .. } | DagNodeKind::Stepper { output, .. } => std::slice::from_ref(output),
             _ => EMPTY_PORTS,
         }
@@ -856,6 +877,7 @@ fn computation_io_side_row_counts(node: &DagNodeSpec) -> (usize, usize) {
             (input_rows, output_rows)
         }
         DagNodeKind::Cluster { inputs, outputs } => (inputs.len(), outputs.len()),
+        DagNodeKind::AppInstance { inputs, outputs, .. } => (inputs.len(), outputs.len()),
         _ => (0, 0),
     }
 }
@@ -952,6 +974,11 @@ pub fn fit_node_size(node: &mut DagNodeSpec) {
             node.height = h;
         }
         DagNodeKind::Screen { .. } => {}
+        DagNodeKind::AppInstance { inputs, outputs, .. } => {
+            let port_count = inputs.len().max(outputs.len()).max(1);
+            node.width = 180.0;
+            node.height = 56.0 + port_count as f64 * 18.0;
+        }
     }
 }
 
@@ -1635,6 +1662,7 @@ pub struct DagHost {
     node_id_map: HashMap<NodeId, usize>,
     handle_key_map: HashMap<HandleId, String>,
     handle_port_shape: HashMap<HandleId, PortShape>,
+    handle_port_visible: HashMap<HandleId, bool>,
     edge_id_map: HashMap<EdgeId, String>,
     edge_route_style: HashMap<EdgeId, EdgeRouteStyle>,
     widget_drag: Option<usize>,
@@ -1648,10 +1676,36 @@ pub struct DagHost {
     icon_paint_cache: graph::IconPaintCache,
     ghost_node: Option<DagNodeSpec>,
     pending_cluster_explode: Option<String>,
+    pending_open_instance_id: Option<String>,
+    last_pointer_down_at_ms: f64,
+    last_pointer_down_world: (f64, f64),
+    last_pointer_down_node_id: Option<String>,
     computing_active: Option<NodeId>,
     computing_stale: HashSet<NodeId>,
     computing_active_anim_phase: Cell<f64>,
     computing_stale_anim_phase: Cell<f64>,
+}
+
+fn pointer_event_now_ms() -> f64 {
+    #[cfg(target_arch = "wasm32")]
+    {
+        js_sys::Date::now()
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        0.0
+    }
+}
+
+/// 🧭 Screen coordinates to world coordinates for the current viewport.
+pub fn dag_screen_to_world(host: &DagHost, sx: f64, sy: f64) -> (f64, f64) {
+    let point = host.screen_to_world_point(sx, sy);
+    (point.x, point.y)
+}
+
+/// 🪟 Takes a pending double-click open request for an app instance node.
+pub fn dag_take_pending_open_instance_id(host: &mut DagHost) -> Option<String> {
+    host.pending_open_instance_id.take()
 }
 
 fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
@@ -1755,6 +1809,7 @@ impl DagHost {
             node_id_map: HashMap::new(),
             handle_key_map: HashMap::new(),
             handle_port_shape: HashMap::new(),
+            handle_port_visible: HashMap::new(),
             edge_id_map: HashMap::new(),
             edge_route_style: HashMap::new(),
             widget_drag: None,
@@ -1768,6 +1823,10 @@ impl DagHost {
             icon_paint_cache: graph::IconPaintCache::new(),
             ghost_node: None,
             pending_cluster_explode: None,
+            pending_open_instance_id: None,
+            last_pointer_down_at_ms: 0.0,
+            last_pointer_down_world: (0.0, 0.0),
+            last_pointer_down_node_id: None,
             computing_active: None,
             computing_stale: HashSet::new(),
             computing_active_anim_phase: Cell::new(0.0),
@@ -2462,6 +2521,7 @@ impl DagHost {
         self.node_id_map.clear();
         self.handle_key_map.clear();
         self.handle_port_shape.clear();
+        self.handle_port_visible.clear();
         self.edge_id_map.clear();
         self.edge_route_style.clear();
         for node in &mut self.fixture.nodes {
@@ -2494,6 +2554,7 @@ impl DagHost {
                 handle_map.insert(Self::dag_port_handle_key(&node.id, &port.id, true), hid);
                 self.handle_key_map.insert(hid, public_key);
                 self.handle_port_shape.insert(hid, port.shape);
+                self.handle_port_visible.insert(hid, port.visible);
                 self.engine.create_handle(hid, nid, in_a);
                 if let Some(handle) = self.engine.handles.get_mut(&hid) {
                     handle.radius = DAG_HANDLE_WORLD_RADIUS;
@@ -2508,6 +2569,7 @@ impl DagHost {
                 handle_map.insert(Self::dag_port_handle_key(&node.id, &port.id, false), hid);
                 self.handle_key_map.insert(hid, public_key);
                 self.handle_port_shape.insert(hid, port.shape);
+                self.handle_port_visible.insert(hid, port.visible);
                 self.engine.create_handle(hid, nid, out_a);
                 if let Some(handle) = self.engine.handles.get_mut(&hid) {
                     handle.radius = DAG_HANDLE_WORLD_RADIUS;
@@ -2957,6 +3019,31 @@ impl DagHost {
         self.last_screen_x = sx;
         self.last_screen_y = sy;
         let world = self.screen_to_world_point(sx, sy);
+        if button == 0 && !shift && !ctrl_or_meta && !alt {
+            if let Some(node_id) = self.fixture_draggable_node_hit(world.x, world.y) {
+                if !self.world_hits_handle(world.x, world.y) {
+                    if let Some(widget_id) = self.widget_id_for_node_id(node_id) {
+                        if let Some(node) = self.fixture.nodes.iter().find(|entry| entry.id == widget_id) {
+                            if let DagNodeKind::AppInstance { instance_id, .. } = &node.kind {
+                                let now = pointer_event_now_ms();
+                                let dist = ((world.x - self.last_pointer_down_world.0).powi(2) + (world.y - self.last_pointer_down_world.1).powi(2)).sqrt();
+                                let zoom = self.fixture.camera.zoom.max(1e-9);
+                                if self.last_pointer_down_node_id.as_deref() == Some(widget_id.as_str())
+                                    && now - self.last_pointer_down_at_ms < 350.0
+                                    && dist < 8.0 / zoom
+                                {
+                                    self.pending_open_instance_id = Some(instance_id.clone());
+                                    return;
+                                }
+                                self.last_pointer_down_at_ms = now;
+                                self.last_pointer_down_world = (world.x, world.y);
+                                self.last_pointer_down_node_id = Some(widget_id);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         if let Some(hit) = self.port_insert_hit(world.x, world.y, self.fixture.camera.zoom) {
             self.pending_port_insert = Some(hit);
             return;
@@ -3149,6 +3236,9 @@ impl DagHost {
         let handle_chrome = chrome.has_interaction_chrome();
         let center = Point::new(node.x, node.y);
         let paint_port = |scene: &mut cavas::vello::Scene, port_idx: usize, inputs: bool, port: &IoPortSpec| {
+            if !port.visible {
+                return;
+            }
             let angle = io_node_rect_port_angle_for_node(node, port_idx, inputs);
             let handle_center = handle_position_on_rectangle(center, node.width, node.height, angle);
             let outward = handle_outward_at_node_rim(handle_center, center, NodeShape::Rectangle, 0.0, node.width, node.height);
@@ -3231,7 +3321,7 @@ impl DagHost {
         let input_column_w = if computation { io_port_column_width(&inputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
         let output_column_w = if computation { io_port_column_width(&outputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
         for (i, port) in inputs.iter().enumerate() {
-            if port.shape == PortShape::Triangle {
+            if port.shape == PortShape::Triangle || !port.visible {
                 continue;
             }
             let label = port.label_with_cardinality(lod);
@@ -3255,7 +3345,7 @@ impl DagHost {
             }));
         }
         for (i, port) in outputs.iter().enumerate() {
-            if port.shape == PortShape::Triangle {
+            if port.shape == PortShape::Triangle || !port.visible {
                 continue;
             }
             let label = port.label_with_cardinality(lod);
@@ -3293,7 +3383,7 @@ impl DagHost {
 
     fn param_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod) -> Vec<serde_json::Value> {
         let inputs = match &node.kind {
-            DagNodeKind::Computation { inputs, .. } | DagNodeKind::Cluster { inputs, .. } => inputs,
+            DagNodeKind::Computation { inputs, .. } | DagNodeKind::Cluster { inputs, .. } | DagNodeKind::AppInstance { inputs, .. } => inputs,
             _ => return Vec::new(),
         };
         let mut rows = Vec::new();
@@ -4041,6 +4131,16 @@ impl DagHost {
                         }
                     }
                 }
+                DagNodeKind::AppInstance { program_id, app_id, .. } => {
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
+                        Self::paint_node_name_horizontal(scene, center_screen, label, paint_px, label_fill, label_halo);
+                    }
+                    if lod.shows_detail_text() {
+                        let subtitle = format!("{program_id}/{app_id}");
+                        let subtitle_pos = world_to_screen(cam, viewport, Point::new(node.x, node.y + hh * 0.22));
+                        append_label(scene, &subtitle, subtitle_pos, paint_px * 0.85, label_fill, label_halo);
+                    }
+                }
             }
         }
     }
@@ -4087,6 +4187,9 @@ impl DagHost {
         }
         let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
         let paint_snap_handle = |scene: &mut cavas::vello::Scene, hid: &HandleId, center: &cavas::vello::kurbo::Point, shape_filter: Option<PortShape>| {
+            if self.handle_port_visible.get(hid) == Some(&false) {
+                return;
+            }
             let shape = self.handle_port_shape.get(hid).copied().unwrap_or_default();
             if let Some(filter) = shape_filter {
                 if shape != filter {
@@ -4328,6 +4431,20 @@ mod wasm_session {
             self.state.borrow_mut().host.pointer_up(x, y);
         }
 
+        #[wasm_bindgen(js_name = takePendingOpenInstanceId)]
+        pub fn take_pending_open_instance_id(&self) -> Option<String> {
+            dag_take_pending_open_instance_id(&mut self.state.borrow_mut().host)
+        }
+
+        #[wasm_bindgen(js_name = screenToWorld)]
+        pub fn screen_to_world(&self, x: f64, y: f64) -> js_sys::Array {
+            let (wx, wy) = dag_screen_to_world(&self.state.borrow().host, x, y);
+            let out = js_sys::Array::new();
+            out.push(&JsValue::from_f64(wx));
+            out.push(&JsValue::from_f64(wy));
+            out
+        }
+
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
             let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(options_json).unwrap_or_default() };
@@ -4365,6 +4482,37 @@ mod tests {
         let (in_a, out_a) = io_node_handle_angles(0, 2, 0, 1);
         assert!(in_a > std::f64::consts::FRAC_PI_2);
         assert!(out_a.abs() < std::f64::consts::FRAC_PI_2);
+    }
+
+    #[test]
+    fn app_instance_node_serializes_and_sizes_n_ports() {
+        let node = DagNodeSpec {
+            id: "node-a".into(),
+            name: "Draw".into(),
+            abbreviation: "drw".into(),
+            icon: "emoji:draw".into(),
+            x: 100.0,
+            y: 80.0,
+            width: 180.0,
+            height: 92.0,
+            kind: DagNodeKind::AppInstance {
+                instance_id: "app-1".into(),
+                program_id: "draw".into(),
+                app_id: "draw".into(),
+                icon: "emoji:draw".into(),
+                inputs: vec![IoPortSpec::simple("in-a", "In")],
+                outputs: vec![IoPortSpec::simple("out-a", "Out"), IoPortSpec::simple("out-b", "Mesh")],
+            },
+        };
+        assert_eq!(dag_node_kind_tag(&node.kind), "appInstance");
+        assert_eq!(node.inputs().len(), 1);
+        assert_eq!(node.outputs().len(), 2);
+        let json = serde_json::to_string(&node).expect("serialize app instance");
+        assert!(json.contains("appInstance"));
+        assert!(json.contains("instanceId"));
+        let mut sized = node.clone();
+        fit_node_size(&mut sized);
+        assert!(sized.height >= 56.0);
     }
 
     #[test]

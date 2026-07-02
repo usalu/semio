@@ -10,6 +10,7 @@
 		"test": "bun nx run @semio-tech/layout-play:test"
 	},
 	"dependencies": {
+		"@semio-tech/framework-platform-core": "workspace:*",
 		"@semio-tech/framework-playground-core": "workspace:*",
 		"@semio-tech/layout-core": "workspace:*",
 		"@semio-tech/layout-react": "workspace:*",

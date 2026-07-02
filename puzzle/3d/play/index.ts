@@ -108,7 +108,7 @@ import {
   ORBIT_CAMERA_VIEW_COMMAND,
   resolveOrbitCameraViewFromTemplateId,
   orbitCameraDistance,
-  parseFixtureV1,
+  parseFixture,
   type OrbitCameraViewId,
   parseVortexFullId,
   puzzle3dLodCanvasProps,
@@ -121,8 +121,8 @@ import {
   type CameraState,
   type AttractionKind,
   type CableKind,
-  type FixtureObjectV1,
-  type FixtureV1,
+  type FixtureObject,
+  type Fixture,
   type KindCatalogBundle,
   type KindCompatEntry,
   type KitConnectorCadRow,
@@ -403,9 +403,9 @@ export function installPuzzle3dPlayBrushHost(_meta: Record<string, unknown> | un
 
 /** @emoji 🪣 Cached fill session for interactive slider prefix application. */
 export interface Puzzle3dFillSessionState {
-  baseFixture: FixtureV1 | null;
+  baseFixture: Fixture | null;
   sequence: readonly BrushPlacePayload[];
-  appendedObjects: readonly FixtureObjectV1[];
+  appendedObjects: readonly FixtureObject[];
   appendedAttractions: readonly AttractionProps[];
   seed: number;
 }
@@ -550,10 +550,10 @@ function mergePuzzle3dFillBuildChunk(
 }
 
 function puzzle3dFillAppendedSlice(
-  core: FixtureV1,
+  core: Fixture,
   sequence: readonly BrushPlacePayload[],
   kindCatalogs: KindCatalogBundle | undefined,
-): { readonly appendedObjects: readonly FixtureObjectV1[]; readonly appendedAttractions: readonly AttractionProps[] } {
+): { readonly appendedObjects: readonly FixtureObject[]; readonly appendedAttractions: readonly AttractionProps[] } {
   if (sequence.length === 0) {
     return { appendedObjects: [], appendedAttractions: [] };
   }
@@ -565,7 +565,7 @@ function puzzle3dFillAppendedSlice(
 }
 
 function startPuzzle3dFillBuild(
-  core: FixtureV1,
+  core: Fixture,
   committedSequence: readonly BrushPlacePayload[],
   seed: number,
   kindCatalogs: KindCatalogBundle | undefined,
@@ -695,7 +695,7 @@ function startPuzzle3dFillBuild(
 
 /** @emoji 🪣 Builds a deterministic fill sequence from the current fixture snapshot. */
 export function preparePuzzle3dFillSession(
-  baseFixture: FixtureV1,
+  baseFixture: Fixture,
   kindCatalogs: KindCatalogBundle | undefined,
   kindCompatibility: readonly KindCompatEntry[] | undefined,
   overlapBudget: number,
@@ -736,7 +736,7 @@ export function rerollPuzzle3dFillTail(
 }
 
 /** @emoji 🪣 Applies a fill prefix count onto the cached base fixture. */
-export function applyPuzzle3dFillCount(count: number, kindCatalogs?: KindCatalogBundle | undefined): FixtureV1 | null {
+export function applyPuzzle3dFillCount(count: number, kindCatalogs?: KindCatalogBundle | undefined): Fixture | null {
   const session = puzzle3dFillSessionRef.current;
   if (!session.baseFixture) {
     return null;
@@ -750,7 +750,7 @@ export function applyPuzzle3dFillCount(count: number, kindCatalogs?: KindCatalog
 }
 
 /** @emoji 🪣 Clears the cached fill session and returns the base fixture when present. */
-export function clearPuzzle3dFillSession(): FixtureV1 | null {
+export function clearPuzzle3dFillSession(): Fixture | null {
   cancelPuzzle3dFillBuild();
   const base = puzzle3dFillSessionRef.current.baseFixture;
   puzzle3dFillSessionRef.current = { baseFixture: null, sequence: [], appendedObjects: [], appendedAttractions: [], seed: 0 };
@@ -977,7 +977,7 @@ export function puzzle3dPlayFixtureTreeRowFields(
 }
 
 /** @emoji 🎯 Resolved selection label for play chrome (objects, vortices, attractions). */
-export function puzzle3dPlaySelectionLabel(fixture: FixtureV1 | null, selection: Puzzle3dPlaySelection): string | null {
+export function puzzle3dPlaySelectionLabel(fixture: Fixture | null, selection: Puzzle3dPlaySelection): string | null {
   if (!fixture) return null;
   if (selection.attractionIds[0]) {
     return selection.attractionIds[0];
@@ -999,7 +999,7 @@ export function puzzle3dPlaySelectionLabel(fixture: FixtureV1 | null, selection:
 }
 
 /** @emoji 🗑️ Removes an object and any attractions touching it or its vortices. */
-export function deletePuzzle3dObjectFromFixture(fixture: FixtureV1, objectId: string): FixtureV1 {
+export function deletePuzzle3dObjectFromFixture(fixture: Fixture, objectId: string): Fixture {
   const removedVortexFullIds = new Set<string>();
   for (const object of fixture.objects) {
     if (object.id !== objectId) {
@@ -1024,7 +1024,7 @@ export function deletePuzzle3dObjectFromFixture(fixture: FixtureV1, objectId: st
 }
 
 /** @emoji 🗑️ Removes one vortex and stale attractions that referenced it. */
-export function deletePuzzle3dVortexFromFixture(fixture: FixtureV1, vortexFullId: string): FixtureV1 {
+export function deletePuzzle3dVortexFromFixture(fixture: Fixture, vortexFullId: string): Fixture {
   const { objectId } = parseVortexFullId(vortexFullId);
   return {
     ...fixture,
@@ -1041,7 +1041,7 @@ export function deletePuzzle3dVortexFromFixture(fixture: FixtureV1, vortexFullId
 }
 
 /** @emoji 🗑️ Drops a single attraction row. */
-export function deletePuzzle3dAttractionFromFixture(fixture: FixtureV1, attractionId: string): FixtureV1 {
+export function deletePuzzle3dAttractionFromFixture(fixture: Fixture, attractionId: string): Fixture {
   return {
     ...fixture,
     attractions: fixture.attractions.filter((attraction) => attraction.id !== attractionId),
@@ -1049,7 +1049,7 @@ export function deletePuzzle3dAttractionFromFixture(fixture: FixtureV1, attracti
 }
 
 export type Puzzle3dFixtureEditOp =
-  | { readonly op: "setDocument"; readonly document: FixtureV1 | null }
+  | { readonly op: "setDocument"; readonly document: Fixture | null }
   | { readonly op: "toggleEntityFlag"; readonly target: HoverTarget; readonly flag: "hidden" | "locked" }
   | { readonly op: "addVoxel"; readonly cad: Vec3; readonly scale: Vec3 }
   | { readonly op: "addTargetVolume"; readonly volume: WorldVolumeProps }
@@ -1058,7 +1058,7 @@ export type Puzzle3dFixtureEditOp =
   | { readonly op: "applyFillCount"; readonly count: number }
   | { readonly op: "applyBrushPlacement"; readonly payload: BrushPlacePayload }
   | { readonly op: "patchObjects"; readonly objectIds: readonly string[]; readonly field: "label" | "objectKind" | "origin" | "wormhole"; readonly value?: unknown }
-  | { readonly op: "patchObject"; readonly objectId: string; readonly patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">> }
+  | { readonly op: "patchObject"; readonly objectId: string; readonly patch: Partial<Omit<FixtureObject, "id" | "vortices">> }
   | { readonly op: "renameObject"; readonly oldId: string; readonly newId: string }
   | { readonly op: "removeObjects"; readonly objectIds: readonly string[] }
   | { readonly op: "patchVortex"; readonly vortexFullId: string; readonly patch: Partial<VortexProps> }
@@ -1074,7 +1074,7 @@ export type Puzzle3dFixtureEditOp =
   | { readonly op: "referenceRelocate"; readonly payload: WorldReferenceRelocatePayload };
 
 /** @emoji 🚪 Applies one semantic puzzle 3D fixture edit (CQRS projection applier). */
-export function applyPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Puzzle3dFixtureEditOp): FixtureV1 | null {
+export function applyPuzzle3dFixtureEditOp(fixture: Fixture | null, op: Puzzle3dFixtureEditOp): Fixture | null {
   if (op.op === "setDocument") {
     return op.document;
   }
@@ -1155,7 +1155,7 @@ export function applyPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Puzzle
           };
           continue;
         }
-        const patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">> = {};
+        const patch: Partial<Omit<FixtureObject, "id" | "vortices">> = {};
         if (op.field === "label" && typeof op.value === "string") patch.label = op.value;
         if (op.field === "wormhole" && typeof op.value === "string") patch.wormhole = op.value === "true";
         if (op.field === "origin" && Array.isArray(op.value) && op.value.length === 3) {
@@ -1243,7 +1243,7 @@ export function applyPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Puzzle
           suffix += 1;
         }
         existingIds.add(newId);
-        const clone: FixtureObjectV1 = {
+        const clone: FixtureObject = {
           ...object,
           id: newId,
           ...(object.label ? { label: `${object.label} copy` } : {}),
@@ -1264,7 +1264,7 @@ export function applyPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Puzzle
 }
 
 /** @emoji ↩️ Inverts a puzzle 3D fixture edit from the pre-apply projection. */
-export function backwardsPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Puzzle3dFixtureEditOp): readonly Puzzle3dFixtureEditOp[] {
+export function backwardsPuzzle3dFixtureEditOp(fixture: Fixture | null, op: Puzzle3dFixtureEditOp): readonly Puzzle3dFixtureEditOp[] {
   const snapshot = (): readonly Puzzle3dFixtureEditOp[] => [{ op: "setDocument", document: fixture }];
   switch (op.op) {
     case "setDocument":
@@ -1278,7 +1278,7 @@ export function backwardsPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Pu
     case "patchObject": {
       const object = fixture?.objects.find((row) => row.id === op.objectId);
       if (!object) return snapshot();
-      const patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">> = {};
+      const patch: Partial<Omit<FixtureObject, "id" | "vortices">> = {};
       for (const key of Object.keys(op.patch) as (keyof typeof op.patch)[]) {
         patch[key] = object[key] as never;
       }
@@ -1290,16 +1290,16 @@ export function backwardsPuzzle3dFixtureEditOp(fixture: FixtureV1 | null, op: Pu
 }
 
 /** @emoji 📊 Returns the puzzle 3D fixture edit payload for persistence diffs. */
-export function diffPuzzle3dFixtureEditOp(_fixture: FixtureV1 | null, operation: Puzzle3dFixtureEditOp): unknown {
+export function diffPuzzle3dFixtureEditOp(_fixture: Fixture | null, operation: Puzzle3dFixtureEditOp): unknown {
   return operation;
 }
 
-function patchPuzzle3dObject(objects: readonly FixtureObjectV1[], objectId: string, patch: (object: FixtureObjectV1) => FixtureObjectV1): FixtureObjectV1[] {
+function patchPuzzle3dObject(objects: readonly FixtureObject[], objectId: string, patch: (object: FixtureObject) => FixtureObject): FixtureObject[] {
   return objects.map((object) => (object.id === objectId ? patch(object) : object));
 }
 
 /** @emoji ✏️ Updates fields on one fixture object. */
-export function updatePuzzle3dObjectInFixture(fixture: FixtureV1, objectId: string, patch: Partial<Omit<FixtureObjectV1, "id" | "vortices">>): FixtureV1 {
+export function updatePuzzle3dObjectInFixture(fixture: Fixture, objectId: string, patch: Partial<Omit<FixtureObject, "id" | "vortices">>): Fixture {
   return {
     ...fixture,
     objects: patchPuzzle3dObject(fixture.objects, objectId, (object) => ({ ...object, ...patch })),
@@ -1307,7 +1307,7 @@ export function updatePuzzle3dObjectInFixture(fixture: FixtureV1, objectId: stri
 }
 
 /** @emoji ✏️ Updates one vortex on an object. */
-export function updatePuzzle3dVortexInFixture(fixture: FixtureV1, vortexFullId: string, patch: Partial<VortexProps>): FixtureV1 {
+export function updatePuzzle3dVortexInFixture(fixture: Fixture, vortexFullId: string, patch: Partial<VortexProps>): Fixture {
   const { objectId, vortexId } = parseVortexFullId(vortexFullId);
   return {
     ...fixture,
@@ -1325,7 +1325,7 @@ export function updatePuzzle3dVortexInFixture(fixture: FixtureV1, vortexFullId: 
 }
 
 /** @emoji ✏️ Updates one attraction row. */
-export function updatePuzzle3dAttractionInFixture(fixture: FixtureV1, attractionId: string, patch: Partial<AttractionProps>): FixtureV1 {
+export function updatePuzzle3dAttractionInFixture(fixture: Fixture, attractionId: string, patch: Partial<AttractionProps>): Fixture {
   return {
     ...fixture,
     attractions: fixture.attractions.map((attraction) => (attraction.id === attractionId ? { ...attraction, ...patch } : attraction)),
@@ -1346,7 +1346,7 @@ export function selectionSnapshotToPlaySelection(snap: SelectionSnapshot): Puzzl
 /** @emoji 🎯 True when two selection snapshots match (skips redundant shell updates). */
 /** @emoji ⌨️ Select-all snapshot for the fixture honoring playground object/vortex/attraction kind toggles. */
 export function puzzle3dPlayAllSelectionFromFixture(
-  fixture: FixtureV1,
+  fixture: Fixture,
   kinds: Readonly<Record<Puzzle3dPlayPickKind, boolean>>,
 ): Puzzle3dPlaySelection {
   return {
@@ -1517,7 +1517,7 @@ export function puzzle3dPlayHierarchyTreeHighlightedIdsForTarget(target: HoverTa
 }
 
 /** @emoji 🌳 Maps transitive kind hover to hierarchy tree row ids. */
-export function puzzle3dPlayHierarchyTreeHighlightedIds(fixture: FixtureV1, kindHover: Puzzle3dKindHover | null): readonly string[] {
+export function puzzle3dPlayHierarchyTreeHighlightedIds(fixture: Fixture, kindHover: Puzzle3dKindHover | null): readonly string[] {
   if (!kindHover?.kindId) {
     return [];
   }
@@ -1549,7 +1549,7 @@ export function puzzle3dPlayHierarchyTreeHighlightedIds(fixture: FixtureV1, kind
 }
 
 /** @emoji 🖱️ Resolves catalog kind hover from a play fixture instance target. */
-export function puzzle3dKindHoverFromPlayTarget(fixture: FixtureV1 | null, target: HoverTarget): Puzzle3dKindHover | null {
+export function puzzle3dKindHoverFromPlayTarget(fixture: Fixture | null, target: HoverTarget): Puzzle3dKindHover | null {
   if (!fixture) {
     return null;
   }
@@ -1632,7 +1632,7 @@ export function puzzle3dPlayKindsTreeRowId(catalogs: KindCatalogBundle | undefin
 /** @emoji 🏷️ Maps hover focus to kinds-tab row ids (kind→object and object→kind, not instance→instance). */
 export function puzzle3dPlayKindsTreeHighlightedIds(
   catalogs: KindCatalogBundle | undefined,
-  fixture: FixtureV1 | null,
+  fixture: Fixture | null,
   focus: Puzzle3dHoverPayload,
 ): readonly string[] {
   const kind =
@@ -1645,7 +1645,7 @@ export function puzzle3dPlayKindsTreeHighlightedIds(
 }
 
 /** @emoji 🌳 Maps hover focus to hierarchy tree row ids (transitive only for kind-row hover). */
-export function puzzle3dPlayHierarchyTreeHighlightedIdsFromFocus(fixture: FixtureV1, focus: Puzzle3dHoverPayload): readonly string[] {
+export function puzzle3dPlayHierarchyTreeHighlightedIdsFromFocus(fixture: Fixture, focus: Puzzle3dHoverPayload): readonly string[] {
   if (focus.hoverTarget) {
     return puzzle3dPlayHierarchyTreeHighlightedIdsForTarget(focus.hoverTarget);
   }
@@ -1714,7 +1714,7 @@ function puzzle3dPlayKindSectionTreeIcon(sectionId: string): string | undefined 
 
 /** @emoji 🌳 Structural hierarchy sections: Objects, References, Target Volumes, Attractions. */
 export function buildPuzzle3dPlayHierarchySections(
-  fixture: FixtureV1,
+  fixture: Fixture,
   options?: Puzzle3dPlayHierarchyHoverBuildOptions,
 ): readonly UiTreeSectionNode[] {
   const onHover = options?.onHover;
@@ -1797,7 +1797,7 @@ export function buildPuzzle3dPlayHierarchySections(
 
 /** @emoji 🌳 Workbench hierarchy: Objects, References, Target Volumes, Attractions sections. */
 export function buildPuzzle3dPlayHierarchyTree(
-  fixture: FixtureV1 | null,
+  fixture: Fixture | null,
   selection: Puzzle3dPlaySelection,
   options?: Puzzle3dPlayHierarchyHoverBuildOptions & { readonly highlightedIds?: readonly string[] },
 ): UiNode {
@@ -1852,7 +1852,7 @@ function puzzle3dPlayKindCatalogSection(
   vortexKinds?: readonly VortexKind[],
   sectionDefaultOpen = false,
   kindCatalogs?: KindCatalogBundle,
-  sceneFixture?: FixtureV1,
+  sceneFixture?: Fixture,
   onHover?: (payload: Puzzle3dHoverPayload) => void,
 ): UiTreeSectionNode | null {
   if (!entries?.length) {
@@ -1891,7 +1891,7 @@ function puzzle3dPlayKindCatalogSection(
 /** @emoji 🏷️ Workbench kinds tab: Objects, Vortices, Cables, Attractions. */
 export function buildPuzzle3dPlayKindsTree(
   catalogs: KindCatalogBundle | undefined,
-  sceneFixture?: FixtureV1,
+  sceneFixture?: Fixture,
   options?: Puzzle3dPlayHierarchyHoverBuildOptions & { readonly highlightedIds?: readonly string[] },
 ): UiNode {
   const onHover = options?.onHover;
@@ -1950,7 +1950,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   readonly selectableKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   readonly visibleKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
-  private readonly docStore = new DocumentVcsStore<FixtureV1 | null, Puzzle3dFixtureEditOp>({
+  private readonly docStore = new DocumentVcsStore<Fixture | null, Puzzle3dFixtureEditOp>({
     envelope: createDocumentVcsEnvelope("puzzle.3d.fixture/v1", "puzzle3d-play", null),
     applyOp: applyPuzzle3dFixtureEditOp,
     backwardsOp: backwardsPuzzle3dFixtureEditOp,
@@ -1998,7 +1998,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-    this.setFixtureProjection(parseFixtureV1(puzzle3dPlayFixtureJson(this.activeFixtureId)));
+    this.setFixtureProjection(parseFixture(puzzle3dPlayFixtureJson(this.activeFixtureId)));
     this.fixtureRevision = 0;
     this.automaticLod = true;
     this.depthVariableLod = false;
@@ -2196,19 +2196,19 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.emit();
   }
 
-  getFixture(): FixtureV1 | null {
+  getFixture(): Fixture | null {
     return this.fixture;
   }
 
-  getDocumentVcsStore(): DocumentVcsStore<FixtureV1 | null, Puzzle3dFixtureEditOp> {
+  getDocumentVcsStore(): DocumentVcsStore<Fixture | null, Puzzle3dFixtureEditOp> {
     return this.docStore;
   }
 
-  private get fixture(): FixtureV1 | null {
+  private get fixture(): Fixture | null {
     return this.docStore.projection();
   }
 
-  private setFixtureProjection(next: FixtureV1 | null): void {
+  private setFixtureProjection(next: Fixture | null): void {
     const previous = this.fixture;
     recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
   }
@@ -2237,7 +2237,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     }
     const raw = PUZZLE_3D_PLAY_FIXTURE_JSON_BY_ID[fixtureId];
     if (!raw) return;
-    const parsed = parseFixtureV1(raw);
+    const parsed = parseFixture(raw);
     if (!parsed) return;
     this.setFixtureProjection(parsed);
     this.fixtureRevision += 1;
@@ -3408,7 +3408,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
 
 /** @emoji 📸 Host-consumed puzzle 3D play state (no React/DOM). */
 export interface Puzzle3dPlaySnapshot {
-  readonly fixture: FixtureV1 | null;
+  readonly fixture: Fixture | null;
   readonly fixtureRevision: number;
   readonly lodProps: ReturnType<typeof puzzle3dLodCanvasProps>;
   readonly lodTag: number;
@@ -3578,7 +3578,7 @@ function puzzle3dPlayQuatAllEqual(values: readonly Quat[]): boolean {
 type Puzzle3dPlayInspectorVortexRow = { readonly fullId: string; readonly vortex: VortexProps };
 
 /** @emoji 🗺️ Resolves selected vortex rows via object index (O(V) not O(V×objects)). */
-export function puzzle3dPlayInspectorVortexRows(fixture: FixtureV1, vortexFullIds: readonly string[]): Puzzle3dPlayInspectorVortexRow[] {
+export function puzzle3dPlayInspectorVortexRows(fixture: Fixture, vortexFullIds: readonly string[]): Puzzle3dPlayInspectorVortexRow[] {
   const objectById = new Map(fixture.objects.map((object) => [object.id, object]));
   const rows: Puzzle3dPlayInspectorVortexRow[] = [];
   for (const fullId of vortexFullIds) {
@@ -4320,7 +4320,7 @@ if (import.meta.vitest) {
     });
 
     it("parses nakagin fixture", () => {
-      const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const f = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       expect(f?.domain).toBe("architecture");
       expect(f?.attractions).toEqual([]);
       expect(f?.objects.length).toBeGreaterThan(0);
@@ -4358,7 +4358,7 @@ if (import.meta.vitest) {
     });
 
     it("parses concrete forest fixture with b and c vortex compatibility rules", () => {
-      const f = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown);
+      const f = parseFixture(concreteForestPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(f?.meta as Record<string, unknown> | undefined);
       expect(f?.objects).toHaveLength(1);
@@ -4388,7 +4388,7 @@ if (import.meta.vitest) {
       };
       registerBox("/mesh/hexagonal-cut-concrete-forest-left.glb");
       registerBox("/mesh/hexagonal-cut-concrete-forest-right.glb");
-      const fixture = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown)!;
+      const fixture = parseFixture(concreteForestPuzzle3dFixtureJson as unknown)!;
       const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
       const host = fixture.objects[0]!;
@@ -4439,7 +4439,7 @@ if (import.meta.vitest) {
     });
 
     it("concrete forest object kinds resolve abbau-aufbau mesh urls for fill preload", () => {
-      const f = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown);
+      const f = parseFixture(concreteForestPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
       expect(resolveObjectKindMeshUrl("Hexagonal Cut Concrete Forest Left", catalogs, f ?? undefined)).toBe(
         "/mesh/hexagonal-cut-concrete-forest-left.glb",
@@ -4464,7 +4464,7 @@ if (import.meta.vitest) {
       };
       registerBox("/mesh/hexagonal-cut-concrete-forest-left.glb");
       registerBox("/mesh/hexagonal-cut-concrete-forest-right.glb");
-      const fixture = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown);
+      const fixture = parseFixture(concreteForestPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture?.meta as Record<string, unknown> | undefined);
       const sequence = buildBrushFillSequence({
@@ -4506,7 +4506,7 @@ if (import.meta.vitest) {
       };
       registerBox("/mesh/hexagonal-cut-concrete-forest-left.glb");
       registerBox("/mesh/hexagonal-cut-concrete-forest-right.glb");
-      const fixture = parseFixtureV1(concreteForestPuzzle3dFixtureJson as unknown)!;
+      const fixture = parseFixture(concreteForestPuzzle3dFixtureJson as unknown)!;
       const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
       const full = buildBrushFillSequence({
@@ -4581,7 +4581,7 @@ if (import.meta.vitest) {
     });
 
     it("nakagin scene object meshUrl matches kind catalog for every placed object", () => {
-      const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const fixture = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta);
       expect(fixture).toBeTruthy();
       for (const object of fixture!.objects) {
@@ -4604,7 +4604,7 @@ if (import.meta.vitest) {
         expect.arrayContaining(["Capsule With Balcony J", "Trapezoid Capsule J", "Last Storey Tambour", "First Storey Tambour", "Cylindric Tambour"]),
       );
       expect(objectKindIds.some((id) => id === "J" || id === "Last Storey" || id === "Tambour Last Storey")).toBe(false);
-      const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const f = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       const placedKinds = new Set((f?.objects ?? []).map((object) => object.objectKind));
       expect(placedKinds.has("Capsule With Balcony J")).toBe(true);
       expect(placedKinds.has("Capsule J")).toBe(false);
@@ -4612,7 +4612,7 @@ if (import.meta.vitest) {
     });
 
     it("nakagin Bridge kind resolves meshUrl from catalog", () => {
-      const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const f = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(f?.meta as Record<string, unknown> | undefined);
       expect(resolveObjectKindMeshUrl("Bridge", catalogs, f ?? undefined)).toBe("/mesh/bridge.glb");
       for (const object of f?.objects ?? []) {
@@ -4670,7 +4670,7 @@ if (import.meta.vitest) {
     });
 
     it("nakagin door tambour left has horizontal door capsule compatible candidates", () => {
-      const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const fixture = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture?.meta as Record<string, unknown> | undefined);
       expect(catalogs).toBeTruthy();
@@ -4684,7 +4684,7 @@ if (import.meta.vitest) {
     });
 
     it("brush on rectangular base rejects cylindric first storey tambour", () => {
-      const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const fixture = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture?.meta as Record<string, unknown> | undefined);
       const target: AttractionVortexContext = { objectId: "host", objectKind: "Base", vortexKind: "core rectangular bottom" };
@@ -4696,7 +4696,7 @@ if (import.meta.vitest) {
     });
 
     it("brush on tambour circular stack prefers cylindric tambour over capital", () => {
-      const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const fixture = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture?.meta as Record<string, unknown> | undefined);
       installPuzzle3dPlayBrushHost(fixture?.meta as Record<string, unknown> | undefined);
@@ -4710,7 +4710,7 @@ if (import.meta.vitest) {
     });
 
     it("brush on last storey roof port still suggests cylindric capital", () => {
-      const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const fixture = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture?.meta as Record<string, unknown> | undefined);
       installPuzzle3dPlayBrushHost(fixture?.meta as Record<string, unknown> | undefined);
@@ -4724,7 +4724,7 @@ if (import.meta.vitest) {
     });
 
     it("cylindric first storey tambour participates when stacking below first storey", () => {
-      const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const fixture = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       const catalogs = parseKindCatalogs(fixture?.meta as Record<string, unknown> | undefined);
       const compat = parseKindCompatibility(fixture?.meta as Record<string, unknown> | undefined);
       installPuzzle3dPlayBrushHost(fixture?.meta as Record<string, unknown> | undefined);
@@ -4822,7 +4822,7 @@ if (import.meta.vitest) {
     });
 
     it("stores nakagin vortex positions in type-local CAD space", () => {
-      const f = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const f = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       const o = f?.objects.find((obj) => obj.id === "01890804-66f2-4544-98f0-b6f0c0615492");
       const v = o?.vortices.find((vx) => vx.id.endsWith(":link"));
       expect(v?.position[0]).toBeCloseTo(-1.3, 5);
@@ -4936,7 +4936,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         meta: {
@@ -5005,7 +5005,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [{ id: "att-1", attracting: "obj-a:v1", attracted: "obj-b:v1" }],
@@ -5030,7 +5030,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5052,7 +5052,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5260,7 +5260,7 @@ if (import.meta.vitest) {
     });
 
     it("puzzle3dPlayAllSelectionFromFixture lists every row for enabled kinds", () => {
-      const fixture = parseFixtureV1(nakaginPuzzle3dFixtureJson as unknown);
+      const fixture = parseFixture(nakaginPuzzle3dFixtureJson as unknown);
       expect(fixture).not.toBeNull();
       const all = puzzle3dPlayAllSelectionFromFixture(fixture!, { object: true, vortex: true, attraction: true });
       expect(all.objectIds.length).toBe(fixture!.objects.length);
@@ -5275,7 +5275,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5301,7 +5301,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5328,7 +5328,7 @@ if (import.meta.vitest) {
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       wb.addApp(buildPuzzle3dPlayAppRuntime(ctrl));
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5398,7 +5398,7 @@ if (import.meta.vitest) {
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
       wb.addApp(buildPuzzle3dPlayAppRuntime(ctrl));
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [
@@ -5444,7 +5444,7 @@ if (import.meta.vitest) {
       const bus = new CommandBus();
       const wb = new Platform();
       const ctrl = new Puzzle3dPlayShellController(bus, () => wb.notify());
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5461,7 +5461,7 @@ if (import.meta.vitest) {
     });
 
     it("puzzle3dPlayInspectorVortexRows resolves rows via object map", () => {
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5513,7 +5513,7 @@ if (import.meta.vitest) {
     });
 
     it("deletePuzzle3dObjectFromFixture removes child vortices and stale attractions", () => {
-      const base = parseFixtureV1({
+      const base = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [
@@ -5533,7 +5533,7 @@ if (import.meta.vitest) {
     });
 
     it("puzzle3dPlaySelectionLabel resolves object and vortex fixture labels", () => {
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5552,7 +5552,7 @@ if (import.meta.vitest) {
     });
 
     it("buildPuzzle3dPlayHierarchySections nests objects, vortices, and attractions", () => {
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [{ id: "t1", attracting: "a:v1", attracted: "b:v2" }],
@@ -5583,7 +5583,7 @@ if (import.meta.vitest) {
     });
 
     it("buildPuzzle3dPlayHierarchySections omits per-row selected flags", () => {
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5614,7 +5614,7 @@ if (import.meta.vitest) {
     });
 
     it("puzzle3dPlayHierarchyTreeHighlightedIds expands transitive vortex kind hover", () => {
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5663,7 +5663,7 @@ if (import.meta.vitest) {
     });
 
     it("puzzle3dPlayHierarchyTreeHighlightedIdsFromFocus highlights one instance row for direct hover", () => {
-      const fixture = parseFixtureV1({
+      const fixture = parseFixture({
         schema: "puzzle.3d.fixture/v1",
         camera: { position: [0, 0, 0], target: [0, 0, 1], zoom: 1 },
         attractions: [],
@@ -5763,7 +5763,7 @@ if (import.meta.vitest) {
     });
 
     it("buildPuzzle3dPlayKindsTree marks object catalog rows draggable with fixture drag payload", async () => {
-      const { FIXTURE_DRAG_V1_MIME, decodePuzzle3dFixtureFromDragV1 } = await import("../react/index.tsx");
+      const { FIXTURE_DRAG_MIME, decodePuzzle3dFixtureFromDrag } = await import("../react/index.tsx");
       const catalogs = parseKindCatalogs({
         kindCatalogs: {
           objects: [{ id: "J", label: "J", name: "J", meshUrl: "/mesh/capsule_J.glb", vortices: [] }],
@@ -5772,9 +5772,9 @@ if (import.meta.vitest) {
       const tree = buildPuzzle3dPlayKindsTree(catalogs);
       const row = tree.sections[0]?.items?.[0];
       expect(row?.draggable).toBe(true);
-      const encoded = row?.dragData?.[FIXTURE_DRAG_V1_MIME];
+      const encoded = row?.dragData?.[FIXTURE_DRAG_MIME];
       expect(encoded).toBeTruthy();
-      const dragFixture = decodePuzzle3dFixtureFromDragV1(encoded!);
+      const dragFixture = decodePuzzle3dFixtureFromDrag(encoded!);
       expect(dragFixture?.objects[0]?.objectKind).toBe("J");
     });
 
@@ -5880,6 +5880,15 @@ if (import.meta.vitest) {
   });
 }
 //#endregion 🧪Tests
+
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for puzzle 3d. */
+export function buildPuzzle3dProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("puzzle.3d", "Puzzle 3D", "puzzle3d", "Puzzle 3D", PUZZLE_3D_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension
 
 //#region 🔖Boot
 if (

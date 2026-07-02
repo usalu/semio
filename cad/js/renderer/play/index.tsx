@@ -3564,7 +3564,10 @@ export function registerCadPlaySurfaceHosts(): void {
   registerCadPlayChrome();
 }
 
-if (typeof document !== "undefined" && !import.meta.vitest) {
+const cadPlayShouldSelfBoot =
+	!import.meta.env.PUZZLE_PLAY_ENTRY || import.meta.env.PUZZLE_PLAY_ENTRY === "cad";
+
+if (typeof document !== "undefined" && !import.meta.vitest && cadPlayShouldSelfBoot) {
   const el = document.getElementById("root");
   if (el) {
     mountPlaygroundApp(
@@ -4330,3 +4333,12 @@ if (import.meta.vitest) {
   });
 }
 //#endregion 🧪Tests
+
+//#region 🔖SExtension
+import { baselineSingleAppPlatformDefinition, type PlatformDefinition } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🧩 S program definition for cad. */
+export function buildCadProgramDefinition(): PlatformDefinition {
+	return baselineSingleAppPlatformDefinition("cad", "CAD", "cad", "CAD", CAD_PLAY_CONTROLLER_ID);
+}
+//#endregion 🔖SExtension

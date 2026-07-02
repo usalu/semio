@@ -82,24 +82,26 @@ function tessellatePreviewMeshes(outputsJson: string, tolerance: number): Record
 		return meshes;
 	}
 	for (const [widgetId, entry] of Object.entries(parsed)) {
-		for (const [port, value] of Object.entries(entry.out ?? {})) {
-			const refs: Array<{ readonly key: string; readonly handle: string }> = [];
-			collectPreviewHandles(value, refs, `${widgetId}:${port}`);
-			for (const ref of refs) {
-				if (DRAWING_HANDLE_PATTERN.test(ref.handle)) {
+		for (const direction of ["out", "in"] as const) {
+			for (const [port, value] of Object.entries(entry[direction] ?? {})) {
+				const refs: Array<{ readonly key: string; readonly handle: string }> = [];
+				collectPreviewHandles(value, refs, `${widgetId}:${port}`);
+				for (const ref of refs) {
+					if (DRAWING_HANDLE_PATTERN.test(ref.handle)) {
+						try {
+							const scene = JSON.parse(render_drawing_scene(ref.handle)) as RawMeshTransfer;
+							if (!scene.error) meshes[ref.handle] = scene;
+						} catch {
+							/* skip invalid handle */
+						}
+						continue;
+					}
 					try {
-						const scene = JSON.parse(render_drawing_scene(ref.handle)) as RawMeshTransfer;
-						if (!scene.error) meshes[ref.handle] = scene;
+						const raw = JSON.parse(tessellate(ref.handle, tolerance)) as RawMeshTransfer;
+						if (!raw.error) meshes[ref.handle] = raw;
 					} catch {
 						/* skip invalid handle */
 					}
-					continue;
-				}
-				try {
-					const raw = JSON.parse(tessellate(ref.handle, tolerance)) as RawMeshTransfer;
-					if (!raw.error) meshes[ref.handle] = raw;
-				} catch {
-					/* skip invalid handle */
 				}
 			}
 		}

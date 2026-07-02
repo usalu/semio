@@ -1,0 +1,13 @@
+{
+  "title": "S Technology Extension Loading",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Convert S technology catalog from static TECHNOLOGY_PLAY_PROGRAMS to dynamic extension loading; register all technologies; fix SAppHostRouter wiring.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1795"
+  },
+  "goal": "🎯s🎯platform",
+  "sessions": [
+    "⚪96bfb8faaeb247c7b10854534ef2cbf2"
+  ]
+}

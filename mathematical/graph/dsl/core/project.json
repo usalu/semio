@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/graph-dsl-core",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "mathematical/graph/dsl/core",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "mathematical/graph/dsl/core",
+        "command": "bun test"
+      }
+    }
+  }
+}
