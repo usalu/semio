@@ -2,6 +2,8 @@
 /** @emoji 📋 Forms play app — form builder and preview. */
 // #endregion 🧲Header
 
+export * from "./internal.ts";
+
 import {
 	AppRuntime,
 	CommandBus,
@@ -11,11 +13,11 @@ import {
 	buildFormsWindowBody,
 	createDefaultLayout,
 	createPlayAppRuntime,
-	eagerPlayFixtureGlob,
-	isPlaygroundFixtureLocked,
-	isPlaygroundNoFixtureId,
-	PLAYGROUND_NO_FIXTURE_ID,
-	playgroundResolvedFixtureId,
+	eagerPlayExampleGlob,
+	isPlaygroundExampleLocked,
+	isPlaygroundNoExampleId,
+	PLAYGROUND_NO_EXAMPLE_ID,
+	playgroundResolvedExampleId,
 	registerWindowBody,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
@@ -30,8 +32,8 @@ import {
 	type UiInspectorFieldGroup,
 	type AppTools,
 	type CommandDescriptor,
-	type PlaygroundFixtureCatalog,
-	type PlaygroundFixtureHost,
+	type PlaygroundExampleCatalog,
+	type PlaygroundExampleHost,
 	type ToolLeaf,
 	toolCollection,
 	type UiNode,
@@ -40,6 +42,8 @@ import {
 	type WindowMeasure,
 	type WindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
@@ -63,7 +67,7 @@ import {
 	type FormVectorField,
 } from "./internal.ts";
 import { FORMS_QUESTION_DRAG_MIME, abortFormsQuestionPaletteDrag, formSpecFromJson, formsQuestionPaletteTreeDragController } from "@semio-tech/forms-react";
-import { FORMS_PLAY_FIXTURE_DEFAULT_ID, resolveFormsPlayFixtureSlug } from "./fixture-slugs.ts";
+import { FORMS_PLAY_EXAMPLE_DEFAULT_ID, resolveFormsPlayExampleSlug } from "./example-slugs.ts";
 
 export const FORMS_PLAY_APP_ID = "forms-play";
 export const FORMS_PLAY_CONTROLLER_ID = "forms-play";
@@ -84,9 +88,9 @@ export const FORMS_PLAY_LAYOUT = createDefaultLayout(
 	["Edit", "Try"],
 );
 
-export { FORMS_PLAY_FIXTURE_DEFAULT_ID, resolveFormsPlayFixtureSlug };
+export { FORMS_PLAY_EXAMPLE_DEFAULT_ID, resolveFormsPlayExampleSlug };
 
-const formsFixtureModules = eagerPlayFixtureGlob("../fixture/*.forms.json");
+const formsFixtureModules = eagerPlayExampleGlob("../example/*.forms.json");
 
 function formsFixtureIdFromGlobPath(globPath: string): string {
 	const base = globPath.split("/").pop() ?? globPath;
@@ -101,7 +105,7 @@ function formsFixtureLabelFromId(id: string): string {
 		.join(" ");
 }
 
-const FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
+const FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
 	Object.entries(formsFixtureModules).map(([path, mod]) => {
 		const id = formsFixtureIdFromGlobPath(path);
 		const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
@@ -109,10 +113,10 @@ const FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID: Record<string, string> = Object.fromEn
 	}),
 );
 
-export const FORMS_PLAY_FIXTURE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
-	...Object.keys(FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID)
+export const FORMS_PLAY_EXAMPLE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
+	...Object.keys(FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID)
 		.sort()
-		.map((id) => ({ id: id === "building-component" ? FORMS_PLAY_FIXTURE_DEFAULT_ID : id, label: formsFixtureLabelFromId(id) })),
+		.map((id) => ({ id: id === "building-component" ? FORMS_PLAY_EXAMPLE_DEFAULT_ID : id, label: formsFixtureLabelFromId(id) })),
 ];
 
 function formsPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -604,7 +608,7 @@ export function buildFormsPlayToolbarTools(controllerId: string): AppTools {
 }
 
 /** @emoji 🎛 Forms play shell controller. */
-export class FormsPlayController extends Controller implements PlaygroundFixtureHost {
+export class FormsPlayController extends Controller implements PlaygroundExampleHost {
 	readonly mainMode = new ModeRuntime("main", "Forms", undefined);
 	private readonly docStore = new DocumentVcsStore<FormSpec, FormEditOp>({
 		envelope: createDocumentVcsEnvelope("forms.form/v1", "forms-play", defaultFormSpec()),
@@ -619,7 +623,7 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(FORMS_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-		const json = FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID["building-component"];
+		const json = FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID["building-component"];
 		if (json) this.replaceDocument(formSpecFromJson(json));
 		formsExtensionHost.subscribe(() => {
 			this.extensionRevision += 1;
@@ -820,25 +824,25 @@ export class FormsPlayController extends Controller implements PlaygroundFixture
 		this.applySpecEdit({ op: "updateQuestion", stepId: location.stepId, question: nextQuestion });
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog {
-		const activeFixtureId = playgroundResolvedFixtureId(this.projection().id, FORMS_PLAY_FIXTURE_DEFAULT_ID);
+	getExampleCatalog(): PlaygroundExampleCatalog {
+		const activeExampleId = playgroundResolvedExampleId(this.projection().id, FORMS_PLAY_EXAMPLE_DEFAULT_ID);
 		return {
-			activeFixtureId,
-			options: FORMS_PLAY_FIXTURE_OPTIONS,
-			locked: isPlaygroundFixtureLocked(),
+			activeExampleId,
+			options: FORMS_PLAY_EXAMPLE_OPTIONS,
+			locked: isPlaygroundExampleLocked(),
 		};
 	}
 
 	override run(command: string, args?: unknown): void {
-		if (command === "setActiveFixture") {
+		if (command === "setActiveExample") {
 			const fixtureId = (args as { fixtureId?: string }).fixtureId;
 			if (typeof fixtureId !== "string") return;
-			if (isPlaygroundNoFixtureId(fixtureId)) {
+			if (isPlaygroundNoExampleId(fixtureId)) {
 				this.setSpec(defaultFormSpec());
 				return;
 			}
-			const resolvedId = resolveFormsPlayFixtureSlug(fixtureId) ?? fixtureId;
-			const json = FORMS_PLAY_FILE_FIXTURE_JSON_BY_ID[resolvedId];
+			const resolvedId = resolveFormsPlayExampleSlug(fixtureId) ?? fixtureId;
+			const json = FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID[resolvedId];
 			if (json) this.setSpec(formSpecFromJson(json));
 			return;
 		}
@@ -1021,6 +1025,38 @@ export function buildFormsPlayAppRuntime(controller: FormsPlayController): AppRu
 
 
 
+//#region 🔖Play
+
+/** @emoji 🛝 Forms playground app. */
+
+
+export const formsPlayAppDefinition = createPlaygroundApp({
+	id: FORMS_PLAY_APP_ID,
+	label: "Forms",
+	controllerId: FORMS_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "forms",
+		resolveDedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei", "@semio-tech/forms-react"],
+		optimizeDeps: { include: ["react", "react-dom"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(FORMS_PLAY_APP_ID);
+			const ctrl = new FormsPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildFormsPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerFormsPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootFormsPlay } = await import("@semio-tech/framework-playground-renderer-react/forms");
+		bootFormsPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -1033,7 +1069,7 @@ if (import.meta.vitest) {
 		it("controller loads file fixtures", () => {
 			const bus = new CommandBus();
 			const ctrl = new FormsPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: "building-component" });
+			ctrl.run("setActiveExample", { exampleId: "building-component" });
 			expect(ctrl.getSpec().id).toBe("building-component");
 			expect(ctrl.getSpec().steps.flatMap((step) => step.questions).some((question) => question.kind === "buildingComponent")).toBe(true);
 		});
@@ -1128,7 +1164,7 @@ if (import.meta.vitest) {
 		it("hierarchy drag reorders steps without catalogue payload", () => {
 			const bus = new CommandBus();
 			const ctrl = new FormsPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: "building-component" });
+			ctrl.run("setActiveExample", { exampleId: "building-component" });
 			const drag = createFormsPlayHierarchyTreeDragController(() => ctrl);
 			const firstStep = ctrl.getSpec().steps[0];
 			const secondStep = ctrl.getSpec().steps[1];
@@ -1190,25 +1226,22 @@ if (import.meta.vitest) {
 }
 // #endregion 🧪Tests
 
-export * from "./internal.ts";
-export { formsPlayAppDefinition, PlaygroundForms } from "./playground.ts";
-
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { formsPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for forms. */
 export function buildFormsProgramDefinition(): PlatformDefinition {
-	const app = formsPlayAppDefinition;
 	return {
 		id: "forms",
 		name: "Forms",
 		apiVersion: "1",
-		apps: [{ id: "forms", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "forms", label: "Forms", controllerId: FORMS_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;

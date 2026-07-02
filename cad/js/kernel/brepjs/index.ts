@@ -3603,6 +3603,36 @@ export async function exportModelSpaceToStep(space: ModelSpace, modelSpaceId = "
 	return kernel.exportModelSpaceToStep(space, modelSpaceId);
 }
 
+/** @emoji 💾 Exports `space` solids as merged OBJ via tessellation. */
+export async function exportModelSpaceToObj(space: ModelSpace, deflection = 0.1): Promise<string> {
+	const { meshTransferToObj, mergeMeshTransfers } = await import("@semio-tech/kernel-3d-js");
+	const kernel = new BrepjsKernel();
+	const meshes = [];
+	for (const model of Object.values(space.models)) {
+		for (const solid of Object.values(model.solids)) {
+			const mesh = await kernel.tessellate(solid.id, deflection, model);
+			if (mesh.position.length > 0 && mesh.index.length > 0) meshes.push(mesh);
+		}
+	}
+	if (meshes.length === 0) return "# empty model space\n";
+	return meshTransferToObj(mergeMeshTransfers(meshes));
+}
+
+/** @emoji 💾 Exports `space` solids as merged GLB via tessellation. */
+export async function exportModelSpaceToGlb(space: ModelSpace, deflection = 0.1): Promise<Uint8Array> {
+	const { meshTransferToGlb, mergeMeshTransfers } = await import("@semio-tech/kernel-3d-js");
+	const kernel = new BrepjsKernel();
+	const meshes = [];
+	for (const model of Object.values(space.models)) {
+		for (const solid of Object.values(model.solids)) {
+			const mesh = await kernel.tessellate(solid.id, deflection, model);
+			if (mesh.position.length > 0 && mesh.index.length > 0) meshes.push(mesh);
+		}
+	}
+	if (meshes.length === 0) return new Uint8Array([0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00]);
+	return meshTransferToGlb(mergeMeshTransfers(meshes));
+}
+
 /** @emoji 🪜 Exports `model` via a fresh `BrepjsKernel` (convenience). */
 export async function exportModelToStep(model: Model, modelId = "model"): Promise<string> {
 	const kernel = new BrepjsKernel();

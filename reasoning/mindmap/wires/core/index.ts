@@ -58,9 +58,9 @@ export type WiresPlayHierarchyBuildOptions = Puzzle2dPlayHierarchyBuildOptions;
 export const WIRES_PLAY_FIXTURE: WiresFixtureV1 = METABOLISM_WIRES_FIXTURE;
 export const WIRES_PLAY_DEFAULT_FIXTURE: Puzzle2dFixture = wiresFixtureBoard(METABOLISM_WIRES_FIXTURE);
 
-export const WIRES_PLAY_FIXTURE_METABOLISM_ID = "metabolism";
+export const WIRES_PLAY_EXAMPLE_METABOLISM_ID = "metabolism";
 
-export const WIRES_PLAY_FIXTURE_OPTIONS = [{ id: WIRES_PLAY_FIXTURE_METABOLISM_ID, label: "Metabolism" }] as const;
+export const WIRES_PLAY_EXAMPLE_OPTIONS = [{ id: WIRES_PLAY_EXAMPLE_METABOLISM_ID, label: "Metabolism" }] as const;
 
 /** @emoji 🕸️ WIRES play defaults: continuous force-graph redraw (no auto-stop). */
 export const WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS = {
@@ -297,21 +297,61 @@ if (import.meta.vitest) {
 }
 // #endregion 🧪Tests
 
-export { wiresPlayAppDefinition, PlaygroundWires } from "./playground.ts";
-
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { wiresPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for wires. */
 export function buildReasoningWiresProgramDefinition(): PlatformDefinition {
-	const app = wiresPlayAppDefinition;
 	return {
 		id: "reasoning.wires",
 		name: "Reasoning Wires",
 		apiVersion: "1",
-		apps: [{ id: "wires", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "wires", label: "Wires", controllerId: WIRES_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖Play
+import { createPlaygroundApp } from "@semio-tech/framework-playground-core";
+import { buildPuzzle2dPlayRuntime, registerPuzzle2dPlayDeclarativeBodies } from "@semio-tech/puzzle-2d-core";
+
+export const wiresPlayAppDefinition = createPlaygroundApp({
+	id: WIRES_PLAY_APP_ID,
+	label: "Wires",
+	controllerId: WIRES_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "wires",
+		resolveDedupe: ["react", "react-dom", "three", "@semio-tech/puzzle-2d-react", "@semio-tech/reasoning-mindmap-wires-react"],
+		watchIgnored: [
+			"../../../../puzzle/2d/rs/lib.rs",
+			"../../../../puzzle/2d/rs/target/**",
+			"../../../../puzzle/2d/rs/Cargo.toml",
+			"../../../../puzzle/2d/rs/script.ts",
+		],
+		optimizeDeps: {
+			include: [
+				"react",
+				"react-dom",
+				"react/jsx-runtime",
+				"react/jsx-dev-runtime",
+				"three",
+				"@react-three/fiber",
+				"@react-three/drei",
+				"lucide-react",
+				"@semio-tech/infinite-cavas-react-renderer",
+				"@semio-tech/puzzle-2d-react",
+				"@semio-tech/reasoning-mindmap-react",
+			],
+		},
+	},
+	createRuntime: () => buildPuzzle2dPlayRuntime(),
+	registerBodies: () => registerPuzzle2dPlayDeclarativeBodies(),
+	bootRenderer: async (pg) => {
+		const { bootWiresPlay } = await import("@semio-tech/framework-playground-renderer-react/reasoning/wires");
+		bootWiresPlay(pg);
+	},
+});
+//#endregion 🔖Play

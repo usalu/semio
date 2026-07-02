@@ -14,6 +14,15 @@ import {
     runGenerationCommand,
 } from "@semio-tech/flow-core";
 import { flowFixtureToFormSpec, type FlowGeneration } from "@semio-tech/forms-react";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import {
+	meshTransferFromPreviewPayload,
+	meshTransferToGlb,
+	meshTransferToObj,
+	mergeMeshTransfers,
+	emptyMeshTransfer,
+	type MeshTransfer,
+} from "@semio-tech/kernel-3d-js";
 import { FlowOrchestratorClient } from "../../../flow/worker-client.ts";
 import {
     buildCatalogueKindsTreeSections,
@@ -40,7 +49,6 @@ import {
     type FlowGraphEditOp,
     type FlowReorganizeRequest,
 } from "@semio-tech/flow-react";
-import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 import {
     AppRuntime,
@@ -52,24 +60,27 @@ import {
     createDefaultLayout,
     createPlayAppRuntime,
     enforcePlaygroundWindowEngagementInput,
-    isPlaygroundFixtureLocked,
-    isPlaygroundNoFixtureId,
+    isPlaygroundExampleLocked,
+    isPlaygroundNoExampleId,
     ModeRuntime,
     Platform,
-    PLAYGROUND_NO_FIXTURE_ID,
-    playgroundResolvedFixtureId,
+    PLAYGROUND_NO_EXAMPLE_ID,
+    playgroundResolvedExampleId,
     registerWindowBody,
     WindowKindRuntime,
+    eagerPlayExampleGlob,
     type AppTools,
     type CommandDescriptor,
-    type PlaygroundFixtureCatalog,
-    type PlaygroundFixtureHost,
+    type PlaygroundExampleCatalog,
+    type PlaygroundExampleHost,
     type ToolLeaf,
     toolCollection,
     type UiNode,
     type UiTreeSectionNode,
     type WindowBodyViewContext,
     type WindowEngagement,
+    createPlaygroundApp,
+    createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import { meshTransferFromPreviewPayload } from "@semio-tech/kernel-3d-js";
 import {
@@ -90,6 +101,13 @@ import {
     type ProceduralPreviewShowMode,
     type ProceduralTransformGranularity,
 } from "@semio-tech/procedural-3d-react";
+import {
+    PROCEDURAL_PLAY_EXAMPLE_DEFAULT_ID,
+    PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID,
+    resolveProceduralPlayExampleSlug,
+} from "./example-slugs.ts";
+
+export { PROCEDURAL_PLAY_EXAMPLE_DEFAULT_ID, PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID, resolveProceduralPlayExampleSlug };
 import type { ContextMenuItem } from "@semio-tech/ui-react";
 import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMergeMode } from "@semio-tech/ui-react";
 
@@ -123,24 +141,6 @@ export const PROCEDURAL_PLAY_BODY_KEY_PREVIEW = "procedural.play.preview";
 export const PROCEDURAL_PLAY_BODY_KEY_GENERATE = "procedural.play.generate";
 export const PROCEDURAL_PLAY_SURFACE_ID_PREVIEW = "procedural.play.preview/v1";
 export const PROCEDURAL_PLAY_SURFACE_ID_GENERATE = "procedural.play.generate/v1";
-
-import {
-	proceduralPlayFixtureJson,
-	PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON,
-	PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID,
-	PROCEDURAL_PLAY_FIXTURE_OPTIONS,
-	PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID,
-	resolveProceduralPlayFixtureSlug,
-} from "./playground.ts";
-
-export {
-	proceduralPlayFixtureJson,
-	PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON,
-	PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID,
-	PROCEDURAL_PLAY_FIXTURE_OPTIONS,
-	PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID,
-	resolveProceduralPlayFixtureSlug,
-};
 
 export const PROCEDURAL_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE;
 export const PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_DEFAULT_FIXTURE);
@@ -606,16 +606,17 @@ export function buildProceduralPlayToolbarTools(state: ProceduralPlayToolbarStat
 	];
 }
 
+
 /** @emoji 🎛 Procedural play shell controller. */
-export class ProceduralPlayController extends Controller implements PlaygroundFixtureHost {
+export class ProceduralPlayController extends Controller implements PlaygroundExampleHost {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
-	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
+	private activeExampleId = playgroundResolvedExampleId(PLAYGROUND_NO_EXAMPLE_ID);
 	private readonly docStore = new DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp>({
 		envelope: createDocumentVcsEnvelope(
 			"flow.fixture/v1",
 			"procedural-3d-play",
-			parseFlowPlayFixtureJson(proceduralPlayFixtureJson(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID))) ?? PROCEDURAL_PLAY_EMPTY_FIXTURE,
+			parseFlowPlayFixtureJson(proceduralPlayFixtureJson(playgroundResolvedExampleId(PLAYGROUND_NO_EXAMPLE_ID))) ?? PROCEDURAL_PLAY_EMPTY_FIXTURE,
 		),
 		applyOp: applyFlowFixtureEditOp,
 		backwardsOp: backwardsFlowFixtureEditOp,
@@ -675,9 +676,9 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		return this.fixtureStore.load() != null;
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog | null {
-		if (isPlaygroundFixtureLocked()) return null;
-		return { activeFixtureId: this.activeFixtureId, options: [...PROCEDURAL_PLAY_FIXTURE_OPTIONS] };
+	getExampleCatalog(): PlaygroundExampleCatalog | null {
+		if (isPlaygroundExampleLocked()) return null;
+		return { activeExampleId: this.activeExampleId, options: [...PROCEDURAL_PLAY_EXAMPLE_OPTIONS] };
 	}
 
 	/** @emoji 🔗 Attaches the React host bridge for toolbar file IO. */
@@ -803,10 +804,10 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 	}
 
 	private loadFixtureById(fixtureId: string): void {
-		const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+		const nextId = isPlaygroundNoExampleId(fixtureId) ? PLAYGROUND_NO_EXAMPLE_ID : fixtureId;
 		const nextJson = proceduralPlayFixtureJson(nextId);
-		if (nextId === this.activeFixtureId && nextJson === this.getFixtureJson()) return;
-		this.activeFixtureId = nextId;
+		if (nextId === this.activeExampleId && nextJson === this.getFixtureJson()) return;
+		this.activeExampleId = nextId;
 		this.applyFixtureJson(nextJson, true);
 	}
 
@@ -1455,8 +1456,8 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 			}
 			return;
 		}
-		if (command === "setActiveFixture") {
-			if (isPlaygroundFixtureLocked()) return;
+		if (command === "setActiveExample") {
+			if (isPlaygroundExampleLocked()) return;
 			const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
 			this.loadFixtureById(fixtureId);
 			return;
@@ -1478,7 +1479,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundFi
 		}
 		if (command === "resetFixture") {
 			this.fixtureStore.clear();
-			this.activeFixtureId = PLAYGROUND_NO_FIXTURE_ID;
+			this.activeExampleId = PLAYGROUND_NO_EXAMPLE_ID;
 			this.applyFixtureJson(PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON, true);
 			return;
 		}
@@ -1812,6 +1813,115 @@ export function buildProceduralPlayAppRuntime(controller: ProceduralPlayControll
 	return app;
 }
 
+//#region 🔖Play
+
+const proceduralFixtureModules = eagerPlayExampleGlob("../example/*.procedural.json");
+
+function proceduralFixtureIdFromGlobPath(globPath: string): string {
+	const base = globPath.split("/").pop() ?? globPath;
+	return base.replace(/\.procedural\.json$/, "");
+}
+
+function proceduralFixtureLabelFromId(id: string): string {
+	return id
+		.split("-")
+		.filter(Boolean)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
+}
+
+const PROCEDURAL_PLAY_FILE_EXAMPLE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
+	Object.entries(proceduralFixtureModules).map(([path, mod]) => {
+		const id = proceduralFixtureIdFromGlobPath(path);
+		const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
+		return [id, json];
+	}),
+);
+
+
+
+export const PROCEDURAL_PLAY_EMPTY_FIXTURE: FlowFixtureV1 = {
+	schema: "flow.fixture/v1",
+	camera: { x: 0, y: 0, zoom: 1 },
+	widgets: [],
+	synapses: [],
+};
+export const PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_PLAY_EMPTY_FIXTURE);
+
+export const PROCEDURAL_PLAY_EXAMPLE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
+	{ id: PROCEDURAL_PLAY_EXAMPLE_DEFAULT_ID, label: "Box fillet move" },
+	...Object.keys(PROCEDURAL_PLAY_FILE_EXAMPLE_JSON_BY_ID)
+		.sort()
+		.map((id) => ({ id, label: proceduralFixtureLabelFromId(id) })),
+];
+
+function proceduralFixtureJsonForId(exampleId: string): string {
+	if (isPlaygroundNoExampleId(exampleId)) {
+		return proceduralFixtureToJson(PROCEDURAL_PLAY_EMPTY_FIXTURE);
+	}
+	if (exampleId === PROCEDURAL_PLAY_EXAMPLE_DEFAULT_ID) {
+		return PROCEDURAL_PLAY_DEFAULT_FIXTURE_JSON;
+	}
+	const fileJson = PROCEDURAL_PLAY_FILE_EXAMPLE_JSON_BY_ID[exampleId];
+	if (fileJson) return fileJson;
+	return PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON;
+}
+
+/** @emoji 🧪 Resolves procedural play fixture JSON by catalog id. */
+export function proceduralPlayFixtureJson(fixtureId: string = PROCEDURAL_PLAY_EXAMPLE_DEFAULT_ID): string {
+	return proceduralFixtureJsonForId(fixtureId);
+}
+
+
+
+/** @emoji 🛝 Procedural playground app. */
+
+
+export const procedural3dPlayAppDefinition = createPlaygroundApp({
+	id: PROCEDURAL_3D_PLAY_APP_ID,
+	label: "Procedural 3D",
+	controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "procedural-3d",
+		resolveDedupe: ["react", "react-dom", "three", "scheduler", "@semio-tech/flow-react", "@semio-tech/procedural-3d-react"],
+		watchIgnored: ["../../../flow/core/lib.rs",
+		"../../../flow/core/target/**",
+		"../../../flow/module/**/lib.rs",
+		"../../../flow/module/**/target/**",],
+		optimizeDeps: { include: [
+			"react",
+			"react-dom",
+			"three",
+			"@react-three/fiber",
+			"@react-three/drei",
+			"@semio-tech/infinite-world-r3f",
+			"@semio-tech/flow-react",
+			"@semio-tech/procedural-3d-react",
+		] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(PROCEDURAL_3D_PLAY_APP_ID);
+			const ctrl = new ProceduralPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildProceduralPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerProceduralPlayDeclarativeBodies();
+	},
+	keybindings: [
+		{ key: "ctrl+a,meta+a", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "selectAll" },
+		{ key: "Delete", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+		{ key: "Backspace", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+	],
+	bootRenderer: async (pg) => {
+		const { bootProceduralPlay } = await import("@semio-tech/framework-playground-renderer-react/procedural-3d");
+		bootProceduralPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -1824,7 +1934,7 @@ if (import.meta.vitest) {
 		it("starts with no fixture selected", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
-			expect(ctrl.getFixtureCatalog().activeFixtureId).toBe(PLAYGROUND_NO_FIXTURE_ID);
+			expect(ctrl.getExampleCatalog().activeExampleId).toBe(PLAYGROUND_NO_EXAMPLE_ID);
 			expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
 		});
 
@@ -2351,56 +2461,56 @@ if (import.meta.vitest) {
 			expect(ctrl.getFixtureJson()).toContain("flow.fixture/v1");
 		});
 
-		it("setActiveFixture loads default and empty fixtures", () => {
+		it("setActiveExample loads default and empty fixtures", () => {
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: PLAYGROUND_NO_FIXTURE_ID });
+			ctrl.run("setActiveExample", { exampleId: PLAYGROUND_NO_EXAMPLE_ID });
 			expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
-			ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
+			ctrl.run("setActiveExample", { exampleId: PROCEDURAL_PLAY_EXAMPLE_DEFAULT_ID });
 			expect(ctrl.getFixtureJson()).toContain("brep.prim3d.box");
 		});
 
 		it("fixture catalog includes procedural/fixture files", () => {
-			expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.some((option) => option.id === "sphere-cut-with-torus")).toBe(true);
-			expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.find((option) => option.id === "sphere-cut-with-torus")?.label).toBe(
+			expect(PROCEDURAL_PLAY_EXAMPLE_OPTIONS.some((option) => option.id === "sphere-cut-with-torus")).toBe(true);
+			expect(PROCEDURAL_PLAY_EXAMPLE_OPTIONS.find((option) => option.id === "sphere-cut-with-torus")?.label).toBe(
 				"Sphere Cut With Torus",
 			);
-			expect(PROCEDURAL_PLAY_FIXTURE_OPTIONS.some((option) => option.id === PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID)).toBe(
+			expect(PROCEDURAL_PLAY_EXAMPLE_OPTIONS.some((option) => option.id === PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID)).toBe(
 				true,
 			);
 		});
 
-		it("resolveProceduralPlayFixtureSlug maps hexagonal-column shorthand", async () => {
-			const { resolveProceduralPlayFixtureSlug, PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID } = await import(
-				"./fixture-slugs.js"
+		it("resolveProceduralPlayExampleSlug maps hexagonal-column shorthand", async () => {
+			const { resolveProceduralPlayExampleSlug, PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID } = await import(
+				"./example-slugs.ts"
 			);
-			expect(resolveProceduralPlayFixtureSlug("hexagonal-column")).toBe(PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID);
-			expect(resolveProceduralPlayFixtureSlug("column")).toBe(PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID);
+			expect(resolveProceduralPlayExampleSlug("hexagonal-column")).toBe(PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID);
+			expect(resolveProceduralPlayExampleSlug("column")).toBe(PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID);
 		});
 
-		it("getFixtureCatalog returns null when fixture host is locked", () => {
-			const prev = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID;
-			(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID =
-				PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID;
+		it("getExampleCatalog returns null when fixture host is locked", () => {
+			const prev = import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID;
+			(import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID =
+				PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID;
 			try {
 				const bus = new CommandBus();
 				const ctrl = new ProceduralPlayController(bus, () => {});
-				expect(ctrl.getFixtureCatalog()).toBeNull();
-				ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID });
-				expect(ctrl.getFixtureCatalog()).toBeNull();
+				expect(ctrl.getExampleCatalog()).toBeNull();
+				ctrl.run("setActiveExample", { exampleId: PROCEDURAL_PLAY_EXAMPLE_DEFAULT_ID });
+				expect(ctrl.getExampleCatalog()).toBeNull();
 			} finally {
 				if (prev === undefined) {
-					delete (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID;
+					(import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID = undefined;
 				} else {
-					(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+					(import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID = prev;
 				}
 			}
 		});
 
 		it("locked fixture host loads file fixture on construct", () => {
-			const prev = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID;
-			(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID =
-				PROCEDURAL_PLAY_FIXTURE_HEXAGONAL_MUSHROOM_COLUMN_ID;
+			const prev = import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID;
+			(import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID =
+				PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID;
 			try {
 				const bus = new CommandBus();
 				const ctrl = new ProceduralPlayController(bus, () => {});
@@ -2408,19 +2518,19 @@ if (import.meta.vitest) {
 				expect(ctrl.getFixtureJson()).toContain("brep_curve_polygon_9");
 			} finally {
 				if (prev === undefined) {
-					delete (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID;
+					(import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID = undefined;
 				} else {
-					(import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+					(import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID = prev;
 				}
 			}
 		});
 
-		it("setActiveFixture loads file fixtures from procedural/fixture", () => {
+		it("setActiveExample loads file fixtures from procedural/fixture", () => {
 			const sphereCutId = "sphere-cut-with-torus";
 			expect(proceduralPlayFixtureJson(sphereCutId)).toContain("brep.bool.cut");
 			const bus = new CommandBus();
 			const ctrl = new ProceduralPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: sphereCutId });
+			ctrl.run("setActiveExample", { exampleId: sphereCutId });
 			expect(ctrl.getFixtureJson()).toContain("brep.bool.cut");
 			expect(ctrl.getFixtureJson()).toContain("brep.prim3d.sphere");
 		});
@@ -2555,23 +2665,46 @@ if (import.meta.vitest) {
 		});
 	});
 }
-// #endregion 🧪Tests
+
+//#region 🔖MediaExport
+async function evaluateProcedural3dMesh(doc: unknown): Promise<MeshTransfer> {
+	const fixture = doc as FlowFixtureV1;
+	const client = new FlowOrchestratorClient();
+	await client.loadFixtureJson(proceduralFixtureToJson(fixture));
+	const result = await client.evaluate();
+	const previewMeshes = await client.tessellatePreviews(result.outputsJson);
+	const meshes = Object.values(previewMeshes)
+		.map((payload) => meshTransferFromPreviewPayload(payload))
+		.filter((mesh): mesh is MeshTransfer => Boolean(mesh && mesh.position.length > 0 && mesh.index.length > 0));
+	return meshes.length > 0 ? mergeMeshTransfers(meshes) : emptyMeshTransfer();
+}
+
+/** @emoji 💾 Registers procedural 3d flow fixture OBJ/GLB export handlers for the OS media graph. */
+export function registerProcedural3dMediaExportHandlers(): void {
+	registerOsMediaExportHandler("3d.procedural", "obj", async (doc) => {
+		const mesh = await evaluateProcedural3dMesh(doc);
+		return { data: meshTransferToObj(mesh), mimeType: "text/plain", fileName: "procedural3d.obj" };
+	});
+	registerOsMediaExportHandler("3d.procedural", "glb", async (doc) => ({
+		data: meshTransferToGlb(await evaluateProcedural3dMesh(doc)),
+		mimeType: "model/gltf-binary",
+		fileName: "procedural3d.glb",
+	}));
+}
+//#endregion 🔖MediaExport
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { procedural3dPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for procedural 3d. */
 export function buildProcedural3dProgramDefinition(): PlatformDefinition {
-	const app = procedural3dPlayAppDefinition;
 	return {
 		id: "procedural.3d",
 		name: "Procedural 3D",
 		apiVersion: "1",
-		apps: [{ id: "procedural3d", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "procedural3d", label: "Procedural 3D", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
 
-export { procedural3dPlayAppDefinition, PlaygroundProcedural } from "./playground.ts";

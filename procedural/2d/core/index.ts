@@ -14,6 +14,13 @@ import {
     runGenerationCommand,
 } from "@semio-tech/flow-core";
 import { flowFixtureToFormSpec, type FlowGeneration } from "@semio-tech/forms-react";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import {
+	drawingSceneFromPreviewPayload,
+	drawingSceneToSvgMarkup,
+	rasterizeSvgMarkupToPngDataUrl,
+	type DrawingScene,
+} from "@semio-tech/kernel-2d-js";
 import { FlowOrchestratorClient } from "../../../flow/worker-client.ts";
 import {
     buildCatalogueKindsTreeSections,
@@ -31,7 +38,6 @@ import {
     type FlowGraphEditOp,
     type FlowReorganizeRequest,
 } from "@semio-tech/flow-react";
-import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 import {
     AppRuntime,
@@ -43,24 +49,27 @@ import {
     createDefaultLayout,
     createPlayAppRuntime,
     enforcePlaygroundWindowEngagementInput,
-    isPlaygroundFixtureLocked,
-    isPlaygroundNoFixtureId,
+    isPlaygroundExampleLocked,
+    isPlaygroundNoExampleId,
     ModeRuntime,
     Platform,
-    PLAYGROUND_NO_FIXTURE_ID,
-    playgroundResolvedFixtureId,
+    PLAYGROUND_NO_EXAMPLE_ID,
+    playgroundResolvedExampleId,
     registerWindowBody,
     WindowKindRuntime,
+    eagerPlayExampleGlob,
     type AppTools,
     type CommandDescriptor,
-    type PlaygroundFixtureCatalog,
-    type PlaygroundFixtureHost,
+    type PlaygroundExampleCatalog,
+    type PlaygroundExampleHost,
     type ToolLeaf,
     toolCollection,
     type UiNode,
     type UiTreeSectionNode,
     type WindowBodyViewContext,
     type WindowEngagement,
+    createPlaygroundApp,
+    createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import { drawingSceneFromPreviewPayload } from "@semio-tech/kernel-2d-js";
 import {
@@ -76,6 +85,9 @@ import {
     type ProceduralPreviewItem,
     type ProceduralPreviewShowMode,
 } from "@semio-tech/procedural-2d-react";
+import { PROCEDURAL_2D_PLAY_EXAMPLE_DEFAULT_ID, resolveProcedural2dPlayExampleSlug } from "./example-slugs.ts";
+
+export { PROCEDURAL_2D_PLAY_EXAMPLE_DEFAULT_ID, resolveProcedural2dPlayExampleSlug };
 import type { ContextMenuItem } from "@semio-tech/ui-react";
 import { bootstrapElementsSurfaceChromeDocument, selectionMergeIds, type SelectionMergeMode } from "@semio-tech/ui-react";
 
@@ -109,20 +121,6 @@ export const PROCEDURAL_2D_PLAY_BODY_KEY_PREVIEW = "procedural2d.play.preview";
 export const PROCEDURAL_2D_PLAY_BODY_KEY_GENERATE = "procedural2d.play.generate";
 export const PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW = "procedural2d.play.preview/v1";
 export const PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE = "procedural2d.play.generate/v1";
-
-import {
-	procedural2dPlayFixtureJson,
-	PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON,
-	PROCEDURAL_2D_PLAY_FIXTURE_DEFAULT_ID,
-	PROCEDURAL_2D_PLAY_FIXTURE_OPTIONS,
-} from "./playground.ts";
-
-export {
-	procedural2dPlayFixtureJson,
-	PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON,
-	PROCEDURAL_2D_PLAY_FIXTURE_DEFAULT_ID,
-	PROCEDURAL_2D_PLAY_FIXTURE_OPTIONS,
-};
 
 export const PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE: FlowFixtureV1 = PROCEDURAL_DEFAULT_FIXTURE;
 export const PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_DEFAULT_FIXTURE);
@@ -516,16 +514,17 @@ export function buildProcedural2dPlayToolbarTools(state: Procedural2dPlayToolbar
 	];
 }
 
+
 /** @emoji 🎛 Procedural play shell controller. */
-export class Procedural2dPlayController extends Controller implements PlaygroundFixtureHost {
+export class Procedural2dPlayController extends Controller implements PlaygroundExampleHost {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
 	readonly generateMode = new ModeRuntime("generate", "Generate", undefined);
-	private activeFixtureId = playgroundResolvedFixtureId(PROCEDURAL_2D_PLAY_FIXTURE_DEFAULT_ID);
+	private activeExampleId = playgroundResolvedExampleId(PROCEDURAL_2D_PLAY_EXAMPLE_DEFAULT_ID);
 	private readonly docStore = new DocumentVcsStore<FlowFixtureV1, FlowFixtureEditOp>({
 		envelope: createDocumentVcsEnvelope(
 			"flow.fixture/v1",
 			"procedural-2d-play",
-			parseFlowPlayFixtureJson(procedural2dPlayFixtureJson(PROCEDURAL_2D_PLAY_FIXTURE_DEFAULT_ID)) ?? PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE,
+			parseFlowPlayFixtureJson(procedural2dPlayFixtureJson(PROCEDURAL_2D_PLAY_EXAMPLE_DEFAULT_ID)) ?? PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE,
 		),
 		applyOp: applyFlowFixtureEditOp,
 		backwardsOp: backwardsFlowFixtureEditOp,
@@ -576,9 +575,9 @@ export class Procedural2dPlayController extends Controller implements Playground
 		return this.fixtureStore.load() != null;
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog | null {
-		if (isPlaygroundFixtureLocked()) return null;
-		return { activeFixtureId: this.activeFixtureId, options: [...PROCEDURAL_2D_PLAY_FIXTURE_OPTIONS] };
+	getExampleCatalog(): PlaygroundExampleCatalog | null {
+		if (isPlaygroundExampleLocked()) return null;
+		return { activeExampleId: this.activeExampleId, options: [...PROCEDURAL_2D_PLAY_EXAMPLE_OPTIONS] };
 	}
 
 	/** @emoji 🔗 Attaches the React host bridge for toolbar file IO. */
@@ -701,10 +700,10 @@ export class Procedural2dPlayController extends Controller implements Playground
 	}
 
 	private loadFixtureById(fixtureId: string): void {
-		const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+		const nextId = isPlaygroundNoExampleId(fixtureId) ? PLAYGROUND_NO_EXAMPLE_ID : fixtureId;
 		const nextJson = procedural2dPlayFixtureJson(nextId);
-		if (nextId === this.activeFixtureId && nextJson === this.getFixtureJson()) return;
-		this.activeFixtureId = nextId;
+		if (nextId === this.activeExampleId && nextJson === this.getFixtureJson()) return;
+		this.activeExampleId = nextId;
 		this.applyFixtureJson(nextJson, true);
 	}
 
@@ -1076,8 +1075,8 @@ export class Procedural2dPlayController extends Controller implements Playground
 			}
 			return;
 		}
-		if (command === "setActiveFixture") {
-			if (isPlaygroundFixtureLocked()) return;
+		if (command === "setActiveExample") {
+			if (isPlaygroundExampleLocked()) return;
 			const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
 			this.loadFixtureById(fixtureId);
 			return;
@@ -1099,7 +1098,7 @@ export class Procedural2dPlayController extends Controller implements Playground
 		}
 		if (command === "resetFixture") {
 			this.fixtureStore.clear();
-			this.activeFixtureId = PLAYGROUND_NO_FIXTURE_ID;
+			this.activeExampleId = PLAYGROUND_NO_EXAMPLE_ID;
 			this.applyFixtureJson(PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON, true);
 			return;
 		}
@@ -1373,6 +1372,106 @@ export function buildProcedural2dPlayAppRuntime(controller: Procedural2dPlayCont
 	return app;
 }
 
+//#region 🔖Play
+
+const proceduralFixtureModules = eagerPlayExampleGlob("../example/*.procedural2d.json");
+
+function proceduralFixtureIdFromGlobPath(globPath: string): string {
+	const base = globPath.split("/").pop() ?? globPath;
+	return base.replace(/\.procedural2d\.json$/, "");
+}
+
+function proceduralFixtureLabelFromId(id: string): string {
+	return id
+		.split("-")
+		.filter(Boolean)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
+}
+
+const PROCEDURAL_2D_PLAY_FILE_EXAMPLE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
+	Object.entries(proceduralFixtureModules).map(([path, mod]) => {
+		const id = proceduralFixtureIdFromGlobPath(path);
+		const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
+		return [id, json];
+	}),
+);
+
+export const PROCEDURAL_2D_PLAY_EMPTY_FIXTURE: FlowFixtureV1 = {
+	schema: "flow.fixture/v1",
+	camera: { x: 0, y: 0, zoom: 1 },
+	widgets: [],
+	synapses: [],
+};
+
+export const PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON = proceduralFixtureToJson(PROCEDURAL_2D_PLAY_EMPTY_FIXTURE);
+
+export const PROCEDURAL_2D_PLAY_EXAMPLE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
+	{ id: PROCEDURAL_2D_PLAY_EXAMPLE_DEFAULT_ID, label: "Draw rect + fill" },
+	...Object.keys(PROCEDURAL_2D_PLAY_FILE_EXAMPLE_JSON_BY_ID)
+		.sort()
+		.map((id) => ({ id, label: proceduralFixtureLabelFromId(id) })),
+];
+
+
+function proceduralFixtureJsonForId(fixtureId: string): string {
+	if (isPlaygroundNoExampleId(fixtureId)) {
+		return proceduralFixtureToJson(PROCEDURAL_2D_PLAY_EMPTY_FIXTURE);
+	}
+	if (fixtureId === PROCEDURAL_2D_PLAY_EXAMPLE_DEFAULT_ID) {
+		return PROCEDURAL_2D_PLAY_DEFAULT_FIXTURE_JSON;
+	}
+	const fileJson = PROCEDURAL_2D_PLAY_FILE_EXAMPLE_JSON_BY_ID[fixtureId];
+	if (fileJson) return fileJson;
+	return PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON;
+}
+
+/** @emoji 🧪 Resolves procedural play fixture JSON by catalog id. */
+export function procedural2dPlayFixtureJson(fixtureId: string = PROCEDURAL_2D_PLAY_EXAMPLE_DEFAULT_ID): string {
+	return proceduralFixtureJsonForId(fixtureId);
+}
+
+
+
+/** @emoji 🛝 Procedural playground app. */
+
+
+export const procedural2dPlayAppDefinition = createPlaygroundApp({
+	id: PROCEDURAL_2D_PLAY_APP_ID,
+	label: "Procedural 2D",
+	controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "procedural-2d",
+		resolveDedupe: ["react", "react-dom", "scheduler", "@semio-tech/flow-react", "@semio-tech/procedural-2d-react"],
+		watchIgnored: ["../../../flow/core/lib.rs",
+		"../../../flow/core/target/**",
+		"../../../flow/module/**/lib.rs",
+		"../../../flow/module/**/target/**",],
+		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/infinite-cavas-react-renderer"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(PROCEDURAL_2D_PLAY_APP_ID);
+			const ctrl = new Procedural2dPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildProcedural2dPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerProcedural2dPlayDeclarativeBodies();
+	},
+	keybindings: [
+		{ key: "ctrl+a,meta+a", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "selectAll" },
+		{ key: "Delete", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+		{ key: "Backspace", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+	],
+	bootRenderer: async (pg) => {
+		const { bootProcedural2dPlay } = await import("@semio-tech/framework-playground-renderer-react/procedural-2d");
+		bootProcedural2dPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -1385,7 +1484,7 @@ if (import.meta.vitest) {
 		it("starts with the default draw fixture selected", () => {
 			const bus = new CommandBus();
 			const ctrl = new Procedural2dPlayController(bus, () => {});
-			expect(ctrl.getFixtureCatalog().activeFixtureId).toBe(PROCEDURAL_2D_PLAY_FIXTURE_DEFAULT_ID);
+			expect(ctrl.getExampleCatalog().activeExampleId).toBe(PROCEDURAL_2D_PLAY_EXAMPLE_DEFAULT_ID);
 			expect(ctrl.getFixtureJson()).toContain("draw.shape.rect");
 		});
 
@@ -1740,12 +1839,12 @@ if (import.meta.vitest) {
 			expect(ctrl.getFixtureJson()).toContain("flow.fixture/v1");
 		});
 
-		it("setActiveFixture loads default and empty fixtures", () => {
+		it("setActiveExample loads default and empty fixtures", () => {
 			const bus = new CommandBus();
 			const ctrl = new Procedural2dPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: PLAYGROUND_NO_FIXTURE_ID });
+			ctrl.run("setActiveExample", { exampleId: PLAYGROUND_NO_EXAMPLE_ID });
 			expect(ctrl.getFixtureJson()).toContain('"widgets":[]');
-			ctrl.run("setActiveFixture", { fixtureId: PROCEDURAL_2D_PLAY_FIXTURE_DEFAULT_ID });
+			ctrl.run("setActiveExample", { exampleId: PROCEDURAL_2D_PLAY_EXAMPLE_DEFAULT_ID });
 			expect(ctrl.getFixtureJson()).toContain("draw.shape.rect");
 		});
 
@@ -1775,24 +1874,53 @@ if (import.meta.vitest) {
 
 	});
 }
-// #endregion 🧪Tests
+
+//#region 🔖MediaExport
+async function evaluateProcedural2dDrawingScene(fixture: FlowFixtureV1): Promise<DrawingScene | null> {
+	const client = new FlowOrchestratorClient();
+	await client.loadFixtureJson(proceduralFixtureToJson(fixture));
+	const result = await client.evaluate();
+	const previewMeshes = await client.tessellatePreviews(result.outputsJson);
+	for (const item of extractChannelPreviewItems(result.outputsJson)) {
+		if (item.kind !== "drawing" || item.direction !== "out") continue;
+		const scene = drawingSceneFromPreviewPayload(previewMeshes[item.handle]);
+		if (scene) return scene;
+	}
+	return null;
+}
+
+/** @emoji 💾 Registers procedural 2d flow fixture SVG/PNG export handlers for the OS media graph. */
+export function registerProcedural2dMediaExportHandlers(): void {
+	registerOsMediaExportHandler("2d.procedural", "svg", async (doc) => {
+		const scene = await evaluateProcedural2dDrawingScene(doc as FlowFixtureV1);
+		const svg = scene ? drawingSceneToSvgMarkup(scene) : `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"/>`;
+		return { data: svg, mimeType: "image/svg+xml", fileName: "procedural2d.svg" };
+	});
+	registerOsMediaExportHandler("2d.procedural", "png", async (doc) => {
+		const scene = await evaluateProcedural2dDrawingScene(doc as FlowFixtureV1);
+		const width = scene?.width ?? 1024;
+		const height = scene?.height ?? 1024;
+		const svg = scene ? drawingSceneToSvgMarkup(scene) : `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"/>`;
+		const dataUrl = await rasterizeSvgMarkupToPngDataUrl(svg, width, height);
+		const blob = await fetch(dataUrl).then((response) => response.blob());
+		return { data: new Uint8Array(await blob.arrayBuffer()), mimeType: "image/png", fileName: "procedural2d.png" };
+	});
+}
+//#endregion 🔖MediaExport
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { procedural2dPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for procedural 2d. */
 export function buildProcedural2dProgramDefinition(): PlatformDefinition {
-	const app = procedural2dPlayAppDefinition;
 	return {
 		id: "procedural.2d",
 		name: "Procedural 2D",
 		apiVersion: "1",
-		apps: [{ id: "procedural2d", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "procedural2d", label: "Procedural 2D", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
 
-export { procedural2dPlayAppDefinition, PlaygroundProcedural2d } from "./playground.ts";
 

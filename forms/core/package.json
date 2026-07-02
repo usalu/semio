@@ -7,7 +7,7 @@
   "private": true,
   "exports": {
     ".": "./index.ts",
-    "./playground": "./playground.ts"
+  "./playground": "./playground.ts"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/forms-core:test"

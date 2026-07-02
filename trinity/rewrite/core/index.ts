@@ -3,6 +3,8 @@
 // #endregion 🧲Header
 
 import {
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
   AppRuntime,
   CommandBus,
   Controller,
@@ -23,8 +25,7 @@ import {
   type WindowEngagement,
   type AppTools,
   toolCollection,
-  enforcePlaygroundWindowEngagementInput,
-} from "@semio-tech/framework-playground-core";
+  enforcePlaygroundWindowEngagementInput} from "@semio-tech/framework-playground-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import { createWriterDocument, jackSymbolAtOffset, jackVariableOccurrences, type WriterDocumentV1 } from "@semio-tech/writer-core";
 import type { Puzzle2dFixture, Puzzle2dPreselectSnapshot } from "@semio-tech/puzzle-2d-react";
@@ -885,21 +886,50 @@ if (import.meta.vitest) {
   });
 }
 
-export { trinityRewritePlayAppDefinition, PlaygroundTrinityRewrite } from "./playground.ts";
-
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { trinityRewritePlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for trinity rewrite. */
 export function buildTrinityRewriteProgramDefinition(): PlatformDefinition {
-	const app = trinityRewritePlayAppDefinition;
 	return {
 		id: "trinity.rewrite",
 		name: "Trinity Rewrite",
 		apiVersion: "1",
-		apps: [{ id: "trinity-rewrite", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "trinity-rewrite", label: "Trinity Rewrite", controllerId: TRINITY_REWRITE_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖Play
+
+/** @emoji 🛝 Trinity Rewrite playground app. */
+
+
+export const trinityRewritePlayAppDefinition = createPlaygroundApp({
+	id: TRINITY_REWRITE_PLAY_APP_ID,
+	label: "Trinity Rewrite",
+	controllerId: TRINITY_REWRITE_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "trinity-rewrite",
+		resolveDedupe: ["react", "react-dom", "three"],
+		watchIgnored: ["../engine/lib.rs", "../engine/target/**", "../engine/Cargo.toml"],
+		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(TRINITY_REWRITE_PLAY_APP_ID);
+			const ctrl = new TrinityRewritePlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildTrinityRewritePlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerTrinityRewritePlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootTrinityRewritePlay } = await import("@semio-tech/framework-playground-renderer-react/trinity-rewrite");
+		bootTrinityRewritePlay(pg);
+	},
+});
+//#endregion 🔖Play

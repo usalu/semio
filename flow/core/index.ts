@@ -11,7 +11,7 @@ import {
 	createDocumentVcsEnvelope,
 	materializeDocumentProjection,
 	type DocumentVcsEnvelope,
-} from "@semio-tech/vcs-core";
+} from "@semio-tech/vcs-core/internal";
 
 export type FlowDocument = {
 	readonly flow: Record<string, unknown>;
@@ -55,8 +55,6 @@ export function createFlowAppVcsHandler() {
 }
 //#endregion 🔖DocumentVcs
 
-export { flowPlayAppDefinition, PlaygroundFlow } from "./playground.ts";
-
 // #region 🧲Header
 /** @emoji 🌊 Flow play app — DAG editor shell. */
 // #endregion 🧲Header
@@ -95,6 +93,8 @@ import {
   type AppTools,
   type ToolLeaf,
   toolCollection,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
@@ -378,6 +378,8 @@ function flowPlayWidgetTreeLabel(widget: FlowWidgetV1): string {
       return "Preview";
     case "outputAction":
       return widget.action;
+    case "outputExport":
+      return `Export ${widget.format.toUpperCase()}`;
     case "cluster":
       return widget.name || widget.id;
     default:
@@ -542,6 +544,11 @@ function flowPlayInspectorKindGroup(kind: FlowWidgetV1["kind"], widgets: readonl
     fields.push(
       flowPlayInspectorTextField(widgetIds, "flow-play-inspector.variable-name", "Name", widgets.map((entry) => (entry.kind === "variable" ? entry.name : "")), "name", controllerId),
       flowPlayInspectorTextField(widgetIds, "flow-play-inspector.variable-schema", "Schema", widgets.map((entry) => (entry.kind === "variable" ? entry.schema : "")), "schema", controllerId),
+    );
+  }
+  if (kind === "outputExport") {
+    fields.push(
+      flowPlayInspectorTextField(widgetIds, "flow-play-inspector.export-format", "Format", widgets.map((entry) => (entry.kind === "outputExport" ? entry.format : "")), "format", controllerId),
     );
   }
   if (!fields.length) return null;
@@ -953,7 +960,9 @@ export class FlowPlayController extends Controller {
       new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_COMPILED_DAG, "Compiled DAG", FLOW_PLAY_BODY_KEY_COMPILED_DAG),
     ];
     for (const windowKind of this.mainMode.windowKinds) {
-      enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Flow play window "${windowKind.id}"`);
+      if (windowKind.engagement !== undefined) {
+        enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Flow play window "${windowKind.id}"`);
+      }
     }
   }
 
@@ -1364,20 +1373,62 @@ export async function runGenerationCommand(input: {
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { flowPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for flow. */
 export function buildFlowProgramDefinition(): PlatformDefinition {
-	const app = flowPlayAppDefinition;
 	return {
 		id: "flow",
 		name: "Flow",
 		apiVersion: "1",
-		apps: [{ id: "flow", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "flow", label: "Flow", controllerId: FLOW_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+
+//#region 🔖Play
+
+/** @emoji 🛝 Flow playground app. */
+
+
+export const flowPlayAppDefinition = createPlaygroundApp({
+	id: FLOW_PLAY_APP_ID,
+	label: "Flow",
+	controllerId: "flow-play",
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "flow",
+		resolveDedupe: ["react", "react-dom", "@semio-tech/flow-react"],
+		watchIgnored: [
+			"../core/lib.rs",
+			"../core/target/**",
+			"../core/Cargo.toml",
+			"../core/Cargo.lock",
+			"../core/script.ts",
+			"../module/**/lib.rs",
+			"../module/**/target/**",
+			"../module/**/Cargo.toml",
+			"../module/**/script.ts",
+		],
+		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/flow-react"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(FLOW_PLAY_APP_ID);
+			const ctrl = new FlowPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildFlowPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerFlowPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootFlowPlay } = await import("@semio-tech/framework-playground-renderer-react/flow");
+		bootFlowPlay(pg);
+	},
+});
+//#endregion 🔖Play
 
 // #region 🧪Tests
 if (import.meta.vitest) {

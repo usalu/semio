@@ -48,12 +48,16 @@ if (import.meta.env.VITEST) {
   initBrepSync({ module: readFileSync(join(reactDir, "../module/brep/pkg/flow_module_brep_bg.wasm")) });
   initBimSync({ module: readFileSync(join(reactDir, "../module/bim/pkg/flow_module_bim_bg.wasm")) });
   initDrawSync({ module: readFileSync(join(reactDir, "../module/draw/pkg/flow_module_draw_bg.wasm")) });
-} else {
+} else if (typeof window !== "undefined") {
   await initFlowWasm({ module_or_path: flowCoreWasmUrl });
 }
 
+let flowWasmBoot: Promise<void> | null = null;
+
 export async function ensureFlowWasmLoaded(): Promise<void> {
-  await initFlowWasm({ module_or_path: flowCoreWasmUrl });
+	if (import.meta.env.VITEST) return;
+	if (!flowWasmBoot) flowWasmBoot = initFlowWasm({ module_or_path: flowCoreWasmUrl });
+	await flowWasmBoot;
 }
 
 export { FlowSession };
@@ -541,7 +545,11 @@ export type FlowWidget =
   | { readonly kind: "variable"; readonly id: string; readonly name: string; readonly schema: string }
   | { readonly kind: "outputPreview"; readonly id: string; readonly expanded?: readonly string[] }
   | { readonly kind: "outputAction"; readonly id: string; readonly action: string }
+  | { readonly kind: "outputExport"; readonly id: string; readonly format: string }
   | { readonly kind: "cluster"; readonly id: string; readonly name?: string; readonly tree: FlowTree; readonly flow?: FlowGui };
+
+export type FlowWidgetV1 = FlowWidget;
+export type FlowFixtureV1 = FlowFixture;
 
 export const FLOW_DEFAULT_FIXTURE: FlowFixture = {
   schema: "flow.fixture",
@@ -694,6 +702,8 @@ function flowWidgetTreeSignature(widget: FlowWidget): string {
       return JSON.stringify(canonicalizeFlowValue({ text: widget.text }));
     case "inputImage":
       return JSON.stringify(canonicalizeFlowValue({ src: widget.src ?? "" }));
+    case "outputExport":
+      return JSON.stringify(canonicalizeFlowValue({ format: widget.format }));
     case "cluster":
       return JSON.stringify(canonicalizeFlowValue({ tree: widget.tree }));
     default:
@@ -851,7 +861,7 @@ function flowEvalAnimationPath(
   const widgetById = new Map(fixture.widgets.map((widget) => [widget.id, widget]));
   return path.filter((id) => {
     const widget = widgetById.get(id);
-    return widget != null && widget.kind !== "outputPreview" && widget.kind !== "outputAction";
+    return widget != null && widget.kind !== "outputPreview" && widget.kind !== "outputAction" && widget.kind !== "outputExport";
   });
 }
 
@@ -868,7 +878,7 @@ export function flowDirtyComputePathReady(fixtureJson: string, dirtyPath: readon
     const widget = widgetById.get(widgetId);
     if (!widget) continue;
     if (widget.kind === "inputSlider" || widget.kind === "inputNote" || widget.kind === "inputImage" || widget.kind === "inputStepper") continue;
-    if (widget.kind === "outputPreview" || widget.kind === "outputAction") continue;
+    if (widget.kind === "outputPreview" || widget.kind === "outputAction" || widget.kind === "outputExport") continue;
     if (widget.kind === "neuron") {
       const incoming = flowIncomingSynapseCount(widgetId, fixture.synapses);
       if (incoming > 0) continue;
@@ -934,6 +944,7 @@ export interface CatalogueItem {
   readonly kind: string;
   readonly neuronKind?: string;
   readonly action?: string;
+  readonly format?: string;
   readonly name: string;
   readonly abbreviation: string;
   readonly icon: string;
@@ -1162,6 +1173,9 @@ export function flowCatalogueItemDescriptor(item: CatalogueItem): string {
   }
   if (item.kind === "outputAction") {
     return JSON.stringify({ kind: "outputAction", action: item.action ?? "log" });
+  }
+  if (item.kind === "outputExport") {
+    return JSON.stringify({ kind: "outputExport", format: item.format ?? "svg" });
   }
   return JSON.stringify({ kind: item.kind });
 }
@@ -2645,6 +2659,21 @@ type FlowSessionClusterApi = FlowSession & {
   takePendingClusterExplode(): string | undefined;
 };
 
+type FlowSessionExportApi = FlowSession & {
+  takePendingExportClick(): string | undefined;
+  exportPayloadJson(widgetId: string): string;
+};
+
+function flowExportFormatForWidget(fixtureJson: string, widgetId: string): string {
+  try {
+    const fixture = JSON.parse(fixtureJson) as FlowFixture;
+    const widget = fixture.widgets.find((entry) => entry.id === widgetId);
+    return widget?.kind === "outputExport" ? widget.format : "svg";
+  } catch {
+    return "svg";
+  }
+}
+
 type FlowSessionVariableApi = FlowSession & {
   schemasJson(): string;
   setVariableName(widgetId: string, name: string): void;
@@ -2705,6 +2734,7 @@ export interface FlowCanvasProps {
   readonly extensionHost?: FlowExtensionHost;
   readonly onPreviewText?: (text: string) => void;
   readonly onEvalOutputs?: (outputsJson: string, previewMeshes?: Readonly<Record<string, unknown>>) => void;
+  readonly onOutputExport?: (widgetId: string, format: string, resolvedValueJson: string) => void;
   readonly onFixtureChange?: (fixtureJson: string) => void;
   readonly onCompiledWireLiteralChange?: (text: string) => void;
   readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
@@ -2799,6 +2829,7 @@ export function FlowCanvas({
   extensionHost = flowExtensionHost,
   onPreviewText,
   onEvalOutputs,
+  onOutputExport,
   onFixtureChange,
   onCompiledWireLiteralChange,
   onCatalogueReady,
@@ -2833,6 +2864,7 @@ export function FlowCanvas({
   const wheelZoomEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onPreviewTextRef = useRef(onPreviewText);
   const onEvalOutputsRef = useRef(onEvalOutputs);
+  const onOutputExportRef = useRef(onOutputExport);
   const onFixtureChangeRef = useRef(onFixtureChange);
   const onCompiledWireLiteralChangeRef = useRef(onCompiledWireLiteralChange);
   const onCatalogueReadyRef = useRef(onCatalogueReady);
@@ -2894,6 +2926,10 @@ export function FlowCanvas({
   useEffect(() => {
     onEvalOutputsRef.current = onEvalOutputs;
   }, [onEvalOutputs]);
+
+  useEffect(() => {
+    onOutputExportRef.current = onOutputExport;
+  }, [onOutputExport]);
 
   useEffect(() => {
     onFixtureChangeRef.current = onFixtureChange;
@@ -3765,9 +3801,33 @@ export function FlowCanvas({
       }
       session.pointerUpScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
       const clusterApi = session as FlowSessionClusterApi;
+      const exportApi = session as FlowSessionExportApi;
       const explodeId = clusterApi.takePendingClusterExplode?.();
       if (explodeId) {
         clusterApi.explodeCluster(explodeId);
+      }
+      const exportWidgetId = exportApi.takePendingExportClick?.();
+      if (exportWidgetId && onOutputExportRef.current) {
+        const format = flowExportFormatForWidget(session.fixtureJson(), exportWidgetId);
+        void (async () => {
+          const orchestrator = orchestratorRef.current;
+          const fixture = session.fixtureJson();
+          try {
+            if (orchestrator && !import.meta.env.VITEST) {
+              await orchestrator.loadFixtureJson(fixture);
+              const result = await orchestrator.evaluate();
+              session.applyEvalOutputsJson(result.outputsJson);
+            } else {
+              session.applyEvalOutputsJson(session.evaluateSync());
+            }
+            lastEvalFixtureRef.current = fixture;
+            renderFrame();
+            const resolvedValueJson = exportApi.exportPayloadJson(exportWidgetId);
+            onOutputExportRef.current?.(exportWidgetId, format, resolvedValueJson);
+          } catch {
+            console.log(`[DEBUG] flow export eval failed for ${exportWidgetId}`);
+          }
+        })();
       }
       pointerRef.current = { active: false, pan: false, id: -1, shift: false, ctrl: false, alt: false, x: 0, y: 0 };
       emitInteractionState(session);

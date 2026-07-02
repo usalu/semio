@@ -45,7 +45,7 @@ import { type ReactNode } from "react";
 // #endregion 🔌Adapters
 
 // #region 🔖DrawFlowModule
-if (!import.meta.env.VITEST) {
+if (!import.meta.env.VITEST && typeof window !== "undefined") {
 	await ensureDrawingWasmLoaded();
 }
 
@@ -711,6 +711,7 @@ export interface Procedural2dFlowEditorProps {
 	readonly extensionRevision?: number;
 	readonly onPreviewText?: (text: string) => void;
 	readonly onEvalOutputs?: (outputsJson: string, previewMeshes?: Readonly<Record<string, unknown>>) => void;
+	readonly onOutputExport?: (widgetId: string, format: string, resolvedValueJson: string) => void;
 	readonly onCatalogueReady?: (sections: readonly CatalogueSection[]) => void;
 	readonly onFixtureChange?: (fixtureJson: string) => void;
 	readonly onSelectionChange?: (ids: readonly string[]) => void;
@@ -741,6 +742,7 @@ export function Procedural2dFlowEditor({
 	extensionRevision = 0,
 	onPreviewText,
 	onEvalOutputs,
+	onOutputExport,
 	onCatalogueReady,
 	onFixtureChange,
 	onSelectionChange,
@@ -776,6 +778,7 @@ export function Procedural2dFlowEditor({
 			extensionHost={extensionHost}
 			onPreviewText={onPreviewText}
 			onEvalOutputs={onEvalOutputs}
+			onOutputExport={onOutputExport}
 			onCatalogueReady={onCatalogueReady}
 			onFixtureChange={onFixtureChange}
 			onSelectionChange={onSelectionChange}

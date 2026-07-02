@@ -1056,7 +1056,7 @@ export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = 
 	draw: { dev: 6064, test: 6065, env: "DRAW_PLAY_PORT" },
 	note: { dev: 6080, test: 6081, env: "NOTE_PLAY_PORT" },
 	writer: { dev: 6062, test: 6063, env: "WRITER_PLAY_PORT" },
-	s: { dev: 6066, test: 6067, env: "S_PLAY_PORT" },
+	s: { dev: 6066, test: 6067, env: "S_OS_PORT" },
 	vcs: { dev: 6075, env: "VCS_PLAY_PORT" },
 	"procedural-3d": { dev: 6018, test: 6031, env: "PROCEDURAL_3D_PLAY_PORT" },
 	"procedural-2d": { dev: 6021, test: 6033, env: "PROCEDURAL_2D_PLAY_PORT" },
@@ -1103,6 +1103,12 @@ export function allPlaygroundReservedPorts(): ReadonlySet<number> {
 	return ports;
 }
 
+/** @emoji 🔌 OS hub service dev port. */
+export const OS_HUB_PORT = 6070;
+
+/** @emoji 🔌 Process env var for {@link OS_HUB_PORT}. */
+export const OS_HUB_PORT_ENV = "OS_HUB_PORT";
+
 /** @emoji 🌐 Subset used by iframe static-site embed URLs (`compose`, `cad`, puzzle dims). */
 export const PLAYGROUND_EMBED_SITE_DEV_PORTS = {
 	compose: playgroundDevPortString("compose"),
@@ -1114,19 +1120,19 @@ export const PLAYGROUND_EMBED_SITE_DEV_PORTS = {
 
 export type PlaygroundEmbedSiteKind = keyof typeof PLAYGROUND_EMBED_SITE_DEV_PORTS;
 
-/** @emoji 🔒 Process env var locking a playground to one fixture (hides navbar dropdown). */
-export const PLAYGROUND_LOCKED_FIXTURE_ENV = "PLAYGROUND_LOCKED_FIXTURE_ID";
+/** @emoji 🔒 Process env var locking a playground to one example (hides navbar dropdown). */
+export const PLAYGROUND_LOCKED_EXAMPLE_ENV = "PLAYGROUND_LOCKED_EXAMPLE_ID";
 
-/** @emoji 🔒 Locked fixture id from process env, if any. */
-export function playgroundLockedFixtureIdFromEnv(env: NodeJS.ProcessEnv = process.env): string | undefined {
-	const raw = env[PLAYGROUND_LOCKED_FIXTURE_ENV]?.trim();
+/** @emoji 🔒 Locked example id from process env, if any. */
+export function playgroundLockedExampleIdFromEnv(env: NodeJS.ProcessEnv = process.env): string | undefined {
+	const raw = env[PLAYGROUND_LOCKED_EXAMPLE_ENV]?.trim();
 	return raw || undefined;
 }
 
 /** @emoji 🔌 Vite `define` entries for playground play bundles. */
 export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Record<string, string> {
 	return {
-		"import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID": JSON.stringify(playgroundLockedFixtureIdFromEnv() ?? ""),
+		"import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID": JSON.stringify(playgroundLockedExampleIdFromEnv() ?? ""),
 		"import.meta.vitest": "undefined",
 		...extra,
 	};
@@ -1165,22 +1171,22 @@ export function playPollingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv
   });
 }
 
-/** @emoji 🔒 Parses optional `fixture <id>` argv prefix for playground play scripts. */
-export function consumePlaygroundFixtureArgv(
+/** @emoji 🔒 Parses optional `example <id>` argv prefix for playground play scripts. */
+export function consumePlaygroundExampleArgv(
   segments: string[],
-  resolveFixtureId: (slug: string) => string | undefined,
-): { readonly segments: string[]; readonly fixtureEnv: NodeJS.ProcessEnv } {
-  if (segments[0] !== "fixture" || !segments[1]) {
-    return { segments, fixtureEnv: {} };
+  resolveExampleId: (slug: string) => string | undefined,
+): { readonly segments: string[]; readonly exampleEnv: NodeJS.ProcessEnv } {
+  if (segments[0] !== "example" || !segments[1]) {
+    return { segments, exampleEnv: {} };
   }
-  const fixtureId = resolveFixtureId(segments[1]);
-  if (!fixtureId) {
-    console.error(`[play] unknown fixture ${JSON.stringify(segments[1])}`);
+  const exampleId = resolveExampleId(segments[1]);
+  if (!exampleId) {
+    console.error(`[play] unknown example ${JSON.stringify(segments[1])}`);
     process.exit(1);
   }
   return {
     segments: segments.slice(2),
-    fixtureEnv: { PLAYGROUND_LOCKED_FIXTURE_ID: fixtureId },
+    exampleEnv: { PLAYGROUND_LOCKED_EXAMPLE_ID: exampleId },
   };
 }
 
@@ -1209,6 +1215,20 @@ export function devServerUrl(host: string, port: number): string {
   return `http://${probeHost}:${port}/`;
 }
 
+/** @emoji 🎯 Reads `import.meta.env.PUZZLE_PLAY_ENTRY` baked into a running playground dev server. */
+export function devServerPlayEntry(host: string, port: number): string | undefined {
+  const url = `${devServerUrl(host, port)}index.ts`;
+  const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
+if (!res.ok) process.exit(1);
+const text = await res.text();
+const match = text.match(/PUZZLE_PLAY_ENTRY\\":\\s*\\"([^\\"]+)\\"/);
+process.stdout.write(match?.[1] ?? "");
+`;
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { encoding: "utf8", timeout: 3000 });
+  const entry = result.stdout?.trim();
+  return entry || undefined;
+}
+
 /** @emoji 🔎 Best-effort description of the process listening on `port` (Unix/macOS/Linux). */
 export function describeDevPortOccupant(port: number): string | undefined {
   if (process.platform === "win32") return undefined;
@@ -1220,12 +1240,14 @@ export function describeDevPortOccupant(port: number): string | undefined {
 }
 
 /** @emoji ♻️ True when an HTTP server on `port` already responds successfully (reuse existing dev). */
-export function canReuseDevPort(host: string, port: number): boolean {
+export function canReuseDevPort(host: string, port: number, expectedPlayEntry?: string): boolean {
   const url = devServerUrl(host, port);
   const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
 process.exit(res.ok ? 0 : 1);`;
   const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { timeout: 3000 });
-  return result.status === 0;
+  if (result.status !== 0) return false;
+  if (!expectedPlayEntry) return true;
+  return devServerPlayEntry(host, port) === expectedPlayEntry;
 }
 
 /** @emoji 🔌 First free TCP port at or after `preferredPort` (up to `maxAttempts`), skipping `skipPorts`. */
@@ -1256,17 +1278,28 @@ export function runViteBunxDev(
     /** When true, bind only `defaultPort` / env — never bump into another playground port. */
     fixedPort?: boolean;
     reservedPorts?: ReadonlySet<number>;
+    env?: NodeJS.ProcessEnv;
+    /** When set with `fixedPort`, only reuse an existing listener serving this play entry. */
+    expectedPlayEntry?: string;
   } = {},
 ): void {
   const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
   const preferredPort = Number(process.env[opts.portEnv ?? "VITE_PORT"] ?? opts.defaultPort ?? "5173");
+  const spawnEnv = playPollingEnv(opts.env);
   if (opts.fixedPort && isDevPortInUse(host, preferredPort)) {
     const url = devServerUrl(host, preferredPort);
-    if (canReuseDevPort(host, preferredPort)) {
+    if (canReuseDevPort(host, preferredPort, opts.expectedPlayEntry)) {
       console.log(`[dev] Port ${preferredPort} is already in use — dev server appears to be running at ${url}`);
       return;
     }
     const occupant = describeDevPortOccupant(preferredPort);
+    const servedEntry = devServerPlayEntry(host, preferredPort);
+    if (servedEntry && opts.expectedPlayEntry && servedEntry !== opts.expectedPlayEntry) {
+      console.error(
+        `[dev] Port ${preferredPort} is serving play entry "${servedEntry}" but "${opts.expectedPlayEntry}" was requested. Stop that process or set ${opts.portEnv ?? "VITE_PORT"}.`,
+      );
+      process.exit(1);
+    }
     console.error(
       `[dev] Port ${preferredPort} is already in use${occupant ? ` by ${occupant}` : ""}. Stop that process or set ${opts.portEnv ?? "VITE_PORT"}.`,
     );
@@ -1293,7 +1326,7 @@ export function runViteBunxDev(
   if (wantStrictPort && !segments.includes("--strictPort") && !segments.includes("--no-strictPort")) {
     viteArgs.push("--strictPort");
   }
-  spawnBunx([...viteArgs, ...segments], bundleRoot, playPollingEnv());
+  spawnBunx([...viteArgs, ...segments], bundleRoot, spawnEnv);
 }
 
 /** ▶️Vite dev via `bunx` without a fixed config path (extra args only). */

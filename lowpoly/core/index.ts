@@ -3,7 +3,6 @@
 // #endregion 🧲Header
 
 export * from "./internal.ts";
-export { lowpolyPlayAppDefinition, PlaygroundLowpoly } from "./playground.ts";
 
 import {
 	AppRuntime,
@@ -32,7 +31,12 @@ import {
 	type WindowEngagement,
 	type WindowMeasure,
 	toolCollection,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import { meshTransferToGlb, type MeshTransfer } from "@semio-tech/kernel-3d-js";
+import { createLowpolySession } from "@semio-tech/lowpoly-react";
 import { selectionMergeIds } from "@semio-tech/ui-react";
 import {
 	DEFAULT_LOWPOLY_SELECTION,
@@ -58,6 +62,7 @@ import {
 	createLowpolyPaintVcsEnvelope,
 	type LowpolyPaintDocument,
   type LowpolyPaintEditOp,
+  type LowpolyTessellation,
 } from "./internal.ts";
 
 export const LOWPOLY_PLAY_APP_ID = "lowpoly-play";
@@ -966,19 +971,87 @@ if (import.meta.vitest) {
 	});
 }
 
+//#region 🔖MediaExport
+function lowpolyTessellationToMeshTransfer(tess: LowpolyTessellation): MeshTransfer {
+	return {
+		position: tess.positions,
+		normal: tess.normals,
+		index: tess.indices,
+		edges: tess.edgePositions,
+		faceGroups: [],
+		edgeGroups: [],
+		faceInfos: [],
+		edgeInfos: [],
+	};
+}
+
+async function lowpolyFixtureToSession(fixture: LowpolyFixture) {
+	const session = await createLowpolySession(lowpolyFixtureToJson(fixture));
+	return session;
+}
+
+/** @emoji 💾 Registers lowpoly fixture OBJ/GLB export handlers for the OS media graph. */
+export function registerLowpolyMediaExportHandlers(): void {
+	registerOsMediaExportHandler("3d.lowpoly", "obj", async (doc) => {
+		const fixture = doc as LowpolyFixture;
+		const session = await lowpolyFixtureToSession(fixture);
+		return { data: session.exportObjActive(), mimeType: "text/plain", fileName: "lowpoly.obj" };
+	});
+	registerOsMediaExportHandler("3d.lowpoly", "glb", async (doc) => {
+		const fixture = doc as LowpolyFixture;
+		const session = await lowpolyFixtureToSession(fixture);
+		const { parseLowpolyTessellationJson } = await import("@semio-tech/lowpoly-react");
+		const tess = parseLowpolyTessellationJson(session.tessellateActive());
+		if (!tess) return { data: new Uint8Array([0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00]), mimeType: "model/gltf-binary", fileName: "lowpoly.glb" };
+		return { data: meshTransferToGlb(lowpolyTessellationToMeshTransfer(tess)), mimeType: "model/gltf-binary", fileName: "lowpoly.glb" };
+	});
+}
+//#endregion 🔖MediaExport
+
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { lowpolyPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for lowpoly. */
 export function buildLowpolyProgramDefinition(): PlatformDefinition {
-	const app = lowpolyPlayAppDefinition;
 	return {
 		id: "lowpoly",
 		name: "Lowpoly",
 		apiVersion: "1",
-		apps: [{ id: "lowpoly", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "lowpoly", label: "Lowpoly", controllerId: LOWPOLY_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖Play
+
+/** @emoji 🛝 Lowpoly playground app. */
+
+
+export const lowpolyPlayAppDefinition = createPlaygroundApp({
+	id: LOWPOLY_PLAY_APP_ID,
+	label: "Lowpoly",
+	controllerId: "lowpoly-play",
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "lowpoly",
+		resolveDedupe: ["react", "react-dom", "three", "scheduler", "@semio-tech/lowpoly-react"],
+		watchIgnored: ["../core/lib.rs", "../core/target/**", "../core/pkg/**"],
+		optimizeDeps: { include: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(LOWPOLY_PLAY_APP_ID);
+			const ctrl = new LowpolyPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildLowpolyPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerLowpolyPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootLowpolyPlay } = await import("@semio-tech/framework-playground-renderer-react/lowpoly");
+		await bootLowpolyPlay(pg);
+	},
+});
+//#endregion 🔖Play

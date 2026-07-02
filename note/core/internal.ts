@@ -24,7 +24,8 @@ export const NOTE_TOOL_IDS = [
 	"table",
 	"math",
 	"pencil",
-	"eraser",
+	"eraserStroke",
+	"eraserPoint",
 ] as const;
 export type NoteToolId = (typeof NOTE_TOOL_IDS)[number];
 
@@ -46,9 +47,21 @@ export interface NoteBlockBase {
 	readonly locked: boolean;
 }
 
+export interface NoteTextRun {
+	readonly text: string;
+	readonly bold?: boolean;
+	readonly italic?: boolean;
+	readonly underline?: boolean;
+	readonly link?: string;
+}
+
+export interface NoteTextParagraph {
+	readonly runs: readonly NoteTextRun[];
+}
+
 export interface NoteTextBlock extends NoteBlockBase {
 	readonly kind: "text";
-	readonly content: string;
+	readonly paragraphs: readonly NoteTextParagraph[];
 	readonly fontSize: number;
 	readonly fontWeight: "normal" | "bold";
 	readonly align: "left" | "center" | "right";
@@ -107,6 +120,7 @@ export interface NoteDocument {
 	readonly gridVisible?: boolean;
 	readonly snapEnabled?: boolean;
 	readonly pencilWidth?: number;
+	readonly eraserRadius?: number;
 }
 
 export type NoteKindHoverDomain = NoteBlockKind | "block";
@@ -128,6 +142,7 @@ export type NoteEditOp =
 	| { readonly op: "setGridVisible"; readonly visible: boolean }
 	| { readonly op: "setSnapEnabled"; readonly enabled: boolean }
 	| { readonly op: "setPencilWidth"; readonly width: number }
+	| { readonly op: "setEraserRadius"; readonly radius: number }
 	| { readonly op: "addBlock"; readonly parentId?: string; readonly index?: number; readonly block: NoteBlockNode }
 	| { readonly op: "updateBlock"; readonly blockId: string; readonly block: NoteBlockNode }
 	| { readonly op: "removeBlock"; readonly blockId: string }
@@ -157,6 +172,7 @@ export function defaultNoteDocument(id = "empty", title?: string): NoteDocument 
 		gridVisible: true,
 		snapEnabled: false,
 		pencilWidth: 3,
+		eraserRadius: 12,
 	};
 }
 
@@ -189,7 +205,216 @@ export interface NoteBlockLocation {
 	readonly index: number;
 }
 
-export function createNoteTextBlock(name = "Text", x = 0, y = 0): NoteTextBlock {
+export function noteTextParagraphsFromPlainText(text: string): readonly NoteTextParagraph[] {
+	const lines = text.split(/\n/);
+	return lines.map((line) => ({ runs: [{ text: line }] }));
+}
+
+export function noteTextPlainText(paragraphs: readonly NoteTextParagraph[]): string {
+	return paragraphs.map((paragraph) => paragraph.runs.map((run) => run.text).join("")).join("\n");
+}
+
+export function noteImageAssetDataUrl(asset: NoteImageAsset): string {
+	return asset.data.startsWith("data:") ? asset.data : `data:${asset.mime};base64,${asset.data}`;
+}
+
+export interface NoteBounds {
+	readonly x: number;
+	readonly y: number;
+	readonly width: number;
+	readonly height: number;
+}
+
+export type NoteResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
+
+export function noteSelectionBounds(blocks: readonly NoteBlockNode[], ids: readonly string[]): NoteBounds | null {
+	const idSet = new Set(ids);
+	const selected = flattenNoteBlocks(blocks).filter((block) => idSet.has(block.id));
+	if (!selected.length) return null;
+	let minX = Infinity;
+	let minY = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	for (const block of selected) {
+		const bounds = noteBlockBounds(block);
+		minX = Math.min(minX, bounds.x);
+		minY = Math.min(minY, bounds.y);
+		maxX = Math.max(maxX, bounds.x + bounds.width);
+		maxY = Math.max(maxY, bounds.y + bounds.height);
+	}
+	return { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) };
+}
+
+function scaleValue(value: number, fromMin: number, fromSize: number, toMin: number, toSize: number): number {
+	if (fromSize <= 0) return toMin;
+	return toMin + ((value - fromMin) / fromSize) * toSize;
+}
+
+export function noteScaleBlockWithinGroup(block: NoteBlockNode, fromBounds: NoteBounds, toBounds: NoteBounds): NoteBlockNode {
+	const blockBounds = noteBlockBounds(block);
+	const nextX = scaleValue(blockBounds.x, fromBounds.x, fromBounds.width, toBounds.x, toBounds.width);
+	const nextY = scaleValue(blockBounds.y, fromBounds.y, fromBounds.height, toBounds.y, toBounds.height);
+	const nextWidth = Math.max(8, scaleValue(blockBounds.x + blockBounds.width, fromBounds.x, fromBounds.width, toBounds.x, toBounds.width) - nextX);
+	const nextHeight = Math.max(8, scaleValue(blockBounds.y + blockBounds.height, fromBounds.y, fromBounds.height, toBounds.y, toBounds.height) - nextY);
+	if (block.kind === "ink") {
+		const scaleX = fromBounds.width > 0 ? toBounds.width / fromBounds.width : 1;
+		const scaleY = fromBounds.height > 0 ? toBounds.height / fromBounds.height : 1;
+		const points = block.points.map(([px, py]) => [px * scaleX, py * scaleY] as Vec2);
+		return { ...block, x: nextX, y: nextY, width: nextWidth, height: nextHeight, points };
+	}
+	if (block.kind === "group") {
+		return {
+			...block,
+			x: nextX,
+			y: nextY,
+			width: nextWidth,
+			height: nextHeight,
+			children: block.children.map((child) => noteScaleBlockWithinGroup(child, fromBounds, toBounds)),
+		};
+	}
+	return { ...block, x: nextX, y: nextY, width: nextWidth, height: nextHeight };
+}
+
+export function noteResizeBounds(fromBounds: NoteBounds, handle: NoteResizeHandle, dx: number, dy: number, minSize = 8): NoteBounds {
+	let { x, y, width, height } = fromBounds;
+	if (handle.includes("e")) width = Math.max(minSize, width + dx);
+	if (handle.includes("w")) {
+		const nextWidth = Math.max(minSize, width - dx);
+		x += width - nextWidth;
+		width = nextWidth;
+	}
+	if (handle.includes("s")) height = Math.max(minSize, height + dy);
+	if (handle.includes("n")) {
+		const nextHeight = Math.max(minSize, height - dy);
+		y += height - nextHeight;
+		height = nextHeight;
+	}
+	return { x, y, width, height };
+}
+
+function pointToSegmentDistance(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+	const dx = x2 - x1;
+	const dy = y2 - y1;
+	if (dx === 0 && dy === 0) return Math.hypot(px - x1, py - y1);
+	const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)));
+	return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+function inkWorldPoints(block: NoteInkBlock): Vec2[] {
+	return block.points.map(([px, py]) => [block.x + px, block.y + py] as Vec2);
+}
+
+function inkHitsPoint(block: NoteInkBlock, x: number, y: number, threshold: number): boolean {
+	const points = inkWorldPoints(block);
+	if (points.length < 2) {
+		if (!points[0]) return false;
+		return Math.hypot(x - points[0][0], y - points[0][1]) <= threshold;
+	}
+	for (let index = 1; index < points.length; index += 1) {
+		const prev = points[index - 1]!;
+		const next = points[index]!;
+		if (pointToSegmentDistance(x, y, prev[0], prev[1], next[0], next[1]) <= threshold + block.strokeWidth / 2) return true;
+	}
+	return false;
+}
+
+export function noteEraseInkStrokeAtPoint(doc: NoteDocument, x: number, y: number, threshold = 8): NoteDocument {
+	const hits = flattenNoteBlocks(doc.blocks).filter((block): block is NoteInkBlock => block.kind === "ink" && inkHitsPoint(block, x, y, threshold));
+	if (!hits.length) return doc;
+	let next = doc;
+	for (const block of hits) next = applyNoteEditOp(next, { op: "removeBlock", blockId: block.id });
+	return next;
+}
+
+function noteEraseInkPointsInBlock(block: NoteInkBlock, x: number, y: number, radius: number): NoteInkBlock[] {
+	const keptIndices: number[] = [];
+	for (let index = 0; index < block.points.length; index += 1) {
+		const point = block.points[index]!;
+		if (Math.hypot(block.x + point[0] - x, block.y + point[1] - y) > radius) keptIndices.push(index);
+	}
+	if (keptIndices.length === block.points.length) return [block];
+	if (!keptIndices.length) return [];
+	const runs: Vec2[][] = [];
+	let current: Vec2[] = [block.points[keptIndices[0]!]!];
+	for (let index = 1; index < keptIndices.length; index += 1) {
+		if (keptIndices[index]! - keptIndices[index - 1]! > 1) {
+			if (current.length >= 2) runs.push(current);
+			current = [block.points[keptIndices[index]!]!];
+		} else {
+			current.push(block.points[keptIndices[index]!]!);
+		}
+	}
+	if (current.length >= 2) runs.push(current);
+	return runs.map((points, index) => ({
+		...block,
+		id: index === 0 ? block.id : createNoteId("ink"),
+		name: index === 0 ? block.name : `${block.name} fragment`,
+		points,
+	}));
+}
+
+export function noteEraseInkPointsNearPoint(doc: NoteDocument, x: number, y: number, radius: number): NoteDocument {
+	let next = doc;
+	const inkBlocks = flattenNoteBlocks(doc.blocks).filter((block): block is NoteInkBlock => block.kind === "ink");
+	for (const block of inkBlocks) {
+		const fragments = noteEraseInkPointsInBlock(block, x, y, radius);
+		if (fragments.length === 1 && fragments[0] === block) continue;
+		next = applyNoteEditOp(next, { op: "removeBlock", blockId: block.id });
+		for (const fragment of fragments) next = applyNoteEditOp(next, { op: "addBlock", block: fragment });
+	}
+	return next;
+}
+
+export interface NoteClipboardPayload {
+	readonly schema: "note.clipboard";
+	readonly blocks: readonly NoteBlockNode[];
+}
+
+export function noteClipboardPayload(blocks: readonly NoteBlockNode[]): string {
+	const payload: NoteClipboardPayload = { schema: "note.clipboard", blocks: [...blocks] };
+	return JSON.stringify(payload);
+}
+
+export function noteBlocksFromClipboardPayload(json: string): readonly NoteBlockNode[] | null {
+	try {
+		const parsed = JSON.parse(json) as NoteClipboardPayload;
+		if (parsed.schema !== "note.clipboard" || !Array.isArray(parsed.blocks)) return null;
+		return parsed.blocks;
+	} catch {
+		return null;
+	}
+}
+
+export function noteCloneBlocksWithOffset(blocks: readonly NoteBlockNode[], dx: number, dy: number): NoteBlockNode[] {
+	return blocks.map((block) => {
+		const clone = cloneNoteBlock(block);
+		return { ...clone, x: clone.x + dx, y: clone.y + dy };
+	});
+}
+
+export function noteTableCellAtPoint(block: NoteTableBlock, localX: number, localY: number): { readonly row: number; readonly col: number } | null {
+	const rowCount = block.rows.length + 1;
+	const colCount = block.columns.length;
+	if (rowCount <= 0 || colCount <= 0) return null;
+	const rowHeight = block.height / rowCount;
+	const colWidth = block.width / colCount;
+	const row = Math.floor(localY / rowHeight) - 1;
+	const col = Math.floor(localX / colWidth);
+	if (row < 0 || row >= block.rows.length || col < 0 || col >= colCount) return null;
+	return { row, col };
+}
+
+export function createNoteImageAssetFromDataUrl(dataUrl: string, mime?: string): NoteImageAsset {
+	const match = /^data:([^;]+);base64,(.+)$/.exec(dataUrl);
+	if (match) return { mime: match[1]!, data: dataUrl };
+	return { mime: mime ?? "image/png", data: dataUrl };
+}
+
+export function createNoteImageAssetKey(): string {
+	return `asset-${createNoteId("image")}`;
+}
+
+export function createNoteTextBlock(name = "Text", x = 0, y = 0, seedText = ""): NoteTextBlock {
 	return {
 		kind: "text",
 		id: createNoteId("text"),
@@ -200,7 +425,7 @@ export function createNoteTextBlock(name = "Text", x = 0, y = 0): NoteTextBlock 
 		height: 120,
 		visible: true,
 		locked: false,
-		content: "Text block",
+		paragraphs: noteTextParagraphsFromPlainText(seedText),
 		fontSize: 18,
 		fontWeight: "normal",
 		align: "left",
@@ -486,6 +711,8 @@ export function applyNoteEditOp(doc: NoteDocument, edit: NoteEditOp): NoteDocume
 			return { ...doc, snapEnabled: edit.enabled };
 		case "setPencilWidth":
 			return { ...doc, pencilWidth: edit.width };
+		case "setEraserRadius":
+			return { ...doc, eraserRadius: edit.radius };
 		case "addBlock":
 			return { ...doc, blocks: insertBlock(doc.blocks, edit.parentId, edit.index ?? doc.blocks.length, edit.block) };
 		case "updateBlock":
@@ -531,6 +758,8 @@ export function backwardsNoteEditOp(projection: NoteDocument, operation: NoteEdi
 			return [{ op: "setSnapEnabled", enabled: projection.snapEnabled ?? false }];
 		case "setPencilWidth":
 			return [{ op: "setPencilWidth", width: projection.pencilWidth ?? 3 }];
+		case "setEraserRadius":
+			return [{ op: "setEraserRadius", radius: projection.eraserRadius ?? 12 }];
 		default:
 			return [{ op: "setDocument", document: projection }];
 	}
@@ -589,6 +818,41 @@ if (import.meta.vitest) {
 		it("encodes pointer focus keys", () => {
 			const key = encodeNotePointerFocusKey("text", "abc");
 			expect(noteHoverPayloadFromPointerFocusKey(key).id).toBe("abc");
+		});
+
+		it("round-trips plain text through paragraphs", () => {
+			const paragraphs = noteTextParagraphsFromPlainText("hello\nworld");
+			expect(noteTextPlainText(paragraphs)).toBe("hello\nworld");
+		});
+
+		it("scales selection bounds", () => {
+			const text = createNoteTextBlock("A", 0, 0);
+			const image = createNoteImageBlock("B", "k", 100, 0);
+			const from = noteSelectionBounds([text, image], [text.id, image.id]);
+			expect(from?.width).toBe(340);
+			const scaled = noteScaleBlockWithinGroup(text, from!, { x: 0, y: 0, width: 680, height: 160 });
+			expect(scaled.x).toBe(0);
+			expect(scaled.width).toBe(560);
+		});
+
+		it("erases ink strokes and points", () => {
+			let doc = defaultNoteDocument("ink");
+			const ink = createNoteInkBlock("Ink", 0, 0);
+			const withPoints = { ...ink, points: [[0, 0], [40, 0], [80, 0]] as const };
+			doc = applyNoteEditOp(doc, { op: "addBlock", block: withPoints });
+			doc = noteEraseInkStrokeAtPoint(doc, 40, 0, 8);
+			expect(doc.blocks.length).toBe(0);
+			doc = applyNoteEditOp(doc, { op: "addBlock", block: withPoints });
+			doc = noteEraseInkPointsNearPoint(doc, 10, 0, 6);
+			expect(flattenNoteBlocks(doc.blocks).length).toBe(1);
+		});
+
+		it("round-trips clipboard payload", () => {
+			const blocks = [createNoteTextBlock("A"), createNoteMathBlock("B")];
+			const payload = noteClipboardPayload(blocks);
+			const parsed = noteBlocksFromClipboardPayload(payload);
+			expect(parsed?.length).toBe(2);
+			expect(parsed?.[0]?.kind).toBe("text");
 		});
 	});
 }

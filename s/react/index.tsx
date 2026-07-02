@@ -15,6 +15,7 @@ import {
 	sMediaGraphToDagFixtureJson,
 	sResourceDescriptor,
 } from "@semio-tech/s-core";
+import type { PresencePeer } from "@semio-tech/framework-os-core";
 import { CATALOGUE_DRAG_MIME } from "@semio-tech/ui-react";
 
 //#region 🔖StudioContext
@@ -66,6 +67,7 @@ export interface SMediaGraphCanvasProps {
 	readonly onDisconnectEdge?: (edgeId: string) => void;
 	readonly onSpawnApp?: (programId: string, appId: string, position: { readonly x: number; readonly y: number }) => void;
 	readonly editable?: boolean;
+	readonly peers?: readonly PresencePeer[];
 }
 
 export function SMediaGraphCanvas({
@@ -80,6 +82,7 @@ export function SMediaGraphCanvas({
 	onSpawnApp,
 	onDisconnectEdge,
 	editable = false,
+	peers = [],
 }: SMediaGraphCanvasProps): React.ReactElement {
 	const sessionRef = useRef<DagSession | null>(null);
 	const lastFixtureRef = useRef<string>("");
@@ -160,6 +163,16 @@ export function SMediaGraphCanvas({
 			}}
 			onDrop={handleDrop}
 		>
+			{peers.length > 0 ? (
+				<div className="pointer-events-none absolute right-2 top-2 z-10 flex flex-col gap-1">
+					{peers.map((peer) => (
+						<div key={peer.clientId} className="rounded bg-[var(--semio-surface-elevated)] px-2 py-1 text-[10px] shadow">
+							{peer.name}
+							{peer.selection?.length ? ` · ${peer.selection.length} selected` : ""}
+						</div>
+					))}
+				</div>
+			) : null}
 			<DagCanvas
 				className="h-full w-full"
 				fixtureJson={fixtureJson}
@@ -241,19 +254,36 @@ export function buildSPlayCatalogueTree(): import("@semio-tech/framework-playgro
 //#endregion 🔖Catalogue
 
 //#region 🔖History
+import { HistoryTable } from "@semio-tech/vcs-react";
+import { buildOsHistoryColumns } from "@semio-tech/framework-os-core";
+
 export function SStudioHistoryPanel(): React.ReactElement {
 	const store = useStudioStore();
 	const generation = useStudioGeneration();
-	void generation;
-	const document = store.getDocument();
+	const dispatch = useDispatchStudioCommand();
+	const columns = useMemo(() => buildOsHistoryColumns(store.getDocument()), [store, generation]);
 	return (
-		<div className="flex h-full flex-col gap-2 overflow-auto p-3 text-xs">
-			<div className="font-semibold uppercase tracking-wide text-[var(--semio-text-secondary)]">History</div>
-			{document.vcs.operations.map((change) => (
-				<div key={change.id} className="rounded border border-[var(--semio-border-default)] px-2 py-1">
-					{change.description ?? change.id}
-				</div>
-			))}
+		<div className="flex h-full min-h-0 flex-col overflow-hidden">
+			<div className="border-b px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--semio-text-secondary)]">History</div>
+			<HistoryTable columns={columns} className="min-h-0 flex-1 overflow-auto" />
+			<div className="flex gap-2 border-t p-2">
+				<button
+					type="button"
+					className="rounded border px-2 py-1 text-xs"
+					onClick={() => dispatch({ kind: "commitCheckpoint", message: "checkpoint" })}
+				>
+					Commit
+				</button>
+				{columns[0] ? (
+					<button
+						type="button"
+						className="rounded border px-2 py-1 text-xs"
+						onClick={() => dispatch({ kind: "checkoutCheckpoint", checkpointId: columns[0]!.checkpointId })}
+					>
+						Checkout head
+					</button>
+				) : null}
+			</div>
 		</div>
 	);
 }

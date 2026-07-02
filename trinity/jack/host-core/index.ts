@@ -13,14 +13,16 @@ import {
   buildTrinityWindowBody,
   buildWriterWindowBody,
   createPlayAppRuntime,
-  eagerPlayFixtureGlob,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
+  eagerPlayExampleGlob,
   createWindowLayout,
   registerWindowBody,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
   FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-  type PlaygroundFixtureCatalog,
-  type PlaygroundFixtureHost,
+  type PlaygroundExampleCatalog,
+  type PlaygroundExampleHost,
   type UiNode,
   type WindowBodyViewContext,
   type WindowLayout,
@@ -61,13 +63,13 @@ import {
   TRINITY_JACK_PLAY_EXAMPLE_QUERIES,
   TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID,
   TRINITY_JACK_PLAY_PRESET_QUERIES,
-  resolveTrinityJackPlayFixtureSlug,
-} from "./fixture-slugs.ts";
+  resolveTrinityJackPlayExampleSlug,
+} from "./example-slugs.ts";
 
 export {
   TRINITY_JACK_PLAY_DEFAULT_QUERY,
   TRINITY_JACK_PLAY_EXAMPLE_QUERIES,
-} from "./fixture-slugs.ts";
+} from "./example-slugs.ts";
 
 export const TRINITY_JACK_PLAY_APP_ID = "trinity-jack-play";
 export const TRINITY_JACK_PLAY_CONTROLLER_ID = "trinity-jack-play";
@@ -85,7 +87,7 @@ export const TRINITY_JACK_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const TRINITY_JACK_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 export const TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON = TRINITY_DEFAULT_FIXTURE_JSON;
 
-const trinityFixtureModules = eagerPlayFixtureGlob("../../fixture/*.trinity.json");
+const trinityExampleModules = eagerPlayExampleGlob("../../example/*.trinity.json");
 
 function trinityFixtureIdFromGlobPath(globPath: string): string {
   const base = globPath.split("/").pop() ?? globPath;
@@ -103,7 +105,7 @@ function trinityFixtureLabelFromPresetId(id: string): string {
 }
 
 const TRINITY_JACK_PLAY_FILE_FIXTURE_JSON_BY_FILE_ID: Record<string, string> = Object.fromEntries(
-  Object.entries(trinityFixtureModules).map(([path, mod]) => {
+	Object.entries(trinityExampleModules).map(([path, mod]) => {
     const id = trinityFixtureIdFromGlobPath(path);
     const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
     return [id, json];
@@ -112,11 +114,11 @@ const TRINITY_JACK_PLAY_FILE_FIXTURE_JSON_BY_FILE_ID: Record<string, string> = O
 
 const TRINITY_JACK_PLAY_PRESET_IDS = ["nakagin", "branch-chain"] as const;
 
-export const TRINITY_JACK_PLAY_FIXTURE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> =
+export const TRINITY_JACK_PLAY_EXAMPLE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> =
   TRINITY_JACK_PLAY_PRESET_IDS.map((id) => ({ id, label: trinityFixtureLabelFromPresetId(id) }));
 
 function trinityJackPlayFixtureJsonForPreset(presetId: string): string | undefined {
-  const fileId = resolveTrinityJackPlayFixtureSlug(presetId);
+  const fileId = resolveTrinityJackPlayExampleSlug(presetId);
   if (!fileId) return undefined;
   return TRINITY_JACK_PLAY_FILE_FIXTURE_JSON_BY_FILE_ID[fileId];
 }
@@ -133,7 +135,7 @@ export function buildTrinityJackPlayCatalogueTree(activeFixtureId?: string): UiN
         id: "trinity-jack-catalogue.fixtures",
         label: "Fixtures",
         defaultOpen: true,
-        items: TRINITY_JACK_PLAY_FIXTURE_OPTIONS.map((row) => ({
+        items: TRINITY_JACK_PLAY_EXAMPLE_OPTIONS.map((row) => ({
           id: `trinity-jack-catalogue.fixture.${row.id}`,
           label: row.label,
           description: TRINITY_JACK_PLAY_PRESET_QUERIES[row.id] ?? "",
@@ -233,10 +235,10 @@ export function buildTrinityJackPlayToolbarTools(controllerId: string): AppTools
   ];
 }
 
-export class TrinityJackPlayController extends Controller implements PlaygroundFixtureHost {
+export class TrinityJackPlayController extends Controller implements PlaygroundExampleHost {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
   private fixtureJson = TRINITY_DEFAULT_FIXTURE_JSON;
-  private activeFixtureId = TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID;
+  private activeExampleId = TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID;
   private jackQuery = TRINITY_JACK_PLAY_PRESET_QUERIES[TRINITY_JACK_PLAY_FIXTURE_DEFAULT_ID] ?? TRINITY_JACK_PLAY_DEFAULT_QUERY;
   private jackResultJson = "";
   private jackDispatchEpoch = 0;
@@ -346,14 +348,14 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
     return this.lodModeByInstance[scopeId] ?? this.lodMode;
   }
 
-  getActiveFixtureId(): string {
-    return this.activeFixtureId;
+  getActiveExampleId(): string {
+    return this.activeExampleId;
   }
 
-  getFixtureCatalog(): PlaygroundFixtureCatalog {
+  getExampleCatalog(): PlaygroundExampleCatalog {
     return {
-      activeId: this.activeFixtureId,
-      options: TRINITY_JACK_PLAY_FIXTURE_OPTIONS,
+      activeExampleId: this.activeExampleId,
+      options: TRINITY_JACK_PLAY_EXAMPLE_OPTIONS,
     };
   }
 
@@ -395,10 +397,10 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
       value: this.editorEngagementInput,
       possibleEngagements: [
         { id: "trinity-jack-run", label: "Run query", command: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "runJackQuery" } },
-        ...TRINITY_JACK_PLAY_FIXTURE_OPTIONS.map((row) => ({
+        ...TRINITY_JACK_PLAY_EXAMPLE_OPTIONS.map((row) => ({
           id: `trinity-jack-preset-${row.id}`,
           label: row.label,
-          command: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "setActiveFixture", args: { fixtureId: row.id } },
+          command: { controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, command: "setActiveExample", args: { exampleId: row.id } },
         })),
       ],
     });
@@ -521,9 +523,9 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
         this.run("runJackQuery");
         return;
       }
-      const preset = TRINITY_JACK_PLAY_FIXTURE_OPTIONS.find((row) => row.label.toLowerCase() === token || row.id === token);
+      const preset = TRINITY_JACK_PLAY_EXAMPLE_OPTIONS.find((row) => row.label.toLowerCase() === token || row.id === token);
       if (preset) {
-        this.run("setActiveFixture", { fixtureId: preset.id });
+        this.run("setActiveExample", { exampleId: preset.id });
         return;
       }
       this.rebuildShellMode();
@@ -573,14 +575,14 @@ export class TrinityJackPlayController extends Controller implements PlaygroundF
       if (queries.length) this.dispatchJackQuery(queries.join("\n"));
       return;
     }
-    if (command === "setActiveFixture") {
-      const fixtureId = (args as { fixtureId?: string }).fixtureId;
-      if (typeof fixtureId !== "string") return;
-      const json = trinityJackPlayFixtureJsonForPreset(fixtureId);
+    if (command === "setActiveExample") {
+      const exampleId = (args as { exampleId?: string }).exampleId;
+      if (typeof exampleId !== "string") return;
+      const json = trinityJackPlayFixtureJsonForPreset(exampleId);
       const parsed = json ? parseTrinityJackPlayFixtureJson(json) : null;
       if (!parsed) return;
-      this.activeFixtureId = fixtureId;
-      this.jackQuery = TRINITY_JACK_PLAY_PRESET_QUERIES[fixtureId] ?? this.jackQuery;
+      this.activeExampleId = exampleId;
+      this.jackQuery = TRINITY_JACK_PLAY_PRESET_QUERIES[exampleId] ?? this.jackQuery;
       this.setFixtureJson(json);
       this.bump();
       this.run("runJackQuery");
@@ -707,7 +709,7 @@ if (import.meta.vitest) {
     it("branch-chain preset returns graph result", () => {
       const bus = new CommandBus();
       const ctrl = new TrinityJackPlayController(bus, () => {});
-      ctrl.run("setActiveFixture", { fixtureId: "branch-chain" });
+      ctrl.run("setActiveExample", { exampleId: "branch-chain" });
       completeJackDispatch(ctrl);
       const result = JSON.parse(ctrl.getJackResultJson()) as { kind: string; graphFixture?: { nodes: unknown[] } };
       expect(result.kind).toBe("graph");
@@ -766,21 +768,49 @@ if (import.meta.vitest) {
   });
 }
 
-export { trinityJackPlayAppDefinition, PlaygroundTrinityJack } from "./playground.ts";
-
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { trinityJackPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for trinity jack. */
 export function buildTrinityProgramDefinition(): PlatformDefinition {
-	const app = trinityJackPlayAppDefinition;
 	return {
 		id: "trinity",
 		name: "Trinity",
 		apiVersion: "1",
-		apps: [{ id: "trinity-jack", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "trinity-jack", label: "Trinity Jack", controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖Play
+
+/** @emoji 🛝 Trinity Jack playground app. */
+
+export const trinityJackPlayAppDefinition = createPlaygroundApp({
+	id: TRINITY_JACK_PLAY_APP_ID,
+	label: "Trinity Jack",
+	controllerId: TRINITY_JACK_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "trinity-jack",
+		resolveDedupe: ["react", "react-dom", "three"],
+		watchIgnored: ["../../rewrite/engine/lib.rs", "../../rewrite/engine/target/**", "../../rewrite/engine/Cargo.toml"],
+		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(TRINITY_JACK_PLAY_APP_ID);
+			const ctrl = new TrinityJackPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildTrinityJackPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerTrinityJackPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootTrinityJackPlay } = await import("@semio-tech/framework-playground-renderer-react/trinity-jack");
+		bootTrinityJackPlay(pg);
+	},
+});
+//#endregion 🔖Play

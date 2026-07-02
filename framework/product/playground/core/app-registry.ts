@@ -28,7 +28,6 @@ const ALL_PLAY_ENTRY_KINDS = [
 	"draw",
 	"note",
 	"writer",
-	"s",
 	"vcs",
 	"gis-2d",
 	"wires",
@@ -66,7 +65,6 @@ async function importPlaygroundAppDefinition(kind: string): Promise<PlaygroundAp
 	if (kind === "draw") return (await import("@semio-tech/draw-core")).drawPlayAppDefinition;
 	if (kind === "note") return (await import("@semio-tech/note-core")).notePlayAppDefinition;
 	if (kind === "writer") return (await import("@semio-tech/writer-core")).writerPlayAppDefinition;
-	if (kind === "s") return (await import("@semio-tech/s-core")).sPlayAppDefinition;
 	if (kind === "vcs") return (await import("@semio-tech/vcs-core")).vcsPlayAppDefinition;
 	if (kind === "gis-2d") return (await import("@semio-tech/gis-2d-core")).gis2dPlayAppDefinition;
 	if (kind === "wires") return (await import("@semio-tech/reasoning-mindmap-wires-core")).wiresPlayAppDefinition;

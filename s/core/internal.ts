@@ -64,6 +64,8 @@ import {
 	DevJsonBackbone,
 	LocalJsonBackbone,
 	RemoteJsonBackbone,
+	RemoteOsBackbone,
+	buildOsHistoryColumns,
 	emptyMediaGraph,
 	validateMediaGraph,
 	applyAppOperationToSource,
@@ -76,6 +78,13 @@ import {
 	OS_STUDIO_SCHEMA,
 	OS_MEDIA_GRAPH_SCHEMA,
 	OS_RESOURCE_KIND_IDS,
+	OsMediaGraphVirtualFileSystemController,
+	OS_MEDIA_GRAPH_VFS_ROOT_ID,
+	registerOsMediaExportHandler,
+	assertOsMediaExportCoverage,
+	exportOsAppInstanceMedia,
+	type OsMediaExportFormat,
+	type OsMediaExportResult,
 } from "@semio-tech/framework-os-core";
 
 //#region 🔖SAliases
@@ -105,7 +114,7 @@ export type SProgramDefinition = OsProgramDefinition;
 export type SResourceDescriptor = OsResourceDescriptor;
 export type SAppResourceSpec = OsAppResourceSpec;
 export type StudioCommand = OsCommand;
-export { OsStore as StudioStore, DevJsonBackbone, LocalJsonBackbone, RemoteJsonBackbone };
+export { OsStore as StudioStore, DevJsonBackbone, LocalJsonBackbone, RemoteJsonBackbone, RemoteOsBackbone, buildOsHistoryColumns };
 export const createSId = createOsId;
 export const createEmptyStudioDocument = createEmptyOsDocument;
 export const materializeStudioProjection = materializeOsProjection;
@@ -156,8 +165,143 @@ export {
 	validateMediaGraph,
 	osOutPort as sOutPort,
 	osInPort as sInPort,
+	OsMediaGraphVirtualFileSystemController,
+	OS_MEDIA_GRAPH_VFS_ROOT_ID,
+	registerOsMediaExportHandler,
+	assertOsMediaExportCoverage,
+	exportOsAppInstanceMedia,
+	type OsMediaExportFormat,
+	type OsMediaExportResult,
 };
 //#endregion 🔖SAliases
+
+//#region 🔖MediaExportHandlers
+import { rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
+
+function mediaExportFileName(base: string, format: OsMediaExportFormat): string {
+	return `${base}.${format === "glb" ? "glb" : format}`;
+}
+
+/** @emoji 💾 Rasterizes SVG markup to a PNG data URL in the browser. */
+export { rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
+
+function registerSvgPngResourceHandlers(
+	resourceKind: SResourceKindId,
+	base: string,
+	toSvg: (doc: unknown) => string,
+	toPng?: (doc: unknown) => Promise<string>,
+): void {
+	registerOsMediaExportHandler(resourceKind, "svg", async (doc) => ({
+		data: toSvg(doc),
+		mimeType: "image/svg+xml",
+		fileName: mediaExportFileName(base, "svg"),
+	}));
+	registerOsMediaExportHandler(resourceKind, "png", async (doc) => {
+		const png = toPng ? await toPng(doc) : await rasterizeSvgMarkupToPngDataUrl(toSvg(doc), 1024, 1024);
+		const data = png.startsWith("data:") ? await (await fetch(png)).blob().then((b) => b.arrayBuffer()).then((b) => new Uint8Array(b)) : png;
+		return {
+			data: typeof data === "string" ? data : data,
+			mimeType: "image/png",
+			fileName: mediaExportFileName(base, "png"),
+		};
+	});
+}
+
+function registerGlbObjResourceHandlers(
+	resourceKind: SResourceKindId,
+	base: string,
+	toObj: (doc: unknown) => Promise<string>,
+	toGlb: (doc: unknown) => Promise<Uint8Array>,
+): void {
+	registerOsMediaExportHandler(resourceKind, "obj", async (doc) => ({
+		data: await toObj(doc),
+		mimeType: "text/plain",
+		fileName: mediaExportFileName(base, "obj"),
+	}));
+	registerOsMediaExportHandler(resourceKind, "glb", async (doc) => ({
+		data: await toGlb(doc),
+		mimeType: "model/gltf-binary",
+		fileName: mediaExportFileName(base, "glb"),
+	}));
+}
+
+/** @emoji 💾 Registers export handlers for all 2d/3d/5d media resource kinds. */
+export async function registerAllMediaExportHandlers(): Promise<void> {
+	const [
+		draw,
+		raster,
+		note,
+		gis,
+		procedural2d,
+		shooting,
+		layout,
+		presentation,
+		cad,
+		lowpoly,
+		procedural3d,
+		puzzle2d,
+		puzzle3d,
+	] = await Promise.all([
+		import("@semio-tech/draw-core"),
+		import("@semio-tech/raster-core"),
+		import("@semio-tech/note-core"),
+		import("@semio-tech/gis-2d-core"),
+		import("@semio-tech/procedural-2d-core"),
+		import("@semio-tech/shooting-core"),
+		import("@semio-tech/layout-core"),
+		import("@semio-tech/framework-presentation-core"),
+		import("@semio-tech/cad-js-renderer-core"),
+		import("@semio-tech/lowpoly-core"),
+		import("@semio-tech/procedural-3d-core"),
+		import("@semio-tech/puzzle-2d-core"),
+		import("@semio-tech/puzzle-3d-core"),
+	]);
+	draw.registerDrawMediaExportHandlers();
+	raster.registerRasterMediaExportHandlers();
+	note.registerNoteMediaExportHandlers();
+	gis.registerGisMediaExportHandlers();
+	procedural2d.registerProcedural2dMediaExportHandlers();
+	shooting.registerShootingMediaExportHandlers();
+	layout.registerLayoutMediaExportHandlers();
+	presentation.registerPresentationMediaExportHandlers();
+	cad.registerCadMediaExportHandlers();
+	lowpoly.registerLowpolyMediaExportHandlers();
+	procedural3d.registerProcedural3dMediaExportHandlers();
+	puzzle2d.registerPuzzle2dMediaExportHandlers();
+	puzzle3d.registerPuzzle3dMediaExportHandlers();
+	registerGlbObjResourceHandlers(
+		"5d.puzzle",
+		"puzzle5d",
+		async (doc) => {
+			const [{ project3d }, { exportPuzzle3dFixtureObj }] = await Promise.all([
+				import("@semio-tech/puzzle-5d-react"),
+				import("@semio-tech/puzzle-3d-core"),
+			]);
+			return exportPuzzle3dFixtureObj(project3d(doc as Parameters<typeof project3d>[0]));
+		},
+		async (doc) => {
+			const [{ project3d }, { exportPuzzle3dFixtureGlb }] = await Promise.all([
+				import("@semio-tech/puzzle-5d-react"),
+				import("@semio-tech/puzzle-3d-core"),
+			]);
+			return exportPuzzle3dFixtureGlb(project3d(doc as Parameters<typeof project3d>[0]));
+		},
+	);
+	registerSvgPngResourceHandlers("3d.mesh", "mesh", (doc) => {
+		const mesh = doc as { readonly url?: string };
+		return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><text x="8" y="24">${mesh.url ?? "mesh"}</text></svg>`;
+	});
+	registerGlbObjResourceHandlers(
+		"3d.mesh",
+		"mesh",
+		async (doc) => {
+			const mesh = doc as { readonly url?: string };
+			return `# mesh reference\n# ${mesh.url ?? ""}\n`;
+		},
+		async () => new Uint8Array([0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00]),
+	);
+}
+//#endregion 🔖MediaExportHandlers
 
 //#region 🔖SProgramRegistry
 function sBaselineResource(
@@ -198,9 +342,10 @@ export const TECHNOLOGY_APP_RESOURCE_BY_PROGRAM: Readonly<Record<string, Readonl
 		},
 	},
 	trinity: {
-		trinity: sBaselineResource("graph.trinity", "trinity.graph", "trinity"),
-		jack: sBaselineResource("graph.trinity", "trinity.graph", "trinity", [{ id: "query", label: "Query" }]),
-		rewrite: sBaselineResource("graph.trinity", "trinity.graph", "trinityRewrite", [{ id: "edit", label: "Edit" }]),
+		"trinity-jack": sBaselineResource("graph.trinity", "trinity.graph", "trinity", [{ id: "query", label: "Query" }]),
+	},
+	"trinity.rewrite": {
+		"trinity-rewrite": sBaselineResource("graph.trinity", "trinity.graph", "trinityRewrite", [{ id: "edit", label: "Edit" }]),
 	},
 	forms: { forms: sBaselineResource("form.dictionary", "forms.form", "forms") },
 	shooting: {
@@ -220,6 +365,7 @@ export const TECHNOLOGY_APP_RESOURCE_BY_PROGRAM: Readonly<Record<string, Readonl
 	"reasoning.wires": { wires: sBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d") },
 	"reasoning.mindmap": { mindmap: sBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d", [{ id: "explore", label: "Explore" }]) },
 	presentation: { presentation: sBaselineResource("presentation.deck", "presentation.deck", "panel", [{ id: "edit", label: "Edit" }]) },
+	"presentation.deck": { "presentation.deck": sBaselineResource("presentation.deck", "presentation.deck", "panel", [{ id: "edit", label: "Edit" }]) },
 	[COMPOSE_SKETCHPAD_PROGRAM_ID]: SKETCHPAD_APP_RESOURCE,
 	lowpoly: { lowpoly: sBaselineResource("3d.lowpoly", "lowpoly.fixture", "lowpoly") },
 	sequence: { sequence: sBaselineResource("computation.sequence", "sequence.fixture", "sequence") },
@@ -250,6 +396,16 @@ const S_SYSTEM_PROGRAM: SProgramDefinition = {
 			outputs: [osOutPort("catalogue.kinds", "out", "Kinds")],
 			sourceFormat: "catalogue.kinds",
 			componentKind: "catalogue",
+			modes: [{ id: "browse", label: "Browse" }],
+			defaultModeId: "browse",
+		},
+		{
+			id: "files",
+			label: "Files",
+			inputs: [],
+			outputs: [],
+			sourceFormat: "os.storage",
+			componentKind: "virtualFileSystem",
 			modes: [{ id: "browse", label: "Browse" }],
 			defaultModeId: "browse",
 		},
@@ -378,6 +534,7 @@ if (import.meta.vitest) {
 		registerAppVcsHandler(createRasterAppVcsHandler());
 		registerAppVcsHandler(createFormsAppVcsHandler());
 		registerAppVcsHandler(createPresentationAppVcsHandler());
+		await registerAllMediaExportHandlers();
 	});
 
 	describe("s studio", () => {
@@ -392,6 +549,10 @@ if (import.meta.vitest) {
 			const ids = listSPrograms().map((program) => program.id);
 			expect(ids).toContain("dag");
 			expect(ids).toContain("s.system");
+		});
+
+		it("assertOsMediaExportCoverage passes after handlers register", () => {
+			expect(() => assertOsMediaExportCoverage()).not.toThrow();
 		});
 	});
 }

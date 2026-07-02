@@ -3,6 +3,8 @@
 // #endregion 🧲Header
 
 import {
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
   CommandBus,
   Controller,
   Platform,
@@ -28,14 +30,15 @@ import {
   enforcePlaygroundWindowEngagementInput,
   windowEngagementsEqual,
   type CommandDescriptor,
-  isPlaygroundFixtureLocked,
+  isPlaygroundExampleLocked,
   playgroundLockedFixtureId,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
   FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   uiDeclarativeSectionsToTree,
-  type UiTreeNode,
-} from "@semio-tech/framework-playground-core";
+  type UiTreeNode} from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import { exportModelSpaceToGlb, exportModelSpaceToObj } from "@semio-tech/cad-js-kernel-brepjs";
 import {
   ORBIT_CAMERA_VIEW_COMMAND,
   applyWorldReferenceTransform,
@@ -1785,8 +1788,6 @@ export function buildCadPlaySelectionInspectorChildren(snapshot: CadPlayChromeSn
   return children;
 }
 
-export * from "./playground.ts";
-
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
 
@@ -1801,6 +1802,7 @@ export function buildCadProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
 
 //#region 🧪Tests
 import geometryConcreteForestLeft from "../../../asset/play/hexagonal-cut-concrete-forest-left.model.json";
@@ -2113,10 +2115,18 @@ if (import.meta.vitest) {
         },
         CAD_PLAY_CONTROLLER_ID,
       );
-      expect(tools.view?.length).toBeGreaterThan(0);
-      expect(tools.save?.map((row) => row.id)).toEqual(["cad.play.save.selected", "cad.play.save.modelspace", "cad.play.save.current", "cad.play.save.load"]);
-      expect(tools.save?.[0]?.disabled).toBe(true);
-      expect(tools.transform).toBeUndefined();
+      const view = tools.find((node) => node.id === "view" && node.kind === "collection");
+      const save = tools.find((node) => node.id === "save" && node.kind === "collection");
+      expect(view?.kind === "collection" ? view.children.length : 0).toBeGreaterThan(0);
+      expect(save?.kind === "collection" ? save.children.map((row) => row.id) : []).toEqual([
+        "cad.play.save.selected",
+        "cad.play.save.modelspace",
+        "cad.play.save.current",
+        "cad.play.save.load",
+      ]);
+      const firstSave = save?.kind === "collection" ? save.children[0] : undefined;
+      expect(firstSave?.kind === "button" ? firstSave.disabled : undefined).toBe(true);
+      expect(tools.some((node) => node.id === "transfer")).toBe(false);
     });
   });
 
@@ -2153,9 +2163,9 @@ if (import.meta.vitest) {
 
     it("cadPlayModelsDigest changes when object rows are added", () => {
       const model = parseModelJson({
-        schema: "spatial.model/v1",
+        schema: "spatial.model",
         revision: 0,
-        objects: {},
+        objects: [],
         geometry: { anchors: [], vertices: [], edges: [], wires: [], faces: [], shells: [], solids: [] },
       });
       expect(model).not.toBeNull();
@@ -2547,15 +2557,97 @@ if (import.meta.vitest) {
       });
       const build = buildCadPlayHierarchySections(models, defaultModelDefinitionId(), [], () => {});
       const buildingBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
-      expect(buildingBranch?.items?.length).toBe(12);
+      expect(buildingBranch?.items?.length).toBe(13);
       const energyBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
-      expect(energyBranch?.items?.length).toBe(1);
+      expect(energyBranch?.items?.length).toBe(2);
       const structureBranch = build.sections.find(
         (row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID}`,
       );
-      expect(structureBranch?.items?.length).toBe(11);
+      expect(structureBranch?.items?.length).toBe(12);
       expect(build.sections.some((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`)).toBe(true);
     });
   });
 }
 //#endregion 🧪Tests
+
+//#region 🔖Play
+import { CAD_PLAY_SHAPE_ASSET_IDS, resolveCadPlayExampleSlug } from "./example-slugs.ts";
+
+export { CAD_PLAY_SHAPE_ASSET_IDS, resolveCadPlayExampleSlug } from "./example-slugs.ts";
+
+/** @emoji 🧩 Shape fixture assets for CAD play navbar. */
+export const CAD_PLAY_SHAPE_ASSETS = [
+	{ id: "concrete-forest-left", key: "c", label: "Concrete forest (left)", json: { modelSpace: geometryConcreteForestLeft, activeModelDefinitionId: defaultModelDefinitionId() } as Record<string, unknown> },
+	{ id: "concrete-forest-right", key: "d", label: "Concrete forest (right)", json: geometryConcreteForestRight as Record<string, unknown> },
+] as const;
+
+//#region 🔖MediaExport
+function cadExportModelSpace(doc: unknown): ModelSpace {
+  if (doc instanceof ModelSpace) return doc;
+  const parsed = parseModelSpaceJson(doc);
+  if (parsed) return parsed;
+  const models = modelsFromCadJson(doc);
+  return modelSpaceFromRecord(models);
+}
+
+/** @emoji 💾 Registers CAD model space OBJ/GLB export handlers for the OS media graph. */
+export function registerCadMediaExportHandlers(): void {
+  registerOsMediaExportHandler("3d.cad", "obj", async (doc) => ({
+    data: await exportModelSpaceToObj(cadExportModelSpace(doc)),
+    mimeType: "text/plain",
+    fileName: "cad.obj",
+  }));
+  registerOsMediaExportHandler("3d.cad", "glb", async (doc) => ({
+    data: await exportModelSpaceToGlb(cadExportModelSpace(doc)),
+    mimeType: "model/gltf-binary",
+    fileName: "cad.glb",
+  }));
+}
+//#endregion 🔖MediaExport
+
+/** @emoji 🛝 CAD playground app. */
+
+
+export const cadPlayAppDefinition = createPlaygroundApp({
+	id: CAD_PLAY_APP_ID,
+	label: "CAD",
+	controllerId: CAD_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "cad",
+		resolveDedupe: ["react", "react-dom", "three"],
+		optimizeDeps: {
+			include: [
+				"react",
+				"react-dom",
+				"react/jsx-runtime",
+				"react/jsx-dev-runtime",
+				"three",
+				"@react-three/fiber",
+				"@react-three/drei",
+				"@semio-tech/infinite-world-r3f",
+				"brepjs",
+				"brepjs-opencascade",
+				"golden-layout",
+				"lucide-react",
+				"chevrotain",
+			],
+		},
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(CAD_PLAY_APP_ID);
+			registerCadPlayDeclarativeBodies();
+			const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildCadPlayAppRuntime(controller));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerCadPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootCadPlay } = await import("@semio-tech/framework-playground-renderer-react/cad");
+		bootCadPlay(pg);
+	},
+});
+//#endregion 🔖Play

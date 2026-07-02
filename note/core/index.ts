@@ -14,17 +14,17 @@ import {
 	buildNoteWindowBody,
 	createDefaultLayout,
 	createPlayAppRuntime,
-	isPlaygroundFixtureLocked,
-	isPlaygroundNoFixtureId,
-	PLAYGROUND_NO_FIXTURE_ID,
-	playgroundResolvedFixtureId,
+	isPlaygroundExampleLocked,
+	isPlaygroundNoExampleId,
+	PLAYGROUND_NO_EXAMPLE_ID,
+	playgroundResolvedExampleId,
 	registerWindowBody,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	type AppTools,
-	type PlaygroundFixtureCatalog,
-	type PlaygroundFixtureHost,
+	type PlaygroundExampleCatalog,
+	type PlaygroundExampleHost,
 	type ToolLeaf,
 	toolCollection,
 	uiDeclarativeSectionsToTree,
@@ -42,7 +42,11 @@ import {
 	type WindowMeasure,
 	type WindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import { pathSegmentsToSvgD, rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
 import { DocumentVcsStore, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 import type { TreeDataItem, TreeDragAndDropController, TreeDropPosition } from "@semio-tech/ui-react";
 import {
@@ -51,6 +55,8 @@ import {
 	createNoteBlockByKind,
 	createNoteDocumentVcsEnvelope,
 	diffNoteEditOp,
+	flattenNoteBlocks,
+	noteImageAssetDataUrl,
 	defaultNoteDocument,
 	encodeNotePointerFocusKey,
 	findNoteBlock,
@@ -62,6 +68,9 @@ import {
 	notePlayBlockIdFromTreeRowId,
 	notePlayBlocksTreeHighlightedIds,
 	notePlayBlocksTreeRowId,
+	noteCloneBlocksWithOffset,
+	noteTextParagraphsFromPlainText,
+	noteTextPlainText,
 	type NoteBlockKind,
 	type NoteBlockNode,
 	type NoteDocument,
@@ -109,7 +118,7 @@ export const NOTE_PLAY_LAYOUT = createDefaultLayout(
 
 export const NOTE_PLAY_EMPTY_DOCUMENT: NoteDocument = defaultNoteDocument("empty");
 
-export type NotePlayFixtureHostConfig = {
+export type NotePlayExampleHostConfig = {
 	readonly defaultId: string;
 	readonly options: ReadonlyArray<{ readonly id: string; readonly label: string }>;
 	readonly fileJsonById: Readonly<Record<string, string>>;
@@ -256,7 +265,7 @@ export function buildNotePlayInspectorTree(doc: NoteDocument, selectedIds: reado
 			id: "note-play-inspector.text",
 			label: "Text",
 			fields: [
-				notePlayInspectorTextField(blockIds, "note-play-inspector.text-content", "Content", blocks.map((b) => (b.kind === "text" ? b.content : "")), "textContent"),
+				notePlayInspectorTextField(blockIds, "note-play-inspector.text-content", "Content", blocks.map((b) => (b.kind === "text" ? noteTextPlainText(b.paragraphs) : "")), "textContent"),
 				notePlayInspectorNumberField(blockIds, "note-play-inspector.text-size", "Size", blocks.map((b) => (b.kind === "text" ? b.fontSize : 0)), "textSize"),
 			],
 		});
@@ -272,7 +281,13 @@ export function buildNotePlayInspectorTree(doc: NoteDocument, selectedIds: reado
 		groups.push({
 			id: "note-play-inspector.table",
 			label: "Table",
-			fields: [uiInspectorReadonlyField("note-play-inspector.table-shape", "Shape", blocks.map((b) => (b.kind === "table" ? `${b.columns.length}×${b.rows.length}` : "")).join(", "))],
+			fields: [
+				uiInspectorReadonlyField("note-play-inspector.table-shape", "Shape", blocks.map((b) => (b.kind === "table" ? `${b.columns.length}×${b.rows.length}` : "")).join(", ")),
+				{ type: "button", id: "note-play-inspector.table-add-row", iconId: "plus", label: "Add Row", command: notePlayInspectorPatch(blockIds, "tableAddRow") },
+				{ type: "button", id: "note-play-inspector.table-remove-row", iconId: "minus", label: "Remove Row", command: notePlayInspectorPatch(blockIds, "tableRemoveRow") },
+				{ type: "button", id: "note-play-inspector.table-add-col", iconId: "plus", label: "Add Column", command: notePlayInspectorPatch(blockIds, "tableAddColumn") },
+				{ type: "button", id: "note-play-inspector.table-remove-col", iconId: "minus", label: "Remove Column", command: notePlayInspectorPatch(blockIds, "tableRemoveColumn") },
+			],
 		});
 	}
 	if (uniformKind === "ink") {
@@ -330,7 +345,7 @@ function notePlayPatchBlockField(doc: NoteDocument, blockId: string, field: stri
 			return applyNoteEditOp(doc, { op: "updateBlock", blockId, block: { ...block, [field]: Number(value) } as NoteBlockNode });
 		case "textContent":
 			if (block.kind !== "text") return doc;
-			return applyNoteEditOp(doc, { op: "updateBlock", blockId, block: { ...block, content: String(value ?? "") } });
+			return applyNoteEditOp(doc, { op: "updateBlock", blockId, block: { ...block, paragraphs: noteTextParagraphsFromPlainText(String(value ?? "")) } });
 		case "textSize":
 			if (block.kind !== "text") return doc;
 			return applyNoteEditOp(doc, { op: "updateBlock", blockId, block: { ...block, fontSize: Number(value) } });
@@ -340,6 +355,30 @@ function notePlayPatchBlockField(doc: NoteDocument, blockId: string, field: stri
 		case "inkWidth":
 			if (block.kind !== "ink") return doc;
 			return applyNoteEditOp(doc, { op: "updateBlock", blockId, block: { ...block, strokeWidth: Number(value) } });
+		case "tableAddRow":
+			if (block.kind !== "table") return doc;
+			return applyNoteEditOp(doc, { op: "updateBlock", blockId, block: { ...block, rows: [...block.rows, block.columns.map(() => ({ content: "" }))] } });
+		case "tableRemoveRow":
+			if (block.kind !== "table" || block.rows.length <= 1) return doc;
+			return applyNoteEditOp(doc, { op: "updateBlock", blockId, block: { ...block, rows: block.rows.slice(0, -1) } });
+		case "tableAddColumn":
+			if (block.kind !== "table") return doc;
+			return applyNoteEditOp(doc, {
+				op: "updateBlock",
+				blockId,
+				block: {
+					...block,
+					columns: [...block.columns, String.fromCharCode(65 + block.columns.length)],
+					rows: block.rows.map((row) => [...row, { content: "" }]),
+				},
+			});
+		case "tableRemoveColumn":
+			if (block.kind !== "table" || block.columns.length <= 1) return doc;
+			return applyNoteEditOp(doc, {
+				op: "updateBlock",
+				blockId,
+				block: { ...block, columns: block.columns.slice(0, -1), rows: block.rows.map((row) => row.slice(0, -1)) },
+			});
 		default:
 			return doc;
 	}
@@ -367,7 +406,7 @@ export interface NotePlayHostBridge {
 	runHostCommand(command: string, args?: unknown): void;
 }
 
-export class NotePlayController extends Controller implements PlaygroundFixtureHost {
+export class NotePlayController extends Controller implements PlaygroundExampleHost {
 	readonly mainMode = new ModeRuntime("main", "Note", undefined);
 	private readonly docStore = new DocumentVcsStore<NoteDocument, NoteEditOp>({
 		envelope: createNoteDocumentVcsEnvelope("note-play", NOTE_PLAY_EMPTY_DOCUMENT),
@@ -380,7 +419,7 @@ export class NotePlayController extends Controller implements PlaygroundFixtureH
 	private hostBridge: NotePlayHostBridge | null = null;
 	private engagementInput = "";
 
-	constructor(bus: CommandBus, notifyPlatform: () => void, private readonly fixtureHost?: NotePlayFixtureHostConfig) {
+	constructor(bus: CommandBus, notifyPlatform: () => void, private readonlyexampleHost?: NotePlayExampleHostConfig) {
 		super(NOTE_PLAY_CONTROLLER_ID, bus, notifyPlatform);
 		this.rebuildShellMode();
 	}
@@ -390,6 +429,7 @@ export class NotePlayController extends Controller implements PlaygroundFixtureH
 		return [
 			{ kind: "slider", id: "note-canvas-zoom", label: "Zoom", value: doc.camera.zoom, min: 0.1, max: 8, step: 0.05, onChange: notePlayCmd("setCameraZoom") },
 			{ kind: "slider", id: "note-canvas-pencil", label: "Pencil", value: doc.pencilWidth ?? 3, min: 1, max: 24, step: 1, onChange: notePlayCmd("setPencilWidth") },
+			{ kind: "slider", id: "note-canvas-eraser", label: "Eraser", value: doc.eraserRadius ?? 12, min: 4, max: 48, step: 1, onChange: notePlayCmd("setEraserRadius") },
 			{ kind: "toggle", id: "note-canvas-grid", label: "Grid", pressed: doc.gridVisible ?? true, onChange: notePlayCmd("toggleGrid") },
 			{ kind: "toggle", id: "note-canvas-snap", label: "Snap", pressed: doc.snapEnabled ?? false, onChange: notePlayCmd("toggleSnap") },
 		];
@@ -470,7 +510,11 @@ export class NotePlayController extends Controller implements PlaygroundFixtureH
 				toolToggle("table", "Table", "table", "table"),
 				toolToggle("math", "Math", "sigma", "math"),
 			]),
-			toolCollection("draw", "pencil", [toolToggle("pencil", "Pencil", "pencil", "pencil"), toolToggle("eraser", "Eraser", "eraser", "eraser")]),
+			toolCollection("draw", "pencil", [
+				toolToggle("pencil", "Pencil", "pencil", "pencil"),
+				toolToggle("eraserStroke", "Stroke Eraser", "eraser", "eraserStroke"),
+				toolToggle("eraserPoint", "Point Eraser", "circle-dot", "eraserPoint"),
+			]),
 			toolCollection("transform", "move", [toolToggle("pan", "Pan", "move", "pan")]),
 		];
 	}
@@ -519,11 +563,11 @@ export class NotePlayController extends Controller implements PlaygroundFixtureH
 		return noteHoverPayloadFromPointerFocusKey(this.pointerFocus.getSnapshot().hover).kind;
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog | null {
-		if (isPlaygroundFixtureLocked() || !this.fixtureHost) return null;
+	getExampleCatalog(): PlaygroundExampleCatalog | null {
+		if (isPlaygroundExampleLocked() || !this.exampleHost) return null;
 		return {
-			activeFixtureId: playgroundResolvedFixtureId(this.projection().id === "empty" ? PLAYGROUND_NO_FIXTURE_ID : this.projection().id, this.fixtureHost.defaultId),
-			options: this.fixtureHost.options,
+			activeExampleId: playgroundResolvedExampleId(this.projection().id === "empty" ? PLAYGROUND_NO_EXAMPLE_ID : this.projection().id, this.exampleHost.defaultId),
+			options: this.exampleHost.options,
 		};
 	}
 
@@ -558,6 +602,12 @@ export class NotePlayController extends Controller implements PlaygroundFixtureH
 				this.dispatchEditOp({ op: "setPencilWidth", width });
 				return;
 			}
+			case "setEraserRadius": {
+				const radius = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(radius)) return;
+				this.dispatchEditOp({ op: "setEraserRadius", radius });
+				return;
+			}
 			case "toggleGrid": {
 				this.dispatchEditOp({ op: "setGridVisible", visible: !(this.projection().gridVisible ?? true) });
 				return;
@@ -566,14 +616,14 @@ export class NotePlayController extends Controller implements PlaygroundFixtureH
 				this.dispatchEditOp({ op: "setSnapEnabled", enabled: !(this.projection().snapEnabled ?? false) });
 				return;
 			}
-			case "setActiveFixture": {
-				const fixtureId = String(args.fixtureId ?? "");
-				if (isPlaygroundNoFixtureId(fixtureId)) {
+			case "setActiveExample": {
+				const fixtureId = String(args.exampleId ?? "");
+				if (isPlaygroundNoExampleId(fixtureId)) {
 					this.dispatchEditOp({ op: "setDocument", document: NOTE_PLAY_EMPTY_DOCUMENT });
 					this.pointerFocus.setSelection([]);
 					return;
 				}
-				const json = this.fixtureHost?.fileJsonById[fixtureId];
+				const json = this.exampleHost?.fileJsonById[fixtureId];
 				if (json) {
 					this.dispatchEditOp({ op: "setDocument", document: noteDocumentFromJson(json) });
 					console.log("[DEBUG] note fixture loaded", fixtureId);
@@ -675,6 +725,58 @@ export class NotePlayController extends Controller implements PlaygroundFixtureH
 				this.bump();
 				return;
 			}
+			case "clearSelection": {
+				this.pointerFocus.setSelection([]);
+				this.bump();
+				return;
+			}
+			case "deleteSelection": {
+				const ids = [...this.getSelectedIds()];
+				for (const blockId of ids) this.dispatchEditOp({ op: "removeBlock", blockId });
+				this.pointerFocus.setSelection([]);
+				this.bump();
+				return;
+			}
+			case "duplicateSelection": {
+				const ids = [...this.getSelectedIds()];
+				if (!ids.length) return;
+				const blocks = ids.map((id) => findNoteBlock(this.projection(), id)).filter((block): block is NoteBlockNode => Boolean(block));
+				const clones = noteCloneBlocksWithOffset(blocks, 24, 24);
+				this.dispatchProjectionEdit((doc) => {
+					let next = doc;
+					for (const block of clones) next = applyNoteEditOp(next, { op: "addBlock", block });
+					return next;
+				});
+				this.pointerFocus.setSelection(clones.map((block) => block.id));
+				this.bump();
+				return;
+			}
+			case "nudgeSelection": {
+				const dx = Number(args.dx ?? 0);
+				const dy = Number(args.dy ?? 0);
+				if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
+				const ids = new Set(this.getSelectedIds());
+				if (!ids.size) return;
+				this.dispatchProjectionEdit((doc) => {
+					let next = doc;
+					for (const block of flattenNoteBlocks(doc.blocks)) {
+						if (!ids.has(block.id) || block.locked) continue;
+						next = applyNoteEditOp(next, { op: "updateBlock", blockId: block.id, block: { ...block, x: block.x + dx, y: block.y + dy } });
+					}
+					return next;
+				});
+				return;
+			}
+			case "undo": {
+				this.docStore.dispatch({ kind: "undo" });
+				this.bump();
+				return;
+			}
+			case "redo": {
+				this.docStore.dispatch({ kind: "redo" });
+				this.bump();
+				return;
+			}
 			default:
 				return;
 		}
@@ -692,20 +794,106 @@ export function registerNotePlayDeclarativeBodies(): void {
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { notePlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for note. */
 export function buildNoteProgramDefinition(): PlatformDefinition {
-	const app = notePlayAppDefinition;
 	return {
 		id: "note",
 		name: "Note",
 		apiVersion: "1",
-		apps: [{ id: "note", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "note", label: "Note", controllerId: NOTE_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖Play
+import { NOTE_PLAY_EXAMPLE_DEFAULT_ID } from "./example-slugs.ts";
+
+let notePlayExampleHostCache: NotePlayExampleHostConfig | undefined;
+
+function noteFixtureIdFromGlobPath(globPath: string): string {
+	const base = globPath.split("/").pop() ?? globPath;
+	return base.replace(/\.note\.json$/, "");
+}
+
+function noteFixtureLabelFromId(id: string): string {
+	return id
+		.split("-")
+		.filter(Boolean)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
+}
+
+/** @emoji 📂 Builds note playground fixture host config. */
+export function createNotePlayExampleHost(): NotePlayExampleHostConfig {
+	if (notePlayExampleHostCache) return notePlayExampleHostCache;
+	const noteFixtureModules = eagerPlayExampleGlob("../example/*.note.json");
+	const fileJsonById = Object.fromEntries(
+		Object.entries(noteFixtureModules).map(([path, mod]) => {
+			const id = noteFixtureIdFromGlobPath(path);
+			const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
+			return [id, json];
+		}),
+	);
+	notePlayExampleHostCache = {
+		defaultId: NOTE_PLAY_EXAMPLE_DEFAULT_ID,
+		options: Object.keys(fileJsonById)
+			.sort()
+			.map((id) => ({ id, label: noteFixtureLabelFromId(id) })),
+		fileJsonById,
+	};
+	return notePlayExampleHostCache;
+}
+
+/** @emoji 🛝 Note playground app. */
+
+
+export const notePlayAppDefinition = createPlaygroundApp({
+	id: NOTE_PLAY_APP_ID,
+	label: "Note",
+	controllerId: NOTE_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "note",
+		resolveDedupe: ["react", "react-dom", "@semio-tech/note-react"],
+		optimizeDeps: { include: ["react", "react-dom", "@semio-tech/note-react"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(this.id);
+			const exampleHost = createNotePlayExampleHost();
+			const ctrl = new NotePlayController(runtime.commandBus, () => runtime.notify(), exampleHost);
+			const resolved = playgroundResolvedExampleId(NOTE_PLAY_EXAMPLE_DEFAULT_ID);
+			if (exampleHost.fileJsonById[resolved]) ctrl.run("setActiveExample", { exampleId: resolved });
+			runtime.addApp(buildNotePlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerNotePlayDeclarativeBodies();
+	},
+	keybindings: [
+		{ key: "ctrl+a,meta+a", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "selectAll" },
+		{ key: "delete,backspace", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+		{ key: "ctrl+d,meta+d", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "duplicateSelection" },
+		{ key: "ctrl+z,meta+z", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "undo" },
+		{ key: "ctrl+shift+z,meta+shift+z,ctrl+y,meta+y", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "redo" },
+		{ key: "escape", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "clearSelection" },
+		{ key: "up", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: 0, dy: -1 } },
+		{ key: "down", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: 0, dy: 1 } },
+		{ key: "left", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: -1, dy: 0 } },
+		{ key: "right", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: 1, dy: 0 } },
+		{ key: "shift+up", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: 0, dy: -10 } },
+		{ key: "shift+down", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: 0, dy: 10 } },
+		{ key: "shift+left", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: -10, dy: 0 } },
+		{ key: "shift+right", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: 10, dy: 0 } },
+	],
+	bootRenderer: async (pg) => {
+		const { bootNotePlay } = await import("@semio-tech/framework-playground-renderer-react/note");
+		bootNotePlay(pg);
+	},
+});
+//#endregion 🔖Play
 
 // #region 🧪Tests
 if (import.meta.vitest) {
@@ -727,8 +915,79 @@ if (import.meta.vitest) {
 			expect(ctrl.getDocument().blocks.length).toBe(1);
 			expect(ctrl.getSelectedIds().length).toBe(1);
 		});
+
+		it("deletes and duplicates selection", () => {
+			const bus = new CommandBus();
+			const ctrl = new NotePlayController(bus, () => {});
+			ctrl.run("addBlock", { kind: "text" });
+			ctrl.run("duplicateSelection");
+			expect(ctrl.getDocument().blocks.length).toBe(2);
+			ctrl.run("deleteSelection");
+			expect(ctrl.getDocument().blocks.length).toBe(1);
+			ctrl.run("selectAll");
+			ctrl.run("deleteSelection");
+			expect(ctrl.getDocument().blocks.length).toBe(0);
+		});
 	});
 }
 // #endregion 🧪Tests
 
-export { notePlayAppDefinition, PlaygroundNote } from "./playground.ts";
+//#region 🔖MediaExport
+function noteDocumentBounds(doc: NoteDocument): { width: number; height: number } {
+	let maxX = 1024;
+	let maxY = 768;
+	for (const block of flattenNoteBlocks(doc.blocks)) {
+		if (!block.visible) continue;
+		maxX = Math.max(maxX, block.x + block.width);
+		maxY = Math.max(maxY, block.y + block.height);
+	}
+	return { width: Math.max(1, Math.ceil(maxX)), height: Math.max(1, Math.ceil(maxY)) };
+}
+
+function noteBlockToSvg(block: NoteBlockNode, doc: NoteDocument): string {
+	const transform = `translate(${block.x} ${block.y}) rotate(${block.rotation ?? 0})`;
+	if (block.kind === "text") {
+		const text = block.paragraphs.map((paragraph) => paragraph.runs.map((run) => run.text).join("")).join("\n");
+		return `<g transform="${transform}"><text x="0" y="${block.fontSize}" font-size="${block.fontSize}" font-weight="${block.fontWeight}">${text.replace(/[<>&]/g, "")}</text></g>`;
+	}
+	if (block.kind === "image") {
+		const asset = doc.assets?.[block.imageKey];
+		if (!asset) return `<rect width="${block.width}" height="${block.height}" fill="#ddd"/>`;
+		return `<g transform="${transform}"><image href="${noteImageAssetDataUrl(asset)}" width="${block.width}" height="${block.height}"/></g>`;
+	}
+	if (block.kind === "ink" && block.points.length > 1) {
+		const segments = block.points.map((point, index) => (index === 0 ? { kind: "move" as const, to: point } : { kind: "line" as const, to: point }));
+		const [r, g, b, a] = block.color;
+		const stroke = `rgba(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)},${a})`;
+		return `<g transform="${transform}"><path d="${pathSegmentsToSvgD(segments)}" fill="none" stroke="${stroke}" stroke-width="${block.strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/></g>`;
+	}
+	return `<g transform="${transform}"><rect width="${block.width}" height="${block.height}" fill="none" stroke="#888"/></g>`;
+}
+
+function noteDocumentToSvg(doc: NoteDocument): string {
+	const { width, height } = noteDocumentBounds(doc);
+	const body = flattenNoteBlocks(doc.blocks)
+		.filter((block) => block.visible)
+		.map((block) => noteBlockToSvg(block, doc))
+		.join("");
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${body}</svg>`;
+}
+
+/** @emoji 💾 Registers note document SVG/PNG export handlers for the OS media graph. */
+export function registerNoteMediaExportHandlers(): void {
+	registerOsMediaExportHandler("2d.note", "svg", async (doc) => ({
+		data: noteDocumentToSvg(doc as NoteDocument),
+		mimeType: "image/svg+xml",
+		fileName: "note.svg",
+	}));
+	registerOsMediaExportHandler("2d.note", "png", async (doc) => {
+		const note = doc as NoteDocument;
+		const { width, height } = noteDocumentBounds(note);
+		const svg = noteDocumentToSvg(note);
+		const dataUrl = await rasterizeSvgMarkupToPngDataUrl(svg, width, height);
+		const blob = await fetch(dataUrl).then((response) => response.blob());
+		return { data: new Uint8Array(await blob.arrayBuffer()), mimeType: "image/png", fileName: "note.png" };
+	});
+}
+//#endregion 🔖MediaExport
+

@@ -355,7 +355,8 @@ export function windowEngagementsEqual(left: WindowEngagement | undefined, right
 
 /** @emoji 💬 Enforces CAD-style window engagement: a command {@link WindowEngagementInput} must be present. */
 export function enforcePlaygroundWindowEngagementInput(engagement: WindowEngagement | undefined, contextLabel: string): void {
-  if (!engagement?.input) {
+  if (!engagement) return;
+  if (!engagement.input) {
     throw new Error(`${contextLabel} must declare engagement.input (command line).`);
   }
 }
@@ -575,20 +576,104 @@ export interface PlaygroundAppDefinition extends AppDefinition {
 	readonly createPlayground: () => Playground;
 	readonly bootRenderer: (playground: Playground, rootId?: string) => void | Promise<void>;
 }
+
+/** @emoji 🛝 Config for {@link createPlaygroundApp} — one object per technology, no hand-written subclass. */
+export interface PlaygroundAppConfig extends AppDefinition {
+	readonly keybindings?: readonly PlaygroundKeybinding[];
+	readonly createRuntime: () => Platform;
+	readonly registerBodies: () => void;
+	readonly registerSurfaceHosts?: () => void;
+	readonly bootRenderer: (playground: Playground, rootId?: string) => void | Promise<void>;
+}
+
+/** @emoji 🛝 Derives a {@link PlaygroundAppDefinition} from a plain config (no per-app {@link Playground} subclass). */
+export function createPlaygroundApp(config: PlaygroundAppConfig): PlaygroundAppDefinition {
+	class ConfiguredPlayground extends Playground {
+		readonly id = config.id;
+		readonly keybindings = config.keybindings;
+		createRuntime = config.createRuntime;
+		registerBodies = config.registerBodies;
+		registerSurfaceHosts = config.registerSurfaceHosts ?? (() => {});
+	}
+	return {
+		id: config.id,
+		label: config.label,
+		iconId: config.iconId,
+		controllerId: config.controllerId,
+		modes: config.modes,
+		defaultModeId: config.defaultModeId,
+		createController: config.createController,
+		registerBodies: config.registerBodies,
+		registerSurfaceHosts: config.registerSurfaceHosts,
+		devHost: config.devHost,
+		createPlayground: () => new ConfiguredPlayground(),
+		bootRenderer: config.bootRenderer,
+	};
+}
 //#endregion 🔖PlaygroundAppDefinition
 
-//#region 🔖PlayFixtureGlob
-type PlayFixtureGlobModule = Record<string, { default: unknown }>;
+//#region 🔖PlayExampleGlob
+type PlayExampleGlobModule = Record<string, { default: unknown }>;
 
-/** @emoji 📂 Vite eager fixture glob with empty fallback outside Vite (Bun prebuild, vitest). */
-export function eagerPlayFixtureGlob(pattern: string | readonly string[]): PlayFixtureGlobModule {
+/** @emoji 📂 Vite eager example glob with empty fallback outside Vite (Bun prebuild, vitest). */
+export function eagerPlayExampleGlob(pattern: string | readonly string[]): PlayExampleGlobModule {
 	const glob = (import.meta as ImportMeta & {
-		glob?: (entry: string | readonly string[], options?: { eager?: boolean }) => PlayFixtureGlobModule;
+		glob?: (entry: string | readonly string[], options?: { eager?: boolean }) => PlayExampleGlobModule;
 	}).glob;
 	if (typeof glob !== "function") return {};
-	return glob(pattern, { eager: true });
+	try {
+		return glob(pattern, { eager: true });
+	} catch {
+		return {};
+	}
 }
-//#endregion 🔖PlayFixtureGlob
+
+/** @emoji 🏷 Derives a playground example id from a Vite glob path and file suffix. */
+export function playgroundExampleIdFromGlobPath(globPath: string, jsonSuffix: string): string {
+	const base = globPath.split("/").pop() ?? globPath;
+	const escaped = jsonSuffix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	return base.replace(new RegExp(`${escaped}$`), "");
+}
+
+/** @emoji 🏷 Title-cases a playground example id for the navbar dropdown. */
+export function playgroundExampleLabelFromId(id: string): string {
+	return id
+		.split("-")
+		.filter(Boolean)
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(" ");
+}
+
+/** @emoji 📋 Loaded user-facing example catalog from a Vite glob pattern. */
+export interface PlaygroundExampleCatalogLoaded {
+	readonly defaultId: string;
+	readonly options: readonly PlaygroundExampleOption[];
+	readonly jsonById: Readonly<Record<string, string>>;
+}
+
+/** @emoji 📂 Globs `example/` JSON files into a sorted navbar catalog plus id→json map. */
+export function loadPlaygroundExampleCatalog(
+	globPattern: string | readonly string[],
+	jsonSuffix: string,
+	defaultId: string,
+): PlaygroundExampleCatalogLoaded {
+	const modules = eagerPlayExampleGlob(globPattern);
+	const jsonById = Object.fromEntries(
+		Object.entries(modules).map(([path, mod]) => {
+			const id = playgroundExampleIdFromGlobPath(path, jsonSuffix);
+			const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
+			return [id, json];
+		}),
+	);
+	return {
+		defaultId,
+		options: Object.keys(jsonById)
+			.sort()
+			.map((id) => ({ id, label: playgroundExampleLabelFromId(id) })),
+		jsonById,
+	};
+}
+//#endregion 🔖PlayExampleGlob
 
 //#region 🔖Playground
 export interface PlaygroundPanelVisibility {
@@ -696,36 +781,36 @@ export interface PlaygroundKindSpec<K extends string> {
 export type PlaygroundFocusFilter<K extends string> = "all" | K;
 //#endregion 🔖Ids
 
-//#region 🔖Fixture
-/** @emoji ∅ Sentinel id for the navbar “No fixture” row (shared with {@link NAVBAR_NO_FIXTURE_ID} in `@semio-tech/ui-react`). */
-export const PLAYGROUND_NO_FIXTURE_ID = "__none__";
+//#region 🔖Example
+/** @emoji ∅ Sentinel id for the navbar “No example” row (shared with {@link NAVBAR_NO_EXAMPLE_ID} in `@semio-tech/ui-react`). */
+export const PLAYGROUND_NO_EXAMPLE_ID = "__none__";
 
-/** @emoji 🧪 One selectable playground fixture (kit, graph, shape source, …). */
-export interface PlaygroundFixtureOption {
+/** @emoji 🧪 One selectable playground example (kit, graph, shape source, …). */
+export interface PlaygroundExampleOption {
   readonly id: string;
   readonly label: string;
 }
 
-/** @emoji ∅ Standard “No fixture” navbar row. */
-export const PLAYGROUND_NO_FIXTURE_OPTION: PlaygroundFixtureOption = {
-  id: PLAYGROUND_NO_FIXTURE_ID,
-  label: "No fixture",
+/** @emoji ∅ Standard “No example” navbar row. */
+export const PLAYGROUND_NO_EXAMPLE_OPTION: PlaygroundExampleOption = {
+  id: PLAYGROUND_NO_EXAMPLE_ID,
+  label: "No example",
 };
 
-/** @emoji 📋 Active fixture plus choices for the navbar center dropdown. */
-export interface PlaygroundFixtureCatalog {
-  readonly activeFixtureId: string;
-  readonly options: readonly PlaygroundFixtureOption[];
+/** @emoji 📋 Active example plus choices for the navbar center dropdown. */
+export interface PlaygroundExampleCatalog {
+  readonly activeExampleId: string;
+  readonly options: readonly PlaygroundExampleOption[];
 }
 
-/** @emoji 🎛 Optional controller surface for {@link PlaygroundView} navbar fixture selection. */
-export interface PlaygroundFixtureHost {
-  getFixtureCatalog(): PlaygroundFixtureCatalog | null;
+/** @emoji 🎛 Optional controller surface for {@link PlaygroundView} navbar example selection. */
+export interface PlaygroundExampleHost {
+  getExampleCatalog(): PlaygroundExampleCatalog | null;
 }
 
-/** @emoji ∅ True when the navbar selection is empty / “No fixture”. */
-export function isPlaygroundNoFixtureId(fixtureId: string | null | undefined): boolean {
-  return fixtureId == null || fixtureId === "" || fixtureId === PLAYGROUND_NO_FIXTURE_ID;
+/** @emoji ∅ True when the navbar selection is empty / “No example”. */
+export function isPlaygroundNoExampleId(exampleId: string | null | undefined): boolean {
+  return exampleId == null || exampleId === "" || exampleId === PLAYGROUND_NO_EXAMPLE_ID;
 }
 
 declare global {
@@ -733,63 +818,63 @@ declare global {
     readonly env: ImportMetaEnv;
   }
   interface ImportMetaEnv {
-    readonly PLAYGROUND_LOCKED_FIXTURE_ID?: string;
+    readonly PLAYGROUND_LOCKED_EXAMPLE_ID?: string;
   }
 }
 
-/** @emoji 🔒 Fixture id baked in at build time for single-fixture playground hosts. */
-export function playgroundLockedFixtureId(): string | undefined {
-  const raw = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID?.trim();
+/** @emoji 🔒 Example id baked in at build time for single-example playground hosts. */
+export function playgroundLockedExampleId(): string | undefined {
+  const raw = import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID?.trim();
   return raw || undefined;
 }
 
-/** @emoji 🔒 True when this playground host is locked to one fixture (no navbar dropdown). */
-export function isPlaygroundFixtureLocked(): boolean {
-  return playgroundLockedFixtureId() !== undefined;
+/** @emoji 🔒 True when this playground host is locked to one example (no navbar dropdown). */
+export function isPlaygroundExampleLocked(): boolean {
+  return playgroundLockedExampleId() !== undefined;
 }
 
-/** @emoji 🎯 Resolves the active fixture id honoring a locked host override. */
-export function playgroundResolvedFixtureId(defaultFixtureId: string): string {
-  return playgroundLockedFixtureId() ?? defaultFixtureId;
+/** @emoji 🎯 Resolves the active example id honoring a locked host override. */
+export function playgroundResolvedExampleId(defaultExampleId: string): string {
+  return playgroundLockedExampleId() ?? defaultExampleId;
 }
 
-const playgroundFixtureCatalogWithNoOptionCache = new Map<string, PlaygroundFixtureCatalog>();
+const playgroundExampleCatalogWithNoOptionCache = new Map<string, PlaygroundExampleCatalog>();
 
-function playgroundFixtureCatalogCacheKey(activeFixtureId: string, options: readonly PlaygroundFixtureOption[]): string {
-  const normalizedId = isPlaygroundNoFixtureId(activeFixtureId) ? PLAYGROUND_NO_FIXTURE_ID : activeFixtureId;
+function playgroundExampleCatalogCacheKey(activeExampleId: string, options: readonly PlaygroundExampleOption[]): string {
+  const normalizedId = isPlaygroundNoExampleId(activeExampleId) ? PLAYGROUND_NO_EXAMPLE_ID : activeExampleId;
   return `${normalizedId}\0${options.map((row) => `${row.id}\u0001${row.label}`).join("\0")}`;
 }
 
-/** @emoji 📋 Prepends {@link PLAYGROUND_NO_FIXTURE_OPTION} and normalizes the active id. */
-export function playgroundFixtureCatalogWithNoOption(
-  activeFixtureId: string,
-  options: readonly PlaygroundFixtureOption[],
-): PlaygroundFixtureCatalog {
-  const key = playgroundFixtureCatalogCacheKey(activeFixtureId, options);
-  const cached = playgroundFixtureCatalogWithNoOptionCache.get(key);
+/** @emoji 📋 Prepends {@link PLAYGROUND_NO_EXAMPLE_OPTION} and normalizes the active id. */
+export function playgroundExampleCatalogWithNoOption(
+  activeExampleId: string,
+  options: readonly PlaygroundExampleOption[],
+): PlaygroundExampleCatalog {
+  const key = playgroundExampleCatalogCacheKey(activeExampleId, options);
+  const cached = playgroundExampleCatalogWithNoOptionCache.get(key);
   if (cached) {
     return cached;
   }
-  const withoutNone = options.filter((row) => row.id !== PLAYGROUND_NO_FIXTURE_ID);
-  const catalog: PlaygroundFixtureCatalog = {
-    activeFixtureId: isPlaygroundNoFixtureId(activeFixtureId) ? PLAYGROUND_NO_FIXTURE_ID : activeFixtureId,
-    options: [PLAYGROUND_NO_FIXTURE_OPTION, ...withoutNone],
+  const withoutNone = options.filter((row) => row.id !== PLAYGROUND_NO_EXAMPLE_ID);
+  const catalog: PlaygroundExampleCatalog = {
+    activeExampleId: isPlaygroundNoExampleId(activeExampleId) ? PLAYGROUND_NO_EXAMPLE_ID : activeExampleId,
+    options: [PLAYGROUND_NO_EXAMPLE_OPTION, ...withoutNone],
   };
-  playgroundFixtureCatalogWithNoOptionCache.set(key, catalog);
+  playgroundExampleCatalogWithNoOptionCache.set(key, catalog);
   return catalog;
 }
 
-/** @emoji 🔎 Reads a fixture catalog from a controller when it implements {@link PlaygroundFixtureHost}. */
-export function resolvePlaygroundFixtureCatalog(controller: Controller | undefined): PlaygroundFixtureCatalog | null {
-  if (isPlaygroundFixtureLocked()) return null;
+/** @emoji 🔎 Reads an example catalog from a controller when it implements {@link PlaygroundExampleHost}. */
+export function resolvePlaygroundExampleCatalog(controller: Controller | undefined): PlaygroundExampleCatalog | null {
+  if (isPlaygroundExampleLocked()) return null;
   if (!controller) return null;
-  const host = controller as Controller & PlaygroundFixtureHost;
-  if (typeof host.getFixtureCatalog !== "function") return null;
-  const catalog = host.getFixtureCatalog();
+  const host = controller as Controller & PlaygroundExampleHost;
+  if (typeof host.getExampleCatalog !== "function") return null;
+  const catalog = host.getExampleCatalog();
   if (!catalog) return null;
-  return playgroundFixtureCatalogWithNoOption(catalog.activeFixtureId, catalog.options);
+  return playgroundExampleCatalogWithNoOption(catalog.activeExampleId, catalog.options);
 }
-//#endregion 🔖Fixture
+//#endregion 🔖Example
 
 //#region 🔖Toolbar
 function createAllKindsEnabled<K extends string>(kinds: readonly K[]): Record<K, boolean> {
@@ -1238,56 +1323,60 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("playgroundFixtureCatalogWithNoOption", () => {
-    it("prepends No fixture and normalizes empty active ids", () => {
-      const catalog = playgroundFixtureCatalogWithNoOption("", [{ id: "a", label: "Alpha" }]);
-      expect(catalog.activeFixtureId).toBe(PLAYGROUND_NO_FIXTURE_ID);
-      expect(catalog.options[0]).toEqual(PLAYGROUND_NO_FIXTURE_OPTION);
+  describe("playgroundExampleCatalogWithNoOption", () => {
+    it("prepends No example and normalizes empty active ids", () => {
+      const catalog = playgroundExampleCatalogWithNoOption("", [{ id: "a", label: "Alpha" }]);
+      expect(catalog.activeExampleId).toBe(PLAYGROUND_NO_EXAMPLE_ID);
+      expect(catalog.options[0]).toEqual(PLAYGROUND_NO_EXAMPLE_OPTION);
       expect(catalog.options).toHaveLength(2);
     });
   });
 
-  describe("resolvePlaygroundFixtureCatalog", () => {
-    it("returns null when the controller does not host fixtures", () => {
+  describe("resolvePlaygroundExampleCatalog", () => {
+    it("returns null when the controller does not host examples", () => {
       const bus = new CommandBus();
       const ctrl = new DemoPlaygroundController(bus, () => undefined);
-      expect(resolvePlaygroundFixtureCatalog(ctrl)).toBeNull();
+      expect(resolvePlaygroundExampleCatalog(ctrl)).toBeNull();
     });
 
-    it("returns null when the playground host fixture is locked", () => {
-      const prev = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID;
-      (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = "concrete-forest";
+    it("returns null when the playground host example is locked", () => {
+      const prev = import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID;
+      (import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID = "concrete-forest";
       try {
-        class FixtureDemoController extends Controller implements PlaygroundFixtureHost {
+        class ExampleDemoController extends Controller implements PlaygroundExampleHost {
           constructor(bus: CommandBus) {
-            super("fixture-demo-locked", bus, () => undefined);
+            super("example-demo-locked", bus, () => undefined);
           }
 
-          getFixtureCatalog(): PlaygroundFixtureCatalog {
-            return { activeFixtureId: "a", options: [{ id: "a", label: "Alpha" }] };
+          getExampleCatalog(): PlaygroundExampleCatalog {
+            return { activeExampleId: "a", options: [{ id: "a", label: "Alpha" }] };
           }
 
           run(): void {}
         }
         const bus = new CommandBus();
-        const ctrl = new FixtureDemoController(bus);
-        expect(resolvePlaygroundFixtureCatalog(ctrl)).toBeNull();
+        const ctrl = new ExampleDemoController(bus);
+        expect(resolvePlaygroundExampleCatalog(ctrl)).toBeNull();
       } finally {
-        (import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string }).PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+        if (prev === undefined || prev === "") {
+          delete (import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID;
+        } else {
+          (import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID = prev;
+        }
       }
     });
 
-    it("returns catalog with No fixture when the controller implements PlaygroundFixtureHost", () => {
-      class FixtureDemoController extends Controller implements PlaygroundFixtureHost {
-        activeFixtureId = "a";
+    it("returns catalog with No example when the controller implements PlaygroundExampleHost", () => {
+      class ExampleDemoController extends Controller implements PlaygroundExampleHost {
+        activeExampleId = "a";
 
         constructor(bus: CommandBus) {
-          super("fixture-demo", bus, () => undefined);
+          super("example-demo", bus, () => undefined);
         }
 
-        getFixtureCatalog(): PlaygroundFixtureCatalog {
+        getExampleCatalog(): PlaygroundExampleCatalog {
           return {
-            activeFixtureId: this.activeFixtureId,
+            activeExampleId: this.activeExampleId,
             options: [
               { id: "a", label: "Alpha" },
               { id: "b", label: "Beta" },
@@ -1298,37 +1387,37 @@ if (import.meta.vitest) {
         run(): void {}
       }
       const bus = new CommandBus();
-      const ctrl = new FixtureDemoController(bus);
-      expect(resolvePlaygroundFixtureCatalog(ctrl)?.activeFixtureId).toBe("a");
-      expect(resolvePlaygroundFixtureCatalog(ctrl)?.options[0]?.id).toBe(PLAYGROUND_NO_FIXTURE_ID);
-      expect(resolvePlaygroundFixtureCatalog(ctrl)?.options).toHaveLength(3);
+      const ctrl = new ExampleDemoController(bus);
+      expect(resolvePlaygroundExampleCatalog(ctrl)?.activeExampleId).toBe("a");
+      expect(resolvePlaygroundExampleCatalog(ctrl)?.options[0]?.id).toBe(PLAYGROUND_NO_EXAMPLE_ID);
+      expect(resolvePlaygroundExampleCatalog(ctrl)?.options).toHaveLength(3);
     });
 
-    it("playgroundFixtureCatalogWithNoOption returns a stable catalog reference for identical inputs", () => {
+    it("playgroundExampleCatalogWithNoOption returns a stable catalog reference for identical inputs", () => {
       const options = [
         { id: "a", label: "Alpha" },
         { id: "b", label: "Beta" },
       ] as const;
-      const first = playgroundFixtureCatalogWithNoOption("a", options);
-      const second = playgroundFixtureCatalogWithNoOption("a", options);
+      const first = playgroundExampleCatalogWithNoOption("a", options);
+      const second = playgroundExampleCatalogWithNoOption("a", options);
       expect(second).toBe(first);
     });
 
-    it("returns only No fixture when the host lists no presets", () => {
-      class EmptyFixtureController extends Controller implements PlaygroundFixtureHost {
+    it("returns only No example when the host lists no presets", () => {
+      class EmptyExampleController extends Controller implements PlaygroundExampleHost {
         constructor(bus: CommandBus) {
-          super("empty-fixture", bus, () => undefined);
+          super("empty-example", bus, () => undefined);
         }
 
-        getFixtureCatalog(): PlaygroundFixtureCatalog {
-          return { activeFixtureId: PLAYGROUND_NO_FIXTURE_ID, options: [] };
+        getExampleCatalog(): PlaygroundExampleCatalog {
+          return { activeExampleId: PLAYGROUND_NO_EXAMPLE_ID, options: [] };
         }
 
         run(): void {}
       }
       const bus = new CommandBus();
-      const catalog = resolvePlaygroundFixtureCatalog(new EmptyFixtureController(bus));
-      expect(catalog?.options).toEqual([PLAYGROUND_NO_FIXTURE_OPTION]);
+      const catalog = resolvePlaygroundExampleCatalog(new EmptyExampleController(bus));
+      expect(catalog?.options).toEqual([PLAYGROUND_NO_EXAMPLE_OPTION]);
     });
   });
 

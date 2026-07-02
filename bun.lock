@@ -802,6 +802,7 @@
         "@semio-tech/imperative-core": "workspace:*",
         "@semio-tech/layout-core": "workspace:*",
         "@semio-tech/lowpoly-core": "workspace:*",
+        "@semio-tech/note-core": "workspace:*",
         "@semio-tech/procedural-2d-core": "workspace:*",
         "@semio-tech/procedural-3d-core": "workspace:*",
         "@semio-tech/puzzle-2d-core": "workspace:*",
@@ -1586,6 +1587,7 @@
         "@semio-tech/framework-core": "workspace:*",
         "@semio-tech/framework-os-core": "workspace:*",
         "@semio-tech/framework-platform-core": "workspace:*",
+        "@semio-tech/framework-playground-core": "workspace:*",
         "@semio-tech/graph-manifest": "workspace:*",
         "@semio-tech/s-studio-rs": "workspace:*",
         "@semio-tech/vcs-core": "workspace:*",
@@ -1607,8 +1609,10 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/dag-react": "workspace:*",
+        "@semio-tech/framework-os-core": "workspace:*",
         "@semio-tech/s-core": "workspace:*",
         "@semio-tech/ui-react": "workspace:*",
+        "@semio-tech/vcs-react": "workspace:*",
       },
       "devDependencies": {
         "@types/react": "^19.2.8",

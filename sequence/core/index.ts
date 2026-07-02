@@ -4,7 +4,6 @@
 
 
 export * from "./internal.ts";
-export { sequencePlayAppDefinition, PlaygroundSequence } from "./playground.ts";
 
 import {
 	AppRuntime,
@@ -36,6 +35,8 @@ import {
 	type WindowEngagement,
 	type WindowMeasure,
 	toolCollection,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import {
 	type EffectLogEntry,
@@ -1038,17 +1039,48 @@ if (import.meta.vitest) {
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { sequencePlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for sequence. */
 export function buildSequenceProgramDefinition(): PlatformDefinition {
-	const app = sequencePlayAppDefinition;
 	return {
 		id: "sequence",
 		name: "Sequence",
 		apiVersion: "1",
-		apps: [{ id: "sequence", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "sequence", label: "Sequence", controllerId: SEQUENCE_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖Play
+
+/** @emoji 🛝 Sequence playground app. */
+
+
+export const sequencePlayAppDefinition = createPlaygroundApp({
+	id: SEQUENCE_PLAY_APP_ID,
+	label: "Sequence",
+	controllerId: "sequence-play",
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "sequence",
+		resolveDedupe: ["react", "react-dom", "@semio-tech/sequence-react"],
+		watchIgnored: ["../core/lib.rs", "../../imperative/**", "../core/target/**", "../core/pkg/**"],
+		optimizeDeps: { include: ["react", "react-dom"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(SEQUENCE_PLAY_APP_ID);
+			const ctrl = new SequencePlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildSequencePlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerSequencePlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootSequencePlay } = await import("@semio-tech/framework-playground-renderer-react/sequence");
+		bootSequencePlay(pg);
+	},
+});
+//#endregion 🔖Play

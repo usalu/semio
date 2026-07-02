@@ -1541,6 +1541,28 @@ export {
 } from "@semio-tech/vcs-core/internal";
 //#endregion 🔖DocumentVcs
 
+//#region 🔖MediaDownload
+/** @emoji 💾 Browser download for exported media blobs and text payloads. */
+export interface MediaDownloadPayload {
+	readonly data: string | Uint8Array;
+	readonly mimeType: string;
+	readonly fileName: string;
+}
+
+export function downloadMediaExportResult(payload: MediaDownloadPayload): void {
+	const blob =
+		typeof payload.data === "string"
+			? new Blob([payload.data], { type: payload.mimeType })
+			: new Blob([payload.data], { type: payload.mimeType });
+	const url = URL.createObjectURL(blob);
+	const anchor = document.createElement("a");
+	anchor.href = url;
+	anchor.download = payload.fileName;
+	anchor.click();
+	URL.revokeObjectURL(url);
+}
+//#endregion 🔖MediaDownload
+
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;

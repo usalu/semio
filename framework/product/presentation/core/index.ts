@@ -5,10 +5,10 @@
 import {
 	CommandBus,
 	Controller,
-	PLAYGROUND_NO_FIXTURE_ID,
-	type PlaygroundFixtureCatalog,
-	type PlaygroundFixtureHost,
-	isPlaygroundNoFixtureId,
+	PLAYGROUND_NO_EXAMPLE_ID,
+	type PlaygroundExampleCatalog,
+	type PlaygroundExampleHost,
+	isPlaygroundNoExampleId,
 	Platform,
 	AppRuntime,
 	ModeRuntime,
@@ -46,6 +46,8 @@ import {
 	uiInspectorReadonlyField,
 	type UiInspectorFieldGroup,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import { rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
 import { Store } from "@semio-tech/framework-core";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 import {
@@ -130,9 +132,9 @@ function newTileId(prefix = "tile"): string {
 }
 
 /** @emoji 🎛 Presentation tile play controller: grid seed, tile edits, LLM prompt export. */
-export class PresentationPlayController extends Controller implements PlaygroundFixtureHost {
+export class PresentationPlayController extends Controller implements PlaygroundExampleHost {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
-	private activeFixtureId = PLAYGROUND_NO_FIXTURE_ID;
+	private activeExampleId = PLAYGROUND_NO_EXAMPLE_ID;
 	private readonly docStore = new DocumentVcsStore<PresentationDeckV1, PresentationEditOp>({
 		envelope: createDocumentVcsEnvelope("presentation.deck/v1", "presentation-tile-play", {
 			schema: "presentation.deck/v1",
@@ -376,18 +378,18 @@ export class PresentationPlayController extends Controller implements Playground
 		this.emit();
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog {
-		return { activeFixtureId: this.activeFixtureId, options: [] };
+	getExampleCatalog(): PlaygroundExampleCatalog {
+		return { activeExampleId: this.activeExampleId, options: [] };
 	}
 
 	override run(command: string, args?: unknown): void {
 		switch (command) {
-			case "setActiveFixture": {
+			case "setActiveExample": {
 				const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
-				const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
-				if (nextId === this.activeFixtureId) break;
-				this.activeFixtureId = nextId;
-				if (isPlaygroundNoFixtureId(nextId)) {
+				const nextId = isPlaygroundNoExampleId(fixtureId) ? PLAYGROUND_NO_EXAMPLE_ID : fixtureId;
+				if (nextId === this.activeExampleId) break;
+				this.activeExampleId = nextId;
+				if (isPlaygroundNoExampleId(nextId)) {
 					this.applyDeckEdit({
 						op: "setDocument",
 						document: {
@@ -998,25 +1000,68 @@ if (import.meta.vitest) {
 //#endregion 🧪Tests
 
 export * from "./internal.ts";
-export { presentationPlayAppDefinition, PresentationPlay } from "./playground.ts";
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { presentationPlayAppDefinition } from "./playground.ts";
 
+/** @emoji 🧩 S program definition for presentation deck tiles. */
+export function buildPresentationDeckProgramDefinition(): PlatformDefinition {
+	return {
+		id: "presentation.deck",
+		name: "Presentation Deck",
+		apiVersion: "1",
+		apps: [{ id: "presentation.deck", label: "Presentation", controllerId: PRESENTATION_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
+		createPlatformApi: () => ({}),
+	};
+}
 
 /** @emoji 🧩 S program definition for presentation. */
 export function buildPresentationProgramDefinition(): PlatformDefinition {
-	const app = presentationPlayAppDefinition;
 	return {
 		id: "presentation",
 		name: "Presentation",
 		apiVersion: "1",
-		apps: [{ id: "presentation", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "presentation", label: "Presentation", controllerId: PRESENTATION_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖Play
+import {
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
+} from "@semio-tech/framework-playground-core";
+
+export const presentationPlayAppDefinition = createPlaygroundApp({
+	id: PRESENTATION_PLAY_APP_ID,
+	label: "Presentation",
+	controllerId: PRESENTATION_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	keybindings: [
+		{ key: "Delete", controllerId: PRESENTATION_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+		{ key: "Backspace", controllerId: PRESENTATION_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+	],
+	devHost: {
+		playEntryKind: "presentation",
+		resolveDedupe: ["react", "react-dom", "./internal.ts"],
+		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "./internal.ts"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(PRESENTATION_PLAY_APP_ID);
+		const ctrl = new PresentationPlayController(runtime.commandBus, () => runtime.notify());
+		runtime.addApp(buildPresentationPlayAppRuntime(ctrl));
+		return runtime;
+	},
+	registerBodies: () => registerPresentationPlayDeclarativeBodies(),
+	bootRenderer: async (pg) => {
+		const { bootPresentationPlay } = await import("@semio-tech/framework-playground-renderer-react/presentation");
+		bootPresentationPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -2157,3 +2202,68 @@ if (import.meta.vitest) {
 		});
 	});
 }
+
+//#region 🔖MediaExport
+async function presentationDeckToPngDataUrl(deck: PresentationDeckV1): Promise<{ dataUrl: string; width: number; height: number }> {
+	const frame = deck.source.frame;
+	const width = Math.max(1, Math.round(frame.width * 1024));
+	const height = Math.max(1, Math.round(frame.height * 1024));
+	if (typeof document === "undefined") return { dataUrl: "", width, height };
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return { dataUrl: "", width, height };
+	await new Promise<void>((resolve) => {
+		const image = new Image();
+		image.crossOrigin = "anonymous";
+		image.onload = () => {
+			const sx = frame.x * image.naturalWidth;
+			const sy = frame.y * image.naturalHeight;
+			const sw = frame.width * image.naturalWidth;
+			const sh = frame.height * image.naturalHeight;
+			ctx.drawImage(image, sx, sy, sw, sh, 0, 0, width, height);
+			for (const tile of deck.tiles) {
+				const crop = tile.crop;
+				ctx.strokeStyle = "#4b7bec";
+				ctx.lineWidth = 2;
+				ctx.strokeRect(crop.x * width, crop.y * height, crop.width * width, crop.height * height);
+			}
+			resolve();
+		};
+		image.onerror = () => resolve();
+		image.src = deck.source.src;
+	});
+	return { dataUrl: canvas.toDataURL("image/png"), width, height };
+}
+
+function presentationDeckToSvg(deck: PresentationDeckV1, width: number, height: number, pngDataUrl: string): string {
+	const overlays = deck.tiles
+		.map((tile) => {
+			const crop = tile.crop;
+			return `<rect x="${crop.x * width}" y="${crop.y * height}" width="${crop.width * width}" height="${crop.height * height}" fill="none" stroke="#4b7bec" stroke-width="2"/>`;
+		})
+		.join("");
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><image href="${pngDataUrl}" width="${width}" height="${height}"/>${overlays}</svg>`;
+}
+
+/** @emoji 💾 Registers presentation deck SVG/PNG export handlers for the OS media graph. */
+export function registerPresentationMediaExportHandlers(): void {
+	registerOsMediaExportHandler("presentation.deck", "png", async (doc) => {
+		const deck = doc as PresentationDeckV1;
+		const { dataUrl } = await presentationDeckToPngDataUrl(deck);
+		const blob = await fetch(dataUrl).then((response) => response.blob());
+		return { data: new Uint8Array(await blob.arrayBuffer()), mimeType: "image/png", fileName: "presentation.png" };
+	});
+	registerOsMediaExportHandler("presentation.deck", "svg", async (doc) => {
+		const deck = doc as PresentationDeckV1;
+		const { dataUrl, width, height } = await presentationDeckToPngDataUrl(deck);
+		return {
+			data: presentationDeckToSvg(deck, width, height, dataUrl),
+			mimeType: "image/svg+xml",
+			fileName: "presentation.svg",
+		};
+	});
+}
+//#endregion 🔖MediaExport
+

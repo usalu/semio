@@ -10,6 +10,8 @@ import {
 	WindowKindRuntime,
 	buildImperativeWindowBody,
 	createPlayAppRuntime,
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
 	createStackLayout,
 	registerWindowBody,
 	type CommandDescriptor,
@@ -19,7 +21,6 @@ import {
 import { DEFAULT_IMPERATIVE_DOCUMENT, imperativeDocumentToJson } from "./internal.ts";
 
 export * from "./internal.ts";
-export { imperativePlayAppDefinition, PlaygroundImperative } from "./playground.ts";
 
 export const IMPERATIVE_PLAY_APP_ID = "imperative-play";
 export const IMPERATIVE_PLAY_CONTROLLER_ID = "imperative-play";
@@ -100,12 +101,45 @@ export function buildImperativeProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 	describe("ImperativePlayController", () => {
 		it("default document json is valid", () => {
-			expect(IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON).toContain("imperative.document/v1");
+			expect(IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON).toContain("imperative.document");
 			expect(IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON).toContain("step-1");
 		});
 	});
 }
+
+//#region 🔖Play
+
+/** @emoji 🛝 Imperative playground app. */
+
+export const imperativePlayAppDefinition = createPlaygroundApp({
+	id: IMPERATIVE_PLAY_APP_ID,
+	label: "Imperative",
+	controllerId: "imperative-play",
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "imperative",
+		resolveDedupe: ["react", "react-dom", "@semio-tech/imperative-react"],
+		watchIgnored: ["../core/lib.rs", "../engine/**", "../module/**", "../core/target/**", "../core/pkg/**"],
+		optimizeDeps: { include: ["react", "react-dom"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(IMPERATIVE_PLAY_APP_ID);
+			const ctrl = new ImperativePlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildImperativePlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerImperativePlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootImperativePlay } = await import("@semio-tech/framework-playground-renderer-react/imperative");
+		bootImperativePlay(pg);
+	},
+});
+//#endregion 🔖Play

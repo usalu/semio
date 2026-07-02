@@ -10477,7 +10477,7 @@ if (puzzle2dVitest) {
     });
 
     it("puzzle2dBrushCompatibleCandidates lists every concrete forest beam mate handle", async () => {
-      const fixture = (await import("../fixture/concrete-forest.2d.json")).default as {
+      const fixture = (await import("../example/concrete-forest.2d.json")).default as {
         meta?: { manifestId?: string; kindCompatibility?: readonly KindCompatEntry[] };
       };
       const catalogs = fixtureMetaKindCatalogBundle(fixture);
@@ -10495,7 +10495,7 @@ if (puzzle2dVitest) {
     });
 
     it("applyBrushPlacementToFixture preserves concrete forest catalog handle radii", async () => {
-      const raw = (await import("../fixture/concrete-forest.2d.json")).default as unknown;
+      const raw = (await import("../example/concrete-forest.2d.json")).default as unknown;
       const fixture = parsePuzzle2dFixture(raw);
       expect(fixture).toBeTruthy();
       const catalogs = fixtureMetaKindCatalogBundle(fixture!.meta);
@@ -10752,7 +10752,7 @@ if (puzzle2dVitest) {
     });
 
     it("puzzle2dFixtureMetaKindCompatibility reads rules from fixture root or meta slice", async () => {
-      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as { meta?: { kindCompatibility?: unknown[] } };
+      const nakaginFixtureJson = (await import("../example/nakagin-capsule-tower.2d.json")).default as { meta?: { kindCompatibility?: unknown[] } };
       const fromRoot = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson);
       const fromMeta = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson.meta);
       expect(fromRoot?.length).toBeGreaterThan(0);
@@ -10760,7 +10760,7 @@ if (puzzle2dVitest) {
     });
 
     it("nakagin kindCompatibility never links circular and rectangular shaped core ports", async () => {
-      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default;
+      const nakaginFixtureJson = (await import("../example/nakagin-capsule-tower.2d.json")).default;
       const compat = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson) ?? [];
       const shapedCoreCross = compat.filter((row) => {
         const source = String(row.source ?? "");
@@ -10779,7 +10779,7 @@ if (puzzle2dVitest) {
 
     it("nakagin door tambour brush excludes Capital after kindCompatibility sync on warm descriptor cache", async () => {
       await ensurePuzzle2dWasmLoaded();
-      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const nakaginFixtureJson = (await import("../example/nakagin-capsule-tower.2d.json")).default as unknown;
       const compat = puzzle2dFixtureMetaKindCompatibility(nakaginFixtureJson) ?? [];
       const catalogs = fixtureMetaKindCatalogBundle(nakaginFixtureJson) ?? {};
       const DOOR_TAMBOUR_LEFT = "door tambour left";
@@ -15138,7 +15138,7 @@ if (puzzle2dReactVitest) {
     });
 
     it("buildPuzzle2dSceneDescriptorFromFixture relabels placed Capsule L door handles", async () => {
-      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const nakaginFixtureJson = (await import("../example/nakagin-capsule-tower.2d.json")).default as unknown;
       const fixture = parsePuzzle2dFixture(nakaginFixtureJson);
       expect(fixture).toBeTruthy();
       const capsuleLKind = "Capsule L";
@@ -15154,7 +15154,7 @@ if (puzzle2dReactVitest) {
     });
 
     it("puzzle2dFixtureSceneMarkers maps nakagin fixture into scene descriptors", async () => {
-      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const nakaginFixtureJson = (await import("../example/nakagin-capsule-tower.2d.json")).default as unknown;
       const fixture = parsePuzzle2dFixture(nakaginFixtureJson);
       expect(fixture?.nodes.length).toBeGreaterThan(100);
       const descriptor = buildPuzzle2dSceneDescriptor(puzzle2dFixtureSceneMarkers(fixture!));
@@ -15164,7 +15164,7 @@ if (puzzle2dReactVitest) {
     });
 
     it("buildPuzzle2dSceneDescriptorFromFixture maps nakagin fixture without React children", async () => {
-      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const nakaginFixtureJson = (await import("../example/nakagin-capsule-tower.2d.json")).default as unknown;
       const fixture = parsePuzzle2dFixture(nakaginFixtureJson);
       expect(fixture).toBeTruthy();
       const descriptor = buildPuzzle2dSceneDescriptorFromFixture(fixture!);
@@ -15174,7 +15174,7 @@ if (puzzle2dReactVitest) {
     });
 
     it("nakagin fixture encodes edge vector paths at play overview zoom in wasm", async () => {
-      const nakaginFixtureJson = (await import("../fixture/nakagin-capsule-tower.2d.json")).default as unknown;
+      const nakaginFixtureJson = (await import("../example/nakagin-capsule-tower.2d.json")).default as unknown;
       const fixture = parsePuzzle2dFixture(nakaginFixtureJson);
       expect(fixture).toBeTruthy();
       await ensurePuzzle2dWasmLoaded();

@@ -11,8 +11,8 @@ import {
 	tokenVar,
 } from "./index.ts";
 import { STYLING_BOARD_THEMES } from "./tokens.generated.ts";
-import { puzzle3dLockedFixtureMeshBasenames, puzzle3dMeshBasenamesInJson } from "../vite-elements-assets.ts";
-import { PLAYGROUND_LOCKED_FIXTURE_ENV } from "../../../repo/lib/js/index.ts";
+import { puzzle3dLockedExampleMeshBasenames, puzzle3dMeshBasenamesInJson } from "../vite-elements-assets.ts";
+import { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "../../../repo/lib/js/index.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
 
@@ -95,17 +95,17 @@ describe("puzzle3d mesh build helpers", () => {
 	});
 
 	it("returns only concrete forest glbs when fixture is locked", () => {
-		const prev = process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+		const prev = process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV];
 		try {
-			process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = "concrete-forest";
-			const basenames = puzzle3dLockedFixtureMeshBasenames(repoRoot);
+			process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV] = "concrete-forest";
+			const basenames = puzzle3dLockedExampleMeshBasenames(repoRoot);
 			expect(basenames?.has("hexagonal-cut-concrete-forest-left.glb")).toBe(true);
 			expect(basenames?.has("hexagonal-cut-concrete-forest-right.glb")).toBe(true);
 			expect(basenames?.has("capsule_J.glb")).toBe(false);
 			expect(basenames?.has("placeholder.glb")).toBe(true);
 		} finally {
-			if (prev === undefined) delete process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
-			else process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = prev;
+			if (prev === undefined) delete process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV];
+			else process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV] = prev;
 		}
 	});
 });

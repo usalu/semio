@@ -9,13 +9,24 @@ import {
 	type DocumentVcsEnvelope,
 	DocumentVcsStore,
 	materializeDocumentProjection,
-} from "@semio-tech/vcs-core";
+	type Author,
+	buildHistoryColumns,
+	type HistoryColumn,
+} from "@semio-tech/vcs-core/internal";
 import {
 	SRESOURCES_DESCRIPTOR_IDS,
 	SRESOURCES_MANIFEST_DOCUMENT,
 	type SResourcesDescriptorKindId,
 } from "@semio-tech/graph-manifest";
 import type { ComponentKind, PlatformDefinition, PluginContext, AppDefinition } from "@semio-tech/framework-platform-core";
+import {
+	VirtualFileSystemController,
+	virtualFileSystemDescriptorValues,
+	type VirtualFileSystemNodeRecord,
+	type VirtualFileSystemSchemaModel,
+	type VirtualFileSystemScope,
+} from "@semio-tech/framework-platform-core";
+import type { CommandBus } from "@semio-tech/framework-core";
 
 //#region 🔖Schemas
 export const OS_STUDIO_SCHEMA = "s.studio" as const;
@@ -127,6 +138,8 @@ export interface OsChange {
 export interface OsCheckpoint {
 	readonly id: string;
 	readonly changeIds: readonly string[];
+	readonly parentId?: string;
+	readonly authors?: readonly Author[];
 	readonly message?: string;
 	readonly savedAt: string;
 }
@@ -1183,6 +1196,473 @@ export function osDocumentFromJson(json: string): OsDocument {
 }
 //#endregion 🔖Projection
 
+//#region 🔖MediaExport
+export type OsMediaExportFormat = "svg" | "png" | "obj" | "glb";
+
+export interface OsMediaExportResult {
+	readonly data: string | Uint8Array;
+	readonly mimeType: string;
+	readonly fileName: string;
+}
+
+export type OsMediaExportHandler = (sourceDocument: unknown) => Promise<OsMediaExportResult>;
+
+const osMediaExportHandlers = new Map<string, OsMediaExportHandler>();
+
+function osMediaExportKey(resourceKind: OsResourceKindId, format: OsMediaExportFormat): string {
+	return `${resourceKind}:${format}`;
+}
+
+/** @emoji 💾 Registers an export handler for a media resource kind and format. */
+export function registerOsMediaExportHandler(
+	resourceKind: OsResourceKindId,
+	format: OsMediaExportFormat,
+	handler: OsMediaExportHandler,
+): void {
+	osMediaExportHandlers.set(osMediaExportKey(resourceKind, format), handler);
+}
+
+export function requiredOsMediaExportFormats(dimension: string): readonly OsMediaExportFormat[] {
+	if (dimension === "2d") return ["svg", "png"];
+	if (dimension === "3d" || dimension === "5d") return ["glb", "obj"];
+	return [];
+}
+
+export function assertOsMediaExportCoverage(): void {
+	const missing: string[] = [];
+	for (const descriptor of listOsResourceDescriptors()) {
+		for (const format of requiredOsMediaExportFormats(descriptor.dimension)) {
+			if (!osMediaExportHandlers.has(osMediaExportKey(descriptor.kind, format))) {
+				missing.push(`${descriptor.kind}:${format}`);
+			}
+		}
+	}
+	if (missing.length) {
+		throw new Error(`missing os media export handlers: ${missing.join(", ")}`);
+	}
+}
+
+export async function exportOsAppInstanceMedia(
+	instance: OsAppInstance,
+	sourceDocument: unknown,
+	format: OsMediaExportFormat,
+): Promise<OsMediaExportResult> {
+	const handler = osMediaExportHandlers.get(osMediaExportKey(instance.yields, format));
+	if (!handler) {
+		throw new Error(`no export handler for ${instance.yields}:${format}`);
+	}
+	return handler(sourceDocument);
+}
+
+export function osMediaExportExtensionForFormat(format: OsMediaExportFormat): string {
+	switch (format) {
+		case "svg":
+			return "svg";
+		case "png":
+			return "png";
+		case "obj":
+			return "obj";
+		case "glb":
+			return "glb";
+	}
+}
+
+export const OS_MEDIA_GRAPH_VFS_ROOT_ID = "os-media-graph-root" as const;
+
+export const OS_MEDIA_GRAPH_VFS_SCHEMA: VirtualFileSystemSchemaModel = {
+	descriptorKinds: {
+		text: { id: "text", name: "Text", presentation: "text" },
+	},
+	fileNodeKinds: {
+		root: {
+			id: "root",
+			name: "Root",
+			descriptors: [{ id: "binding", descriptorKindId: "text", label: "Binding" }],
+		},
+		instance: {
+			id: "instance",
+			name: "App Instance",
+			descriptors: [{ id: "binding", descriptorKindId: "text", label: "Binding" }],
+		},
+		folder: {
+			id: "folder",
+			name: "Folder",
+			descriptors: [{ id: "binding", descriptorKindId: "text", label: "Binding" }],
+		},
+		source: {
+			id: "source",
+			name: "Source",
+			descriptors: [{ id: "binding", descriptorKindId: "text", label: "Binding" }],
+		},
+		export: {
+			id: "export",
+			name: "Export",
+			descriptors: [
+				{ id: "binding", descriptorKindId: "text", label: "Binding" },
+				{ id: "format", descriptorKindId: "text", label: "Format" },
+			],
+		},
+		input: {
+			id: "input",
+			name: "Input Port",
+			descriptors: [{ id: "binding", descriptorKindId: "text", label: "Binding" }],
+		},
+	},
+	descriptorColumnIds: ["binding", "format"],
+};
+
+function osMediaGraphVfsInstanceId(nodeId: string): string | null {
+	const match = /^inst:([^:]+)(?::|$)/.exec(nodeId);
+	return match?.[1] ?? null;
+}
+
+function osMediaGraphVfsInstanceFolderId(instanceId: string): string {
+	return `inst:${instanceId}`;
+}
+
+function osMediaGraphVfsSourceId(instanceId: string): string {
+	return `inst:${instanceId}:source`;
+}
+
+function osMediaGraphVfsInputsFolderId(instanceId: string): string {
+	return `inst:${instanceId}:inputs`;
+}
+
+function osMediaGraphVfsOutputsFolderId(instanceId: string): string {
+	return `inst:${instanceId}:outputs`;
+}
+
+function osMediaGraphVfsInputPortId(instanceId: string, portSpecId: string): string {
+	return `inst:${instanceId}:input:${portSpecId}`;
+}
+
+function osMediaGraphVfsExportId(instanceId: string, portSpecId: string, format: OsMediaExportFormat): string {
+	return `inst:${instanceId}:export:${portSpecId}:${format}`;
+}
+
+/** @emoji 📁 Bidirectional VFS projection of the OS media graph backed by {@link OsStore}. */
+export class OsMediaGraphVirtualFileSystemController extends VirtualFileSystemController {
+	private readonly storeProvider: () => OsStore;
+	private readonly onOpenInstance?: (instanceId: string) => void;
+	private readonly onExport?: (instanceId: string, portSpecId: string, format: OsMediaExportFormat) => void | Promise<void>;
+	private readonly onSpawnApp?: (programId: string, appId: string) => void;
+
+	constructor(
+		id: string,
+		commandBus: CommandBus,
+		hostNotify: () => void,
+		options: {
+			readonly store: () => OsStore;
+			readonly onOpenInstance?: (instanceId: string) => void;
+			readonly onExport?: (instanceId: string, portSpecId: string, format: OsMediaExportFormat) => void | Promise<void>;
+			readonly onSpawnApp?: (programId: string, appId: string) => void;
+		},
+	) {
+		super(id, commandBus, hostNotify);
+		this.storeProvider = options.store;
+		this.onOpenInstance = options.onOpenInstance;
+		this.onExport = options.onExport;
+		this.onSpawnApp = options.onSpawnApp;
+	}
+
+	invalidateMediaGraphVirtualFileSystem(scope: VirtualFileSystemScope): void {
+		this.invalidateVirtualFileSystemScope(scope);
+	}
+
+	protected override getSchema(_scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
+		return OS_MEDIA_GRAPH_VFS_SCHEMA;
+	}
+
+	protected override getRoot(_scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
+		return {
+			id: OS_MEDIA_GRAPH_VFS_ROOT_ID,
+			fileNodeKindId: "root",
+			name: "Media Graph",
+			path: "/",
+			parentId: null,
+			hasChildren: true,
+			icon: "folder",
+		};
+	}
+
+	protected override loadChildren(parentId: string, _scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
+		const projection = this.storeProvider().projection();
+		if (parentId === OS_MEDIA_GRAPH_VFS_ROOT_ID) {
+			return projection.appInstances.map((instance) => {
+				const registration = osAppRegistration(instance.programId, instance.appId);
+				return {
+					id: osMediaGraphVfsInstanceFolderId(instance.id),
+					fileNodeKindId: "instance",
+					name: `${instance.label} (${instance.programId}.${instance.appId})`,
+					path: `/${instance.label}`,
+					parentId: OS_MEDIA_GRAPH_VFS_ROOT_ID,
+					hasChildren: true,
+					icon: registration?.componentKind ?? "component",
+					canDrag: true,
+					descriptorValues: virtualFileSystemDescriptorValues(OS_MEDIA_GRAPH_VFS_SCHEMA, "instance", {
+						path: `/${instance.label}`,
+						textByDescriptorId: { binding: instance.yields },
+					}),
+				};
+			});
+		}
+		const instanceId = osMediaGraphVfsInstanceId(parentId);
+		if (!instanceId) return [];
+		const instance = projection.appInstances.find((entry) => entry.id === instanceId);
+		if (!instance) return [];
+		const registration = osAppRegistration(instance.programId, instance.appId);
+		const graphNode = projection.mediaGraph.nodes.find((node) => node.instanceId === instanceId);
+		if (parentId === osMediaGraphVfsInstanceFolderId(instanceId)) {
+			return [
+				{
+					id: osMediaGraphVfsSourceId(instanceId),
+					fileNodeKindId: "source",
+					name: "source.json",
+					path: `/${instance.label}/source.json`,
+					parentId,
+					hasChildren: false,
+					icon: "json",
+					navigateUri: `os://instance/${instanceId}`,
+					descriptorValues: virtualFileSystemDescriptorValues(OS_MEDIA_GRAPH_VFS_SCHEMA, "source", {
+						path: `/${instance.label}/source.json`,
+						textByDescriptorId: { binding: registration?.sourceFormat ?? instance.yields },
+					}),
+				},
+				{
+					id: osMediaGraphVfsInputsFolderId(instanceId),
+					fileNodeKindId: "folder",
+					name: "inputs",
+					path: `/${instance.label}/inputs`,
+					parentId,
+					hasChildren: (registration?.inputs.length ?? 0) > 0,
+					icon: "folder-input",
+				},
+				{
+					id: osMediaGraphVfsOutputsFolderId(instanceId),
+					fileNodeKindId: "folder",
+					name: "outputs",
+					path: `/${instance.label}/outputs`,
+					parentId,
+					hasChildren: (registration?.outputs.length ?? 0) > 0,
+					icon: "folder-output",
+				},
+			];
+		}
+		if (parentId === osMediaGraphVfsInputsFolderId(instanceId)) {
+			const bindings = resolveInputBindingsForInstance(projection.mediaGraph, projection.appInstances, instanceId);
+			return (registration?.inputs ?? []).map((spec) => {
+				const binding = bindings.find((entry) => entry.inputSpecId === spec.id);
+				return {
+					id: osMediaGraphVfsInputPortId(instanceId, spec.id),
+					fileNodeKindId: "input",
+					name: spec.id,
+					path: `/${instance.label}/inputs/${spec.id}`,
+					parentId,
+					hasChildren: false,
+					icon: "plug",
+					canDrag: true,
+					descriptorValues: virtualFileSystemDescriptorValues(OS_MEDIA_GRAPH_VFS_SCHEMA, "input", {
+						path: `/${instance.label}/inputs/${spec.id}`,
+						textByDescriptorId: {
+							binding: binding
+								? `← ${binding.upstreamInstanceId}:${mediaPortSpecId(binding.upstreamPortId) ?? binding.upstreamPortId}`
+								: spec.resourceKind,
+						},
+					}),
+				};
+			});
+		}
+		if (parentId === osMediaGraphVfsOutputsFolderId(instanceId)) {
+			const descriptor = osResourceDescriptor(instance.yields);
+			const formats = requiredOsMediaExportFormats(descriptor.dimension);
+			const rows: VirtualFileSystemNodeRecord[] = [];
+			for (const spec of registration?.outputs ?? []) {
+				for (const format of formats) {
+					const ext = osMediaExportExtensionForFormat(format);
+					rows.push({
+						id: osMediaGraphVfsExportId(instanceId, spec.id, format),
+						fileNodeKindId: "export",
+						name: `${spec.id}.${ext}`,
+						path: `/${instance.label}/outputs/${spec.id}.${ext}`,
+						parentId,
+						hasChildren: false,
+						icon: ext,
+						navigateUri: `os://export/${instanceId}/${spec.id}/${format}`,
+						descriptorValues: virtualFileSystemDescriptorValues(OS_MEDIA_GRAPH_VFS_SCHEMA, "export", {
+							path: `/${instance.label}/outputs/${spec.id}.${ext}`,
+							textByDescriptorId: { binding: spec.resourceKind, format },
+						}),
+					});
+				}
+			}
+			return rows;
+		}
+		if (graphNode && parentId.startsWith(`inst:${instanceId}:`)) return [];
+		return [];
+	}
+
+	protected override createNode(parentId: string, name: string, _fileNodeKindId: string, scope: VirtualFileSystemScope): boolean {
+		if (parentId !== OS_MEDIA_GRAPH_VFS_ROOT_ID) return false;
+		const [programId, appId] = name.split(".").map((part) => part.trim());
+		if (!programId || !appId) return false;
+		if (!osAppRegistration(programId, appId)) return false;
+		if (this.onSpawnApp) {
+			this.onSpawnApp(programId, appId);
+		} else {
+			this.storeProvider().dispatch({ kind: "spawnAppInstance", programId, appId, label: name });
+		}
+		this.invalidateMediaGraphVirtualFileSystem(scope);
+		return true;
+	}
+
+	protected override renameNode(nodeId: string, name: string, _scope: VirtualFileSystemScope): boolean {
+		const instanceId = osMediaGraphVfsInstanceId(nodeId);
+		if (!instanceId || nodeId !== osMediaGraphVfsInstanceFolderId(instanceId)) return false;
+		this.storeProvider().dispatch({ kind: "patchAppInstances", instanceIds: [instanceId], field: "label", value: name });
+		return true;
+	}
+
+	protected override deleteNode(nodeId: string, scope: VirtualFileSystemScope): boolean {
+		const instanceId = osMediaGraphVfsInstanceId(nodeId);
+		if (!instanceId) return false;
+		if (nodeId === osMediaGraphVfsInstanceFolderId(instanceId)) {
+			this.storeProvider().dispatch({ kind: "removeAppInstance", instanceId });
+			this.invalidateMediaGraphVirtualFileSystem(scope);
+			return true;
+		}
+		const inputMatch = /^inst:([^:]+):input:([^:]+)$/.exec(nodeId);
+		if (inputMatch) {
+			const [, targetInstanceId, portSpecId] = inputMatch;
+			const projection = this.storeProvider().projection();
+			const graphNode = projection.mediaGraph.nodes.find((node) => node.instanceId === targetInstanceId);
+			if (!graphNode) return false;
+			const targetPortId = mediaPortIdForSpec(targetInstanceId!, portSpecId!, "in");
+			const edge = projection.mediaGraph.edges.find((entry) => entry.targetPortId === targetPortId);
+			if (edge) this.storeProvider().dispatch({ kind: "disconnectMediaEdge", edgeId: edge.id });
+			this.invalidateMediaGraphVirtualFileSystem(scope);
+			return true;
+		}
+		return false;
+	}
+
+	protected override moveNodePersisted(activeId: string, overId: string, scope: VirtualFileSystemScope): boolean {
+		const inputMatch = /^inst:([^:]+):input:([^:]+)$/.exec(activeId);
+		const exportMatch = /^inst:([^:]+):export:([^:]+):([a-z]+)$/.exec(overId);
+		if (!inputMatch || !exportMatch) return false;
+		const [, targetInstanceId, targetPortSpecId] = inputMatch;
+		const [, sourceInstanceId, sourcePortSpecId] = exportMatch;
+		if (targetInstanceId === sourceInstanceId) return false;
+		const projection = this.storeProvider().projection();
+		const sourceNode = projection.mediaGraph.nodes.find((node) => node.instanceId === sourceInstanceId);
+		const targetNode = projection.mediaGraph.nodes.find((node) => node.instanceId === targetInstanceId);
+		if (!sourceNode || !targetNode) return false;
+		this.storeProvider().dispatch({
+			kind: "connectMediaPorts",
+			sourceNodeId: sourceNode.id,
+			sourcePortId: mediaPortIdForSpec(sourceInstanceId!, sourcePortSpecId!, "out"),
+			targetNodeId: targetNode.id,
+			targetPortId: mediaPortIdForSpec(targetInstanceId!, targetPortSpecId!, "in"),
+		});
+		this.invalidateMediaGraphVirtualFileSystem(scope);
+		return true;
+	}
+
+	protected override runVirtualFileSystemCommand(command: string, args?: unknown): boolean {
+		if (command === "navigateVirtualFileSystemNode") {
+			const payload = (args ?? {}) as { nodeId?: string };
+			if (!payload.nodeId) return true;
+			if (payload.nodeId.endsWith(":source")) {
+				const instanceId = osMediaGraphVfsInstanceId(payload.nodeId);
+				if (instanceId) this.onOpenInstance?.(instanceId);
+				return true;
+			}
+			const exportMatch = /^inst:([^:]+):export:([^:]+):([a-z]+)$/.exec(payload.nodeId);
+			if (exportMatch) {
+				const [, instanceId, portSpecId, format] = exportMatch;
+				void this.onExport?.(instanceId!, portSpecId!, format as OsMediaExportFormat);
+				return true;
+			}
+		}
+		return super.runVirtualFileSystemCommand(command, args);
+	}
+}
+
+export const OS_STORAGE_VFS_ROOT_ID = "os-storage-root";
+
+export interface OsStorageNodeRecord {
+	readonly id: string;
+	readonly parentId: string | null;
+	readonly name: string;
+	readonly kind: "folder" | "document";
+	readonly documentId?: string;
+}
+
+/** @emoji 🗄️ VFS controller for OS storage nodes (hub REST or dev localStorage namespace). */
+export class OsStorageVirtualFileSystemController extends VirtualFileSystemController {
+	private readonly hubOrigin: string | null;
+	private readonly onOpenDocument?: (documentId: string) => void;
+	private cachedNodes: OsStorageNodeRecord[] = [];
+
+	constructor(
+		id: string,
+		commandBus: CommandBus,
+		hostNotify: () => void,
+		options?: { readonly hubOrigin?: string | null; readonly onOpenDocument?: (documentId: string) => void },
+	) {
+		super(id, commandBus, hostNotify);
+		this.hubOrigin = options?.hubOrigin ?? null;
+		this.onOpenDocument = options?.onOpenDocument;
+	}
+
+	protected override loadChildren(parentId: string, _scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
+		const nodes = this.resolveNodes();
+		return nodes
+			.filter((node) => node.parentId === (parentId === OS_STORAGE_VFS_ROOT_ID ? null : parentId))
+			.map((node) => ({
+				id: node.id,
+				parentId: node.parentId ?? OS_STORAGE_VFS_ROOT_ID,
+				name: node.name,
+				fileNodeKindId: node.kind === "folder" ? "folder" : "source",
+			}));
+	}
+
+	protected override runVirtualFileSystemCommand(command: string, args?: unknown): boolean {
+		if (command === "navigateVirtualFileSystemNode") {
+			const payload = (args ?? {}) as { nodeId?: string };
+			const node = this.resolveNodes().find((entry) => entry.id === payload.nodeId);
+			if (node?.documentId) {
+				this.onOpenDocument?.(node.documentId);
+				return true;
+			}
+		}
+		return super.runVirtualFileSystemCommand(command, args);
+	}
+
+	private resolveNodes(): readonly OsStorageNodeRecord[] {
+		if (this.hubOrigin) return this.cachedNodes;
+		if (typeof localStorage === "undefined") return [];
+		const nodes: OsStorageNodeRecord[] = [
+			{ id: "storage:documents", parentId: null, name: "Documents", kind: "folder" },
+		];
+		for (const key of Object.keys(localStorage)) {
+			if (!key.startsWith("s:backbone:")) continue;
+			const uri = key.slice("s:backbone:".length);
+			const id = `storage:doc:${uri}`;
+			nodes.push({ id, parentId: "storage:documents", name: uri, kind: "document", documentId: uri });
+		}
+		return nodes;
+	}
+
+	async refreshFromHub(): Promise<void> {
+		if (!this.hubOrigin) return;
+		const response = await fetch(`${this.hubOrigin}/nodes`);
+		if (!response.ok) throw new Error(`storage nodes fetch failed: ${response.status}`);
+		this.cachedNodes = (await response.json()) as OsStorageNodeRecord[];
+		this.invalidateVirtualFileSystem();
+	}
+}
+//#endregion 🔖MediaExport
+
 //#region 🔖OsStore
 export type OsCommand =
 	| { readonly kind: "spawnAppInstance"; readonly programId: string; readonly appId: string; readonly label?: string; readonly sourceInline?: string; readonly payloadRef?: string; readonly position?: { readonly x: number; readonly y: number } }
@@ -1195,11 +1675,18 @@ export type OsCommand =
 	| { readonly kind: "applyAppOperation"; readonly instanceId: string; readonly forwards: readonly unknown[]; readonly backwards: readonly unknown[] }
 	| { readonly kind: "openProgram"; readonly programId: string }
 	| { readonly kind: "setStudioName"; readonly name: string }
-	| { readonly kind: "commitCheckpoint"; readonly message?: string }
+	| { readonly kind: "commitCheckpoint"; readonly message?: string; readonly authors?: readonly Author[] }
+	| { readonly kind: "checkoutCheckpoint"; readonly checkpointId: string }
 	| { readonly kind: "createAlternative"; readonly name: string }
 	| { readonly kind: "switchAlternative"; readonly alternativeId: string }
 	| { readonly kind: "undo" }
 	| { readonly kind: "redo" };
+
+export interface PresencePeer {
+	readonly clientId: string;
+	readonly name: string;
+	readonly selection?: readonly string[];
+}
 
 export class OsStore {
 	private document: OsDocument;
@@ -1210,6 +1697,7 @@ export class OsStore {
 	private projectionSnapshot: OsProjection | undefined;
 	private projectionSnapshotGeneration = -1;
 	private onAfterMutation?: () => void;
+	private presencePeers = new Map<string, PresencePeer>();
 
 	constructor(document: OsDocument, options?: { readonly onAfterMutation?: () => void }) {
 		this.document = document;
@@ -1233,6 +1721,16 @@ export class OsStore {
 		return this.document;
 	}
 
+	getPresencePeers(): readonly PresencePeer[] {
+		return [...this.presencePeers.values()];
+	}
+
+	setPresencePeers(peers: readonly PresencePeer[]): void {
+		this.presencePeers = new Map(peers.map((peer) => [peer.clientId, peer]));
+		this.generation += 1;
+		for (const listener of this.listeners) listener();
+	}
+
 	projection(): OsProjection {
 		if (this.projectionSnapshotGeneration === this.generation && this.projectionSnapshot) {
 			return this.projectionSnapshot;
@@ -1250,6 +1748,19 @@ export class OsStore {
 		const instance = this.projection().appInstances.find((entry) => entry.id === instanceId);
 		if (!instance) return null;
 		return osAppRegistration(instance.programId, instance.appId) ? osAppPrimaryOutputKind(osAppRegistration(instance.programId, instance.appId)!) : null;
+	}
+
+	/** @emoji 📡 Applies an inbound remote change without touching the undo stack. */
+	applyRemoteChange(change: OsChange): void {
+		if (this.document.vcs.operations.some((entry) => entry.id === change.id)) return;
+		this.document = {
+			...this.document,
+			vcs: { ...this.document.vcs, operations: [...this.document.vcs.operations, change] },
+		};
+		this.appliedChangeIds.push(change.id);
+		this.redoChangeIds = [];
+		this.generation += 1;
+		for (const listener of this.listeners) listener();
 	}
 
 	dispatch(command: OsCommand): void {
@@ -1270,6 +1781,7 @@ export class OsStore {
 			return;
 		}
 		if (command.kind === "commitCheckpoint") {
+			const parentId = this.document.vcs.checkpoints.at(-1)?.id;
 			this.document = {
 				...this.document,
 				vcs: {
@@ -1279,12 +1791,24 @@ export class OsStore {
 						{
 							id: createOsId("checkpoint"),
 							changeIds: [...this.appliedChangeIds],
+							parentId,
+							authors: command.authors ? [...command.authors] : [],
 							message: command.message,
 							savedAt: new Date().toISOString(),
 						},
 					],
 				},
 			};
+			this.generation += 1;
+			for (const listener of this.listeners) listener();
+			this.onAfterMutation?.();
+			return;
+		}
+		if (command.kind === "checkoutCheckpoint") {
+			const checkpoint = this.document.vcs.checkpoints.find((entry) => entry.id === command.checkpointId);
+			if (!checkpoint) return;
+			this.appliedChangeIds = [...checkpoint.changeIds];
+			this.redoChangeIds = [];
 			this.generation += 1;
 			for (const listener of this.listeners) listener();
 			this.onAfterMutation?.();
@@ -1378,6 +1902,7 @@ export class OsStore {
 			case "undo":
 			case "redo":
 			case "commitCheckpoint":
+			case "checkoutCheckpoint":
 			case "createAlternative":
 			case "switchAlternative":
 			case "setStudioName":
@@ -1493,6 +2018,58 @@ export class OsStore {
 }
 //#endregion 🔖OsStore
 
+/** @emoji 🌳 Builds branch-lane history columns for studio VCS checkpoints. */
+export function buildOsHistoryColumns(document: OsDocument): readonly HistoryColumn[] {
+	const envelope: DocumentVcsEnvelope<OsProjection, OsOperation> = {
+		schema: document.schema,
+		id: document.id,
+		vcs: {
+			initialProjection: document.vcs.initialProjection,
+			edits: [],
+			changes: document.vcs.operations.map((operation) => ({
+				id: operation.id,
+				editIds: [operation.id],
+				description: operation.description,
+				savedAt: operation.savedAt ?? new Date().toISOString(),
+			})),
+			checkpoints: document.vcs.checkpoints.map((checkpoint) => ({
+				id: checkpoint.id,
+				changeIds: [...checkpoint.changeIds],
+				parentId: checkpoint.parentId,
+				authors: checkpoint.authors ? [...checkpoint.authors] : [],
+				message: checkpoint.message,
+				timestamp: checkpoint.savedAt,
+			})),
+			alternatives: document.vcs.alternatives.map((alternative) => ({
+				id: alternative.id,
+				name: alternative.name,
+				checkpointIds: [...alternative.checkpointIds],
+			})),
+		},
+		backbone: document.backbone,
+	};
+	return buildHistoryColumns(envelope);
+}
+
+//#region 🔖OsBackbone
+export type OsBackboneKind = "dev" | "local" | "remote";
+
+export interface OsBackbone {
+	readonly kind: OsBackboneKind;
+	attach(uri: string): void;
+	detach?(): void;
+	status(): { readonly attachedUri: string | null; readonly kind: OsBackboneKind; readonly conflict?: OsConflict | null };
+	loadAttached(): OsDocument | null;
+	sync(document: OsDocument): string;
+	subscribe?(listener: (document: OsDocument) => void): () => void;
+}
+
+export interface PendingOsOp {
+	readonly changeId: string;
+	readonly change: OsChange;
+	readonly baseVersion: number;
+}
+
 //#region 🔖DevJsonBackbone
 export interface OsBackbonePort {
 	readonly read: (uri: string) => string | null;
@@ -1510,9 +2087,12 @@ const defaultBrowserBackbonePort: OsBackbonePort = {
 	},
 };
 
-export class DevJsonBackbone {
+export class DevJsonBackbone implements OsBackbone {
+	readonly kind = "dev" as const;
 	private uri: string | null = null;
 	private readonly port: OsBackbonePort;
+	private channel: BroadcastChannel | null = null;
+	private readonly remoteListeners = new Set<(document: OsDocument) => void>();
 
 	constructor(port: OsBackbonePort = defaultBrowserBackbonePort) {
 		this.port = port;
@@ -1520,14 +2100,34 @@ export class DevJsonBackbone {
 
 	attach(uri: string): void {
 		this.uri = uri;
+		if (typeof BroadcastChannel === "undefined") return;
+		this.channel?.close();
+		this.channel = new BroadcastChannel(`os-backbone:${uri}`);
+		this.channel.onmessage = (event: MessageEvent<string>) => {
+			const json = typeof event.data === "string" ? event.data : null;
+			if (!json) return;
+			try {
+				const document = this.load(json);
+				for (const listener of this.remoteListeners) listener(document);
+			} catch {
+				return;
+			}
+		};
 	}
 
 	detach(): void {
+		this.channel?.close();
+		this.channel = null;
 		this.uri = null;
 	}
 
 	status(): { readonly attachedUri: string | null; readonly kind: "dev" } {
 		return { attachedUri: this.uri, kind: "dev" };
+	}
+
+	subscribe(listener: (document: OsDocument) => void): () => void {
+		this.remoteListeners.add(listener);
+		return () => this.remoteListeners.delete(listener);
 	}
 
 	load(json: string): OsDocument {
@@ -1545,7 +2145,10 @@ export class DevJsonBackbone {
 		const synced =
 			this.uri != null ? { ...document, backbone: { kind: "dev" as const, uri: this.uri } } : document;
 		const json = osDocumentToJson(synced);
-		if (this.uri) this.port.write(this.uri, json);
+		if (this.uri) {
+			this.port.write(this.uri, json);
+			this.channel?.postMessage(json);
+		}
 		return json;
 	}
 }
@@ -1584,29 +2187,136 @@ export class LocalJsonBackbone {
 	}
 }
 
-/** @emoji 🌐 Remote backbone stub (`remote://`) with conflict placeholder. */
-export class RemoteJsonBackbone {
+/** @emoji 🌐 Remote OS backbone (`remote://`) with REST push, WS pull, and conflict surfacing. */
+export class RemoteOsBackbone implements OsBackbone {
+	readonly kind = "remote" as const;
 	private uri: string | null = null;
+	private hubOrigin: string | null = null;
+	private documentId: string | null = null;
+	private cachedDocument: OsDocument | null = null;
+	private version = 0;
 	private lastConflict: OsConflict | null = null;
+	private ws: WebSocket | null = null;
+	private readonly remoteListeners = new Set<(document: OsDocument) => void>();
+	private readonly pendingOps: PendingOsOp[] = [];
+	private lastSyncedOpCount = 0;
 
 	attach(uri: string): void {
 		if (!uri.startsWith("remote://")) throw new Error(`expected remote:// uri, got ${uri}`);
 		this.uri = uri;
+		const parsed = new URL(uri.replace("remote://", "http://"));
+		this.hubOrigin = `${parsed.protocol}//${parsed.host}`;
+		this.documentId = parsed.pathname.replace(/^\//, "") || "default";
+	}
+
+	detach(): void {
+		this.ws?.close();
+		this.ws = null;
+		this.uri = null;
 	}
 
 	status(): { readonly attachedUri: string | null; readonly kind: "remote"; readonly conflict: OsConflict | null } {
 		return { attachedUri: this.uri, kind: "remote", conflict: this.lastConflict };
 	}
 
-	sync(_document: OsDocument): never {
-		this.lastConflict = {
-			kind: "os-conflict",
-			uri: this.uri ?? "remote://unknown",
-			message: "remote backbone sync is not implemented",
+	subscribe(listener: (document: OsDocument) => void): () => void {
+		this.remoteListeners.add(listener);
+		return () => this.remoteListeners.delete(listener);
+	}
+
+	/** @emoji 📥 Loads snapshot + version from hub and opens the op stream. */
+	async connect(): Promise<OsDocument | null> {
+		if (!this.hubOrigin || !this.documentId) return null;
+		const response = await fetch(`${this.hubOrigin}/documents/${encodeURIComponent(this.documentId)}`);
+		if (!response.ok) throw new Error(`remote load failed: ${response.status}`);
+		const payload = (await response.json()) as { snapshot: OsDocument; version: number };
+		this.cachedDocument = payload.snapshot;
+		this.version = payload.version;
+		this.lastSyncedOpCount = payload.snapshot.vcs.operations.length;
+		this.openWebSocket();
+		return this.cachedDocument;
+	}
+
+	loadAttached(): OsDocument | null {
+		return this.cachedDocument;
+	}
+
+	sync(document: OsDocument): string {
+		if (!this.hubOrigin || !this.documentId) return osDocumentToJson(document);
+		const synced = { ...document, backbone: { kind: "remote" as const, uri: this.uri! } };
+		const json = osDocumentToJson(synced);
+		this.cachedDocument = synced;
+		const newOps = synced.vcs.operations.slice(this.lastSyncedOpCount);
+		for (const change of newOps) {
+			this.pendingOps.push({ changeId: change.id, change, baseVersion: this.version });
+		}
+		this.lastSyncedOpCount = synced.vcs.operations.length;
+		void this.flushPendingOps();
+		return json;
+	}
+
+	getPendingOps(): readonly PendingOsOp[] {
+		return this.pendingOps;
+	}
+
+	clearConflict(): void {
+		this.lastConflict = null;
+	}
+
+	private openWebSocket(): void {
+		if (!this.hubOrigin || !this.documentId || typeof WebSocket === "undefined") return;
+		this.ws?.close();
+		const wsUrl = `${this.hubOrigin.replace(/^http/u, "ws")}/documents/${encodeURIComponent(this.documentId)}/ws`;
+		this.ws = new WebSocket(wsUrl);
+		this.ws.onmessage = (event) => {
+			try {
+				const message = JSON.parse(String(event.data)) as { kind: string; change?: OsChange; version?: number };
+				if (message.kind === "op" && message.change) {
+					this.version = message.version ?? this.version + 1;
+					if (this.cachedDocument) {
+						this.cachedDocument = {
+							...this.cachedDocument,
+							vcs: { ...this.cachedDocument.vcs, operations: [...this.cachedDocument.vcs.operations, message.change] },
+						};
+						this.lastSyncedOpCount = this.cachedDocument.vcs.operations.length;
+						for (const listener of this.remoteListeners) listener(this.cachedDocument);
+					}
+				}
+			} catch {
+				return;
+			}
 		};
-		throw new Error(this.lastConflict.message);
+	}
+
+	private async flushPendingOps(): Promise<void> {
+		if (!this.hubOrigin || !this.documentId) return;
+		while (this.pendingOps.length > 0) {
+			const pending = this.pendingOps[0]!;
+			const response = await fetch(`${this.hubOrigin}/documents/${encodeURIComponent(this.documentId)}/ops`, {
+				method: "POST",
+				headers: { "content-type": "application/json" },
+				body: JSON.stringify({ version: pending.baseVersion, change: pending.change }),
+			});
+			if (response.status === 409) {
+				this.lastConflict = {
+					kind: "os-conflict",
+					uri: this.uri ?? "remote://unknown",
+					message: "remote version conflict",
+					remoteRevision: String(pending.baseVersion),
+				};
+				return;
+			}
+			if (!response.ok) throw new Error(`remote push failed: ${response.status}`);
+			const payload = (await response.json()) as { version: number };
+			this.version = payload.version;
+			this.pendingOps.shift();
+			this.lastConflict = null;
+		}
 	}
 }
+
+/** @emoji 🌐 Legacy alias for {@link RemoteOsBackbone}. */
+export const RemoteJsonBackbone = RemoteOsBackbone;
 //#endregion 🔖DevJsonBackbone
 
 // #region 🧪Tests
@@ -1636,6 +2346,10 @@ if (import.meta.vitest) {
 			expect(validateMediaGraph(graph).ok).toBe(true);
 		});
 
+		it("assertOsMediaExportCoverage lists missing handlers", () => {
+			expect(() => assertOsMediaExportCoverage()).toThrow(/missing os media export handlers/);
+		});
+
 		it("resolves app definitions for embedded instances", () => {
 			mergeOsProgramDefinition("writer", {
 				id: "writer",
@@ -1650,6 +2364,14 @@ if (import.meta.vitest) {
 			store.dispatch({ kind: "spawnAppInstance", programId: "writer", appId: "writer" });
 			const instance = store.projection().appInstances[0]!;
 			expect(resolveOsAppDefinition(instance)?.controllerId).toBe("writer-play");
+		});
+
+		it("buildOsHistoryColumns maps checkpoint authors", () => {
+			const store = new OsStore(createEmptyOsDocument());
+			store.dispatch({ kind: "commitCheckpoint", message: "root", authors: [{ id: "dev", name: "Dev" }] });
+			const columns = buildOsHistoryColumns(store.getDocument());
+			expect(columns.length).toBe(1);
+			expect(columns[0]?.authors[0]?.name).toBe("Dev");
 		});
 	});
 }

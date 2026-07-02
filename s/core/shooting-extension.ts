@@ -1,6 +1,6 @@
 /** @emoji 🎯 S-play shooting VCS handler with mesh input binding. */
 
-import { createTypedAppVcsHandler } from "@semio-tech/s-core";
+import { createTypedAppVcsHandler } from "./internal.ts";
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
 import { DEFAULT_SHOOTING_FIXTURE, type ShootingFixture } from "@semio-tech/shooting-react";
 

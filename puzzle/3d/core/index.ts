@@ -23,12 +23,12 @@ import {
   FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-  PLAYGROUND_NO_FIXTURE_ID,
-  type PlaygroundFixtureCatalog,
-  type PlaygroundFixtureHost,
-  isPlaygroundFixtureLocked,
-  isPlaygroundNoFixtureId,
-  playgroundResolvedFixtureId,
+  PLAYGROUND_NO_EXAMPLE_ID,
+  type PlaygroundExampleCatalog,
+  type PlaygroundExampleHost,
+  isPlaygroundExampleLocked,
+  isPlaygroundNoExampleId,
+  playgroundResolvedExampleId,
   Platform,
   WindowKindRuntime,
   buildPlaygroundBrowseFilterTools,
@@ -66,6 +66,8 @@ import {
   JackHoverBridge,
   buildWriterWindowBody,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import { meshTransferToGlb, meshTransferToObj, mergeMeshTransfers, type MeshTransfer } from "@semio-tech/kernel-3d-js";
 import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
 import { runJackOnPuzzle3dFixture } from "@semio-tech/graph-dsl-core";
 
@@ -185,23 +187,6 @@ import {
   puzzle3dKindHoversEqual,
   PUZZLE_3D_GUMBALL_CONFIG,
 } from "../react/index.tsx";
-import {
-  PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-  PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID,
-  PUZZLE_3D_PLAY_FIXTURE_OPTIONS,
-  PUZZLE_3D_PLAY_FIXTURE_JSON_BY_ID,
-  puzzle3dPlayFixtureJson,
-} from "./playground.ts";
-export { puzzle3dPlayAppDefinition, Playground3d } from "./playground.ts";
-export {
-  PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-  PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID,
-  PUZZLE_3D_PLAY_FIXTURE_OPTIONS,
-  puzzle3dPlayFixtureJson,
-  puzzle3dFixtureToJackBoardJson,
-  puzzle3dFixtureToJson,
-  resolvePuzzle3dPlayFixtureSlug,
-} from "./playground.ts";
 
 //#region 🏗️NakaginCatalog
 function cadVec3FromKitPoint(row: { readonly x: number; readonly y: number; readonly z: number }): [number, number, number] {
@@ -1932,8 +1917,54 @@ export function primaryPuzzle3dPlayObjectId(selection: Puzzle3dPlaySelection): s
 }
 //#endregion 🔖Puzzle3dPlaySelection
 
+//#region 🔖PlayExamples
+import nakaginPuzzle3dFixtureJson from "../example/nakagin-capsule-tower.3d.json";
+import concreteForestPuzzle3dFixtureJson from "../example/concrete-forest.3d.json";
+
+export const PUZZLE_3D_PLAY_EXAMPLE_NAKAGIN_ID = "nakagin";
+export const PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID = "concrete-forest";
+
+export const PUZZLE_3D_PLAY_EXAMPLE_OPTIONS = [
+  { id: PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, label: "Concrete Forest" },
+  { id: PUZZLE_3D_PLAY_EXAMPLE_NAKAGIN_ID, label: "Nakagin capsule tower" },
+] as const;
+
+export function resolvePuzzle3dPlayExampleSlug(slug: string): string | undefined {
+  const aliases: Record<string, string> = { concrete: PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID };
+  const normalized = aliases[slug] ?? slug;
+  return PUZZLE_3D_PLAY_EXAMPLE_OPTIONS.some((row) => row.id === normalized) ? normalized : undefined;
+}
+
+export const PUZZLE_3D_PLAY_EXAMPLE_JSON_BY_ID: Record<string, unknown> = {
+  [PUZZLE_3D_PLAY_EXAMPLE_NAKAGIN_ID]: nakaginPuzzle3dFixtureJson,
+  [PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID]: concreteForestPuzzle3dFixtureJson,
+};
+
+export function puzzle3dPlayFixtureJson(exampleId: string = PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID): unknown {
+  return PUZZLE_3D_PLAY_EXAMPLE_JSON_BY_ID[exampleId] ?? concreteForestPuzzle3dFixtureJson;
+}
+
+export function puzzle3dFixtureToJson(fixture: Fixture): string {
+  return JSON.stringify(fixture);
+}
+
+export function puzzle3dFixtureToJackBoardJson(fixtureOrJson: Fixture | string): string {
+  const fixture =
+    typeof fixtureOrJson === "string"
+      ? (parseFixture(JSON.parse(fixtureOrJson) as unknown) ?? ({ objects: [] } as Fixture))
+      : fixtureOrJson;
+  return JSON.stringify({
+    nodes: fixture.objects.map((object) => ({
+      id: object.id,
+      nodeKind: "Object",
+      text: object.label ?? object.id,
+    })),
+    edges: [],
+  });
+}
+//#endregion 🔖PlayExamples
+
 //#region 🔖Puzzle3dPlayController
-const PUZZLE_3D_PLAY_KINDS = ["object", "vortex", "attraction"] as const;
 type Puzzle3dPlayPickKind = (typeof PUZZLE_3D_PLAY_KINDS)[number];
 
 function puzzle3dPlayPickKindLabel(kind: Puzzle3dPlayPickKind): string {
@@ -1943,8 +1974,8 @@ function puzzle3dPlayPickKindLabel(kind: Puzzle3dPlayPickKind): string {
 }
 
 /** @emoji 🎬 Playground puzzle 3D play controller: fixture, LOD, selection/filter tools, and interaction counters. */
-export class Puzzle3dPlayShellController extends Controller implements PlaygroundFixtureHost {
-  private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+export class Puzzle3dPlayShellController extends Controller implements PlaygroundExampleHost {
+  private activeExampleId = playgroundResolvedExampleId(PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   readonly selectableKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
   readonly visibleKinds: Record<Puzzle3dPlayPickKind, boolean> = { object: true, vortex: true, attraction: true };
@@ -1992,14 +2023,14 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
   private hoverFocus: Puzzle3dHoverPayload = { hoverTarget: null, kindHover: null };
   private instanceCameras = new Map<string, CameraState>();
   private cameraSeedEpoch = 0;
-  private fixtureCatalogCache: PlaygroundFixtureCatalog | null = null;
+  private fixtureCatalogCache: PlaygroundExampleCatalog | null = null;
   private readonly jackBridge = new JackHoverBridge();
   private jackEngagementInput = "";
   private readonly jackSnapshotListeners = new Set<() => void>();
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(PUZZLE_3D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-    this.setFixtureProjection(parseFixture(puzzle3dPlayFixtureJson(this.activeFixtureId)));
+    this.setFixtureProjection(parseFixture(puzzle3dPlayFixtureJson(this.activeExampleId)));
     this.jackBridge.setJackQueryText(PUZZLE_3D_PLAY_DEFAULT_JACK_QUERY);
     this.syncJackFixtureJson();
     this.fixtureRevision = 0;
@@ -2284,10 +2315,10 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     recordProjectionChange(this.docStore, [{ op: "setDocument", document: next }]);
   }
 
-  getFixtureCatalog(): PlaygroundFixtureCatalog | null {
-    if (isPlaygroundFixtureLocked()) return null;
-    if (!this.fixtureCatalogCache || this.fixtureCatalogCache.activeFixtureId !== this.activeFixtureId) {
-      this.fixtureCatalogCache = { activeFixtureId: this.activeFixtureId, options: PUZZLE_3D_PLAY_FIXTURE_OPTIONS };
+  getExampleCatalog(): PlaygroundExampleCatalog | null {
+    if (isPlaygroundExampleLocked()) return null;
+    if (!this.fixtureCatalogCache || this.fixtureCatalogCache.activeExampleId !== this.activeExampleId) {
+      this.fixtureCatalogCache = { activeExampleId: this.activeExampleId, options: PUZZLE_3D_PLAY_EXAMPLE_OPTIONS };
     }
     return this.fixtureCatalogCache;
   }
@@ -2301,12 +2332,12 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
     this.syncShell();
   }
 
-  private loadFixtureById(fixtureId: string): void {
-    if (isPlaygroundNoFixtureId(fixtureId)) {
+  private loadFixtureById(exampleId: string): void {
+    if (isPlaygroundNoExampleId(fixtureId)) {
       this.clearFixture();
       return;
     }
-    const raw = PUZZLE_3D_PLAY_FIXTURE_JSON_BY_ID[fixtureId];
+    const raw = PUZZLE_3D_PLAY_EXAMPLE_JSON_BY_ID[fixtureId];
     if (!raw) return;
     const parsed = parseFixture(raw);
     if (!parsed) return;
@@ -2833,15 +2864,15 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
       return;
     }
     switch (command) {
-      case "setActiveFixture": {
-        if (isPlaygroundFixtureLocked()) return;
+      case "setActiveExample": {
+        if (isPlaygroundExampleLocked()) return;
         const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
-        const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
-        if (nextId === this.activeFixtureId) {
+        const nextId = isPlaygroundNoExampleId(fixtureId) ? PLAYGROUND_NO_EXAMPLE_ID : fixtureId;
+        if (nextId === this.activeExampleId) {
           this.syncBrushKindWeightsFromFixture();
           return;
         }
-        this.activeFixtureId = nextId;
+        this.activeExampleId = nextId;
         this.fixtureCatalogCache = null;
         this.loadFixtureById(nextId);
         return;
@@ -4424,28 +4455,127 @@ export function registerPuzzle3dPlayDeclarativeBodies(): void {
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { puzzle3dPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for puzzle 3d. */
 export function buildPuzzle3dProgramDefinition(): PlatformDefinition {
-	const app = puzzle3dPlayAppDefinition;
 	return {
 		id: "puzzle.3d",
 		name: "Puzzle 3D",
 		apiVersion: "1",
-		apps: [{ id: "puzzle3d", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "puzzle3d", label: "Puzzle 3D", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
 
-import nakaginPuzzle3dFixtureJson from "../fixture/nakagin-capsule-tower.3d.json";
-import concreteForestPuzzle3dFixtureJson from "../fixture/concrete-forest.3d.json";
-import {
-  PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-  PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID,
-  resolvePuzzle3dPlayFixtureSlug,
-} from "./playground.ts";
+//#region 🔖MediaExport
+function puzzle3dObjectBoxMesh(origin: readonly [number, number, number], size = 1): MeshTransfer {
+	const [ox, oy, oz] = origin;
+	const sx = size;
+	const sy = size;
+	const sz = size;
+	const position = new Float32Array([
+		ox, oy, oz, ox + sx, oy, oz, ox + sx, oy + sy, oz, ox, oy + sy, oz,
+		ox, oy, oz + sz, ox + sx, oy, oz + sz, ox + sx, oy + sy, oz + sz, ox, oy + sy, oz + sz,
+	]);
+	const normal = new Float32Array(position.length);
+	for (let i = 0; i < normal.length; i += 3) normal[i + 2] = 1;
+	const index = new Uint32Array([
+		0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2,
+	]);
+	return { position, normal, index, edges: new Float32Array(0), faceGroups: [], edgeGroups: [], faceInfos: [], edgeInfos: [] };
+}
+
+async function puzzle3dFixtureMeshTransfer(fixture: Fixture): Promise<MeshTransfer> {
+	const meshes: MeshTransfer[] = [];
+	for (const object of fixture.objects) {
+		meshes.push(puzzle3dObjectBoxMesh(object.origin));
+	}
+	return meshes.length > 0 ? mergeMeshTransfers(meshes) : puzzle3dObjectBoxMesh([0, 0, 0]);
+}
+
+async function puzzle3dFixtureGlbBytes(fixture: Fixture): Promise<Uint8Array> {
+	if (fixture.objects.length === 1) {
+		const object = fixture.objects[0]!;
+		if (isLoadableMeshUrl(object.meshUrl)) {
+			try {
+				const response = await fetch(object.meshUrl);
+				if (response.ok) return new Uint8Array(await response.arrayBuffer());
+			} catch {
+				/* fallback */
+			}
+		}
+	}
+	return meshTransferToGlb(await puzzle3dFixtureMeshTransfer(fixture));
+}
+
+/** @emoji 💾 Exports a puzzle 3d fixture to OBJ text. */
+export async function exportPuzzle3dFixtureObj(fixture: Fixture): Promise<string> {
+	return meshTransferToObj(await puzzle3dFixtureMeshTransfer(fixture));
+}
+
+/** @emoji 💾 Exports a puzzle 3d fixture to GLB bytes. */
+export async function exportPuzzle3dFixtureGlb(fixture: Fixture): Promise<Uint8Array> {
+	return puzzle3dFixtureGlbBytes(fixture);
+}
+
+/** @emoji 💾 Registers puzzle 3d fixture OBJ/GLB export handlers for the OS media graph. */
+export function registerPuzzle3dMediaExportHandlers(): void {
+	registerOsMediaExportHandler("3d.puzzle", "obj", async (doc) => ({
+		data: await exportPuzzle3dFixtureObj(doc as Fixture),
+		mimeType: "text/plain",
+		fileName: "puzzle3d.obj",
+	}));
+	registerOsMediaExportHandler("3d.puzzle", "glb", async (doc) => ({
+		data: await exportPuzzle3dFixtureGlb(doc as Fixture),
+		mimeType: "model/gltf-binary",
+		fileName: "puzzle3d.glb",
+	}));
+}
+//#endregion 🔖MediaExport
+
+//#region 🔖Play
+import { createPlaygroundApp } from "@semio-tech/framework-playground-core";
+
+
+export const puzzle3dPlayAppDefinition = createPlaygroundApp({
+	id: PUZZLE_3D_PLAY_APP_ID,
+	label: "Puzzle 3D",
+	controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	keybindings: [
+		{ key: "ctrl+a,meta+a", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "selectAllSelection" },
+		{ key: "Delete", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+		{ key: "Backspace", controllerId: PUZZLE_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
+	],
+	devHost: {
+		playEntryKind: "3d",
+		resolveDedupe: ["react", "react-dom", "three", "@semio-tech/puzzle-3d-react"],
+		optimizeDeps: {
+			include: [
+				"react",
+				"react-dom",
+				"react/jsx-runtime",
+				"react/jsx-dev-runtime",
+				"three",
+				"@react-three/fiber",
+				"@react-three/drei",
+				"lucide-react",
+				"@semio-tech/infinite-world-r3f",
+				"@semio-tech/infinite-cavas-react-renderer",
+				"@semio-tech/puzzle-3d-react",
+			],
+		},
+	},
+	createRuntime: () => buildPuzzle3dPlayRuntime(),
+	registerBodies: () => registerPuzzle3dPlayDeclarativeBodies(),
+	bootRenderer: async (pg) => {
+		const { bootPuzzle3dPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/3d");
+		bootPuzzle3dPlay(pg);
+	},
+});
+//#endregion 🔖Play
 
 //#region 🧪Tests
 if (import.meta.vitest) {
@@ -4464,9 +4594,9 @@ if (import.meta.vitest) {
   }
 
   describe("puzzle 3D play fixture", () => {
-    it("resolvePuzzle3dPlayFixtureSlug maps concrete shorthand", () => {
-      expect(resolvePuzzle3dPlayFixtureSlug("concrete")).toBe(PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
-      expect(resolvePuzzle3dPlayFixtureSlug("nakagin")).toBe(PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID);
+    it("resolvePuzzle3dPlayExampleSlug maps concrete shorthand", () => {
+      expect(resolvePuzzle3dPlayExampleSlug("concrete")).toBe(PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
+      expect(resolvePuzzle3dPlayExampleSlug("nakagin")).toBe(PUZZLE_3D_PLAY_EXAMPLE_NAKAGIN_ID);
     });
 
     it("parses nakagin fixture", () => {
@@ -4476,33 +4606,33 @@ if (import.meta.vitest) {
       expect(f?.objects.length).toBeGreaterThan(0);
     });
 
-    it("getFixtureCatalog returns a stable snapshot reference for useSyncExternalStore", () => {
+    it("getExampleCatalog returns a stable snapshot reference for useSyncExternalStore", () => {
       const bus = new CommandBus();
       const ctrl = new Puzzle3dPlayShellController(bus, () => {});
-      const first = ctrl.getFixtureCatalog();
-      const second = ctrl.getFixtureCatalog();
+      const first = ctrl.getExampleCatalog();
+      const second = ctrl.getExampleCatalog();
       expect(second).toBe(first);
-      ctrl.run("setActiveFixture", { fixtureId: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID });
-      const third = ctrl.getFixtureCatalog();
+      ctrl.run("setActiveExample", { exampleId: PUZZLE_3D_PLAY_EXAMPLE_NAKAGIN_ID });
+      const third = ctrl.getExampleCatalog();
       expect(third).not.toBe(first);
-      expect(third.activeFixtureId).toBe(PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID);
+      expect(third.activeExampleId).toBe(PUZZLE_3D_PLAY_EXAMPLE_NAKAGIN_ID);
     });
 
-    it("getFixtureCatalog returns null when fixture host is locked", () => {
-      const prev = import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID;
-      const env = import.meta.env as { PLAYGROUND_LOCKED_FIXTURE_ID?: string };
-      env.PLAYGROUND_LOCKED_FIXTURE_ID = PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID;
+    it("getExampleCatalog returns null when fixture host is locked", () => {
+      const prev = import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID;
+      const env = import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string };
+      env.PLAYGROUND_LOCKED_EXAMPLE_ID = PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID;
       try {
         const bus = new CommandBus();
         const ctrl = new Puzzle3dPlayShellController(bus, () => {});
-        expect(ctrl.getFixtureCatalog()).toBeNull();
-        ctrl.run("setActiveFixture", { fixtureId: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID });
-        expect(ctrl.getFixtureCatalog()).toBeNull();
+        expect(ctrl.getExampleCatalog()).toBeNull();
+        ctrl.run("setActiveExample", { exampleId: PUZZLE_3D_PLAY_EXAMPLE_NAKAGIN_ID });
+        expect(ctrl.getExampleCatalog()).toBeNull();
       } finally {
         if (prev === undefined) {
-          delete env.PLAYGROUND_LOCKED_FIXTURE_ID;
+          delete env.PLAYGROUND_LOCKED_EXAMPLE_ID;
         } else {
-          env.PLAYGROUND_LOCKED_FIXTURE_ID = prev;
+          env.PLAYGROUND_LOCKED_EXAMPLE_ID = prev;
         }
       }
     });
@@ -5946,7 +6076,7 @@ if (import.meta.vitest) {
     it("nakagin fixture seeds default object and vortex suggestion ratios", () => {
       const bus = new CommandBus();
       const ctrl = new Puzzle3dPlayShellController(bus, () => {});
-      ctrl.run("setActiveFixture", { fixtureId: PUZZLE_3D_PLAY_FIXTURE_NAKAGIN_ID });
+      ctrl.run("setActiveExample", { exampleId: PUZZLE_3D_PLAY_EXAMPLE_NAKAGIN_ID });
       const { objectWeights, vortexWeights } = puzzle3dBrushKindWeightsRef.current;
       expect(objectWeights.Tambour / objectWeights.Base).toBeCloseTo(15, 4);
       expect(objectWeights.Tambour / objectWeights.Capital).toBeCloseTo(10, 4);

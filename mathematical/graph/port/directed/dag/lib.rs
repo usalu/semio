@@ -368,6 +368,7 @@ enum WidgetPointerKind {
     SelectClick,
     PreviewToggle(String),
     ClusterExplode,
+    ExportClick,
 }
 
 fn preview_scalar_text_width(text: &str) -> f64 {
@@ -589,6 +590,11 @@ pub enum DagNodeKind {
         label: String,
         input: IoPortSpec,
     },
+    Export {
+        label: String,
+        format: String,
+        input: IoPortSpec,
+    },
     Cluster {
         inputs: Vec<IoPortSpec>,
         outputs: Vec<IoPortSpec>,
@@ -619,6 +625,7 @@ pub fn dag_node_kind_tag(kind: &DagNodeKind) -> &'static str {
         DagNodeKind::Image { .. } => "image",
         DagNodeKind::Preview { .. } => "preview",
         DagNodeKind::Action { .. } => "action",
+        DagNodeKind::Export { .. } => "export",
         DagNodeKind::Cluster { .. } => "cluster",
         DagNodeKind::AppInstance { .. } => "appInstance",
     }
@@ -765,7 +772,7 @@ impl DagNodeSpec {
     pub fn inputs(&self) -> &[IoPortSpec] {
         match &self.kind {
             DagNodeKind::Computation { inputs, .. } | DagNodeKind::Cluster { inputs, .. } | DagNodeKind::AppInstance { inputs, .. } => inputs,
-            DagNodeKind::Screen { input, .. } | DagNodeKind::Preview { input, .. } | DagNodeKind::Action { input, .. } => std::slice::from_ref(input),
+            DagNodeKind::Screen { input, .. } | DagNodeKind::Preview { input, .. } | DagNodeKind::Action { input, .. } | DagNodeKind::Export { input, .. } => std::slice::from_ref(input),
             _ => EMPTY_PORTS,
         }
     }
@@ -1010,7 +1017,7 @@ pub fn fit_node_size(node: &mut DagNodeSpec) {
             node.width = w;
             node.height = h;
         }
-        DagNodeKind::Select { .. } | DagNodeKind::Action { .. } => {
+        DagNodeKind::Select { .. } | DagNodeKind::Action { .. } | DagNodeKind::Export { .. } => {
             node.width = io_widget_width(&node.name);
             node.height = io_widget_height(&node.name);
         }
@@ -1727,6 +1734,7 @@ pub struct DagHost {
     icon_paint_cache: graph::IconPaintCache,
     ghost_node: Option<DagNodeSpec>,
     pending_cluster_explode: Option<String>,
+    pending_export_click: Option<String>,
     pending_open_instance_id: Option<String>,
     last_pointer_down_at_ms: f64,
     last_pointer_down_world: (f64, f64),
@@ -1837,7 +1845,7 @@ impl Default for DagFixtureEdge {
 
 impl Default for DagFixture {
     fn default() -> Self {
-        serde_json::from_str(include_str!("fixture/demo.dag.json")).unwrap_or_else(|_| Self { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] })
+        serde_json::from_str(include_str!("example/demo.dag.json")).unwrap_or_else(|_| Self { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] })
     }
 }
 
@@ -1972,6 +1980,7 @@ impl DagHost {
             icon_paint_cache: graph::IconPaintCache::new(),
             ghost_node: None,
             pending_cluster_explode: None,
+            pending_export_click: None,
             pending_open_instance_id: None,
             last_pointer_down_at_ms: 0.0,
             last_pointer_down_world: (0.0, 0.0),
@@ -3055,6 +3064,12 @@ impl DagHost {
                         return Some((idx, WidgetPointerKind::ClusterExplode));
                     }
                 }
+                DagNodeKind::Export { .. } => {
+                    let (x0, y0, x1, y1) = action_control_bounds(node);
+                    if point_in_rect(world_x, world_y, x0, y0, x1, y1) {
+                        return Some((idx, WidgetPointerKind::ExportClick));
+                    }
+                }
                 _ => {}
             }
         }
@@ -3137,6 +3152,9 @@ impl DagHost {
             WidgetPointerKind::ClusterExplode => {
                 self.pending_cluster_explode = Some(self.fixture.nodes[idx].id.clone());
             }
+            WidgetPointerKind::ExportClick => {
+                self.pending_export_click = Some(self.fixture.nodes[idx].id.clone());
+            }
         }
         true
     }
@@ -3144,6 +3162,11 @@ impl DagHost {
     /// 💥 Takes a pending cluster explode request from the last widget hit.
     pub fn take_pending_cluster_explode(&mut self) -> Option<String> {
         self.pending_cluster_explode.take()
+    }
+
+    /// 📤 Takes a pending export control click from the last widget hit.
+    pub fn take_pending_export_click(&mut self) -> Option<String> {
+        self.pending_export_click.take()
     }
 
     fn sync_connection_hit_picking_for_lod(&mut self) {
@@ -4265,6 +4288,24 @@ impl DagHost {
                         if lod.shows_detail_text() {
                             let pos = world_to_screen(cam, viewport, Point::new(node.x, node.y));
                             append_label(scene, label, pos, paint_px * 0.95, label_fill, label_halo);
+                        }
+                    }
+                }
+                DagNodeKind::Export { format, .. } => {
+                    if lod.shows_controls() {
+                        Self::paint_io_widget_channel_borders(scene, *aff, node, layout_px, chrome_stroke, internal_chrome_stroke);
+                    }
+                    if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
+                        Self::paint_io_widget_name(scene, cam, viewport, node, lod, label, paint_px, label_fill, label_halo);
+                    }
+                    if lod.shows_controls() {
+                        let (x0, y0, x1, y1) = action_control_bounds(node);
+                        let control = Rect::new(x0, y0, x1, y1);
+                        scene.stroke(&Stroke::new(chrome_stroke), *aff, theme.edge_stroke, None, &control);
+                        if lod.shows_detail_text() {
+                            let export_label = format.to_uppercase();
+                            let pos = world_to_screen(cam, viewport, Point::new(node.x, node.y));
+                            append_label(scene, &export_label, pos, paint_px * 0.95, label_fill, label_halo);
                         }
                     }
                 }
@@ -6249,6 +6290,20 @@ mod tests {
         };
         assert_eq!(preview.inputs().len(), 1);
         assert!(preview.outputs().is_empty());
+        let export = DagNodeSpec {
+            id: "export".into(),
+            name: "Export SVG".into(),
+            abbreviation: "SVG".into(),
+            icon: "emoji:📤".into(),
+            x: 0.0,
+            y: 0.0,
+            width: 120.0,
+            height: 48.0,
+            kind: DagNodeKind::Export { label: "SVG".into(), format: "svg".into(), input: IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() } },
+            ..Default::default()
+        };
+        assert_eq!(export.inputs().len(), 1);
+        assert!(export.outputs().is_empty());
     }
 
     #[test]

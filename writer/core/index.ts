@@ -3,7 +3,6 @@
 // #endregion 🧲Header
 
 export * from "./internal.ts";
-export { writerPlayAppDefinition, PlaygroundWriter, WRITER_PLAY_FIXTURE_DEFAULT_ID, resolveWriterPlayFixtureSlug } from "./playground.ts";
 
 import {
 	AppRuntime,
@@ -15,21 +14,24 @@ import {
 	createDefaultLayout,
 	createPlayAppRuntime,
 	enforcePlaygroundWindowEngagementInput,
-	isPlaygroundNoFixtureId,
+	isPlaygroundNoExampleId,
 	registerWindowBody,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 	uiDeclarativeSectionsToTree,
 	type AppTools,
-	type PlaygroundFixtureCatalog,
-	type PlaygroundFixtureHost,
+	type PlaygroundExampleCatalog,
+	type PlaygroundExampleHost,
 	toolCollection,
 	type UiNode,
 	type UiTreeItemNode,
 	type UiTreeNode,
 	type WindowEngagement,
 	type WindowMeasure,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
+  eagerPlayExampleGlob,
 } from "@semio-tech/framework-playground-core";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 import {
@@ -49,7 +51,7 @@ import {
 	type WriterEditOp,
 	type WriterEditorSettings,
 } from "./internal.ts";
-import { WRITER_PLAY_FIXTURE_DEFAULT_ID, resolveWriterPlayFixtureSlug } from "./fixture-slugs.ts";
+import { WRITER_PLAY_EXAMPLE_DEFAULT_ID, resolveWriterPlayExampleSlug } from "./example-slugs.ts";
 
 export const WRITER_PLAY_APP_ID = "writer-play";
 export const WRITER_PLAY_CONTROLLER_ID = "writer-play";
@@ -211,7 +213,7 @@ export function buildWriterPlayInspectorTree(doc: WriterDocumentV1, lintMessages
 	]);
 }
 
-export class WriterPlayController extends Controller implements PlaygroundFixtureHost {
+export class WriterPlayController extends Controller implements PlaygroundExampleHost {
 	readonly mainMode = new ModeRuntime("main", "Writer", undefined);
 	private readonly docStore = new DocumentVcsStore<WriterDocumentV1, WriterEditOp>({
 		envelope: createDocumentVcsEnvelope("writer.document/v1", "writer-play", WRITER_PLAY_EMPTY_DOCUMENT),
@@ -341,11 +343,11 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 		this.emit();
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog {
+	getExampleCatalog(): PlaygroundExampleCatalog {
 		return {
 			options: this.fixtureAccess.options,
-			defaultId: WRITER_PLAY_FIXTURE_DEFAULT_ID,
-			resolveSlug: resolveWriterPlayFixtureSlug,
+			defaultId: WRITER_PLAY_EXAMPLE_DEFAULT_ID,
+			resolveSlug: resolveWriterPlayExampleSlug,
 		};
 	}
 
@@ -386,9 +388,9 @@ export class WriterPlayController extends Controller implements PlaygroundFixtur
 				this.applyDocumentEdit({ op: "setText", text });
 				return;
 			}
-			case "setActiveFixture": {
+			case "setActiveExample": {
 				const fixtureId = String(args?.fixtureId ?? "");
-				if (isPlaygroundNoFixtureId(fixtureId)) {
+				if (isPlaygroundNoExampleId(fixtureId)) {
 					this.replaceDocument(WRITER_PLAY_EMPTY_DOCUMENT);
 					return;
 				}
@@ -670,20 +672,89 @@ export function buildWriterPlayAppRuntime(ctrl: WriterPlayController): AppRuntim
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { writerPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for writer. */
 export function buildWriterProgramDefinition(): PlatformDefinition {
-	const app = writerPlayAppDefinition;
 	return {
 		id: "writer",
 		name: "Writer",
 		apiVersion: "1",
-		apps: [{ id: "writer", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "writer", label: "Writer", controllerId: WRITER_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+
+//#region 🔖Play
+
+const writerFixtureModules = eagerPlayExampleGlob("../example/*.writer.json");
+
+function writerFixtureIdFromGlobPath(globPath: string): string {
+	const base = globPath.split("/").pop() ?? globPath;
+	return base.replace(/\.writer\.json$/, "");
+}
+
+const WRITER_PLAY_FILE_EXAMPLE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
+	Object.entries(writerFixtureModules).map(([path, mod]) => {
+		const id = writerFixtureIdFromGlobPath(path);
+		const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
+		return [id, json];
+	}),
+);
+
+/** @emoji 📁 Writer play fixture access for controller and playground bootstrap. */
+export function createWriterPlayFixtureAccess(): WriterPlayFixtureAccess {
+	return {
+		jsonById: (fixtureId) => WRITER_PLAY_FILE_EXAMPLE_JSON_BY_ID[fixtureId],
+		options: Object.keys(WRITER_PLAY_FILE_EXAMPLE_JSON_BY_ID)
+			.sort()
+			.map((id) => ({ id: id === "jack" ? WRITER_PLAY_EXAMPLE_DEFAULT_ID : id, label: id === "jack" ? "Jack" : id })),
+	};
+}
+
+/** @emoji 🛝 Writer playground app. */
+
+
+export const writerPlayAppDefinition = createPlaygroundApp({
+	id: WRITER_PLAY_APP_ID,
+	label: "Writer",
+	controllerId: "writer-play",
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "writer",
+		resolveDedupe: ["react", "react-dom", "three", "@semio-tech/writer-react"],
+		optimizeDeps: { include: ["react", "react-dom"] },
+	},
+	createRuntime: () => {
+		const fixtureAccess = createWriterPlayFixtureAccess();
+			const locked = isPlaygroundExampleLocked();
+			const noFixture = isPlaygroundNoExampleId();
+			const fixtureId = playgroundResolvedExampleId(WRITER_PLAY_EXAMPLE_DEFAULT_ID, resolveWriterPlayExampleSlug);
+			const json = fixtureAccess.jsonById(fixtureId) ?? fixtureAccess.jsonById("jack")!;
+			if (locked || noFixture) {
+				void json;
+			}
+			const runtime = createProductPlaygroundPlatform(WRITER_PLAY_APP_ID);
+			const ctrl = new WriterPlayController(runtime.commandBus, () => runtime.notify(), json, fixtureAccess);
+			const resolved = playgroundResolvedExampleId(WRITER_PLAY_EXAMPLE_DEFAULT_ID, resolveWriterPlayExampleSlug);
+			if (!locked && !noFixture) {
+				ctrl.run("setActiveExample", { exampleId: resolved });
+			}
+			runtime.addApp(buildWriterPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerWriterPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootWriterPlay } = await import("@semio-tech/framework-playground-renderer-react/writer");
+		bootWriterPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -692,7 +763,7 @@ if (import.meta.vitest) {
 			fixtureId === "jack"
 				? writerDocumentToJson(createWriterDocument({ id: "jack", languageId: "jack", text: "MATCH (a:Piece) RETURN a" }))
 				: undefined,
-		options: [{ id: WRITER_PLAY_FIXTURE_DEFAULT_ID, label: "Jack" }],
+		options: [{ id: WRITER_PLAY_EXAMPLE_DEFAULT_ID, label: "Jack" }],
 	};
 
 	describe("writer document", () => {
@@ -923,10 +994,10 @@ if (import.meta.vitest) {
 			expect(ctrl.getLintSignal()).toBe(1);
 		});
 
-		it("loads fixture via setActiveFixture", () => {
+		it("loads fixture via setActiveExample", () => {
 			const bus = new CommandBus();
 			const ctrl = new WriterPlayController(bus, () => {}, writerDocumentToJson(createWriterDocument({ id: "empty", languageId: "plaintext", text: "" })), writerPlayFixtureAccess);
-			ctrl.run("setActiveFixture", { fixtureId: "jack" });
+			ctrl.run("setActiveExample", { exampleId: "jack" });
 			expect(ctrl.getDocument().id).toBe("jack");
 			expect(ctrl.getDocument().languageId).toBe("jack");
 		});

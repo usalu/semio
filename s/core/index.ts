@@ -3,7 +3,6 @@
 // #endregion 🧲Header
 
 export * from "./internal.ts";
-export { sPlayAppDefinition, PlaygroundS } from "./playground.ts";
 
 import {
 	AppRuntime,
@@ -29,11 +28,20 @@ import {
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 	JackHoverBridge,
 	buildWriterWindowBody,
+  createProductPlaygroundPlatform,
+  eagerPlayExampleGlob,
+  Playground,
+  playgroundResolvedExampleId,
 } from "@semio-tech/framework-playground-core";
-import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
+import {
+	registerAppVirtualFileSystem,
+} from "@semio-tech/framework-platform-core";
+import { downloadMediaExportResult } from "@semio-tech/framework-core";
+import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core/internal";
 import { runJackOnMediaGraph, wireLiteralFromDagFixtureJson } from "@semio-tech/graph-dsl-core";
 import {
 	DevJsonBackbone,
+	RemoteOsBackbone,
 	listSPrograms,
 	materializeStudioProjection,
 	mergeSProgramDefinition,
@@ -62,17 +70,22 @@ import {
 	createVcsDemoAppVcsHandler,
 	createCatalogueKindsAppVcsHandler,
 	sMediaGraphToDagFixtureJson,
-	type SAppInstance,
-	type SMediaGraphNode,
-	type SStudioDocumentV1,
-	type StudioCommand,
+	OsMediaGraphVirtualFileSystemController,
+	OS_MEDIA_GRAPH_VFS_ROOT_ID,
+	registerAllMediaExportHandlers,
+	assertOsMediaExportCoverage,
+	exportOsAppInstanceMedia,
+	materializeAppInstanceProjection,
+	type OsMediaExportFormat,
+	type OsMediaExportResult,
+	TECHNOLOGY_APP_RESOURCE_BY_PROGRAM,
+	sAppRegistration,
 } from "./internal.ts";
-import { createDrawAppVcsHandler } from "@semio-tech/draw-core";
-import { createNoteAppVcsHandler } from "@semio-tech/note-core";
 
 export const S_PLAY_APP_ID = "s-play";
 export const S_PLAY_CONTROLLER_ID = "s-play";
 export const S_PLAY_SURFACE_MEDIA_GRAPH = "s.play.media-graph/v1";
+export const S_PLAY_SURFACE_MEDIA_VFS = "s.play.media-vfs/v1";
 export const S_PLAY_SURFACE_APP_HOST = "s.play.app-host/v1";
 export const S_PLAY_SURFACE_LAUNCHER = "s.play.launcher/v1";
 export const S_PLAY_SURFACE_HISTORY = "s.play.history/v1";
@@ -81,8 +94,10 @@ export const S_PLAY_BODY_HISTORY = "s.play.history";
 export const S_PLAY_WINDOW_LAUNCHER = "s-launcher";
 export const S_PLAY_WINDOW_HISTORY = "s-history";
 export const S_PLAY_BODY_MEDIA_GRAPH = "s.play.media-graph";
+export const S_PLAY_BODY_MEDIA_VFS = "s.play.media-vfs";
 export const S_PLAY_BODY_APP_HOST = "s.play.app-host";
 export const S_PLAY_WINDOW_MEDIA_GRAPH = "s-media-graph";
+export const S_PLAY_WINDOW_MEDIA_VFS = "s-media-vfs";
 export const S_PLAY_WINDOW_APP_HOST = "s-app-host";
 export const S_PLAY_WINDOW_JACK = "s-jack";
 export const S_PLAY_WINDOW_COMPILED_DAG = "s-compiled-dag";
@@ -93,38 +108,45 @@ export const S_PLAY_SURFACE_COMPILED_DAG = "s.play.compiled-dag/v1";
 export const S_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:flow) RETURN n.id";
 
 export const S_PLAY_LAYOUT = createDefaultLayout(
-	[S_PLAY_WINDOW_MEDIA_GRAPH, S_PLAY_WINDOW_APP_HOST, S_PLAY_WINDOW_LAUNCHER, S_PLAY_WINDOW_HISTORY, S_PLAY_WINDOW_JACK, S_PLAY_WINDOW_COMPILED_DAG],
+	[S_PLAY_WINDOW_MEDIA_GRAPH, S_PLAY_WINDOW_MEDIA_VFS, S_PLAY_WINDOW_APP_HOST, S_PLAY_WINDOW_LAUNCHER, S_PLAY_WINDOW_HISTORY, S_PLAY_WINDOW_JACK, S_PLAY_WINDOW_COMPILED_DAG],
 	"row",
-	[26, 32, 9, 9, 12, 12],
-	["Media Graph", "App Host", "Launcher", "History", "Jack", "Compiled DAG"],
+	[22, 18, 28, 8, 8, 8, 8],
+	["Media Graph", "Media VFS", "App Host", "Launcher", "History", "Jack", "Compiled DAG"],
 );
 
 export type SPlayFixtureLoader = (fixtureId: string) => SStudioDocumentV1;
 
 /** @emoji 🏗️ Creates a studio store for s play. */
 export function createStudioStore(document: SStudioDocumentV1): StudioStore {
-	const backbone = new DevJsonBackbone();
+	const backbone = document.backbone?.kind === "remote" ? new RemoteOsBackbone() : new DevJsonBackbone();
 	if (document.backbone?.uri) backbone.attach(document.backbone.uri);
 	const store = new StudioStore(document, {
 		onAfterMutation: () => {
 			backbone.sync(store.getDocument());
 		},
 	});
+	backbone.subscribe?.((remoteDocument) => {
+		const known = new Set(store.getDocument().vcs.operations.map((entry) => entry.id));
+		for (const change of remoteDocument.vcs.operations) {
+			if (!known.has(change.id)) store.applyRemoteChange(change);
+		}
+	});
 	return store;
 }
 
 //#region 🔖SExtensionWiring
-import { createFormsAppVcsHandler } from "@semio-tech/forms-core";
-import { createPresentationAppVcsHandler } from "@semio-tech/framework-presentation-core";
-import { createRasterAppVcsHandler } from "@semio-tech/raster-core";
-import { createWriterAppVcsHandler } from "@semio-tech/writer-core";
-import { puzzle5dDefaultManifestCatalogBundle } from "@semio-tech/puzzle-5d-react";
-import { loadAllSProgramExtensions } from "./program-extensions.ts";
-import { createSPlayPuzzle5dAppVcsHandler } from "./puzzle5d-extension.ts";
-import { createSPlayShootingAppVcsHandler } from "./shooting-extension.ts";
-
 /** @emoji 🧩 Registers all s technology extensions and VCS handlers. */
 export async function bootstrapSPlayExtensions(): Promise<void> {
+	const { createFormsAppVcsHandler } = await import("@semio-tech/forms-core");
+	const { createPresentationAppVcsHandler } = await import("@semio-tech/framework-presentation-core");
+	const { createRasterAppVcsHandler } = await import("@semio-tech/raster-core");
+	const { createWriterAppVcsHandler } = await import("@semio-tech/writer-core");
+	const { puzzle5dDefaultManifestCatalogBundle } = await import("@semio-tech/puzzle-5d-react");
+	const { loadAllSProgramExtensions } = await import("./program-extensions.ts");
+	const { createSPlayPuzzle5dAppVcsHandler } = await import("./puzzle5d-extension.ts");
+	const { createSPlayShootingAppVcsHandler } = await import("./shooting-extension.ts");
+	const { createDrawAppVcsHandler } = await import("@semio-tech/draw-core");
+	const { createNoteAppVcsHandler } = await import("@semio-tech/note-core");
 	seedSProgramRegistryFromResourceMap();
 	registerAppVcsHandler(createDrawAppVcsHandler());
 	registerAppVcsHandler(createNoteAppVcsHandler());
@@ -152,6 +174,7 @@ export async function bootstrapSPlayExtensions(): Promise<void> {
 	const { buildSketchpadProgramDefinition } = await import("@semio-tech/compose-sketchpad");
 	mergeSProgramDefinition(COMPOSE_SKETCHPAD_PROGRAM_ID, buildSketchpadProgramDefinition());
 	await loadAllSProgramExtensions();
+	await registerAllMediaExportHandlers();
 }
 //#endregion 🔖SExtensionWiring
 
@@ -206,6 +229,8 @@ export class SPlayController extends Controller {
 	private appHostEngagementInput = "";
 	private focusedInstanceId: string | null = null;
 	private mediaGraphEngagementInput = "";
+	private readonly mediaGraphVfsController: OsMediaGraphVirtualFileSystemController;
+	private mediaGraphVfsUnsubscribe?: () => void;
 	private readonly jackBridge = new JackHoverBridge();
 	private readonly snapshotListeners = new Set<() => void>();
 	readonly mainMode = new ModeRuntime("main", "S", undefined);
@@ -219,7 +244,51 @@ export class SPlayController extends Controller {
 		this.jackBridge.setJackQueryText(S_PLAY_DEFAULT_JACK_QUERY);
 		this.syncJackFixtureJson();
 		this.jackBridge.bindPointerFocus(this.pointerFocus);
+		this.mediaGraphVfsController = new OsMediaGraphVirtualFileSystemController(
+			`${S_PLAY_CONTROLLER_ID}-media-vfs`,
+			commandBus,
+			notify,
+			{
+				store: () => this.store,
+				onOpenInstance: (instanceId) => {
+					this.activeInstanceId = instanceId;
+					this.focusedInstanceId = instanceId;
+					this.emit();
+				},
+				onExport: async (instanceId, _portSpecId, format) => {
+					const projection = this.store.projection();
+					const instance = projection.appInstances.find((entry) => entry.id === instanceId);
+					if (!instance) return;
+					const source = materializeAppInstanceProjection(instance, { graph: projection.mediaGraph, instances: projection.appInstances });
+					const result = await exportOsAppInstanceMedia(instance, source, format);
+					downloadMediaExportResult(result);
+				},
+				onSpawnApp: (programId, appId) => {
+					this.run("spawnApp", { programId, appId });
+				},
+			},
+		);
+		this.mediaGraphVfsUnsubscribe = this.store.subscribe(() => {
+			this.mediaGraphVfsController.invalidateMediaGraphVirtualFileSystem({
+				appId: S_PLAY_APP_ID,
+				surfaceId: S_PLAY_SURFACE_MEDIA_VFS,
+			});
+			this.syncJackFixtureJson();
+			this.notifySnapshot();
+		});
 		this.rebuildShellMode();
+	}
+
+	attachMediaGraphVirtualFileSystem(platform: import("@semio-tech/framework-core").Platform, app: AppRuntime): void {
+		registerAppVirtualFileSystem(platform, app, this.mediaGraphVfsController, {
+			bodyKey: S_PLAY_BODY_MEDIA_VFS,
+			surfaceId: S_PLAY_SURFACE_MEDIA_VFS,
+			initialExpanded: [OS_MEDIA_GRAPH_VFS_ROOT_ID],
+		});
+	}
+
+	disposeMediaGraphVirtualFileSystem(): void {
+		this.mediaGraphVfsUnsubscribe?.();
 	}
 
 	private syncJackFixtureJson(): void {
@@ -279,7 +348,7 @@ export class SPlayController extends Controller {
 	}
 
 	private syncJackGraphSelect(): void {
-		this.jackBridge.setGraphSelect(this.getSelectedMediaNodeIds());
+		this.jackBridge.mirrorGraphSelect(this.getSelectedMediaNodeIds());
 		this.notifySnapshot();
 	}
 
@@ -424,6 +493,20 @@ export class SPlayController extends Controller {
 		};
 	}
 
+	private compiledDagEngagement(): WindowEngagement {
+		return {
+			sessionActive: false,
+			input: {
+				id: "s-compiled-dag-engagement",
+				value: "",
+				placeholder: "Compiled DAG is read-only",
+				onChange: sPlayCmd("compiledDagEngagementInput"),
+				onSubmit: sPlayCmd("compiledDagEngagementSubmit"),
+			},
+			status: [{ id: "s-compiled-dag-status", text: this.getCompiledWireLiteral() ? "Compiled" : "Empty" }],
+		};
+	}
+
 	private rebuildShellMode(): void {
 		this.mainMode.tools = buildSPlayToolbarTools(this.id);
 		this.mainMode.windowKinds = [
@@ -435,6 +518,7 @@ export class SPlayController extends Controller {
 				this.mediaGraphMeasures(),
 				this.mediaGraphEngagement(),
 			),
+			new WindowKindRuntime(S_PLAY_WINDOW_MEDIA_VFS, "Media VFS", S_PLAY_BODY_MEDIA_VFS),
 			new WindowKindRuntime(
 				S_PLAY_WINDOW_APP_HOST,
 				"App Host",
@@ -460,14 +544,14 @@ export class SPlayController extends Controller {
 				this.historyEngagement(),
 			),
 			new WindowKindRuntime(S_PLAY_WINDOW_JACK, "Jack", S_PLAY_BODY_JACK, undefined, undefined, this.jackEngagement()),
-			new WindowKindRuntime(S_PLAY_WINDOW_COMPILED_DAG, "Compiled DAG", S_PLAY_BODY_COMPILED_DAG),
+			new WindowKindRuntime(S_PLAY_WINDOW_COMPILED_DAG, "Compiled DAG", S_PLAY_BODY_COMPILED_DAG, undefined, undefined, this.compiledDagEngagement()),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `S play window "${windowKind.id}"`);
 		}
 	}
 
-	getStore(): StudioStore {
+	getStudioStore(): StudioStore {
 		return this.store;
 	}
 
@@ -528,7 +612,15 @@ export class SPlayController extends Controller {
 		}
 		if (command === "setGraphSelect") {
 			const ids = Array.isArray(args?.ids) ? args!.ids.map((id) => String(id)) : [];
-			this.jackBridge.setGraphSelect(ids);
+			const projection = this.store.projection();
+			const instanceIds = ids
+				.map((nodeId) => projection.mediaGraph.nodes.find((node) => node.id === nodeId)?.instanceId)
+				.filter((id): id is string => Boolean(id));
+			this.pointerFocus.setSelection([
+				...ids.map(sPlayMediaNodePointerKey),
+				...instanceIds.map(sPlayAppInstancePointerKey),
+			]);
+			this.jackBridge.mirrorGraphSelect(ids);
 			this.notifySnapshot();
 			this.emit();
 			return;
@@ -598,6 +690,9 @@ export class SPlayController extends Controller {
 				}
 				return;
 			}
+			case "compiledDagEngagementInput":
+			case "compiledDagEngagementSubmit":
+				return;
 			case "historyEngagementInput": {
 				const value = typeof args?.value === "string" ? args.value : "";
 				if (value !== this.historyEngagementInput) {
@@ -742,7 +837,7 @@ export class SPlayController extends Controller {
 				this.rebuildShellMode();
 				this.emit();
 				return;
-			case "setActiveFixture": {
+			case "setActiveExample": {
 				const fixtureId = String(args?.fixtureId ?? this.fixtureId);
 				this.fixtureId = fixtureId;
 				this.store = createStudioStore(this.loadFixture(fixtureId));
@@ -780,7 +875,7 @@ export function buildSPlayToolbarTools(controllerId: string): AppTools {
 
 /** @emoji 🔎 Declarative inspection tree for s play media graph and app instances. */
 export function buildSPlayInspectorTree(ctrl: SPlayController): UiTreeNode {
-	const projection = ctrl.getStore().projection();
+	const projection = ctrl.getStudioStore().projection();
 	const mediaNodeIds = [...ctrl.getSelectedMediaNodeIds()];
 	const instanceIds = [...ctrl.getSelectedAppInstanceIds()];
 	const children: UiNode[] = [
@@ -927,6 +1022,134 @@ export async function sSketchpadProgramFromCompose() {
 	return buildSketchpadProgramDefinition();
 }
 
+//#region 🔖Play
+import { S_PLAY_EXAMPLE_DEFAULT_ID, resolveSPlayExampleSlug } from "./example-slugs.ts";
+import demoSFixture from "../example/demo.s.json";
+
+
+export { S_PLAY_EXAMPLE_DEFAULT_ID, resolveSPlayExampleSlug };
+
+let sPlayFixtureJsonByIdCache: Readonly<Record<string, string>> | undefined;
+let sFixtureResolverRegistered = false;
+
+function fixtureSlugFromPath(path: string): string {
+	return path.split("/").pop() ?? path;
+}
+
+function sFixtureIdFromGlobPath(globPath: string): string {
+	const base = globPath.split("/").pop() ?? globPath;
+	return base.replace(/\.s\.json$/, "");
+}
+
+function ensureSPlayFixtureCatalog(): Readonly<Record<string, string>> {
+	if (sPlayFixtureJsonByIdCache) return sPlayFixtureJsonByIdCache;
+	const sFixtureModules = eagerPlayExampleGlob("../example/*.s.json");
+	const sFixtureFromGlob = Object.keys(sFixtureModules).length
+		? Object.fromEntries(
+				Object.entries(sFixtureModules).map(([path, module]) => [sFixtureIdFromGlobPath(path), JSON.stringify(module.default)]),
+			)
+		: { demo: JSON.stringify(demoSFixture) };
+	const technologyFixtureModules = {
+		...eagerPlayExampleGlob("../../draw/example/*.json"),
+		...eagerPlayExampleGlob("../../writer/example/*.json"),
+		...eagerPlayExampleGlob("../../note/example/*.note.json"),
+	};
+	const slugJsonByPath = Object.fromEntries(
+		Object.entries(technologyFixtureModules).map(([path, module]) => [fixtureSlugFromPath(path), JSON.stringify(module.default)]),
+	);
+	if (!sFixtureResolverRegistered) {
+		registerSFixtureJsonResolver((slug) => slugJsonByPath[slug] ?? null);
+		sFixtureResolverRegistered = true;
+	}
+	sPlayFixtureJsonByIdCache = sFixtureFromGlob;
+	return sPlayFixtureJsonByIdCache;
+}
+
+export function getSPlayFixtureJsonById(): Readonly<Record<string, string>> {
+	return ensureSPlayFixtureCatalog();
+}
+
+export const S_PLAY_EXAMPLE_OPTIONS = (): ReadonlyArray<{ readonly id: string; readonly label: string }> =>
+	Object.keys(ensureSPlayFixtureCatalog())
+		.sort()
+		.map((id) => ({ id, label: id }));
+
+/** @emoji 📂 Loads an s studio document from a playground example id. */
+export function loadSPlayStudioDocument(exampleId: string): SStudioDocumentV1 {
+	const json = ensureSPlayFixtureCatalog()[exampleId];
+	if (!json) throw new Error(`unknown s example: ${exampleId}`);
+	return parseSStudioDocument(JSON.parse(json));
+}
+
+/** @emoji 🎮 Creates an s play controller wired to playground examples. */
+export function createSPlayController(
+	commandBus: CommandBus,
+	notify: () => void,
+	exampleId: string = S_PLAY_EXAMPLE_DEFAULT_ID,
+): SPlayController {
+	const resolved = playgroundResolvedExampleId(exampleId);
+	const store = createStudioStore(loadSPlayStudioDocument(resolved));
+	return new SPlayController(commandBus, notify, store, resolved, loadSPlayStudioDocument);
+}
+
+/** @emoji 🧪 Test helper for s play controller with example. */
+export function createSPlayTestController(exampleId: string): SPlayController {
+	const bus = new CommandBus();
+	return createSPlayController(bus, () => {}, exampleId);
+}
+
+export const OS_BOOT_BACKBONE_URI = "dev://studio/default";
+
+/** @emoji 💾 Resolves the studio document from backbone storage, seeding the demo fixture when empty. */
+export function resolveOsBootStudioDocument(): SStudioDocumentV1 {
+	const backbone = new DevJsonBackbone();
+	backbone.attach(OS_BOOT_BACKBONE_URI);
+	const stored = backbone.loadAttached();
+	if (stored) return stored;
+	const seed = loadSPlayStudioDocument(S_PLAY_EXAMPLE_DEFAULT_ID);
+	const seeded: SStudioDocumentV1 = { ...seed, backbone: { kind: "dev", uri: OS_BOOT_BACKBONE_URI } };
+	backbone.sync(seeded);
+	return seeded;
+}
+
+class OsDevPlayground extends Playground {
+	readonly id = S_PLAY_APP_ID;
+	private readonly document: SStudioDocumentV1;
+
+	constructor(document: SStudioDocumentV1) {
+		super();
+		this.document = document;
+	}
+
+	createRuntime() {
+		const runtime = createProductPlaygroundPlatform(S_PLAY_APP_ID, "S");
+		const ctrl = new SPlayController(
+			runtime.commandBus,
+			() => runtime.notify(),
+			createStudioStore(this.document),
+			S_PLAY_EXAMPLE_DEFAULT_ID,
+			loadSPlayStudioDocument,
+		);
+		const app = buildSPlayAppRuntime(ctrl);
+		runtime.addApp(app);
+		ctrl.attachMediaGraphVirtualFileSystem(runtime, app);
+		return runtime;
+	}
+
+	registerBodies() {
+		registerSPlayDeclarativeBodies();
+	}
+}
+
+/** @emoji 🖥️ Boots S as the OS studio shell (extensions, storage-first document, renderer). */
+export async function bootOsDev(rootId = "root"): Promise<void> {
+	await bootstrapSPlayExtensions();
+	const document = resolveOsBootStudioDocument();
+	const { bootSPlay } = await import("@semio-tech/framework-playground-renderer-react/s");
+	bootSPlay(new OsDevPlayground(document), rootId);
+}
+//#endregion 🔖Play
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it, beforeAll } = import.meta.vitest;
@@ -937,26 +1160,23 @@ if (import.meta.vitest) {
 
 	describe("SPlayController", () => {
 		it("loads demo studio projection", async () => {
-			const { createSPlayTestController } = await import("./playground.ts");
 			const ctrl = createSPlayTestController("demo");
-			const projection = ctrl.getStore().projection();
+			const projection = ctrl.getStudioStore().projection();
 			expect(projection.appInstances.length).toBeGreaterThanOrEqual(2);
 			expect(projection.mediaGraph.nodes.length).toBeGreaterThanOrEqual(2);
 		});
 
 		it("round-trips checkpoint save on studio document", async () => {
-			const { createSPlayTestController } = await import("./playground.ts");
 			const ctrl = createSPlayTestController("demo");
 			ctrl.dispatch({ kind: "commitCheckpoint", message: "snapshot" });
-			const doc = ctrl.getStore().getDocument();
+			const doc = ctrl.getStudioStore().getDocument();
 			const rematerialized = materializeStudioProjection(doc, doc.vcs.checkpoints[0]?.changeIds ?? []);
-			expect(rematerialized.appInstances.length).toBe(ctrl.getStore().projection().appInstances.length);
+			expect(rematerialized.appInstances.length).toBe(ctrl.getStudioStore().projection().appInstances.length);
 		});
 
 		it("demo fixture includes cross-instance media edge", async () => {
-			const { createSPlayTestController } = await import("./playground.ts");
 			const ctrl = createSPlayTestController("demo");
-			const projection = ctrl.getStore().projection();
+			const projection = ctrl.getStudioStore().projection();
 			expect(projection.mediaGraph.edges.length).toBeGreaterThanOrEqual(1);
 			expect(projection.appInstances.length).toBeGreaterThanOrEqual(5);
 		});
@@ -978,22 +1198,20 @@ if (import.meta.vitest) {
 		});
 
 		it("resolves draw fixture payload refs", async () => {
-			const { createSPlayTestController } = await import("./playground.ts");
 			const ctrl = createSPlayTestController("demo");
-			const drawInstance = ctrl.getStore().projection().appInstances.find((entry) => entry.programId === "draw");
+			const drawInstance = ctrl.getStudioStore().projection().appInstances.find((entry) => entry.programId === "draw");
 			expect(drawInstance).toBeTruthy();
 			const bundle = appInstanceResourceProjection(
-				ctrl.getStore().projection().mediaGraph,
-				ctrl.getStore().projection().appInstances,
+				ctrl.getStudioStore().projection().mediaGraph,
+				ctrl.getStudioStore().projection().appInstances,
 				drawInstance!.id,
 			);
 			expect(bundle?.projection).toBeTruthy();
 		});
 
 		it("openInstance and closeFocusedInstance toggle drill-in focus", async () => {
-			const { createSPlayTestController } = await import("./playground.ts");
 			const ctrl = createSPlayTestController("demo");
-			const instanceId = ctrl.getStore().projection().appInstances[0]?.id;
+			const instanceId = ctrl.getStudioStore().projection().appInstances[0]?.id;
 			expect(instanceId).toBeTruthy();
 			ctrl.run("openInstance", { instanceId });
 			expect(ctrl.getFocusedInstanceId()).toBe(instanceId);
@@ -1002,11 +1220,10 @@ if (import.meta.vitest) {
 		});
 
 		it("spawns puzzle5d and shooting with multi-port registrations", async () => {
-			const { createSPlayTestController } = await import("./playground.ts");
 			const ctrl = createSPlayTestController("demo");
 			ctrl.run("spawnApp", { programId: "puzzle.5d", appId: "puzzle5d", position: { x: 100, y: 100 } });
 			ctrl.run("spawnApp", { programId: "shooting", appId: "shooting", position: { x: 300, y: 100 } });
-			const projection = ctrl.getStore().projection();
+			const projection = ctrl.getStudioStore().projection();
 			const puzzleNode = projection.mediaGraph.nodes.find((node) => node.instanceId === projection.appInstances.at(-2)?.id);
 			const shootingNode = projection.mediaGraph.nodes.find((node) => node.instanceId === projection.appInstances.at(-1)?.id);
 			expect(puzzleNode?.outputs.length).toBe(2);
@@ -1014,9 +1231,8 @@ if (import.meta.vitest) {
 		});
 
 		it("buildSPlayInspectorTree exposes batch label editing for selected instances", async () => {
-			const { createSPlayTestController } = await import("./playground.ts");
 			const ctrl = createSPlayTestController("demo");
-			const instances = ctrl.getStore().projection().appInstances;
+			const instances = ctrl.getStudioStore().projection().appInstances;
 			expect(instances.length).toBeGreaterThanOrEqual(2);
 			ctrl.run("setAppInstanceSelection", { instanceIds: instances.slice(0, 2).map((row) => row.id) });
 			const tree = buildSPlayInspectorTree(ctrl);
@@ -1027,12 +1243,45 @@ if (import.meta.vitest) {
 		});
 
 		it("patchAppInstances updates labels in batch", async () => {
-			const { createSPlayTestController } = await import("./playground.ts");
 			const ctrl = createSPlayTestController("demo");
-			const ids = ctrl.getStore().projection().appInstances.slice(0, 2).map((row) => row.id);
+			const ids = ctrl.getStudioStore().projection().appInstances.slice(0, 2).map((row) => row.id);
 			ctrl.run("patchAppInstances", { instanceIds: ids, field: "label", value: "Batch Label" });
-			const labels = ctrl.getStore().projection().appInstances.filter((row) => ids.includes(row.id)).map((row) => row.label);
+			const labels = ctrl.getStudioStore().projection().appInstances.filter((row) => ids.includes(row.id)).map((row) => row.label);
 			expect(labels.every((label) => label === "Batch Label")).toBe(true);
+		});
+
+		it("registry completeness: every registered app resolves handler, componentKind, and ports", () => {
+			for (const program of listSPrograms()) {
+				const resources = TECHNOLOGY_APP_RESOURCE_BY_PROGRAM[program.id];
+				if (!resources) continue;
+				for (const app of program.apps) {
+					const resource = resources[app.id];
+					expect(resource, `${program.id}/${app.id} resource map`).toBeTruthy();
+					const registration = sAppRegistration(program.id, app.id);
+					expect(registration, `${program.id}/${app.id} registration`).toBeTruthy();
+					expect(registration?.componentKind).toBe(resource.componentKind);
+					expect(registration?.sourceFormat).toBe(resource.sourceFormat);
+				}
+			}
+		});
+
+		it("resolveOsBootStudioDocument seeds storage when empty", () => {
+			const document = resolveOsBootStudioDocument();
+			expect(document.backbone?.uri).toBe(OS_BOOT_BACKBONE_URI);
+			expect(document.vcs.initialProjection.appInstances.length).toBeGreaterThan(0);
+		});
+
+		it("checkoutCheckpoint restores studio projection", () => {
+			const ctrl = createSPlayTestController("demo");
+			const before = ctrl.getStudioStore().projection().appInstances.length;
+			ctrl.getStudioStore().dispatch({ kind: "commitCheckpoint", message: "before" });
+			ctrl.getStudioStore().dispatch({ kind: "spawnAppInstance", programId: "draw", appId: "draw" });
+			const after = ctrl.getStudioStore().projection().appInstances.length;
+			expect(after).toBeGreaterThan(before);
+			const checkpointId = ctrl.getStudioStore().getDocument().vcs.checkpoints.at(-1)?.id;
+			expect(checkpointId).toBeTruthy();
+			ctrl.getStudioStore().dispatch({ kind: "checkoutCheckpoint", checkpointId: checkpointId! });
+			expect(ctrl.getStudioStore().projection().appInstances.length).toBe(before);
 		});
 	});
 }
@@ -1041,3 +1290,4 @@ if (import.meta.vitest) {
 export function sPlayProgramCatalog() {
 	return listSPrograms();
 }
+

@@ -13,6 +13,7 @@
 		"@semio-tech/framework-core": "workspace:*",
 		"@semio-tech/framework-platform-core": "workspace:*",
 		"@semio-tech/draw-core": "workspace:*",
+		"@semio-tech/note-core": "workspace:*",
 		"@semio-tech/writer-core": "workspace:*",
 		"@semio-tech/raster-core": "workspace:*",
 		"@semio-tech/forms-core": "workspace:*",

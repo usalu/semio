@@ -11,7 +11,7 @@ import {
     Icon,
     Input,
     LevelProvider,
-    NavbarFixtureSelect,
+    NavbarExampleSelect,
     PanelToggleGroup,
     Select,
     SelectContent,
@@ -73,7 +73,7 @@ const _playgroundCadToolbarI18nKeys = [
   "ui.toolbar.parent.transfer",
 ] as const satisfies readonly UiTranslationKey[];
 //#endregion 🪁I18n Compile Gate
-import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_CATALOG, CANVAS_HOVER_SOURCE_HIERARCHY, NamedLayoutStore } from "@semio-tech/framework-core";
+import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_CATALOG, CANVAS_HOVER_SOURCE_HIERARCHY, NamedLayoutStore, downloadMediaExportResult } from "@semio-tech/framework-core";
 import {
     DisplayHostContext,
     ProductShell,
@@ -113,7 +113,7 @@ import {
     FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    PLAYGROUND_NO_FIXTURE_ID,
+    PLAYGROUND_NO_EXAMPLE_ID,
     PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
     Platform,
     WindowKindRuntime,
@@ -124,17 +124,17 @@ import {
     getSidePanelBodyFactory,
     getWindowBodyFactory,
     isEdgelessWindowBody,
-    isPlaygroundFixtureLocked,
-    isPlaygroundNoFixtureId,
-    playgroundResolvedFixtureId,
+    isPlaygroundExampleLocked,
+    isPlaygroundNoExampleId,
+    playgroundResolvedExampleId,
     registerSidePanelBody,
     registerWindowBody,
     resolveInitialPanelVisibility,
-    resolvePlaygroundFixtureCatalog,
+    resolvePlaygroundExampleCatalog,
     uiDeclarativeSectionsToTree,
     type CommandDescriptor,
     type Playground,
-    type PlaygroundFixtureCatalog,
+    type PlaygroundExampleCatalog,
     type PlaygroundKeybinding,
     type ResolvedAppState,
     type SidePanelBodyViewContext,
@@ -186,11 +186,26 @@ export {
     FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
     FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PLAYGROUND_NO_FIXTURE_ID,
-    PLAYGROUND_NO_FIXTURE_OPTION, isPlaygroundNoFixtureId, playgroundFixtureCatalogWithNoOption,
-    resolvePlaygroundFixtureCatalog
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PLAYGROUND_NO_EXAMPLE_ID,
+    PLAYGROUND_NO_EXAMPLE_OPTION, isPlaygroundNoExampleId, playgroundExampleCatalogWithNoOption,
+    resolvePlaygroundExampleCatalog
 } from "@semio-tech/framework-playground-core";
-export type { PlaygroundFixtureCatalog, PlaygroundFixtureHost, PlaygroundFixtureOption } from "@semio-tech/framework-playground-core";
+export type { PlaygroundExampleCatalog, PlaygroundExampleHost, PlaygroundExampleOption } from "@semio-tech/framework-playground-core";
+
+import {
+    AppRuntime,
+    CommandBus,
+    ModeRuntime, Platform, PlaygroundController, WindowKindRuntime, buildCadWindowBody, buildPuzzle3dWindowBody,
+    toolCollection,
+    createDefaultLayout,
+    createStackLayout,
+    createWindowLayout,
+    getSidePanelBodyFactory,
+    getWindowBodyFactory, playgroundTreePanelRootItems, registerSidePanelBody,
+    registerWindowBody,
+    resolveAppState,
+    uiInspectorAllEqual,
+} from "@semio-tech/framework-playground-core";
 
 export {
     AppRuntime,
@@ -205,7 +220,7 @@ export {
     registerWindowBody,
     resolveAppState,
     uiInspectorAllEqual,
-} from "@semio-tech/framework-playground-core";
+};
 
 export { uiTreeNodeToTreePanelConfig, useControllerStore, useStore } from "@semio-tech/framework-platform-renderer-react";
 export type { Store } from "@semio-tech/framework-playground-core";
@@ -970,6 +985,7 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "forms":
     case "raster":
     case "draw":
+    case "note":
     case "vcs":
     case "writer":
     case "s":
@@ -1350,10 +1366,10 @@ export interface PlaygroundViewProps {
   readonly onActiveWindowChange?: (windowKindId: string) => void;
 }
 
-const playgroundFixtureCatalogSnapshotCache = new WeakMap<object, PlaygroundFixtureCatalog | null>();
+const playgroundExampleCatalogSnapshotCache = new WeakMap<object, PlaygroundExampleCatalog | null>();
 
-function playgroundFixtureCatalogSemanticallyEqual(a: PlaygroundFixtureCatalog, b: PlaygroundFixtureCatalog): boolean {
-  if (a.activeFixtureId !== b.activeFixtureId || a.options.length !== b.options.length) {
+function playgroundExampleCatalogSemanticallyEqual(a: PlaygroundExampleCatalog, b: PlaygroundExampleCatalog): boolean {
+  if (a.activeExampleId !== b.activeExampleId || a.options.length !== b.options.length) {
     return false;
   }
   for (let i = 0; i < a.options.length; i += 1) {
@@ -1367,7 +1383,7 @@ function playgroundFixtureCatalogSemanticallyEqual(a: PlaygroundFixtureCatalog, 
 }
 
 /** @emoji 🔔 Subscribes to controller snapshot or platform generation for navbar fixture catalog. */
-function usePlaygroundFixtureCatalog(runtime: Platform, controllerId: string | undefined): PlaygroundFixtureCatalog | null {
+function usePlaygroundExampleCatalog(runtime: Platform, controllerId: string | undefined): PlaygroundExampleCatalog | null {
   return reactHostPort.useSyncExternalStore(
     (listener) => {
       const app = runtime.getActiveApp();
@@ -1387,15 +1403,15 @@ function usePlaygroundFixtureCatalog(runtime: Platform, controllerId: string | u
       if (!controller) {
         return null;
       }
-      const next = resolvePlaygroundFixtureCatalog(controller);
-      const cached = playgroundFixtureCatalogSnapshotCache.get(controller);
+      const next = resolvePlaygroundExampleCatalog(controller);
+      const cached = playgroundExampleCatalogSnapshotCache.get(controller);
       if (cached === next) {
         return cached;
       }
-      if (cached && next && playgroundFixtureCatalogSemanticallyEqual(cached, next)) {
+      if (cached && next && playgroundExampleCatalogSemanticallyEqual(cached, next)) {
         return cached;
       }
-      playgroundFixtureCatalogSnapshotCache.set(controller, next);
+      playgroundExampleCatalogSnapshotCache.set(controller, next);
       return next;
     },
     () => null,
@@ -1677,21 +1693,21 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
   }, [rightSidePanelTabs.length, setPanelVisibility]);
 
   const controllerId = shell.activeAppBase?.controller.id;
-  const fixtureCatalog = usePlaygroundFixtureCatalog(runtime, controllerId);
-  const navbarFixtureSelect = reactHostPort.useMemo(() => {
+  const exampleCatalog = usePlaygroundExampleCatalog(runtime, controllerId);
+  const navbarExampleSelect = reactHostPort.useMemo(() => {
     if (slotNavbarCenter !== undefined) return slotNavbarCenter;
-    if (!fixtureCatalog || !controllerId) return null;
+    if (!exampleCatalog || !controllerId) return null;
     return (
-      <NavbarFixtureSelect
+      <NavbarExampleSelect
         id="playground.navbar.fixture"
-        value={fixtureCatalog.activeFixtureId}
-        options={fixtureCatalog.options}
-        onValueChange={(fixtureId) => {
-          shell.bus.dispatch(controllerId, "setActiveFixture", { fixtureId });
+        value={exampleCatalog.activeExampleId}
+        options={exampleCatalog.options}
+        onValueChange={(exampleId) => {
+          shell.bus.dispatch(controllerId, "setActiveExample", { exampleId });
         }}
       />
     );
-  }, [controllerId, fixtureCatalog, shell.bus, slotNavbarCenter]);
+  }, [controllerId, exampleCatalog, shell.bus, slotNavbarCenter]);
 
   const playgroundPanelToggleItems = reactHostPort.useMemo<PanelToggleItem[]>(() => {
     const items: PanelToggleItem[] = [];
@@ -1763,10 +1779,10 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         ),
       },
     ];
-    if (navbarFixtureSelect) {
+    if (navbarExampleSelect) {
       items.push({
         key: "fixture",
-        content: navbarFixtureSelect,
+        content: navbarExampleSelect,
       });
       items.push(navbarFillItem());
     } else {
@@ -1801,7 +1817,7 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
       ),
     });
     return items;
-  }, [navbarFixtureSelect, playgroundPanelToggleItems, shell.activeApp, shell.activeAppBase, shell.activeModeId, runtime]);
+  }, [navbarExampleSelect, playgroundPanelToggleItems, shell.activeApp, shell.activeAppBase, shell.activeModeId, runtime]);
 
   if (!shell.activeAppBase || !shell.activeApp || !shell.playgroundContextValue) return null;
 
@@ -1897,7 +1913,7 @@ import {
     PUZZLE_3D_PLAY_APP_ID,
     PUZZLE_3D_PLAY_BODY_KEY_JACK,
     PUZZLE_3D_PLAY_CONTROLLER_ID,
-    PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
+    PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
     PUZZLE_3D_PLAY_ICON_HIERARCHY,
     PUZZLE_3D_PLAY_ICON_INSPECTOR,
     PUZZLE_3D_PLAY_ICON_KINDS,
@@ -2661,7 +2677,7 @@ export function registerPuzzle3dPlaySurfaceHosts(): void {
   registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, "tags");
   registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, "list-tree");
   registerTabIcon(PUZZLE_3D_PLAY_ICON_SETTINGS, "settings");
-  const fixture = parseFixture(puzzle3dPlayFixtureJson(playgroundResolvedFixtureId(PUZZLE_3D_PLAY_FIXTURE_CONCRETE_FOREST_ID)) as unknown);
+  const fixture = parseFixture(puzzle3dPlayFixtureJson(playgroundResolvedExampleId(PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID)) as unknown);
   if (fixture) {
     const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
     const compatibility = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
@@ -2720,13 +2736,12 @@ import {
     type Puzzle5dPlayHostBridge,
     type Puzzle5dPlaySnapshot
 } from "@semio-tech/puzzle-5d-core";
-import { buildWriterWindowBody } from "@semio-tech/framework-platform-core";
-import { createWriterDocument } from "@semio-tech/writer-core";
-import { WriterCanvas } from "@semio-tech/writer-react";
 import {
     FiveD,
     Puzzle5dBrushPairedSync,
     StoreProvider,
+    createStore,
+    parseModel,
     buildPuzzle5dFillSequence,
     project2dKindCatalogs,
     project3d,
@@ -2737,6 +2752,7 @@ import {
     puzzle5dCommitVolumeBrushPlacementToPlay,
     puzzle5dFlatRendererRef,
     useStore as usePuzzle5dStore,
+    type Model,
     type Store as Puzzle5dStore,
 } from "@semio-tech/puzzle-5d-react";
 // #endregion 🔌Adapters
@@ -3350,9 +3366,9 @@ import {
     PUZZLE_2D_PLAY_CONTROLLER_ID,
     PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
     PUZZLE_2D_PLAY_EMPTY_FIXTURE,
-    PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-    PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
-    PUZZLE_2D_PLAY_FIXTURE_OPTIONS,
+    PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
+    PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID,
+    PUZZLE_2D_PLAY_EXAMPLE_OPTIONS,
     PUZZLE_2D_PLAY_HIERARCHY_TAB_ID,
     PUZZLE_2D_PLAY_ICON_KINDS,
     PUZZLE_2D_PLAY_KINDS_TAB_ID,
@@ -3399,9 +3415,6 @@ import {
     type Puzzle2dPlayPaneId,
     type Puzzle2dPlayStructuralDeleteItem,
 } from "@semio-tech/puzzle-2d-core";
-import { buildWriterWindowBody } from "@semio-tech/framework-platform-core";
-import { createWriterDocument } from "@semio-tech/writer-core";
-import { WriterCanvas } from "@semio-tech/writer-react";
 import {
     BUILTIN_PORT_HANDLE_KIND,
     DEFAULT_PUZZLE_2D_BRUSH_NODE_SIZE_PX,
@@ -3471,8 +3484,8 @@ import {
 import {
     WIRES_PLAY_DEFAULT_FIXTURE,
     WIRES_PLAY_FIXTURE,
-    WIRES_PLAY_FIXTURE_METABOLISM_ID,
-    WIRES_PLAY_FIXTURE_OPTIONS,
+    WIRES_PLAY_EXAMPLE_METABOLISM_ID,
+    WIRES_PLAY_EXAMPLE_OPTIONS,
     WIRES_PLAY_HIERARCHY_TAB_ID,
     WIRES_PLAY_KINDS_TAB_ID,
     WIRES_PLAY_LIVE_FORCE_GRAPH_DEFAULTS,
@@ -3549,10 +3562,10 @@ function triptychCamerasFromFixture(fixture: Puzzle2dFixture, rawFixture?: unkno
 }
 
 function puzzle2dPlayRawFixtureJsonForNavbarId(fixtureId: string): unknown | undefined {
-  if (isPlaygroundNoFixtureId(fixtureId) || fixtureId === WIRES_PLAY_FIXTURE_METABOLISM_ID) {
+  if (isPlaygroundNoExampleId(fixtureId) || fixtureId === WIRES_PLAY_EXAMPLE_METABOLISM_ID) {
     return undefined;
   }
-  if (fixtureId === PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID || fixtureId === PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID) {
+  if (fixtureId === PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID || fixtureId === PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID) {
     return puzzle2dPlayFixtureJson(fixtureId);
   }
   return undefined;
@@ -3561,7 +3574,7 @@ function puzzle2dPlayRawFixtureJsonForNavbarId(fixtureId: string): unknown | und
 function puzzle2dPlayInitialCameras(): Record<Puzzle2dPlayPaneId, CameraState> {
   return triptychCamerasFromFixture(
     puzzle2dPlayResolvedDefaultFixture(),
-    puzzle2dPlayFixtureJson(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID),
+    puzzle2dPlayFixtureJson(PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
   );
 }
 
@@ -4930,22 +4943,22 @@ interface Puzzle2dPlayRedrawLoopSnapshot {
 // #region 🔖Entrypoint
 const initialFixture = clonePuzzle2dFixture(puzzle2dPlayResolvedDefaultFixture());
 
-const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_OPTIONS = PUZZLE_2D_PLAY_IS_WIRES
-  ? WIRES_PLAY_FIXTURE_OPTIONS
-  : [...PUZZLE_2D_PLAY_FIXTURE_OPTIONS, { id: WIRES_PLAY_FIXTURE_METABOLISM_ID, label: "Metabolism (WIRES)" }];
+const PUZZLE_2D_PLAY_NAVBAR_EXAMPLE_OPTIONS = PUZZLE_2D_PLAY_IS_WIRES
+  ? WIRES_PLAY_EXAMPLE_OPTIONS
+  : [...PUZZLE_2D_PLAY_EXAMPLE_OPTIONS, { id: WIRES_PLAY_EXAMPLE_METABOLISM_ID, label: "Metabolism (WIRES)" }];
 
-const PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID = playgroundResolvedFixtureId(
-  PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_FIXTURE_METABOLISM_ID : PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
+const PUZZLE_2D_PLAY_NAVBAR_EXAMPLE_DEFAULT_ID = playgroundResolvedExampleId(
+  PUZZLE_2D_PLAY_IS_WIRES ? WIRES_PLAY_EXAMPLE_METABOLISM_ID : PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
 );
 
 function puzzle2dPlayFixtureForNavbarId(fixtureId: string): Puzzle2dFixture {
-  if (isPlaygroundNoFixtureId(fixtureId)) {
+  if (isPlaygroundNoExampleId(fixtureId)) {
     return clonePuzzle2dFixture(PUZZLE_2D_PLAY_EMPTY_FIXTURE);
   }
-  if (fixtureId === WIRES_PLAY_FIXTURE_METABOLISM_ID) {
+  if (fixtureId === WIRES_PLAY_EXAMPLE_METABOLISM_ID) {
     return clonePuzzle2dFixture(WIRES_PLAY_DEFAULT_FIXTURE);
   }
-  if (fixtureId === PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID || fixtureId === PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID) {
+  if (fixtureId === PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID || fixtureId === PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID) {
     return clonePuzzle2dFixture(puzzle2dPlayFixtureForId(fixtureId));
   }
   return clonePuzzle2dFixture(PUZZLE_2D_PLAY_DEFAULT_FIXTURE);
@@ -4958,12 +4971,12 @@ function Puzzle2dPlayInner({
   readonly puzzle2dRuntime: Platform;
   readonly playgroundKeybindings?: readonly import("@semio-tech/framework-playground-core").PlaygroundKeybinding[];
 }): ReactElement {
-  const [activeFixtureId, setActiveFixtureId] = reactHostPort.useState(PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID);
+  const [activeExampleId, setActiveExampleId] = reactHostPort.useState(PUZZLE_2D_PLAY_NAVBAR_EXAMPLE_DEFAULT_ID);
   const [fixture, setFixtureState] = reactHostPort.useState<Puzzle2dFixture>(() => clonePuzzle2dFixture(initialFixture));
   const fixtureRef = reactHostPort.useRef<Puzzle2dFixture>(fixture);
   fixtureRef.current = fixture;
   const catalogRawFixtureRef = reactHostPort.useRef<unknown | undefined>(
-    puzzle2dPlayRawFixtureJsonForNavbarId(PUZZLE_2D_PLAY_NAVBAR_FIXTURE_DEFAULT_ID),
+    puzzle2dPlayRawFixtureJsonForNavbarId(PUZZLE_2D_PLAY_NAVBAR_EXAMPLE_DEFAULT_ID),
   );
   const triptychCamerasForFixture = reactHostPort.useCallback((next: Puzzle2dFixture) => {
     return triptychCamerasFromFixture(next, catalogRawFixtureRef.current);
@@ -6359,31 +6372,31 @@ function Puzzle2dPlayInner({
 
   const applyNavbarFixtureId = reactHostPort.useCallback(
     (fixtureId: string) => {
-      const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
-      if (nextId === activeFixtureId) return;
-      setActiveFixtureId(nextId);
+      const nextId = isPlaygroundNoExampleId(fixtureId) ? PLAYGROUND_NO_EXAMPLE_ID : fixtureId;
+      if (nextId === activeExampleId) return;
+      setActiveExampleId(nextId);
       const next = puzzle2dPlayFixtureForNavbarId(nextId);
       catalogRawFixtureRef.current = puzzle2dPlayRawFixtureJsonForNavbarId(nextId);
       setFixtureState(next);
-      setSelectionIdsState(isPlaygroundNoFixtureId(nextId) ? new Set() : selectionSeedForFixture(next));
+      setSelectionIdsState(isPlaygroundNoExampleId(nextId) ? new Set() : selectionSeedForFixture(next));
       setPuzzle2dPlayPaneCamerasBaseline(triptychCamerasForFixture(next));
       puzzle2dSyncFixtureDescriptorToAllAuthoringPeers(next);
       bumpSceneAuthoringEpoch();
     },
-    [activeFixtureId, bumpSceneAuthoringEpoch, triptychCamerasForFixture],
+    [activeExampleId, bumpSceneAuthoringEpoch, triptychCamerasForFixture],
   );
 
   const slotNavbarCenter = reactHostPort.useMemo(() => {
-    if (isPlaygroundFixtureLocked()) return null;
+    if (isPlaygroundExampleLocked()) return null;
     return (
-      <NavbarFixtureSelect
+      <NavbarExampleSelect
         id="puzzle2d.play.fixture"
-        value={activeFixtureId}
-        options={PUZZLE_2D_PLAY_NAVBAR_FIXTURE_OPTIONS}
+        value={activeExampleId}
+        options={PUZZLE_2D_PLAY_NAVBAR_EXAMPLE_OPTIONS}
         onValueChange={applyNavbarFixtureId}
       />
     );
-  }, [activeFixtureId, applyNavbarFixtureId]);
+  }, [activeExampleId, applyNavbarFixtureId]);
 
   puzzle2dPlayRuntimeRef.current = puzzle2dRuntime;
   puzzle2dPlayShellControllerRef.current = puzzle2dShellController ?? null;
@@ -6779,16 +6792,85 @@ import {
     FLOW_WIDGET_DRAG_MIME,
     FlowCanvas,
     dagLodCanvasProps,
+    ensureFlowWasmLoaded,
     flowWidgetPaletteTreeDragController,
 } from "@semio-tech/flow-react";
+import { canvasDrawingPngExportPort } from "@semio-tech/procedural-2d-react";
 import { FlowGenerateSurface } from "@semio-tech/forms-react";
 import { parseFormSpec } from "@semio-tech/forms-core";
 import type { UiFlowHostSurfaceNode, UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
-import { createWriterDocument } from "@semio-tech/writer-core";
-import { WriterCanvas } from "@semio-tech/writer-react";
 
 let flowPlayChromeRegistered = false;
 const flowPlayControllerRef: { current: FlowPlayController | null } = { current: null };
+
+type FlowExportMesh = {
+  readonly position?: readonly number[];
+  readonly index?: readonly number[];
+  readonly error?: string;
+};
+
+function flowExportCollectHandle(value: unknown): string | null {
+  if (typeof value === "string" && value.length > 0) return value;
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  if (typeof record.handle === "string" && record.handle.length > 0) return record.handle;
+  for (const nested of Object.values(record)) {
+    const handle = flowExportCollectHandle(nested);
+    if (handle) return handle;
+  }
+  return null;
+}
+
+function flowExportMeshToObj(mesh: FlowExportMesh): string {
+  const position = mesh.position ?? [];
+  const index = mesh.index ?? [];
+  const lines = ["# semio flow export"];
+  for (let i = 0; i + 2 < position.length; i += 3) {
+    lines.push(`v ${position[i]} ${position[i + 1]} ${position[i + 2]}`);
+  }
+  for (let i = 0; i + 2 < index.length; i += 3) {
+    lines.push(`f ${index[i]! + 1} ${index[i + 1]! + 1} ${index[i + 2]! + 1}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+async function downloadFlowOutputExport(format: string, resolvedValueJson: string, widgetId: string): Promise<void> {
+  await ensureFlowWasmLoaded();
+  const { export_drawing_svg, render_drawing_scene, tessellate } = await import("@semio-tech/flow-core/pkg/flow_core.js");
+  const parsed = JSON.parse(resolvedValueJson) as unknown;
+  const handle = flowExportCollectHandle(parsed);
+  const normalized = format.trim().toLowerCase();
+  const baseName = `flow-export-${widgetId}`;
+  if (!handle) {
+    console.log(`[DEBUG] flow export skipped: no media handle in payload for ${widgetId}`);
+    return;
+  }
+  if (normalized === "svg") {
+    const payload = JSON.parse(export_drawing_svg(handle)) as { svg?: string; error?: string };
+    if (!payload.svg) throw new Error(payload.error ?? "svg export failed");
+    downloadMediaExportResult({ data: payload.svg, mimeType: "image/svg+xml", fileName: `${baseName}.svg` });
+    return;
+  }
+  if (normalized === "png") {
+    const sceneJson = render_drawing_scene(handle);
+    const scene = JSON.parse(sceneJson) as { error?: string };
+    if (scene.error) throw new Error(scene.error);
+    const png = canvasDrawingPngExportPort.exportPng(scene);
+    downloadMediaExportResult({ data: png, mimeType: "image/png", fileName: `${baseName}.png` });
+    return;
+  }
+  const mesh = JSON.parse(tessellate(handle, 0.25)) as FlowExportMesh;
+  if (mesh.error) throw new Error(mesh.error);
+  if (normalized === "obj") {
+    downloadMediaExportResult({ data: flowExportMeshToObj(mesh), mimeType: "text/plain", fileName: `${baseName}.obj` });
+    return;
+  }
+  if (normalized === "glb") {
+    downloadMediaExportResult({ data: JSON.stringify(mesh), mimeType: "application/json", fileName: `${baseName}.mesh.json` });
+    return;
+  }
+  throw new Error(`unsupported export format: ${format}`);
+}
 
 /** @emoji 🔔 Re-renders flow play workbench kinds when WASM catalogue sections arrive. */
 function useFlowPlaySnapshotRevision(runtime: Platform, selector: (ctrl: FlowPlayController) => number): number {
@@ -6887,6 +6969,14 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
     },
     [ctrl],
   );
+  const onOutputExport = reactHostPort.useCallback(
+    (widgetId: string, format: string, resolvedValueJson: string) => {
+      void downloadFlowOutputExport(format, resolvedValueJson, widgetId).catch((error) => {
+        console.log(`[DEBUG] flow play export failed: ${String(error)}`);
+      });
+    },
+    [],
+  );
   return (
     <FlowCanvas
       fixtureJson={ctrl?.getFixtureJson() ?? FLOW_PLAY_DEFAULT_FIXTURE_JSON}
@@ -6898,6 +6988,7 @@ function FlowPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurfaceNod
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
       onCompiledWireLiteralChange={onCompiledWireLiteralChange}
+      onOutputExport={onOutputExport}
       contextMenu={(ctx) => buildFlowPlayCanvasContextMenu(ctx, onCanvasCommand)}
       selectedNodeIds={ctrl?.getSelectedNodeIds()}
       onSelectionChange={onSelectionChange}
@@ -7088,8 +7179,6 @@ import {
 } from "@semio-tech/dag-host-core";
 import { DAG_LOD_MODE_AUTOMATIC as DAG_HOST_LOD_AUTOMATIC, DagCanvas } from "@semio-tech/dag-react";
 import type { UiDagHostSurfaceNode } from "@semio-tech/framework-platform-core";
-import { createWriterDocument } from "@semio-tech/writer-core";
-import { WriterCanvas } from "@semio-tech/writer-react";
 
 let dagPlayChromeRegistered = false;
 const dagPlayControllerRef: { current: DagPlayController | null } = { current: null };
@@ -7367,8 +7456,6 @@ import {
   SequenceCanvas,
   sequenceStepPaletteTreeDragController,
 } from "@semio-tech/sequence-react";
-import { createWriterDocument } from "@semio-tech/writer-core";
-import { WriterCanvas } from "@semio-tech/writer-react";
 
 let sequencePlayChromeRegistered = false;
 const sequencePlayControllerRef: { current: SequencePlayController | null } = { current: null };
@@ -8333,10 +8420,9 @@ import {
   TRINITY_JACK_PLAY_WINDOW_KIND_ID,
   TrinityJackPlayController,
   buildTrinityJackPlayCatalogueTree,
-  buildTrinityPlayHierarchyTree,
-  buildTrinityPlayInspectorTree,
   registerTrinityJackPlayDeclarativeBodies,
 } from "@semio-tech/trinity-jack-host-core";
+import { buildTrinityPlayHierarchyTree, buildTrinityPlayInspectorTree } from "@semio-tech/trinity-react";
 import {
   TRINITY_REWRITE_PLAY_CONTROLLER_ID,
   TRINITY_REWRITE_PLAY_APP_ID,
@@ -8358,13 +8444,13 @@ import {
   rewriteLhsKindCatalogs,
   rewriteRhsKindCatalogs,
   parseRewriteGraphFixtureJson,
-  buildTrinityPlayCatalogueTree,
   registerTrinityRewritePlayDeclarativeBodies,
 } from "@semio-tech/trinity-rewrite-core";
 import {
   TRINITY_DEFAULT_FIXTURE_JSON,
   TRINITY_LOD_MODE_AUTOMATIC,
   TrinityCanvas,
+  buildTrinityPlayCatalogueTree,
   createJackLspWorker,
   trinityLodCanvasProps,
   type TrinityDrawLodKind,
@@ -8971,7 +9057,6 @@ import {
 import {
     PROCEDURAL_3D_PLAY_APP_ID,
     PROCEDURAL_PLAY_CATALOGUE_TAB_ID,
-    PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON,
     PROCEDURAL_PLAY_HIERARCHY_TAB_ID,
     PROCEDURAL_PLAY_INSPECTION_TAB_ID,
     PROCEDURAL_PLAY_SURFACE_ID,
@@ -8985,6 +9070,7 @@ import {
     registerProceduralPlayDeclarativeBodies,
     type ProceduralPlayHostBridge,
 } from "@semio-tech/procedural-3d-core";
+import { PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON } from "@semio-tech/procedural-3d-core";
 
 let proceduralPlayChromeRegistered = false;
 const proceduralPlayControllerRef: { current: ProceduralPlayController | null } = { current: null };
@@ -9193,6 +9279,14 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
     },
     [ctrl],
   );
+  const onOutputExport = reactHostPort.useCallback(
+    (widgetId: string, format: string, resolvedValueJson: string) => {
+      void downloadFlowOutputExport(format, resolvedValueJson, widgetId).catch((error) => {
+        console.log(`[DEBUG] procedural play export failed: ${String(error)}`);
+      });
+    },
+    [],
+  );
   return (
     <ProceduralFlowEditor
       fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON}
@@ -9201,6 +9295,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
       extensionRevision={extensionRevision}
       onPreviewText={onPreviewText}
       onEvalOutputs={onEvalOutputs}
+      onOutputExport={onOutputExport}
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
       onSelectionChange={onSelectionChange}
@@ -9422,7 +9517,6 @@ import { flowWidgetPaletteTreeDragController as procedural2dWidgetPaletteTreeDra
 import {
     PROCEDURAL_2D_PLAY_APP_ID,
     PROCEDURAL_2D_PLAY_CATALOGUE_TAB_ID,
-    PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON,
     PROCEDURAL_2D_PLAY_HIERARCHY_TAB_ID,
     PROCEDURAL_2D_PLAY_INSPECTION_TAB_ID,
     PROCEDURAL_2D_PLAY_SURFACE_ID,
@@ -9437,6 +9531,7 @@ import {
     registerProcedural2dPlayDeclarativeBodies,
     type Procedural2dPlayHostBridge,
 } from "@semio-tech/procedural-2d-core";
+import { PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON } from "@semio-tech/procedural-2d-core";
 
 let procedural2dPlayChromeRegistered = false;
 const procedural2dPlayControllerRef: { current: Procedural2dPlayController | null } = { current: null };
@@ -9671,6 +9766,14 @@ function Procedural2dPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSu
     },
     [ctrl],
   );
+  const onOutputExport = reactHostPort.useCallback(
+    (widgetId: string, format: string, resolvedValueJson: string) => {
+      void downloadFlowOutputExport(format, resolvedValueJson, widgetId).catch((error) => {
+        console.log(`[DEBUG] procedural 2d play export failed: ${String(error)}`);
+      });
+    },
+    [],
+  );
   return (
     <Procedural2dFlowEditor
       fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON}
@@ -9679,6 +9782,7 @@ function Procedural2dPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSu
       extensionRevision={extensionRevision}
       onPreviewText={onPreviewText}
       onEvalOutputs={onEvalOutputs}
+      onOutputExport={onOutputExport}
       onCatalogueReady={onCatalogueReady}
       onFixtureChange={onFixtureChange}
       onSelectionChange={onSelectionChange}
@@ -11205,6 +11309,7 @@ function NotePlayInner({ playground }: { readonly playground: Playground }): Rea
       <PlaygroundView
         runtime={playground.runtime}
         defaultAppId={NOTE_PLAY_APP_ID}
+        playgroundKeybindings={playground.keybindings}
         augmentPanelTabs={{
           workbench: [hierarchyPanel, cataloguePanel],
           details: [propertiesPanel],
@@ -12262,11 +12367,10 @@ import {
 	sResourceDescriptor,
 } from "@semio-tech/s-core";
 import { defaultDrawDocument, drawDocumentFromJson, drawDocumentToJson, type DrawDocument } from "@semio-tech/draw-core";
+import { defaultNoteDocument, noteDocumentFromJson, noteDocumentToJson, type NoteDocument } from "@semio-tech/note-core";
 import { defaultRasterDocument, parseRasterDocument, rasterDocumentToJson, type RasterDocument } from "@semio-tech/raster-core";
 import type { FormSpec } from "@semio-tech/forms-core";
 import { PlayCanvas as Puzzle3dPlayCanvas, parseFixture as parsePuzzle3dFixture } from "@semio-tech/puzzle-3d-react";
-import { FiveD, StoreProvider, createStore, parseModel, type Model } from "@semio-tech/puzzle-5d-react";
-import { LayoutCanvas } from "@semio-tech/layout-react";
 import { PresentationDeck } from "@semio-tech/framework-presentation-renderer-react";
 import type { PresentationDeck as PresentationDeckDocument } from "@semio-tech/framework-presentation-core";
 
@@ -12712,20 +12816,20 @@ function useSPlayController(runtimeOverride?: Platform): SPlayController | undef
 
 function SMediaGraphSurfaceHost({ node: _node }: { readonly node: UiSHostSurfaceNode }): ReactElement {
 	const ctrl = useSPlayController();
-	const generation = ctrl?.getStore().getGeneration() ?? 0;
+	const generation = ctrl?.getStudioStore().getGeneration() ?? 0;
 	void generation;
-	const projection = ctrl?.getStore().projection() ?? {
+	const projection = ctrl?.getStudioStore().projection() ?? {
 		activeProgramId: null,
 		activeAlternativeId: null,
 		appInstances: [],
 		mediaGraph: { schema: "s.media-graph", nodes: [], edges: [] },
 	};
 	const activeInstanceId = ctrl?.getActiveInstanceId() ?? null;
-	const store = ctrl?.getStore();
+	const store = ctrl?.getStudioStore();
 	const onSelect = reactHostPort.useCallback((instanceId: string) => {
 		const current = sPlayControllerRef.current;
 		if (!current) return;
-		const node = current.getStore().projection().mediaGraph.nodes.find((row) => row.instanceId === instanceId);
+		const node = current.getStudioStore().projection().mediaGraph.nodes.find((row) => row.instanceId === instanceId);
 		current.run("setMediaNodeSelection", { nodeIds: node ? [node.id] : [] });
 		current.run("selectInstance", { instanceId });
 	}, []);
@@ -12744,6 +12848,7 @@ function SMediaGraphSurfaceHost({ node: _node }: { readonly node: UiSHostSurface
 			onDisconnectEdge={(edgeId) => store?.dispatch({ kind: "disconnectMediaEdge", edgeId })}
 			onRemoveInstance={(instanceId) => store?.dispatch({ kind: "removeAppInstance", instanceId })}
 			onSpawnApp={(programId, appId, position) => sPlayControllerRef.current?.run("spawnApp", { programId, appId, position })}
+			peers={store?.getPresencePeers() ?? []}
 		/>
 	);
 }
@@ -12762,7 +12867,7 @@ function SAppHostContent({ instance }: { readonly instance: import("@semio-tech/
 
 export function SAppHostRouter({ instance }: { readonly instance: import("@semio-tech/s-core").SAppInstance | null }): ReactElement {
 	const ctrl = useSPlayController();
-	const store = ctrl?.getStore();
+	const store = ctrl?.getStudioStore();
 	const generation = store?.getGeneration() ?? 0;
 	const projection = store?.projection();
 	const resourceBundle = reactHostPort.useMemo(() => {
@@ -12890,6 +12995,30 @@ export function SAppHostRouter({ instance }: { readonly instance: import("@semio
 		const doc = materialized as { text?: string } | null;
 		return createWriterPlayDocument({ id: instance?.id ?? "writer", languageId: "jack", text: doc?.text ?? instance?.sourceDocument.inline ?? "" });
 	}, [instance, materialized]);
+	const noteDoc = reactHostPort.useMemo(() => {
+		if (materialized && typeof materialized === "object" && (materialized as NoteDocument).schema === "note.document") {
+			return materialized as NoteDocument;
+		}
+		if (instance?.sourceDocument.inline) {
+			try {
+				return noteDocumentFromJson(instance.sourceDocument.inline);
+			} catch {
+				return defaultNoteDocument(instance?.id ?? "note");
+			}
+		}
+		return defaultNoteDocument(instance?.id ?? "note");
+	}, [instance, materialized]);
+	const dispatchNote = reactHostPort.useCallback(
+		(document: NoteDocument) => {
+			if (!instance || !store) return;
+			store.dispatch({
+				kind: "patchAppSource",
+				instanceId: instance.id,
+				inline: noteDocumentToJson(document),
+			});
+		},
+		[instance, store],
+	);
 	const fixtureJson = reactHostPort.useMemo(() => JSON.stringify(materialized ?? {}), [materialized]);
 	const layoutPageId = reactHostPort.useMemo(() => {
 		try {
@@ -12936,6 +13065,23 @@ export function SAppHostRouter({ instance }: { readonly instance: import("@semio
 		);
 	}
 	switch (resource.componentKind) {
+		case "note":
+			return (
+				<div className="flex h-full min-h-0 flex-col overflow-hidden">
+					{hostChrome}
+					<NoteCanvas
+						document={noteDoc}
+						selectedIds={[]}
+						hoveredId={null}
+						kindHover={null}
+						activeTool={noteDoc.activeTool}
+						camera={noteDoc.camera}
+						onCommit={(document) => dispatchNote(document)}
+						onCameraChange={(camera) => dispatchNote({ ...noteDoc, camera })}
+						className="min-h-0 flex-1"
+					/>
+				</div>
+			);
 		case "draw":
 			return (
 				<div className="flex h-full min-h-0 flex-col overflow-hidden">
@@ -13030,7 +13176,15 @@ export function SAppHostRouter({ instance }: { readonly instance: import("@semio
 			return (
 				<div className="flex h-full min-h-0 flex-col overflow-hidden">
 					{hostChrome}
-					<LayoutCanvas documentJson={fixtureJson} pageId={layoutPageId} className="min-h-0 flex-1" />
+					<div className="grid min-h-0 flex-1 grid-rows-[1fr_auto]">
+						<LayoutCanvas documentJson={fixtureJson} pageId={layoutPageId} className="min-h-0" chromeMode="blueprint" />
+						<textarea
+							className="min-h-28 border-t bg-muted/20 p-3 font-mono text-xs"
+							value={fixtureJson}
+							spellCheck={false}
+							onChange={(event) => dispatchFixtureJson(event.target.value)}
+						/>
+					</div>
 				</div>
 			);
 		case "lowpoly":
@@ -13196,7 +13350,7 @@ export function SAppHostRouter({ instance }: { readonly instance: import("@semio
 
 function SAppHostSurfaceHost({ node: _node }: { readonly node: UiSHostSurfaceNode }): ReactElement {
 	const ctrl = useSPlayController();
-	const generation = ctrl?.getStore().getGeneration() ?? 0;
+	const generation = ctrl?.getStudioStore().getGeneration() ?? 0;
 	void generation;
 	const instance = ctrl?.getActiveInstance() ?? null;
 	return (
@@ -13234,9 +13388,9 @@ function SPlayInner({ playground }: { readonly playground: Playground }): ReactE
 	const augmentPanelTabs = reactHostPort.useMemo(() => ({ details: detailTabs, workbench: catalogueTabs }), [detailTabs, catalogueTabs]);
 	if (!ctrl) return <PlaygroundView runtime={playground.runtime} defaultAppId={S_PLAY_APP_ID} />;
 	if (focusedInstanceId) {
-		const instance = ctrl.getStore().projection().appInstances.find((entry) => entry.id === focusedInstanceId) ?? null;
+		const instance = ctrl.getStudioStore().projection().appInstances.find((entry) => entry.id === focusedInstanceId) ?? null;
 		return (
-			<SStudioProvider store={ctrl.getStore()}>
+			<SStudioProvider store={ctrl.getStudioStore()}>
 				<div className="flex h-full min-h-0 flex-col bg-background">
 					<button
 						type="button"
@@ -13253,7 +13407,7 @@ function SPlayInner({ playground }: { readonly playground: Playground }): ReactE
 		);
 	}
 	return (
-		<SStudioProvider store={ctrl.getStore()}>
+		<SStudioProvider store={ctrl.getStudioStore()}>
 			<PlaygroundView runtime={playground.runtime} defaultAppId={S_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
 		</SStudioProvider>
 	);

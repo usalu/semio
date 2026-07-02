@@ -362,6 +362,182 @@ export async function createDefaultBrepWasmBridge(): Promise<BrepWasmBridge> {
 	const module = await ensureBrepWasmLoaded();
 	return createBrepWasmBridge(module);
 }
+
+type BrepModuleWasm = {
+	readonly evaluate: (kindId: string, inputJson: string) => string;
+	readonly activate: () => void;
+	readonly initSync?: (input: { module: BufferSource }) => void;
+	readonly default?: (input?: unknown) => Promise<unknown>;
+};
+
+let brepModuleWasm: BrepModuleWasm | null = null;
+
+/** @emoji ⏳ Loads flow brep module WASM for geometry IO operators. */
+export async function ensureBrepModuleWasmLoaded(): Promise<BrepModuleWasm> {
+	if (brepModuleWasm) return brepModuleWasm;
+	if (import.meta.env.VITEST) {
+		const { readFileSync } = await import("node:fs");
+		const { dirname, join } = await import("node:path");
+		const { fileURLToPath } = await import("node:url");
+		const here = dirname(fileURLToPath(import.meta.url));
+		const mod = (await import("../../../../flow/module/brep/pkg/flow_module_brep.js")) as BrepModuleWasm;
+		mod.initSync?.({ module: readFileSync(join(here, "../../../../flow/module/brep/pkg/flow_module_brep_bg.wasm")) });
+		mod.activate();
+		brepModuleWasm = mod;
+		return mod;
+	}
+	const [{ default: initBrep, evaluate, activate }, { default: wasmUrl }] = await Promise.all([
+		import("../../../../flow/module/brep/pkg/flow_module_brep.js"),
+		import("../../../../flow/module/brep/pkg/flow_module_brep_bg.wasm?url"),
+	]);
+	if (typeof evaluate !== "function" || typeof activate !== "function") {
+		throw new Error("flow_module_brep evaluate exports missing — rebuild flow/module/brep wasm");
+	}
+	if (initBrep) await initBrep({ module_or_path: wasmUrl });
+	activate();
+	brepModuleWasm = { evaluate, activate };
+	return brepModuleWasm;
+}
+
+function brepGeometryInput(handle: GeometryRef): string {
+	return JSON.stringify({
+		geometry: { $schema: "geometry", handle, kind: "solid" },
+		deflection: { $schema: "number", value: 0.1 },
+	});
+}
+
+function readBrepTextChannel(raw: Record<string, unknown>, channel: string): string {
+	const payload = raw[channel];
+	if (payload && typeof payload === "object" && payload !== null && "value" in payload && typeof (payload as { value: unknown }).value === "string") {
+		return (payload as { value: string }).value;
+	}
+	throw new Error(`brep export missing ${channel} payload`);
+}
+
+/** @emoji 💾 Exports a brep geometry handle to OBJ text via flow brep WASM. */
+export async function exportObj(handle: GeometryRef, deflection = 0.1): Promise<string> {
+	const mod = await ensureBrepModuleWasmLoaded();
+	const input = JSON.stringify({
+		geometry: { $schema: "geometry", handle, kind: "solid" },
+		deflection: { $schema: "number", value: deflection },
+	});
+	const raw = JSON.parse(mod.evaluate("brep.io.exportObj", input)) as Record<string, unknown> & { error?: string };
+	if (raw.error) throw new Error(raw.error);
+	return readBrepTextChannel(raw, "obj");
+}
+
+/** @emoji 💾 Exports a brep geometry handle to GLB bytes via tessellation. */
+export async function exportGltf(handle: GeometryRef, deflection = 0.1): Promise<Uint8Array> {
+	const bridge = await createDefaultBrepWasmBridge();
+	const mesh = await bridge.tessellateGeometry(handle, deflection);
+	return meshTransferToGlb(mesh);
+}
+
+/** @emoji 💾 Serializes a {@link MeshTransfer} to OBJ text. */
+export function meshTransferToObj(mesh: MeshTransfer): string {
+	let out = "# mesh export\n";
+	const vertexCount = mesh.position.length / 3;
+	for (let i = 0; i < vertexCount; i += 1) {
+		const base = i * 3;
+		out += `v ${mesh.position[base]!} ${mesh.position[base + 1]!} ${mesh.position[base + 2]!}\n`;
+	}
+	for (let i = 0; i < mesh.index.length; i += 3) {
+		out += `f ${mesh.index[i]! + 1} ${mesh.index[i + 1]! + 1} ${mesh.index[i + 2]! + 1}\n`;
+	}
+	return out;
+}
+
+function vec3Bounds(position: Float32Array): { min: [number, number, number]; max: [number, number, number] } {
+	const min: [number, number, number] = [Infinity, Infinity, Infinity];
+	const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];
+	for (let i = 0; i < position.length; i += 3) {
+		for (let axis = 0; axis < 3; axis += 1) {
+			const value = position[i + axis]!;
+			if (value < min[axis]!) min[axis] = value;
+			if (value > max[axis]!) max[axis] = value;
+		}
+	}
+	return { min, max };
+}
+
+/** @emoji 💾 Encodes a {@link MeshTransfer} as minimal GLB v2 bytes. */
+export function meshTransferToGlb(mesh: MeshTransfer): Uint8Array {
+	const positions = mesh.position;
+	const indices = mesh.index;
+	const { min, max } = vec3Bounds(positions);
+	const vertexBytes = positions.byteLength;
+	const indexBytes = indices.byteLength;
+	const binLength = vertexBytes + indexBytes + ((vertexBytes + indexBytes) % 4 === 0 ? 0 : 4 - ((vertexBytes + indexBytes) % 4));
+	const bin = new Uint8Array(binLength);
+	bin.set(new Uint8Array(positions.buffer, positions.byteOffset, vertexBytes), 0);
+	bin.set(new Uint8Array(indices.buffer, indices.byteOffset, indexBytes), vertexBytes);
+	const gltf = {
+		asset: { version: "2.0" },
+		scene: 0,
+		scenes: [{ nodes: [0] }],
+		nodes: [{ mesh: 0 }],
+		meshes: [{ primitives: [{ attributes: { POSITION: 0 }, indices: 1, mode: 4 }] }],
+		buffers: [{ byteLength: binLength }],
+		bufferViews: [
+			{ buffer: 0, byteOffset: 0, byteLength: vertexBytes, target: 34962 },
+			{ buffer: 0, byteOffset: vertexBytes, byteLength: indexBytes, target: 34963 },
+		],
+		accessors: [
+			{ bufferView: 0, componentType: 5126, count: positions.length / 3, type: "VEC3", min, max },
+			{ bufferView: 1, componentType: 5125, count: indices.length, type: "SCALAR" },
+		],
+	};
+	const json = JSON.stringify(gltf);
+	const jsonBytes = new TextEncoder().encode(json);
+	const jsonPadding = (4 - (jsonBytes.length % 4)) % 4;
+	const binPadding = (4 - (binLength % 4)) % 4;
+	const totalLength = 12 + 8 + jsonBytes.length + jsonPadding + 8 + binLength + binPadding;
+	const out = new Uint8Array(totalLength);
+	const view = new DataView(out.buffer);
+	view.setUint32(0, 0x46546c67, true);
+	view.setUint32(4, 2, true);
+	view.setUint32(8, totalLength, true);
+	let offset = 12;
+	view.setUint32(offset, jsonBytes.length + jsonPadding, true);
+	offset += 4;
+	view.setUint32(offset, 0x4e4f534a, true);
+	offset += 4;
+	out.set(jsonBytes, offset);
+	offset += jsonBytes.length;
+	for (let i = 0; i < jsonPadding; i += 1) out[offset++] = 0x20;
+	view.setUint32(offset, binLength + binPadding, true);
+	offset += 4;
+	view.setUint32(offset, 0x004e4942, true);
+	offset += 4;
+	out.set(bin, offset);
+	offset += binLength;
+	for (let i = 0; i < binPadding; i += 1) out[offset++] = 0;
+	return out;
+}
+
+/** @emoji 🔗 Merges mesh transfers into one triangle soup. */
+export function mergeMeshTransfers(meshes: readonly MeshTransfer[]): MeshTransfer {
+	const positions: number[] = [];
+	const normals: number[] = [];
+	const indices: number[] = [];
+	let vertexBase = 0;
+	for (const mesh of meshes) {
+		for (let i = 0; i < mesh.position.length; i += 1) positions.push(mesh.position[i]!);
+		for (let i = 0; i < mesh.normal.length; i += 1) normals.push(mesh.normal[i]!);
+		for (let i = 0; i < mesh.index.length; i += 1) indices.push(mesh.index[i]! + vertexBase);
+		vertexBase += mesh.position.length / 3;
+	}
+	return {
+		position: new Float32Array(positions),
+		normal: new Float32Array(normals),
+		index: new Uint32Array(indices),
+		edges: new Float32Array(0),
+		faceGroups: [],
+		edgeGroups: [],
+		faceInfos: [],
+		edgeInfos: [],
+	};
+}
 // #endregion 🔌WasmBridge
 
 // #region 🧪Tests

@@ -12,9 +12,11 @@
     "test": "bun nx run @semio-tech/s-react:test"
   },
   "dependencies": {
+    "@semio-tech/framework-os-core": "workspace:*",
     "@semio-tech/dag-react": "workspace:*",
     "@semio-tech/s-core": "workspace:*",
-    "@semio-tech/ui-react": "workspace:*"
+    "@semio-tech/ui-react": "workspace:*",
+    "@semio-tech/vcs-react": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",

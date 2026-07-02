@@ -736,8 +736,8 @@ if (import.meta.vitest) {
 
 	describe("RasterRenderer", () => {
 		it("syncDocument accepts every play fixture json", async () => {
-			const fixtureModules = (await import("../core/fixture-slugs.ts")) as typeof import("../core/fixture-slugs.ts");
-			const glob = await import.meta.glob<string>("../fixture/*.raster.json", { eager: true, import: "default" });
+			const fixtureModules = (await import("../core/example-slugs.ts")) as typeof import("../core/example-slugs.ts");
+			const glob = await import.meta.glob<string>("../example/*.raster.json", { eager: true, import: "default" });
 			const renderer = new RasterRenderer();
 			for (const [path, json] of Object.entries(glob)) {
 				const id = path.split("/").pop()?.replace(/\.raster\.json$/, "") ?? path;

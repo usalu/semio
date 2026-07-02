@@ -3,6 +3,8 @@
 // #endregion 🧲Header
 
 import {
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
 	CommandBus,
 	Controller,
 	registerWindowBody,
@@ -38,6 +40,8 @@ import {
 	JackHoverBridge,
 	buildWriterWindowBody,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import { rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
 import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
 import { runJackOnBoardFixture, wireLiteralFromDagFixtureJson } from "@semio-tech/graph-dsl-core";
 
@@ -107,40 +111,6 @@ export const PUZZLE_2D_PLAY_SURFACE_ID_COMPILED_DAG = "puzzle.2d.play.compiled-d
 export const PUZZLE_2D_PLAY_BODY_KEY_JACK = "puzzle.2d.play.jack";
 export const PUZZLE_2D_PLAY_BODY_KEY_COMPILED_DAG = "puzzle.2d.play.compiled-dag";
 export const PUZZLE_2D_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:node) RETURN n.name";
-
-import {
-	PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
-	PUZZLE_2D_PLAY_EMPTY_FIXTURE,
-	PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-	PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
-	PUZZLE_2D_PLAY_FIXTURE_OPTIONS,
-	puzzle2dFixtureToCompiledDagWireLiteral,
-	puzzle2dFixtureToJackBoardJson,
-	puzzle2dFixtureToJson,
-	puzzle2dPlayFixtureForId,
-	puzzle2dPlayFixtureJson,
-	puzzle2dPlayViewportCameraForFixtureId,
-	puzzle2dPlayViewportCameraFromFixture,
-	puzzle2dPlayTriptychCamerasFromFixture,
-	resolvePuzzle2dPlayFixtureSlug,
-} from "./playground.ts";
-
-export {
-	PUZZLE_2D_PLAY_DEFAULT_FIXTURE,
-	PUZZLE_2D_PLAY_EMPTY_FIXTURE,
-	PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-	PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
-	PUZZLE_2D_PLAY_FIXTURE_OPTIONS,
-	puzzle2dFixtureToCompiledDagWireLiteral,
-	puzzle2dFixtureToJackBoardJson,
-	puzzle2dFixtureToJson,
-	puzzle2dPlayFixtureForId,
-	puzzle2dPlayFixtureJson,
-	puzzle2dPlayViewportCameraForFixtureId,
-	puzzle2dPlayViewportCameraFromFixture,
-	puzzle2dPlayTriptychCamerasFromFixture,
-	resolvePuzzle2dPlayFixtureSlug,
-};
 
 export const PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW = "puzzle.2d.play.overview";
 export const PUZZLE_2D_PLAY_BODY_KEY_DETAIL = "puzzle.2d.play.detail";
@@ -1327,6 +1297,7 @@ export function buildPuzzle2dPlayToolbarTools(state: Puzzle2dPlayToolbarState, c
 	];
 }
 
+
 /** @emoji 🎛 Puzzle 2d play shell controller: per-pane LOD modes + playground toolbar tools. */
 export class Puzzle2dPlayShellController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
@@ -2379,8 +2350,8 @@ if (import.meta.vitest) {
 			expect(hostCommand).toBe("selectAllSelection");
 		});
 
-		it("Playground2d registers ctrl+a select-all keybinding", () => {
-			const playground = new Playground2d();
+		it("puzzle2d play registers ctrl+a select-all keybinding", () => {
+			const playground = puzzle2dPlayAppDefinition.createPlayground();
 			expect(playground.keybindings).toEqual(
 				expect.arrayContaining([
 					expect.objectContaining({
@@ -2398,25 +2369,25 @@ if (import.meta.vitest) {
 		});
 
 		it("nakagin fixture parses with puzzle 2d graph nodes", () => {
-			const nakagin = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID);
+			const nakagin = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID);
 			expect(nakagin.nodes.length).toBeGreaterThan(0);
 			expect(nakagin.edges.length).toBeGreaterThan(0);
 			expect(parsePuzzle2dFixture(nakaginFixtureJson as unknown)?.nodes.length).toBe(nakagin.nodes.length);
 		});
 
 		it("fixture catalog lists concrete forest and nakagin", () => {
-			expect(PUZZLE_2D_PLAY_FIXTURE_OPTIONS.map((row) => row.id)).toEqual([
-				PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-				PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID,
+			expect(PUZZLE_2D_PLAY_EXAMPLE_OPTIONS.map((row) => row.id)).toEqual([
+				PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
+				PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID,
 			]);
 		});
 
 		it("concrete forest viewport camera centers on the seed node with room to grow", () => {
-			const raw = puzzle2dPlayFixtureJson(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID) as { nodes: { x: number; y: number }[] };
-			const fixture = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+			const raw = puzzle2dPlayFixtureJson(PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID) as { nodes: { x: number; y: number }[] };
+			const fixture = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
 			const authoredNode = raw.nodes[0];
 			expect(authoredNode).toBeTruthy();
-			const camera = puzzle2dPlayViewportCameraForFixtureId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+			const camera = puzzle2dPlayViewportCameraForFixtureId(PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
 			expect(camera.x).toBeCloseTo(authoredNode!.x, 3);
 			expect(camera.y).toBeCloseTo(authoredNode!.y, 3);
 			expect(camera.zoom).toBeGreaterThan(0.9);
@@ -2425,8 +2396,8 @@ if (import.meta.vitest) {
 		});
 
 		it("triptych cameras use distinct zoom per pane", () => {
-			const fixture = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
-			const raw = puzzle2dPlayFixtureJson(PUZZLE_2D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+			const fixture = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
+			const raw = puzzle2dPlayFixtureJson(PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
 			const cameras = puzzle2dPlayTriptychCamerasFromFixture(fixture, raw);
 			expect(cameras["2d-detail"].zoom).toBeGreaterThan(cameras["2d-overview"].zoom);
 			expect(cameras["2d-overview"].zoom).toBeGreaterThan(cameras["2d-selection"].zoom);
@@ -2446,7 +2417,7 @@ if (import.meta.vitest) {
 		});
 
 		it("buildPuzzle2dPlayKindsTree mirrors puzzle 3d catalog slices with 2d names", () => {
-			const catalogs = puzzle2dFixtureMergedKindCatalogs(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID));
+			const catalogs = puzzle2dFixtureMergedKindCatalogs(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID));
 			const tree = buildPuzzle2dPlayKindsTree(catalogs);
 			expect(tree.type).toBe("tree");
 			if (tree.type !== "tree") return;
@@ -2832,7 +2803,7 @@ if (import.meta.vitest) {
 		it("brush distribution measures label node kinds from catalog names not uuid tails", () => {
 			const bus = new CommandBus();
 			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
-			const catalogs = puzzle2dFixtureMergedKindCatalogs(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID));
+			const catalogs = puzzle2dFixtureMergedKindCatalogs(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID));
 			ctrl.setKindCatalogs(catalogs);
 			const collectLabels = (measures: readonly WindowMeasure[] | undefined): string[] => {
 				const out: string[] = [];
@@ -3070,7 +3041,7 @@ if (import.meta.vitest) {
 	});
 
 	it("nakagin fixture yields a populated hierarchy nodes group", () => {
-		const tree = buildPuzzle2dPlayHierarchySections(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_FIXTURE_NAKAGIN_ID), []);
+		const tree = buildPuzzle2dPlayHierarchySections(puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID), []);
 		const nodesSection = tree.sections.find((section) => section.label === "Nodes");
 		expect(nodesSection?.items?.length).toBeGreaterThan(0);
 		expect(nodesSection?.items?.[0]?.label).not.toBe("(none)");
@@ -3136,19 +3107,321 @@ if (import.meta.vitest) {
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { puzzle2dPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for puzzle 2d. */
 export function buildPuzzle2dProgramDefinition(): PlatformDefinition {
-	const app = puzzle2dPlayAppDefinition;
 	return {
 		id: "puzzle.2d",
 		name: "Puzzle 2D",
 		apiVersion: "1",
-		apps: [{ id: "puzzle2d", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "puzzle2d", label: "Puzzle 2D", controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
 
-export { puzzle2dPlayAppDefinition, Playground2d } from "./playground.ts";
+//#region 🔖Play
+import nakaginFixtureJson from "../example/nakagin-capsule-tower.2d.json";
+import concreteForestFixtureJson from "../example/concrete-forest.2d.json";
+
+export const PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID = "nakagin";
+export const PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID = "concrete-forest";
+
+export const PUZZLE_2D_PLAY_EXAMPLE_OPTIONS = [
+	{ id: PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, label: "Concrete Forest" },
+	{ id: PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID, label: "Nakagin capsule tower" },
+] as const;
+
+/** @emoji 🔒 Resolves a playground example slug (e.g. `concrete`) to a puzzle 2d example id. */
+export function resolvePuzzle2dPlayExampleSlug(slug: string): string | undefined {
+	const aliases: Record<string, string> = { concrete: PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID };
+	const normalized = aliases[slug] ?? slug;
+	return PUZZLE_2D_PLAY_EXAMPLE_OPTIONS.some((row) => row.id === normalized) ? normalized : undefined;
+}
+
+const PUZZLE_2D_PLAY_EXAMPLE_JSON_BY_ID: Record<string, unknown> = {
+	[PUZZLE_2D_PLAY_EXAMPLE_NAKAGIN_ID]: nakaginFixtureJson,
+	[PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID]: concreteForestFixtureJson,
+};
+
+/** @emoji 🧪 Resolves imported puzzle 2d example JSON by catalog id. */
+export function puzzle2dPlayFixtureJson(fixtureId: string = PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID): unknown {
+	return PUZZLE_2D_PLAY_EXAMPLE_JSON_BY_ID[fixtureId] ?? concreteForestFixtureJson;
+}
+
+/** @emoji 📋 Parses a puzzle 2d play example by catalog id. */
+export function puzzle2dPlayFixtureForId(fixtureId: string): Puzzle2dFixture {
+	const parsed = parsePuzzle2dFixture(puzzle2dPlayFixtureJson(fixtureId) as unknown);
+	if (!parsed) throw new Error(`puzzle 2d example "${fixtureId}" is invalid`);
+	return parsed;
+}
+
+/** @emoji 📄 Serializes a puzzle 2d fixture for Jack and VCS bridges. */
+export function puzzle2dFixtureToJson(fixture: Puzzle2dFixture): string {
+	return JSON.stringify(fixture);
+}
+
+/** @emoji 🃏 Normalizes a puzzle 2d fixture into board-shaped JSON for Jack queries. */
+export function puzzle2dFixtureToJackBoardJson(fixtureOrJson: Puzzle2dFixture | string): string {
+	const fixture =
+		typeof fixtureOrJson === "string"
+			? (parsePuzzle2dFixture(JSON.parse(fixtureOrJson) as unknown) ?? PUZZLE_2D_PLAY_EMPTY_FIXTURE)
+			: fixtureOrJson;
+	return JSON.stringify({
+		schema: fixture.schema,
+		nodes: fixture.nodes.map((node) => ({
+			id: node.id,
+			nodeKind: "node",
+			text: puzzle2dFixtureNodeDisplayLabel(node),
+		})),
+		edges: fixture.edges,
+	});
+}
+
+/** @emoji 🔌 Renders a puzzle fixture as wire-literal compiled DAG text. */
+export function puzzle2dFixtureToCompiledDagWireLiteral(fixtureOrJson: Puzzle2dFixture | string): string {
+	const fixture =
+		typeof fixtureOrJson === "string"
+			? (parsePuzzle2dFixture(JSON.parse(fixtureOrJson) as unknown) ?? PUZZLE_2D_PLAY_EMPTY_FIXTURE)
+			: fixtureOrJson;
+	return wireLiteralFromDagFixtureJson(
+		JSON.stringify({
+			nodes: fixture.nodes.map((node) => ({
+				id: node.id,
+				operatorKind: node.nodeKind ?? "node",
+			})),
+			edges: fixture.edges.map((edge) => ({
+				id: edge.id,
+				source: edge.source,
+				target: edge.target,
+			})),
+		}),
+	);
+}
+
+export const PUZZLE_2D_PLAY_DEFAULT_FIXTURE: Puzzle2dFixture = puzzle2dPlayFixtureForId(PUZZLE_2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
+
+export const PUZZLE_2D_PLAY_EMPTY_FIXTURE: Puzzle2dFixture = {
+	schema: "puzzle.2d.fixture/v1",
+	camera: { x: 0, y: 0, zoom: 1 },
+	nodes: [],
+	edges: [],
+};
+
+const PUZZLE_2D_PLAY_VIEWPORT_REF_SHORT_PX = 640;
+const PUZZLE_2D_PLAY_VIEWPORT_MARGIN = 0.18;
+const PUZZLE_2D_PLAY_VIEWPORT_FRAMING_HALF_SPAN_SCALE = 2.25;
+const PUZZLE_2D_PLAY_VIEWPORT_ZOOM_BOOST = 2.5;
+const PUZZLE_2D_PLAY_VIEWPORT_PANE_ZOOM_SCALE: Record<Puzzle2dPlayPaneId, number> = {
+	"2d-overview": 0.68,
+	"2d-detail": 2.15,
+	"2d-selection": 0.36,
+};
+
+function clampPuzzle2dPlayViewportZoom(value: number): number {
+	return Math.min(PUZZLE_2D_CAMERA_ZOOM_MAX, Math.max(PUZZLE_2D_CAMERA_ZOOM_MIN, value));
+}
+
+function puzzle2dPlayNodeWorldExtents(node: Record<string, unknown>): { minX: number; minY: number; maxX: number; maxY: number } | null {
+	const x = Number(node.x);
+	const y = Number(node.y);
+	if (!Number.isFinite(x) || !Number.isFinite(y)) {
+		return null;
+	}
+	if (node.shape === "rectangle") {
+		const width = Number(node.width);
+		const height = Number(node.height);
+		if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+			return null;
+		}
+		const hw = width / 2;
+		const hh = height / 2;
+		return { minX: x - hw, maxX: x + hw, minY: y - hh, maxY: y + hh };
+	}
+	const radius = Number(node.radius);
+	if (!Number.isFinite(radius) || radius <= 0) {
+		return null;
+	}
+	return { minX: x - radius, maxX: x + radius, minY: y - radius, maxY: y + radius };
+}
+
+function puzzle2dPlayFixtureWorldBoundsFromNodeRecords(nodes: readonly Record<string, unknown>[]): { cx: number; cy: number; halfSpan: number } {
+	let minX = Number.POSITIVE_INFINITY;
+	let minY = Number.POSITIVE_INFINITY;
+	let maxX = Number.NEGATIVE_INFINITY;
+	let maxY = Number.NEGATIVE_INFINITY;
+	for (const node of nodes) {
+		const extents = puzzle2dPlayNodeWorldExtents(node);
+		if (!extents) continue;
+		minX = Math.min(minX, extents.minX);
+		maxX = Math.max(maxX, extents.maxX);
+		minY = Math.min(minY, extents.minY);
+		maxY = Math.max(maxY, extents.maxY);
+	}
+	if (!Number.isFinite(minX)) {
+		return { cx: 0, cy: 0, halfSpan: 400 };
+	}
+	const cx = (minX + maxX) / 2;
+	const cy = (minY + maxY) / 2;
+	const halfSpan = Math.max(maxX - minX, maxY - minY, 1) / 2;
+	return { cx, cy, halfSpan };
+}
+
+function puzzle2dPlayFixtureWorldBounds(fixture: Puzzle2dFixture): { cx: number; cy: number; halfSpan: number } {
+	return puzzle2dPlayFixtureWorldBoundsFromNodeRecords(fixture.nodes as unknown as Record<string, unknown>[]);
+}
+
+function puzzle2dPlayFixtureWorldBoundsFromJson(raw: unknown): { cx: number; cy: number; halfSpan: number } | null {
+	if (!raw || typeof raw !== "object") return null;
+	const nodes = (raw as Record<string, unknown>).nodes;
+	if (!Array.isArray(nodes)) return null;
+	const records = nodes.filter((node): node is Record<string, unknown> => Boolean(node) && typeof node === "object");
+	if (!records.length) return null;
+	return puzzle2dPlayFixtureWorldBoundsFromNodeRecords(records);
+}
+
+function puzzle2dPlayViewportCameraFromBounds(
+	fixture: Puzzle2dFixture,
+	bounds: { cx: number; cy: number; halfSpan: number },
+): CameraState {
+	const usable = PUZZLE_2D_PLAY_VIEWPORT_REF_SHORT_PX * (1 - 2 * PUZZLE_2D_PLAY_VIEWPORT_MARGIN);
+	const worldSpan = Math.max(2 * bounds.halfSpan * PUZZLE_2D_PLAY_VIEWPORT_FRAMING_HALF_SPAN_SCALE, 1);
+	const zoom = clampPuzzle2dPlayViewportZoom((usable / worldSpan) * PUZZLE_2D_PLAY_VIEWPORT_ZOOM_BOOST);
+	return {
+		x: bounds.cx,
+		y: bounds.cy,
+		zoom,
+	};
+}
+
+/** @emoji 📷 Viewport camera centered on fixture node bounds with zoom fitted for growth. */
+export function puzzle2dPlayViewportCameraFromFixture(fixture: Puzzle2dFixture, rawFixture?: unknown): CameraState {
+	const bounds = (rawFixture ? puzzle2dPlayFixtureWorldBoundsFromJson(rawFixture) : null) ?? puzzle2dPlayFixtureWorldBounds(fixture);
+	return puzzle2dPlayViewportCameraFromBounds(fixture, bounds);
+}
+
+/** @emoji 📷 Viewport camera for a play example catalog id (uses raw JSON bounds before circle normalization). */
+export function puzzle2dPlayViewportCameraForFixtureId(fixtureId: string): CameraState {
+	const raw = puzzle2dPlayFixtureJson(fixtureId);
+	return puzzle2dPlayViewportCameraFromFixture(puzzle2dPlayFixtureForId(fixtureId), raw);
+}
+
+function puzzle2dPlayTriptychCameraForPane(
+	pane: Puzzle2dPlayPaneId,
+	fixture: Puzzle2dFixture,
+	bounds: { cx: number; cy: number; halfSpan: number },
+	baseZoom: number,
+): CameraState {
+	const camOffset = fixture.camera;
+	const detailNode = fixture.nodes[Math.min(42, Math.max(0, fixture.nodes.length - 1))];
+	const zoom = clampPuzzle2dPlayViewportZoom(baseZoom * PUZZLE_2D_PLAY_VIEWPORT_PANE_ZOOM_SCALE[pane]);
+	switch (pane) {
+		case "2d-overview":
+			return { x: bounds.cx + camOffset.x * 0.04, y: bounds.cy + camOffset.y * 0.03, zoom };
+		case "2d-detail":
+			return {
+				x: (detailNode?.x ?? bounds.cx) + camOffset.x * 0.02,
+				y: (detailNode?.y ?? bounds.cy) + camOffset.y * 0.02,
+				zoom,
+			};
+		case "2d-selection":
+			return {
+				x: bounds.cx - bounds.halfSpan * 0.28 + camOffset.x * 0.06,
+				y: bounds.cy + bounds.halfSpan * 0.22 + camOffset.y * 0.05,
+				zoom,
+			};
+	}
+}
+
+/** @emoji 📷 Default cameras for all puzzle 2d play panes (wide overview, tight detail, regional selection). */
+export function puzzle2dPlayTriptychCamerasFromFixture(fixture: Puzzle2dFixture, rawFixture?: unknown): Record<Puzzle2dPlayPaneId, CameraState> {
+	const bounds = (rawFixture ? puzzle2dPlayFixtureWorldBoundsFromJson(rawFixture) : null) ?? puzzle2dPlayFixtureWorldBounds(fixture);
+	const base = puzzle2dPlayViewportCameraFromBounds(fixture, bounds);
+	return {
+		"2d-overview": puzzle2dPlayTriptychCameraForPane("2d-overview", fixture, bounds, base.zoom),
+		"2d-detail": puzzle2dPlayTriptychCameraForPane("2d-detail", fixture, bounds, base.zoom),
+		"2d-selection": puzzle2dPlayTriptychCameraForPane("2d-selection", fixture, bounds, base.zoom),
+	};
+}
+
+
+
+
+//#region 🔖MediaExport
+function puzzle2dFixtureToSvg(fixture: Puzzle2dFixture): string {
+	const padding = 40;
+	const xs = fixture.nodes.map((node) => node.x);
+	const ys = fixture.nodes.map((node) => node.y);
+	const radii = fixture.nodes.map((node) => node.radius);
+	const minX = Math.min(...xs.map((x, i) => x - (radii[i] ?? 0)), 0) - padding;
+	const minY = Math.min(...ys.map((y, i) => y - (radii[i] ?? 0)), 0) - padding;
+	const maxX = Math.max(...xs.map((x, i) => x + (radii[i] ?? 0)), 1) + padding;
+	const maxY = Math.max(...ys.map((y, i) => y + (radii[i] ?? 0)), 1) + padding;
+	const width = Math.max(1, maxX - minX);
+	const height = Math.max(1, maxY - minY);
+	const nodeById = new Map(fixture.nodes.map((node) => [node.id, node]));
+	const edges = fixture.edges
+		.map((edge) => {
+			const source = nodeById.get(edge.source);
+			const target = nodeById.get(edge.target);
+			if (!source || !target) return "";
+			return `<line x1="${source.x - minX}" y1="${source.y - minY}" x2="${target.x - minX}" y2="${target.y - minY}" stroke="#666" stroke-width="2"/>`;
+		})
+		.join("");
+	const nodes = fixture.nodes
+		.map((node) => `<circle cx="${node.x - minX}" cy="${node.y - minY}" r="${node.radius}" fill="#4b7bec" fill-opacity="0.25" stroke="#2d5aa8"/><text x="${node.x - minX + node.radius + 4}" y="${node.y - minY + 4}" font-size="12">${(node.text ?? node.id).replace(/[<>&]/g, "")}</text>`)
+		.join("");
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${edges}${nodes}</svg>`;
+}
+
+/** @emoji 💾 Registers puzzle 2d fixture SVG/PNG export handlers for the OS media graph. */
+export function registerPuzzle2dMediaExportHandlers(): void {
+	registerOsMediaExportHandler("2d.puzzle", "svg", async (doc) => ({
+		data: puzzle2dFixtureToSvg(doc as Puzzle2dFixture),
+		mimeType: "image/svg+xml",
+		fileName: "puzzle2d.svg",
+	}));
+	registerOsMediaExportHandler("2d.puzzle", "png", async (doc) => {
+		const svg = puzzle2dFixtureToSvg(doc as Puzzle2dFixture);
+		const width = Number(svg.match(/width="(\d+)"/)?.[1] ?? 1024);
+		const height = Number(svg.match(/height="(\d+)"/)?.[1] ?? 768);
+		const dataUrl = await rasterizeSvgMarkupToPngDataUrl(svg, width, height);
+		const blob = await fetch(dataUrl).then((response) => response.blob());
+		return { data: new Uint8Array(await blob.arrayBuffer()), mimeType: "image/png", fileName: "puzzle2d.png" };
+	});
+}
+//#endregion 🔖MediaExport
+
+/** @emoji 🛝 Puzzle 2d play harness as a single {@link Playground} instance. */
+
+
+export const puzzle2dPlayAppDefinition = createPlaygroundApp({
+	id: PUZZLE_2D_PLAY_APP_ID,
+	label: "Puzzle 2D",
+	controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "2d",
+		resolveDedupe: ["react", "react-dom", "three"],
+		watchIgnored: ["../rs/lib.rs", "../rs/target/**", "../rs/Cargo.toml", "../rs/Cargo.lock", "../rs/script.ts"],
+		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "three", "@react-three/fiber", "@react-three/drei", "lucide-react", "@semio-tech/infinite-cavas-react-renderer"] },
+	},
+	createRuntime: () => {
+		const runtime = new Platform({ id: PUZZLE_2D_PLAY_APP_ID });
+			const ctrl = new Puzzle2dPlayShellController(runtime.commandBus, () => runtime.notify(), () => runtime.notifyChrome());
+			runtime.addApp(buildPuzzle2dPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerPuzzle2dPlayDeclarativeBodies();
+	},
+	keybindings: [
+		{ key: "ctrl+a,meta+a", controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command: "selectAllSelection" },
+	],
+	bootRenderer: async (pg) => {
+		const { boot2dPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/2d");
+		boot2dPlay(pg);
+	},
+});
+//#endregion 🔖Play

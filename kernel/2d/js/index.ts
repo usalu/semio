@@ -267,6 +267,66 @@ export const canvasDrawingPngExportPort: DrawingPngExportPort = {
 		return rasterizeDrawingSceneToPng(scene);
 	},
 };
+
+/** @emoji 🖼️ Rasterizes SVG markup to a PNG data URL in the browser. */
+export async function rasterizeSvgMarkupToPngDataUrl(svg: string, width: number, height: number): Promise<string> {
+	if (typeof document === "undefined") {
+		return `data:image/png;base64,`;
+	}
+	return await new Promise((resolve, reject) => {
+		const image = new Image();
+		image.onload = () => {
+			const canvas = document.createElement("canvas");
+			canvas.width = width;
+			canvas.height = height;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) {
+				reject(new Error("canvas 2d unavailable"));
+				return;
+			}
+			ctx.drawImage(image, 0, 0, width, height);
+			resolve(canvas.toDataURL("image/png"));
+		};
+		image.onerror = () => reject(new Error("svg rasterize failed"));
+		image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+	});
+}
+
+/** @emoji 📄 Serializes path segments to an SVG `d` attribute. */
+export function pathSegmentsToSvgD(segments: readonly PathSegment[]): string {
+	let d = "";
+	for (const segment of segments) {
+		if (segment.kind === "move") d += `M ${segment.to[0]} ${segment.to[1]} `;
+		else if (segment.kind === "line") d += `L ${segment.to[0]} ${segment.to[1]} `;
+		else if (segment.kind === "quad") d += `Q ${segment.ctrl[0]} ${segment.ctrl[1]} ${segment.to[0]} ${segment.to[1]} `;
+		else if (segment.kind === "cubic")
+			d += `C ${segment.ctrl1[0]} ${segment.ctrl1[1]} ${segment.ctrl2[0]} ${segment.ctrl2[1]} ${segment.to[0]} ${segment.to[1]} `;
+		else if (segment.kind === "arc")
+			d += `A ${segment.rx} ${segment.ry} ${segment.rotation} ${segment.largeArc ? 1 : 0} ${segment.sweep ? 1 : 0} ${segment.to[0]} ${segment.to[1]} `;
+		else if (segment.kind === "close") d += "Z ";
+	}
+	return d.trim();
+}
+
+/** @emoji 📄 Serializes a {@link DrawingScene} to SVG markup. */
+export function drawingSceneToSvgMarkup(scene: DrawingScene): string {
+	const shapes = scene.nodes
+		.map((entry) => {
+			const segments = nodePath(entry.node);
+			if (segments.length === 0) return "";
+			const d = pathSegmentsToSvgD(segments);
+			if (!d) return "";
+			const fill = entry.fill?.kind === "solid" ? rgbaCss(entry.fill.color) : "none";
+			const stroke = entry.stroke ? rgbaCss(entry.stroke.color) : "none";
+			const strokeWidth = entry.stroke?.width ?? 0;
+			const opacity = entry.opacity ?? 1;
+			const [a, b, c, dM, e, f] = entry.transform;
+			return `<g transform="matrix(${a} ${b} ${c} ${dM} ${e} ${f})" opacity="${opacity}"><path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" fill-rule="evenodd"/></g>`;
+		})
+		.filter(Boolean)
+		.join("");
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Math.max(1, scene.width)} ${Math.max(1, scene.height)}" width="${Math.max(1, scene.width)}" height="${Math.max(1, scene.height)}">${shapes}</svg>`;
+}
 // #endregion 🎨CanvasRaster
 
 // #region 🔌WasmBridge

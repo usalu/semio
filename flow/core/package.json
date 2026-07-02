@@ -7,7 +7,7 @@
   "private": true,
   "exports": {
     ".": "./index.ts",
-    "./playground": "./playground.ts"
+    "./pkg/flow_core.js": "./pkg/flow_core.js"
   },
   "dependencies": {
     "@semio-tech/vcs-core": "workspace:*",

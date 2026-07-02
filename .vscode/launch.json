@@ -951,7 +951,7 @@
       "cwd": "${workspaceFolder}",
       "dependsOn": ["📦build🗄️vcs", "📦build🖥️s🔗studio"],
       "env": {
-        "S_PLAY_PORT": "6066"
+        "S_OS_PORT": "6066"
       },
       "presentation": {
         "group": "3_dev",
@@ -961,6 +961,20 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6066)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🗄️os-hub",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "OS_HUB_PORT": "6070"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 387
       }
     },
     {

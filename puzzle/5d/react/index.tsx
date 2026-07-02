@@ -4360,8 +4360,8 @@ if (import.meta.vitest) {
 
     it("keeps unset concrete forest mesh style unset like native 3d", async () => {
       const [{ default: fixture2dRaw }, { default: fixture3dRaw }] = await Promise.all([
-        import("../../2d/fixture/concrete-forest.2d.json"),
-        import("../../3d/fixture/concrete-forest.3d.json"),
+        import("../../2d/example/concrete-forest.2d.json"),
+        import("../../3d/example/concrete-forest.3d.json"),
       ]);
       const fixture2d = parsePuzzle2dFixture(fixture2dRaw as unknown);
       const fixture3d = parseFixture(fixture3dRaw as unknown);

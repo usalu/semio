@@ -25,7 +25,11 @@ import {
 	type WindowBodyViewContext,
 	type WindowEngagement,
 	toolCollection,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import initLayout, { LayoutSession } from "@semio-tech/layout-rs";
 import {
 	DEFAULT_LAYOUT_DOCUMENT_JSON,
 	LayoutHistory,
@@ -39,7 +43,6 @@ import {
 } from "./internal.ts";
 
 export * from "./internal.ts";
-export { layoutPlayAppDefinition, PlaygroundLayout } from "./playground.ts";
 
 export const LAYOUT_PLAY_APP_ID = "layout-play";
 export const LAYOUT_PLAY_CONTROLLER_ID = "layout-play";
@@ -430,20 +433,48 @@ export { layoutPlayCmd, downloadBytes };
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { layoutPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for layout. */
 export function buildLayoutProgramDefinition(): PlatformDefinition {
-	const app = layoutPlayAppDefinition;
 	return {
 		id: "layout",
 		name: "Layout",
 		apiVersion: "1",
-		apps: [{ id: "layout", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "layout", label: "Layout", controllerId: LAYOUT_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖MediaExport
+let layoutExportWasmReady: Promise<void> | null = null;
+
+async function ensureLayoutExportWasm(): Promise<void> {
+	if (!layoutExportWasmReady) layoutExportWasmReady = initLayout().then(() => undefined);
+	await layoutExportWasmReady;
+}
+
+async function exportLayoutDocumentMedia(doc: LayoutDocument): Promise<{ svg: string; png: Uint8Array }> {
+	await ensureLayoutExportWasm();
+	const session = new LayoutSession();
+	session.setDocumentJson(layoutDocumentToJson(doc));
+	const pageId = doc.pages[0]?.id ?? "page-1";
+	session.setPageId(pageId);
+	return { svg: session.exportSvg(pageId), png: session.exportPng(pageId) };
+}
+
+/** @emoji 💾 Registers layout document SVG/PNG export handlers for the OS media graph. */
+export function registerLayoutMediaExportHandlers(): void {
+	registerOsMediaExportHandler("2d.layout", "svg", async (doc) => {
+		const { svg } = await exportLayoutDocumentMedia(doc as LayoutDocument);
+		return { data: svg, mimeType: "image/svg+xml", fileName: "layout.svg" };
+	});
+	registerOsMediaExportHandler("2d.layout", "png", async (doc) => {
+		const { png } = await exportLayoutDocumentMedia(doc as LayoutDocument);
+		return { data: png, mimeType: "image/png", fileName: "layout.png" };
+	});
+}
+//#endregion 🔖MediaExport
 
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -456,3 +487,36 @@ if (import.meta.vitest) {
 		});
 	});
 }
+
+//#region 🔖Play
+
+/** @emoji 🛝 Layout playground app. */
+
+
+export const layoutPlayAppDefinition = createPlaygroundApp({
+	id: LAYOUT_PLAY_APP_ID,
+	label: "Layout",
+	controllerId: "layout-play",
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "layout",
+		resolveDedupe: ["react", "react-dom", "@semio-tech/layout-react"],
+		watchIgnored: ["../rs/lib.rs", "../rs/target/**", "../rs/pkg/**"],
+		optimizeDeps: { include: ["react", "react-dom"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(LAYOUT_PLAY_APP_ID);
+			const ctrl = new LayoutPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildLayoutPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerLayoutPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootLayoutPlay } = await import("@semio-tech/framework-playground-renderer-react/layout");
+		bootLayoutPlay(pg);
+	},
+});
+//#endregion 🔖Play

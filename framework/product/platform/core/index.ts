@@ -1639,6 +1639,31 @@ export abstract class VirtualFileSystemController extends Controller {
 		};
 	}
 
+	/** @emoji 📁 Drops cached children for a scope so the tree rebuilds from {@link loadChildren}. */
+	invalidateVirtualFileSystemScope(scope: VirtualFileSystemScope): void {
+		const key = virtualFileSystemScopeKey(scope);
+		this.childrenByScope.delete(key);
+		this.pendingChildrenLoadsByScope.delete(key);
+		this.childrenLoadPromisesByScope.delete(key);
+		this.emit();
+	}
+
+	protected createNode(_parentId: string, _name: string, _fileNodeKindId: string, _scope: VirtualFileSystemScope): boolean {
+		return false;
+	}
+
+	protected renameNode(_nodeId: string, _name: string, _scope: VirtualFileSystemScope): boolean {
+		return false;
+	}
+
+	protected deleteNode(_nodeId: string, _scope: VirtualFileSystemScope): boolean {
+		return false;
+	}
+
+	protected moveNodePersisted(_activeId: string, _overId: string, _scope: VirtualFileSystemScope): boolean {
+		return false;
+	}
+
 	/** @emoji 📁 Visible file nodes for the current expansion state (same visibility as the VFS table). */
 	visibleVirtualFileSystemNodes(scope: VirtualFileSystemScope): readonly VirtualFileSystemVisibleNode[] {
 		this.syncOpenBranches(scope);
@@ -1680,7 +1705,32 @@ export abstract class VirtualFileSystemController extends Controller {
 				const rootId = this.getRoot(scope).id;
 				const targetParentId = payload.over === rootId ? rootId : payload.over;
 				childrenStore.moveNode(payload.active, targetParentId, rootId);
+				this.moveNodePersisted(payload.active, payload.over, scope);
 				this.emit();
+				return true;
+			}
+			case "createVirtualFileSystemNode": {
+				const createPayload = args as { parentId?: string; name?: string; fileNodeKindId?: string };
+				if (!createPayload.parentId || !createPayload.name) return true;
+				if (this.createNode(createPayload.parentId, createPayload.name, createPayload.fileNodeKindId ?? "folder", scope)) {
+					this.emit();
+				}
+				return true;
+			}
+			case "renameVirtualFileSystemNode": {
+				const renamePayload = args as { nodeId?: string; name?: string };
+				if (!renamePayload.nodeId || !renamePayload.name) return true;
+				if (this.renameNode(renamePayload.nodeId, renamePayload.name, scope)) {
+					this.emit();
+				}
+				return true;
+			}
+			case "deleteVirtualFileSystemNode": {
+				const deletePayload = args as { nodeId?: string };
+				if (!deletePayload.nodeId) return true;
+				if (this.deleteNode(deletePayload.nodeId, scope)) {
+					this.emit();
+				}
 				return true;
 			}
 			default:
@@ -2845,9 +2895,15 @@ export class JackHoverBridge {
 		this.pointerFocus = null;
 	}
 
+	private resolveGraphNodeKey(key: string): string {
+		const mediaPrefix = "media-node:";
+		return key.startsWith(mediaPrefix) ? key.slice(mediaPrefix.length) : key;
+	}
+
 	private applyPointerSnapshot(selection: readonly string[], hover: string | null, hoverSourceId: string | null): void {
-		const first = selection[0] ?? null;
-		const selectVar = first ? jackVarForBoardNodeId(this.fixtureJson, this.jackQueryText, first) : null;
+		const graphSelection = selection.filter((key) => !key.startsWith("app-instance:"));
+		const first = graphSelection[0] ?? null;
+		const selectVar = first ? jackVarForBoardNodeId(this.fixtureJson, this.jackQueryText, this.resolveGraphNodeKey(first)) : null;
 		if (selectVar !== this.activeSelectVar) {
 			this.activeSelectVar = selectVar;
 			this.selectEpoch += 1;
@@ -2964,6 +3020,14 @@ export class JackHoverBridge {
 				this.syncingPointer = false;
 			}
 		}
+		this.notify();
+	}
+
+	/** @emoji 🪞 Updates jack graph selection without writing {@link AppPointerFocusStore} (caller owns keys). */
+	mirrorGraphSelect(nodeIds: readonly string[]): void {
+		const first = nodeIds[0] ?? null;
+		this.activeSelectVar = first ? jackVarForBoardNodeId(this.fixtureJson, this.jackQueryText, first) : null;
+		this.selectEpoch += 1;
 		this.notify();
 	}
 

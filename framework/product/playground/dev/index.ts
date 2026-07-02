@@ -15,5 +15,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
 		if (!app) throw new Error(`[playground-dev] unknown app entry kind: ${playEntryKind}`);
 		const playground = app.createPlayground();
 		await app.bootRenderer(playground);
-	})();
+	})().catch((error) => {
+		console.error("[DEBUG] playground-dev boot failed", error);
+	});
 }

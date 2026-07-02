@@ -82,6 +82,11 @@ const extensionLoaders: readonly SProgramExtensionLoader[] = [
 		registerAppVcsHandler(createTrinityGraphAppVcsHandler());
 	},
 	async () => {
+		const { buildTrinityRewriteProgramDefinition } = await import("@semio-tech/trinity-rewrite-core");
+		mergeSProgramDefinition("trinity.rewrite", buildTrinityRewriteProgramDefinition());
+		registerAppVcsHandler(createTrinityGraphAppVcsHandler());
+	},
+	async () => {
 		const { buildShootingProgramDefinition } = await import("@semio-tech/shooting-core");
 		mergeSProgramDefinition("shooting", buildShootingProgramDefinition());
 		registerAppVcsHandler(createSPlayShootingAppVcsHandler());
@@ -148,6 +153,21 @@ const extensionLoaders: readonly SProgramExtensionLoader[] = [
 	async () => {
 		const { buildSketchpadProgramDefinition } = await import("@semio-tech/compose-sketchpad");
 		mergeSProgramDefinition(COMPOSE_SKETCHPAD_PROGRAM_ID, buildSketchpadProgramDefinition());
+	},
+	async () => {
+		const { buildReasoningWiresProgramDefinition } = await import("@semio-tech/reasoning-mindmap-wires-core");
+		mergeSProgramDefinition("reasoning.wires", buildReasoningWiresProgramDefinition());
+		registerAppVcsHandler(createPuzzle2dAppVcsHandler());
+	},
+	async () => {
+		mergeSProgramDefinition("reasoning.mindmap", {
+			id: "reasoning.mindmap",
+			name: "Reasoning Mindmap",
+			apiVersion: "1",
+			apps: [{ id: "mindmap", label: "Mindmap", controllerId: "reasoning-mindmap", modes: [{ id: "explore", label: "Explore" }], defaultModeId: "explore" }],
+			createPlatformApi: () => ({}),
+		});
+		registerAppVcsHandler(createPuzzle2dAppVcsHandler());
 	},
 	async () => {
 		registerAppVcsHandler(

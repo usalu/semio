@@ -6,12 +6,18 @@ const playDir = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(playDir, "../../../..");
 const playEntryKind = process.env.PUZZLE_PLAY_ENTRY ?? process.env.PLAYGROUND_APP ?? "draw";
 const packageRoot = process.env.PLAYGROUND_PACKAGE_ROOT;
-const extraAliases = packageRoot
-	? [
-			{ find: `@semio-tech/${packageRoot}-react`, replacement: path.resolve(repoRoot, packageRoot, "react/index.tsx") },
-			{ find: `@semio-tech/${packageRoot}-core`, replacement: path.resolve(repoRoot, packageRoot, "core/index.ts") },
-		]
-	: [];
+const extraAliases = [
+	...(packageRoot
+		? [
+				{ find: `@semio-tech/${packageRoot}-react`, replacement: path.resolve(repoRoot, packageRoot, "react/index.tsx") },
+				{ find: `@semio-tech/${packageRoot}-core`, replacement: path.resolve(repoRoot, packageRoot, "core/index.ts") },
+			]
+		: []),
+	{
+		find: "@semio-tech/framework-playground-core/app-registry",
+		replacement: path.resolve(repoRoot, "framework/product/playground/core/app-registry.ts"),
+	},
+];
 
 export default createPlaygroundPlayViteConfig({
 	playDir,

@@ -7,8 +7,8 @@ import "./globals.css";
 import {
   Button,
   Label,
-  NavbarFixtureSelect,
-  NAVBAR_NO_FIXTURE_ID,
+  NavbarExampleSelect,
+  NAVBAR_NO_EXAMPLE_ID,
   reactHostPort,
   formatNumber,
   type EngagementSpec,
@@ -38,7 +38,7 @@ import {
   uiTreeNodeToTreePanelConfig,
   type SidePanelTabConfig,
 } from "@semio-tech/framework-playground-renderer-react/shell";
-import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode, Platform, isPlaygroundFixtureLocked, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL } from "@semio-tech/framework-playground-core";
+import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode, Platform, isPlaygroundExampleLocked, playgroundLockedExampleId, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL } from "@semio-tech/framework-playground-core";
 import { AppPointerFocusStore } from "@semio-tech/framework-core";
 import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@semio-tech/framework-platform-renderer-react";
 import { defaultConstructRunner } from "@semio-tech/cad-js-query";
@@ -119,7 +119,7 @@ import {
   type CadPlayReferencesByModelDefinitionId,
   type CadPlaySelectedReference,
 } from "@semio-tech/cad-js-renderer-core";
-import { CAD_PLAY_SHAPE_ASSETS, resolveCadPlayFixtureSlug } from "@semio-tech/cad-js-renderer-core/playground";
+import { CAD_PLAY_SHAPE_ASSETS, resolveCadPlayFixtureSlug } from "@semio-tech/cad-js-renderer-core";
 
 const CadPlayHierarchyIcon = createIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID);
 const CadPlayCatalogueIcon = createIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID);
@@ -807,7 +807,7 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
   }, []);
 
   reactHostPort.useEffect(() => {
-    const locked = playgroundLockedFixtureId();
+    const locked = playgroundLockedExampleId();
     if (locked) handleShapeAssetChange(locked);
   }, [handleShapeAssetChange]);
 
@@ -1615,18 +1615,18 @@ function CadPlayLoadInput(): ReactNode {
   return <input ref={loadInputRef} type="file" accept=".json,.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />;
 }
 
-/** @emoji 🧪 Navbar fixture dropdown for CAD play shape sources (replaces workbench catalog picker). */
-function CadPlayFixtureNavbarSelect(): ReactNode {
+/** @emoji 🧪 Navbar example dropdown for CAD play shape sources (replaces workbench catalog picker). */
+function CadPlayExampleNavbarSelect(): ReactNode {
   const { shapeAssetId, handleShapeAssetChange } = useCadPlayModelSpace();
   return (
-    <NavbarFixtureSelect
-      id="cad.play.fixture"
-      value={shapeAssetId || NAVBAR_NO_FIXTURE_ID}
+    <NavbarExampleSelect
+      id="cad.play.example"
+      value={shapeAssetId || NAVBAR_NO_EXAMPLE_ID}
       options={CAD_PLAY_SHAPE_ASSETS.map((row) => ({
         id: row.id,
         label: `[${row.key}] ${row.label} (${modelVertexCount(row.json)} verts)`,
       }))}
-      onValueChange={(fixtureId) => handleShapeAssetChange(fixtureId === NAVBAR_NO_FIXTURE_ID ? "" : fixtureId)}
+      onValueChange={(exampleId) => handleShapeAssetChange(exampleId === NAVBAR_NO_EXAMPLE_ID ? "" : exampleId)}
     />
   );
 }
@@ -1881,7 +1881,7 @@ export function CadPlayRoot({ runtime: runtimeOverride }: { readonly runtime?: P
   );
   const detailsTabs = reactHostPort.useMemo(() => [cadPlayDetailsPanel.resolveTab()], [cadPlayDetailsPanel]);
   const slotNavbarCenter = reactHostPort.useMemo(
-    () => (isPlaygroundFixtureLocked() ? null : <CadPlayFixtureNavbarSelect />),
+    () => (isPlaygroundExampleLocked() ? null : <CadPlayExampleNavbarSelect />),
     [],
   );
   return (

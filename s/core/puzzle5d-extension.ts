@@ -1,6 +1,6 @@
 /** @emoji 🧩 S-play puzzle 5d VCS handler with catalogue input and multi-port projection. */
 
-import { createTypedAppVcsHandler } from "@semio-tech/s-core";
+import { createTypedAppVcsHandler } from "./internal.ts";
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
 import {
 	parseModel,

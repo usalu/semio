@@ -3,6 +3,8 @@
 // #endregion 🧲Header
 
 import {
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
 	AppRuntime,
 	CommandBus,
 	Controller,
@@ -11,18 +13,18 @@ import {
 	buildRasterWindowBody,
 	createDefaultLayout,
 	createPlayAppRuntime,
-	eagerPlayFixtureGlob,
-	isPlaygroundFixtureLocked,
-	isPlaygroundNoFixtureId,
-	PLAYGROUND_NO_FIXTURE_ID,
-	playgroundResolvedFixtureId,
+	eagerPlayExampleGlob,
+	isPlaygroundExampleLocked,
+	isPlaygroundNoExampleId,
+	PLAYGROUND_NO_EXAMPLE_ID,
+	playgroundResolvedExampleId,
 	registerWindowBody,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	type AppTools,
-	type PlaygroundFixtureCatalog,
-	type PlaygroundFixtureHost,
+	type PlaygroundExampleCatalog,
+	type PlaygroundExampleHost,
 	type ToolLeaf,
 	toolCollection,
 	uiDeclarativeSectionsToTree,
@@ -42,7 +44,11 @@ import {
 	type WindowMeasure,
 	type WindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import { rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
 import {
 	CANVAS_HOVER_SOURCE_CANVAS,
 	CANVAS_HOVER_SOURCE_CATALOG,
@@ -88,7 +94,7 @@ import {
 	RASTER_BLEND_MODES,
 	RASTER_FILTER_KINDS,
 } from "./internal.ts";
-import { RASTER_PLAY_FIXTURE_DEFAULT_ID, resolveRasterPlayFixtureSlug } from "./fixture-slugs.ts";
+import { RASTER_PLAY_EXAMPLE_DEFAULT_ID, resolveRasterPlayExampleSlug } from "./example-slugs.ts";
 
 export const RASTER_PLAY_APP_ID = "raster-play";
 export const RASTER_PLAY_CONTROLLER_ID = "raster-play";
@@ -116,16 +122,16 @@ export const RASTER_PLAY_LAYOUT = createDefaultLayout(
 	["Composite", "Navigator"],
 );
 
-export { RASTER_PLAY_FIXTURE_DEFAULT_ID, resolveRasterPlayFixtureSlug };
+export { RASTER_PLAY_EXAMPLE_DEFAULT_ID, resolveRasterPlayExampleSlug };
 
-const rasterFixtureModules = eagerPlayFixtureGlob("../fixture/*.raster.json");
+const rasterExampleModules = eagerPlayExampleGlob("../example/*.raster.json");
 
-function rasterFixtureIdFromGlobPath(globPath: string): string {
+function rasterExampleIdFromGlobPath(globPath: string): string {
 	const base = globPath.split("/").pop() ?? globPath;
 	return base.replace(/\.raster\.json$/, "");
 }
 
-function rasterFixtureLabelFromId(id: string): string {
+function rasterExampleLabelFromId(id: string): string {
 	return id
 		.split("-")
 		.filter(Boolean)
@@ -133,19 +139,19 @@ function rasterFixtureLabelFromId(id: string): string {
 		.join(" ");
 }
 
-export const RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
-	Object.entries(rasterFixtureModules).map(([path, mod]) => {
-		const id = rasterFixtureIdFromGlobPath(path);
+export const RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
+	Object.entries(rasterExampleModules).map(([path, mod]) => {
+		const id = rasterExampleIdFromGlobPath(path);
 		const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
 		return [id, json];
 	}),
 );
 
-export const RASTER_PLAY_FIXTURE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = Object.keys(
-	RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID,
+export const RASTER_PLAY_EXAMPLE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = Object.keys(
+	RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID,
 )
 	.sort()
-	.map((id) => ({ id, label: rasterFixtureLabelFromId(id) }));
+		.map((id) => ({ id, label: rasterExampleLabelFromId(id) }));
 
 export const RASTER_PLAY_EMPTY_DOCUMENT: RasterDocument = defaultRasterDocument("empty");
 
@@ -724,7 +730,7 @@ function rasterPlayPatchLayerField(doc: RasterDocument, layerId: string, field: 
 	}
 }
 
-export class RasterPlayController extends Controller implements PlaygroundFixtureHost {
+export class RasterPlayController extends Controller implements PlaygroundExampleHost {
 	readonly mainMode = new ModeRuntime("main", "Raster", undefined);
 	private readonly docStore = new DocumentVcsStore<RasterDocument, RasterEditOp>({
 		envelope: createDocumentVcsEnvelope("raster.document/v1", "raster-play", RASTER_PLAY_EMPTY_DOCUMENT),
@@ -909,14 +915,14 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 		return this.compositeViewport;
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog | null {
-		if (isPlaygroundFixtureLocked()) return null;
+	getExampleCatalog(): PlaygroundExampleCatalog | null {
+		if (isPlaygroundExampleLocked()) return null;
 		return {
-			activeFixtureId: playgroundResolvedFixtureId(
-				this.projection().id === "empty" ? PLAYGROUND_NO_FIXTURE_ID : this.projection().id,
-				RASTER_PLAY_FIXTURE_DEFAULT_ID,
+			activeExampleId: playgroundResolvedExampleId(
+				this.projection().id === "empty" ? PLAYGROUND_NO_EXAMPLE_ID : this.projection().id,
+				RASTER_PLAY_EXAMPLE_DEFAULT_ID,
 			),
-			options: RASTER_PLAY_FIXTURE_OPTIONS,
+			options: RASTER_PLAY_EXAMPLE_OPTIONS,
 		};
 	}
 
@@ -959,17 +965,17 @@ export class RasterPlayController extends Controller implements PlaygroundFixtur
 				this.dispatchEditOp({ op: "setBrushOpacity", opacity });
 				return;
 			}
-			case "setActiveFixture": {
-				const fixtureId = String(args.fixtureId ?? "");
-				if (isPlaygroundNoFixtureId(fixtureId)) {
+			case "setActiveExample": {
+				const exampleId = String(args.exampleId ?? "");
+				if (isPlaygroundNoExampleId(exampleId)) {
 					this.replaceDocument(RASTER_PLAY_EMPTY_DOCUMENT, true);
 					this.pointerFocus.setSelection([]);
 					return;
 				}
-				const json = RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId];
+				const json = RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID[exampleId];
 				if (json) {
 					this.applyDocument(rasterDocumentFromJson(json), true);
-					console.log("[DEBUG] raster fixture loaded", fixtureId);
+					console.log("[DEBUG] raster example loaded", exampleId);
 				}
 				return;
 			}
@@ -1235,13 +1241,51 @@ export function registerRasterPlayDeclarativeBodies(): void {
 
 
 
+//#region 🔖Play
+
+/** @emoji 🛝 Raster playground app. */
+
+
+export const rasterPlayAppDefinition = createPlaygroundApp({
+	id: RASTER_PLAY_APP_ID,
+	label: "Raster",
+	controllerId: RASTER_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "raster",
+		resolveDedupe: ["react", "react-dom", "@semio-tech/raster-react", "three"],
+		optimizeDeps: { include: ["react", "react-dom", "@semio-tech/raster-react"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(RASTER_PLAY_APP_ID);
+			const ctrl = new RasterPlayController(runtime.commandBus, () => runtime.notify());
+			const resolved = playgroundResolvedExampleId(RASTER_PLAY_EXAMPLE_DEFAULT_ID);
+			const fixtureJson = RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID[resolved];
+			if (fixtureJson) {
+				ctrl.run("setActiveExample", { exampleId: resolved });
+			}
+			runtime.addApp(buildRasterPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerRasterPlayDeclarativeBodies();
+	},
+	keybindings: [{ key: "ctrl+a,meta+a", controllerId: RASTER_PLAY_CONTROLLER_ID, command: "selectAll" }],
+	bootRenderer: async (pg) => {
+		const { bootRasterPlay } = await import("@semio-tech/framework-playground-renderer-react/raster");
+		bootRasterPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
-	describe("RASTER_PLAY_FIXTURE_OPTIONS", () => {
-		it("includes semio fixture", () => {
-			expect(RASTER_PLAY_FIXTURE_OPTIONS.some((row) => row.id === "semio")).toBe(true);
+	describe("RASTER_PLAY_EXAMPLE_OPTIONS", () => {
+		it("includes semio example", () => {
+			expect(RASTER_PLAY_EXAMPLE_OPTIONS.some((row) => row.id === "semio")).toBe(true);
 		});
 	});
 
@@ -1258,7 +1302,7 @@ if (import.meta.vitest) {
 	});
 	describe("buildRasterPlayMasksTree", () => {
 		it("lists mask rows from the semio fixture", () => {
-			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
+			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID.semio!);
 			const tree = buildRasterPlayMasksTree(doc, [], null, null);
 			expect(tree.sections[0]?.items.some((item) => item.id.includes(".mask."))).toBe(true);
 		});
@@ -1277,7 +1321,7 @@ if (import.meta.vitest) {
 		it("resolves tree row ids from hierarchy selectionChange", () => {
 			const bus = new CommandBus();
 			const ctrl = new RasterPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: "semio" });
+			ctrl.run("setActiveExample", { exampleId: "semio" });
 			const doc = ctrl.getDocument();
 			const layer = flattenRasterLayers(doc.layers)[0]!;
 			const rowId = rasterPlayLayersTreeRowId(layer);
@@ -1288,7 +1332,7 @@ if (import.meta.vitest) {
 
 	describe("buildRasterPlayLayersTree", () => {
 		it("builds nested layer rows", () => {
-			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
+			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID.semio!);
 			const tree = buildRasterPlayLayersTree(doc, [], null, null);
 			const emblem = tree.sections[0]?.items.find((item) => item.id.includes("logo-group"));
 			expect(emblem?.items?.length).toBeGreaterThan(0);
@@ -1300,7 +1344,7 @@ if (import.meta.vitest) {
 		it("adds and deletes layers", () => {
 			const bus = new CommandBus();
 			const ctrl = new RasterPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: "semio" });
+			ctrl.run("setActiveExample", { exampleId: "semio" });
 			const before = flattenRasterLayers(ctrl.getDocument().layers).length;
 			ctrl.run("addLayer", { kind: "pixel" });
 			expect(flattenRasterLayers(ctrl.getDocument().layers).length).toBe(before + 1);
@@ -1314,7 +1358,7 @@ if (import.meta.vitest) {
 		it("round-trips fixture json", () => {
 			const bus = new CommandBus();
 			const ctrl = new RasterPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: "semio" });
+			ctrl.run("setActiveExample", { exampleId: "semio" });
 			const exported = ctrl.getDocumentJson();
 			ctrl.run("setFixtureJson", { json: exported, resetInteraction: true });
 			expect(ctrl.getDocument().id).toBe("semio");
@@ -1324,7 +1368,7 @@ if (import.meta.vitest) {
 
 	describe("buildRasterPlayInspectorTree", () => {
 		it("orders inspector sections specific to general for pixel layers", () => {
-			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
+			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID.semio!);
 			const layer = flattenRasterLayers(doc.layers).find((entry) => entry.kind === "pixel");
 			if (!layer) return;
 			const tree = buildRasterPlayInspectorTree(doc, [layer.id]);
@@ -1333,7 +1377,7 @@ if (import.meta.vitest) {
 		});
 
 		it("batch-patches shared fields across multiple layers", () => {
-			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID.semio!);
+			const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID.semio!);
 			const layers = flattenRasterLayers(doc.layers).slice(0, 2);
 			if (layers.length < 2) return;
 			const bus = new CommandBus();
@@ -1346,10 +1390,10 @@ if (import.meta.vitest) {
 		});
 	});
 
-	describe("RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID", () => {
-		for (const fixtureId of Object.keys(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID)) {
+	describe("RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID", () => {
+		for (const fixtureId of Object.keys(RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID)) {
 			it(`loads ${fixtureId} fixture into trees without empty sections`, () => {
-				const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId]!);
+				const doc = rasterDocumentFromJson(RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID[fixtureId]!);
 				const layers = buildRasterPlayLayersTree(doc, [], null, null);
 				const masks = buildRasterPlayMasksTree(doc, [], null, null);
 				const properties = buildRasterPlayInspectorTree(doc, doc.layers[0] ? [doc.layers[0].id] : []);
@@ -1363,24 +1407,23 @@ if (import.meta.vitest) {
 // #endregion 🧪Tests
 
 export * from "./internal.ts";
-export { rasterPlayAppDefinition, PlaygroundRaster } from "./playground.ts";
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { rasterPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for raster. */
 export function buildRasterProgramDefinition(): PlatformDefinition {
-	const app = rasterPlayAppDefinition;
 	return {
 		id: "raster",
 		name: "Raster",
 		apiVersion: "1",
-		apps: [{ id: "raster", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "raster", label: "Raster", controllerId: RASTER_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -1603,3 +1646,84 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖MediaExport
+function rasterAssetDataUrl(doc: RasterDocument, key: string | undefined): string | null {
+	if (!key) return null;
+	const asset = doc.assets?.[key];
+	if (!asset) return null;
+	return asset.data.startsWith("data:") ? asset.data : `data:${asset.mime};base64,${asset.data}`;
+}
+
+function rasterDocumentBounds(doc: RasterDocument): { width: number; height: number } {
+	let maxX = 512;
+	let maxY = 512;
+	for (const layer of flattenRasterLayers(doc.layers)) {
+		if (!layer.visible) continue;
+		const width = layer.width ?? 512;
+		const height = layer.height ?? 512;
+		maxX = Math.max(maxX, layer.transform.x + width);
+		maxY = Math.max(maxY, layer.transform.y + height);
+	}
+	return { width: Math.max(1, Math.ceil(maxX)), height: Math.max(1, Math.ceil(maxY)) };
+}
+
+async function rasterDocumentToPngBytes(doc: RasterDocument): Promise<{ png: Uint8Array; width: number; height: number }> {
+	const { width, height } = rasterDocumentBounds(doc);
+	if (typeof document === "undefined") return { png: new Uint8Array(0), width, height };
+	const canvas = document.createElement("canvas");
+	canvas.width = width;
+	canvas.height = height;
+	const ctx = canvas.getContext("2d");
+	if (!ctx) return { png: new Uint8Array(0), width, height };
+	for (const layer of flattenRasterLayers(doc.layers)) {
+		if (!layer.visible || layer.kind !== "pixel") continue;
+		const src = rasterAssetDataUrl(doc, layer.imageKey);
+		if (!src) continue;
+		await new Promise<void>((resolve) => {
+			const image = new Image();
+			image.onload = () => {
+				ctx.save();
+				ctx.globalAlpha = layer.opacity;
+				ctx.translate(layer.transform.x, layer.transform.y);
+				ctx.rotate(layer.transform.rotation);
+				ctx.scale(layer.transform.scaleX, layer.transform.scaleY);
+				ctx.drawImage(image, 0, 0, layer.width ?? image.naturalWidth, layer.height ?? image.naturalHeight);
+				ctx.restore();
+				resolve();
+			};
+			image.onerror = () => resolve();
+			image.src = src;
+		});
+	}
+	const dataUrl = canvas.toDataURL("image/png");
+	const blob = await fetch(dataUrl).then((response) => response.blob());
+	return { png: new Uint8Array(await blob.arrayBuffer()), width, height };
+}
+
+function rasterDocumentToSvg(width: number, height: number, pngDataUrl: string): string {
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}"><image href="${pngDataUrl}" width="${width}" height="${height}"/></svg>`;
+}
+
+/** @emoji 💾 Registers raster document SVG/PNG export handlers for the OS media graph. */
+export function registerRasterMediaExportHandlers(): void {
+	registerOsMediaExportHandler("2d.raster", "png", async (doc) => {
+		const raster = doc as RasterDocument;
+		const { png } = await rasterDocumentToPngBytes(raster);
+		return { data: png, mimeType: "image/png", fileName: "raster.png" };
+	});
+	registerOsMediaExportHandler("2d.raster", "svg", async (doc) => {
+		const raster = doc as RasterDocument;
+		const { width, height, png } = await rasterDocumentToPngBytes(raster);
+		const pngDataUrl =
+			png.length > 0
+				? `data:image/png;base64,${btoa(String.fromCharCode(...png))}`
+				: await rasterizeSvgMarkupToPngDataUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"/>`, width, height);
+		return {
+			data: rasterDocumentToSvg(width, height, pngDataUrl),
+			mimeType: "image/svg+xml",
+			fileName: "raster.svg",
+		};
+	});
+}
+//#endregion 🔖MediaExport

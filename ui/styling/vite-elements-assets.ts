@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import type { Connect, Plugin } from "vite";
 import { defineConfig, type UserConfig } from "vite";
 import {
-  PLAYGROUND_LOCKED_FIXTURE_ENV,
+  PLAYGROUND_LOCKED_EXAMPLE_ENV,
   PLAYGROUND_PORTS,
   PLAYGROUND_SITE_DEV_PORTS,
   PLAYGROUND_SITE_HOSTS,
@@ -26,7 +26,7 @@ import {
   playgroundDevPort,
   playgroundDevPortString,
   playgroundEmbedUrl,
-  playgroundLockedFixtureIdFromEnv,
+  playgroundLockedExampleIdFromEnv,
   playgroundPlayViteDefine,
   playgroundPortEnv,
   playgroundTestPort,
@@ -367,13 +367,13 @@ export function puzzle3dMeshBasenamesInJson(value: unknown, out = new Set<string
   return out;
 }
 
-/** @emoji 🔒 GLB basenames required by {@link PLAYGROUND_LOCKED_FIXTURE_ENV}, if set. */
-export function puzzle3dLockedFixtureMeshBasenames(repoRoot: string): Set<string> | undefined {
-  const fixtureId = playgroundLockedFixtureIdFromEnv();
-  if (!fixtureId) {
+/** @emoji 🔒 GLB basenames required by {@link PLAYGROUND_LOCKED_EXAMPLE_ENV}, if set. */
+export function puzzle3dLockedExampleMeshBasenames(repoRoot: string): Set<string> | undefined {
+  const exampleId = playgroundLockedExampleIdFromEnv();
+  if (!exampleId) {
     return undefined;
   }
-  const relPaths = PUZZLE_3D_LOCKED_FIXTURE_JSON_REL[fixtureId];
+  const relPaths = PUZZLE_3D_LOCKED_FIXTURE_JSON_REL[exampleId];
   if (!relPaths?.length) {
     return undefined;
   }
@@ -442,7 +442,7 @@ export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
       closeBundle() {
         const dest = resolve(viteRoot, "dist", "mesh");
         mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
-        copyPuzzle3dKitGlbs(meshRoots, dest, puzzle3dLockedFixtureMeshBasenames(repoRoot));
+        copyPuzzle3dKitGlbs(meshRoots, dest, puzzle3dLockedExampleMeshBasenames(repoRoot));
         if (existsSync(placeholderMesh)) {
           cpSync(placeholderMesh, resolve(dest, "placeholder.glb"));
         }
@@ -651,15 +651,30 @@ const S_PLAYGROUND_HOST_MARKERS: readonly { readonly start: string; readonly end
   { start: "//#region 🔖SPlayHost", end: "//#endregion 🔖SPlayHost" },
 ];
 
+/** @emoji ✂️ Removes duplicate writer jack imports before concatenating play host slices. */
+function stripPlaygroundRendererWriterJackImports(source: string): string {
+	return source
+		.replace(/import\s*\{\s*createWriterDocument\s*\}\s*from\s*["']@semio-tech\/writer-core["'];\s*\n/g, "")
+		.replace(/import\s*\{\s*WriterCanvas\s*\}\s*from\s*["']@semio-tech\/writer-react["'];\s*\n/g, "");
+}
+
+const PLAYGROUND_RENDERER_WRITER_JACK_IMPORTS = `import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
+`;
+
 /** @emoji ✂️ Shell + s-relevant play hosts + boot (excludes lowpoly/vcs/imperative/sequence). */
 export function stripPlaygroundRendererForS(source: string): string {
-  const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
-  const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
-  const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
-  if (puzzleStart < 0 || bootStart < 0) return source;
-  const bootEnd = testsStart >= 0 ? testsStart : source.length;
-  const hosts = S_PLAYGROUND_HOST_MARKERS.map((markers) => slicePlaygroundRendererRegion(source, markers.start, markers.end)).join("\n");
-  return `${source.slice(0, puzzleStart)}${hosts}${source.slice(bootStart, bootEnd)}`;
+	const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
+	const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
+	const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
+	if (puzzleStart < 0 || bootStart < 0) return source;
+	const bootEnd = testsStart >= 0 ? testsStart : source.length;
+	const hosts =
+		PLAYGROUND_RENDERER_WRITER_JACK_IMPORTS +
+		S_PLAYGROUND_HOST_MARKERS.map((markers) =>
+			stripPlaygroundRendererWriterJackImports(slicePlaygroundRendererRegion(source, markers.start, markers.end)),
+		).join("\n");
+	return `${source.slice(0, puzzleStart)}${hosts}${source.slice(bootStart, bootEnd)}`;
 }
 
 function slicePlaygroundRendererRegion(source: string, startMarker: string, endMarker: string): string {
@@ -682,22 +697,31 @@ export function stripPlaygroundRendererPuzzleHosts(source: string, options: { re
   return out;
 }
 
+/** @emoji ✂️ Injects jack writer imports when a sliced host uses WriterCanvas without importing it. */
+function ensurePlaygroundRendererWriterJackImports(host: string): string {
+	if (!host.includes("WriterCanvas") || /import\s*\{\s*WriterCanvas\s*\}/.test(host)) {
+		return host;
+	}
+	const insertAt = host.indexOf("\n", host.indexOf("//")) + 1;
+	return `${host.slice(0, insertAt)}${PLAYGROUND_RENDERER_WRITER_JACK_IMPORTS}${host.slice(insertAt)}`;
+}
+
 /** @emoji ✂️ Keeps shell + one puzzle play host + boot (per-dimension playground entries). */
 export function stripPlaygroundRendererForPuzzleKind(
-  source: string,
-  kind: PlaygroundRendererPuzzleKind,
-  options: { readonly includeVitest?: boolean } = {},
+	source: string,
+	kind: PlaygroundRendererPuzzleKind,
+	options: { readonly includeVitest?: boolean } = {},
 ): string {
-  const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
-  const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
-  const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
-  const markers = PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS[kind];
-  if (puzzleStart < 0 || bootStart < 0) return source;
-  const bootEnd = testsStart >= 0 ? testsStart : source.length;
-  const host = slicePlaygroundRendererRegion(source, markers.start, markers.end);
-  let out = `${source.slice(0, puzzleStart)}${host}${source.slice(bootStart, bootEnd)}`;
-  if (options.includeVitest && testsStart >= 0) out += source.slice(testsStart);
-  return out;
+	const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
+	const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
+	const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
+	const markers = PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS[kind];
+	if (puzzleStart < 0 || bootStart < 0) return source;
+	const bootEnd = testsStart >= 0 ? testsStart : source.length;
+	const host = ensurePlaygroundRendererWriterJackImports(slicePlaygroundRendererRegion(source, markers.start, markers.end));
+	let out = `${source.slice(0, puzzleStart)}${host}${source.slice(bootStart, bootEnd)}`;
+	if (options.includeVitest && testsStart >= 0) out += source.slice(testsStart);
+	return out;
 }
 
 function namedImportSpecifiersForModule(source: string, moduleId: string): string[] {
@@ -1266,6 +1290,7 @@ export function playgroundRendererResolveAliases(
     { find: "@semio-tech/framework-presentation-renderer-react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
     { find: "@semio-tech/framework-playground-core", replacement: packageDir(repoRoot, "framework/product/playground/core") },
     { find: "@semio-tech/flow-core", replacement: packageDir(repoRoot, "flow/core") },
+    { find: "@semio-tech/flow-core/pkg/flow_core.js", replacement: resolve(repoRoot, "flow/core/pkg/flow_core.js") },
     { find: "@semio-tech/flow-react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
     { find: "@semio-tech/flow-module-core", replacement: resolve(repoRoot, "flow/module/core/pkg/flow_module_core.js") },
     { find: "@semio-tech/flow-module-brep", replacement: resolve(repoRoot, "flow/module/brep/pkg/flow_module_brep.js") },
@@ -1300,6 +1325,8 @@ export function playgroundRendererResolveAliases(
     { find: "@semio-tech/shooting-react", replacement: resolve(repoRoot, "shooting/react/index.tsx") },
     { find: "@semio-tech/draw-core", replacement: packageDir(repoRoot, "draw/core") },
     { find: "@semio-tech/draw-react", replacement: resolve(repoRoot, "draw/react/index.tsx") },
+    { find: "@semio-tech/note-core", replacement: packageDir(repoRoot, "note/core") },
+    { find: "@semio-tech/note-react", replacement: resolve(repoRoot, "note/react/index.tsx") },
     { find: "@semio-tech/writer-core", replacement: packageDir(repoRoot, "writer/core") },
     { find: "@semio-tech/writer-react", replacement: resolve(repoRoot, "writer/react/index.tsx") },
     { find: "@semio-tech/forms-core", replacement: packageDir(repoRoot, "forms/core") },
@@ -1652,6 +1679,26 @@ if (import.meta.vitest) {
       expect(stripped).toContain("//#region 🔖FormsPlayHost");
       expect(stripped).toContain("bootFormsPlay");
       expect(stripped).not.toContain("//#region 🔖ShootingPlayHost");
+      expect(stripped).not.toContain("//#region 🔖Puzzle3dPlayHost");
+    });
+
+    it("s virtual entry imports WriterCanvas once for concatenated hosts", () => {
+      const rendererIndex = resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
+      const stripped = stripPlaygroundRendererForS(readFileSync(rendererIndex, "utf8"));
+      expect(stripped).toContain("//#region 🔖SPlayHost");
+      expect(stripped).toContain("bootSPlay");
+      expect(stripped).toMatch(/import\s*\{[^}]*WriterCanvas[^}]*\}\s*from\s*["']@semio-tech\/writer-react["']/);
+      expect(stripped.match(/import\s*\{\s*WriterCanvas\s*\}\s*from\s*["']@semio-tech\/writer-react["']/g)?.length).toBe(1);
+      expect(stripped).not.toContain("//#region 🔖LowpolyPlayHost");
+    });
+
+    it("flow virtual entry imports WriterCanvas in the host slice", () => {
+      const rendererIndex = resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
+      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "flow");
+      expect(stripped).toContain("//#region 🔖FlowPlayHost");
+      expect(stripped).toContain("bootFlowPlay");
+      expect(stripped).toMatch(/import\s*\{[^}]*WriterCanvas[^}]*\}\s*from\s*["']@semio-tech\/writer-react["']/);
+      expect(stripped).toMatch(/import\s*\{[^}]*createWriterDocument[^}]*\}\s*from\s*["']@semio-tech\/writer-core["']/);
       expect(stripped).not.toContain("//#region 🔖Puzzle3dPlayHost");
     });
 

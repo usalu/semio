@@ -14,17 +14,17 @@ import {
 	buildDrawWindowBody,
 	createDefaultLayout,
 	createPlayAppRuntime,
-	isPlaygroundFixtureLocked,
-	isPlaygroundNoFixtureId,
-	PLAYGROUND_NO_FIXTURE_ID,
-	playgroundResolvedFixtureId,
+	isPlaygroundExampleLocked,
+	isPlaygroundNoExampleId,
+	PLAYGROUND_NO_EXAMPLE_ID,
+	playgroundResolvedExampleId,
 	registerWindowBody,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	type AppTools,
-	type PlaygroundFixtureCatalog,
-	type PlaygroundFixtureHost,
+	type PlaygroundExampleCatalog,
+	type PlaygroundExampleHost,
 	type ToolLeaf,
 	toolCollection,
 	uiDeclarativeSectionsToTree,
@@ -45,6 +45,8 @@ import {
 	type WindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler, type OsMediaExportFormat } from "@semio-tech/framework-os-core";
+import { pathSegmentsToSvgD, rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
 import { DocumentVcsStore, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
@@ -75,6 +77,8 @@ import {
 	drawTransformToMatrix,
 	findDrawLayer,
 	flattenDrawLayers,
+	flattenDrawDocumentToSceneNodes,
+	resolveDrawDocumentArtboard,
 	hexToRgba,
 	layerToPathSegments,
 	mutateDrawLayer,
@@ -94,7 +98,6 @@ import {
 } from "./internal.ts";
 import type { DrawShapeKind } from "./internal.ts";
 export * from "./internal.ts";
-export { drawPlayAppDefinition, PlaygroundDraw } from "./playground.ts";
 
 export const DRAW_PLAY_APP_ID = "draw-play";
 export const DRAW_PLAY_CONTROLLER_ID = "draw-play";
@@ -122,7 +125,7 @@ export const DRAW_PLAY_LAYOUT = createDefaultLayout(
 export const DRAW_PLAY_EMPTY_DOCUMENT: DrawDocument = defaultDrawDocument("empty");
 
 /** @emoji 📂 Draw playground fixture catalog for {@link DrawPlayController}. */
-export type DrawPlayFixtureHostConfig = {
+export type DrawPlayExampleHostConfig = {
 	readonly defaultId: string;
 	readonly options: ReadonlyArray<{ readonly id: string; readonly label: string }>;
 	readonly fileJsonById: Readonly<Record<string, string>>;
@@ -981,7 +984,7 @@ function drawPlayPatchLayerField(doc: DrawDocument, layerId: string, field: stri
 	}
 }
 
-export class DrawPlayController extends Controller implements PlaygroundFixtureHost {
+export class DrawPlayController extends Controller implements PlaygroundExampleHost {
 	readonly mainMode = new ModeRuntime("main", "Draw", undefined);
 	private readonly docStore = new DocumentVcsStore<DrawDocument, DrawEditOp>({
 		envelope: createDrawDocumentVcsEnvelope("draw-play", DRAW_PLAY_EMPTY_DOCUMENT),
@@ -993,7 +996,7 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 	private listeners = new Set<() => void>();
 	private hostBridge: DrawPlayHostBridge | null = null;
 
-	constructor(bus: CommandBus, notifyPlatform: () => void, private readonly fixtureHost?: DrawPlayFixtureHostConfig) {
+	constructor(bus: CommandBus, notifyPlatform: () => void, private readonlyexampleHost?: DrawPlayExampleHostConfig) {
 		super(DRAW_PLAY_CONTROLLER_ID, bus, notifyPlatform);
 		this.rebuildShellMode();
 	}
@@ -1185,14 +1188,14 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 		return drawHoverPayloadFromPointerFocusKey(this.pointerFocus.getSnapshot().hover).kind;
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog | null {
-		if (isPlaygroundFixtureLocked() || !this.fixtureHost) return null;
+	getExampleCatalog(): PlaygroundExampleCatalog | null {
+		if (isPlaygroundExampleLocked() || !this.exampleHost) return null;
 		return {
-			activeFixtureId: playgroundResolvedFixtureId(
-				this.projection().id === "empty" ? PLAYGROUND_NO_FIXTURE_ID : this.projection().id,
-				this.fixtureHost.defaultId,
+			activeExampleId: playgroundResolvedExampleId(
+				this.projection().id === "empty" ? PLAYGROUND_NO_EXAMPLE_ID : this.projection().id,
+				this.exampleHost.defaultId,
 			),
-			options: this.fixtureHost.options,
+			options: this.exampleHost.options,
 		};
 	}
 
@@ -1231,13 +1234,13 @@ export class DrawPlayController extends Controller implements PlaygroundFixtureH
 				this.run("patchLayers", { layerIds: [...selected], field: "opacity", value: opacity });
 				return;
 			}
-			case "setActiveFixture": {
-				const fixtureId = String(args.fixtureId ?? "");
-				if (isPlaygroundNoFixtureId(fixtureId)) {
+			case "setActiveExample": {
+				const fixtureId = String(args.exampleId ?? "");
+				if (isPlaygroundNoExampleId(fixtureId)) {
 					this.dispatchEditOp({ op: "setDocument", document: DRAW_PLAY_EMPTY_DOCUMENT }, undefined, true);
 					return;
 				}
-				const json = this.fixtureHost?.fileJsonById[fixtureId];
+				const json = this.exampleHost?.fileJsonById[fixtureId];
 				if (json) {
 					this.applyDocument(drawDocumentFromJson(json), true);
 					console.log("[DEBUG] draw fixture loaded", fixtureId);
@@ -1397,20 +1400,65 @@ export function registerDrawPlayDeclarativeBodies(): void {
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { drawPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for draw. */
 export function buildDrawProgramDefinition(): PlatformDefinition {
-	const app = drawPlayAppDefinition;
 	return {
 		id: "draw",
 		name: "Draw",
 		apiVersion: "1",
-		apps: [{ id: "draw", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "draw", label: "Draw", controllerId: DRAW_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+
+//#region 🔖Play
+import {
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
+	loadPlaygroundExampleCatalog,
+	playgroundResolvedExampleId,
+} from "@semio-tech/framework-playground-core";
+import { DRAW_PLAY_EXAMPLE_DEFAULT_ID } from "./example-slugs.ts";
+import { drawDocumentFromJson, flattenDrawLayers } from "./internal.ts";
+
+
+const drawExampleCatalog = loadPlaygroundExampleCatalog("../example/*.draw.json", ".draw.json", DRAW_PLAY_EXAMPLE_DEFAULT_ID);
+
+export const drawPlayAppDefinition = createPlaygroundApp({
+	id: DRAW_PLAY_APP_ID,
+	label: "Draw",
+	controllerId: DRAW_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "draw",
+		resolveDedupe: ["react", "react-dom", "@semio-tech/draw-react"],
+		optimizeDeps: { include: ["react", "react-dom", "@semio-tech/draw-react"] },
+	},
+	keybindings: [{ key: "ctrl+a,meta+a", controllerId: DRAW_PLAY_CONTROLLER_ID, command: "selectAll" }],
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(DRAW_PLAY_APP_ID);
+		const exampleHost: DrawPlayExampleHostConfig = {
+			defaultId: drawExampleCatalog.defaultId,
+			options: drawExampleCatalog.options,
+			fileJsonById: drawExampleCatalog.jsonById,
+		};
+		const ctrl = new DrawPlayController(runtime.commandBus, () => runtime.notify(), exampleHost);
+		const resolved = playgroundResolvedExampleId(DRAW_PLAY_EXAMPLE_DEFAULT_ID);
+		if (exampleHost.fileJsonById[resolved]) ctrl.run("setActiveExample", { exampleId: resolved });
+		runtime.addApp(buildDrawPlayAppRuntime(ctrl));
+		return runtime;
+	},
+	registerBodies: () => registerDrawPlayDeclarativeBodies(),
+	bootRenderer: async (pg) => {
+		const { bootDrawPlay } = await import("@semio-tech/framework-playground-renderer-react/draw");
+		bootDrawPlay(pg);
+	},
+});
+//#endregion 🔖Play
 
 // #region 🧪Tests
 if (import.meta.vitest) {
@@ -1461,3 +1509,74 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖MediaExport
+function drawMediaExportFileName(format: OsMediaExportFormat): string {
+	return `drawing.${format}`;
+}
+
+function drawFillCss(fill: { readonly kind: "solid"; readonly color: readonly [number, number, number, number] } | undefined): string {
+	if (!fill || fill.kind !== "solid") return "none";
+	const [r, g, b, a] = fill.color;
+	return `rgba(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)},${a})`;
+}
+
+function drawStrokeCss(stroke: { readonly color: readonly [number, number, number, number] } | undefined): string {
+	if (!stroke) return "none";
+	const [r, g, b, a] = stroke.color;
+	return `rgba(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)},${a})`;
+}
+
+function drawDocumentToSvg(doc: DrawDocument): string {
+	const artboard = resolveDrawDocumentArtboard(doc) ?? { width: 1024, height: 1024 };
+	const nodes = flattenDrawDocumentToSceneNodes(doc);
+	const shapes = nodes
+		.map((node) => {
+			if (node.text) {
+				const fill = drawFillCss(node.fill);
+				return `<g transform="matrix(${node.transform.join(" ")})" opacity="${node.opacity}"><text x="0" y="${node.text.size}" font-size="${node.text.size}" fill="${fill}">${node.text.content.replace(/[<>&]/g, "")}</text></g>`;
+			}
+			if (node.image?.src) {
+				return `<g transform="matrix(${node.transform.join(" ")})" opacity="${node.opacity}"><image href="${node.image.src}" width="${node.image.width}" height="${node.image.height}"/></g>`;
+			}
+			const d = pathSegmentsToSvgD(node.segments);
+			if (!d) return "";
+			const fill = drawFillCss(node.fill);
+			const stroke = drawStrokeCss(node.stroke);
+			const strokeWidth = node.stroke?.width ?? 0;
+			return `<g transform="matrix(${node.transform.join(" ")})" opacity="${node.opacity}"><path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" fill-rule="evenodd"/></g>`;
+		})
+		.filter(Boolean)
+		.join("");
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${artboard.width} ${artboard.height}" width="${artboard.width}" height="${artboard.height}">${shapes}</svg>`;
+}
+
+async function drawPngBytesFromSvg(svg: string, width: number, height: number): Promise<Uint8Array> {
+	const dataUrl = await rasterizeSvgMarkupToPngDataUrl(svg, width, height);
+	const blob = await fetch(dataUrl).then((response) => response.blob());
+	return new Uint8Array(await blob.arrayBuffer());
+}
+
+/** @emoji 💾 Registers draw document SVG/PNG export handlers for the OS media graph. */
+export function registerDrawMediaExportHandlers(): void {
+	registerOsMediaExportHandler("2d.drawing", "svg", async (doc) => {
+		const draw = doc as DrawDocument;
+		const artboard = resolveDrawDocumentArtboard(draw) ?? { width: 1024, height: 1024 };
+		return {
+			data: drawDocumentToSvg(draw),
+			mimeType: "image/svg+xml",
+			fileName: drawMediaExportFileName("svg"),
+		};
+	});
+	registerOsMediaExportHandler("2d.drawing", "png", async (doc) => {
+		const draw = doc as DrawDocument;
+		const artboard = resolveDrawDocumentArtboard(draw) ?? { width: 1024, height: 1024 };
+		const svg = drawDocumentToSvg(draw);
+		return {
+			data: await drawPngBytesFromSvg(svg, artboard.width, artboard.height),
+			mimeType: "image/png",
+			fileName: drawMediaExportFileName("png"),
+		};
+	});
+}
+//#endregion 🔖MediaExport

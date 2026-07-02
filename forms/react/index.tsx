@@ -61,7 +61,7 @@ import {
 } from "@semio-tech/ui-react";
 import React from "react";
 import { createPortal } from "react-dom";
-import hexColumnFixture from "../../procedural/3d/fixture/hexagonal-mushroom-column.procedural.json";
+import hexColumnFixture from "../../procedural/3d/example/hexagonal-mushroom-column.procedural.json";
 
 function registerDefaultFormsFlowFixtures(): void {
 	registerFormsFlowFixtureResolver("hexagonal-mushroom-column", () =>

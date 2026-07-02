@@ -16,6 +16,8 @@ import {
 	type DocumentVcsEnvelope,
 	type HistoryColumn,
 	type WindowEngagement,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import {
 	DocumentVcsStore,
@@ -25,7 +27,6 @@ import {
 } from "./internal.ts";
 
 export * from "./internal.ts";
-export { vcsPlayAppDefinition, PlaygroundVcs } from "./playground.ts";
 
 export const VCS_PLAY_APP_ID = "vcs-play";
 export const VCS_PLAY_CONTROLLER_ID = "vcs-play";
@@ -377,20 +378,51 @@ export function seedVcsDemoHistory(store: DocumentVcsStore<VcsDemoProjection, Vc
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { vcsPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for vcs. */
 export function buildVcsProgramDefinition(): PlatformDefinition {
-	const app = vcsPlayAppDefinition;
 	return {
 		id: "vcs",
 		name: "VCS",
 		apiVersion: "1",
-		apps: [{ id: "vcs", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "vcs", label: "VCS", controllerId: VCS_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
+
+//#region 🔖Play
+
+/** @emoji 🛝 VCS playground app. */
+
+
+export const vcsPlayAppDefinition = createPlaygroundApp({
+	id: VCS_PLAY_APP_ID,
+	label: "VCS",
+	controllerId: VCS_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "vcs",
+		resolveDedupe: ["react", "react-dom", "@semio-tech/ui-react", "@semio-tech/vcs-react"],
+		optimizeDeps: { include: ["react", "react-dom"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(VCS_PLAY_APP_ID, "VCS");
+			const ctrl = new VcsPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildVcsPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerVcsPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootVcsPlay } = await import("@semio-tech/framework-playground-renderer-react/vcs");
+		bootVcsPlay(pg);
+	},
+});
+//#endregion 🔖Play
 
 // #region 🧪Tests
 if (import.meta.vitest) {

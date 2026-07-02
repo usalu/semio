@@ -11,12 +11,12 @@ import {
 	buildShootingWindowBody,
 	createDefaultLayout,
 	createPlayAppRuntime,
-	eagerPlayFixtureGlob,
+	eagerPlayExampleGlob,
 	enforcePlaygroundWindowEngagementInput,
-	isPlaygroundFixtureLocked,
-	isPlaygroundNoFixtureId,
-	PLAYGROUND_NO_FIXTURE_ID,
-	playgroundResolvedFixtureId,
+	isPlaygroundExampleLocked,
+	isPlaygroundNoExampleId,
+	PLAYGROUND_NO_EXAMPLE_ID,
+	playgroundResolvedExampleId,
 	registerWindowBody,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
@@ -30,8 +30,8 @@ import {
 	uiInspectorReadonlyField,
 	type AppTools,
 	type CommandDescriptor,
-	type PlaygroundFixtureCatalog,
-	type PlaygroundFixtureHost,
+	type PlaygroundExampleCatalog,
+	type PlaygroundExampleHost,
 	type ToolLeaf,
 	type UiInspectorFieldGroup,
 	toolCollection,
@@ -39,8 +39,12 @@ import {
 	type UiTreeItemNode,
 	type WindowEngagement,
 	type WindowMeasure,
+  createPlaygroundApp,
+  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
+import { iconRenderPort } from "@semio-tech/ui-react";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 import {
 	DEFAULT_SHOOTING_FIXTURE,
@@ -48,6 +52,8 @@ import {
 	resolveActiveShot,
 	resolveActiveAsset,
 	shootingFixtureToJson,
+	renderShootingShot,
+	resolveShotCamera,
 	applyShootingFixtureEditOp,
 	backwardsShootingFixtureEditOp,
 	diffShootingFixtureEditOp,
@@ -57,7 +63,7 @@ import {
 	type ShootingSceneV1,
 	type ShootingShotV1,
 } from "@semio-tech/shooting-react";
-import { SHOOTING_PLAY_FIXTURE_DEFAULT_ID, resolveShootingPlayFixtureSlug } from "./fixture-slugs.ts";
+import { SHOOTING_PLAY_EXAMPLE_DEFAULT_ID, resolveShootingPlayExampleSlug } from "./example-slugs.ts";
 
 export const SHOOTING_PLAY_APP_ID = "shooting-play";
 export const SHOOTING_PLAY_CONTROLLER_ID = "shooting-play";
@@ -80,9 +86,9 @@ export const SHOOTING_PLAY_LAYOUT = createDefaultLayout(
 	["Model", "Icon"],
 );
 
-export { SHOOTING_PLAY_FIXTURE_DEFAULT_ID, resolveShootingPlayFixtureSlug };
+export { SHOOTING_PLAY_EXAMPLE_DEFAULT_ID, resolveShootingPlayExampleSlug };
 
-const shootingFixtureModules = eagerPlayFixtureGlob("../fixture/*.shooting.json");
+const shootingFixtureModules = eagerPlayExampleGlob("../example/*.shooting.json");
 
 function shootingFixtureIdFromGlobPath(globPath: string): string {
 	const base = globPath.split("/").pop() ?? globPath;
@@ -97,7 +103,7 @@ function shootingFixtureLabelFromId(id: string): string {
 		.join(" ");
 }
 
-const SHOOTING_PLAY_FILE_FIXTURE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
+const SHOOTING_PLAY_FILE_EXAMPLE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
 	Object.entries(shootingFixtureModules).map(([path, mod]) => {
 		const id = shootingFixtureIdFromGlobPath(path);
 		const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
@@ -111,9 +117,9 @@ export const SHOOTING_PLAY_EMPTY_FIXTURE_JSON = shootingFixtureToJson({
 	shots: [],
 });
 
-export const SHOOTING_PLAY_FIXTURE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
-	{ id: SHOOTING_PLAY_FIXTURE_DEFAULT_ID, label: "Default Base Icon" },
-	...Object.keys(SHOOTING_PLAY_FILE_FIXTURE_JSON_BY_ID)
+export const SHOOTING_PLAY_EXAMPLE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
+	{ id: SHOOTING_PLAY_EXAMPLE_DEFAULT_ID, label: "Default Base Icon" },
+	...Object.keys(SHOOTING_PLAY_FILE_EXAMPLE_JSON_BY_ID)
 		.sort()
 		.map((id) => ({ id, label: shootingFixtureLabelFromId(id) })),
 ];
@@ -433,9 +439,9 @@ export function buildShootingPlayInspectorTree(
 // #endregion 🔖ShootingPlayPanels
 
 function shootingFixtureJsonForId(fixtureId: string): string {
-	if (isPlaygroundNoFixtureId(fixtureId)) return SHOOTING_PLAY_EMPTY_FIXTURE_JSON;
-	if (fixtureId === SHOOTING_PLAY_FIXTURE_DEFAULT_ID) return shootingFixtureToJson(DEFAULT_SHOOTING_FIXTURE);
-	return SHOOTING_PLAY_FILE_FIXTURE_JSON_BY_ID[fixtureId] ?? SHOOTING_PLAY_EMPTY_FIXTURE_JSON;
+	if (isPlaygroundNoExampleId(fixtureId)) return SHOOTING_PLAY_EMPTY_FIXTURE_JSON;
+	if (fixtureId === SHOOTING_PLAY_EXAMPLE_DEFAULT_ID) return shootingFixtureToJson(DEFAULT_SHOOTING_FIXTURE);
+	return SHOOTING_PLAY_FILE_EXAMPLE_JSON_BY_ID[fixtureId] ?? SHOOTING_PLAY_EMPTY_FIXTURE_JSON;
 }
 
 export function buildShootingPlayToolbarTools(state: ShootingPlayToolbarState, controllerId: string): AppTools {
@@ -557,14 +563,14 @@ function shootingPointerKeysToAssetIds(keys: readonly string[]): string[] {
 	return keys.filter((key) => key.startsWith("shooting:asset:")).map((key) => key.slice("shooting:asset:".length));
 }
 
-export class ShootingPlayController extends Controller implements PlaygroundFixtureHost {
+export class ShootingPlayController extends Controller implements PlaygroundExampleHost {
 	readonly mainMode = new ModeRuntime("main", "Edit", undefined);
-	private activeFixtureId = playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID);
+	private activeExampleId = playgroundResolvedExampleId(PLAYGROUND_NO_EXAMPLE_ID);
 	private readonly docStore = new DocumentVcsStore<ShootingFixtureV1, ShootingFixtureEditOp>({
 		envelope: createDocumentVcsEnvelope(
 			"shooting.fixture/v1",
 			"shooting-play",
-			parseShootingFixture(shootingFixtureJsonForId(playgroundResolvedFixtureId(PLAYGROUND_NO_FIXTURE_ID))) ?? {
+			parseShootingFixture(shootingFixtureJsonForId(playgroundResolvedExampleId(PLAYGROUND_NO_EXAMPLE_ID))) ?? {
 				...DEFAULT_SHOOTING_FIXTURE,
 				assets: [],
 				shots: [],
@@ -633,9 +639,9 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		return this.fixtureStore.load() != null;
 	}
 
-	getFixtureCatalog(): PlaygroundFixtureCatalog | null {
-		if (isPlaygroundFixtureLocked()) return null;
-		return { activeFixtureId: this.activeFixtureId, options: [...SHOOTING_PLAY_FIXTURE_OPTIONS] };
+	getExampleCatalog(): PlaygroundExampleCatalog | null {
+		if (isPlaygroundExampleLocked()) return null;
+		return { activeExampleId: this.activeExampleId, options: [...SHOOTING_PLAY_EXAMPLE_OPTIONS] };
 	}
 
 	setHostBridge(bridge: ShootingPlayHostBridge | null): void {
@@ -691,10 +697,10 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 	}
 
 	private loadFixtureById(fixtureId: string): void {
-		const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
+		const nextId = isPlaygroundNoExampleId(fixtureId) ? PLAYGROUND_NO_EXAMPLE_ID : fixtureId;
 		const nextJson = shootingFixtureJsonForId(nextId);
-		if (nextId === this.activeFixtureId && nextJson === this.getFixtureJson()) return;
-		this.activeFixtureId = nextId;
+		if (nextId === this.activeExampleId && nextJson === this.getFixtureJson()) return;
+		this.activeExampleId = nextId;
 		this.applyFixtureJson(nextJson);
 	}
 
@@ -997,8 +1003,8 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 			if (typeof json === "string") this.applyFixtureJson(json);
 			return;
 		}
-		if (command === "setActiveFixture") {
-			if (isPlaygroundFixtureLocked()) return;
+		if (command === "setActiveExample") {
+			if (isPlaygroundExampleLocked()) return;
 			const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
 			this.loadFixtureById(fixtureId);
 			return;
@@ -1146,7 +1152,7 @@ export class ShootingPlayController extends Controller implements PlaygroundFixt
 		}
 		if (command === "resetFixture") {
 			this.fixtureStore.clear();
-			this.activeFixtureId = PLAYGROUND_NO_FIXTURE_ID;
+			this.activeExampleId = PLAYGROUND_NO_EXAMPLE_ID;
 			this.applyFixtureJson(SHOOTING_PLAY_EMPTY_FIXTURE_JSON);
 			return;
 		}
@@ -1173,6 +1179,38 @@ export function buildShootingPlayAppRuntime(controller: ShootingPlayController):
 
 
 
+//#region 🔖Play
+
+/** @emoji 🛝 Shooting playground app. */
+
+
+export const shootingPlayAppDefinition = createPlaygroundApp({
+	id: SHOOTING_PLAY_APP_ID,
+	label: "Shooting",
+	controllerId: SHOOTING_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "shooting",
+		resolveDedupe: ["react", "react-dom", "three", "@semio-tech/shooting-react"],
+		optimizeDeps: { include: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei", "@semio-tech/infinite-world-r3f", "@semio-tech/shooting-react"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(SHOOTING_PLAY_APP_ID);
+			const ctrl = new ShootingPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildShootingPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerShootingPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootShootingPlay } = await import("@semio-tech/framework-playground-renderer-react/shooting");
+		bootShootingPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
 // #region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
@@ -1190,7 +1228,7 @@ if (import.meta.vitest) {
 		});
 
 		it("fixture catalog includes shooting/fixture files", () => {
-			expect(SHOOTING_PLAY_FIXTURE_OPTIONS.some((option) => option.id === "base-icon")).toBe(true);
+			expect(SHOOTING_PLAY_EXAMPLE_OPTIONS.some((option) => option.id === "base-icon")).toBe(true);
 		});
 
 		it("toolbar includes import and export actions", () => {
@@ -1199,13 +1237,13 @@ if (import.meta.vitest) {
 			expect(tools.save?.some((row) => row.id === "shooting.save.shot")).toBe(true);
 		});
 
-		it("setActiveFixture loads file fixtures and updates catalog", () => {
+		it("setActiveExample loads file fixtures and updates catalog", () => {
 			const bus = new CommandBus();
 			const ctrl = new ShootingPlayController(bus, () => {});
-			ctrl.run("setActiveFixture", { fixtureId: "base-icon" });
+			ctrl.run("setActiveExample", { exampleId: "base-icon" });
 			expect(ctrl.getFixture().assets).toHaveLength(1);
 			expect(ctrl.getFixture().shots).toHaveLength(2);
-			expect(ctrl.getFixtureCatalog()?.activeFixtureId).toBe("base-icon");
+			expect(ctrl.getExampleCatalog()?.activeExampleId).toBe("base-icon");
 		});
 
 		it("setShotCamera updates active shot camera", () => {
@@ -1273,23 +1311,53 @@ if (import.meta.vitest) {
 }
 // #endregion 🧪Tests
 
-export { shootingPlayAppDefinition, PlaygroundShooting } from "./playground.ts";
+//#region 🔖MediaExport
+/** @emoji 💾 Registers shooting fixture SVG/PNG export handlers via {@link iconRenderPort}. */
+export function registerShootingMediaExportHandlers(): void {
+	registerOsMediaExportHandler("2d.shooting", "svg", async (doc) => {
+		const fixture = doc as ShootingFixtureV1;
+		const shot = resolveActiveShot(fixture);
+		const asset = resolveActiveAsset(fixture);
+		if (!shot || !asset) return { data: `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>`, mimeType: "image/svg+xml", fileName: "shooting.svg" };
+		const rendered = await renderShootingShot(fixture, shot, asset);
+		const svg = rendered.svgMarkup ?? `<svg xmlns="http://www.w3.org/2000/svg" width="${shot.width}" height="${shot.height}"><image href="${rendered.dataUrl}" width="${shot.width}" height="${shot.height}"/></svg>`;
+		return { data: svg, mimeType: "image/svg+xml", fileName: "shooting.svg" };
+	});
+	registerOsMediaExportHandler("2d.shooting", "png", async (doc) => {
+		const fixture = doc as ShootingFixtureV1;
+		const shot = resolveActiveShot(fixture);
+		const asset = resolveActiveAsset(fixture);
+		if (!shot || !asset) return { data: new Uint8Array(0), mimeType: "image/png", fileName: "shooting.png" };
+		const rendered = await iconRenderPort.render({
+			assetUrl: asset.url,
+			width: shot.width,
+			height: shot.height,
+			camera: resolveShotCamera(fixture, shot),
+			format: "png",
+			shape: shot.shape,
+			shadowEnabled: shot.shadowEnabled,
+			background: shot.background,
+		});
+		const blob = await fetch(rendered.dataUrl).then((response) => response.blob());
+		return { data: new Uint8Array(await blob.arrayBuffer()), mimeType: "image/png", fileName: "shooting.png" };
+	});
+}
+//#endregion 🔖MediaExport
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { shootingPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for shooting. */
 export function buildShootingProgramDefinition(): PlatformDefinition {
-	const app = shootingPlayAppDefinition;
 	return {
 		id: "shooting",
 		name: "Shooting",
 		apiVersion: "1",
-		apps: [{ id: "shooting", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "shooting", label: "Shooting", controllerId: SHOOTING_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+
 
 

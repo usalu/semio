@@ -12,19 +12,11 @@ import {
 } from "@semio-tech/framework-playground-core";
 import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
 import { useVelloThemeSync } from "@semio-tech/ui-react";
-import initTrinityWasm, { TrinitySession, initSync, ruleQueryJson } from "../rewrite/engine/pkg/trinity_rewrite.js";
-import nakaginFixtureJson from "../fixture/nakagin-capsule-tower.trinity.json";
+import initTrinityWasm, { TrinitySession, ruleQueryJson } from "../rewrite/engine/pkg/trinity_rewrite.js";
+import nakaginFixtureJson from "../example/nakagin-capsule-tower.trinity.json";
 
 // #region 🔖GpuWasmBridge
-if (import.meta.env.VITEST) {
-  const { readFileSync } = await import("node:fs");
-  const { dirname, join } = await import("node:path");
-  const { fileURLToPath } = await import("node:url");
-  const wasmPath = join(dirname(fileURLToPath(import.meta.url)), "../rewrite/engine/pkg/trinity_rewrite_bg.wasm");
-  initSync({ module: readFileSync(wasmPath) });
-} else {
-  await initTrinityWasm();
-}
+void initTrinityWasm();
 
 export async function ensureTrinityWasmLoaded(): Promise<void> {
   await initTrinityWasm();

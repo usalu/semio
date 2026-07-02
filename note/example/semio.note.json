@@ -1,0 +1,66 @@
+{
+  "schema": "note.document",
+  "id": "semio",
+  "title": "Semio Note",
+  "camera": { "x": 0, "y": 0, "zoom": 1 },
+  "activeTool": "selectDirect",
+  "gridVisible": true,
+  "snapEnabled": false,
+  "pencilWidth": 3,
+  "eraserRadius": 12,
+  "blocks": [
+    {
+      "kind": "text",
+      "id": "welcome-text",
+      "name": "Welcome",
+      "x": 80,
+      "y": 80,
+      "width": 360,
+      "height": 120,
+      "visible": true,
+      "locked": false,
+      "paragraphs": [
+        {
+          "runs": [
+            {
+              "text": "Welcome to Note — an infinite canvas for text, images, tables, math, and pencil ink."
+            }
+          ]
+        }
+      ],
+      "fontSize": 20,
+      "fontWeight": "normal",
+      "align": "left"
+    },
+    {
+      "kind": "math",
+      "id": "welcome-math",
+      "name": "Equation",
+      "x": 80,
+      "y": 240,
+      "width": 240,
+      "height": 80,
+      "visible": true,
+      "locked": false,
+      "tex": "E = mc^2",
+      "displayMode": true
+    },
+    {
+      "kind": "table",
+      "id": "welcome-table",
+      "name": "Blocks",
+      "x": 80,
+      "y": 360,
+      "width": 360,
+      "height": 140,
+      "visible": true,
+      "locked": false,
+      "columns": ["Block", "Description"],
+      "rows": [
+        [{ "content": "Text" }, { "content": "Rich text blocks" }],
+        [{ "content": "Math" }, { "content": "TeX equations" }],
+        [{ "content": "Ink" }, { "content": "Freehand pencil strokes" }]
+      ]
+    }
+  ]
+}

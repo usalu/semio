@@ -3,6 +3,8 @@
 // #endregion 🧲Header
 
 import {
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
   AppRuntime,
   CommandBus,
   Controller,
@@ -34,8 +36,7 @@ import {
   type UiTreeSectionNode,
   type AppTools,
   type ToolLeaf,
-  toolCollection,
-} from "@semio-tech/framework-playground-core";
+  toolCollection} from "@semio-tech/framework-playground-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
@@ -765,6 +766,39 @@ export function buildDagPlayAppRuntime(controller: DagPlayController): AppRuntim
   return createPlayAppRuntime(DAG_PLAY_APP_ID, "DAG", controller, DAG_PLAY_LAYOUT, controller.mainMode);
 }
 
+//#region 🔖Play
+
+/** @emoji 🛝 DAG playground app. */
+
+
+export const dagPlayAppDefinition = createPlaygroundApp({
+	id: DAG_PLAY_APP_ID,
+	label: "DAG",
+	controllerId: DAG_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "dag",
+		resolveDedupe: ["react", "react-dom"],
+		watchIgnored: ["../lib.rs", "../target/**", "../Cargo.toml", "../Cargo.lock", "../script.ts"],
+		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(DAG_PLAY_APP_ID);
+			const ctrl = new DagPlayController(runtime.commandBus, () => runtime.notify());
+			runtime.addApp(buildDagPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerDagPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootDagPlay } = await import("@semio-tech/framework-playground-renderer-react/dag");
+		bootDagPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -833,21 +867,18 @@ if (import.meta.vitest) {
 }
 // #endregion 🧪Tests
 
-export { dagPlayAppDefinition, PlaygroundDag } from "./playground.ts";
-
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { dagPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for dag. */
 export function buildDagProgramDefinition(): PlatformDefinition {
-	const app = dagPlayAppDefinition;
 	return {
 		id: "dag",
 		name: "DAG",
 		apiVersion: "1",
-		apps: [{ id: "dag", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "dag", label: "DAG", controllerId: DAG_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
+

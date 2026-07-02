@@ -14296,7 +14296,7 @@ if (import.meta.vitest) {
       expect(puzzle3dSingleLetterPortFamiliesCompatible("door tambour left", "door capsule left")).toBe(true);
     });
     it("concrete forest brush rejects c-* candidates for b-* targets even without compatibility rules", async () => {
-      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as Fixture;
+      const concreteForestFixture = (await import("../example/concrete-forest.3d.json")).default as Fixture;
       const meta = concreteForestFixture.meta as Record<string, unknown> | undefined;
       const kindCatalogs = (meta?.kindCatalogs ?? undefined) as KindCatalogBundle | undefined;
       const host = concreteForestFixture.objects[0]!;
@@ -15211,7 +15211,7 @@ if (import.meta.vitest) {
       clearBrushCollisionGltfScenes();
     });
     it("concrete forest first brush iteration on every seed b-* vortex yields all beam connectors", async () => {
-      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as Fixture;
+      const concreteForestFixture = (await import("../example/concrete-forest.3d.json")).default as Fixture;
       const leftType = (await import("../../../compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.compose.json")).default as {
         connectors: { items: readonly { name: string; point: { x: number; y: number; z: number } }[] };
       };
@@ -15334,7 +15334,7 @@ if (import.meta.vitest) {
       clearBrushCollisionGltfScenes();
     }, 120_000);
     it("wasm concrete forest brush agrees with mesh-bvh on real geometry beam connector set", async () => {
-      const concreteForestFixture = (await import("../fixture/concrete-forest.3d.json")).default as Fixture;
+      const concreteForestFixture = (await import("../example/concrete-forest.3d.json")).default as Fixture;
       const leftType = (await import("../../../compose/fixture/kit/dev/abbau-aufbau/wip/initialKit/type/hexagonal-cut-concrete-forest-left.type.compose.json")).default as {
         connectors: { items: readonly { name: string }[] };
       };

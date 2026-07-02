@@ -2796,12 +2796,90 @@ const BuiltinVirtualFileSystemKindRenderer: ComponentKindRenderer = ({ component
 					});
 				}}
 				onRowDoubleClick={(row) => {
-					if (!row.navigateUri || !platform) return;
+					if (!platform) return;
+					const vfs = component as VirtualFileSystemSurface;
+					if (row.navigateUri?.startsWith("os://")) {
+						platform.commandBus.dispatch(controllerId, "navigateVirtualFileSystemNode", {
+							appId: vfs.appId,
+							nodeId: row.id,
+							surfaceId: component.surfaceId,
+						});
+						return;
+					}
+					if (!row.navigateUri) return;
 					if (platform.onNavigate) {
 						platform.onNavigate(row.navigateUri);
 						return;
 					}
 					platform.commandBus.dispatch(controllerId, "navigate", { path: row.navigateUri });
+				}}
+				onRowContextMenu={(row, event) => {
+					event.preventDefault();
+					if (!platform) return;
+					const vfs = component as VirtualFileSystemSurface;
+					const scopeArgs = { appId: vfs.appId, surfaceId: component.surfaceId };
+					const menu = document.createElement("div");
+					menu.className = "fixed z-50 min-w-40 rounded border bg-popover p-1 text-xs shadow";
+					menu.style.left = `${event.clientX}px`;
+					menu.style.top = `${event.clientY}px`;
+					const addItem = (label: string, onClick: () => void) => {
+						const item = document.createElement("button");
+						item.type = "button";
+						item.className = "block w-full rounded px-2 py-1 text-left hover:bg-hover-interactive-fill";
+						item.textContent = label;
+						item.onclick = () => {
+							onClick();
+							menu.remove();
+						};
+						menu.appendChild(item);
+					};
+					const dismiss = () => menu.remove();
+					if (row.id === rows[0]?.id) {
+						addItem("New app (program.app)", () => {
+							const name = window.prompt("App id as program.app", "draw.draw");
+							if (!name) return;
+							platform.commandBus.dispatch(controllerId, "createVirtualFileSystemNode", {
+								...scopeArgs,
+								parentId: row.id,
+								name,
+								fileNodeKindId: "instance",
+							});
+						});
+					}
+					if (row.fileNodeKindId === "instance") {
+						addItem("Rename", () => {
+							const name = window.prompt("Instance label", row.name);
+							if (!name) return;
+							platform.commandBus.dispatch(controllerId, "renameVirtualFileSystemNode", {
+								...scopeArgs,
+								nodeId: row.id,
+								name,
+							});
+						});
+						addItem("Delete", () => {
+							platform.commandBus.dispatch(controllerId, "deleteVirtualFileSystemNode", {
+								...scopeArgs,
+								nodeId: row.id,
+							});
+						});
+					}
+					if (row.fileNodeKindId === "input") {
+						addItem("Disconnect", () => {
+							platform.commandBus.dispatch(controllerId, "deleteVirtualFileSystemNode", {
+								...scopeArgs,
+								nodeId: row.id,
+							});
+						});
+					}
+					if (!menu.childElementCount) return;
+					document.body.appendChild(menu);
+					const onPointerDown = (pointerEvent: PointerEvent) => {
+						if (!menu.contains(pointerEvent.target as Node)) {
+							dismiss();
+							document.removeEventListener("pointerdown", onPointerDown, true);
+						}
+					};
+					document.addEventListener("pointerdown", onPointerDown, true);
 				}}
 				dragDrop={
 					model.dragDropEnabled

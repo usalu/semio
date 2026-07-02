@@ -55,7 +55,6 @@ function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; re
     "draw",
     "note",
     "cad",
-    "s",
     "writer",
   ]);
   if (direct.has(head)) return { app: head, rest: segments.slice(1) };
@@ -261,6 +260,13 @@ export class DevScript extends Script {
     }
     if (segments[0] === "storybook-static") {
       await this.runStorybookStatic();
+      return;
+    }
+    if (segments[0] === "s") {
+      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", ...segments.slice(1)], {
+        cwd: this.root,
+        env: devToolingEnv(),
+      });
       return;
     }
     const playgroundApp = resolvePlaygroundDevApp(segments);

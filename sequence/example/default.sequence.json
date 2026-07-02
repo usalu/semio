@@ -1,0 +1,1 @@
+{"schema":"sequence.fixture","camera":{"x":0,"y":0,"zoom":1},"steps":[{"id":"step-1","kind":"state.set","params":{"key":"counter","value":0},"x":0,"y":0},{"id":"step-2","kind":"log.print","params":{"message":"hello sequence"},"x":280,"y":0}],"edges":[{"id":"edge-1","from":"step-1","to":"step-2"}]}

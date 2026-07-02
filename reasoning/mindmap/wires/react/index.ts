@@ -2,7 +2,7 @@
 /** @emoji 🔗 `@semio-tech/reasoning-mindmap-wires-react` — WIRES fixture parsing and puzzle 2d board adapter. */
 // #endregion 🧲Header
 
-import metabolismWiresJson from "../fixture/metabolism.wires.json";
+import metabolismWiresJson from "../example/metabolism.wires.json";
 import { mergeKindCatalogBundleByRowId, type CameraState, type KindCatalogBundle, type Puzzle2dFixtureEdge, type Puzzle2dFixtureNode, type Puzzle2dFixture } from "@semio-tech/puzzle-2d-react";
 import { mergeManifestCatalogBundles, type WiresEdgeKindId, wiresManifestCatalogBundle } from "@semio-tech/graph-manifest";
 import type { MindmapFixtureEdge, MindmapFixtureNode, MindmapFixture } from "@semio-tech/reasoning-mindmap-react";

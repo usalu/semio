@@ -7,7 +7,7 @@
 	"private": true,
 	"exports": {
 		".": "./index.ts",
-		"./playground": "./playground.ts"
+	"./playground": "./playground.ts"
 	},
 	"dependencies": {
 		"@semio-tech/vcs-core": "workspace:*"

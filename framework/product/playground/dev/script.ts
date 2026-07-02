@@ -13,7 +13,6 @@ import {
 	runViteBunxDev,
 	type PlaygroundHostKind,
 } from "../../../../repo/lib/js/index.ts";
-import { loadPlaygroundApp } from "@semio-tech/framework-playground-core/app-registry";
 
 const ENTRY_TO_HOST: Readonly<Record<string, PlaygroundHostKind>> = {
 	"2d": "puzzle-2d",
@@ -25,6 +24,7 @@ const ENTRY_TO_HOST: Readonly<Record<string, PlaygroundHostKind>> = {
 
 const PACKAGE_ROOT_BY_ENTRY: Readonly<Record<string, string>> = {
 	draw: "draw",
+	note: "note",
 	writer: "writer",
 	raster: "raster",
 	forms: "forms",
@@ -37,7 +37,6 @@ const PACKAGE_ROOT_BY_ENTRY: Readonly<Record<string, string>> = {
 	"procedural-2d": "procedural/2d",
 	"procedural-3d": "procedural/3d",
 	shooting: "shooting",
-	s: "s",
 	vcs: "vcs",
 	"gis-2d": "gis/2d",
 	wires: "reasoning/mindmap/wires",
@@ -68,15 +67,13 @@ function hostKindForEntry(entry: string): PlaygroundHostKind {
 class DevScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		const { app: appEntry, viteArgs } = resolveAppArg(segments);
-		const app = await loadPlaygroundApp(appEntry);
-		if (!app) throw new Error(`unknown playground app: ${appEntry}`);
-		const prebuild = app.devHost?.prebuild;
-		if (prebuild) await prebuild(this.root);
+		if (!PACKAGE_ROOT_BY_ENTRY[appEntry]) throw new Error(`unknown playground app: ${appEntry}`);
 		const hostKind = hostKindForEntry(appEntry);
+		const playEntryKind = appEntry;
 		const env = {
 			...playPollingEnv(),
 			PLAYGROUND_APP: appEntry,
-			PUZZLE_PLAY_ENTRY: app.devHost?.playEntryKind ?? appEntry,
+			PUZZLE_PLAY_ENTRY: playEntryKind,
 			PLAYGROUND_PACKAGE_ROOT: PACKAGE_ROOT_BY_ENTRY[appEntry] ?? "",
 		};
 		runViteBunxDev(this.root, viteArgs, {
@@ -84,6 +81,7 @@ class DevScript extends BundleScript {
 			defaultPort: playgroundDevPortString(hostKind),
 			fixedPort: true,
 			env,
+			expectedPlayEntry: playEntryKind,
 		});
 	}
 }

@@ -9115,35 +9115,35 @@ function PanelToggleGroup({ items }: { readonly items: readonly PanelToggleItem[
 
 export { PanelToggleGroup };
 
-/** @emoji ∅ Sentinel id for the navbar “No fixture” row (matches {@link PLAYGROUND_NO_FIXTURE_ID}). */
-export const NAVBAR_NO_FIXTURE_ID = "__none__";
+/** @emoji ∅ Sentinel id for the navbar “No example” row (matches {@link PLAYGROUND_NO_EXAMPLE_ID}). */
+export const NAVBAR_NO_EXAMPLE_ID = "__none__";
 
-/** @emoji 🧪 One selectable fixture row for {@link NavbarFixtureSelect}. */
-export interface NavbarFixtureOption {
+/** @emoji 🧪 One selectable example row for {@link NavbarExampleSelect}. */
+export interface NavbarExampleOption {
   readonly id: string;
   readonly label: string;
 }
 
-/** @emoji 🧪 Props for {@link NavbarFixtureSelect}. */
-export interface NavbarFixtureSelectProps {
+/** @emoji 🧪 Props for {@link NavbarExampleSelect}. */
+export interface NavbarExampleSelectProps {
   readonly id: string;
   readonly label?: string;
   readonly value: string;
-  readonly options: readonly NavbarFixtureOption[];
-  readonly onValueChange: (fixtureId: string) => void;
+  readonly options: readonly NavbarExampleOption[];
+  readonly onValueChange: (exampleId: string) => void;
   readonly className?: string;
-  readonly includeNoFixture?: boolean;
+  readonly includeNoExample?: boolean;
 }
 
-/** @emoji 🧪 Center-navbar dropdown for switching playground fixtures (kits, graphs, shape sources). */
-function NavbarFixtureSelect({ id, label = "Fixture", value, options, onValueChange, className, includeNoFixture = true }: NavbarFixtureSelectProps) {
+/** @emoji 🧪 Center-navbar dropdown for switching playground examples (kits, graphs, shape sources). */
+function NavbarExampleSelect({ id, label = "Example", value, options, onValueChange, className, includeNoExample = true }: NavbarExampleSelectProps) {
   const resolvedOptions = reactHostPort.useMemo(() => {
-    const withoutNone = options.filter((row) => row.id !== NAVBAR_NO_FIXTURE_ID);
-    if (!includeNoFixture) return withoutNone;
-    return [{ id: NAVBAR_NO_FIXTURE_ID, label: "No fixture" }, ...withoutNone];
-  }, [includeNoFixture, options]);
+    const withoutNone = options.filter((row) => row.id !== NAVBAR_NO_EXAMPLE_ID);
+    if (!includeNoExample) return withoutNone;
+    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: "No example" }, ...withoutNone];
+  }, [includeNoExample, options]);
   if (resolvedOptions.length === 0) return null;
-  const resolvedValue = !value || value === NAVBAR_NO_FIXTURE_ID ? NAVBAR_NO_FIXTURE_ID : value;
+  const resolvedValue = !value || value === NAVBAR_NO_EXAMPLE_ID ? NAVBAR_NO_EXAMPLE_ID : value;
   return (
     <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
       <Label id={`${id}.label`} label={label} className="sr-only" />
@@ -9163,7 +9163,7 @@ function NavbarFixtureSelect({ id, label = "Fixture", value, options, onValueCha
   );
 }
 
-export { NavbarFixtureSelect };
+export { NavbarExampleSelect };
 
 // #endregion 🩺Navbar
 
@@ -18466,6 +18466,7 @@ export interface TableProps<T = unknown> {
   columns: TableColumn<T>[];
   data: T[];
   onRowClick?: (row: T, index: number, event: React.MouseEvent) => void;
+  onRowContextMenu?: (row: T, index: number, event: React.MouseEvent) => void;
   onRowDoubleClick?: (row: T, index: number) => void;
   onRowMouseEnter?: (row: T, index: number) => void;
   onRowMouseLeave?: (row: T, index: number) => void;
@@ -18503,6 +18504,7 @@ interface TableDraggableRowProps<T> {
   visibleColumns: TableColumn<T>[];
   dragDrop?: DragDropConfig;
   onRowClick?: (row: T, index: number, event: React.MouseEvent) => void;
+  onRowContextMenu?: (row: T, index: number, event: React.MouseEvent) => void;
   onRowDoubleClick?: (row: T, index: number) => void;
   onRowMouseEnter?: (row: T, index: number) => void;
   onRowMouseLeave?: (row: T, index: number) => void;
@@ -18519,6 +18521,7 @@ function TableDraggableRow<T>({
   visibleColumns,
   dragDrop,
   onRowClick,
+  onRowContextMenu,
   onRowDoubleClick,
   onRowMouseEnter,
   onRowMouseLeave,
@@ -18565,6 +18568,9 @@ function TableDraggableRow<T>({
         }
         onRowClick?.(row, index, e);
       }}
+      onContextMenu={(e) => {
+        onRowContextMenu?.(row, index, e);
+      }}
       onMouseEnter={() => onRowMouseEnter?.(row, index)}
       onMouseLeave={() => onRowMouseLeave?.(row, index)}
       role={onRowClick ? "button" : undefined}
@@ -18587,6 +18593,7 @@ const Table = <T,>({
   columns,
   data,
   onRowClick,
+  onRowContextMenu,
   onRowDoubleClick,
   onRowMouseEnter,
   onRowMouseLeave,
@@ -18756,6 +18763,7 @@ const Table = <T,>({
                       visibleColumns={visibleColumns}
                       dragDrop={dragDrop}
                       onRowClick={onRowClick}
+                      onRowContextMenu={onRowContextMenu}
                       onRowDoubleClick={onRowDoubleClick}
                       onRowMouseEnter={onRowMouseEnter}
                       onRowMouseLeave={onRowMouseLeave}
@@ -18776,6 +18784,9 @@ const Table = <T,>({
                         return;
                       }
                       onRowClick?.(row, index, e);
+                    }}
+                    onContextMenu={(e) => {
+                      onRowContextMenu?.(row, index, e);
                     }}
                     onMouseEnter={() => onRowMouseEnter?.(row, index)}
                     onMouseLeave={() => onRowMouseLeave?.(row, index)}
@@ -18975,6 +18986,7 @@ export interface VirtualFileSystemProps {
   readonly defaultSelectedRowIds?: readonly string[];
   readonly onSelectionChange?: (selectedRowIds: readonly string[], context: { readonly anchorRowId?: string }) => void;
   readonly onRowClick?: (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => void;
+  readonly onRowContextMenu?: (row: VirtualFileSystemRow, index: number, event: React.MouseEvent) => void;
   readonly onRowDoubleClick?: (row: VirtualFileSystemRow, index: number) => void;
   readonly onRowMouseEnter?: (row: VirtualFileSystemRow, index: number) => void;
   readonly onRowMouseLeave?: (row: VirtualFileSystemRow, index: number) => void;
@@ -19302,6 +19314,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   defaultSelectedRowIds = [],
   onSelectionChange,
   onRowClick,
+  onRowContextMenu,
   onRowDoubleClick,
   onRowMouseEnter,
   onRowMouseLeave,
@@ -19394,6 +19407,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       getRowId={(row) => row.id}
       selectedRows={resolvedSelectedRowIds}
       onRowClick={handleRowClick}
+      onRowContextMenu={onRowContextMenu}
       onRowDoubleClick={onRowDoubleClick}
       onRowMouseEnter={onRowMouseEnter}
       onRowMouseLeave={onRowMouseLeave}

@@ -2,16 +2,16 @@
 /** @emoji 🗺️ GIS map play app — world map shell. */
 // #endregion 🧲Header
 
-export { gis2dPlayAppDefinition, PlaygroundMap } from "./playground.ts";
-
 import {
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
   CommandBus,
   Controller,
-  PLAYGROUND_NO_FIXTURE_ID,
+  PLAYGROUND_NO_EXAMPLE_ID,
   Platform,
-  type PlaygroundFixtureCatalog,
-  type PlaygroundFixtureHost,
-  isPlaygroundNoFixtureId,
+  type PlaygroundExampleCatalog,
+  type PlaygroundExampleHost,
+  isPlaygroundNoExampleId,
   AppRuntime,
   ModeRuntime,
   WindowKindRuntime,
@@ -41,8 +41,9 @@ import {
   type WindowTemplate,
   type AppTools,
   type ToolLeaf,
-  toolCollection,
-} from "@semio-tech/framework-playground-core";
+  toolCollection} from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import { rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
 import { Store } from "@semio-tech/framework-core";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 
@@ -84,10 +85,10 @@ export const GIS_MAP_PLAY_SURFACE_ID = "gis.map.play/v1";
 export const GIS_MAP_PLAY_BODY_KEY_MAIN = "gis.map.play.main";
 export const GIS_MAP_PLAY_STORE_ID = "gis-map-play.snapshot";
 export const GIS_MAP_PLAY_WINDOW_KIND_ID = "gis-map-main";
-export const GIS_MAP_PLAY_FIXTURE_REUSE_ID = "reuse";
+export const GIS_MAP_PLAY_EXAMPLE_REUSE_ID = "reuse";
 
 /** @emoji 📂 GIS map playground fixture host for {@link MapPlayController}. */
-export type GisMapPlayFixtureHostConfig = {
+export type GisMapPlayExampleHostConfig = {
   readonly defaultFixture: GisMapFixtureV1;
   readonly options: ReadonlyArray<{ readonly id: string; readonly label: string }>;
   readonly reuseFixtureId: string;
@@ -870,9 +871,9 @@ function gisHoveredFeatureFromPointerKey(key: string | null): MapHoveredFeature 
   return { kind, id };
 }
 
-export class MapPlayController extends Controller implements PlaygroundFixtureHost {
+export class MapPlayController extends Controller implements PlaygroundExampleHost {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
-  private activeFixtureId: string;
+  private activeExampleId: string;
   private readonly docStore: DocumentVcsStore<GisMapFixtureV1 | null, GisMapFixtureEditOp>;
   private readonly snapshotStore: MapPlaySnapshotStore;
   private snapshotCache: MapPlaySnapshot | null = null;
@@ -894,11 +895,11 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
   private interactionRevision = 0;
   private readonly snapshotListeners = new Set<() => void>();
 
-  constructor(commandBus: CommandBus, notify: () => void, private readonly fixtureHost: GisMapPlayFixtureHostConfig) {
+  constructor(commandBus: CommandBus, notify: () => void, private readonlyexampleHost: GisMapPlayExampleHostConfig) {
     super(GIS_MAP_PLAY_CONTROLLER_ID, commandBus, notify);
-    this.activeFixtureId = fixtureHost.reuseFixtureId;
+    this.activeExampleId =exampleHost.reuseFixtureId;
     this.docStore = new DocumentVcsStore<GisMapFixtureV1 | null, GisMapFixtureEditOp>({
-      envelope: createDocumentVcsEnvelope("gis.map.fixture/v1", "gis-map-play", fixtureHost.defaultFixture),
+      envelope: createDocumentVcsEnvelope("gis.map.fixture/v1", "gis-map-play",exampleHost.defaultFixture),
       applyOp: applyGisMapFixtureEditOp,
       backwardsOp: backwardsGisMapFixtureEditOp,
       diffOp: diffGisMapFixtureEditOp,
@@ -1090,7 +1091,7 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     this.bumpSnapshot();
   }
 
-  private setActiveFixtureProjection(next: GisMapFixtureV1 | null): void {
+  private setActiveExampleProjection(next: GisMapFixtureV1 | null): void {
     this.applyFixtureEdit({ op: "setDocument", document: next });
   }
 
@@ -1172,8 +1173,8 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
     enforcePlaygroundWindowEngagementInput(this.mainMode.windowKinds[0]?.engagement, `GIS map play window "${GIS_MAP_PLAY_WINDOW_KIND_ID}"`);
   }
 
-  getFixtureCatalog(): PlaygroundFixtureCatalog {
-    return { activeFixtureId: this.activeFixtureId, options: [...this.fixtureHost.options] };
+  getExampleCatalog(): PlaygroundExampleCatalog {
+    return { activeExampleId: this.activeExampleId, options: [...this.exampleHost.options] };
   }
 
   private applyFixtureLayersForData(): void {
@@ -1324,13 +1325,13 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
       }
       return;
     }
-    if (command === "setActiveFixture") {
+    if (command === "setActiveExample") {
       const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
-      const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
-      if (nextId === this.activeFixtureId) return;
-      this.activeFixtureId = nextId;
-      if (isPlaygroundNoFixtureId(nextId)) {
-        this.setActiveFixtureProjection(null);
+      const nextId = isPlaygroundNoExampleId(fixtureId) ? PLAYGROUND_NO_EXAMPLE_ID : fixtureId;
+      if (nextId === this.activeExampleId) return;
+      this.activeExampleId = nextId;
+      if (isPlaygroundNoExampleId(nextId)) {
+        this.setActiveExampleProjection(null);
         this.layerVisibility = defaultMapLayerVisibility();
         this.layerVisibilityByInstance = {};
         this.layerStrokeScale = defaultMapLayerStrokeScale();
@@ -1339,8 +1340,8 @@ export class MapPlayController extends Controller implements PlaygroundFixtureHo
         this.bumpSnapshot();
         return;
       }
-      if (nextId === this.fixtureHost.reuseFixtureId) {
-        this.setActiveFixtureProjection(this.fixtureHost.defaultFixture);
+      if (nextId === this.exampleHost.reuseFixtureId) {
+        this.setActiveExampleProjection(this.exampleHost.defaultFixture);
         this.applyFixtureLayersForData();
         this.rebuildShellMode();
         this.bumpSnapshot();
@@ -1484,30 +1485,29 @@ export { buildMapPlayAppRuntime };
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { gis2dPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for map. */
 export function buildGisMapProgramDefinition(): PlatformDefinition {
-	const app = gis2dPlayAppDefinition;
 	return {
 		id: "gis.map",
 		name: "GIS Map",
 		apiVersion: "1",
-		apps: [{ id: "map", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "map", label: "Map", controllerId: GIS_MAP_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
 
+
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  function mapPlayTestFixtureHost(fixture?: GisMapFixtureV1): GisMapPlayFixtureHostConfig {
+  function mapPlayTestFixtureHost(fixture?: GisMapFixtureV1): GisMapPlayExampleHostConfig {
     const defaultFixture = fixture ?? { schema: "gis.map.fixture/v1", name: "test", positions: [], routes: [], regions: [] };
     return {
       defaultFixture,
-      reuseFixtureId: GIS_MAP_PLAY_FIXTURE_REUSE_ID,
-      options: [{ id: GIS_MAP_PLAY_FIXTURE_REUSE_ID, label: "Reuse map" }],
+      reuseFixtureId: GIS_MAP_PLAY_EXAMPLE_REUSE_ID,
+      options: [{ id: GIS_MAP_PLAY_EXAMPLE_REUSE_ID, label: "Reuse map" }],
     };
   }
 
@@ -1762,3 +1762,152 @@ if (import.meta.vitest) {
     });
   });
 }
+
+//#region 🔖Play
+import reuseMapFixtureJson from "../example/reuse.map.gis.json";
+
+export const GIS_MAP_PLAY_EXAMPLE_OPTIONS = [{ id: GIS_MAP_PLAY_EXAMPLE_REUSE_ID, label: "Reuse map" }] as const;
+
+export const GIS_MAP_PLAY_DEFAULT_FIXTURE: GisMapFixtureV1 = reuseMapFixtureJson as GisMapFixtureV1;
+
+/** @emoji 📂 Builds GIS map playground fixture host config. */
+export function createGisMapPlayFixtureHost(): GisMapPlayExampleHostConfig {
+	return {
+		defaultFixture: GIS_MAP_PLAY_DEFAULT_FIXTURE,
+		reuseFixtureId: GIS_MAP_PLAY_EXAMPLE_REUSE_ID,
+		options: [...GIS_MAP_PLAY_EXAMPLE_OPTIONS],
+	};
+}
+
+/** @emoji 🛝 Map playground app. */
+
+
+export const gis2dPlayAppDefinition = createPlaygroundApp({
+	id: GIS_MAP_PLAY_APP_ID,
+	label: "Map",
+	controllerId: GIS_MAP_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "gis-2d",
+		resolveDedupe: ["react", "react-dom", "@semio-tech/gis-2d-react", "three"],
+		watchIgnored: ["../rs/lib.rs", "../rs/target/**", "../rs/Cargo.toml", "../rs/script.ts"],
+		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/infinite-cavas-react-renderer", "@semio-tech/gis-2d-react"] },
+	},
+	createRuntime: () => {
+		const runtime = createProductPlaygroundPlatform(GIS_MAP_PLAY_APP_ID);
+			const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify(), createGisMapPlayFixtureHost());
+			runtime.addApp(buildMapPlayAppRuntime(ctrl));
+			return runtime;
+	},
+	registerBodies: () => {
+		registerMapPlayDeclarativeBodies();
+	},
+	bootRenderer: async (pg) => {
+		const { bootMapPlay } = await import("@semio-tech/framework-playground-renderer-react/gis/2d");
+		bootMapPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
+
+// #region 🧪Tests
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
+
+	describe("MapPlayController fixtures", () => {
+		it("loads the reuse fixture by default", () => {
+			const runtime = new Platform({ id: "test" });
+			const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify(), createGisMapPlayFixtureHost());
+			expect(ctrl.getExampleCatalog().activeExampleId).toBe(GIS_MAP_PLAY_EXAMPLE_REUSE_ID);
+			expect(ctrl.getSnapshot().activeFixture?.schema).toBe("gis.map.fixture/v1");
+			expect(ctrl.getSnapshot().activeFixture?.positions.length).toBeGreaterThan(0);
+			expect(ctrl.getSnapshot().activeFixture?.routes.length).toBeGreaterThan(0);
+		});
+
+		it("clears fixture overlays when No fixture is selected", () => {
+			const runtime = new Platform({ id: "test" });
+			const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify(), createGisMapPlayFixtureHost());
+			ctrl.run("setActiveExample", { exampleId: PLAYGROUND_NO_EXAMPLE_ID });
+			expect(ctrl.getSnapshot().activeFixture).toBeNull();
+		});
+
+		it("maps fixture positions into a map descriptor", () => {
+			const descriptor = gisMapFixtureToDescriptor(GIS_MAP_PLAY_DEFAULT_FIXTURE);
+			expect(descriptor.positions[0]?.sourceUrl).toBeTruthy();
+			expect(descriptor.routes.length).toBe(GIS_MAP_PLAY_DEFAULT_FIXTURE.routes.length);
+		});
+
+		it("buildMapPlayInspectorTree batches position fields for multi-select", () => {
+			const fixture = GIS_MAP_PLAY_DEFAULT_FIXTURE;
+			const positionIds = fixture.positions.slice(0, 2).map((row) => row.id);
+			const tree = buildMapPlayInspectorTree(fixture, positionIds, []);
+			expect(tree.type).toBe("tree");
+			const latField = tree.sections[0]?.items.find((item) => item.id === "gis-map-play-inspector.position.lat");
+			expect(latField?.control?.type).toBe("input");
+			expect(latField?.control?.onChange?.command).toBe("patchPositions");
+			expect(latField?.control?.onChange?.args).toMatchObject({ positionIds, field: "lat" });
+		});
+
+		it("patchPositions updates every selected position", () => {
+			const runtime = new Platform({ id: "test" });
+			const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify(), createGisMapPlayFixtureHost());
+			const fixture = ctrl.getActiveFixture();
+			expect(fixture).not.toBeNull();
+			const positionIds = fixture!.positions.slice(0, 2).map((row) => row.id);
+			ctrl.run("patchPositions", { positionIds, field: "label", value: "batch-label" });
+			const updated = ctrl.getActiveFixture()!;
+			for (const positionId of positionIds) {
+				expect(updated.positions.find((row) => row.id === positionId)?.label).toBe("batch-label");
+			}
+		});
+	});
+}
+// #endregion 🧪Tests
+
+//#region 🔖MediaExport
+function gisMapFixtureToSvg(fixture: GisMapFixtureV1): string {
+	const scale = 8;
+	const padding = 40;
+	const xs = fixture.positions.map((row) => row.lon * scale);
+	const ys = fixture.positions.map((row) => -row.lat * scale);
+	const minX = Math.min(...xs, 0) - padding;
+	const minY = Math.min(...ys, 0) - padding;
+	const maxX = Math.max(...xs, 1) + padding;
+	const maxY = Math.max(...ys, 1) + padding;
+	const width = Math.max(1, maxX - minX);
+	const height = Math.max(1, maxY - minY);
+	const routes = fixture.routes
+		.map((route) => {
+			const points = route.points.map(([lon, lat]) => `${lon * scale - minX},${-lat * scale - minY}`).join(" ");
+			return `<polyline points="${points}" fill="none" stroke="#4b7bec" stroke-width="2"/>`;
+		})
+		.join("");
+	const markers = fixture.positions
+		.map((row) => {
+			const cx = row.lon * scale - minX;
+			const cy = -row.lat * scale - minY;
+			const fill = row.kind === "receiver" ? "#2ecc71" : "#e67e22";
+			return `<g><circle cx="${cx}" cy="${cy}" r="6" fill="${fill}"/><text x="${cx + 8}" y="${cy + 4}" font-size="12">${row.label.replace(/[<>&]/g, "")}</text></g>`;
+		})
+		.join("");
+	return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">${routes}${markers}</svg>`;
+}
+
+/** @emoji 💾 Registers GIS map fixture SVG/PNG export handlers for the OS media graph. */
+export function registerGisMediaExportHandlers(): void {
+	registerOsMediaExportHandler("2d.map", "svg", async (doc) => {
+		const fixture = doc as GisMapFixtureV1;
+		return { data: gisMapFixtureToSvg(fixture), mimeType: "image/svg+xml", fileName: "map.svg" };
+	});
+	registerOsMediaExportHandler("2d.map", "png", async (doc) => {
+		const fixture = doc as GisMapFixtureV1;
+		const svg = gisMapFixtureToSvg(fixture);
+		const width = Number(svg.match(/width="(\d+)"/)?.[1] ?? 1024);
+		const height = Number(svg.match(/height="(\d+)"/)?.[1] ?? 768);
+		const dataUrl = await rasterizeSvgMarkupToPngDataUrl(svg, width, height);
+		const blob = await fetch(dataUrl).then((response) => response.blob());
+		return { data: new Uint8Array(await blob.arrayBuffer()), mimeType: "image/png", fileName: "map.png" };
+	});
+}
+//#endregion 🔖MediaExport

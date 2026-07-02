@@ -21,7 +21,7 @@ import {
   PLAYGROUND_PORTS,
   PLAYGROUND_SITE_DEV_PORTS,
   PLAYGROUND_SITE_HOSTS,
-  PLAYGROUND_LOCKED_FIXTURE_ENV,
+  PLAYGROUND_LOCKED_EXAMPLE_ENV,
   allPlaygroundReservedPorts,
   playgroundDevPort,
   playgroundEmbedUrl,
@@ -538,15 +538,15 @@ describe("playground static sites", () => {
   });
 
   test("playgroundPlayViteDefine embeds locked fixture env", () => {
-    const prev = process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
+    const prev = process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV];
     try {
-      delete process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
-      expect(playgroundPlayViteDefine()["import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID"]).toBe('""');
-      process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = "concrete-forest";
-      expect(playgroundPlayViteDefine()["import.meta.env.PLAYGROUND_LOCKED_FIXTURE_ID"]).toBe('"concrete-forest"');
+      delete process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV];
+      expect(playgroundPlayViteDefine()["import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID"]).toBe('""');
+      process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV] = "concrete-forest";
+      expect(playgroundPlayViteDefine()["import.meta.env.PLAYGROUND_LOCKED_EXAMPLE_ID"]).toBe('"concrete-forest"');
     } finally {
-      if (prev === undefined) delete process.env[PLAYGROUND_LOCKED_FIXTURE_ENV];
-      else process.env[PLAYGROUND_LOCKED_FIXTURE_ENV] = prev;
+      if (prev === undefined) delete process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV];
+      else process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV] = prev;
     }
   });
 

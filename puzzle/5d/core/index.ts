@@ -3,6 +3,8 @@
 // #endregion 🧲Header
 
 import {
+	createPlaygroundApp,
+	createProductPlaygroundPlatform,
   CommandBus,
   Controller,
   Store,
@@ -22,13 +24,13 @@ import {
   type WindowEngagement,
   type WindowMeasure,
   type UiNode,
-  PLAYGROUND_NO_FIXTURE_ID,
-  type PlaygroundFixtureCatalog,
-  type PlaygroundFixtureHost,
+  PLAYGROUND_NO_EXAMPLE_ID,
+  type PlaygroundExampleCatalog,
+  type PlaygroundExampleHost,
   type PlaygroundKeybinding,
-  isPlaygroundFixtureLocked,
-  isPlaygroundNoFixtureId,
-  playgroundResolvedFixtureId,
+  isPlaygroundExampleLocked,
+  isPlaygroundNoExampleId,
+  playgroundResolvedExampleId,
   playgroundTreePanelRootItems,
   platformFromViewContext,
   type UiTreeItemNode,
@@ -41,8 +43,10 @@ import {
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   uiInspectorAllEqual,
   JackHoverBridge,
-  buildWriterWindowBody,
+	buildWriterWindowBody,
 } from "@semio-tech/framework-playground-core";
+import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
+import { exportPuzzle3dFixtureGlb, exportPuzzle3dFixtureObj } from "@semio-tech/puzzle-3d-core";
 import { createWriterDocument, type WriterDocumentV1 } from "@semio-tech/writer-core";
 import { runJackOnBoardFixture } from "@semio-tech/graph-dsl-core";
 import {
@@ -160,15 +164,6 @@ export const PUZZLE_5D_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:part) RETURN n.name";
 export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
 export const PUZZLE_5D_PLAY_KINDS_TAB_ID = "puzzle-5d-play-kinds";
 export const PUZZLE_5D_PLAY_ICON_KINDS = "puzzle.5d-play.icon.kinds";
-
-import {
-	fetchPuzzle5dPlayModel,
-	PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID,
-	PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID,
-	PUZZLE_5D_PLAY_FIXTURE_OPTIONS,
-	puzzle5dPlayEmptyModel,
-	resolvePuzzle5dPlayFixtureSlug,
-} from "./playground.ts";
 
 const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
 
@@ -879,7 +874,6 @@ function sameCamera(a: CameraState | null, b: CameraState): boolean {
 
 
 //#region 🔖LiveForceGraph
-import { project2d, type Model as Puzzle5dModel, type Store as Puzzle5dStore } from "../react/index.tsx";
 import {
   puzzle2dApplyLiveForceGraphLayoutTick,
   type Puzzle2dLiveForceGraphDragState,
@@ -1023,10 +1017,11 @@ function puzzle5dSelected3dFromPointerKeys(keys: readonly string[]): string | nu
   return key ? key.slice("puzzle5d:3d:".length) : null;
 }
 
+
 /** @emoji 🎛 Puzzle 5d play shell controller shared by declarative 2d and 3d windows. */
-export class Puzzle5dPlayShellController extends Controller implements PlaygroundFixtureHost {
+export class Puzzle5dPlayShellController extends Controller implements PlaygroundExampleHost {
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
-  private activeFixtureId = playgroundResolvedFixtureId(PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
+  private activeExampleId = playgroundResolvedExampleId(PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
   readonly puzzle5dStore: Puzzle5dStore = createStore(puzzle5dPlayEmptyModel());
   readonly puzzle5dStoreBridge: Puzzle5dStoreBridge;
   private readonly modelDocStore = new DocumentVcsStore<Puzzle5dModel, Puzzle5dModelEditOp>({
@@ -1093,7 +1088,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     this.jackBridge.setFixtureJson(puzzle5dPlayJackBoardJson(puzzle5dPlayEmptyModel()));
     this.jackBridge.bindPointerFocus(this.pointerFocus);
     this.rebuildShellMode();
-    void this.loadFixtureById(this.activeFixtureId);
+    void this.loadFixtureById(this.activeExampleId);
   }
 
   private notifyStoreShellIfNeeded(): void {
@@ -1370,17 +1365,17 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     this.syncJackFixtureJson();
   }
 
-  getFixtureCatalog(): PlaygroundFixtureCatalog | null {
-    if (isPlaygroundFixtureLocked()) return null;
-    return { activeFixtureId: this.activeFixtureId, options: PUZZLE_5D_PLAY_FIXTURE_OPTIONS };
+  getExampleCatalog(): PlaygroundExampleCatalog | null {
+    if (isPlaygroundExampleLocked()) return null;
+    return { activeExampleId: this.activeExampleId, options: PUZZLE_5D_PLAY_EXAMPLE_OPTIONS };
   }
 
   private async loadFixtureById(fixtureId: string): Promise<void> {
-    let model = isPlaygroundNoFixtureId(fixtureId) ? puzzle5dPlayEmptyModel() : await fetchPuzzle5dPlayModel(fixtureId);
+    let model = isPlaygroundNoExampleId(fixtureId) ? puzzle5dPlayEmptyModel() : await fetchPuzzle5dPlayModel(fixtureId);
     if (!model) return;
-    if (!isPlaygroundNoFixtureId(fixtureId)) {
+    if (!isPlaygroundNoExampleId(fixtureId)) {
       const camera2d =
-        fixtureId === PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID || fixtureId === PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID
+        fixtureId === PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID || fixtureId === PUZZLE_5D_PLAY_EXAMPLE_NAKAGIN_ID
           ? puzzle2dPlayViewportCameraForFixtureId(fixtureId)
           : puzzle2dPlayViewportCameraFromFixture(project2d(model));
       model = { ...model, camera2d };
@@ -1507,15 +1502,15 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
     }
     let changed = true;
     switch (command) {
-      case "setActiveFixture": {
-        if (isPlaygroundFixtureLocked()) return;
+      case "setActiveExample": {
+        if (isPlaygroundExampleLocked()) return;
         const fixtureId = (args as { fixtureId?: string }).fixtureId ?? "";
-        const nextId = isPlaygroundNoFixtureId(fixtureId) ? PLAYGROUND_NO_FIXTURE_ID : fixtureId;
-        if (nextId === this.activeFixtureId) {
+        const nextId = isPlaygroundNoExampleId(fixtureId) ? PLAYGROUND_NO_EXAMPLE_ID : fixtureId;
+        if (nextId === this.activeExampleId) {
           changed = false;
           break;
         }
-        this.activeFixtureId = nextId;
+        this.activeExampleId = nextId;
         void this.loadFixtureById(nextId);
         changed = false;
         break;
@@ -1976,7 +1971,7 @@ if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
   async function puzzle5dPlaySnapshotWithConcreteForest(controller: Puzzle5dPlayShellController): Promise<Puzzle5dPlaySnapshot> {
-    const { default: raw } = await import("../fixture/concrete-forest.5d.json");
+    const { default: raw } = await import("../example/concrete-forest.5d.json");
     const model = parseModel(raw as unknown);
     if (!model) throw new Error("concrete-forest model required for test");
     controller.puzzle5dStore.replaceModel(model);
@@ -2084,8 +2079,8 @@ if (import.meta.vitest) {
   describe("puzzle 5d play fixtures", () => {
     it("parses nakagin 2d and 3d fixtures", async () => {
       const [{ default: nakagin2dJson }, { default: nakagin3dJson }] = await Promise.all([
-        import("../../2d/fixture/nakagin-capsule-tower.2d.json"),
-        import("../../3d/fixture/nakagin-capsule-tower.3d.json"),
+        import("../../2d/example/nakagin-capsule-tower.2d.json"),
+        import("../../3d/example/nakagin-capsule-tower.3d.json"),
       ]);
       const fixture2d = parsePuzzle2dFixture(nakagin2dJson as unknown);
       const fixture3d = parseFixture(nakagin3dJson as unknown);
@@ -2093,16 +2088,16 @@ if (import.meta.vitest) {
       expect(fixture3d?.objects.length).toBeGreaterThan(0);
     });
     it("parses nakagin unified puzzle 5d model", async () => {
-      const { default: nakagin5dJson } = await import("../fixture/nakagin-capsule-tower.5d.json");
+      const { default: nakagin5dJson } = await import("../example/nakagin-capsule-tower.5d.json");
       const model = parseModel(nakagin5dJson as unknown);
       expect(model?.schema).toBe(PUZZLE_5D_SCHEMA);
       expect(model?.parts.length).toBeGreaterThan(0);
     });
     it("parses concrete forest 2d, 3d, and unified puzzle 5d model", async () => {
       const [{ default: concreteForest2dJson }, { default: concreteForest3dJson }, { default: concreteForest5dJson }] = await Promise.all([
-        import("../../2d/fixture/concrete-forest.2d.json"),
-        import("../../3d/fixture/concrete-forest.3d.json"),
-        import("../fixture/concrete-forest.5d.json"),
+        import("../../2d/example/concrete-forest.2d.json"),
+        import("../../3d/example/concrete-forest.3d.json"),
+        import("../example/concrete-forest.5d.json"),
       ]);
       const fixture2d = parsePuzzle2dFixture(concreteForest2dJson as unknown);
       const fixture3d = parseFixture(concreteForest3dJson as unknown);
@@ -2115,15 +2110,15 @@ if (import.meta.vitest) {
     it("fixture catalog lists concrete forest and nakagin", () => {
       const runtime = buildPuzzle5dPlayRuntime();
       const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
-      const catalog = controller.getFixtureCatalog();
-      expect(catalog.activeFixtureId).toBe(PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID);
-      expect(catalog.options.map((row) => row.id)).toEqual([PUZZLE_5D_PLAY_FIXTURE_CONCRETE_FOREST_ID, PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID]);
+      const catalog = controller.getExampleCatalog();
+      expect(catalog.activeExampleId).toBe(PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID);
+      expect(catalog.options.map((row) => row.id)).toEqual([PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, PUZZLE_5D_PLAY_EXAMPLE_NAKAGIN_ID]);
     });
     it("regenerates nakagin 5d fixture when REGENERATE_NAKAGIN_5D=1", async () => {
       if (process.env.REGENERATE_NAKAGIN_5D !== "1") return;
       const [{ default: nakagin2dJson }, { default: nakagin3dJson }] = await Promise.all([
-        import("../../2d/fixture/nakagin-capsule-tower.2d.json"),
-        import("../../3d/fixture/nakagin-capsule-tower.3d.json"),
+        import("../../2d/example/nakagin-capsule-tower.2d.json"),
+        import("../../3d/example/nakagin-capsule-tower.3d.json"),
       ]);
       const fixture2d = parsePuzzle2dFixture(nakagin2dJson as unknown);
       const fixture3d = parseFixture(nakagin3dJson as unknown);
@@ -2138,15 +2133,15 @@ if (import.meta.vitest) {
       };
       const { writeFile } = await import("node:fs/promises");
       const { join } = await import("node:path");
-      const outPath = join(process.cwd(), "../fixture/nakagin-capsule-tower.5d.json");
+      const outPath = join(process.cwd(), "../example/nakagin-capsule-tower.5d.json");
       await writeFile(outPath, `${JSON.stringify(model, null, 2)}\n`, "utf8");
       expect(model.parts.length).toBeGreaterThan(0);
     });
     it("regenerates concrete forest 5d fixture when REGENERATE_CONCRETE_FOREST_5D=1", async () => {
       if (process.env.REGENERATE_CONCRETE_FOREST_5D !== "1") return;
       const [{ default: concreteForest2dJson }, { default: concreteForest3dJson }] = await Promise.all([
-        import("../../2d/fixture/concrete-forest.2d.json"),
-        import("../../3d/fixture/concrete-forest.3d.json"),
+        import("../../2d/example/concrete-forest.2d.json"),
+        import("../../3d/example/concrete-forest.3d.json"),
       ]);
       const fixture2d = parsePuzzle2dFixture(concreteForest2dJson as unknown);
       const fixture3d = parseFixture(concreteForest3dJson as unknown);
@@ -2161,7 +2156,7 @@ if (import.meta.vitest) {
       };
       const { writeFile } = await import("node:fs/promises");
       const { join } = await import("node:path");
-      const outPath = join(process.cwd(), "../fixture/concrete-forest.5d.json");
+      const outPath = join(process.cwd(), "../example/concrete-forest.5d.json");
       await writeFile(outPath, `${JSON.stringify(model, null, 2)}\n`, "utf8");
       expect(model.parts.length).toBeGreaterThan(0);
     });
@@ -2233,19 +2228,129 @@ if (import.meta.vitest) {
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
-import { puzzle5dPlayAppDefinition } from "./playground.ts";
 
 /** @emoji 🧩 S program definition for puzzle 5d. */
 export function buildPuzzle5dProgramDefinition(): PlatformDefinition {
-	const app = puzzle5dPlayAppDefinition;
 	return {
 		id: "puzzle.5d",
 		name: "Puzzle 5D",
 		apiVersion: "1",
-		apps: [{ id: "puzzle5d", label: app.label, controllerId: app.controllerId, modes: app.modes, defaultModeId: app.defaultModeId }],
+		apps: [{ id: "puzzle5d", label: "Puzzle 5D", controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }], defaultModeId: "edit" }],
 		createPlatformApi: () => ({}),
 	};
 }
 //#endregion 🔖SExtension
 
-export { puzzle5dPlayAppDefinition, Playground5d } from "./playground.ts";
+//#region 🔖Play
+
+export const PUZZLE_5D_PLAY_EXAMPLE_NAKAGIN_ID = "nakagin";
+export const PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID = "concrete-forest";
+
+export const PUZZLE_5D_PLAY_EXAMPLE_OPTIONS = [
+	{ id: PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, label: "Concrete Forest" },
+	{ id: PUZZLE_5D_PLAY_EXAMPLE_NAKAGIN_ID, label: "Nakagin capsule tower" },
+] as const;
+
+/** @emoji 🔒 Resolves a playground example slug (e.g. `concrete`) to a puzzle 5d example id. */
+export function resolvePuzzle5dPlayExampleSlug(slug: string): string | undefined {
+	const aliases: Record<string, string> = { concrete: PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID };
+	const normalized = aliases[slug] ?? slug;
+	return PUZZLE_5D_PLAY_EXAMPLE_OPTIONS.some((row) => row.id === normalized) ? normalized : undefined;
+}
+
+const PUZZLE_5D_PLAY_EXAMPLE_URL_BY_ID: Readonly<Record<string, string>> = {
+	[PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID]: "/puzzle-5d-fixture/concrete-forest.5d.json",
+	[PUZZLE_5D_PLAY_EXAMPLE_NAKAGIN_ID]: "/puzzle-5d-fixture/nakagin-capsule-tower.5d.json",
+};
+
+async function readPuzzle5dPlayModelFromDisk(exampleId: string): Promise<Puzzle5dModel | null> {
+	const url = PUZZLE_5D_PLAY_EXAMPLE_URL_BY_ID[exampleId];
+	if (!url) return null;
+	const fileName = url.split("/").pop();
+	if (!fileName) return null;
+	const { readFile } = await import("node:fs/promises");
+	const { join, dirname } = await import("node:path");
+	const { fileURLToPath } = await import("node:url");
+	const filePath = join(dirname(fileURLToPath(import.meta.url)), "../example", fileName);
+	return parseModel(JSON.parse(await readFile(filePath, "utf8")) as unknown);
+}
+
+/** @emoji 📥 Loads a play sample by catalog id (browser fetch or disk in non-browser hosts). */
+export async function fetchPuzzle5dPlayModel(exampleId: string): Promise<Puzzle5dModel | null> {
+	const url = PUZZLE_5D_PLAY_EXAMPLE_URL_BY_ID[exampleId];
+	if (!url) return null;
+	if (typeof window === "undefined") {
+		return readPuzzle5dPlayModelFromDisk(exampleId);
+	}
+	const response = await fetch(url);
+	if (!response.ok) return null;
+	return parseModel((await response.json()) as unknown);
+}
+
+/** @emoji 📭 Empty puzzle 5d model for the no-example playground catalog entry. */
+export function puzzle5dPlayEmptyModel(): Puzzle5dModel {
+	return {
+		schema: PUZZLE_5D_SCHEMA,
+		domain: "architecture",
+		camera2d: { x: 0, y: 0, zoom: 1 },
+		camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+		parts: [],
+		fasteners: [],
+		label: "",
+	};
+}
+
+export const puzzle5dPlayAppDefinition = createPlaygroundApp({
+	id: PUZZLE_5D_PLAY_APP_ID,
+	label: "Puzzle 5D",
+	controllerId: PUZZLE_5D_PLAY_CONTROLLER_ID,
+	modes: [{ id: "edit", label: "Edit" }],
+	defaultModeId: "edit",
+	devHost: {
+		playEntryKind: "5d",
+		resolveDedupe: ["react", "react-dom", "three", "@semio-tech/puzzle-2d-react", "@semio-tech/puzzle-3d-react", "@semio-tech/puzzle-5d-react"],
+		optimizeDeps: {
+			include: [
+				"react",
+				"react-dom",
+				"react/jsx-runtime",
+				"react/jsx-dev-runtime",
+				"three",
+				"@react-three/fiber",
+				"@react-three/drei",
+				"lucide-react",
+				"@semio-tech/infinite-world-r3f",
+				"@semio-tech/puzzle-2d-react",
+				"@semio-tech/puzzle-3d-react",
+				"@semio-tech/puzzle-5d-react",
+			],
+		},
+	},
+	createRuntime: () => {
+		return buildPuzzle5dPlayRuntime();
+	},
+	registerBodies: () => {
+		/* window bodies registered with surface hosts in {@link registerPuzzle5dPlaySurfaceHosts} */
+	},
+	bootRenderer: async (pg) => {
+		const { boot5dPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/5d");
+		boot5dPlay(pg);
+	},
+});
+//#endregion 🔖Play
+
+//#region 🔖MediaExport
+/** @emoji 💾 Registers puzzle 5d model OBJ/GLB export handlers via {@link project3d}. */
+export function registerPuzzle5dMediaExportHandlers(): void {
+	registerOsMediaExportHandler("5d.puzzle", "obj", async (doc) => ({
+		data: await exportPuzzle3dFixtureObj(project3d(doc as Parameters<typeof project3d>[0])),
+		mimeType: "text/plain",
+		fileName: "puzzle5d.obj",
+	}));
+	registerOsMediaExportHandler("5d.puzzle", "glb", async (doc) => ({
+		data: await exportPuzzle3dFixtureGlb(project3d(doc as Parameters<typeof project3d>[0])),
+		mimeType: "model/gltf-binary",
+		fileName: "puzzle5d.glb",
+	}));
+}
+//#endregion 🔖MediaExport
