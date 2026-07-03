@@ -34,17 +34,6 @@ import {
   type PlaygroundHostKind,
   type PlaygroundSiteKind,
 } from "../../repo/lib/js/index.ts";
-import {
-  scanPlaygroundAppManifests,
-  buildProgramIdToPlaygroundKind,
-  collectLockedExampleFixturesFromManifests,
-  collectPlaygroundManifestAssets,
-  collectPlaygroundOptimizeDepsExclude,
-  filterPlaygroundAppManifestsForActiveKind,
-  filterPlaygroundProgramManifestsForActiveKind,
-  playgroundManifestCoreAliases,
-  type PlaygroundAssetKind,
-} from "../../repo/lib/js/playground-manifest.ts";
 // #endregion 🔌Adapters
 
 export {
@@ -252,7 +241,6 @@ export function playgroundComposeSketchpadVitePlugins(repoRoot: string, enableSk
     },
   ];
   if (enableSketchpadMdx) {
-    const docsMdxStub = resolve(repoRoot, "framework/product/playground/core/sketchpad-docs-mdx-stub.ts");
     const sketchpadMdxStubSource = "export default function SketchpadMdxStub() { return null; }";
     return [
       {
@@ -260,9 +248,6 @@ export function playgroundComposeSketchpadVitePlugins(repoRoot: string, enableSk
         enforce: "pre",
         resolveId(id) {
           const cleanId = id.split("?", 1)[0] ?? id;
-          if (cleanId.endsWith("/compose/client/lib/sketchpad/js/docs-mdx.ts")) {
-            return docsMdxStub;
-          }
           if (cleanId.endsWith(".mdx") && cleanId.includes("/compose/client/lib/sketchpad/")) {
             return PLAYGROUND_COMPOSE_SKETCHPAD_MDX_STUB_ID;
           }
@@ -431,9 +416,9 @@ export function createPuzzle3dMeshesMiddleware(meshRoots: readonly string[], pla
 
 const PUZZLE_3D_LOCKED_FIXTURE_JSON_REL: Readonly<Record<string, readonly string[]>> = {};
 
-/** @emoji 🔒 Resolves locked-example fixture paths from semio.app manifests. */
-export function resolvePuzzle3dLockedFixtureJsonRel(repoRoot: string): Readonly<Record<string, readonly string[]>> {
-  return collectLockedExampleFixturesFromManifests(scanPlaygroundAppManifests(repoRoot));
+/** @emoji 🔒 Resolves locked-example fixture paths for puzzle 3d play bundles. */
+export function resolvePuzzle3dLockedFixtureJsonRel(_repoRoot: string): Readonly<Record<string, readonly string[]>> {
+  return PUZZLE_3D_LOCKED_FIXTURE_JSON_REL;
 }
 
 /** @emoji 🔎 Collects `/mesh/*.glb` basenames referenced anywhere in fixture JSON. */
@@ -1191,8 +1176,6 @@ export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/flow-module-draw",
 ] as const;
 
-const PLAYGROUND_APPS_VIRTUAL_MODULE_ID = "virtual:semio-playground-apps";
-
 /** @emoji 🧭 Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */
 export function createWorkspaceViteResolveConfig(
   repoRoot: string,
@@ -1210,61 +1193,6 @@ export function createWorkspaceViteResolveConfig(
       exclude: [...findWorkspacePackages(repoRoot), ...FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE],
     },
   };
-}
-
-/** @emoji 📋 Vite virtual module with dynamic playground app definition imports from manifests. */
-export function playgroundAppsVirtualModulePlugin(repoRoot: string, activeKind?: string): Plugin {
-  const resolvedId = `\0${PLAYGROUND_APPS_VIRTUAL_MODULE_ID}`;
-  return {
-    name: "semio-playground-apps-virtual",
-    enforce: "pre",
-    resolveId(id) {
-      if (id === PLAYGROUND_APPS_VIRTUAL_MODULE_ID) return resolvedId;
-    },
-    load(id) {
-      if (id !== resolvedId) return;
-      const allManifests = scanPlaygroundAppManifests(repoRoot);
-      const appManifests = filterPlaygroundAppManifestsForActiveKind(allManifests, activeKind);
-      const programManifests = filterPlaygroundProgramManifestsForActiveKind(allManifests, activeKind);
-      const entries = appManifests
-        .map(
-          (manifest) =>
-            `  ${JSON.stringify(manifest.kind)}: async () => (await import(${JSON.stringify(manifest.corePackage)}))[${JSON.stringify(manifest.definitionExport)}]`,
-        )
-        .join(",\n");
-      const programEntries = programManifests
-        .map(
-          (manifest) =>
-            `  ${JSON.stringify(manifest.kind)}: async () => (await import(${JSON.stringify(manifest.corePackage)}))[${JSON.stringify(manifest.programExport!)}]`,
-        )
-        .join(",\n");
-      const programIdMap = buildProgramIdToPlaygroundKind(programManifests);
-      const programIdEntries = Object.entries(programIdMap)
-        .map(([programId, kind]) => `  ${JSON.stringify(programId)}: ${JSON.stringify(kind)}`)
-        .join(",\n");
-      const programIdMapExport = `export const programIdToPlaygroundKind = {\n${programIdEntries}\n};\n`;
-      const rendererEntries = appManifests
-        .map(
-          (manifest) =>
-            `  ${JSON.stringify(manifest.kind)}: async () => {
-    const mod = await import(${JSON.stringify(manifest.rendererPackage)});
-    const exported = mod[${JSON.stringify(manifest.rendererExport)}];
-    if (typeof exported === "function") {
-      const result = exported();
-      return result && typeof result.then === "function" ? await result : result;
-    }
-    return exported;
-  }`,
-        )
-        .join(",\n");
-      const rendererImportsExport = `export const playgroundRendererImports = {\n${rendererEntries}\n};\n`;
-      return `export const playgroundAppImports = {\n${entries}\n};\nexport const playgroundProgramImports = {\n${programEntries}\n};\n${rendererImportsExport}${programIdMapExport}`;
-    },
-  };
-}
-
-function playgroundRendererIndexPath(repoRoot: string): string {
-  return resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
 }
 
 /** @emoji 🖼️ Vite: serve and copy `cad/fixture` at `/cad-fixture/*` for CAD world reference planes. */
@@ -1427,16 +1355,6 @@ function playgroundSketchpadMdxGlobalStubPlugin(): Plugin {
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
   const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
   const uiAssetsRoot = resolve(repoRoot, "ui/asset");
-  const presentationIndex = resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx");
-  const manifests = scanPlaygroundAppManifests(repoRoot);
-  const assets = collectPlaygroundManifestAssets(manifests, playEntryKind);
-  const manifestOptimizeExclude = collectPlaygroundOptimizeDepsExclude(manifests, playEntryKind);
-  const virtualManifests = [
-    ...filterPlaygroundAppManifestsForActiveKind(manifests, playEntryKind),
-    ...filterPlaygroundProgramManifestsForActiveKind(manifests, playEntryKind),
-  ];
-  const uniqueVirtualManifests = [...new Map(virtualManifests.map((manifest) => [manifest.kind, manifest])).values()];
-  const manifestCoreAliases = uniqueVirtualManifests.flatMap((manifest) => playgroundManifestCoreAliases(manifest));
   const osHubAliases =
     playEntryKind === "s"
       ? [
@@ -1462,34 +1380,8 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
           },
         ]
       : [];
-  const sketchpadComposeAliases = assets.has("sketchpad-mdx")
-    ? [
-        {
-          find: "@semio-tech/compose-rs-wasm",
-          replacement: resolve(repoRoot, "compose/client/lib/rs/pkg/compose.js"),
-        },
-        {
-          find: "@semio-tech/compose-js",
-          replacement: resolve(repoRoot, "compose/client/lib/js/index.ts"),
-        },
-        {
-          find: "@semio-tech/compose-react",
-          replacement: resolve(repoRoot, "compose/client/lib/react/index.ts"),
-        },
-      ]
-    : [];
-  const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [
-    ...extraAliases,
-    ...osHubAliases,
-    ...sketchpadComposeAliases,
-    ...manifestCoreAliases,
-  ]);
-  const sketchpadMdx = assets.has("sketchpad-mdx");
-  const workerStubPlugins = [
-    ...(assets.has("sketchpad-mdx") ? [playgroundSketchpadMdxGlobalStubPlugin()] : []),
-    ...(assets.has("playwright-dev-stub") ? [playgroundPlaywrightDevStubPlugin()] : []),
-    ...(assets.has("vitest-dev-stub") ? [playgroundVitestDevStubPlugin()] : []),
-  ];
+  const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [...extraAliases, ...osHubAliases]);
+  const workerStubPlugins = [playgroundPlaywrightDevStubPlugin(), playgroundVitestDevStubPlugin()];
   return defineConfig({
     root: playDir,
     base: "./",
@@ -1497,7 +1389,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     assetsInclude: ["**/*.wasm"],
     worker: {
       format: "es",
-      ...(workerStubPlugins.length ? { plugins: () => workerStubPlugins } : {}),
+      plugins: () => workerStubPlugins,
     },
     define: {
       ...playgroundPlayViteDefine(
@@ -1505,28 +1397,19 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       ),
     },
     plugins: [
-      playgroundAppsVirtualModulePlugin(repoRoot, playEntryKind),
-      ...(sketchpadMdx ? [playgroundSketchpadMdxGlobalStubPlugin()] : []),
       playgroundPlayBootHtmlPlugin(),
       playgroundFlowWasmDevStubPlugin(repoRoot),
-      ...(sketchpadMdx
-        ? playgroundComposeSketchpadVitePlugins(repoRoot, true)
-        : [playgroundComposeSketchpadStubPlugin(repoRoot)]),
+      playgroundComposeSketchpadStubPlugin(repoRoot),
       ...uiAssetsVitePlugin(uiAssetsRoot),
       ...semioFaviconVitePlugin(repoRoot),
       ...cadFixtureVitePlugin(repoRoot),
       infiniteFixtureVitePlugin(repoRoot),
-      ...(assets.has("puzzle3d-meshes") ? puzzle3dMeshesVitePlugin(repoRoot) : []),
-      ...(assets.has("gis-tiles")
-        ? gisMapTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env[GIS_MAP_TILE_SERVE_MODE_ENV]))
-        : []),
       tailwindcss(),
-      react(assets.has("react-all-extensions") ? { include: /\.(tsx?|jsx?)$/ } : undefined),
-      ...(assets.has("playwright-dev-stub") ? [playgroundPlaywrightDevStubPlugin()] : []),
-      ...(assets.has("vitest-dev-stub") ? [playgroundVitestDevStubPlugin()] : []),
+      react(),
+      playgroundPlaywrightDevStubPlugin(),
+      playgroundVitestDevStubPlugin(),
       playgroundIframeEmbedHeadersPlugin(),
       playgroundStaleOptimizeDepPlugin(),
-      presentationRendererVitestStripPlugin(presentationIndex),
       ...extraPlugins,
     ],
     build: playgroundStaticSiteBuildOptions(build),
@@ -1542,7 +1425,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     optimizeDeps: {
       ...workspaceResolve.optimizeDeps,
       ...optimizeDeps,
-      exclude: [...(workspaceResolve.optimizeDeps?.exclude ?? []), ...manifestOptimizeExclude, ...(optimizeDeps?.exclude ?? [])],
+      exclude: [...(workspaceResolve.optimizeDeps?.exclude ?? []), ...(optimizeDeps?.exclude ?? [])],
     },
   });
 }

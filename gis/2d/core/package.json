@@ -29,29 +29,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "gis/2d/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "gis-2d",
-      "aliases": [
-        "gis-2d",
-        "gis 2d"
-      ],
-      "packageRoot": "gis/2d",
-      "corePackage": "@semio-tech/gis-2d-core",
-      "definitionExport": "gis2dPlayAppDefinition",
-      "hostKind": "gis-2d",
-      "port": {
-        "dev": 6040,
-        "env": "GIS_2D_PLAY_PORT"
-      },
-      "programExport": "gisMapProgramContribution",
-      "programId": "gis.map",
-      "assets": [
-        "gis-tiles"
-      ],
-      "rendererPackage": "@semio-tech/gis-2d-react",
-      "rendererExport": "mapAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

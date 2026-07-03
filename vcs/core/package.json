@@ -23,25 +23,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "vcs/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "vcs",
-      "aliases": [
-        "vcs"
-      ],
-      "packageRoot": "vcs",
-      "corePackage": "@semio-tech/vcs-core",
-      "definitionExport": "vcsPlayAppDefinition",
-      "hostKind": "vcs",
-      "port": {
-        "dev": 6075,
-        "env": "VCS_PLAY_PORT"
-      },
-      "programExport": "vcsProgramContribution",
-      "programId": "vcs",
-      "rendererPackage": "@semio-tech/vcs-react",
-      "rendererExport": "vcsAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

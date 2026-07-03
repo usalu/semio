@@ -22,26 +22,6 @@
     "directory": "layout/core"
   },
   "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "layout",
-      "aliases": [
-        "layout"
-      ],
-      "packageRoot": "layout",
-      "corePackage": "@semio-tech/layout-core",
-      "definitionExport": "layoutPlayAppDefinition",
-      "hostKind": "layout",
-      "port": {
-        "dev": 6079,
-        "env": "LAYOUT_PLAY_PORT"
-      },
-      "programExport": "layoutProgramContribution",
-      "programId": "layout",
-      "rendererPackage": "@semio-tech/layout-react",
-      "rendererExport": "layoutAppRenderer"
-    }
-  },
   "dependencies": {
     "@semio-tech/framework-os-core": "workspace:*",
     "@semio-tech/framework-platform-core": "workspace:*"

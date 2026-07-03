@@ -1,0 +1,253 @@
+package semio:framework;
+
+interface ui {
+  use types.{json-value, command-descriptor, style-spec};
+
+  record stack-node {
+    direction: string,
+    gap: option<string>,
+    padding: option<string>,
+    children: list<ui-node>,
+  }
+
+  record text-node {
+    value: string,
+    emphasize: option<bool>,
+  }
+
+  record button-node {
+    id: option<string>,
+    icon-id: string,
+    label: string,
+    command: command-descriptor,
+    style: option<style-spec>,
+  }
+
+  record separator-node {}
+
+  record input-node {
+    id: string,
+    input-kind: string,
+    value: string,
+    placeholder: option<string>,
+    commit: option<string>,
+    on-change: command-descriptor,
+  }
+
+  record select-node {
+    id: string,
+    value: string,
+    items: list<select-item>,
+    on-change: command-descriptor,
+  }
+
+  record select-item {
+    id: string,
+    value: string,
+    label: string,
+  }
+
+  record toggle-node {
+    id: string,
+    icon-id: string,
+    label: option<string>,
+    pressed: bool,
+    text: option<string>,
+    on-change: command-descriptor,
+  }
+
+  record slider-node {
+    id: string,
+    label: option<string>,
+    value: f64,
+    min: f64,
+    max: f64,
+    step: option<f64>,
+    on-change: command-descriptor,
+  }
+
+  record section-node {
+    id: string,
+    title: string,
+    children: list<ui-node>,
+  }
+
+  record tree-item-node {
+    id: string,
+    label: string,
+    icon-id: option<string>,
+    expanded: option<bool>,
+    selected: option<bool>,
+    children: list<ui-node>,
+  }
+
+  record tree-node {
+    id: string,
+    items: list<tree-item-node>,
+  }
+
+  record canvas-2d-scene {
+    camera-x: f64,
+    camera-y: f64,
+    zoom: f64,
+    layers-json: string,
+  }
+
+  record world-3d-scene {
+    camera-json: string,
+    instances-json: string,
+  }
+
+  record node-graph-scene {
+    nodes-json: string,
+    edges-json: string,
+    viewport-json: string,
+  }
+
+  record text-editor-scene {
+    buffer: string,
+    language: option<string>,
+    selection-json: option<string>,
+  }
+
+  record table-scene {
+    columns-json: string,
+    rows-json: string,
+  }
+
+  record raster-scene {
+    width: u32,
+    height: u32,
+    pixels-base64: string,
+  }
+
+  record component-scene-node {
+    surface-id: string,
+    controller-id: string,
+    component-kind: string,
+    pane-id: option<string>,
+    binding-id: option<string>,
+    canvas-2d: option<canvas-2d-scene>,
+    world-3d: option<world-3d-scene>,
+    node-graph: option<node-graph-scene>,
+    text-editor: option<text-editor-scene>,
+    table: option<table-scene>,
+    raster: option<raster-scene>,
+  }
+
+  variant ui-node {
+    stack(stack-node),
+    text(text-node),
+    button(button-node),
+    separator(separator-node),
+    input(input-node),
+    select(select-node),
+    toggle(toggle-node),
+    slider(slider-node),
+    section(section-node),
+    tree(tree-node),
+    component-scene(component-scene-node),
+  }
+}
+
+interface types {
+  record command-descriptor {
+    controller-id: string,
+    command: string,
+    args-json: option<string>,
+  }
+
+  record style-spec {
+    variant: option<string>,
+    size: option<string>,
+    density: option<string>,
+  }
+
+  type json-value = string;
+
+  record keybinding {
+    keys: string,
+    command: command-descriptor,
+  }
+
+  record mode-definition {
+    id: string,
+    label: string,
+  }
+
+  record window-kind-definition {
+    id: string,
+    label: string,
+    body-key: string,
+  }
+
+  record panel-tab-definition {
+    id: string,
+    label: string,
+    group: string,
+    body-key: string,
+  }
+
+  record app-definition {
+    id: string,
+    label: string,
+    icon-id: option<string>,
+    controller-id: string,
+    modes: list<mode-definition>,
+    default-mode-id: option<string>,
+    window-kinds: list<window-kind-definition>,
+    panel-tabs: list<panel-tab-definition>,
+    keybindings: list<keybinding>,
+  }
+
+  record program-definition {
+    program-id: string,
+    app-id: string,
+    label: string,
+    yields: string,
+  }
+
+  record example-definition {
+    id: string,
+    label: string,
+    document-json: string,
+  }
+
+  record plugin-manifest {
+    plugin-id: string,
+    label: string,
+    version: string,
+    apps: list<app-definition>,
+    programs: list<program-definition>,
+    examples: list<example-definition>,
+  }
+
+  record view-state {
+    active-mode-id: option<string>,
+    active-window-kind-id: option<string>,
+    selection-json: option<string>,
+    panel-json: option<string>,
+  }
+}
+
+interface plugin-api {
+  use types.{plugin-manifest, view-state};
+  use ui.{ui-node};
+
+  create-app: func(app-id: string) -> result<u32, string>;
+  destroy-app: func(instance-id: u32) -> result<_, string>;
+  handle-command: func(instance-id: u32, command-json: string, document-json: string, view-state: view-state) -> result<list<string>, string>;
+  render: func(instance-id: u32, body-key: string, document-json: string, view-state: view-state) -> result<ui-node, string>;
+  manifest: func() -> plugin-manifest;
+}
+
+interface host {
+  log: func(level: string, message: string);
+  now-ms: func() -> s64;
+  fetch-asset: func(uri: string) -> result<string, string>;
+}
+
+world plugin-world {
+  import host;
+  export plugin-api;
+}

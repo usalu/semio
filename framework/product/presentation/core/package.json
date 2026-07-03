@@ -22,29 +22,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/product/presentation/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "presentation",
-      "aliases": [
-        "presentation"
-      ],
-      "packageRoot": "framework/product/presentation",
-      "corePackage": "@semio-tech/framework-presentation-core",
-      "definitionExport": "presentationPlayAppDefinition",
-      "hostKind": "presentation",
-      "port": {
-        "dev": 6051,
-        "test": 6052,
-        "env": "PRESENTATION_PLAY_PORT"
-      },
-      "programExport": "presentationProgramContribution",
-      "programId": "presentation",
-      "programIds": [
-        "presentation.deck"
-      ],
-      "rendererPackage": "@semio-tech/framework-presentation-renderer-react",
-      "rendererExport": "presentationAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

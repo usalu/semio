@@ -32,43 +32,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "puzzle/3d/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "3d",
-      "aliases": [
-        "3d",
-        "puzzle 3d",
-        "puzzle-3d"
-      ],
-      "packageRoot": "puzzle/3d",
-      "corePackage": "@semio-tech/puzzle-3d-core",
-      "definitionExport": "puzzle3dPlayAppDefinition",
-      "rendererPackage": "@semio-tech/puzzle-3d-react",
-      "rendererExport": "puzzle3dAppRenderer",
-      "hostKind": "puzzle-3d",
-      "port": {
-        "dev": 6013,
-        "test": 6028,
-        "env": "PUZZLE_3D_PLAY_PORT"
-      },
-      "programExport": "puzzle3dProgramContribution",
-      "programId": "puzzle.3d",
-      "site": {
-        "embedKind": "3d",
-        "host": "play.3d.semio-tech.com"
-      },
-      "assets": [
-        "puzzle3d-meshes"
-      ],
-      "lockedExampleFixtures": {
-        "nakagin": [
-          "puzzle/3d/example/nakagin-capsule-tower.3d.json"
-        ],
-        "concrete-forest": [
-          "puzzle/3d/example/concrete-forest.3d.json"
-        ]
-      }
-    }
-  }
+  "bundleKind": "library"
 }

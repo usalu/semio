@@ -27,25 +27,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "imperative/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "imperative",
-      "aliases": [
-        "imperative"
-      ],
-      "packageRoot": "imperative",
-      "corePackage": "@semio-tech/imperative-core",
-      "definitionExport": "imperativePlayAppDefinition",
-      "hostKind": "imperative",
-      "port": {
-        "dev": 6076,
-        "env": "IMPERATIVE_PLAY_PORT"
-      },
-      "programExport": "imperativeProgramContribution",
-      "programId": "imperative",
-      "rendererPackage": "@semio-tech/imperative-react",
-      "rendererExport": "imperativeAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

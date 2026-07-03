@@ -34,30 +34,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "cad/renderer/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "cad",
-      "aliases": [
-        "cad"
-      ],
-      "packageRoot": "cad/renderer",
-      "corePackage": "@semio-tech/cad-js-renderer-core",
-      "definitionExport": "cadPlayAppDefinition",
-      "hostKind": "cad",
-      "port": {
-        "dev": 6020,
-        "test": 6041,
-        "env": "CAD_JS_RENDERER_PLAY_PORT"
-      },
-      "programExport": "cadProgramContribution",
-      "programId": "cad",
-      "site": {
-        "embedKind": "cad",
-        "host": "play.cad.semio-tech.com"
-      },
-      "rendererPackage": "@semio-tech/cad-js-renderer-react",
-      "rendererExport": "cadAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

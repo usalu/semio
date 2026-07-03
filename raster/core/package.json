@@ -26,26 +26,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "raster/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "raster",
-      "aliases": [
-        "raster"
-      ],
-      "packageRoot": "raster",
-      "corePackage": "@semio-tech/raster-core",
-      "definitionExport": "rasterPlayAppDefinition",
-      "hostKind": "raster",
-      "port": {
-        "dev": 6060,
-        "test": 6061,
-        "env": "RASTER_PLAY_PORT"
-      },
-      "programExport": "rasterProgramContribution",
-      "programId": "raster",
-      "rendererPackage": "@semio-tech/raster-react",
-      "rendererExport": "rasterAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

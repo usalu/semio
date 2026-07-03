@@ -14,8 +14,6 @@ import {
   runMicroCommit,
   runWorkspaceScriptMain,
   tryRun,
-  scanPlaygroundAppManifests,
-  resolvePlaygroundDevAppFromManifests,
 } from "./repo/lib/js/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -30,8 +28,8 @@ const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap")
 
 export { Script };
 
-function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; readonly rest: string[] } | null {
-  return resolvePlaygroundDevAppFromManifests(segments, scanPlaygroundAppManifests(WORKSPACE_ROOT));
+function resolvePlaygroundDevApp(_segments: string[]): { readonly app: string; readonly rest: string[] } | null {
+  return null;
 }
 
 //#region 🔖NativeOsScript

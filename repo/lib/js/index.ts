@@ -9,26 +9,9 @@ import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, st
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
-import { scanPlaygroundAppManifests } from "./playground-manifest.ts";
 //#endregion 🔌Adapters
 
-export {
-	buildProgramIdToPlaygroundKind,
-	collectLockedExampleFixturesFromManifests,
-	collectPlaygroundManifestAssets,
-	collectPlaygroundOptimizeDepsExclude,
-	filterPlaygroundAppManifestsForActiveKind,
-	filterPlaygroundProgramManifestsForActiveKind,
-	playgroundAppManifestByKind,
-	playgroundManifestCoreEntry,
-	playgroundManifestCoreAliases,
-	resolvePlaygroundDevAppFromManifests,
-	scanPlaygroundAppManifests,
-	type PlaygroundAppManifest,
-	type PlaygroundAppManifestEntry,
-	type PlaygroundAssetKind,
-	type PlaygroundHostKind,
-} from "./playground-manifest.ts";
+export type PlaygroundHostKind = string;
 
 //#region 🔖breach
 /** 🚫BreachRecord is one policy lint finding from `script.ts` (serialized to cache JSON). */
@@ -1034,20 +1017,9 @@ type PlaygroundPortSpec = {
 
 /** @emoji 🔌 Builds playground port table from semio.app manifests plus non-app hosts. */
 function buildPlaygroundPortsFromManifests(): Record<string, PlaygroundPortSpec> {
-	const ports: Record<string, PlaygroundPortSpec> = {
+	return {
 		storybook: { dev: 6010, env: "STORYBOOK_PORT" },
 	};
-	for (const manifest of scanPlaygroundAppManifests(getWorkspaceRoot())) {
-		if (!manifest.port) continue;
-		const hostKind = manifest.hostKind ?? manifest.kind;
-		const spec: PlaygroundPortSpec = {
-			dev: manifest.port.dev,
-			test: manifest.port.test,
-			env: manifest.port.env ?? `${hostKind.toUpperCase().replaceAll("-", "_")}_PORT`,
-		};
-		ports[hostKind] = spec;
-	}
-	return ports;
 }
 
 let playgroundPortsCache: Record<string, PlaygroundPortSpec> | undefined;
@@ -1124,13 +1096,7 @@ let playgroundEmbedSiteDevPortsCache: Readonly<Record<string, string>> | undefin
 
 /** @emoji 🌐 Builds embed-site dev port map from semio.app manifest `site.embedKind`. */
 function buildPlaygroundEmbedSiteDevPortsFromManifests(): Readonly<Record<string, string>> {
-	const ports: Record<string, string> = {};
-	for (const manifest of scanPlaygroundAppManifests(getWorkspaceRoot())) {
-		if (!manifest.site) continue;
-		const hostKind = manifest.hostKind ?? manifest.kind;
-		ports[manifest.site.embedKind] = playgroundDevPortString(hostKind);
-	}
-	return ports;
+	return {};
 }
 
 /** @emoji 🌐 Resolves iframe embed dev ports after manifest scan is available. */
@@ -1172,12 +1138,7 @@ let playgroundSiteHostsCache: Readonly<Record<string, string>> | undefined;
 
 /** @emoji 🌐 Builds production iframe hostnames from semio.app manifest `site.host`. */
 function buildPlaygroundSiteHostsFromManifests(): Readonly<Record<string, string>> {
-	const hosts: Record<string, string> = {};
-	for (const manifest of scanPlaygroundAppManifests(getWorkspaceRoot())) {
-		if (!manifest.site) continue;
-		hosts[manifest.site.embedKind] = manifest.site.host;
-	}
-	return hosts;
+	return {};
 }
 
 function resolvePlaygroundSiteHosts(): Readonly<Record<string, string>> {

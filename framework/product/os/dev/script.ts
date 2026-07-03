@@ -1,37 +1,107 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@semio-tech/framework-os-dev` task router. */
+/** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
+import { spawnSync } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, watch } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
 	BundleScript,
 	ScriptRouter,
-	playPollingEnv,
-	playgroundDevPortString,
-	playgroundPortEnv,
-	runBun,
+	getWorkspaceRoot,
 	runBundleScriptMain,
 	runVitest,
 	runViteBunxDev,
 } from "../../../../repo/lib/js/index.ts";
+import { PLUGIN_BUILD_TARGETS } from "./js/plugin-registry.ts";
+
+const repoRoot = getWorkspaceRoot();
+const wasmTarget = "wasm32-unknown-unknown";
+const pluginOutRoot = join(repoRoot, "framework/product/os/dev/public/plugins");
+
+function ensureWasmTarget(): void {
+	const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
+	if (!probe.stdout?.includes(wasmTarget)) {
+		spawnSync("rustup", ["target", "add", wasmTarget], { stdio: "inherit" });
+	}
+}
+
+async function readPackageName(cratePath: string): Promise<string> {
+	const content = await Bun.file(join(repoRoot, cratePath, "Cargo.toml")).text();
+	const match = content.match(/^name = "([^"]+)"/m);
+	if (!match) throw new Error(`missing package name in ${cratePath}/Cargo.toml`);
+	return match[1]!;
+}
+
+async function buildPlugin(target: (typeof PLUGIN_BUILD_TARGETS)[number]): Promise<void> {
+	const packageName = await readPackageName(target.cratePath);
+	const build = spawnSync(
+		"cargo",
+		["build", "-p", packageName, "--target", wasmTarget, "--release"],
+		{ cwd: repoRoot, stdio: "inherit" },
+	);
+	if (build.status !== 0) throw new Error(`plugin build failed: ${target.pluginId}`);
+	const artifact = join(repoRoot, "target", wasmTarget, "release", `${packageName.replace(/-/g, "_")}.wasm`);
+	const outDir = join(pluginOutRoot, target.pluginId);
+	mkdirSync(outDir, { recursive: true });
+	const wasmBindgen = spawnSync("wasm-bindgen", ["--version"], { encoding: "utf8" });
+	if (wasmBindgen.status !== 0) {
+		spawnSync("cargo", ["install", "wasm-bindgen-cli", "--locked"], { stdio: "inherit" });
+	}
+	const bindgen = spawnSync(
+		"wasm-bindgen",
+		["--target", "web", "--out-dir", outDir, "--out-name", target.wasmOut.replace(/\.wasm$/, ""), artifact],
+		{ cwd: repoRoot, stdio: "inherit" },
+	);
+	if (bindgen.status !== 0) throw new Error(`wasm-bindgen failed: ${target.pluginId}`);
+	console.log(`[DEBUG] built plugin ${target.pluginId} -> ${outDir}`);
+}
+
+class PluginBuildScript extends BundleScript {
+	async run(_segments: string[]): Promise<void> {
+		ensureWasmTarget();
+		mkdirSync(pluginOutRoot, { recursive: true });
+		for (const target of PLUGIN_BUILD_TARGETS) {
+			await buildPlugin(target);
+		}
+	}
+}
+
+class PluginWatchScript extends BundleScript {
+	async run(_segments: string[]): Promise<void> {
+		await new PluginBuildScript(this.root).run([]);
+		for (const target of PLUGIN_BUILD_TARGETS) {
+			const watchRoot = join(repoRoot, target.cratePath);
+			watch(watchRoot, { recursive: true }, () => {
+				void buildPlugin(target).catch((error) => {
+					console.error("[DEBUG] plugin watch rebuild failed", error);
+				});
+			});
+		}
+		console.log("[DEBUG] watching plugin crates for hot-swap rebuilds");
+	}
+}
 
 class DevScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
+		await new PluginBuildScript(this.root).run([]);
+		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "draw";
 		runViteBunxDev(this.root, segments, {
-			portEnv: playgroundPortEnv("s"),
-			defaultPort: playgroundDevPortString("s"),
+			portEnv: "S_OS_PORT",
+			defaultPort: "6066",
 			fixedPort: true,
 			env: {
-				...playPollingEnv(),
-				PLAYGROUND_APP_KIND: "s",
+				SEMIO_PLUGIN: plugin,
 			},
-			expectedPlayEntry: "s",
 		});
 	}
 }
 
 class BuildScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
-		runBun(["run", "vite", "build", "--config", "vite.config.ts", ...segments], this.root, {
-			...playPollingEnv(),
-			PUZZLE_PLAY_ENTRY: "s",
+		await new PluginBuildScript(this.root).run([]);
+		spawnSync("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...segments], {
+			cwd: this.root,
+			stdio: "inherit",
 		});
 	}
 }
@@ -42,6 +112,16 @@ class TestScript extends BundleScript {
 	}
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dir)
+	.register("dev", DevScript)
+	.register("build", BuildScript)
+	.register("test", TestScript)
+	.register("plugin", class extends BundleScript {
+		async run(segments: string[]): Promise<void> {
+			const sub = segments[0];
+			if (sub === "watch") return new PluginWatchScript(this.root).run(segments.slice(1));
+			return new PluginBuildScript(this.root).run(segments.slice(1));
+		}
+	});
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });

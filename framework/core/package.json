@@ -2,20 +2,11 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/framework-core",
   "version": "0.1.0",
-  "description": "framework · render-independent shared core (declarative UI graph, runtime shell, command routing)",
+  "description": "framework · render-independent shared core (Rust: Platform, CommandBus, UiTree, layouts)",
   "type": "module",
   "private": true,
-  "exports": {
-    ".": "./js/index.ts"
-  },
   "scripts": {
     "test": "bun nx run @semio-tech/framework-core:test"
-  },
-  "dependencies": {
-    "@semio-tech/vcs-core": "workspace:*"
-  },
-  "devDependencies": {
-    "typescript": "^5.9.3"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

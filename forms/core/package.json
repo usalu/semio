@@ -26,26 +26,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "forms/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "forms",
-      "aliases": [
-        "forms"
-      ],
-      "packageRoot": "forms",
-      "corePackage": "@semio-tech/forms-core",
-      "definitionExport": "formsPlayAppDefinition",
-      "hostKind": "forms",
-      "port": {
-        "dev": 6058,
-        "test": 6059,
-        "env": "FORMS_PLAY_PORT"
-      },
-      "programExport": "formsProgramContribution",
-      "programId": "forms",
-      "rendererPackage": "@semio-tech/forms-react",
-      "rendererExport": "formsAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

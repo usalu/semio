@@ -25,6 +25,14 @@
 				"command": "bun ./script.ts test",
 				"forwardAllArgs": true
 			}
+		},
+		"plugin": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "framework/product/os/dev",
+				"command": "bun ./script.ts plugin",
+				"forwardAllArgs": true
+			}
 		}
 	}
 }

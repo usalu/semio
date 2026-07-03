@@ -1,0 +1,16 @@
+{
+  "name": "@semio-tech/framework-renderer-react",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "framework/renderer/react",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test",
+        "cwd": "framework/renderer/react"
+      }
+    }
+  },
+  "tags": ["scope:framework", "type:renderer"]
+}

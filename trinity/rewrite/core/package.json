@@ -35,27 +35,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "trinity/rewrite/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "trinity-rewrite",
-      "aliases": [
-        "trinity-rewrite",
-        "trinity rewrite"
-      ],
-      "packageRoot": "trinity/rewrite",
-      "corePackage": "@semio-tech/trinity-rewrite-core",
-      "definitionExport": "trinityRewritePlayAppDefinition",
-      "hostKind": "trinity-rewrite",
-      "port": {
-        "dev": 6056,
-        "test": 6057,
-        "env": "TRINITY_REWRITE_PLAY_PORT"
-      },
-      "programExport": "trinityRewriteProgramContribution",
-      "programId": "trinity.rewrite",
-      "rendererPackage": "@semio-tech/trinity-react",
-      "rendererExport": "trinityRewriteAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

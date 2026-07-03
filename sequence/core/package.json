@@ -26,25 +26,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "sequence/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "sequence",
-      "aliases": [
-        "sequence"
-      ],
-      "packageRoot": "sequence",
-      "corePackage": "@semio-tech/sequence-core",
-      "definitionExport": "sequencePlayAppDefinition",
-      "hostKind": "sequence",
-      "port": {
-        "dev": 6077,
-        "env": "SEQUENCE_PLAY_PORT"
-      },
-      "programExport": "sequenceProgramContribution",
-      "programId": "sequence",
-      "rendererPackage": "@semio-tech/sequence-react",
-      "rendererExport": "sequenceAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

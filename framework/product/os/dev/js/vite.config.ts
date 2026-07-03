@@ -1,14 +1,23 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPlaygroundPlayViteConfig } from "../../../../../ui/styling/vite-elements-assets.ts";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "..");
 const repoRoot = path.resolve(playDir, "../../../..");
 
-export default createPlaygroundPlayViteConfig({
-	playDir,
-	repoRoot,
-	playEntryKind: "s",
-	resolveDedupe: ["react", "react-dom", "@semio-tech/s-react", "three", "@react-three/fiber", "@react-three/drei"],
+export default defineConfig({
+	root: playDir,
+	publicDir: path.join(playDir, "public"),
+	server: {
+		port: Number(process.env.S_OS_PORT ?? 6066),
+		strictPort: true,
+		fs: { allow: [repoRoot] },
+	},
+	plugins: [react(), tailwindcss()],
+	define: {
+		"import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "draw"),
+	},
 });

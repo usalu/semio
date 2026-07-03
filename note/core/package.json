@@ -26,26 +26,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "note/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "note",
-      "aliases": [
-        "note"
-      ],
-      "packageRoot": "note",
-      "corePackage": "@semio-tech/note-core",
-      "definitionExport": "notePlayAppDefinition",
-      "hostKind": "note",
-      "port": {
-        "dev": 6080,
-        "test": 6081,
-        "env": "NOTE_PLAY_PORT"
-      },
-      "programExport": "noteProgramContribution",
-      "programId": "note",
-      "rendererPackage": "@semio-tech/note-react",
-      "rendererExport": "noteAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

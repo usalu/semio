@@ -947,11 +947,11 @@
       "name": "🛠️dev🖥️s",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:s",
+      "command": "bun nx run @semio-tech/framework-os-dev:dev",
       "cwd": "${workspaceFolder}",
-      "dependsOn": ["📦build🗄️vcs", "📦build🖥️s🔗studio"],
       "env": {
-        "S_OS_PORT": "6066"
+        "S_OS_PORT": "6066",
+        "SEMIO_PLUGIN": "s"
       },
       "presentation": {
         "group": "3_dev",
@@ -961,6 +961,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6066)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🦀os-plugins",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:plugin",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.5
       }
     },
     {
@@ -981,10 +992,11 @@
       "name": "🛠️dev✏️draw",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:draw",
+      "command": "bun nx run @semio-tech/framework-os-dev:dev",
       "cwd": "${workspaceFolder}",
       "env": {
-        "DRAW_PLAY_PORT": "6064"
+        "S_OS_PORT": "6064",
+        "SEMIO_PLUGIN": "draw"
       },
       "presentation": {
         "group": "3_dev",

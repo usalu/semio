@@ -56,34 +56,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "s/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "s",
-      "aliases": [
-        "s"
-      ],
-      "packageRoot": "framework/product/os",
-      "corePackage": "@semio-tech/s-core",
-      "definitionExport": "sPlayAppDefinition",
-      "hostKind": "s",
-      "programContributionKinds": [
-        "draw",
-        "writer",
-        "raster",
-        "vcs"
-      ],
-      "port": {
-        "dev": 6066,
-        "test": 6067,
-        "env": "S_OS_PORT"
-      },
-      "assets": [
-        "playwright-dev-stub",
-        "vitest-dev-stub"
-      ],
-      "rendererPackage": "@semio-tech/s-react",
-      "rendererExport": "sAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

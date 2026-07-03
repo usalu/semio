@@ -32,30 +32,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "puzzle/2d/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "2d",
-      "aliases": [
-        "2d",
-        "puzzle 2d",
-        "puzzle-2d"
-      ],
-      "packageRoot": "puzzle/2d",
-      "corePackage": "@semio-tech/puzzle-2d-core",
-      "definitionExport": "puzzle2dPlayAppDefinition",
-      "rendererPackage": "@semio-tech/puzzle-2d-react",
-      "rendererExport": "puzzle2dAppRenderer",
-      "hostKind": "puzzle-2d",
-      "port": {
-        "dev": 6012,
-        "test": 6027,
-        "env": "PUZZLE_2D_PLAY_PORT"
-      },
-      "programExport": "puzzle2dProgramContribution",
-      "programId": "puzzle.2d",
-      "site": { "embedKind": "2d", "host": "play.2d.semio-tech.com" },
-      "programIds": ["reasoning.mindmap"]
-    }
-  }
+  "bundleKind": "library"
 }

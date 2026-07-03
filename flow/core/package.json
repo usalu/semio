@@ -25,37 +25,5 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "flow/core"
   },
-  "bundleKind": "library",
-  "semio": {
-    "app": {
-      "kind": "flow",
-      "aliases": [
-        "flow"
-      ],
-      "packageRoot": "flow",
-      "corePackage": "@semio-tech/flow-core",
-      "definitionExport": "flowPlayAppDefinition",
-      "hostKind": "flow",
-      "port": {
-        "dev": 6016,
-        "test": 6029,
-        "env": "FLOW_PLAY_PORT"
-      },
-      "programExport": "flowProgramContribution",
-      "programId": "flow",
-      "optimizeDepsExclude": [
-        "@semio-tech/flow-module-core",
-        "@semio-tech/flow-core",
-        "@semio-tech/flow-module-math",
-        "@semio-tech/flow-module-text",
-        "@semio-tech/flow-module-logic",
-        "@semio-tech/flow-module-dictionary",
-        "@semio-tech/flow-module-list",
-        "@semio-tech/flow-module-brep",
-        "@semio-tech/flow-module-draw"
-      ],
-      "rendererPackage": "@semio-tech/flow-react",
-      "rendererExport": "flowAppRenderer"
-    }
-  }
+  "bundleKind": "library"
 }

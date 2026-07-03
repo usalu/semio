@@ -26,9 +26,6 @@ import {
   playgroundDevPort,
   playgroundEmbedUrl,
   playgroundPlayViteDefine,
-  scanPlaygroundAppManifests,
-  resolvePlaygroundDevAppFromManifests,
-  playgroundAppManifestByKind,
 } from "./index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
@@ -560,25 +557,6 @@ describe("playground static sites", () => {
       emptyOutDir: true,
     });
     expect(playgroundStaticSiteBuildOptions({ sourcemap: true }).sourcemap).toBe(true);
-  });
-});
-
-describe("playground app manifests", () => {
-  const repoRoot = findRepoRoot();
-
-  test("scanPlaygroundAppManifests discovers all playground core packages", () => {
-    const manifests = scanPlaygroundAppManifests(repoRoot);
-    expect(manifests.length).toBeGreaterThanOrEqual(24);
-    expect(manifests.some((entry) => entry.kind === "flow" && entry.corePackage === "@semio-tech/flow-core")).toBe(true);
-    expect(manifests.some((entry) => entry.kind === "cad" && entry.packageRoot === "cad/renderer")).toBe(true);
-  });
-
-  test("resolvePlaygroundDevAppFromManifests maps CLI segments to app kinds", () => {
-    const manifests = scanPlaygroundAppManifests(repoRoot);
-    expect(resolvePlaygroundDevAppFromManifests(["flow"], manifests)).toEqual({ app: "flow", rest: [] });
-    expect(resolvePlaygroundDevAppFromManifests(["puzzle", "3d"], manifests)).toEqual({ app: "3d", rest: [] });
-    expect(resolvePlaygroundDevAppFromManifests(["trinity", "jack"], manifests)).toEqual({ app: "trinity-jack", rest: [] });
-    expect(playgroundAppManifestByKind(manifests).get("2d")?.hostKind).toBe("puzzle-2d");
   });
 });
 
