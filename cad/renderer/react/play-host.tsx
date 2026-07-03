@@ -1,32 +1,27 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Cad — loaded only via `./play` subpath. */
+/** @emoji 🛝 CAD app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
-import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution, PlaygroundMountProps } from "@semio-tech/framework-platform-core";
+import type { Platform } from "@semio-tech/framework-playground-renderer-react";
+import { CadPlayRoot } from "./index.tsx";
+import { cadPlaySceneSurfaceIdForPane, cadPlayWindowBodies } from "@semio-tech/cad-js-renderer-core";
+import {
+  CadPlaySurfaceHost,
+  CadPlayCatalogPanelDefinition,
+  CadPlayDetailsPanelDefinition,
+  CadPlayHierarchyPanelDefinition,
+} from "./index.tsx";
 
-let cadPlayChromeRegistered = false;
+const CAD_PLAY_PANES = ["shape", "building", "energy", "structure-classic"] as const;
 
-function registerCadPlayPlaygroundHosts(): void {
-  if (cadPlayChromeRegistered) return;
-  cadPlayChromeRegistered = true;
-  registerCadPlaySurfaceHosts();
-}
-
-function CadPlayPlaygroundChrome({ playground }: { readonly playground: Playground }): ReactElement {
-  return <CadPlayRoot runtime={playground.runtime} />;
-}
-
-export function mountCadPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<CadPlayPlaygroundChrome playground={playground} />, rootId);
-}
-
-const cadPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerCadPlayPlaygroundHosts,
-  mount: mountCadPlayChrome,
+/** @emoji 🛝 CAD app renderer for playground and OS shells. */
+export const cadAppRenderer: AppRendererContribution = {
+  windowBodies: cadPlayWindowBodies,
+  surfaceHosts: Object.fromEntries(CAD_PLAY_PANES.map((pane) => [cadPlaySceneSurfaceIdForPane(pane), CadPlaySurfaceHost])),
+  panelTabs: {
+    workbench: [new CadPlayHierarchyPanelDefinition(), new CadPlayCatalogPanelDefinition()],
+    details: [new CadPlayDetailsPanelDefinition()],
+  },
+  mountChrome: ({ runtime }) => <CadPlayRoot runtime={runtime as Platform} />,
 };
-
-export function bootCadPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, cadPlayChromeBoot, rootId);
-}
-//#endregion 🔖CadPlayHost

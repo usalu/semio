@@ -1,22 +1,21 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Sequence — loaded only via `./play` subpath. */
+/** @emoji 🛝 Sequence app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import { createWriterDocument } from "@semio-tech/writer-core";
 import { WriterCanvas } from "@semio-tech/writer-react";
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiSequenceSurfaceHost, registerUiWriterSurfaceHost, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
 import {
-  SEQUENCE_PLAY_APP_ID,
   SEQUENCE_PLAY_CATALOGUE_TAB_ID,
   SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON,
   SEQUENCE_PLAY_HIERARCHY_TAB_ID,
   SEQUENCE_PLAY_INSPECTION_TAB_ID,
   SEQUENCE_PLAY_SCRIPT_SURFACE_ID,
-  SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID,
   SEQUENCE_PLAY_SURFACE_ID,
   SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG,
   SEQUENCE_PLAY_WINDOW_KIND_ID,
@@ -24,10 +23,10 @@ import {
   buildSequencePlayCatalogueTree,
   buildSequencePlayHierarchyTree,
   buildSequencePlayInspectorTree,
-  registerSequencePlayDeclarativeBodies,
+  sequencePlayWindowBodies,
 } from "@semio-tech/sequence-core";
+import { DAG_LOD_MODE_AUTOMATIC, SequenceCanvas, dagLodCanvasProps, ensureSequenceWasmLoaded, sequenceStepPaletteTreeDragController } from "./index.tsx";
 
-let sequencePlayChromeRegistered = false;
 const sequencePlayControllerRef: { current: SequencePlayController | null } = { current: null };
 
 function useSequencePlayController(runtimeOverride?: Platform): SequencePlayController | undefined {
@@ -66,7 +65,7 @@ function SequencePlayPaneSurfaceHost({ node }: { readonly node: import("@semio-t
   const interactionRevision = useSequencePlayInteractionRevision(runtime);
   void interactionRevision;
   const scopeId = node.paneId ?? SEQUENCE_PLAY_WINDOW_KIND_ID;
-  const lodProps = sequenceLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? SEQUENCE_HOST_LOD_AUTOMATIC);
+  const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
   const onLodChange = reactHostPort.useCallback(
     (lod: import("@semio-tech/dag-react").DagDrawLodKind) => {
       ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
@@ -168,15 +167,6 @@ function SequencePlayCompiledDagSurfaceHost({ node: _node }: { readonly node: im
   );
 }
 
-export function registerSequencePlaySurfaceHosts(): void {
-  if (sequencePlayChromeRegistered) return;
-  sequencePlayChromeRegistered = true;
-  registerUiSequenceSurfaceHost(SEQUENCE_PLAY_SURFACE_ID, SequencePlayPaneSurfaceHost);
-  registerUiWriterSurfaceHost(SEQUENCE_PLAY_SCRIPT_SURFACE_ID, SequencePlayScriptSurfaceHost);
-  registerUiWriterSurfaceHost(SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG, SequencePlayCompiledDagSurfaceHost);
-  registerSequencePlayDeclarativeBodies();
-}
-
 class SequencePlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
@@ -235,36 +225,18 @@ class SequencePlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-function SequencePlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  useSequencePlayController(runtime);
-  const interactionRevision = useSequencePlayInteractionRevision(runtime);
-  const sequencePlayHierarchyPanel = reactHostPort.useMemo(() => new SequencePlayHierarchyPanelDefinition(), []);
-  const sequencePlayCataloguePanel = reactHostPort.useMemo(() => new SequencePlayCataloguePanelDefinition(), []);
-  const sequencePlayInspectionPanel = reactHostPort.useMemo(() => new SequencePlayInspectionPanelDefinition(), []);
-  const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [sequencePlayHierarchyPanel, sequencePlayCataloguePanel],
-      details: [sequencePlayInspectionPanel],
-    }),
-    [interactionRevision, sequencePlayCataloguePanel, sequencePlayHierarchyPanel, sequencePlayInspectionPanel],
-  );
-  return <PlaygroundView runtime={runtime} defaultAppId={SEQUENCE_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
-}
-
-function SequencePlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <SequencePlayInner runtime={runtime} />;
-}
-
-export function mountSequencePlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<SequencePlayChrome runtime={playground.runtime} />, rootId);
-}
-
-const sequencePlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerSequencePlaySurfaceHosts,
-  mount: mountSequencePlayChrome,
+/** @emoji 🛝 Sequence app renderer contribution for playground and OS shells. */
+export const sequenceAppRenderer: AppRendererContribution = {
+  windowBodies: sequencePlayWindowBodies,
+  surfaceHosts: {
+    [SEQUENCE_PLAY_SURFACE_ID]: SequencePlayPaneSurfaceHost,
+    [SEQUENCE_PLAY_SCRIPT_SURFACE_ID]: SequencePlayScriptSurfaceHost,
+    [SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG]: SequencePlayCompiledDagSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new SequencePlayHierarchyPanelDefinition(), new SequencePlayCataloguePanelDefinition()],
+    details: [new SequencePlayInspectionPanelDefinition()],
+  },
+  preload: ensureSequenceWasmLoaded,
 };
-
-export function bootSequencePlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, sequencePlayChromeBoot, rootId);
-}
 //#endregion 🔖SequencePlayHost

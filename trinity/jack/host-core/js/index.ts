@@ -183,10 +183,14 @@ export function buildTrinityJackPlayResultsDeclarativeBody(_ctx: WindowBodyViewC
   return buildTableWindowBody(TRINITY_JACK_PLAY_RESULTS_SURFACE_ID, TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID);
 }
 
+export const trinityJackPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+  [TRINITY_JACK_PLAY_BODY_KEY_MAIN]: buildTrinityJackPlayMainDeclarativeBody,
+  [TRINITY_JACK_PLAY_BODY_KEY_EDITOR]: buildTrinityJackPlayEditorDeclarativeBody,
+  [TRINITY_JACK_PLAY_BODY_KEY_RESULTS]: buildTrinityJackPlayResultsDeclarativeBody,
+};
+
 export function registerTrinityJackPlayDeclarativeBodies(): void {
-  registerWindowBody(TRINITY_JACK_PLAY_BODY_KEY_MAIN, buildTrinityJackPlayMainDeclarativeBody);
-  registerWindowBody(TRINITY_JACK_PLAY_BODY_KEY_EDITOR, buildTrinityJackPlayEditorDeclarativeBody);
-  registerWindowBody(TRINITY_JACK_PLAY_BODY_KEY_RESULTS, buildTrinityJackPlayResultsDeclarativeBody);
+  for (const [key, build] of Object.entries(trinityJackPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildTrinityJackPlayLayout(): WindowLayout {
@@ -783,6 +787,25 @@ export function buildTrinityProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createTrinityGraphAppVcsHandler } from "@semio-tech/trinity-rewrite-core";
+
+const trinityProgramContributionResources = {
+		"trinity-jack": osBaselineResource("graph.trinity", "trinity.graph", "trinity", [{ id: "query", label: "Query" }]),
+	};
+
+/** @emoji 🧩 OS program contribution for trinity. */
+export const trinityProgramContribution: OsProgramContribution = {
+	programId: "trinity",
+	register() {
+		mergeOsProgramDefinition("trinity", buildTrinityProgramDefinition(), trinityProgramContributionResources);
+		registerAppVcsHandler(createTrinityGraphAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+
 //#region 🔖Play
 
 /** @emoji 🛝 Trinity Jack playground app. */
@@ -805,12 +828,6 @@ export const trinityJackPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildTrinityJackPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerTrinityJackPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootTrinityJackPlay } = await import("@semio-tech/trinity-react/play");
-		bootTrinityJackPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/trinity-react/play")).trinityJackAppRenderer,
 });
 //#endregion 🔖Play

@@ -5,8 +5,9 @@
 import "../globals.css";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 import { loadPlaygroundApp } from "@semio-tech/framework-playground-core/app-registry";
+import { bootPlaygroundApp } from "@semio-tech/framework-playground-renderer-react";
 
-const playEntryKind = import.meta.env.PUZZLE_PLAY_ENTRY as string | undefined;
+const playEntryKind = import.meta.env.PLAYGROUND_APP_KIND as string | undefined;
 
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest && playEntryKind) {
 	bootstrapElementsSurfaceChromeDocument("system");
@@ -19,7 +20,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
 		}
 		// #endregion 🏷️PageTitle
 		const playground = app.createPlayground();
-		await app.bootRenderer(playground);
+		await bootPlaygroundApp(app, playground);
 	})().catch((error) => {
 		console.error("[DEBUG] playground-dev boot failed", error);
 	});

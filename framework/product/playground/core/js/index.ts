@@ -599,21 +599,19 @@ export {
 //#endregion 🔖SidePanelBodyViewContext
 
 //#region 🔖PlaygroundAppDefinition
-import type { AppDefinition } from "@semio-tech/framework-platform-core";
+import type { AppDefinition, AppRendererContribution } from "@semio-tech/framework-platform-core";
 
-/** @emoji 🛝 Playground app contract: runtime factory plus renderer boot hook. */
+/** @emoji 🛝 Playground app contract: runtime factory plus renderer contribution loader. */
 export interface PlaygroundAppDefinition extends AppDefinition {
 	readonly createPlayground: () => Playground;
-	readonly bootRenderer: (playground: Playground, rootId?: string) => void | Promise<void>;
+	readonly loadRenderer: () => Promise<AppRendererContribution>;
 }
 
 /** @emoji 🛝 Config for {@link createPlaygroundApp} — one object per technology, no hand-written subclass. */
 export interface PlaygroundAppConfig extends AppDefinition {
 	readonly keybindings?: readonly PlaygroundKeybinding[];
 	readonly createRuntime: () => Platform;
-	readonly registerBodies: () => void;
-	readonly registerSurfaceHosts?: () => void;
-	readonly bootRenderer: (playground: Playground, rootId?: string) => void | Promise<void>;
+	readonly loadRenderer: () => Promise<AppRendererContribution>;
 }
 
 /** @emoji 🛝 Derives a {@link PlaygroundAppDefinition} from a plain config (no per-app {@link Playground} subclass). */
@@ -622,8 +620,6 @@ export function createPlaygroundApp(config: PlaygroundAppConfig): PlaygroundAppD
 		readonly id = config.id;
 		readonly keybindings = config.keybindings;
 		createRuntime = config.createRuntime;
-		registerBodies = config.registerBodies;
-		registerSurfaceHosts = config.registerSurfaceHosts ?? (() => {});
 	}
 	return {
 		id: config.id,
@@ -633,11 +629,10 @@ export function createPlaygroundApp(config: PlaygroundAppConfig): PlaygroundAppD
 		modes: config.modes,
 		defaultModeId: config.defaultModeId,
 		createController: config.createController,
-		registerBodies: config.registerBodies,
-		registerSurfaceHosts: config.registerSurfaceHosts,
 		devHost: config.devHost,
+		loadRenderer: config.loadRenderer,
+		program: config.program,
 		createPlayground: () => new ConfiguredPlayground(),
-		bootRenderer: config.bootRenderer,
 	};
 }
 //#endregion 🔖PlaygroundAppDefinition
@@ -749,13 +744,9 @@ export abstract class Playground {
   }
 
   abstract createRuntime(): Platform;
-  abstract registerBodies(): void;
 
   readonly initialPanelVisibility?: PlaygroundPanelVisibility;
   readonly keybindings?: readonly PlaygroundKeybinding[];
-
-  /** @emoji 🧊 Override to register canvas surface hosts (library React adapters). */
-  registerSurfaceHosts(): void {}
 }
 
 export const PLAYGROUND_LS_THEME = "framework.playground.surface.theme";
@@ -861,9 +852,13 @@ export function isPlaygroundExampleLocked(): boolean {
   return playgroundLockedExampleId() !== undefined;
 }
 
-/** @emoji 🎯 Resolves the active example id honoring a locked host override. */
-export function playgroundResolvedExampleId(defaultExampleId: string): string {
-  return playgroundLockedExampleId() ?? defaultExampleId;
+/** @emoji 🎯 Resolves the active example id honoring a locked host override and optional slug alias. */
+export function playgroundResolvedExampleId(defaultExampleId: string, resolveSlug?: (slug: string) => string | undefined): string {
+  const locked = playgroundLockedExampleId();
+  if (locked) {
+    return resolveSlug?.(locked) ?? locked;
+  }
+  return defaultExampleId;
 }
 
 const playgroundExampleCatalogWithNoOptionCache = new Map<string, PlaygroundExampleCatalog>();
@@ -892,12 +887,14 @@ export function playgroundExampleCatalogWithNoOption(
   return catalog;
 }
 
-/** @emoji 🔎 Reads an example catalog from a controller when it implements {@link PlaygroundExampleHost}. */
+/** @emoji 🔎 Reads an example catalog from a controller that implements {@link PlaygroundExampleHost}. */
 export function resolvePlaygroundExampleCatalog(controller: Controller | undefined): PlaygroundExampleCatalog | null {
   if (isPlaygroundExampleLocked()) return null;
   if (!controller) return null;
   const host = controller as Controller & PlaygroundExampleHost;
-  if (typeof host.getExampleCatalog !== "function") return null;
+  if (typeof host.getExampleCatalog !== "function") {
+    throw new Error(`Controller "${controller.id}" does not implement PlaygroundExampleHost.getExampleCatalog()`);
+  }
   const catalog = host.getExampleCatalog();
   if (!catalog) return null;
   return playgroundExampleCatalogWithNoOption(catalog.activeExampleId, catalog.options);
@@ -1385,10 +1382,10 @@ if (import.meta.vitest) {
   });
 
   describe("resolvePlaygroundExampleCatalog", () => {
-    it("returns null when the controller does not host examples", () => {
+    it("throws when the controller does not implement PlaygroundExampleHost", () => {
       const bus = new CommandBus();
       const ctrl = new DemoPlaygroundController(bus, () => undefined);
-      expect(resolvePlaygroundExampleCatalog(ctrl)).toBeNull();
+      expect(() => resolvePlaygroundExampleCatalog(ctrl)).toThrow(/PlaygroundExampleHost/);
     });
 
     it("returns null when the playground host example is locked", () => {

@@ -12,7 +12,9 @@
     "test": "bun nx run @semio-tech/sequence-core:test"
   },
   "dependencies": {
-    "@semio-tech/imperative-core": "workspace:*"
+    "@semio-tech/imperative-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -26,7 +28,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "sequence",
       "aliases": [
         "sequence"
@@ -38,7 +40,9 @@
       "port": {
         "dev": 6077,
         "env": "SEQUENCE_PLAY_PORT"
-      }
+      },
+      "programExport": "sequenceProgramContribution",
+      "programId": "sequence"
     }
   }
 }

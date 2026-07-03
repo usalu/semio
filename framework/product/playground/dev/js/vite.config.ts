@@ -5,7 +5,7 @@ import { createPlaygroundPlayViteConfig } from "../../../../../ui/styling/vite-e
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "..");
 const repoRoot = path.resolve(playDir, "../../../..");
-const playEntryKind = process.env.PUZZLE_PLAY_ENTRY ?? process.env.PLAYGROUND_APP ?? "draw";
+const playEntryKind = process.env.PLAYGROUND_APP_KIND ?? process.env.PLAYGROUND_APP ?? "draw";
 const packageRoot = process.env.PLAYGROUND_PACKAGE_ROOT;
 const extraAliases = [
 	{ find: /^three$/, replacement: path.resolve(repoRoot, "node_modules/three/build/three.module.js") },

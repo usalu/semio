@@ -2066,7 +2066,7 @@ function buildPuzzle2dPlayCompiledDagDeclarativeBody(_ctx: WindowBodyViewContext
 
 /** @emoji 🧩 Registers puzzle 2d play window kinds on the supplied controller (layout supplied by host). */
 export function attachPuzzle2dPlayWindowKinds(controller: Puzzle2dPlayShellController, layout: unknown): AppRuntime {
-	const isWires = import.meta.env?.PUZZLE_PLAY_ENTRY === "wires";
+	const isWires = import.meta.env?.PLAYGROUND_APP_KIND === "wires";
 	const app = new AppRuntime(
 		PUZZLE_2D_PLAY_APP_ID,
 		isWires ? "Wires" : "Puzzle 2D",
@@ -2089,12 +2089,16 @@ export function buildPuzzle2dPlayAppRuntime(controller: Puzzle2dPlayShellControl
 	return app;
 }
 
+export const puzzle2dPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW]: buildPuzzle2dPlayOverviewDeclarativeBody,
+	[PUZZLE_2D_PLAY_BODY_KEY_DETAIL]: buildPuzzle2dPlayDetailDeclarativeBody,
+	[PUZZLE_2D_PLAY_BODY_KEY_SELECTION]: buildPuzzle2dPlaySelectionDeclarativeBody,
+	[PUZZLE_2D_PLAY_BODY_KEY_COMPILED_DAG]: buildPuzzle2dPlayCompiledDagDeclarativeBody,
+};
+
 /** @emoji 📝 Registers puzzle 2d play declarative window bodies on the playground host (side tabs are host tree panels only). */
 export function registerPuzzle2dPlayDeclarativeBodies(): void {
-	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildPuzzle2dPlayOverviewDeclarativeBody);
-	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildPuzzle2dPlayDetailDeclarativeBody);
-	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildPuzzle2dPlaySelectionDeclarativeBody);
-	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_COMPILED_DAG, buildPuzzle2dPlayCompiledDagDeclarativeBody);
+	for (const [key, build] of Object.entries(puzzle2dPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 //#region 🔖Extension
@@ -3100,6 +3104,25 @@ export function buildPuzzle2dProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+const puzzle2dProgramContributionResources = {
+		"puzzle2d": osBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d"),
+	};
+
+/** @emoji 🧩 OS program contribution for puzzle.2d. */
+export const puzzle2dProgramContribution: OsProgramContribution = {
+	programId: "puzzle.2d",
+	register() {
+		mergeOsProgramDefinition("puzzle.2d", buildPuzzle2dProgramDefinition(), puzzle2dProgramContributionResources);
+		registerPuzzle2dMediaExportHandlers();
+		registerAppVcsHandler(createPuzzle2dAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+
 //#region 🔖Play
 import nakaginFixtureJson from "../../example/nakagin-capsule-tower.2d.json";
 import concreteForestFixtureJson from "../../example/concrete-forest.2d.json";
@@ -3393,15 +3416,22 @@ export const puzzle2dPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildPuzzle2dPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerPuzzle2dPlayDeclarativeBodies();
-	},
 	keybindings: [
 		{ key: "ctrl+a,meta+a", controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command: "selectAllSelection" },
 	],
-	bootRenderer: async (pg) => {
-		const { boot2dPlay } = await import("@semio-tech/puzzle-2d-react/play");
-		boot2dPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/puzzle-2d-react/play")).puzzle2dAppRenderer,
 });
 //#endregion 🔖Play
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+
+/** @emoji 🩻 S app VCS handler for puzzle 2d documents. */
+export function createPuzzle2dAppVcsHandler() {
+	type Doc = { readonly nodes: readonly string[] };
+	type Op = { readonly op: "addNode"; readonly nodeId: string } | { readonly op: "removeNode"; readonly nodeId: string };
+	return createTypedAppVcsHandler<Doc, Op>("puzzle.2d", "puzzle.2d", () => ({ nodes: [] }), (doc, op) => {
+		if (op.op === "addNode") return { ...doc, nodes: [...doc.nodes, op.nodeId] };
+		return { ...doc, nodes: doc.nodes.filter((id) => id !== op.nodeId) };
+	});
+}
+//#endregion 🔖DocumentVcs

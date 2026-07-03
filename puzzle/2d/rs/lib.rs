@@ -1,7 +1,7 @@
 //! 🧩 Puzzle 2d board: elements palette, icon codec, `BoardHost`, WASM session on directed port normal graph.
 #![allow(clippy::missing_errors_doc, reason = "Puzzle board bundle is internal to puzzle 2d.")]
 
-pub use cavas::vello::kurbo::{CubicBez, Point, Vec2};
+pub use cavas::{CubicBez, Point, Vec2};
 pub use gis_2d as map;
 pub use graph::cavas;
 pub use graph::{
@@ -28,9 +28,6 @@ fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<
         apply_ported_redraw_layout_to_fixture_v1_json(fixture_json, options_json)
     }
 }
-
-pub use vello_svg::usvg;
-pub use vello_svg::vello;
 
 mod board_metabolism_icons {
     include!(concat!(env!("OUT_DIR"), "/board_metabolism_icon_match.rs"));
@@ -168,7 +165,7 @@ impl BoardSessionInner {
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         let scene = self.host.build_vector_scene();
-        let clear = self.host.vello_theme.raster_clear;
+        let clear = self.host.canvas_theme.raster_clear;
         self.gpu.render_frame(&scene, clear)
     }
 }
@@ -282,9 +279,9 @@ impl BoardSession {
         self.state.borrow_mut().host.set_board_kind_catalogs_from_json(json).map_err(|e| JsValue::from_str(&e))
     }
 
-    #[wasm_bindgen(js_name = setVelloThemeJson)]
-    pub fn set_vello_theme_json(&mut self, json: &str) {
-        let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+    #[wasm_bindgen(js_name = setCanvasThemeJson)]
+    pub fn set_canvas_theme_json(&mut self, json: &str) {
+        let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
     }
 
     #[wasm_bindgen(js_name = clearIconVectorCache)]
@@ -566,7 +563,7 @@ impl BoardSession {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::cavas::vello::kurbo::Point;
+    use crate::cavas::Point;
 
     #[test]
     fn computes_handle_positions_and_edge_curves() {
@@ -578,16 +575,20 @@ mod tests {
         engine.create_edge(100, 10, 20);
 
         let curve = engine.edge_curve(100).expect("edge curve should exist");
+        let p0 = curve.p0();
+        let p1 = curve.p1();
+        let p2 = curve.p2();
+        let p3 = curve.p3();
         let cap = 8.0;
-        assert!((curve.p0.x - (40.0 + cap)).abs() < 0.001);
-        assert!(curve.p0.y.abs() < 0.001);
-        assert!((curve.p3.x - (260.0 - cap)).abs() < 0.001);
-        assert!(curve.p3.y.abs() < 0.001);
-        let source_radial = curve.p0 - Point::ORIGIN;
-        let arm0 = curve.p1 - curve.p0;
+        assert!((p0.x() - (40.0 + cap)).abs() < 0.001);
+        assert!(p0.y().abs() < 0.001);
+        assert!((p3.x() - (260.0 - cap)).abs() < 0.001);
+        assert!(p3.y().abs() < 0.001);
+        let source_radial = p0 - Point::ZERO;
+        let arm0 = p1 - p0;
         let align0 = normalize_or_zero(source_radial).dot(normalize_or_zero(arm0));
-        let target_approach = Point::new(300.0, 0.0) - curve.p3;
-        let arm1 = curve.p3 - curve.p2;
+        let target_approach = Point::new(300.0, 0.0) - p3;
+        let arm1 = p3 - p2;
         let align1 = normalize_or_zero(target_approach).dot(normalize_or_zero(arm1));
         assert!(align0 > 0.99);
         assert!(align1 > 0.99);
@@ -675,7 +676,7 @@ mod host_tests {
         NodeDescJson, NodeShape, SceneDescriptorJson, WireDescJson,
     };
     use crate::cavas::geom_sel::cubic_bezier_point;
-    use crate::cavas::vello::kurbo::Point;
+    use crate::cavas::Point;
     use serde_json::json;
 
     fn set_detail_lod(h: &mut BoardHost) {
@@ -875,9 +876,9 @@ mod host_tests {
     }
 
     #[test]
-    fn board_host_vello_theme_keeps_explicit_element_state_colors() {
+    fn board_host_canvas_theme_keeps_explicit_element_state_colors() {
         let mut h = BoardHost::new();
-        h.set_vello_theme_from_json(
+        h.set_canvas_theme_from_json(
             r#"{
 				"nodeStrokeHovered": [1, 2, 3, 255],
 				"edgeStrokeHovered": [4, 5, 6, 255],
@@ -886,10 +887,10 @@ mod host_tests {
 			}"#,
         )
         .unwrap();
-        assert_eq!(h.vello_theme.node_stroke_hovered.to_rgba8(), crate::cavas::vello::peniko::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
-        assert_eq!(h.vello_theme.edge_stroke_hovered.to_rgba8(), crate::cavas::vello::peniko::Color::from_rgba8(4, 5, 6, 255).to_rgba8());
-        assert_eq!(h.vello_theme.handle_stroke_hovered.to_rgba8(), crate::cavas::vello::peniko::Color::from_rgba8(7, 8, 9, 255).to_rgba8());
-        assert_eq!(h.vello_theme.wire_stroke_hovered.to_rgba8(), crate::cavas::vello::peniko::Color::from_rgba8(10, 11, 12, 255).to_rgba8());
+        assert_eq!(h.canvas_theme.node_stroke_hovered.to_rgba8(), crate::cavas::Color::from_rgba8(1, 2, 3, 255).to_rgba8());
+        assert_eq!(h.canvas_theme.edge_stroke_hovered.to_rgba8(), crate::cavas::Color::from_rgba8(4, 5, 6, 255).to_rgba8());
+        assert_eq!(h.canvas_theme.handle_stroke_hovered.to_rgba8(), crate::cavas::Color::from_rgba8(7, 8, 9, 255).to_rgba8());
+        assert_eq!(h.canvas_theme.wire_stroke_hovered.to_rgba8(), crate::cavas::Color::from_rgba8(10, 11, 12, 255).to_rgba8());
     }
 
     #[test]
@@ -2111,7 +2112,7 @@ mod host_tests {
         assert_eq!(h.edges.get("e1").unwrap().target, "b");
         h.set_size(800, 600, 1.0);
         let scene = h.build_vector_scene();
-        assert!(scene.encoding().path_tags.len() > 0);
+        assert!(scene.path_count() > 0);
     }
 
     #[test]
@@ -2205,7 +2206,7 @@ mod host_tests {
         assert_eq!(h.edges.get("e1").unwrap().target, "b");
         h.set_size(800, 600, 1.0);
         let scene = h.build_vector_scene();
-        assert!(scene.encoding().path_tags.len() > 0);
+        assert!(scene.path_count() > 0);
     }
 
     #[test]
@@ -4322,14 +4323,14 @@ mod force_graph_tests {
     }
 
     #[test]
-    fn svg_icon_vello09_append_smoke() {
-        let mut scene = crate::cavas::vello::Scene::new();
+    fn svg_icon_append_smoke() {
+        let mut scene = crate::cavas::Scene::new();
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="#ffffff"/><path d="M0 0 L10 10" stroke="#000000" stroke-width="1"/></svg>"##;
-        crate::cavas::svg_icon_vello09::append_svg_str(&mut scene, svg).expect("parse svg");
-        let fg = crate::cavas::vello::peniko::Color::from_rgba8(200, 10, 10, 255);
-        let bg = crate::cavas::vello::peniko::Color::from_rgba8(10, 200, 10, 255);
-        let mut scene2 = crate::cavas::vello::Scene::new();
-        crate::cavas::svg_icon_vello09::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
+        crate::cavas::svg_icon::append_svg_str(&mut scene, svg).expect("parse svg");
+        let fg = crate::cavas::Color::from_rgba8(200, 10, 10, 255);
+        let bg = crate::cavas::Color::from_rgba8(10, 200, 10, 255);
+        let mut scene2 = crate::cavas::Scene::new();
+        crate::cavas::svg_icon::append_svg_str_themed(&mut scene2, svg, fg, bg).expect("parse themed");
     }
 
     #[test]
@@ -4369,8 +4370,7 @@ mod force_graph_tests {
     #[test]
     fn svg_icon_content_bounds_follows_nested_group_translate() {
         let svg = r#"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><g transform="translate(72 88)"><rect width="12" height="12" fill="rgb(8,8,8)"/></g></svg>"#;
-        let tree = crate::usvg::Tree::from_str(svg, &crate::usvg::Options::default()).expect("parse");
-        let (x, y, w, h) = crate::cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        let (x, y, w, h) = crate::cavas::svg_icon::svg_icon_content_bounds_from_str(svg).expect("parse");
         assert!(x >= 70.0 && x <= 74.0, "expected translated art near x≈72, got {x}");
         assert!(y >= 86.0 && y <= 90.0, "expected translated art near y≈88, got {y}");
         assert!(w > 10.0 && w < 14.0 && h > 10.0 && h < 14.0, "expected ~12×12 bbox, got {w}×{h}");
@@ -4379,8 +4379,7 @@ mod force_graph_tests {
     #[test]
     fn svg_icon_content_bounds_includes_visible_image_abs_box() {
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" x="30" y="40" width="50" height="50"/></svg>"##;
-        let tree = crate::usvg::Tree::from_str(svg, crate::cavas::svg_icon_vello09::usvg_options_icons()).expect("parse");
-        let (x, y, w, h) = crate::cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        let (x, y, w, h) = crate::cavas::svg_icon::svg_icon_content_bounds_from_str(svg).expect("parse");
         assert!((x - 30.0).abs() < 2.0, "expected image bbox near x=30, got {x}");
         assert!((y - 40.0).abs() < 2.0, "expected image bbox near y=40, got {y}");
         assert!((w - 50.0).abs() < 2.0 && (h - 50.0).abs() < 2.0, "expected ~50×50 bbox, got {w}×{h}");

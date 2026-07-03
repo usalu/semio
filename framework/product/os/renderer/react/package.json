@@ -11,7 +11,10 @@
   "dependencies": {
     "@semio-tech/framework-os-core": "workspace:*",
     "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-platform-renderer-react": "workspace:*",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
     "@semio-tech/s-core": "workspace:*",
+    "@semio-tech/ui-react": "workspace:*",
     "react": "^19.2.3"
   },
   "devDependencies": {

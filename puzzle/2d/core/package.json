@@ -17,7 +17,8 @@
     "@semio-tech/graph-dsl-core": "workspace:*",
     "@semio-tech/puzzle-2d-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -33,10 +34,12 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "2d",
       "aliases": [
-        "2d"
+        "2d",
+        "puzzle 2d",
+        "puzzle-2d"
       ],
       "packageRoot": "puzzle/2d",
       "corePackage": "@semio-tech/puzzle-2d-core",
@@ -46,7 +49,11 @@
         "dev": 6012,
         "test": 6027,
         "env": "PUZZLE_2D_PLAY_PORT"
-      }
+      },
+      "programExport": "puzzle2dProgramContribution",
+      "programId": "puzzle.2d",
+      "site": { "embedKind": "2d", "host": "play.2d.semio-tech.com" },
+      "programIds": ["reasoning.mindmap"]
     }
   }
 }

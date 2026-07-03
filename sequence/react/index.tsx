@@ -1,8 +1,8 @@
 /** @emoji 📜 `@semio-tech/sequence-react` — execution-flow canvas. */
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
+import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import {
-	useVelloThemeSync,
+	useCanvasThemeSync,
 	SelectionMarquee,
 	Icon,
 	cn,
@@ -720,11 +720,11 @@ export function SequenceCanvas({
 	const [drawLod, setDrawLod] = useState<DagDrawLodKind>("normal");
 	const [catalogueSections, setCatalogueSections] = useState<readonly ImperativeCatalogueSection[]>(() => imperativeExtensionHost.getCatalogue().sections);
 
-	const syncVelloTheme = useCallback(() => {
-		syncSessionVelloTheme(sessionRef.current);
+	const syncCanvasTheme = useCallback(() => {
+		syncSessionCanvasTheme(sessionRef.current);
 	}, []);
 
-	useVelloThemeSync(syncVelloTheme);
+	useCanvasThemeSync(syncCanvasTheme);
 
 	useEffect(() => {
 		return imperativeExtensionHost.subscribe(() => {
@@ -823,7 +823,7 @@ export function SequenceCanvas({
 		const session = sessionRef.current as SequenceOverlaySession | null;
 		syncLodMode();
 		try {
-			syncVelloTheme();
+			syncCanvasTheme();
 			session?.renderFrame();
 			const overlay = textOverlayRef.current;
 			if (session && overlay && containerRef.current) {
@@ -843,7 +843,7 @@ export function SequenceCanvas({
 		} catch {
 			/* gpu not ready */
 		}
-	}, [reportDrawLod, syncLodMode, syncMarqueeOverlay, syncSelectionBoundsOverlay, syncVelloTheme]);
+	}, [reportDrawLod, syncLodMode, syncMarqueeOverlay, syncSelectionBoundsOverlay, syncCanvasTheme]);
 
 	const renderFrameRef = useRef(renderFrame);
 	useEffect(() => {

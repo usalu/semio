@@ -1,39 +1,45 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Procedural — loaded only via `./play` subpath. */
+/** @emoji 🛝 Procedural app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiPuzzle3dSurfaceHost, registerUiFlowSurfaceHost, registerUiFormsSurfaceHost, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig, UiPuzzle3dHostSurfaceNode } from "@semio-tech/framework-playground-core";
-import type { UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import type { UiFlowHostSurfaceNode, UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 import {
-    DAG_LOD_MODE_AUTOMATIC as PROCEDURAL_3D_DAG_LOD_MODE_AUTOMATIC,
-    FLOW_DEFAULT_PROXIMITY_DISTANCE as PROCEDURAL_3D_DEFAULT_PROXIMITY_DISTANCE,
-    dagLodCanvasProps as procedural3dDagLodCanvasProps,
-    flowWidgetPaletteTreeDragController as procedural3dWidgetPaletteTreeDragController,
-} from "@semio-tech/flow-react";
-import {
-    PROCEDURAL_3D_PLAY_APP_ID,
     PROCEDURAL_PLAY_CATALOGUE_TAB_ID,
+    PROCEDURAL_3D_PLAY_CONTROLLER_ID,
+    PROCEDURAL_PLAY_EXAMPLE_OPTIONS,
     PROCEDURAL_PLAY_HIERARCHY_TAB_ID,
     PROCEDURAL_PLAY_INSPECTION_TAB_ID,
     PROCEDURAL_PLAY_SURFACE_ID,
     PROCEDURAL_PLAY_SURFACE_ID_GENERATE,
     PROCEDURAL_PLAY_SURFACE_ID_PREVIEW,
+    PROCEDURAL_PLAY_WINDOW_KIND_ID,
     ProceduralPlayController,
     buildProceduralPlayCanvasContextMenu,
     buildProceduralPlayCatalogueTree,
     buildProceduralPlayHierarchyTree,
     buildProceduralPlayInspectorTree,
-    registerProceduralPlayDeclarativeBodies,
     type ProceduralPlayHostBridge,
+    proceduralPlayWindowBodies,
 } from "@semio-tech/procedural-3d-core";
 import { PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON } from "@semio-tech/procedural-3d-core";
+import { FlowGenerateSurface } from "@semio-tech/forms-react";
+import { parseFormSpec } from "@semio-tech/forms-core";
+import { downloadFlowOutputExport } from "@semio-tech/flow-react/play";
+import {
+  DAG_LOD_MODE_AUTOMATIC as PROCEDURAL_3D_DAG_LOD_MODE_AUTOMATIC,
+  FLOW_DEFAULT_PROXIMITY_DISTANCE as PROCEDURAL_3D_DEFAULT_PROXIMITY_DISTANCE,
+  dagLodCanvasProps as procedural3dDagLodCanvasProps,
+  flowWidgetPaletteTreeDragController as procedural3dWidgetPaletteTreeDragController,
+} from "@semio-tech/flow-react";
+import { ProceduralFlowEditor, ProceduralPreview, useProceduralBrepBridge } from "./index.tsx";
 
-let proceduralPlayChromeRegistered = false;
 const proceduralPlayControllerRef: { current: ProceduralPlayController | null } = { current: null };
 
 /** @emoji 🔔 Re-renders procedural play workbench kinds when WASM catalogue sections arrive. */
@@ -56,10 +62,6 @@ function useProceduralPlaySnapshotRevision(runtime: Platform, selector: (ctrl: P
     },
     () => 0,
   );
-}
-
-function useProceduralPlayCatalogueRevision(runtime: Platform): number {
-  return useProceduralPlaySnapshotRevision(runtime, (c) => c.getCatalogueRevision());
 }
 
 function useProceduralPlayExtensionRevision(runtime: Platform): number {
@@ -249,7 +251,9 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
     [],
   );
   return (
-    <ProceduralFlowEditor
+    <>
+      <ProceduralPlayToolbarHostBridge runtime={runtime} ctrl={ctrl} />
+      <ProceduralFlowEditor
       fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_PLAY_EMPTY_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
       commandRequest={ctrl?.getCommandRequest()}
@@ -280,6 +284,7 @@ function ProceduralPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSurf
       proximityDistance={proximityDistance}
       className="h-full w-full"
     />
+    </>
   );
 }
 
@@ -397,28 +402,6 @@ class ProceduralPlayInspectionPanelDefinition extends PureSidePanelTabDefinition
   }
 }
 
-function ProceduralPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  const ctrl = useProceduralPlayController(runtime);
-  const catalogueRevision = useProceduralPlayCatalogueRevision(runtime);
-  const extensionRevision = useProceduralPlayExtensionRevision(runtime);
-  const interactionRevision = useProceduralPlayInteractionRevision(runtime);
-  const proceduralPlayHierarchyPanel = reactHostPort.useMemo(() => new ProceduralPlayHierarchyPanelDefinition(), []);
-  const proceduralPlayCataloguePanel = reactHostPort.useMemo(() => new ProceduralPlayCataloguePanelDefinition(), []);
-  const proceduralPlayInspectionPanel = reactHostPort.useMemo(() => new ProceduralPlayInspectionPanelDefinition(), []);
-  const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [proceduralPlayHierarchyPanel, proceduralPlayCataloguePanel],
-      details: [proceduralPlayInspectionPanel],
-    }),
-    [catalogueRevision, extensionRevision, interactionRevision, proceduralPlayCataloguePanel, proceduralPlayHierarchyPanel, proceduralPlayInspectionPanel],
-  );
-  return (
-    <>
-      <ProceduralPlayToolbarHostBridge runtime={runtime} ctrl={ctrl} />
-      <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_3D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
-    </>
-  );
-}
 
 function Procedural3dGenerateSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
   const ctrl = useProceduralPlayController();
@@ -445,29 +428,17 @@ function Procedural3dGenerateSurfaceHost({ node }: { readonly node: UiFormsHostS
   );
 }
 
-export function registerProceduralPlaySurfaceHosts(): void {
-  if (proceduralPlayChromeRegistered) return;
-  proceduralPlayChromeRegistered = true;
-  registerUiFlowSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID, ProceduralPlayPaneSurfaceHost);
-  registerUiPuzzle3dSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, ProceduralPreviewSurfaceHost);
-  registerUiFormsSurfaceHost(PROCEDURAL_PLAY_SURFACE_ID_GENERATE, Procedural3dGenerateSurfaceHost);
-  registerProceduralPlayDeclarativeBodies();
-}
-
-function ProceduralPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <ProceduralPlayInner runtime={runtime} />;
-}
-
-export function mountProceduralPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<ProceduralPlayChrome runtime={playground.runtime} />, rootId);
-}
-
-const proceduralPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerProceduralPlaySurfaceHosts,
-  mount: mountProceduralPlayChrome,
+/** @emoji 🛝 procedural app renderer for playground and OS shells. */
+export const proceduralAppRenderer: AppRendererContribution = {
+  windowBodies: proceduralPlayWindowBodies,
+  surfaceHosts: {
+    [PROCEDURAL_PLAY_SURFACE_ID]: ProceduralPlayPaneSurfaceHost,
+    [PROCEDURAL_PLAY_SURFACE_ID_PREVIEW]: ProceduralPreviewSurfaceHost,
+    [PROCEDURAL_PLAY_SURFACE_ID_GENERATE]: Procedural3dGenerateSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new ProceduralPlayHierarchyPanelDefinition(), new ProceduralPlayCataloguePanelDefinition()],
+    details: [new ProceduralPlayInspectionPanelDefinition()],
+  },
+  examples: controllerBackedExampleContribution(PROCEDURAL_3D_PLAY_CONTROLLER_ID, PROCEDURAL_PLAY_EXAMPLE_OPTIONS),
 };
-
-export function bootProceduralPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, proceduralPlayChromeBoot, rootId);
-}
-//#endregion 🔖ProceduralPlayHost

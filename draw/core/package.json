@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@semio-tech/graph-manifest": "workspace:*",
-    "@semio-tech/vcs-core": "workspace:*"
+    "@semio-tech/vcs-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -27,7 +29,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "draw",
       "aliases": [
         "draw"
@@ -40,7 +42,9 @@
         "dev": 6064,
         "test": 6065,
         "env": "DRAW_PLAY_PORT"
-      }
+      },
+      "programExport": "drawProgramContribution",
+      "programId": "draw"
     }
   }
 }

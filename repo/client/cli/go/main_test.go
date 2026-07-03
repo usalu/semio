@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -16074,6 +16075,58 @@ func TestHookClientForMcpKindMapsIDEEntrypoints(t *testing.T) {
 		if got := HookClientForMcpKind(tc.kind); got != tc.want {
 			t.Errorf("HookClientForMcpKind(%q) = %q, want %q", tc.kind, got, tc.want)
 		}
+	}
+}
+
+func TestResolveMcpTicketClient(t *testing.T) {
+	tests := []struct {
+		name     string
+		kind     McpClientKind
+		client   string
+		expected string
+	}{
+		{"Codex inferred", McpClientCodex, "", "codex"},
+		{"Claude inferred", McpClientClaude, "", "claude-code"},
+		{"Explicit preserved", McpClientCodex, "cursor-chat", "cursor-chat"},
+		{"Generic remains empty", McpClientGeneric, "", ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := resolveMcpTicketClient(tc.kind, tc.client); got != tc.expected {
+				t.Fatalf("resolveMcpTicketClient(%q, %q) = %q, want %q", tc.kind, tc.client, got, tc.expected)
+			}
+		})
+	}
+}
+
+func TestCurrentMcpLLMsAllowed(t *testing.T) {
+	for _, llm := range []string{"opus-4-7", "gpt-5-5"} {
+		if got, err := ResolveAllowedLLM(llm); err != nil || got != llm {
+			t.Fatalf("ResolveAllowedLLM(%q) = %q, %v", llm, got, err)
+		}
+	}
+}
+
+func TestWriteWarningfUsesStderr(t *testing.T) {
+	read, write, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	previous := os.Stderr
+	os.Stderr = write
+	defer func() { os.Stderr = previous }()
+
+	writeWarningf("Failed to update: %s", "boom")
+	if err := write.Close(); err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = previous
+	output, err := io.ReadAll(read)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(output), "Warning: Failed to update: boom\n"; got != want {
+		t.Fatalf("warning output = %q, want %q", got, want)
 	}
 }
 

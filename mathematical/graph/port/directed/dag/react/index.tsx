@@ -3,8 +3,8 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef } from "react";
-import { syncSessionVelloTheme, resolveColorHex, resolveSemanticColorHex, tokenVar } from "@semio-tech/ui-styling";
-import { useVelloThemeSync } from "@semio-tech/ui-react";
+import { syncSessionCanvasTheme, resolveColorHex, resolveSemanticColorHex, tokenVar } from "@semio-tech/ui-styling";
+import { useCanvasThemeSync } from "@semio-tech/ui-react";
 import initDagWasm, { DagSession, initSync } from "../rs/pkg/mathematical_graph_port_directed_dag.js";
 
 // #region 🔖GpuWasmBridge
@@ -479,11 +479,11 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange,
   const wheelZoomEndRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pointerActiveRef = useRef(false);
 
-  const syncVelloTheme = useCallback(() => {
-    syncSessionVelloTheme(sessionRef.current);
+  const syncCanvasTheme = useCallback(() => {
+    syncSessionCanvasTheme(sessionRef.current);
   }, []);
 
-  useVelloThemeSync(syncVelloTheme);
+  useCanvasThemeSync(syncCanvasTheme);
 
   const syncLodMode = useCallback(() => {
     const session = sessionRef.current;
@@ -526,13 +526,13 @@ export function DagCanvas({ fixtureJson, className, reorganize, onFixtureChange,
       }
     }
     try {
-      syncVelloTheme();
+      syncCanvasTheme();
       session?.renderFrame();
       reportDrawLod();
     } catch {
       /* gpu not ready */
     }
-  }, [reportDrawLod, syncLodMode, syncVelloTheme]);
+  }, [reportDrawLod, syncLodMode, syncCanvasTheme]);
 
   const persistFixture = useCallback(() => {
     const session = sessionRef.current;

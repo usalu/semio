@@ -1354,13 +1354,17 @@ export class Procedural2dPlayController extends Controller implements Playground
 
 }
 
+export const procedural2dPlayWindowBodies: Readonly<Record<string, (ctx: WindowBodyViewContext) => UiNode>> = {
+	[PROCEDURAL_2D_PLAY_BODY_KEY_MAIN]: (_ctx: WindowBodyViewContext) =>
+		buildFlowWindowBody(PROCEDURAL_2D_PLAY_SURFACE_ID, PROCEDURAL_2D_PLAY_CONTROLLER_ID, PROCEDURAL_2D_PLAY_WINDOW_KIND_ID),
+	[PROCEDURAL_2D_PLAY_BODY_KEY_PREVIEW]: (_ctx: WindowBodyViewContext) =>
+		buildPuzzle2dWindowBody(PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW, PROCEDURAL_2D_PLAY_CONTROLLER_ID),
+	[PROCEDURAL_2D_PLAY_BODY_KEY_GENERATE]: (_ctx: WindowBodyViewContext) =>
+		buildFormsWindowBody(PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE, PROCEDURAL_2D_PLAY_CONTROLLER_ID, "generate"),
+};
+
 export function registerProcedural2dPlayDeclarativeBodies(): void {
-	registerWindowBody(PROCEDURAL_2D_PLAY_BODY_KEY_MAIN, (_ctx: WindowBodyViewContext) =>
-		buildFlowWindowBody(PROCEDURAL_2D_PLAY_SURFACE_ID, PROCEDURAL_2D_PLAY_CONTROLLER_ID, PROCEDURAL_2D_PLAY_WINDOW_KIND_ID));
-	registerWindowBody(PROCEDURAL_2D_PLAY_BODY_KEY_PREVIEW, (_ctx: WindowBodyViewContext) =>
-		buildPuzzle2dWindowBody(PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW, PROCEDURAL_2D_PLAY_CONTROLLER_ID));
-	registerWindowBody(PROCEDURAL_2D_PLAY_BODY_KEY_GENERATE, (_ctx: WindowBodyViewContext) =>
-		buildFormsWindowBody(PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE, PROCEDURAL_2D_PLAY_CONTROLLER_ID, "generate"));
+	for (const [key, build] of Object.entries(procedural2dPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildProcedural2dPlayAppRuntime(controller: Procedural2dPlayController): AppRuntime {
@@ -1454,18 +1458,12 @@ export const procedural2dPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildProcedural2dPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerProcedural2dPlayDeclarativeBodies();
-	},
 	keybindings: [
 		{ key: "ctrl+a,meta+a", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "selectAll" },
 		{ key: "Delete", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 		{ key: "Backspace", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 	],
-	bootRenderer: async (pg) => {
-		const { bootProcedural2dPlay } = await import("@semio-tech/procedural-2d-react/play");
-		bootProcedural2dPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/procedural-2d-react/play")).procedural2dAppRenderer,
 });
 //#endregion 🔖Play
 
@@ -1920,4 +1918,31 @@ export function buildProcedural2dProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
 
+const procedural2dProgramContributionResources = {
+		"procedural2d": osBaselineResource("2d.procedural", "procedural.2d", "puzzle2d"),
+	};
+
+/** @emoji 🧩 OS program contribution for procedural.2d. */
+export const procedural2dProgramContribution: OsProgramContribution = {
+	programId: "procedural.2d",
+	register() {
+		mergeOsProgramDefinition("procedural.2d", buildProcedural2dProgramDefinition(), procedural2dProgramContributionResources);
+		registerProcedural2dMediaExportHandlers();
+		registerAppVcsHandler(createProcedural2dAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+
+/** @emoji 📏 S app VCS handler for procedural 2d documents. */
+export function createProcedural2dAppVcsHandler() {
+	type Doc = { readonly revision: number };
+	type Op = { readonly op: "setRevision"; readonly revision: number };
+	return createTypedAppVcsHandler<Doc, Op>("procedural.2d", "procedural.2d", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
+}
+//#endregion 🔖DocumentVcs

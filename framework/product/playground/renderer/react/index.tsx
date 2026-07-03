@@ -107,6 +107,7 @@ import {
     type UIWindowMeasure,
     type UiComponentHostSurfaceNode
 } from "@semio-tech/framework-platform-renderer-react";
+import type { AppExampleContribution, AppExampleOption, AppRendererContribution, UiSurfaceHostNode } from "@semio-tech/framework-platform-core";
 import {
     AppRuntime,
     CommandBus,
@@ -150,6 +151,7 @@ import {
     uiInspectorAllEqual,
     type CommandDescriptor,
     type Playground,
+    type PlaygroundAppDefinition,
     type PlaygroundExampleCatalog,
     type PlaygroundKeybinding,
     type ResolvedAppState,
@@ -206,7 +208,7 @@ export {
     PLAYGROUND_NO_EXAMPLE_OPTION, isPlaygroundNoExampleId, playgroundExampleCatalogWithNoOption,
     resolvePlaygroundExampleCatalog
 } from "@semio-tech/framework-playground-core";
-export type { PlaygroundExampleCatalog, PlaygroundExampleHost, PlaygroundExampleOption } from "@semio-tech/framework-playground-core";
+export type { AppExampleContribution, AppExampleOption } from "@semio-tech/framework-platform-core";
 
 export {
     AppRuntime,
@@ -376,368 +378,30 @@ function resolveSidePanelTabSource(tab: SidePanelTabConfig | SidePanelTabDefinit
 }
 
 //#region 🔖UiRenderer
-type Puzzle3dSurfaceHost = React.ComponentType<{ readonly node: UiPuzzle3dHostSurfaceNode }>;
-type Puzzle2dSurfaceHost = React.ComponentType<{ readonly node: UiPuzzle2dHostSurfaceNode }>;
-type TableSurfaceHost = React.ComponentType<{ readonly node: UiTableHostSurfaceNode }>;
-type PlaygroundSurfaceBindingHost = React.ComponentType<{ readonly node: UiComponentHostSurfaceNode }>;
-
-const puzzle3dSurfaceHosts = new Map<string, Puzzle3dSurfaceHost>();
-const puzzle2dSurfaceHosts = new Map<string, Puzzle2dSurfaceHost>();
-type GisMapSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiGisMapHostSurfaceNode }>;
-const gisMapSurfaceHosts = new Map<string, GisMapSurfaceHost>();
-type FlowSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiFlowHostSurfaceNode }>;
-const flowSurfaceHosts = new Map<string, FlowSurfaceHost>();
-type DagSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiDagHostSurfaceNode }>;
-const dagSurfaceHosts = new Map<string, DagSurfaceHost>();
-type ImperativeSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiImperativeHostSurfaceNode }>;
-const imperativeSurfaceHosts = new Map<string, ImperativeSurfaceHost>();
-type SequenceSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiSequenceHostSurfaceNode }>;
-const sequenceSurfaceHosts = new Map<string, SequenceSurfaceHost>();
-type LayoutSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiLayoutHostSurfaceNode }>;
-const layoutSurfaceHosts = new Map<string, LayoutSurfaceHost>();
-type TrinitySurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }>;
-const trinitySurfaceHosts = new Map<string, TrinitySurfaceHost>();
-type ShootingSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiShootingHostSurfaceNode }>;
-const shootingSurfaceHosts = new Map<string, ShootingSurfaceHost>();
-const tableSurfaceHosts = new Map<string, TableSurfaceHost>();
-type FormsSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiFormsHostSurfaceNode }>;
-const formsSurfaceHosts = new Map<string, FormsSurfaceHost>();
-type RasterSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiRasterHostSurfaceNode }>;
-const rasterSurfaceHosts = new Map<string, RasterSurfaceHost>();
-type DrawSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiDrawHostSurfaceNode }>;
-const drawSurfaceHosts = new Map<string, DrawSurfaceHost>();
-type NoteSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiNoteHostSurfaceNode }>;
-const noteSurfaceHosts = new Map<string, NoteSurfaceHost>();
-type VcsSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiVcsHostSurfaceNode }>;
-const vcsSurfaceHosts = new Map<string, VcsSurfaceHost>();
-type EditorSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiEditorHostSurfaceNode }>;
-const editorSurfaceHosts = new Map<string, EditorSurfaceHost>();
-type WriterSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }>;
-const writerSurfaceHosts = new Map<string, WriterSurfaceHost>();
-type SSurfaceHost = React.ComponentType<{ readonly node: import("@semio-tech/framework-platform-core").UiSHostSurfaceNode }>;
-const sSurfaceHosts = new Map<string, SSurfaceHost>();
-
-const PLAYGROUND_CANVAS_HOST_TYPES = new Set(["puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "shooting", "forms", "raster", "draw", "note", "writer", "s", "vcs", "editor"]);
-
-function isPlaygroundCanvasHostChild(child: UiNode): boolean {
-  return PLAYGROUND_CANVAS_HOST_TYPES.has(child.type);
+function isUiSurfaceHostNode(node: UiNode): node is UiComponentHostSurfaceNode {
+  return typeof node === "object" && node !== null && "surfaceId" in node && "controllerId" in node;
 }
 
-/** @emoji 🧭 Binds a `surfaceId` from {@link UiPuzzle3dHostSurfaceNode} to a host React canvas implementation. */
-export function registerUiPuzzle3dSurfaceHost(surfaceId: string, Component: Puzzle3dSurfaceHost): void {
-  puzzle3dSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
+function surfaceHostLayout(node: UiNode): "canvas" | "panel" {
+  if (isUiSurfaceHostNode(node)) {
+    const layout = (node as UiSurfaceHostNode).layout;
+    if (layout) return layout;
+  }
+  if (node.type === "table" || node.type === "panel" || node.type === "editor" || node.type === "virtualFileSystem") {
+    return "panel";
+  }
+  return "canvas";
+}
+
+function isPlaygroundCanvasHostChild(child: UiNode): boolean {
+  return isUiSurfaceHostNode(child) && surfaceHostLayout(child) === "canvas";
 }
 
 export { registerSurfaceBinding, unregisterSurfaceBinding };
 
-/** @emoji 📋 Binds `surfaceId` from {@link UiPuzzle2dHostSurfaceNode} to a puzzle 2d canvas. */
-export function registerUiPuzzle2dSurfaceHost(surfaceId: string, Component: Puzzle2dSurfaceHost): void {
-  puzzle2dSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 🗺️ Binds `surfaceId` from {@link UiGisMapHostSurfaceNode} to a GIS map canvas. */
-export function registerUiGisMapSurfaceHost(surfaceId: string, Component: GisMapSurfaceHost): void {
-  gisMapSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 🌊 Binds `surfaceId` from {@link UiFlowHostSurfaceNode} to a flow canvas. */
-export function registerUiFlowSurfaceHost(surfaceId: string, Component: FlowSurfaceHost): void {
-  flowSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 🌳 Binds `surfaceId` from {@link UiDagHostSurfaceNode} to a DAG canvas. */
-export function registerUiDagSurfaceHost(surfaceId: string, Component: DagSurfaceHost): void {
-  dagSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji ⚙️ Binds `surfaceId` from {@link UiImperativeHostSurfaceNode} to an imperative editor. */
-export function registerUiImperativeSurfaceHost(surfaceId: string, Component: ImperativeSurfaceHost): void {
-  imperativeSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 📜 Binds `surfaceId` from {@link UiSequenceHostSurfaceNode} to a sequence canvas. */
-export function registerUiSequenceSurfaceHost(surfaceId: string, Component: SequenceSurfaceHost): void {
-  sequenceSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 📄 Binds `surfaceId` from {@link UiLayoutHostSurfaceNode} to a layout canvas. */
-export function registerUiLayoutSurfaceHost(surfaceId: string, Component: LayoutSurfaceHost): void {
-  layoutSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 🔺 Binds `surfaceId` from {@link UiTrinityHostSurfaceNode} to a trinity canvas. */
-export function registerUiTrinitySurfaceHost(surfaceId: string, Component: TrinitySurfaceHost): void {
-  trinitySurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 📸 Binds `surfaceId` from {@link UiShootingHostSurfaceNode} to a shooting canvas. */
-export function registerUiShootingSurfaceHost(surfaceId: string, Component: ShootingSurfaceHost): void {
-  shootingSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 📊 Binds `surfaceId` from {@link UiTableHostSurfaceNode} to a host table body. */
-export function registerUiTableSurfaceHost(surfaceId: string, Component: TableSurfaceHost): void {
-  tableSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 📋 Binds `surfaceId` from {@link UiFormsHostSurfaceNode} to a forms surface. */
-export function registerUiFormsSurfaceHost(surfaceId: string, Component: FormsSurfaceHost): void {
-  formsSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 🖼️ Binds `surfaceId` from {@link UiRasterHostSurfaceNode} to a raster canvas. */
-export function registerUiRasterSurfaceHost(surfaceId: string, Component: RasterSurfaceHost): void {
-  rasterSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji ✏️ Binds `surfaceId` from {@link UiDrawHostSurfaceNode} to a draw canvas. */
-export function registerUiDrawSurfaceHost(surfaceId: string, Component: DrawSurfaceHost): void {
-  drawSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 📝 Binds `surfaceId` from {@link UiNoteHostSurfaceNode} to a note canvas. */
-export function registerUiNoteSurfaceHost(surfaceId: string, Component: NoteSurfaceHost): void {
-  noteSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 🗄️ Binds `surfaceId` from {@link UiVcsHostSurfaceNode} to a vcs surface. */
-export function registerUiVcsSurfaceHost(surfaceId: string, Component: VcsSurfaceHost): void {
-  vcsSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji ✍️ Binds `surfaceId` from {@link UiEditorHostSurfaceNode} to a code editor body. */
-export function registerUiEditorSurfaceHost(surfaceId: string, Component: EditorSurfaceHost): void {
-  editorSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji ✍️ Binds `surfaceId` from {@link UiWriterHostSurfaceNode} to a writer canvas body. */
-export function registerUiWriterSurfaceHost(surfaceId: string, Component: WriterSurfaceHost): void {
-  writerSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
-/** @emoji 🖥️ Binds `surfaceId` from {@link UiSHostSurfaceNode} to a s studio surface. */
-export function registerUiSSurfaceHost(surfaceId: string, Component: SSurfaceHost): void {
-  sSurfaceHosts.set(surfaceId, Component);
-  registerSurfaceBinding(surfaceId, Component as PlaygroundSurfaceBindingHost);
-}
-
 function renderPlaygroundHostSurface(node: UiNode, layout: "canvas" | "panel", platform?: Platform): React.ReactElement {
-  if (node.type === "puzzle2d") {
-    const Host = puzzle2dSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "gismap") {
-    const Host = gisMapSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "flow") {
-    const Host = flowSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "dag") {
-    const Host = dagSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "imperative") {
-    const Host = imperativeSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "sequence") {
-    const Host = sequenceSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "layout") {
-    const Host = layoutSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "trinity") {
-    const Host = trinitySurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "shooting") {
-    const Host = shootingSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "forms") {
-    const Host = formsSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <ChromeAwareWindowScrollSurface className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </ChromeAwareWindowScrollSurface>
-      );
-    }
-  }
-  if (node.type === "raster") {
-    const Host = rasterSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "draw") {
-    const Host = drawSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "note") {
-    const Host = noteSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "vcs") {
-    const Host = vcsSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0 overflow-auto">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "writer") {
-    const Host = writerSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "s") {
-    const Host = sSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="absolute inset-0 min-h-0 min-w-0">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (node.type === "table") {
-    const Host = tableSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <ChromeAwareWindowScrollSurface className="relative min-h-0 min-w-0 flex-1">
-          <Host node={node} />
-        </ChromeAwareWindowScrollSurface>
-      );
-    }
-  }
-  if (node.type === "editor") {
-    const Host = editorSurfaceHosts.get(node.surfaceId);
-    if (Host) {
-      return (
-        <div className="relative min-h-0 min-w-0 flex-1 overflow-hidden">
-          <Host node={node} />
-        </div>
-      );
-    }
-  }
-  if (
-    node.type === "cad" ||
-    node.type === "puzzle2d" ||
-    node.type === "puzzle3d" ||
-    node.type === "puzzle5d" ||
-    node.type === "flow" ||
-    node.type === "dag" ||
-    node.type === "trinity" ||
-    node.type === "shooting" ||
-    node.type === "forms" ||
-    node.type === "raster" ||
-    node.type === "draw" ||
-    node.type === "panel" ||
-    node.type === "table" ||
-    node.type === "editor" ||
-    node.type === "virtualFileSystem"
-  ) {
-    return renderComponentHostSurface(node as UiComponentHostSurfaceNode, layout);
+  if (isUiSurfaceHostNode(node)) {
+    return renderComponentHostSurface(node, layout, platform);
   }
   const surfaceId = "surfaceId" in node ? String((node as { surfaceId: string }).surfaceId) : "?";
   return (
@@ -808,23 +472,15 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
 }
 
 
+let activeTreeDragController: AppRendererContribution["treeDragController"];
+
 function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDragAndDropController | undefined {
   void commandBus;
-  if (import.meta.env.PUZZLE_PLAY_ENTRY === "map") {
-    return undefined;
-  }
   const dragByItemId = collectUiTreeItemDragData(sections);
-  if (dragByItemId.size === 0) {
+  if (dragByItemId.size === 0 || !activeTreeDragController) {
     return undefined;
   }
-  const sample = dragByItemId.values().next().value;
-  if (sample && FLOW_WIDGET_DRAG_MIME in sample) {
-    return flowWidgetPaletteTreeDragController(dragByItemId);
-  }
-  if (sample && PUZZLE_2D_FIXTURE_DRAG_MIME in sample) {
-    return puzzle2dFixturePaletteTreeDragController(dragByItemId);
-  }
-  return puzzle3dFixturePaletteTreeDragController(dragByItemId);
+  return activeTreeDragController(dragByItemId) as TreeDragAndDropController | undefined;
 }
 
 /** @emoji 🌲 Renders a declarative {@link UiTreeNode}; memoizes TreeData by stable {@link UiTreeNode.sections} identity. */
@@ -982,34 +638,6 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
       );
     case "separator":
       return <span role="separator" className="bg-border my-1 h-px w-full shrink-0" aria-hidden />;
-    case "puzzle2d":
-    case "puzzle3d":
-    case "puzzle5d":
-    case "cad":
-    case "gismap":
-    case "flow":
-    case "dag":
-    case "imperative":
-    case "sequence":
-    case "layout":
-    case "trinity":
-    case "shooting":
-    case "forms":
-    case "raster":
-    case "draw":
-    case "note":
-    case "vcs":
-    case "writer":
-    case "s":
-    case "panel":
-    case "table":
-    case "editor":
-    case "virtualFileSystem":
-      return renderPlaygroundHostSurface(
-        node,
-        node.type === "table" || node.type === "panel" || node.type === "editor" || node.type === "virtualFileSystem" ? "panel" : "canvas",
-        platform,
-      );
     case "section": {
       const section = node as UiSectionNode;
       return (
@@ -1068,6 +696,9 @@ export function UiRenderer({ node, commandBus }: { readonly node: UiNode; readon
     case "tree":
       return renderPlaygroundDeclarativeTree(node as UiTreeNode, commandBus);
     default:
+      if (isUiSurfaceHostNode(node)) {
+        return renderPlaygroundHostSurface(node, surfaceHostLayout(node), platform);
+      }
       return <div className="p-2 text-xs text-destructive">Unsupported UiNode</div>;
   }
 }
@@ -1401,11 +1032,25 @@ export interface PlaygroundViewProps {
   readonly mobileQuery?: string;
   readonly initialPanelVisibility?: PlaygroundPanelVisibility;
   readonly slotToolbar?: React.ReactNode;
-  /** @emoji 🧪 Overrides controller-backed navbar fixture dropdown (React-held fixture state). */
-  readonly slotNavbarCenter?: React.ReactNode;
+  /** @emoji 🧪 App-declared navbar example dropdown (from {@link AppRendererContribution.examples}). */
+  readonly exampleContribution?: AppExampleContribution;
   readonly extraFooterItems?: readonly FooterItem[];
   readonly augmentPanelTabs?: Partial<Record<"workbench" | "details" | "settings", readonly (SidePanelTabConfig | SidePanelTabDefinition)[]>>;
   readonly onActiveWindowChange?: (windowKindId: string) => void;
+}
+
+/** @emoji 🎛 Wraps controller {@link PlaygroundExampleHost} catalog + `setActiveExample` for {@link AppRendererContribution.examples}. */
+export function controllerBackedExampleContribution(controllerId: string, options: readonly AppExampleOption[]): AppExampleContribution {
+  return {
+    options,
+    activeExampleId: (runtime) => {
+      const catalog = resolvePlaygroundExampleCatalog(runtime.getActiveApp()?.controller);
+      return catalog?.activeExampleId ?? playgroundResolvedExampleId(options[0]?.id ?? PLAYGROUND_NO_EXAMPLE_ID);
+    },
+    onSelect: (exampleId, runtime) => {
+      runtime.commandBus.dispatch(controllerId, "setActiveExample", { exampleId });
+    },
+  };
 }
 
 const playgroundExampleCatalogSnapshotCache = new WeakMap<object, PlaygroundExampleCatalog | null>();
@@ -1424,12 +1069,11 @@ function playgroundExampleCatalogSemanticallyEqual(a: PlaygroundExampleCatalog, 
   return true;
 }
 
-/** @emoji 🔔 Subscribes to controller snapshot or platform generation for navbar fixture catalog. */
-function usePlaygroundExampleCatalog(runtime: Platform, controllerId: string | undefined): PlaygroundExampleCatalog | null {
+/** @emoji 🔔 Subscribes to runtime generation for app-declared navbar example catalog. */
+function usePlaygroundExampleCatalog(runtime: Platform, contribution: AppExampleContribution | undefined): PlaygroundExampleCatalog | null {
   return reactHostPort.useSyncExternalStore(
     (listener) => {
-      const app = runtime.getActiveApp();
-      const controller = app?.controller.id === controllerId ? app.controller : undefined;
+      const controller = runtime.getActiveApp()?.controller;
       const unsubscribeSnapshot =
         controller && "subscribeSnapshot" in controller && typeof controller.subscribeSnapshot === "function"
           ? (controller as import("@semio-tech/framework-playground-core").Controller & { subscribeSnapshot: (l: () => void) => () => void }).subscribeSnapshot(listener)
@@ -1441,19 +1085,19 @@ function usePlaygroundExampleCatalog(runtime: Platform, controllerId: string | u
       };
     },
     () => {
-      const controller = runtime.getActiveApp()?.controller;
-      if (!controller) {
+      if (isPlaygroundExampleLocked() || !contribution) {
         return null;
       }
-      const next = resolvePlaygroundExampleCatalog(controller);
-      const cached = playgroundExampleCatalogSnapshotCache.get(controller);
+      const next = playgroundExampleCatalogWithNoOption(contribution.activeExampleId(runtime), contribution.options);
+      const cacheKey = contribution;
+      const cached = playgroundExampleCatalogSnapshotCache.get(cacheKey);
       if (cached === next) {
         return cached;
       }
-      if (cached && next && playgroundExampleCatalogSemanticallyEqual(cached, next)) {
+      if (cached && playgroundExampleCatalogSemanticallyEqual(cached, next)) {
         return cached;
       }
-      playgroundExampleCatalogSnapshotCache.set(controller, next);
+      playgroundExampleCatalogSnapshotCache.set(cacheKey, next);
       return next;
     },
     () => null,
@@ -1614,7 +1258,7 @@ function usePlaygroundViewShellData(runtime: Platform, options: Pick<PlaygroundV
 }
 
 /** @emoji 🛝 Playground application shell: tree-only side panels, no JSON fallback details tab. */
-export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgroundKeybindings, defaultAppId, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, slotNavbarCenter, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
+export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgroundKeybindings, defaultAppId, mobile, mobileQuery = "(max-width: 767px)", initialPanelVisibility, slotToolbar, exampleContribution, extraFooterItems, augmentPanelTabs, onActiveWindowChange }) => {
   reactHostPort.useSyncExternalStore((listener) => runtime.subscribeChrome(listener), () => runtime.chromeGeneration, () => 0);
 
   reactHostPort.useEffect(() => {
@@ -1734,12 +1378,9 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
     setPanelVisibility((prev) => ({ ...prev, rightSidePanel: !prev.rightSidePanel }));
   }, [rightSidePanelTabs.length, setPanelVisibility]);
 
-  const controllerId = shell.activeAppBase?.controller.id;
-  const exampleCatalog = usePlaygroundExampleCatalog(runtime, controllerId);
+  const exampleCatalog = usePlaygroundExampleCatalog(runtime, exampleContribution);
   const navbarExampleSelect = reactHostPort.useMemo(() => {
-    if (slotNavbarCenter !== undefined) return slotNavbarCenter;
-    if (!exampleCatalog || !controllerId) {
-      // Render a placeholder dropdown when no examples are available
+    if (!exampleContribution || !exampleCatalog) {
       return (
         <NavbarExampleSelect
           id="playground.navbar.fixture"
@@ -1755,11 +1396,11 @@ export const PlaygroundView: React.FC<PlaygroundViewProps> = ({ runtime, playgro
         value={exampleCatalog.activeExampleId}
         options={exampleCatalog.options}
         onValueChange={(exampleId) => {
-          shell.bus.dispatch(controllerId, "setActiveExample", { exampleId });
+          exampleContribution.onSelect(exampleId, runtime);
         }}
       />
     );
-  }, [controllerId, exampleCatalog, shell.bus, slotNavbarCenter]);
+  }, [exampleCatalog, exampleContribution, runtime]);
 
   const playgroundPanelToggleItems = reactHostPort.useMemo<PanelToggleItem[]>(() => {
     const items: PanelToggleItem[] = [];
@@ -1961,18 +1602,48 @@ export const mountReactApp = mountPlaygroundApp;
 
 //#region 🔖Boot
 
-/** @emoji 🧩 Play package supplies host registration + React mount (one puzzle surface per boot). */
-export interface PlaygroundChromeBoot {
-  registerHosts(): void;
-  mount(playground: Playground, rootId?: string): void;
+/** @emoji 🧩 Registers surface hosts and tab icons from an app renderer contribution. */
+export function applyAppRendererContribution(contribution: AppRendererContribution): void {
+  for (const [surfaceId, component] of Object.entries(contribution.surfaceHosts)) {
+    registerSurfaceBinding(surfaceId, component as React.ComponentType<{ readonly node: UiComponentHostSurfaceNode; readonly platform?: Platform }>);
+  }
+  if (contribution.windowBodies) {
+    for (const [bodyKey, build] of Object.entries(contribution.windowBodies)) {
+      registerWindowBody(bodyKey, build);
+    }
+  }
+  if (contribution.sidePanelBodies) {
+    for (const [bodyKey, build] of Object.entries(contribution.sidePanelBodies)) {
+      registerSidePanelBody(bodyKey, build);
+    }
+  }
+  if (contribution.tabIcons) {
+    for (const [iconId, icon] of Object.entries(contribution.tabIcons)) {
+      registerTabIcon(iconId, icon as Parameters<typeof registerTabIcon>[1]);
+    }
+  }
+  activeTreeDragController = contribution.treeDragController;
 }
 
-/** @emoji 🛝 Registers hosts, declarative bodies, and mounts play chrome synchronously. */
-export function bootPlayground(playground: Playground, boot: PlaygroundChromeBoot, rootId = "root"): void {
-  boot.registerHosts();
-  playground.registerBodies();
-  playground.registerSurfaceHosts();
-  boot.mount(playground, rootId);
+/** @emoji 🛝 Boots a playground app from its definition — fully derived from {@link AppRendererContribution}. */
+export async function bootPlaygroundApp(app: PlaygroundAppDefinition, playground: Playground, rootId = "root"): Promise<void> {
+  const contribution = await app.loadRenderer();
+  if (contribution.preload) {
+    await contribution.preload();
+  }
+  applyAppRendererContribution(contribution);
+  const mountProps = { runtime: playground.runtime, appId: app.id, panelTabs: contribution.panelTabs, examples: contribution.examples };
+  const chrome = contribution.mountChrome
+    ? (contribution.mountChrome(mountProps) as React.ReactElement)
+    : (
+        <PlaygroundView
+          runtime={playground.runtime}
+          defaultAppId={app.id}
+          augmentPanelTabs={contribution.panelTabs as PlaygroundViewProps["augmentPanelTabs"]}
+          exampleContribution={contribution.examples}
+        />
+      );
+  mountPlaygroundApp(chrome, rootId);
 }
 //#endregion 🔖Boot
 
@@ -1986,11 +1657,9 @@ if (import.meta.vitest) {
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
       const rendererDir = dirname(fileURLToPath(import.meta.url));
-      const puzzle2dSource = readFileSync(join(rendererDir, "../../../../puzzle/2d/react/play-host.tsx"), "utf8");
-      const start = "//#region 🔖Puzzle2dPlayHost";
-      const puzzle2d = puzzle2dSource.slice(puzzle2dSource.indexOf(start), puzzle2dSource.indexOf("//#endregion 🔖Puzzle2dPlayHost"));
-      expect(puzzle2d).toMatch(
-        /import\s*\{[^}]*puzzle2dSetBrushPlaceCommitHandler[^}]*\}\s*from\s*["']@semio-tech\/puzzle-2d-react["']/,
+      const puzzle2dSource = readFileSync(join(rendererDir, "../../../../../puzzle/2d/react/play-host.tsx"), "utf8");
+      expect(puzzle2dSource).toMatch(
+        /puzzle2dSetBrushPlaceCommitHandler/,
       );
     });
   });
@@ -2326,13 +1995,12 @@ if (import.meta.vitest) {
       function TestGisMapHost(): React.ReactElement {
         return <div data-host="gismap">gis map canvas</div>;
       }
-      registerUiGisMapSurfaceHost(surfaceId, TestGisMapHost);
+      registerSurfaceBinding(surfaceId, TestGisMapHost);
       try {
         const html = renderToStaticMarkup(<UiRenderer node={buildMapWindowBody(surfaceId, "ctrl", "main")} commandBus={new CommandBus()} />);
         expect(html).toContain('data-host="gismap"');
         expect(html).not.toContain("Unsupported UiNode");
       } finally {
-        gisMapSurfaceHosts.delete(surfaceId);
         unregisterSurfaceBinding(surfaceId);
       }
     });
@@ -2344,13 +2012,12 @@ if (import.meta.vitest) {
       function TestFlowHost(): React.ReactElement {
         return <div data-host="flow">flow canvas</div>;
       }
-      registerUiFlowSurfaceHost(surfaceId, TestFlowHost);
+      registerSurfaceBinding(surfaceId, TestFlowHost);
       try {
         const html = renderToStaticMarkup(<UiRenderer node={buildFlowWindowBody(surfaceId, "ctrl", "main")} commandBus={new CommandBus()} />);
         expect(html).toContain('data-host="flow"');
         expect(html).not.toContain("Unsupported UiNode");
       } finally {
-        flowSurfaceHosts.delete(surfaceId);
         unregisterSurfaceBinding(surfaceId);
       }
     });
@@ -2381,7 +2048,7 @@ if (import.meta.vitest) {
       function TestRasterHost(): React.ReactElement {
         return <div data-host="raster">raster canvas</div>;
       }
-      registerUiRasterSurfaceHost(surfaceId, TestRasterHost);
+      registerSurfaceBinding(surfaceId, TestRasterHost);
       try {
         const html = renderToStaticMarkup(
           <UiRenderer node={buildRasterWindowBody(surfaceId, "ctrl", "composite", "composite")} commandBus={new CommandBus()} />,
@@ -2389,7 +2056,6 @@ if (import.meta.vitest) {
         expect(html).toContain('data-host="raster"');
         expect(html).not.toContain("Unsupported UiNode");
       } finally {
-        rasterSurfaceHosts.delete(surfaceId);
         unregisterSurfaceBinding(surfaceId);
       }
     });

@@ -1,17 +1,19 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Flow — loaded only via `./play` subpath. */
+/** @emoji 🛝 Flow app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import { createWriterDocument } from "@semio-tech/writer-core";
 import { WriterCanvas } from "@semio-tech/writer-react";
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiFlowSurfaceHost, registerUiFormsSurfaceHost, registerUiWriterSurfaceHost, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { downloadMediaExportResult } from "@semio-tech/framework-core";
 import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
 import {
-    FLOW_PLAY_APP_ID,
     FLOW_PLAY_CATALOGUE_TAB_ID,
     FLOW_PLAY_DEFAULT_FIXTURE_JSON,
     FLOW_PLAY_HIERARCHY_TAB_ID,
@@ -25,15 +27,23 @@ import {
     buildFlowPlayCatalogueTree,
     buildFlowPlayHierarchyTree,
     buildFlowPlayInspectorTree,
-    registerFlowPlayDeclarativeBodies
+    flowPlayWindowBodies,
 } from "@semio-tech/flow-core";
 
 import { canvasDrawingPngExportPort } from "@semio-tech/procedural-2d-react";
 import { FlowGenerateSurface } from "@semio-tech/forms-react";
-import { parseFormSpec, type FormSpec } from "@semio-tech/forms-core";
+import { parseFormSpec } from "@semio-tech/forms-core";
 import type { UiFlowHostSurfaceNode, UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import {
+  FlowCanvas,
+  DAG_LOD_MODE_AUTOMATIC,
+  FLOW_DEFAULT_PROXIMITY_DISTANCE,
+  FLOW_WIDGET_DRAG_MIME,
+  dagLodCanvasProps,
+  ensureFlowWasmLoaded,
+  flowWidgetPaletteTreeDragController,
+} from "./index.tsx";
 
-let flowPlayChromeRegistered = false;
 const flowPlayControllerRef: { current: FlowPlayController | null } = { current: null };
 
 type FlowExportMesh = {
@@ -67,7 +77,7 @@ function flowExportMeshToObj(mesh: FlowExportMesh): string {
   return `${lines.join("\n")}\n`;
 }
 
-async function downloadFlowOutputExport(format: string, resolvedValueJson: string, widgetId: string): Promise<void> {
+export async function downloadFlowOutputExport(format: string, resolvedValueJson: string, widgetId: string): Promise<void> {
   await ensureFlowWasmLoaded();
   const { export_drawing_svg, render_drawing_scene, tessellate } = await import("@semio-tech/flow-core/pkg/flow_core.js");
   const parsed = JSON.parse(resolvedValueJson) as unknown;
@@ -125,10 +135,6 @@ function useFlowPlaySnapshotRevision(runtime: Platform, selector: (ctrl: FlowPla
     },
     () => 0,
   );
-}
-
-function useFlowPlayCatalogueRevision(runtime: Platform): number {
-  return useFlowPlaySnapshotRevision(runtime, (c) => c.getCatalogueRevision());
 }
 
 function useFlowPlayExtensionRevision(runtime: Platform): number {
@@ -376,47 +382,29 @@ function FlowPlayGenerateSurfaceHost({ node }: { readonly node: UiFormsHostSurfa
   );
 }
 
-function FlowPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  useFlowPlayController(runtime);
-  const catalogueRevision = useFlowPlayCatalogueRevision(runtime);
-  const extensionRevision = useFlowPlayExtensionRevision(runtime);
-  const interactionRevision = useFlowPlayInteractionRevision(runtime);
-  const flowPlayHierarchyPanel = reactHostPort.useMemo(() => new FlowPlayHierarchyPanelDefinition(), []);
-  const flowPlayCataloguePanel = reactHostPort.useMemo(() => new FlowPlayCataloguePanelDefinition(), []);
-  const flowPlayInspectionPanel = reactHostPort.useMemo(() => new FlowPlayInspectionPanelDefinition(), []);
-  const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [flowPlayHierarchyPanel, flowPlayCataloguePanel],
-      details: [flowPlayInspectionPanel],
-    }),
-    [catalogueRevision, extensionRevision, interactionRevision, flowPlayCataloguePanel, flowPlayHierarchyPanel, flowPlayInspectionPanel],
-  );
-  return <PlaygroundView runtime={runtime} defaultAppId={FLOW_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
+function FlowOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bundle = useOsInstanceMaterialization(instance);
+  const fixtureJson = reactHostPort.useMemo(() => JSON.stringify(bundle.projection ?? {}), [bundle.projection]);
+  return <FlowCanvas fixtureJson={fixtureJson} className="h-full min-h-0" />;
 }
 
-export function registerFlowPlaySurfaceHosts(): void {
-  if (flowPlayChromeRegistered) return;
-  flowPlayChromeRegistered = true;
-  registerUiFlowSurfaceHost(FLOW_PLAY_SURFACE_ID, FlowPlayPaneSurfaceHost);
-  registerUiFormsSurfaceHost(FLOW_PLAY_SURFACE_ID_GENERATE, FlowPlayGenerateSurfaceHost);
-  registerUiWriterSurfaceHost(FLOW_PLAY_SURFACE_ID_COMPILED_DAG, FlowPlayCompiledDagSurfaceHost);
-  registerFlowPlayDeclarativeBodies();
-}
-
-function FlowPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <FlowPlayInner runtime={runtime} />;
-}
-
-export function mountFlowPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<FlowPlayChrome runtime={playground.runtime} />, rootId);
-}
-
-const flowPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerFlowPlaySurfaceHosts,
-  mount: mountFlowPlayChrome,
+/** @emoji 🛝 flow app renderer for playground and OS shells. */
+export const flowAppRenderer: AppRendererContribution = {
+  windowBodies: flowPlayWindowBodies,
+  surfaceHosts: {
+    [FLOW_PLAY_SURFACE_ID]: FlowPlayPaneSurfaceHost,
+    [FLOW_PLAY_SURFACE_ID_GENERATE]: FlowPlayGenerateSurfaceHost,
+    [FLOW_PLAY_SURFACE_ID_COMPILED_DAG]: FlowPlayCompiledDagSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new FlowPlayHierarchyPanelDefinition(), new FlowPlayCataloguePanelDefinition()],
+    details: [new FlowPlayInspectionPanelDefinition()],
+  },
+  preload: ensureFlowWasmLoaded,
+  instanceHost: FlowOsInstanceHost,
+  treeDragController: (dragByItemId) => {
+    const sample = dragByItemId.values().next().value;
+    if (sample && FLOW_WIDGET_DRAG_MIME in sample) return flowWidgetPaletteTreeDragController(dragByItemId);
+    return undefined;
+  },
 };
-
-export function bootFlowPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, flowPlayChromeBoot, rootId);
-}
-//#endregion 🔖FlowPlayHost

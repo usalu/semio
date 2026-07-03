@@ -23,7 +23,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "layout",
       "aliases": [
         "layout"
@@ -35,7 +35,13 @@
       "port": {
         "dev": 6079,
         "env": "LAYOUT_PLAY_PORT"
-      }
+      },
+      "programExport": "layoutProgramContribution",
+      "programId": "layout"
     }
+  },
+  "dependencies": {
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   }
 }

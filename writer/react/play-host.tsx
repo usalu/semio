@@ -1,27 +1,26 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Writer — loaded only via `./play` subpath. */
+/** @emoji 🛝 Writer app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiWriterSurfaceHost, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution, UiWriterHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceHostBridge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
-import type { UiWriterHostSurfaceNode } from "@semio-tech/framework-platform-core";
-import { createWorkerLspTransport as createWriterPlayWorkerLspTransport, createWriterDocument as createWriterPlayDocument } from "@semio-tech/writer-core";
-
+import { createWorkerLspTransport as createWriterPlayWorkerLspTransport, createWriterDocument as createWriterPlayDocument, createWriterPlayFixtureAccess, WRITER_PLAY_CONTROLLER_ID } from "@semio-tech/writer-core";
 import {
-  WRITER_PLAY_APP_ID,
-  WRITER_PLAY_CONTROLLER_ID,
   WRITER_PLAY_SURFACE_ID,
   WriterPlayController,
   buildWriterPlayCatalogueTree,
   buildWriterPlayHierarchyTree,
   buildWriterPlayInspectorTree,
-  registerWriterPlayDeclarativeBodies,
+  writerPlayWindowBodies,
 } from "@semio-tech/writer-core";
+import { WriterCanvas } from "./index.tsx";
 
-let writerPlayChromeRegistered = false;
 const writerPlayControllerRef: { current: WriterPlayController | null } = { current: null };
 
 function useWriterPlayController(runtimeOverride?: Platform): WriterPlayController | undefined {
@@ -101,13 +100,6 @@ function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSur
   );
 }
 
-export function registerWriterPlaySurfaceHosts(): void {
-  if (writerPlayChromeRegistered) return;
-  writerPlayChromeRegistered = true;
-  registerUiWriterSurfaceHost(WRITER_PLAY_SURFACE_ID, WriterPlaySurfaceHost);
-  registerWriterPlayDeclarativeBodies();
-}
-
 class WriterPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
@@ -173,26 +165,44 @@ class WriterPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-function WriterPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  useWriterPlayController(runtime);
-  const hierarchy = reactHostPort.useMemo(() => new WriterPlayHierarchyPanelDefinition(), []);
-  const catalogue = reactHostPort.useMemo(() => new WriterPlayCataloguePanelDefinition(), []);
-  const inspection = reactHostPort.useMemo(() => new WriterPlayInspectionPanelDefinition(), []);
+function WriterOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bridge = useOsInstanceHostBridge();
+  const bundle = useOsInstanceMaterialization(instance);
+  const materialized = bundle.projection;
+  const writerDoc = reactHostPort.useMemo(() => {
+    const doc = materialized as { text?: string } | null;
+    return createWriterPlayDocument({
+      id: instance.id,
+      languageId: "jack",
+      text: doc?.text ?? instance.sourceDocument.inline ?? "",
+    });
+  }, [instance, materialized]);
   return (
-    <PlaygroundView runtime={runtime} defaultAppId={WRITER_PLAY_APP_ID} augmentPanelTabs={{ workbench: [hierarchy, catalogue], details: [inspection] }} />
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+      <WriterCanvas
+        document={writerDoc}
+        onChange={(document) => {
+          bridge.dispatch({ kind: "patchAppSource", instanceId: instance.id, inline: JSON.stringify(document) });
+        }}
+        createLspTransport={() => ({ dispose() {} } as never)}
+        className="min-h-0 flex-1"
+      />
+    </div>
   );
 }
 
-export function mountWriterPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<WriterPlayInner runtime={playground.runtime} />, rootId);
-}
-
-const writerPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerWriterPlaySurfaceHosts,
-  mount: mountWriterPlayChrome,
+/** @emoji 🛝 Writer app renderer contribution for playground and OS shells. */
+export const writerAppRenderer: AppRendererContribution = {
+  windowBodies: writerPlayWindowBodies,
+  surfaceHosts: {
+    [WRITER_PLAY_SURFACE_ID]: WriterPlaySurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new WriterPlayHierarchyPanelDefinition(), new WriterPlayCataloguePanelDefinition()],
+    details: [new WriterPlayInspectionPanelDefinition()],
+  },
+  instanceHost: WriterOsInstanceHost,
+  examples: controllerBackedExampleContribution(WRITER_PLAY_CONTROLLER_ID, createWriterPlayFixtureAccess().options),
 };
-
-export function bootWriterPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, writerPlayChromeBoot, rootId);
-}
 //#endregion 🔖WriterPlayHost

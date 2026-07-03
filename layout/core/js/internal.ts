@@ -1005,4 +1005,18 @@ if (import.meta.vitest) {
 		});
 	});
 }
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
 
+/** @emoji 📄 S app VCS handler for layout documents. */
+export function createLayoutAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly pages: readonly unknown[] };
+	type Op = { readonly op: "setDocument"; readonly document: Doc };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"layout.fixture",
+		"layout.fixture",
+		() => ({ schema: "layout.fixture", pages: [] }),
+		(doc, op) => (op.op === "setDocument" ? op.document : doc),
+	);
+}
+//#endregion 🔖DocumentVcs

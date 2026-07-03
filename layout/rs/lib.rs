@@ -1,7 +1,6 @@
 //! 📄 Layout engine — document layout, WebGPU render, export.
 
 pub use infinite_cavas as cavas;
-pub use vello;
 
 mod document;
 mod display;

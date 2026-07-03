@@ -1,32 +1,40 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Map — loaded only via `./play` subpath. */
+/** @emoji 🛝 Map app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiGisMapSurfaceHost, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, useControllerStore, useShellWindowInstance, registerWindowBody } from "@semio-tech/framework-playground-renderer-react";
-import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
-import { reactHostPort, Select } from "@semio-tech/ui-react";
+import type { AppRendererContribution, UiGisMapHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, useControllerStore, useShellWindowInstance, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
+import { shellTabIconComponent, shellWindowScopeId } from "@semio-tech/framework-platform-renderer-react";
+import { reactHostPort, type ContextMenuItem } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
-import type { UiGisMapHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import {
-    GIS_MAP_PLAY_APP_ID,
-    GIS_MAP_PLAY_BODY_KEY_MAIN,
-    GIS_MAP_PLAY_CATALOGUE_TAB_ID,
-    GIS_MAP_PLAY_HIERARCHY_TAB_ID,
-    GIS_MAP_PLAY_IDLE_SNAPSHOT,
-    GIS_MAP_PLAY_INSPECTION_TAB_ID,
-    GIS_MAP_PLAY_STORE_ID,
-    GIS_MAP_PLAY_SURFACE_ID,
-    GIS_MAP_PLAY_WINDOW_KIND_ID,
-    buildMapPlayCatalogueTree,
-    buildMapPlayHierarchyTree,
-    buildMapPlayInspectorTree,
-    buildMapPlayMainDeclarativeBody,
-    parseGisMapFixture,
-    type MapPlayController
+  GIS_MAP_PLAY_CATALOGUE_TAB_ID,
+  GIS_MAP_PLAY_CONTROLLER_ID,
+  GIS_MAP_PLAY_EXAMPLE_OPTIONS,
+  GIS_MAP_PLAY_HIERARCHY_TAB_ID,
+  GIS_MAP_PLAY_IDLE_SNAPSHOT,
+  GIS_MAP_PLAY_INSPECTION_TAB_ID,
+  GIS_MAP_PLAY_STORE_ID,
+  GIS_MAP_PLAY_SURFACE_ID,
+  GIS_MAP_PLAY_WINDOW_KIND_ID,
+  buildMapPlayCatalogueTree,
+  buildMapPlayHierarchyTree,
+  buildMapPlayInspectorTree,
+  type MapPlayController,
+  mapPlayWindowBodies,
 } from "@semio-tech/gis-2d-core";
+import {
+  MapCanvas,
+  Position,
+  Route,
+  ensureGisMapWasmLoaded,
+  type GisMapLodId,
+  type MapContextMenuContext,
+  type MapHoveredFeature,
+  type MapSelectPayload,
+} from "./index.tsx";
 
-let mapPlayChromeRegistered = false;
 const mapPlayControllerRef: { current: MapPlayController | null } = { current: null };
 
 function useMapPlayController(runtimeOverride?: Platform): MapPlayController | undefined {
@@ -40,24 +48,6 @@ function useMapPlayController(runtimeOverride?: Platform): MapPlayController | u
   const ctrl = runtime?.getActiveApp()?.controller as MapPlayController | undefined;
   mapPlayControllerRef.current = ctrl ?? null;
   return ctrl;
-}
-
-function useMapPlayInteractionRevision(runtime: Platform): number {
-  return reactHostPort.useSyncExternalStore(
-    (listener) => {
-      const ctrl = runtime.getActiveApp()?.controller as MapPlayController | undefined;
-      mapPlayControllerRef.current = ctrl ?? null;
-      const unsubscribeRuntime = runtime.subscribe(listener);
-      const unsubscribeSnapshot =
-        ctrl && typeof ctrl.subscribeSnapshot === "function" ? ctrl.subscribeSnapshot(listener) : undefined;
-      return () => {
-        unsubscribeRuntime();
-        unsubscribeSnapshot?.();
-      };
-    },
-    () => (runtime.getActiveApp()?.controller as MapPlayController | undefined)?.getInteractionRevision() ?? 0,
-    () => 0,
-  );
 }
 
 function useMapPlaySnapshot() {
@@ -216,13 +206,6 @@ function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSu
   );
 }
 
-export function registerMapPlaySurfaceHosts(): void {
-  if (mapPlayChromeRegistered) return;
-  mapPlayChromeRegistered = true;
-  registerUiGisMapSurfaceHost(GIS_MAP_PLAY_SURFACE_ID, MapPlayPaneSurfaceHost);
-  registerWindowBody(GIS_MAP_PLAY_BODY_KEY_MAIN, buildMapPlayMainDeclarativeBody);
-}
-
 class MapPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
@@ -282,36 +265,17 @@ class MapPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-function MapPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  useMapPlayController(runtime);
-  const interactionRevision = useMapPlayInteractionRevision(runtime);
-  const mapPlayHierarchyPanel = reactHostPort.useMemo(() => new MapPlayHierarchyPanelDefinition(), []);
-  const mapPlayCataloguePanel = reactHostPort.useMemo(() => new MapPlayCataloguePanelDefinition(), []);
-  const mapPlayInspectionPanel = reactHostPort.useMemo(() => new MapPlayInspectionPanelDefinition(), []);
-  const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [mapPlayHierarchyPanel, mapPlayCataloguePanel],
-      details: [mapPlayInspectionPanel],
-    }),
-    [interactionRevision, mapPlayCataloguePanel, mapPlayHierarchyPanel, mapPlayInspectionPanel],
-  );
-  return <PlaygroundView runtime={runtime} defaultAppId={GIS_MAP_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
-}
-
-function MapPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <MapPlayInner runtime={runtime} />;
-}
-
-export function mountMapPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<MapPlayChrome runtime={playground.runtime} />, rootId);
-}
-
-const mapPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerMapPlaySurfaceHosts,
-  mount: mountMapPlayChrome,
+/** @emoji 🛝 Map app renderer contribution for playground and OS shells. */
+export const mapAppRenderer: AppRendererContribution = {
+  windowBodies: mapPlayWindowBodies,
+  surfaceHosts: {
+    [GIS_MAP_PLAY_SURFACE_ID]: MapPlayPaneSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new MapPlayHierarchyPanelDefinition(), new MapPlayCataloguePanelDefinition()],
+    details: [new MapPlayInspectionPanelDefinition()],
+  },
+  preload: ensureGisMapWasmLoaded,
+  examples: controllerBackedExampleContribution(GIS_MAP_PLAY_CONTROLLER_ID, GIS_MAP_PLAY_EXAMPLE_OPTIONS),
 };
-
-export function bootMapPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, mapPlayChromeBoot, rootId);
-}
 //#endregion 🔖MapPlayHost

@@ -1,9 +1,12 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Raster — loaded only via `./play` subpath. */
+/** @emoji 🛝 Raster app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiRasterSurfaceHost, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceHostBridge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_CATALOG, CANVAS_HOVER_SOURCE_HIERARCHY } from "@semio-tech/framework-core";
@@ -11,9 +14,9 @@ import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
 import * as React from "react";
 import type { UiRasterHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import {
-  RASTER_PLAY_APP_ID,
   RASTER_PLAY_CATALOGUE_TAB_ID,
   RASTER_PLAY_CONTROLLER_ID,
+  RASTER_PLAY_EXAMPLE_OPTIONS,
   RASTER_PLAY_LAYERS_TAB_ID,
   RASTER_PLAY_MASKS_TAB_ID,
   RASTER_PLAY_PROPERTIES_TAB_ID,
@@ -25,12 +28,14 @@ import {
   buildRasterPlayLayersTree,
   buildRasterPlayMasksTree,
   createRasterPlayHierarchyTreeDragController,
-  registerRasterPlayDeclarativeBodies,
+  defaultRasterDocument,
+  type RasterDocument,
   type RasterPlayHierarchyBuildOptions,
   type RasterPlayHostBridge,
+  rasterPlayWindowBodies,
 } from "@semio-tech/raster-core";
+import { RasterCanvas, RasterLayerView, RasterMaskView } from "./index.tsx";
 
-let rasterPlayChromeRegistered = false;
 const rasterPlayControllerRef: { current: RasterPlayController | null } = { current: null };
 
 function useRasterPlayController(runtimeOverride?: Platform): RasterPlayController | undefined {
@@ -64,23 +69,6 @@ function rasterPlayHierarchyOptions(ctrl: RasterPlayController | undefined): Ras
     onDuplicateLayer: (layerId) => ctrl?.run("duplicateLayer", { layerId }),
     onAddMask: (layerId) => ctrl?.run("addLayerMask", { layerId }),
   };
-}
-
-function useRasterPlayInteractionRevision(runtime: Platform): number {
-  return reactHostPort.useSyncExternalStore(
-    (listener) => {
-      const ctrl = runtime.getActiveApp()?.controller as RasterPlayController | undefined;
-      rasterPlayControllerRef.current = ctrl ?? null;
-      const unsubscribeRuntime = runtime.subscribe(listener);
-      const unsubscribeCtrl = ctrl?.subscribe(listener);
-      return () => {
-        unsubscribeRuntime();
-        unsubscribeCtrl?.();
-      };
-    },
-    () => (runtime.getActiveApp()?.controller as RasterPlayController | undefined)?.getInteractionRevision() ?? 0,
-    () => 0,
-  );
 }
 
 function RasterPlayPaneSurfaceHost({ node }: { readonly node: UiRasterHostSurfaceNode }): ReactElement {
@@ -118,9 +106,19 @@ function RasterPlayPaneSurfaceHost({ node }: { readonly node: UiRasterHostSurfac
     return <RasterMaskView {...common} isolatedLayerId={node.layerId ?? selectedIds[0] ?? null} />;
   }
   if (node.view === "navigator") {
-    return <RasterCanvas {...common} viewMode="navigator" />;
+    return (
+      <>
+        <RasterPlayFileBridge />
+        <RasterCanvas {...common} viewMode="navigator" />
+      </>
+    );
   }
-  return <RasterCanvas {...common} viewMode="composite" />;
+  return (
+    <>
+      <RasterPlayFileBridge />
+      <RasterCanvas {...common} viewMode="composite" />
+    </>
+  );
 }
 
 class RasterPlayLayersPanelDefinition extends PureSidePanelTabDefinition {
@@ -279,50 +277,56 @@ function RasterPlayFileBridge(): ReactElement | null {
   return <input ref={loadInputRef} type="file" accept=".json,.raster.json,application/json" className="hidden" onChange={handleLoadFile} />;
 }
 
-function RasterPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
-  useRasterPlayController(playground.runtime);
-  useRasterPlayInteractionRevision(playground.runtime);
-  const rasterLayersPanel = reactHostPort.useMemo(() => new RasterPlayLayersPanelDefinition(), []);
-  const rasterCataloguePanel = reactHostPort.useMemo(() => new RasterPlayCataloguePanelDefinition(), []);
-  const rasterMasksPanel = reactHostPort.useMemo(() => new RasterPlayMasksPanelDefinition(), []);
-  const rasterPropertiesPanel = reactHostPort.useMemo(() => new RasterPlayPropertiesPanelDefinition(), []);
+function RasterOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bridge = useOsInstanceHostBridge();
+  const bundle = useOsInstanceMaterialization(instance);
+  const materialized = bundle.projection;
+  const rasterDoc = reactHostPort.useMemo(() => {
+    if (materialized && typeof materialized === "object" && (materialized as RasterDocument).schema === "raster.document") return materialized as RasterDocument;
+    return defaultRasterDocument(instance.id);
+  }, [instance.id, materialized]);
+  const dispatchRaster = reactHostPort.useCallback(
+    (document: RasterDocument) => {
+      bridge.dispatch({
+        kind: "applyAppOperation",
+        instanceId: instance.id,
+        forwards: [{ op: "replaceProjection", projection: document }],
+        backwards: [{ op: "replaceProjection", projection: rasterDoc }],
+      });
+    },
+    [bridge, instance.id, rasterDoc],
+  );
   return (
-    <>
-      <RasterPlayFileBridge />
-      <PlaygroundView
-        runtime={playground.runtime}
-        defaultAppId={RASTER_PLAY_APP_ID}
-        augmentPanelTabs={{
-          workbench: [rasterLayersPanel, rasterCataloguePanel, rasterMasksPanel],
-          details: [rasterPropertiesPanel],
-        }}
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+      <RasterCanvas
+        document={rasterDoc}
+        selectedIds={[]}
+        hoveredId={null}
+        kindHover={null}
+        activeTool={rasterDoc.activeTool}
+        camera={rasterDoc.camera}
+        onSelect={() => {}}
+        onHover={() => {}}
+        onCameraChange={(camera) => dispatchRaster({ ...rasterDoc, camera })}
+        className="min-h-0 flex-1"
+        viewMode="composite"
       />
-    </>
+    </div>
   );
 }
 
-export function registerRasterPlaySurfaceHosts(): void {
-  if (rasterPlayChromeRegistered) return;
-  rasterPlayChromeRegistered = true;
-  registerUiRasterSurfaceHost(RASTER_PLAY_SURFACE_ID_COMPOSITE, RasterPlayPaneSurfaceHost);
-  registerUiRasterSurfaceHost(RASTER_PLAY_SURFACE_ID_NAVIGATOR, RasterPlayPaneSurfaceHost);
-  registerRasterPlayDeclarativeBodies();
-}
-
-function RasterPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
-  return <RasterPlayInner playground={playground} />;
-}
-
-export function mountRasterPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<RasterPlayChrome playground={playground} />, rootId);
-}
-
-const rasterPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerRasterPlaySurfaceHosts,
-  mount: mountRasterPlayChrome,
+/** @emoji 🛝 raster app renderer for playground and OS shells. */
+export const rasterAppRenderer: AppRendererContribution = {
+  windowBodies: rasterPlayWindowBodies,
+  surfaceHosts: {
+    [RASTER_PLAY_SURFACE_ID_COMPOSITE]: RasterPlayPaneSurfaceHost,
+    [RASTER_PLAY_SURFACE_ID_NAVIGATOR]: RasterPlayPaneSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new RasterPlayLayersPanelDefinition(), new RasterPlayCataloguePanelDefinition(), new RasterPlayMasksPanelDefinition()],
+    details: [new RasterPlayPropertiesPanelDefinition()],
+  },
+  instanceHost: RasterOsInstanceHost,
+  examples: controllerBackedExampleContribution(RASTER_PLAY_CONTROLLER_ID, RASTER_PLAY_EXAMPLE_OPTIONS),
 };
-
-export function bootRasterPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, rasterPlayChromeBoot, rootId);
-}
-//#endregion 🔖RasterPlayHost

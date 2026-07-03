@@ -9653,6 +9653,7 @@ func (e BreachPriority) String() string {
 
 // ⬛AllowedLLMs holds the allowed l l ms values.
 var AllowedLLMs = []string{
+	"opus-4-7",
 	"opus-4-6",
 	"opus-4-5",
 	"opus-4",
@@ -9664,6 +9665,7 @@ var AllowedLLMs = []string{
 	"gemini-3-1-pro",
 	"gemini-3-pro",
 	"gemini-3-flash",
+	"gpt-5-5",
 	"gpt-5-2",
 	"gpt-5-2-codex",
 	"gpt-5-3-codex",
@@ -16296,6 +16298,11 @@ func ensureExecutor() {
 	})
 }
 
+// ⚠️writeWarningf writes operational diagnostics without contaminating structured stdout.
+func writeWarningf(format string, args ...interface{}) {
+	fmt.Fprintf(os.Stderr, "Warning: "+format+"\n", args...)
+}
+
 // 💿init holds the data fields for a init record.
 func init() {
 	wd, err := os.Getwd()
@@ -22011,7 +22018,7 @@ func linkTicketIssueToGoalIssue(issueURL, goalRef string) {
 		}
 		if goal.Management != nil && goal.Management.Issue != "" {
 			if err := GetManagementProvider().AddSubIssue(goal.Management.Issue, issueURL); err != nil {
-				fmt.Printf("Warning: Failed to link ticket issue to goal issue %s: %v\n", goal.Management.Issue, err)
+				writeWarningf("Failed to link ticket issue to goal issue %s: %v", goal.Management.Issue, err)
 			}
 			return
 		}
@@ -22117,7 +22124,7 @@ func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool,
 					src := filepath.Join(draftPath, entry.Name())
 					dst := filepath.Join(ticketDir, entry.Name())
 					if err := MoveFile(src, dst); err != nil {
-						fmt.Printf("Warning: Failed to move draft file %s: %v\n", entry.Name(), err)
+						writeWarningf("Failed to move draft file %s: %v", entry.Name(), err)
 						continue
 					}
 				}
@@ -22161,7 +22168,7 @@ func CreateTicket(emoji, title, prompt, llm, client, draft string, noIssue bool,
 
 	if !noIssue {
 		if err := ensureTicketGitHubIssue(ticket, title, prompt, goal, issue, noManagement, false); err != nil {
-			fmt.Printf("Warning: Failed to create GitHub issue: %v\n", err)
+			writeWarningf("Failed to create GitHub issue: %v", err)
 		}
 	}
 
@@ -22215,7 +22222,7 @@ func ghCreateIssue(title, body string, milestone *int) (string, error) {
 	if milestone != nil {
 		milestoneTitle, err := ghGetMilestoneTitle(*milestone)
 		if err != nil {
-			fmt.Printf("Warning: could not resolve milestone %d, creating issue without milestone: %v\n", *milestone, err)
+			writeWarningf("could not resolve milestone %d, creating issue without milestone: %v", *milestone, err)
 		} else {
 			args = append(args, "--milestone", milestoneTitle)
 		}
@@ -24614,7 +24621,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 		}
 
 		if err := os.Remove(ticket.ImportantPath); err != nil {
-			fmt.Printf("Warning: Failed to delete %s: %v\n", filepath.Base(ticket.ImportantPath), err)
+			writeWarningf("Failed to delete %s: %v", filepath.Base(ticket.ImportantPath), err)
 		}
 	}
 
@@ -24662,7 +24669,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 			}
 			if len(labelList) > 0 {
 				if err := GetManagementProvider().AddLabels(issueURL, labelList); err != nil {
-					fmt.Printf("Warning: Failed to add labels to GitHub issue: %v\n", err)
+					writeWarningf("Failed to add labels to GitHub issue: %v", err)
 				}
 			}
 
@@ -24673,12 +24680,12 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noManagement b
 			}
 
 			if err := GetManagementProvider().AddComment(issueURL, comment); err != nil {
-				fmt.Printf("Warning: Failed to add summary and metrics comment to GitHub issue: %v\n", err)
+				writeWarningf("Failed to add summary and metrics comment to GitHub issue: %v", err)
 			}
 		}
 
 		if err := GetManagementProvider().CloseIssue(issueURL); err != nil {
-			fmt.Printf("Warning: Failed to close GitHub issue: %v\n", err)
+			writeWarningf("Failed to close GitHub issue: %v", err)
 		}
 	}
 
@@ -24805,7 +24812,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 						}
 					}
 					if err := MoveFile(src, dst); err != nil {
-						fmt.Printf("Warning: Failed to move draft file %s: %v\n", entry.Name(), err)
+						writeWarningf("Failed to move draft file %s: %v", entry.Name(), err)
 						continue
 					}
 				}
@@ -24819,13 +24826,13 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	ticket.Status = TicketStatusOpen
 
 	if err := ensureTicketGitHubIssue(ticket, ticket.Title, prompt, ticket.Goal, "", noManagement, true); err != nil {
-		fmt.Printf("Warning: Failed to ensure GitHub issue: %v\n", err)
+		writeWarningf("Failed to ensure GitHub issue: %v", err)
 	}
 	if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
 		issueURL := ticket.Management.Issue
 		comment := formatPromptHeading(prompt)
 		if err := GetManagementProvider().AddComment(issueURL, comment); err != nil {
-			fmt.Printf("Warning: Failed to add prompt comment to GitHub issue: %v\n", err)
+			writeWarningf("Failed to add prompt comment to GitHub issue: %v", err)
 		}
 	}
 
@@ -24951,7 +24958,7 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 		}
 		if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
 			if err := GetManagementProvider().UpdateIssueTitle(ticket.Management.Issue, title); err != nil {
-				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
+				writeWarningf("Failed to update GitHub issue title: %v", err)
 			}
 		}
 	}
@@ -24995,7 +25002,7 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 		}
 		if ticket.Management != nil && ticket.Management.Issue != "" && !noManagement {
 			if err := GetManagementProvider().UpdateIssueTitle(ticket.Management.Issue, title); err != nil {
-				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
+				writeWarningf("Failed to update GitHub issue title: %v", err)
 			}
 		}
 	}
@@ -34444,6 +34451,7 @@ func ticketOpenWithKind(ctx context.Context, request mcp.CallToolRequest, kind M
 	issue, _, _ := getStringArg(args, "issue")
 	planID, _, _ := getStringArg(args, "plan_id")
 	specID, _, _ := getStringArg(args, "spec_id")
+	client = resolveMcpTicketClient(kind, client)
 
 	result := ToolTicketOpen(emoji, title, prompt, llm, client, draft, false, goal, parent, false, issue, kind, planID, specID)
 	return toolResultToMCP(result)
@@ -34561,6 +34569,7 @@ func ticketReopenWithKind(ctx context.Context, request mcp.CallToolRequest, kind
 	noManagement, _, _ := getBoolArg(args, "no_management")
 	planID, _, _ := getStringArg(args, "plan_id")
 	specID, _, _ := getStringArg(args, "spec_id")
+	client = resolveMcpTicketClient(kind, client)
 
 	year, month, day, slug, err := resolveTicketForReopen(path)
 	if err != nil {
@@ -45160,6 +45169,14 @@ func HookClientForMcpKind(kind McpClientKind) string {
 	}
 }
 
+// 🧾resolveMcpTicketClient derives native ticket metadata from the MCP entrypoint.
+func resolveMcpTicketClient(kind McpClientKind, client string) string {
+	if strings.TrimSpace(client) != "" {
+		return client
+	}
+	return HookClientForMcpKind(kind)
+}
+
 // McpKindFromResolvedClient maps a validated ticket client slug to an MCP surface kind for plan/spec attachment.
 func McpKindFromResolvedClient(client string) McpClientKind {
 	switch strings.TrimSpace(client) {
@@ -45454,7 +45471,7 @@ func postTicketPlanComment(ticket *Ticket, noManagement bool) {
 	}
 	body, err := formatPlanComment(ticket.Plan, src)
 	if err != nil {
-		fmt.Printf("Warning: Failed to format plan comment: %v\n", err)
+		writeWarningf("Failed to format plan comment: %v", err)
 		return
 	}
 	if strings.TrimSpace(body) == "" {
@@ -45462,7 +45479,7 @@ func postTicketPlanComment(ticket *Ticket, noManagement bool) {
 	}
 	issueURL := ticket.Management.Issue
 	if err := GetManagementProvider().AddComment(issueURL, body); err != nil {
-		fmt.Printf("Warning: Failed to add plan comment to GitHub issue: %v\n", err)
+		writeWarningf("Failed to add plan comment to GitHub issue: %v", err)
 	}
 }
 

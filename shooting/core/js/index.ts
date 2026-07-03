@@ -1166,11 +1166,15 @@ export class ShootingPlayController extends Controller implements PlaygroundExam
 	}
 }
 
+export const shootingPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[SHOOTING_PLAY_BODY_KEY_MODEL]: () =>
+		buildShootingWindowBody(SHOOTING_PLAY_SURFACE_ID_MODEL, SHOOTING_PLAY_CONTROLLER_ID, "model"),
+	[SHOOTING_PLAY_BODY_KEY_ICON]: () =>
+		buildShootingWindowBody(SHOOTING_PLAY_SURFACE_ID_ICON, SHOOTING_PLAY_CONTROLLER_ID, "icon"),
+};
+
 export function registerShootingPlayDeclarativeBodies(): void {
-	registerWindowBody(SHOOTING_PLAY_BODY_KEY_MODEL, () =>
-		buildShootingWindowBody(SHOOTING_PLAY_SURFACE_ID_MODEL, SHOOTING_PLAY_CONTROLLER_ID, "model"));
-	registerWindowBody(SHOOTING_PLAY_BODY_KEY_ICON, () =>
-		buildShootingWindowBody(SHOOTING_PLAY_SURFACE_ID_ICON, SHOOTING_PLAY_CONTROLLER_ID, "icon"));
+	for (const [key, build] of Object.entries(shootingPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildShootingPlayAppRuntime(controller: ShootingPlayController): AppRuntime {
@@ -1201,13 +1205,7 @@ export const shootingPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildShootingPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerShootingPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootShootingPlay } = await import("@semio-tech/shooting-react/play");
-		bootShootingPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/shooting-react/play")).shootingAppRenderer,
 });
 //#endregion 🔖Play
 
@@ -1311,6 +1309,74 @@ if (import.meta.vitest) {
 }
 // #endregion 🧪Tests
 
+
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+
+type ShootingVcsAsset = { readonly id: string; readonly name: string; readonly url: string; readonly format: "glb" };
+type ShootingVcsFixture = {
+	readonly schema: "shooting.fixture";
+	readonly assets: readonly ShootingVcsAsset[];
+	readonly camera: { readonly position: readonly [number, number, number]; readonly target: readonly [number, number, number]; readonly zoom: number };
+	readonly savedCameras: readonly unknown[];
+	readonly scene: Record<string, unknown>;
+	readonly shots: readonly unknown[];
+	readonly activeShotId?: string;
+	readonly activeAssetId?: string;
+};
+type ShootingVcsOp =
+	| { readonly op: "addAsset"; readonly asset: ShootingVcsAsset }
+	| { readonly op: "removeAsset"; readonly assetId: string }
+	| { readonly op: "setActiveAsset"; readonly assetId: string };
+
+function defaultShootingVcsFixture(): ShootingVcsFixture {
+	return {
+		schema: "shooting.fixture",
+		assets: [{ id: "base", name: "Base", url: "/mesh/base.glb", format: "glb" }],
+		camera: { position: [420, -420, 320], target: [0, 0, 40], zoom: 1 },
+		savedCameras: [],
+		scene: {},
+		shots: [{ id: "overview-svg", label: "Overview", width: 256, height: 256, format: "svg" }],
+		activeShotId: "overview-svg",
+		activeAssetId: "base",
+	};
+}
+
+function applyShootingVcsOp(fixture: ShootingVcsFixture, op: ShootingVcsOp): ShootingVcsFixture {
+	switch (op.op) {
+		case "addAsset":
+			return { ...fixture, assets: [...fixture.assets, op.asset] };
+		case "removeAsset":
+			return { ...fixture, assets: fixture.assets.filter((asset) => asset.id !== op.assetId) };
+		case "setActiveAsset":
+			return { ...fixture, activeAssetId: op.assetId };
+	}
+}
+
+/** @emoji 📸 S app VCS handler for shooting scene documents. */
+export function createShootingAppVcsHandler() {
+	return createTypedAppVcsHandler<ShootingVcsFixture, ShootingVcsOp>(
+		"shooting.scene",
+		"shooting.fixture",
+		defaultShootingVcsFixture,
+		applyShootingVcsOp,
+		undefined,
+		{
+			applyInputBindings: (fixture, inputBindings) => {
+				const mesh = inputBindings.mesh as { readonly url?: string } | undefined;
+				if (!mesh?.url) return fixture;
+				const activeId = fixture.activeAssetId ?? fixture.assets[0]?.id;
+				if (!activeId) return fixture;
+				return {
+					...fixture,
+					assets: fixture.assets.map((asset) => (asset.id === activeId ? { ...asset, url: mesh.url! } : asset)),
+				};
+			},
+		},
+	);
+}
+//#endregion 🔖DocumentVcs
+
 //#region 🔖MediaExport
 /** @emoji 💾 Registers shooting fixture SVG/PNG export handlers via {@link iconRenderPort}. */
 export function registerShootingMediaExportHandlers(): void {
@@ -1358,6 +1424,25 @@ export function buildShootingProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler, osInPort, osOutPort } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+const shootingProgramContributionResources = {
+		"shooting": { inputs: [osInPort("3d.mesh", "mesh", "Mesh")], outputs: [osOutPort("2d.shooting")], sourceFormat: "shooting.scene", componentKind: "shooting", modes: [{ id: "edit", label: "Edit" }], parameterFields: [{ fieldPath: "/camera/zoom", label: "Camera zoom", type: "numeric" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for shooting. */
+export const shootingProgramContribution: OsProgramContribution = {
+	programId: "shooting",
+	register() {
+		mergeOsProgramDefinition("shooting", buildShootingProgramDefinition(), shootingProgramContributionResources);
+		registerShootingMediaExportHandlers();
+		registerAppVcsHandler(createShootingAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 
 

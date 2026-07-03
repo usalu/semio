@@ -38,7 +38,7 @@ pub struct HandleDescJson {
 // #endregion 🔖HandleDescJson
 
 // #region 🔖HandleKinds
-use cavas::vello::peniko::Color;
+use cavas::Color;
 
 #[derive(Clone, Debug)]
 pub struct HandleKindDef {

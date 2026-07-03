@@ -137,8 +137,8 @@ pub mod types {
     use std::collections::{BTreeMap, BTreeSet};
 
     use crate::cavas::camera::Camera;
-    use crate::cavas::vello::kurbo::{Point, Vec2};
-    use crate::cavas::vello::peniko::Color;
+    use crate::cavas::{Point, Vec2};
+    use crate::cavas::Color;
     use crate::NodeKindHandleTemplate;
 
     // #region 🔖GraphPortMode
@@ -369,7 +369,7 @@ pub mod types {
     }
 
     #[derive(Clone, Copy, Debug)]
-    pub struct VelloThemePalette {
+    pub struct CanvasThemePalette {
         pub raster_clear: Color,
         pub grid_minor_stroke: Color,
         pub edge_stroke: Color,
@@ -411,7 +411,7 @@ pub mod types {
         pub label_halo: Color,
     }
 
-    impl VelloThemePalette {
+    impl CanvasThemePalette {
         /// @emoji 🎨 Builds a palette from centralized board theme tokens.
         pub fn from_board_theme(t: &ui_styling::BoardTheme) -> Self {
             Self {
@@ -519,15 +519,12 @@ pub mod types {
     use std::hash::{Hash, Hasher};
     use std::sync::Arc;
 
-    use crate::cavas::usvg;
-    use crate::cavas::vello::kurbo::{Affine, Rect};
-    use crate::cavas::vello::peniko::{Blob, Fill, ImageAlphaType, ImageBrush, ImageData, ImageFormat};
-    use crate::cavas::vello::Scene;
+    use crate::cavas::{append_svg_document, Affine, FillRule, RasterImage, Rect, Scene, SvgDocument};
 
     #[derive(Clone)]
     pub enum CachedIconBody {
         Vector(Scene),
-        Raster(Arc<ImageData>),
+        Raster(Arc<RasterImage>),
     }
 
     #[derive(Clone)]
@@ -598,31 +595,30 @@ pub mod types {
             let (bx, by, bw, bh, body) = match resolved {
                 infinite_cavas::icon_codec::BoardResolvedIcon::None => return None,
                 infinite_cavas::icon_codec::BoardResolvedIcon::SvgThemed(s) => {
-                    let tree = usvg::Tree::from_str(s.trim(), infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
-                    let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
+                    let doc = SvgDocument::parse_icons(s.trim()).ok()?;
+                    let (bx, by, bw, bh) = doc.content_bounds();
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
                         return None;
                     }
                     let mut s = Scene::new();
                     if preserve_original_style {
-                        let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
+                        append_svg_document(&mut s, &doc);
                     } else {
-                        infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+                        doc.render_themed(&mut s, fg, bg);
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
                 infinite_cavas::icon_codec::BoardResolvedIcon::SvgPlain(s) => {
-                    let svg_t = s.trim();
-                    let tree = usvg::Tree::from_str(svg_t, infinite_cavas::svg_icon_vello09::usvg_options_icons()).ok()?;
-                    let (bx, by, bw, bh) = infinite_cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
+                    let doc = SvgDocument::parse_icons(s.trim()).ok()?;
+                    let (bx, by, bw, bh) = doc.content_bounds();
                     if !(bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite()) {
                         return None;
                     }
                     let mut s = Scene::new();
                     if preserve_original_style {
-                        let _ = infinite_cavas::vello_svg::append_tree(&mut s, &tree);
+                        append_svg_document(&mut s, &doc);
                     } else {
-                        infinite_cavas::svg_icon_vello09::render_svg_tree_themed(&mut s, &tree, fg, bg);
+                        doc.render_themed(&mut s, fg, bg);
                     }
                     (bx, by, bw, bh, CachedIconBody::Vector(s))
                 }
@@ -631,7 +627,7 @@ pub mod types {
                     let by = 0.0_f64;
                     let bw = f64::from(w);
                     let bh = f64::from(h);
-                    let img = ImageData { data: Blob::new(Arc::new(rgba.as_ref().to_vec())), format: ImageFormat::Rgba8, alpha_type: ImageAlphaType::Alpha, width: w, height: h };
+                    let img = RasterImage::rgba8(w, h, Arc::new(rgba.as_ref().to_vec()));
                     (bx, by, bw, bh, CachedIconBody::Raster(Arc::new(img)))
                 }
             };
@@ -654,26 +650,26 @@ pub mod types {
             let cx = bx + bw * 0.5;
             let cy = by + bh * 0.5;
             let scale = (2.0 * sx_half / bw).min(2.0 * sy_half / bh);
-            let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
+            let aff = Affine::IDENTITY.translate((center.x - scale * cx, center.y - scale * cy)) * Affine::IDENTITY.scale(scale);
             let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
             let hw = avail_w * clip_inset * 0.5;
             let hh = avail_h * clip_inset * 0.5;
             let clip_r = Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh));
-            scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
+            scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &clip_r);
             match &body {
                 CachedIconBody::Vector(icon_scene) => {
                     scene.append(icon_scene, Some(aff));
                 }
                 CachedIconBody::Raster(img) => {
-                    scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                    scene.draw_image(img, aff);
                 }
             }
             scene.pop_layer();
         }
 
         /// @emoji 🎨 Themed SVG icon fg/bg from centralized canvas tokens (not node chrome stroke/fill).
-        pub fn board_icon_paint_colors(vello_theme: &VelloThemePalette) -> (Color, Color) {
-            let rgba = vello_theme.raster_clear.to_rgba8();
+        pub fn board_icon_paint_colors(canvas_theme: &CanvasThemePalette) -> (Color, Color) {
+            let rgba = canvas_theme.raster_clear.to_rgba8();
             let lum = f64::from(rgba.r) * 0.299 + f64::from(rgba.g) * 0.587 + f64::from(rgba.b) * 0.114;
             let canvas = if lum < 128.0 { &ui_styling::CANVAS_DARK } else { &ui_styling::CANVAS_LIGHT };
             (Color::new(canvas.icon_fg), Color::new(canvas.icon_bg))
@@ -681,7 +677,7 @@ pub mod types {
     }
     // #endregion 🔖Icons
 
-    impl Default for VelloThemePalette {
+    impl Default for CanvasThemePalette {
         fn default() -> Self {
             Self::from_board_theme(&ui_styling::BOARD_LIGHT)
         }
@@ -1340,7 +1336,7 @@ pub mod hierarchical_tree {
 
 // #region 🔁RedrawLayout
 pub mod redraw_layout {
-    use crate::cavas::vello::kurbo::Point;
+    use crate::cavas::Point;
     use serde::Deserialize;
     use serde_json::Value;
     use std::collections::HashMap;
@@ -1564,11 +1560,11 @@ pub use redraw_layout::{apply_edge_handle_snap_to_fixture_v1_json, apply_redraw_
 #[cfg(test)]
 mod quadrant_tests {
     use super::*;
-    use crate::cavas::vello::peniko::Color;
+    use crate::cavas::Color;
 
     #[test]
-    fn vello_theme_default_uses_centralized_board_light_tokens() {
-        let p = VelloThemePalette::default();
+    fn canvas_theme_default_uses_centralized_board_light_tokens() {
+        let p = CanvasThemePalette::default();
         let t = &ui_styling::BOARD_LIGHT;
         assert_eq!(p.raster_clear, Color::new(t.raster_clear));
         assert_eq!(p.edge_stroke_selected, Color::new(t.edge_stroke_selected));
@@ -1577,7 +1573,7 @@ mod quadrant_tests {
 
     #[test]
     fn board_icon_paint_colors_use_canvas_tokens_not_node_chrome() {
-        let theme = VelloThemePalette::default();
+        let theme = CanvasThemePalette::default();
         let (fg, bg) = IconPaintCache::board_icon_paint_colors(&theme);
         assert_eq!(fg, Color::new(ui_styling::CANVAS_LIGHT.icon_fg));
         assert_eq!(bg, Color::new(ui_styling::CANVAS_LIGHT.icon_bg));

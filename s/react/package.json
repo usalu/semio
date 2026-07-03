@@ -15,6 +15,7 @@
   "dependencies": {
     "@semio-tech/flow-react": "workspace:*",
     "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-os-renderer-react": "workspace:*",
     "@semio-tech/s-core": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/vcs-react": "workspace:*",
@@ -22,11 +23,7 @@
     "@semio-tech/writer-core": "workspace:*",
     "@semio-tech/writer-react": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*",
-    "@semio-tech/draw-core": "workspace:*",
-    "@semio-tech/raster-core": "workspace:*",
-    "@semio-tech/framework-presentation-renderer-react": "workspace:*",
-    "@semio-tech/framework-presentation-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",

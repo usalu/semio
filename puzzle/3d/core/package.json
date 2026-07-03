@@ -17,7 +17,8 @@
     "@semio-tech/infinite-world-r3f": "workspace:*",
     "@semio-tech/puzzle-3d-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -33,10 +34,12 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "3d",
       "aliases": [
-        "3d"
+        "3d",
+        "puzzle 3d",
+        "puzzle-3d"
       ],
       "packageRoot": "puzzle/3d",
       "corePackage": "@semio-tech/puzzle-3d-core",
@@ -46,6 +49,14 @@
         "dev": 6013,
         "test": 6028,
         "env": "PUZZLE_3D_PLAY_PORT"
+      },
+      "programExport": "puzzle3dProgramContribution",
+      "programId": "puzzle.3d",
+      "site": { "embedKind": "3d", "host": "play.3d.semio-tech.com" },
+      "assets": ["puzzle3d-meshes"],
+      "lockedExampleFixtures": {
+        "nakagin": ["puzzle/3d/example/nakagin-capsule-tower.3d.json"],
+        "concrete-forest": ["puzzle/3d/example/concrete-forest.3d.json"]
       }
     }
   }

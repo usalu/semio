@@ -1,52 +1,40 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Vcs — loaded only via `./play` subpath. */
+/** @emoji 🛝 Vcs app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, registerUiVcsSurfaceHost, Platform } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution, UiVcsHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, Platform } from "@semio-tech/framework-playground-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
-import type { UiVcsHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { VCS_PLAY_SURFACE_ID_EDITOR, VCS_PLAY_SURFACE_ID_HISTORY, VcsPlayController, vcsPlayWindowBodies } from "@semio-tech/vcs-core";
+import { HistoryTable } from "./index.tsx";
 
-import {
-  VCS_PLAY_APP_ID,
-  VCS_PLAY_CONTROLLER_ID,
-  VCS_PLAY_SURFACE_ID_EDITOR,
-  VCS_PLAY_SURFACE_ID_HISTORY,
-  VcsPlayController,
-  registerVcsPlayDeclarativeBodies,
-} from "@semio-tech/vcs-core";
-
-let vcsPlayChromeRegistered = false;
 const vcsPlayControllerRef: { current: VcsPlayController | null } = { current: null };
 
 function useVcsPlayController(runtimeOverride?: Platform): VcsPlayController | undefined {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const runtime = runtimeOverride ?? appCtx?.runtime;
   reactHostPort.useSyncExternalStore(
-    (listener) => (runtime ? runtime.subscribe(listener) : () => {}),
-    () => runtime?.generation ?? 0,
-    () => 0,
-  );
-  const ctrl = runtime?.getActiveApp()?.controller as VcsPlayController | undefined;
-  vcsPlayControllerRef.current = ctrl ?? null;
-  return ctrl;
-}
-
-function useVcsPlayInteractionRevision(runtime: Platform): number {
-  return reactHostPort.useSyncExternalStore(
     (listener) => {
-      const ctrl = runtime.getActiveApp()?.controller as VcsPlayController | undefined;
+      const ctrl = runtime?.getActiveApp()?.controller as VcsPlayController | undefined;
       vcsPlayControllerRef.current = ctrl ?? null;
-      const unsubscribeRuntime = runtime.subscribe(listener);
+      const unsubscribeRuntime = runtime ? runtime.subscribe(listener) : () => {};
       const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
       return () => {
         unsubscribeRuntime();
         unsubscribeSnapshot?.();
       };
     },
-    () => (runtime.getActiveApp()?.controller as VcsPlayController | undefined)?.getInteractionRevision() ?? 0,
+    () => {
+      const generation = runtime?.generation ?? 0;
+      const revision = (runtime?.getActiveApp()?.controller as VcsPlayController | undefined)?.getInteractionRevision() ?? 0;
+      return generation * 1_000_000 + revision;
+    },
     () => 0,
   );
+  const ctrl = runtime?.getActiveApp()?.controller as VcsPlayController | undefined;
+  vcsPlayControllerRef.current = ctrl ?? null;
+  return ctrl;
 }
 
 function VcsPlayEditorSurfaceHost({ node: _node }: { readonly node: UiVcsHostSurfaceNode }): ReactElement {
@@ -94,34 +82,12 @@ function VcsPlayHistorySurfaceHost({ node: _node }: { readonly node: UiVcsHostSu
   );
 }
 
-function VcsPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
-  useVcsPlayController(playground.runtime);
-  useVcsPlayInteractionRevision(playground.runtime);
-  return <PlaygroundView runtime={playground.runtime} defaultAppId={VCS_PLAY_APP_ID} />;
-}
-
-export function registerVcsPlaySurfaceHosts(): void {
-  if (vcsPlayChromeRegistered) return;
-  vcsPlayChromeRegistered = true;
-  registerUiVcsSurfaceHost(VCS_PLAY_SURFACE_ID_EDITOR, VcsPlayEditorSurfaceHost);
-  registerUiVcsSurfaceHost(VCS_PLAY_SURFACE_ID_HISTORY, VcsPlayHistorySurfaceHost);
-  registerVcsPlayDeclarativeBodies();
-}
-
-function VcsPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
-  return <VcsPlayInner playground={playground} />;
-}
-
-export function mountVcsPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<VcsPlayChrome playground={playground} />, rootId);
-}
-
-const vcsPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerVcsPlaySurfaceHosts,
-  mount: mountVcsPlayChrome,
+/** @emoji 🛝 Vcs app renderer contribution for playground and OS shells. */
+export const vcsAppRenderer: AppRendererContribution = {
+  windowBodies: vcsPlayWindowBodies,
+  surfaceHosts: {
+    [VCS_PLAY_SURFACE_ID_EDITOR]: VcsPlayEditorSurfaceHost,
+    [VCS_PLAY_SURFACE_ID_HISTORY]: VcsPlayHistorySurfaceHost,
+  },
 };
-
-export function bootVcsPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, vcsPlayChromeBoot, rootId);
-}
 //#endregion 🔖VcsPlayHost

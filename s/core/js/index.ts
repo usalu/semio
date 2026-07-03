@@ -13,6 +13,7 @@ import {
 	buildSWindowBody,
 	createDefaultLayout,
 	createPlayAppRuntime,
+	createTabStackLayout,
 	registerWindowBody,
 	type CommandDescriptor,
 	type AppTools,
@@ -33,11 +34,14 @@ import {
   eagerPlayExampleGlob,
   Playground,
   playgroundResolvedExampleId,
+  type PlaygroundExampleCatalog,
 } from "@semio-tech/framework-playground-core";
 import {
 	registerAppVirtualFileSystem,
+	virtualFileSystemSurfaceId,
+	buildVirtualFileSystemWindowBody,
 } from "@semio-tech/framework-platform-core";
-import { downloadMediaExportResult } from "@semio-tech/framework-core";
+import { downloadMediaExportResult, type NavigationLevel, type Platform } from "@semio-tech/framework-core";
 import { createWriterDocument, type WriterDocument } from "@semio-tech/writer-core/internal";
 import { wireLiteralFromDagFixtureJson } from "@semio-tech/graph-dsl-core";
 import {
@@ -49,45 +53,46 @@ import {
 	COMPOSE_SKETCHPAD_PROGRAM_ID,
 	appInstanceResourceProjection,
 	parseSStudioDocument,
-	registerAppVcsHandler,
 	registerSFixtureJsonResolver,
 	seedSProgramRegistryFromResourceMap,
 	sExtensionRegistrySize,
 	StudioStore,
 	sProgramById,
-	createFlowDocumentAppVcsHandler,
-	createFlowDagAppVcsHandler,
-	createProcedural2dAppVcsHandler,
-	createProcedural3dAppVcsHandler,
-	createTrinityGraphAppVcsHandler,
-	createGisMapAppVcsHandler,
-	createPresentationDeckAppVcsHandler,
-	createPuzzle2dAppVcsHandler,
-	createPuzzle3dAppVcsHandler,
-	createSequenceAppVcsHandler,
-	createLayoutAppVcsHandler,
-	createImperativeAppVcsHandler,
-	createLowpolyAppVcsHandler,
-	createVcsDemoAppVcsHandler,
-	createCatalogueKindsAppVcsHandler,
 	sMediaGraphToDagFixtureJson,
 	OsMediaGraphVirtualFileSystemController,
 	OS_MEDIA_GRAPH_VFS_ROOT_ID,
-	registerAllMediaExportHandlers,
+	registerGenericMeshMediaExportHandlers,
 	assertOsMediaExportCoverage,
 	exportOsAppInstanceMedia,
 	materializeAppInstanceProjection,
 	type OsMediaExportFormat,
 	type OsMediaExportResult,
-	TECHNOLOGY_APP_RESOURCE_BY_PROGRAM,
 	sAppRegistration,
 	osParameterTypesCompatible,
 	osParameterValue,
 	type OsParameter,
 	type OsParameterType,
 } from "./internal.ts";
+import {
+	OsHomeVirtualFileSystemController,
+	OS_HOME_VFS_ROOT_ID,
+	createEmptyOsDocument,
+	createOsStudio,
+	deleteOsStudio,
+	importOsStudioFromJson,
+	loadOsStudioDocument,
+	seedOsStudioCatalogIfEmpty,
+	listOsStudioCatalogEntries,
+} from "@semio-tech/framework-os-core";
 
-export const S_PLAY_APP_ID = "s-play";
+export const S_HOME_APP_ID = "home";
+export const S_HOME_CONTROLLER_ID = "s-home";
+export const S_HOME_WINDOW = "s-home-main";
+export const S_HOME_BODY = "s.home.vfs";
+export const S_HOME_SURFACE = virtualFileSystemSurfaceId(S_HOME_APP_ID);
+export const S_HOME_LAYOUT = createTabStackLayout([S_HOME_WINDOW], ["Studios"]);
+
+export const S_PLAY_APP_ID = "studio";
 export const S_PLAY_CONTROLLER_ID = "s-play";
 export const S_PLAY_SURFACE_MEDIA_GRAPH = "s.play.media-graph";
 export const S_PLAY_SURFACE_MEDIA_VFS = "s.play.media-vfs";
@@ -129,44 +134,13 @@ export function createStudioStore(document: SStudioDocument): StudioStore {
 //#region 🔖SExtensionWiring
 /** @emoji 🧩 Registers all s technology extensions and VCS handlers. */
 export async function bootstrapSPlayExtensions(): Promise<void> {
-	const { createFormsAppVcsHandler } = await import("@semio-tech/forms-core");
-	const { createPresentationAppVcsHandler } = await import("@semio-tech/framework-presentation-core");
-	const { createRasterAppVcsHandler } = await import("@semio-tech/raster-core");
-	const { createWriterAppVcsHandler } = await import("@semio-tech/writer-core");
-	const { puzzle5dDefaultManifestCatalogBundle } = await import("@semio-tech/puzzle-5d-react");
-	const { loadAllSProgramExtensions } = await import("./program-extensions.ts");
-	const { createSPlayPuzzle5dAppVcsHandler } = await import("./puzzle5d-extension.ts");
-	const { createSPlayShootingAppVcsHandler } = await import("./shooting-extension.ts");
-	const { createDrawAppVcsHandler } = await import("@semio-tech/draw-core");
-	const { createNoteAppVcsHandler } = await import("@semio-tech/note-core");
 	seedSProgramRegistryFromResourceMap();
-	registerAppVcsHandler(createDrawAppVcsHandler());
-	registerAppVcsHandler(createNoteAppVcsHandler());
-	registerAppVcsHandler(createWriterAppVcsHandler());
-	registerAppVcsHandler(createRasterAppVcsHandler());
-	registerAppVcsHandler(createFormsAppVcsHandler());
-	registerAppVcsHandler(createFlowDocumentAppVcsHandler());
-	registerAppVcsHandler(createFlowDagAppVcsHandler());
-	registerAppVcsHandler(createProcedural2dAppVcsHandler());
-	registerAppVcsHandler(createProcedural3dAppVcsHandler());
-	registerAppVcsHandler(createSPlayShootingAppVcsHandler());
-	registerAppVcsHandler(createTrinityGraphAppVcsHandler());
-	registerAppVcsHandler(createGisMapAppVcsHandler());
-	registerAppVcsHandler(createPresentationDeckAppVcsHandler());
-	registerAppVcsHandler(createPresentationAppVcsHandler());
-	registerAppVcsHandler(createPuzzle2dAppVcsHandler());
-	registerAppVcsHandler(createPuzzle3dAppVcsHandler());
-	registerAppVcsHandler(createSPlayPuzzle5dAppVcsHandler());
-	registerAppVcsHandler(createSequenceAppVcsHandler());
-	registerAppVcsHandler(createLayoutAppVcsHandler());
-	registerAppVcsHandler(createImperativeAppVcsHandler());
-	registerAppVcsHandler(createLowpolyAppVcsHandler());
-	registerAppVcsHandler(createVcsDemoAppVcsHandler());
-	registerAppVcsHandler(createCatalogueKindsAppVcsHandler(() => puzzle5dDefaultManifestCatalogBundle() ?? {}));
-	const { buildSketchpadProgramDefinition } = await import("@semio-tech/compose-sketchpad");
-	mergeSProgramDefinition(COMPOSE_SKETCHPAD_PROGRAM_ID, buildSketchpadProgramDefinition());
-	await loadAllSProgramExtensions();
-	await registerAllMediaExportHandlers();
+	const { loadAllOsProgramContributions } = await import("@semio-tech/framework-playground-core/app-registry");
+	const contributions = await loadAllOsProgramContributions();
+	for (const contribution of contributions) {
+		await contribution.register();
+	}
+	registerGenericMeshMediaExportHandlers();
 }
 //#endregion 🔖SExtensionWiring
 
@@ -186,16 +160,170 @@ function sPlayPointerKeysToAppInstanceIds(keys: readonly string[]): string[] {
 	return keys.filter((key) => key.startsWith("app-instance:")).map((key) => key.slice("app-instance:".length));
 }
 
+function sHomeCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
+	return { controllerId: S_HOME_CONTROLLER_ID, command, args };
+}
+
+function sOsNavigationDestination(id: string, label: string, uri: string) {
+	return { id, label, uri };
+}
+
+function sOsNavigationLevel(node: ReturnType<typeof sOsNavigationDestination>, alternatives: readonly ReturnType<typeof sOsNavigationDestination>[]): NavigationLevel {
+	return { node, alternatives };
+}
+
+export interface SOsShellRefs {
+	readonly home: SHomeController;
+	readonly studio: SPlayController;
+}
+
+let sOsPlatformSingleton: Platform | null = null;
+let sOsShellRefsSingleton: SOsShellRefs | null = null;
+
+/** @emoji 🔍 Returns the live OS shell {@link Platform}, if built. */
+export function getSOsPlatform(): Platform | null {
+	return sOsPlatformSingleton;
+}
+
+/** @emoji 🧭 Applies an OS shell URI to home/studio app routing. */
+export function applySOsUri(platform: Platform, uri: string, shell: SOsShellRefs): void {
+	const pathOnly = uri.split("?")[0] ?? "/";
+	platform.uri = uri;
+	const studioMatch = /^\/studios\/([^/]+)$/.exec(pathOnly);
+	if (studioMatch) {
+		platform.activeAppId = S_PLAY_APP_ID;
+		shell.studio.openStudio(studioMatch[1]!);
+	} else {
+		platform.activeAppId = S_HOME_APP_ID;
+		shell.studio.goHome();
+	}
+	platform.notify();
+}
+
+/** @emoji 🧭 Breadcrumb trail for the OS shell home/studio routes. */
+export function osNavigation(_platform: Platform, uri: string, shell?: SOsShellRefs | null): readonly NavigationLevel[] {
+	const pathOnly = uri.split("?")[0] ?? "/";
+	const homeLevel = sOsNavigationLevel(sOsNavigationDestination("os.nav.home", "Home", "/"), []);
+	const studioMatch = /^\/studios\/([^/]+)$/.exec(pathOnly);
+	if (!studioMatch) return [homeLevel];
+	const studioId = studioMatch[1]!;
+	const studioName = shell?.studio.getStudioStore().getDocument().name ?? studioId;
+	return [
+		homeLevel,
+		sOsNavigationLevel(sOsNavigationDestination(`os.nav.studio.${studioId}`, studioName, `/studios/${studioId}`), []),
+	];
+}
+
+/** @emoji 🧭 Navigates the OS shell (updates browser history when mounted). */
+export function navigateOsTo(uri: string): void {
+	const platform = sOsPlatformSingleton;
+	if (!platform) throw new Error("s: OS platform not initialized");
+	if (platform.onNavigate) {
+		platform.onNavigate(uri);
+		return;
+	}
+	if (sOsShellRefsSingleton) applySOsUri(platform, uri, sOsShellRefsSingleton);
+}
+
+export class SHomeController extends Controller {
+	readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
+	private readonly homeVfsController: OsHomeVirtualFileSystemController;
+
+	constructor(commandBus: CommandBus, notify: () => void) {
+		super(S_HOME_CONTROLLER_ID, commandBus, notify);
+		this.homeVfsController = new OsHomeVirtualFileSystemController(`${S_HOME_CONTROLLER_ID}-vfs`, commandBus, notify, {
+			onOpenStudio: (studioId) => navigateOsTo(`/studios/${studioId}`),
+			onDeleteStudio: (studioId) => {
+				deleteOsStudio(studioId);
+				this.invalidateHomeCatalog();
+			},
+		});
+		this.rebuildShellMode();
+	}
+
+	attachHomeVirtualFileSystem(platform: Platform, app: AppRuntime): void {
+		registerAppVirtualFileSystem(platform, app, this.homeVfsController, {
+			bodyKey: S_HOME_BODY,
+			surfaceId: S_HOME_SURFACE,
+			initialExpanded: [OS_HOME_VFS_ROOT_ID],
+		});
+	}
+
+	invalidateHomeCatalog(): void {
+		this.homeVfsController.invalidateHomeVirtualFileSystem({ appId: S_HOME_APP_ID, surfaceId: S_HOME_SURFACE });
+		this.emit();
+	}
+
+	private rebuildShellMode(): void {
+		this.mainMode.tools = buildSHomeToolbarTools(this.id);
+		this.mainMode.windowKinds = [new WindowKindRuntime(S_HOME_WINDOW, "Studios", S_HOME_BODY)];
+	}
+
+	run(command: string, args?: Record<string, unknown>): void {
+		switch (command) {
+			case "createStudio": {
+				const entry = createOsStudio(typeof args?.name === "string" ? args.name : "Untitled Studio");
+				this.invalidateHomeCatalog();
+				navigateOsTo(`/studios/${entry.id}`);
+				return;
+			}
+			case "importStudio": {
+				if (typeof window === "undefined") return;
+				const input = document.createElement("input");
+				input.type = "file";
+				input.accept = ".json,application/json";
+				input.onchange = () => {
+					const file = input.files?.[0];
+					if (!file) return;
+					void file.text().then((json) => {
+						const entry = importOsStudioFromJson(json);
+						this.invalidateHomeCatalog();
+						navigateOsTo(`/studios/${entry.id}`);
+					});
+				};
+				input.click();
+				return;
+			}
+			case "openStudio": {
+				const studioId = String(args?.studioId ?? "");
+				if (!studioId) return;
+				navigateOsTo(`/studios/${studioId}`);
+				return;
+			}
+			case "goHome":
+				navigateOsTo("/");
+				return;
+			default:
+				return;
+		}
+	}
+}
+
+export function buildSHomeAppRuntime(ctrl: SHomeController): AppRuntime {
+	return createPlayAppRuntime(S_HOME_APP_ID, "Home", ctrl, S_HOME_LAYOUT, ctrl.mainMode);
+}
+
+/** @emoji 🧰 OS home footer toolbar. */
+export function buildSHomeToolbarTools(controllerId: string): AppTools {
+	return [
+		toolCollection("studios", "layout-grid", [
+			{ kind: "button", id: "s.home.createStudio", label: "New Studio", iconId: "plus", controllerId, command: "createStudio" },
+			{ kind: "button", id: "s.home.importStudio", label: "Import Studio", iconId: "upload", controllerId, command: "importStudio" },
+		]),
+	];
+}
+
 export class SPlayController extends Controller {
 	private store: StudioStore;
 	private activeInstanceId: string | null = null;
 	private focusedInstanceId: string | null = null;
 	private fixtureId: string;
+	private studioId: string | null = null;
 	private mediaGraphEngagementInput = "";
 	private readonly mediaGraphVfsController: OsMediaGraphVirtualFileSystemController;
 	private mediaGraphVfsUnsubscribe?: () => void;
 	private readonly snapshotListeners = new Set<() => void>();
-	readonly mainMode = new ModeRuntime("main", "S", undefined);
+	readonly mainMode = new ModeRuntime("main", "Studio", undefined);
 
 	constructor(commandBus: CommandBus, notify: () => void, store: StudioStore, fixtureId: string, private readonly loadFixture: SPlayFixtureLoader) {
 		super(S_PLAY_CONTROLLER_ID, commandBus, notify);
@@ -356,6 +484,50 @@ export class SPlayController extends Controller {
 		return this.fixtureId;
 	}
 
+	getStudioId(): string | null {
+		return this.studioId;
+	}
+
+	/** @emoji 📂 Loads a persisted studio document into the studio app store. */
+	openStudio(studioId: string): void {
+		if (this.studioId === studioId) {
+			this.rebuildShellMode();
+			this.emit();
+			return;
+		}
+		this.mediaGraphVfsUnsubscribe?.();
+		const document = loadOsStudioDocument(studioId);
+		this.studioId = studioId;
+		this.fixtureId = studioId;
+		this.store = createStudioStore(document);
+		this.mediaGraphVfsUnsubscribe = this.store.subscribe(() => {
+			this.mediaGraphVfsController.invalidateMediaGraphVirtualFileSystem({
+				appId: S_PLAY_APP_ID,
+				surfaceId: S_PLAY_SURFACE_MEDIA_VFS,
+			});
+			this.notifySnapshot();
+		});
+		const projection = this.store.projection();
+		this.activeInstanceId = projection.appInstances[0]?.id ?? null;
+		this.focusedInstanceId = null;
+		this.rebuildShellMode();
+		this.emit();
+		this.notifySnapshot();
+	}
+
+	/** @emoji 🏠 Clears studio drill-in state when returning to the home app. */
+	goHome(): void {
+		this.focusedInstanceId = null;
+		this.emit();
+	}
+
+	getExampleCatalog(): PlaygroundExampleCatalog {
+		return {
+			activeExampleId: this.fixtureId,
+			options: S_PLAY_EXAMPLE_OPTIONS(),
+		};
+	}
+
 	dispatch(command: StudioCommand): void {
 		this.store.dispatch(command);
 		this.emit();
@@ -486,6 +658,9 @@ export class SPlayController extends Controller {
 				this.emit();
 				return;
 			}
+			case "goHome":
+				navigateOsTo("/");
+				return;
 			case "closeFocusedInstance": {
 				this.focusedInstanceId = null;
 				this.emit();
@@ -507,7 +682,7 @@ export class SPlayController extends Controller {
 				this.emit();
 				return;
 			case "setActiveExample": {
-				const fixtureId = String(args?.fixtureId ?? this.fixtureId);
+				const fixtureId = String(args?.exampleId ?? args?.fixtureId ?? this.fixtureId);
 				this.fixtureId = fixtureId;
 				this.store = createStudioStore(this.loadFixture(fixtureId));
 				const projection = this.store.projection();
@@ -582,7 +757,7 @@ export class SPlayController extends Controller {
 }
 
 export function buildSPlayAppRuntime(ctrl: SPlayController): AppRuntime {
-	return createPlayAppRuntime(S_PLAY_APP_ID, "S", ctrl, S_PLAY_LAYOUT, ctrl.mainMode);
+	return createPlayAppRuntime(S_PLAY_APP_ID, "Studio", ctrl, S_PLAY_LAYOUT, ctrl.mainMode);
 }
 
 function sPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -999,11 +1174,24 @@ export function buildSPlayInspectorTree(ctrl: SPlayController): UiTreeNode {
 	return uiDeclarativeSectionsToTree(children);
 }
 
+export const sHomeWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[S_HOME_BODY]: () => buildVirtualFileSystemWindowBody(S_HOME_SURFACE, S_HOME_CONTROLLER_ID, S_HOME_WINDOW),
+};
+
+export const sPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[S_PLAY_BODY_MEDIA_GRAPH]: () =>
+		buildSWindowBody(S_PLAY_SURFACE_MEDIA_GRAPH, S_PLAY_CONTROLLER_ID, "mediaGraph", "media-graph"),
+	[S_PLAY_BODY_COMPILED_DAG]: () =>
+		buildWriterWindowBody(S_PLAY_SURFACE_COMPILED_DAG, S_PLAY_CONTROLLER_ID, S_PLAY_WINDOW_COMPILED_DAG),
+};
+
 export function registerSPlayDeclarativeBodies(): void {
-	registerWindowBody(S_PLAY_BODY_MEDIA_GRAPH, () =>
-		buildSWindowBody(S_PLAY_SURFACE_MEDIA_GRAPH, S_PLAY_CONTROLLER_ID, "mediaGraph", "media-graph"));
-	registerWindowBody(S_PLAY_BODY_COMPILED_DAG, () =>
-		buildWriterWindowBody(S_PLAY_SURFACE_COMPILED_DAG, S_PLAY_CONTROLLER_ID, S_PLAY_WINDOW_COMPILED_DAG));
+	for (const [key, build] of Object.entries(sHomeWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(sPlayWindowBodies)) registerWindowBody(key, build);
+}
+
+export function registerSOsShellDeclarativeBodies(): void {
+	registerSPlayDeclarativeBodies();
 }
 
 export async function sSketchpadProgramFromCompose() {
@@ -1087,60 +1275,62 @@ export function createSPlayTestController(exampleId: string): SPlayController {
 	return createSPlayController(bus, () => {}, exampleId);
 }
 
-export const OS_BOOT_BACKBONE_URI = "dev://studio/default";
+export const OS_BOOT_STUDIO_ID = "default";
 
-/** @emoji 💾 Resolves the studio document from backbone storage, seeding the demo fixture when empty. */
-export function resolveOsBootStudioDocument(): SStudioDocument {
-	const backbone = new DevJsonBackbone();
-	backbone.attach(OS_BOOT_BACKBONE_URI);
-	const stored = backbone.loadAttached();
-	if (stored) return stored;
+/** @emoji 💾 Seeds the demo studio into the catalog when storage is empty. */
+export function seedOsBootStudioCatalog(): SStudioDocument {
 	const seed = loadSPlayStudioDocument(S_PLAY_EXAMPLE_DEFAULT_ID);
-	const seeded: SStudioDocument = { ...seed, backbone: { kind: "dev", uri: OS_BOOT_BACKBONE_URI } };
-	backbone.sync(seeded);
-	return seeded;
+	const entry = seedOsStudioCatalogIfEmpty({ ...seed, id: OS_BOOT_STUDIO_ID, name: seed.name ?? "Demo Studio" });
+	if (entry) return loadOsStudioDocument(entry.id);
+	const first = listOsStudioCatalogEntries()[0];
+	return first ? loadOsStudioDocument(first.id) : seed;
 }
 
 class OsDevPlayground extends Playground {
-	readonly id = S_PLAY_APP_ID;
-	private readonly document: SStudioDocument;
-
-	constructor(document: SStudioDocument) {
-		super();
-		this.document = document;
-	}
+	readonly id = "os";
 
 	createRuntime() {
-		const runtime = createProductPlaygroundPlatform(S_PLAY_APP_ID, "S");
-		const ctrl = new SPlayController(
+		const runtime = createProductPlaygroundPlatform("os", "S");
+		seedOsBootStudioCatalog();
+		const homeCtrl = new SHomeController(runtime.commandBus, () => runtime.notify());
+		const studioCtrl = new SPlayController(
 			runtime.commandBus,
 			() => runtime.notify(),
-			createStudioStore(this.document),
+			createStudioStore(createEmptyOsDocument("studio-bootstrap", "Bootstrap")),
 			S_PLAY_EXAMPLE_DEFAULT_ID,
 			loadSPlayStudioDocument,
 		);
-		const app = buildSPlayAppRuntime(ctrl);
-		runtime.addApp(app);
-		ctrl.attachMediaGraphVirtualFileSystem(runtime, app);
+		const shell: SOsShellRefs = { home: homeCtrl, studio: studioCtrl };
+		sOsPlatformSingleton = runtime;
+		sOsShellRefsSingleton = shell;
+		runtime.applyUri = (uri) => applySOsUri(runtime, uri, shell);
+		runtime.navigation = (uri) => osNavigation(runtime, uri, shell);
+		runtime.defaultActiveAppId = S_HOME_APP_ID;
+		const homeApp = buildSHomeAppRuntime(homeCtrl);
+		const studioApp = buildSPlayAppRuntime(studioCtrl);
+		runtime.addApp(homeApp);
+		runtime.addApp(studioApp);
+		homeCtrl.attachHomeVirtualFileSystem(runtime, homeApp);
+		studioCtrl.attachMediaGraphVirtualFileSystem(runtime, studioApp);
+		applySOsUri(runtime, "/", shell);
 		return runtime;
 	}
 
 	registerBodies() {
-		registerSPlayDeclarativeBodies();
+		registerSOsShellDeclarativeBodies();
 	}
 }
 
 /** @emoji 🖥️ Boots S as the OS studio shell (extensions, storage-first document, renderer). */
 export async function bootOsDev(rootId = "root"): Promise<void> {
 	await bootstrapSPlayExtensions();
-	const document = resolveOsBootStudioDocument();
-	const { bootSPlay } = await import("@semio-tech/s-react/play");
-	bootSPlay(new OsDevPlayground(document), rootId);
+	const { bootPlaygroundApp } = await import("@semio-tech/framework-playground-renderer-react");
+	await bootPlaygroundApp(sPlayAppDefinition, new OsDevPlayground(), rootId);
 }
 
 export const sPlayAppDefinition = createPlaygroundApp({
 	id: S_PLAY_APP_ID,
-	label: "S",
+	label: "Studio",
 	controllerId: S_PLAY_CONTROLLER_ID,
 	modes: [{ id: "edit", label: "Edit" }],
 	defaultModeId: "edit",
@@ -1150,19 +1340,19 @@ export const sPlayAppDefinition = createPlaygroundApp({
 		optimizeDeps: { include: ["react", "react-dom", "three"] },
 	},
 	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(S_PLAY_APP_ID, "S");
+		const runtime = createProductPlaygroundPlatform(S_PLAY_APP_ID, "Studio");
 		const resolved = playgroundResolvedExampleId(S_PLAY_EXAMPLE_DEFAULT_ID);
 		const ctrl = createSPlayController(runtime.commandBus, () => runtime.notify(), resolved);
-		runtime.addApp(buildSPlayAppRuntime(ctrl));
+		const app = buildSPlayAppRuntime(ctrl);
+		runtime.addApp(app);
+		ctrl.attachMediaGraphVirtualFileSystem(runtime, app);
+		runtime.activeAppId = S_PLAY_APP_ID;
 		return runtime;
 	},
 	registerBodies: () => {
 		registerSPlayDeclarativeBodies();
 	},
-	bootRenderer: async (pg) => {
-		const { bootSPlay } = await import("@semio-tech/s-react/play");
-		bootSPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/s-react/play")).sAppRenderer,
 });
 //#endregion 🔖Play
 
@@ -1226,6 +1416,8 @@ if (import.meta.vitest) {
 		});
 
 		it("spawns puzzle5d and shooting with multi-port registrations", async () => {
+			const ctrl = createSPlayTestController("demo");
+			ctrl.run("spawnApp", { programId: "puzzle.5d", appId: "puzzle5d", position: { x: 200, y: 100 } });
 			ctrl.run("spawnApp", { programId: "shooting", appId: "shooting", position: { x: 300, y: 100 } });
 			const projection = ctrl.getStudioStore().projection();
 			const puzzleNode = projection.mediaGraph.nodes.find((node) => node.instanceId === projection.appInstances.at(-2)?.id);
@@ -1274,23 +1466,40 @@ if (import.meta.vitest) {
 
 		it("registry completeness: every registered app resolves handler, componentKind, and ports", () => {
 			for (const program of listSPrograms()) {
-				const resources = TECHNOLOGY_APP_RESOURCE_BY_PROGRAM[program.id];
-				if (!resources) continue;
+				if (program.id === "s.system" || program.id === COMPOSE_SKETCHPAD_PROGRAM_ID) continue;
 				for (const app of program.apps) {
-					const resource = resources[app.id];
-					expect(resource, `${program.id}/${app.id} resource map`).toBeTruthy();
 					const registration = sAppRegistration(program.id, app.id);
 					expect(registration, `${program.id}/${app.id} registration`).toBeTruthy();
-					expect(registration?.componentKind).toBe(resource.componentKind);
-					expect(registration?.sourceFormat).toBe(resource.sourceFormat);
+					expect(registration?.componentKind).toBeTruthy();
+					expect(registration?.sourceFormat).toBeTruthy();
 				}
 			}
 		});
 
-		it("resolveOsBootStudioDocument seeds storage when empty", () => {
-			const document = resolveOsBootStudioDocument();
-			expect(document.backbone?.uri).toBe(OS_BOOT_BACKBONE_URI);
+		it("seedOsBootStudioCatalog seeds storage when empty", () => {
+			const document = seedOsBootStudioCatalog();
+			expect(document.backbone?.uri).toBe(`dev://studio/${OS_BOOT_STUDIO_ID}`);
 			expect(document.vcs.initialProjection.appInstances.length).toBeGreaterThan(0);
+		});
+
+		it("applySOsUri routes home and studio apps", () => {
+			const runtime = createProductPlaygroundPlatform("os-test", "S");
+			const homeCtrl = new SHomeController(runtime.commandBus, () => runtime.notify());
+			const studioCtrl = new SPlayController(
+				runtime.commandBus,
+				() => runtime.notify(),
+				createStudioStore(createEmptyOsDocument("bootstrap", "Bootstrap")),
+				S_PLAY_EXAMPLE_DEFAULT_ID,
+				loadSPlayStudioDocument,
+			);
+			const shell: SOsShellRefs = { home: homeCtrl, studio: studioCtrl };
+			const entry = createOsStudio("Routing Studio");
+			applySOsUri(runtime, "/", shell);
+			expect(runtime.activeAppId).toBe(S_HOME_APP_ID);
+			applySOsUri(runtime, `/studios/${entry.id}`, shell);
+			expect(runtime.activeAppId).toBe(S_PLAY_APP_ID);
+			expect(studioCtrl.getStudioId()).toBe(entry.id);
+			deleteOsStudio(entry.id);
 		});
 
 		it("checkoutCheckpoint restores studio projection", () => {

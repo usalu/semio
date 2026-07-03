@@ -20,7 +20,9 @@
     "@semio-tech/framework-playground-renderer-react": "workspace:*",
     "@semio-tech/framework-platform-renderer-react": "workspace:*",
     "@semio-tech/framework-core": "workspace:*",
-    "@semio-tech/framework-playground-core": "workspace:*"
+    "@semio-tech/framework-playground-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-renderer-react": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",

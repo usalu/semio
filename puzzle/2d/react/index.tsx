@@ -20,7 +20,7 @@ import {
   type RenderMode,
 } from "@semio-tech/infinite-cavas-react-renderer";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
-import { type TreeDragAndDropController, CanvasPickMenu, classifyIconSelectorMode, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget, type IconSelectorMode } from "@semio-tech/ui-react";
+import { type TreeDragAndDropController, CanvasPickMenu, classifyIconSelectorMode, cn, glassMenuClass, normalizeEngagementCommandText, resolveIconUrlsInBoardJson, useCanvasPickInteraction, useCanvasThemeSync, type CanvasPickTarget, type IconSelectorMode } from "@semio-tech/ui-react";
 import { createPortal } from "react-dom";
 import {
   blendTokenHex,
@@ -30,7 +30,7 @@ import {
   resolveColorHex,
   resolveColorRgba,
   semanticVar,
-  serializeGraphVelloThemePaletteJson,
+  serializeGraphCanvasThemePaletteJson,
   themeColorVar,
   tokenHex,
   tokenVar,
@@ -1993,8 +1993,8 @@ function puzzle2dDefaultStylesFromElementsUiTokens(): Record<string, Puzzle2dSty
   };
 }
 
-function serializePuzzle2dVelloThemeJson(): string {
-  return serializeGraphVelloThemePaletteJson(currentStylingThemeName());
+function serializePuzzle2dCanvasThemeJson(): string {
+  return serializeGraphCanvasThemePaletteJson(currentStylingThemeName());
 }
 //#endregion 🎨ElementsUiPuzzle2dPaint
 
@@ -4763,7 +4763,7 @@ export class Puzzle2dRenderer {
   private hostDeclarativeSceneDescriptor: Puzzle2dSceneDescriptor | null = null;
   private sceneDescriptorEpoch = 0;
   private lastPushedSceneDescriptorEpoch = -1;
-  private lastVelloThemeJson = "";
+  private lastCanvasThemeJson = "";
   private textOverlayContentEpoch = 0;
   private readonly textOverlayLayoutCache = new Map<string, { readonly line: string; readonly fontPx: number }>();
   private textOverlayPainted = false;
@@ -4777,7 +4777,7 @@ export class Puzzle2dRenderer {
   private lastOverlaySelection: Puzzle2dSelectionSnapshot | null = null;
   private lastOverlayPreselect: Puzzle2dPreselectSnapshot | null = null;
   private lastOverlayContentEpoch = -1;
-  private lastOverlayVelloThemeJson = "";
+  private lastOverlayCanvasThemeJson = "";
   private lastDescriptorPushDeferred = false;
   private wasmDeferHadStructuralMutation = false;
   private lastAppliedChromeSelectedIds = new Set<string>();
@@ -6431,13 +6431,13 @@ export class Puzzle2dRenderer {
       return;
     }
     try {
-      const json = serializePuzzle2dVelloThemeJson();
-      if (json !== this.lastVelloThemeJson) {
-        this.lastVelloThemeJson = json;
-        this.session.setVelloThemeJson(json);
+      const json = serializePuzzle2dCanvasThemeJson();
+      if (json !== this.lastCanvasThemeJson) {
+        this.lastCanvasThemeJson = json;
+        this.session.setCanvasThemeJson(json);
       }
     } catch {
-      this.lastVelloThemeJson = "";
+      this.lastCanvasThemeJson = "";
     }
     const styles = puzzle2dDefaultStylesFromElementsUiTokens();
     for (const [key, value] of Object.entries(styles)) {
@@ -7024,7 +7024,7 @@ export class Puzzle2dRenderer {
       lod !== this.lastOverlayLod;
     return (
       this.textOverlayContentEpoch !== this.lastOverlayContentEpoch ||
-      this.lastVelloThemeJson !== this.lastOverlayVelloThemeJson ||
+      this.lastCanvasThemeJson !== this.lastOverlayCanvasThemeJson ||
       selectionChromeDirty ||
       viewportDirty
     );
@@ -7103,7 +7103,7 @@ export class Puzzle2dRenderer {
     this.lastOverlaySelection = this.selectionStore.getSnapshot();
     this.lastOverlayPreselect = this.preselectStore.getSnapshot();
     this.lastOverlayContentEpoch = this.textOverlayContentEpoch;
-    this.lastOverlayVelloThemeJson = this.lastVelloThemeJson;
+    this.lastOverlayCanvasThemeJson = this.lastCanvasThemeJson;
   }
 
   /** @emoji 🎨 Effective node fill ref for label contrast (catalog color in base chrome, else themed chrome fill). */
@@ -8714,7 +8714,7 @@ if (puzzle2dVitest) {
       renderer.markDirty();
       expect(renderer.textOverlayDirty()).toBe(true);
       renderer["rememberTextOverlayPainted"]({ ...renderer.camera }, renderer.effectiveDrawLodLabel());
-      renderer["lastVelloThemeJson"] = '{"changed":true}';
+      renderer["lastCanvasThemeJson"] = '{"changed":true}';
       expect(renderer.textOverlayDirty()).toBe(true);
       renderer.dispose();
     });
@@ -14538,7 +14538,7 @@ export function Puzzle2dCanvas({
     };
   }, [contextRenderer, renderMode]);
 
-  useVelloThemeSync(() => {
+  useCanvasThemeSync(() => {
     rendererRef.current?.invalidate();
   }, renderMode !== "headless-test");
 

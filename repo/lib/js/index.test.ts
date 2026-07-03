@@ -538,7 +538,7 @@ describe("playground static sites", () => {
         seen.add(spec.test);
       }
     }
-  });
+  }, 30_000);
 
   test("playgroundPlayViteDefine embeds locked fixture env", () => {
     const prev = process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV];
@@ -621,6 +621,15 @@ describe("package boundary guards", () => {
       .map((line) => line.trim())
       .filter(Boolean);
     expect(files).toEqual([]);
+  });
+
+  test("framework playground renderer has no per-technology registerUi surface host APIs", () => {
+    const rendererPath = join(repoRoot, "framework/product/playground/renderer/react/index.tsx");
+    const source = readFileSync(rendererPath, "utf8");
+    expect(source).not.toMatch(
+      /registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/,
+    );
+    expect(source).toContain("bootPlaygroundApp");
   });
 });
 

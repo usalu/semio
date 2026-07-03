@@ -877,9 +877,13 @@ export function buildNotePlayAppRuntime(ctrl: NotePlayController): AppRuntime {
 	return createPlayAppRuntime(NOTE_PLAY_APP_ID, "Note", ctrl, NOTE_PLAY_LAYOUT, ctrl.mainMode);
 }
 
+export const notePlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[NOTE_PLAY_BODY_KEY_COMPOSITE]: () => buildNoteWindowBody(NOTE_PLAY_SURFACE_ID_COMPOSITE, NOTE_PLAY_CONTROLLER_ID, "composite", "composite"),
+	[NOTE_PLAY_BODY_KEY_NAVIGATOR]: () => buildNoteWindowBody(NOTE_PLAY_SURFACE_ID_NAVIGATOR, NOTE_PLAY_CONTROLLER_ID, "navigator", "navigator"),
+};
+
 export function registerNotePlayDeclarativeBodies(): void {
-	registerWindowBody(NOTE_PLAY_BODY_KEY_COMPOSITE, () => buildNoteWindowBody(NOTE_PLAY_SURFACE_ID_COMPOSITE, NOTE_PLAY_CONTROLLER_ID, "composite", "composite"));
-	registerWindowBody(NOTE_PLAY_BODY_KEY_NAVIGATOR, () => buildNoteWindowBody(NOTE_PLAY_SURFACE_ID_NAVIGATOR, NOTE_PLAY_CONTROLLER_ID, "navigator", "navigator"));
+	for (const [key, build] of Object.entries(notePlayWindowBodies)) registerWindowBody(key, build);
 }
 
 //#region 🔖SExtension
@@ -896,6 +900,26 @@ export function buildNoteProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createNoteAppVcsHandler } from "./internal.ts";
+
+const noteProgramContributionResources = {
+		"note": osBaselineResource("2d.note", "note.document", "note"),
+	};
+
+/** @emoji 🧩 OS program contribution for note. */
+export const noteProgramContribution: OsProgramContribution = {
+	programId: "note",
+	register() {
+		mergeOsProgramDefinition("note", buildNoteProgramDefinition(), noteProgramContributionResources);
+		registerNoteMediaExportHandlers();
+		registerAppVcsHandler(createNoteAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 //#region 🔖Play
 import { NOTE_PLAY_EXAMPLE_DEFAULT_ID } from "./example-slugs.ts";
@@ -962,9 +986,6 @@ export const notePlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildNotePlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerNotePlayDeclarativeBodies();
-	},
 	keybindings: [
 		{ key: "ctrl+a,meta+a", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "selectAll" },
 		{ key: "delete,backspace", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "deleteSelection" },
@@ -981,10 +1002,7 @@ export const notePlayAppDefinition = createPlaygroundApp({
 		{ key: "shift+left", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: -10, dy: 0 } },
 		{ key: "shift+right", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: 10, dy: 0 } },
 	],
-	bootRenderer: async (pg) => {
-		const { bootNotePlay } = await import("@semio-tech/note-react/play");
-		bootNotePlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/note-react/play")).noteAppRenderer,
 });
 //#endregion 🔖Play
 

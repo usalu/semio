@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use infinite_cavas::camera::{self, Camera, Viewport};
 use js_sys::Promise;
-use vello::kurbo::Point;
+use infinite_cavas::Point;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
 use web_sys::HtmlCanvasElement;

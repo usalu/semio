@@ -5,7 +5,8 @@
 import { createWriterDocument } from "@semio-tech/writer-core";
 import { WriterCanvas } from "@semio-tech/writer-react";
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, type Store, bootPlayground, mountPlaygroundApp, PlaygroundView, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiPuzzle3dSurfaceHost, registerUiPuzzle2dSurfaceHost, registerUiWriterSurfaceHost, registerTabIcon, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, registerWindowBody, uiDeclarativeSectionsToTree } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution, PlaygroundMountProps } from "@semio-tech/framework-platform-core";
+import { type Store, PlaygroundView, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, uiDeclarativeSectionsToTree, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { reactHostPort, createIconComponent } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig, UiTreeNode, UiPuzzle2dHostSurfaceNode, UiPuzzle3dHostSurfaceNode } from "@semio-tech/framework-playground-core";
 import * as React from "react";
@@ -21,6 +22,7 @@ import {
     PUZZLE_5D_PLAY_JACK_WINDOW_ID,
     PUZZLE_5D_PLAY_APP_ID,
     PUZZLE_5D_PLAY_CONTROLLER_ID,
+    PUZZLE_5D_PLAY_EXAMPLE_OPTIONS,
     PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
     PUZZLE_5D_PLAY_ICON_KINDS,
     PUZZLE_5D_PLAY_KINDS_TAB_ID,
@@ -35,8 +37,34 @@ import {
     buildPuzzle5dPlayKindsTree,
     puzzle5dFixturePaletteTreeDragController,
     type Puzzle5dPlayHostBridge,
-    type Puzzle5dPlaySnapshot
+    type Puzzle5dPlaySnapshot,
+    puzzle5dPlayWindowBodies,
 } from "@semio-tech/puzzle-5d-core";
+
+import { puzzle2dBrushCandidateDisplayLabels, type Puzzle2dBrushCandidatesPayload, type Puzzle2dDrawLodKind, type Puzzle2dFixtureDropDetail, type Puzzle2dSelectionMethod, type Puzzle2dSelectionMode, type Puzzle2dSelectionTargets } from "@semio-tech/puzzle-2d-core";
+import {
+  puzzle2dActiveRenderer,
+  puzzle2dGetBrushSessionSnapshot,
+  puzzle2dSetBrushPlaceCommitHandler,
+} from "@semio-tech/puzzle-2d-react";
+import { brushMeshUrlsForFillSession, isLoadableMeshUrl, puzzle3dBrushMeshRootForFill, resolvePuzzle3dFixtureDrop, type Puzzle3dFixtureDropDetail, installPuzzle3dPlayBrushHost } from "@semio-tech/puzzle-3d-core";
+import { puzzle3dBrushEngagementSourceRef } from "@semio-tech/puzzle-3d-react";
+import {
+  FiveD,
+  StoreProvider,
+  Puzzle5dBrushPairedSync,
+  useStore,
+  project2dKindCatalogs,
+  project3dKindCatalogs,
+  project3d,
+  buildPuzzle5dFillSequence,
+  puzzle5dBrushPlacementFromFlat,
+  puzzle5dCommitBrushPlacementToPlay,
+  puzzle5dBrushPlacementFromVolume,
+  puzzle5dCommitVolumeBrushPlacementToPlay,
+  puzzle5dFlatRendererRef,
+  type Store as Puzzle5dStore,
+} from "./index.tsx";
 
 // #endregion 🔌Adapters
 
@@ -208,7 +236,7 @@ function puzzle5dBrushCandidateRows(payload: Puzzle2dBrushCandidatesPayload, kin
 }
 
 function usePuzzle5dPlayStore(): Puzzle5dStore {
-  return usePuzzle5dStore();
+  return useStore();
 }
 //#endregion 🔖HostBridge
 
@@ -543,29 +571,13 @@ function Puzzle5dPlayJackSurfaceHost({ node: _node }: { readonly node: import("@
   );
 }
 
-//#region 🔖Mount
-let topologyPlayChromeRegistered = false;
-
-/** @emoji 🧊 Registers topology play flat+volume surface hosts (called from `@semio-tech/framework-playground-renderer-react`). */
-export function registerPuzzle5dPlaySurfaceHosts(): void {
-  if (topologyPlayChromeRegistered) return;
-  topologyPlayChromeRegistered = true;
-  registerUiPuzzle2dSurfaceHost(PUZZLE_5D_PLAY_2D_SURFACE_ID, Puzzle5d2dSurfaceHost);
-  registerUiPuzzle3dSurfaceHost(PUZZLE_5D_PLAY_3D_SURFACE_ID, Puzzle5d3dSurfaceHost);
-  registerUiWriterSurfaceHost(PUZZLE_5D_PLAY_JACK_SURFACE_ID, Puzzle5dPlayJackSurfaceHost);
-  registerTabIcon(PUZZLE_5D_PLAY_ICON_KINDS, "tags");
-  registerWindowBody(PUZZLE_5D_PLAY_2D_BODY_KEY, buildPuzzle5d2dDeclarativeBody);
-  registerWindowBody(PUZZLE_5D_PLAY_3D_BODY_KEY, buildPuzzle5d3dDeclarativeBody);
-  registerWindowBody(PUZZLE_5D_PLAY_JACK_BODY_KEY, buildPuzzle5dJackDeclarativeBody);
-}
-
 function Puzzle5dPlayChrome({
   runtime,
   playgroundKeybindings,
 }: {
   readonly runtime: Platform;
   readonly playgroundKeybindings?: readonly { readonly key: string; readonly controllerId: string; readonly command: string }[];
-}): React.ReactElement {
+}): ReactElement {
   const generation = reactHostPort.useSyncExternalStore(
     (listener) => runtime.subscribe(listener),
     () => runtime.generation,
@@ -594,12 +606,17 @@ function Puzzle5dPlayChrome({
     () => (snapshot ? [new Puzzle5dPlayInspectorPanelDefinition(() => buildPuzzle5dPlayInspectorTreePanel(snapshot), bus).resolveTab()] : []),
     [snapshot, snapshotKey, bus],
   );
+  const exampleContribution = reactHostPort.useMemo(
+    () => controllerBackedExampleContribution(PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_EXAMPLE_OPTIONS),
+    [],
+  );
   const shell = (
     <PlaygroundView
       runtime={runtime}
       defaultAppId={PUZZLE_5D_PLAY_APP_ID}
       playgroundKeybindings={playgroundKeybindings}
       augmentPanelTabs={{ workbench: workbenchTabs, details: detailTabs }}
+      exampleContribution={exampleContribution}
     />
   );
   if (!controller) {
@@ -616,22 +633,24 @@ function Puzzle5dPlayChrome({
   );
 }
 
-/** @emoji 🚀 Mounts puzzle 5d play chrome for a {@link Playground}. */
-export function mountPuzzle5dPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<Puzzle5dPlayChrome runtime={playground.runtime} playgroundKeybindings={playground.keybindings} />, rootId);
+function puzzle5dMountChrome({ runtime }: PlaygroundMountProps): ReactElement {
+  return <Puzzle5dPlayChrome runtime={runtime as Platform} />;
 }
 
-const topologyPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerPuzzle5dPlaySurfaceHosts,
-  mount: mountPuzzle5dPlayChrome,
+/** @emoji 🛝 Puzzle 5D app renderer for playground and OS shells. */
+export const puzzle5dAppRenderer: AppRendererContribution = {
+  windowBodies: puzzle5dPlayWindowBodies,
+  surfaceHosts: {
+    [PUZZLE_5D_PLAY_2D_SURFACE_ID]: Puzzle5d2dSurfaceHost,
+    [PUZZLE_5D_PLAY_3D_SURFACE_ID]: Puzzle5d3dSurfaceHost,
+    [PUZZLE_5D_PLAY_JACK_SURFACE_ID]: Puzzle5dPlayJackSurfaceHost,
+  },
+  tabIcons: {
+    [PUZZLE_5D_PLAY_ICON_KINDS]: "tags",
+  },
+  mountChrome: puzzle5dMountChrome,
+  examples: controllerBackedExampleContribution(PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_EXAMPLE_OPTIONS),
 };
-
-/** @emoji 🛝 Puzzle 5d play entry: register hosts, bodies, mount chrome (from `puzzle/5d/play/index.ts`). */
-export function boot5dPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, topologyPlayChromeBoot, rootId);
-}
-
-//#endregion 🔖Mount
 
 // #endregion 🛝PlayHost
 //#endregion 🔖Puzzle5dPlayHost

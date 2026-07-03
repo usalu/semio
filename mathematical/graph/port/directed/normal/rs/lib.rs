@@ -6,10 +6,7 @@ pub mod board_host {
 
 #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
 
-use infinite_cavas::usvg;
-use infinite_cavas::vello::kurbo::{Affine, Circle, CubicBez, Point, Rect, Stroke, Vec2};
-use infinite_cavas::vello::peniko::{Blob, Color, Fill, ImageAlphaType, ImageBrush, ImageData, ImageFormat};
-use infinite_cavas::vello::Scene;
+use infinite_cavas::{Affine, Circle, CubicBez, Color, FillRule, Point, RasterImage, Rect, Scene, Stroke, Vec2};
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
@@ -19,7 +16,7 @@ use crate::{
     handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
     normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, property_bag_to_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveTool, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
     EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate,
-    NodeShape, SceneDescriptorJson, SelectionOptions, VelloThemePalette, WireData, WireKindDef,
+    NodeShape, SceneDescriptorJson, SelectionOptions, CanvasThemePalette, WireData, WireKindDef,
 };
 use infinite_cavas::camera::Camera;
 use mathematical_graph_manifest::manifest_by_id;
@@ -266,7 +263,7 @@ pub struct BoardHost {
     pub selection_preview_crossing: bool,
     /// Screen-space polyline preview (CSS px) while dragging a handle link before drop.
     pub link_screen_preview: Option<Vec<Point>>,
-    pub vello_theme: VelloThemePalette,
+    pub canvas_theme: CanvasThemePalette,
     /// @emoji 📐 Positive multiplier for LOD world grid steps (`10` / `5` / `1` base world units per band).
     pub grid_factor: f64,
     /// @emoji 🧲 When true, node drags snap to the finest visible LOD grid (step scales with `grid_factor`).
@@ -346,7 +343,7 @@ impl Default for BoardHost {
             selection_screen_preview: None,
             selection_preview_crossing: false,
             link_screen_preview: None,
-            vello_theme: VelloThemePalette::default(),
+            canvas_theme: CanvasThemePalette::default(),
             grid_factor: GRID_FACTOR_DEFAULT,
             grid_snap_enabled: false,
             preserve_original_element_style: false,
@@ -1190,7 +1187,7 @@ impl BoardHost {
         }
     }
 
-    fn node_fill_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn node_fill_for_style(theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.node_fill_hovered,
             BoardElementStyleKind::Selected => theme.node_fill_selected,
@@ -1200,7 +1197,7 @@ impl BoardHost {
         }
     }
 
-    fn node_stroke_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn node_stroke_for_style(theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.node_stroke_hovered,
             BoardElementStyleKind::Selected => theme.node_stroke_selected,
@@ -1210,7 +1207,7 @@ impl BoardHost {
         }
     }
 
-    fn resolve_handle_fill_color(&self, h: &HandleData, theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn resolve_handle_fill_color(&self, h: &HandleData, theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.handle_fill_hovered,
             BoardElementStyleKind::Selected => theme.handle_fill_selected,
@@ -1228,7 +1225,7 @@ impl BoardHost {
         }
     }
 
-    fn resolve_handle_stroke_color(&self, _h: &HandleData, theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn resolve_handle_stroke_color(&self, _h: &HandleData, theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.handle_stroke_hovered,
             BoardElementStyleKind::Selected => theme.handle_stroke_selected,
@@ -1238,7 +1235,7 @@ impl BoardHost {
         }
     }
 
-    fn edge_stroke_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn edge_stroke_for_style(theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.edge_stroke_hovered,
             BoardElementStyleKind::Selected => theme.edge_stroke_selected,
@@ -1260,7 +1257,7 @@ impl BoardHost {
         )
     }
 
-    fn resolve_node_fill_color(&self, n: &NodeData, theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn resolve_node_fill_color(&self, n: &NodeData, theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
         let theme_fill = Self::node_fill_for_style(theme, kind);
         match kind {
             BoardElementStyleKind::Hovered | BoardElementStyleKind::Selected | BoardElementStyleKind::Highlighted | BoardElementStyleKind::Disabled => theme_fill,
@@ -1275,17 +1272,17 @@ impl BoardHost {
     }
 
     fn edge_stroke_for_kind_pattern(pattern: EdgeStrokePattern, width: f64) -> Stroke {
-        use infinite_cavas::vello::kurbo::Cap;
+        use infinite_cavas::Cap;
         let mut stroke = Stroke::new(width);
         match pattern {
             EdgeStrokePattern::Solid => {}
             EdgeStrokePattern::Dashed => {
-                stroke.dash_pattern = vec![width * 3.0, width * 2.0].into();
+                stroke.set_dash_pattern(vec![width * 3.0, width * 2.0]);
             }
             EdgeStrokePattern::Dotted => {
-                stroke.dash_pattern = vec![width * 0.35, width * 1.65].into();
-                stroke.start_cap = Cap::Round;
-                stroke.end_cap = Cap::Round;
+                stroke.set_dash_pattern(vec![width * 0.35, width * 1.65]);
+                stroke.set_start_cap(Cap::Round);
+                stroke.set_end_cap(Cap::Round);
             }
         }
         stroke
@@ -1293,9 +1290,9 @@ impl BoardHost {
 
     fn resolve_edge_stroke_paint(&self, e: &EdgeData, chrome_pass: StyleChromePass, lod: BoardDrawLod, lod_scale_width: f64) -> (Color, Stroke, f64) {
         let style_kind = self.resolve_edge_style_kind(e, chrome_pass);
-        let chrome = Self::edge_stroke_for_style(&self.vello_theme, style_kind);
+        let chrome = Self::edge_stroke_for_style(&self.canvas_theme, style_kind);
         let kind_def = self.edge_kinds.get(e.edge_kind.as_str());
-        let base_color = kind_def.and_then(|d| d.color).unwrap_or(self.vello_theme.edge_stroke);
+        let base_color = kind_def.and_then(|d| d.color).unwrap_or(self.canvas_theme.edge_stroke);
         let stroke_color = match style_kind {
             BoardElementStyleKind::Neutral | BoardElementStyleKind::Original => base_color,
             _ if lod == BoardDrawLod::Minimap => chrome,
@@ -1328,7 +1325,7 @@ impl BoardHost {
     }
 
     fn append_edge_tip(scene: &mut Scene, tip: Point, dir: Vec2, color: Color, stroke_width: f64, tip_def: &EdgeTipDef) {
-        use infinite_cavas::vello::kurbo::BezPath;
+        use infinite_cavas::BezPath;
         let len = dir.hypot();
         if len < 1e-9 {
             return;
@@ -1347,7 +1344,7 @@ impl BoardHost {
                 path.line_to(base - n * half_w);
                 path.close_path();
                 if tip_def.filled {
-                    scene.fill(Fill::NonZero, Affine::IDENTITY, color, None, &path);
+                    scene.fill(FillRule::NonZero, Affine::IDENTITY, color, None, &path);
                 } else {
                     scene.stroke(&Stroke::new(sw.max(ui_styling::strokes::EDGE_TIP_MIN)), Affine::IDENTITY, color, None, &path);
                 }
@@ -1376,7 +1373,7 @@ impl BoardHost {
                 path.line_to(mid - n * half_w);
                 path.close_path();
                 if tip_def.filled {
-                    scene.fill(Fill::NonZero, Affine::IDENTITY, color, None, &path);
+                    scene.fill(FillRule::NonZero, Affine::IDENTITY, color, None, &path);
                 } else {
                     scene.stroke(&Stroke::new(sw.max(ui_styling::strokes::EDGE_TIP_MIN)), Affine::IDENTITY, color, None, &path);
                 }
@@ -1386,7 +1383,7 @@ impl BoardHost {
                 let center = tip - d * r;
                 let circle = Circle::new(center, r);
                 if tip_def.filled {
-                    scene.fill(Fill::NonZero, Affine::IDENTITY, color, None, &circle);
+                    scene.fill(FillRule::NonZero, Affine::IDENTITY, color, None, &circle);
                 } else {
                     scene.stroke(&Stroke::new(sw.max(ui_styling::strokes::EDGE_TIP_MIN)), Affine::IDENTITY, color, None, &circle);
                 }
@@ -1405,30 +1402,30 @@ impl BoardHost {
     fn append_edge_tips_on_curve(scene: &mut Scene, curve: &CubicBez, color: Color, stroke_w: f64, source: Option<&EdgeTipDef>, target: Option<&EdgeTipDef>) {
         let inset = stroke_w * 0.35;
         if let Some(tip_def) = target {
-            let mut tangent = curve.p3 - curve.p2;
+            let mut tangent = curve.p3() - curve.p2();
             if tangent.hypot() < 1e-9 {
-                tangent = curve.p3 - curve.p1;
+                tangent = curve.p3() - curve.p1();
             }
             if tangent.hypot() >= 1e-9 {
                 let dir = tangent / tangent.hypot();
-                let tip = curve.p3 - dir * inset;
+                let tip = curve.p3() - dir * inset;
                 Self::append_edge_tip(scene, tip, tangent, color, stroke_w, tip_def);
             }
         }
         if let Some(tip_def) = source {
-            let mut tangent = curve.p0 - curve.p1;
+            let mut tangent = curve.p0() - curve.p1();
             if tangent.hypot() < 1e-9 {
-                tangent = curve.p0 - curve.p2;
+                tangent = curve.p0() - curve.p2();
             }
             if tangent.hypot() >= 1e-9 {
                 let dir = tangent / tangent.hypot();
-                let tip = curve.p0 - dir * inset;
+                let tip = curve.p0() - dir * inset;
                 Self::append_edge_tip(scene, tip, tangent, color, stroke_w, tip_def);
             }
         }
     }
 
-    fn wire_stroke_for_style(theme: &VelloThemePalette, kind: BoardElementStyleKind) -> Color {
+    fn wire_stroke_for_style(theme: &CanvasThemePalette, kind: BoardElementStyleKind) -> Color {
         match kind {
             BoardElementStyleKind::Hovered => theme.wire_stroke_hovered,
             BoardElementStyleKind::Selected => theme.wire_stroke_selected,
@@ -2454,7 +2451,7 @@ impl BoardHost {
             return;
         }
         let preserve_original_style = false;
-        let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.vello_theme);
+        let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.canvas_theme);
         let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(icon_kind, icon_fg, icon_bg, preserve_original_style) else {
             return;
         };
@@ -2473,18 +2470,18 @@ impl BoardHost {
         let avail_w = 2.0 * sx_half;
         let avail_h = 2.0 * sy_half;
         let scale = (avail_w / bw).min(avail_h / bh);
-        let aff = Affine::translate((center_ds.x - scale * cx, center_ds.y - scale * cy)) * Affine::scale(scale);
+        let aff = Affine::IDENTITY.translate((center_ds.x - scale * cx, center_ds.y - scale * cy)) * Affine::IDENTITY.scale(scale);
         match shape {
             NodeShape::Circle => {
                 let r_clip = self.draw_space_len(radius, world_space) * clip_inset;
                 let disc = Circle::new(center_ds, r_clip);
-                scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
+                scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &disc);
                 match &body {
                     CachedIconBody::Vector(icon_scene) => {
                         scene.append(icon_scene, Some(aff));
                     }
                     CachedIconBody::Raster(img) => {
-                        scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                        scene.draw_image(img, aff);
                     }
                 }
                 scene.pop_layer();
@@ -2493,13 +2490,13 @@ impl BoardHost {
                 let hw = self.draw_space_len(width, world_space) * clip_inset * 0.5;
                 let hh = self.draw_space_len(height, world_space) * clip_inset * 0.5;
                 let clip_r = Rect::from_points(Point::new(center_ds.x - hw, center_ds.y - hh), Point::new(center_ds.x + hw, center_ds.y + hh));
-                scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
+                scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &clip_r);
                 match &body {
                     CachedIconBody::Vector(icon_scene) => {
                         scene.append(icon_scene, Some(aff));
                     }
                     CachedIconBody::Raster(img) => {
-                        scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                        scene.draw_image(img, aff);
                     }
                 }
                 scene.pop_layer();
@@ -2510,15 +2507,15 @@ impl BoardHost {
     fn paint_highlighted_node_preview(&self, scene: &mut Scene, _lod: BoardDrawLod, x: f64, y: f64, shape: NodeShape, radius: f64, width: f64, height: f64, icon_kind: Option<&str>, world_space: bool) {
         let center = Point::new(x, y);
         let style = BoardElementStyleKind::Highlighted;
-        let fill = Self::node_fill_for_style(&self.vello_theme, style);
-        let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style);
+        let fill = Self::node_fill_for_style(&self.canvas_theme, style);
+        let stroke_c = Self::node_stroke_for_style(&self.canvas_theme, style);
         let stroke = Stroke::new(ui_styling::strokes::NODE_BODY);
         match shape {
             NodeShape::Circle => {
                 let c = self.draw_space_point(center, world_space);
                 let r = self.draw_space_len(radius, world_space);
                 let circle = Circle::new(c, r);
-                scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+                scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &circle);
                 scene.stroke(&stroke, Affine::IDENTITY, stroke_c, None, &circle);
             }
             NodeShape::Rectangle => {
@@ -2527,7 +2524,7 @@ impl BoardHost {
                 let p0 = self.draw_space_point(Point::new(x - hw, y - hh), world_space);
                 let p1 = self.draw_space_point(Point::new(x + hw, y + hh), world_space);
                 let rect = Rect::from_points(p0, p1);
-                scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
+                scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &rect);
                 scene.stroke(&stroke, Affine::IDENTITY, stroke_c, None, &rect);
             }
         }
@@ -2624,12 +2621,12 @@ impl BoardHost {
         };
         let tgt_center = center;
         let curve = compute_edge_bezier_points(src_pos, tgt_pos, Point::new(src_node.x, src_node.y), tgt_center);
-        let p0 = self.draw_space_point(curve.p0, world_space);
-        let p1 = self.draw_space_point(curve.p1, world_space);
-        let p2 = self.draw_space_point(curve.p2, world_space);
-        let p3 = self.draw_space_point(curve.p3, world_space);
+        let p0 = self.draw_space_point(curve.p0(), world_space);
+        let p1 = self.draw_space_point(curve.p1(), world_space);
+        let p2 = self.draw_space_point(curve.p2(), world_space);
+        let p3 = self.draw_space_point(curve.p3(), world_space);
         let bez = CubicBez::new(p0, p1, p2, p3);
-        scene.stroke(&Stroke::new(ui_styling::strokes::WIRE_HIGHLIGHT), Affine::IDENTITY, self.vello_theme.wire_stroke_highlighted, None, &bez);
+        scene.stroke(&Stroke::new(ui_styling::strokes::WIRE_HIGHLIGHT), Affine::IDENTITY, self.canvas_theme.wire_stroke_highlighted, None, &bez);
     }
 
     /// @emoji 🧩 Selects world-space clip tiling for Vello scene construction (`none` | `world-clip`).
@@ -2656,8 +2653,8 @@ impl BoardHost {
         self.selection_screen_preview = points;
     }
 
-    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.vello_theme.merge_from_json(json)?;
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+        self.canvas_theme.merge_from_json(json)?;
         self.icon_paint_cache.clear();
         Ok(())
     }
@@ -4174,7 +4171,7 @@ impl BoardHost {
         let origin = self.world_to_screen(Point::new(0.0, 0.0));
         let x_off = ((origin.x % step) + step) % step;
         let y_off = ((origin.y % step) + step) % step;
-        let mut p = infinite_cavas::vello::kurbo::BezPath::new();
+        let mut p = infinite_cavas::BezPath::new();
         let mut x = x_off;
         while x <= w {
             p.move_to(Point::new(x, 0.0));
@@ -4222,16 +4219,16 @@ impl BoardHost {
         let c = self.draw_space_point(center, world_space);
         let r = self.draw_space_len(radius_world, world_space);
         let (fill, stroke_c, stroke_px) =
-            if let Some((f, s, sw)) = paint_override { (f, s, sw) } else { (self.resolve_handle_fill_color(h, &self.vello_theme, style_kind), self.resolve_handle_stroke_color(h, &self.vello_theme, style_kind), 2.0_f64) };
+            if let Some((f, s, sw)) = paint_override { (f, s, sw) } else { (self.resolve_handle_fill_color(h, &self.canvas_theme, style_kind), self.resolve_handle_stroke_color(h, &self.canvas_theme, style_kind), 2.0_f64) };
         let paint_fill = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill);
         let paint_stroke = matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Stroke);
         let paint_icons = draw_icon && matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Icons);
         let outward = if exterior_cap { self.nodes.get(h.node_id.as_str()).and_then(|n| handle_outward_at_node_rim(center, Point::new(n.x, n.y), n.shape, n.radius, n.width, n.height)) } else { None };
         if paint_fill {
             if let Some(out) = outward {
-                scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &handle_exterior_cap_fill_path(c, out, r));
+                scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &handle_exterior_cap_fill_path(c, out, r));
             } else {
-                scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &Circle::new(c, r));
+                scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &Circle::new(c, r));
             }
         }
         if paint_stroke {
@@ -4244,7 +4241,7 @@ impl BoardHost {
         if paint_icons {
             if let Some(k) = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
                 let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
-                let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.vello_theme);
+                let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.canvas_theme);
                 if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, icon_fg, icon_bg, preserve_original_style) {
                     let fit_inset = 0.62;
                     let s = self.draw_space_len(radius_world, world_space) * fit_inset;
@@ -4252,16 +4249,16 @@ impl BoardHost {
                     let cy = by + bh * 0.5;
                     let avail = 2.0 * s;
                     let scale = (avail / bw).min(avail / bh);
-                    let aff = Affine::translate((c.x - scale * cx, c.y - scale * cy)) * Affine::scale(scale);
+                    let aff = Affine::IDENTITY.translate((c.x - scale * cx, c.y - scale * cy)) * Affine::IDENTITY.scale(scale);
                     let r_clip = self.draw_space_len(radius_world, world_space) * 0.82;
                     let disc = Circle::new(c, r_clip);
-                    scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
+                    scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &disc);
                     match &body {
                         CachedIconBody::Vector(icon_scene) => {
                             scene.append(icon_scene, Some(aff));
                         }
                         CachedIconBody::Raster(img) => {
-                            scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                            scene.draw_image(img, aff);
                         }
                     }
                     scene.pop_layer();
@@ -4287,7 +4284,7 @@ impl BoardHost {
             let Some(wp) = self.indirect_handle_world_pos(h) else { continue };
             let style_kind = self.resolve_handle_style_kind(h, chrome_pass);
             let stroke_px = 2.0_f64;
-            let paint_override = if matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { Some((self.vello_theme.indirect_handle_fill, self.vello_theme.indirect_handle_stroke, stroke_px)) } else { None };
+            let paint_override = if matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { Some((self.canvas_theme.indirect_handle_fill, self.canvas_theme.indirect_handle_stroke, stroke_px)) } else { None };
             self.append_handle_marker(scene, h, wp, self.indirect_handle_marker_radius_world(h), false, style_kind, paint_override, world_space, NodeHandlePaintLayer::Full, false);
         }
     }
@@ -4320,8 +4317,8 @@ impl BoardHost {
         let resolved_style_kind = self.resolve_node_style_kind(n, chrome_pass);
         let style_kind = if link_compat && matches!(resolved_style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral) { BoardElementStyleKind::Highlighted } else { resolved_style_kind };
         let draw_node_stroke = lod != BoardDrawLod::Minimap || !matches!(style_kind, BoardElementStyleKind::Original | BoardElementStyleKind::Neutral);
-        let stroke_c = Self::node_stroke_for_style(&self.vello_theme, style_kind);
-        let fill = if lod == BoardDrawLod::Minimap { stroke_c } else { self.resolve_node_fill_color(n, &self.vello_theme, style_kind) };
+        let stroke_c = Self::node_stroke_for_style(&self.canvas_theme, style_kind);
+        let fill = if lod == BoardDrawLod::Minimap { stroke_c } else { self.resolve_node_fill_color(n, &self.canvas_theme, style_kind) };
         let sw = 2.0_f64;
         let paint_fill = if lod == BoardDrawLod::Minimap {
             matches!(layer, NodeHandlePaintLayer::Full | NodeHandlePaintLayer::Fill)
@@ -4336,7 +4333,7 @@ impl BoardHost {
                 let r = self.draw_space_len(self.scaled_node_radius(n), world_space);
                 let circle = Circle::new(c, r);
                 if paint_fill {
-                    scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+                    scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &circle);
                 }
                 if paint_stroke {
                     scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &circle);
@@ -4352,7 +4349,7 @@ impl BoardHost {
                 let p1 = self.draw_space_point(Point::new(n.x + hw, n.y + hh), world_space);
                 let rect = Rect::from_points(p0, p1);
                 if paint_fill {
-                    scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
+                    scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &rect);
                 }
                 if paint_stroke {
                     scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &rect);
@@ -4367,7 +4364,7 @@ impl BoardHost {
     fn paint_node_icon(&self, scene: &mut Scene, n: &NodeData, world_space: bool, style_kind: BoardElementStyleKind, stroke_c: Color, fill: Color, circle_clip: Option<&Circle>, rect_clip: Option<Rect>) {
         if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
             let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
-            let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.vello_theme);
+            let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.canvas_theme);
             if let Some((bx, by, bw, bh, body)) = self.get_or_build_icon_paint(k, icon_fg, icon_bg, preserve_original_style) {
                 let clip_inset = ui_styling::metrics::icon::CLIP_INSET;
                 let fit_inset = ui_styling::metrics::icon::FIT_INSET;
@@ -4384,18 +4381,18 @@ impl BoardHost {
                 let avail_w = 2.0 * sx_half;
                 let avail_h = 2.0 * sy_half;
                 let scale = (avail_w / bw).min(avail_h / bh);
-                let aff = Affine::translate((center.x - scale * cx, center.y - scale * cy)) * Affine::scale(scale);
+                let aff = Affine::IDENTITY.translate((center.x - scale * cx, center.y - scale * cy)) * Affine::IDENTITY.scale(scale);
                 match n.shape {
                     NodeShape::Circle => {
                         let r_clip = self.draw_space_len(self.scaled_node_radius(n), world_space) * clip_inset;
                         let disc = circle_clip.copied().unwrap_or_else(|| Circle::new(center, r_clip));
-                        scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &disc);
+                        scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &disc);
                         match &body {
                             CachedIconBody::Vector(icon_scene) => {
                                 scene.append(icon_scene, Some(aff));
                             }
                             CachedIconBody::Raster(img) => {
-                                scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                                scene.draw_image(img, aff);
                             }
                         }
                         scene.pop_layer();
@@ -4404,13 +4401,13 @@ impl BoardHost {
                         let hw = self.draw_space_len(self.scaled_node_width(n), world_space) * clip_inset * 0.5;
                         let hh = self.draw_space_len(self.scaled_node_height(n), world_space) * clip_inset * 0.5;
                         let clip_r = rect_clip.unwrap_or_else(|| Rect::from_points(Point::new(center.x - hw, center.y - hh), Point::new(center.x + hw, center.y + hh)));
-                        scene.push_clip_layer(Fill::NonZero, Affine::IDENTITY, &clip_r);
+                        scene.push_clip_layer(FillRule::NonZero, Affine::IDENTITY, &clip_r);
                         match &body {
                             CachedIconBody::Vector(icon_scene) => {
                                 scene.append(icon_scene, Some(aff));
                             }
                             CachedIconBody::Raster(img) => {
-                                scene.draw_image(&ImageBrush::new((**img).clone()), aff);
+                                scene.draw_image(img, aff);
                             }
                         }
                         scene.pop_layer();
@@ -4558,10 +4555,10 @@ impl BoardHost {
                 }
             }
             if let Some(c) = self.edge_curve(e) {
-                let p0 = self.draw_space_point(c.p0, world_space);
-                let p1 = self.draw_space_point(c.p1, world_space);
-                let p2 = self.draw_space_point(c.p2, world_space);
-                let p3 = self.draw_space_point(c.p3, world_space);
+                let p0 = self.draw_space_point(c.p0(), world_space);
+                let p1 = self.draw_space_point(c.p1(), world_space);
+                let p2 = self.draw_space_point(c.p2(), world_space);
+                let p3 = self.draw_space_point(c.p3(), world_space);
                 let curve = CubicBez::new(p0, p1, p2, p3);
                 let chrome_pass = overlay_ids.map(|ids| self.chrome_pass_for_entity(&e.id, ids)).unwrap_or(StyleChromePass::CachedBase);
                 let (stroke_color, edge_stroke, stroke_w) = self.resolve_edge_stroke_paint(e, chrome_pass, lod, edge_sw);
@@ -4582,24 +4579,24 @@ impl BoardHost {
                 }
             }
             if let Some(c) = self.wire_curve(w) {
-                let p0 = self.draw_space_point(c.p0, world_space);
-                let p1 = self.draw_space_point(c.p1, world_space);
-                let p2 = self.draw_space_point(c.p2, world_space);
-                let p3 = self.draw_space_point(c.p3, world_space);
+                let p0 = self.draw_space_point(c.p0(), world_space);
+                let p1 = self.draw_space_point(c.p1(), world_space);
+                let p2 = self.draw_space_point(c.p2(), world_space);
+                let p3 = self.draw_space_point(c.p3(), world_space);
                 let curve = CubicBez::new(p0, p1, p2, p3);
                 let chrome_pass = overlay_ids.map(|ids| self.chrome_pass_for_entity(&w.id, ids)).unwrap_or(StyleChromePass::CachedBase);
-                let wc = Self::wire_stroke_for_style(&self.vello_theme, self.resolve_wire_style_kind(w, chrome_pass));
+                let wc = Self::wire_stroke_for_style(&self.canvas_theme, self.resolve_wire_style_kind(w, chrome_pass));
                 scene.stroke(&wire_stroke, Affine::IDENTITY, wc, None, &curve);
             }
         }
         let link_wire_sw = 2.85_f64;
         let link_wire_stroke = Stroke::new(link_wire_sw);
-        let link_wire_color = self.vello_theme.node_stroke;
+        let link_wire_color = self.canvas_theme.node_stroke;
         if let Some(c) = self.active_link_wire_curve() {
-            let p0 = self.draw_space_point(c.p0, world_space);
-            let p1 = self.draw_space_point(c.p1, world_space);
-            let p2 = self.draw_space_point(c.p2, world_space);
-            let p3 = self.draw_space_point(c.p3, world_space);
+            let p0 = self.draw_space_point(c.p0(), world_space);
+            let p1 = self.draw_space_point(c.p1(), world_space);
+            let p2 = self.draw_space_point(c.p2(), world_space);
+            let p3 = self.draw_space_point(c.p3(), world_space);
             let curve = CubicBez::new(p0, p1, p2, p3);
             scene.stroke(&link_wire_stroke, Affine::IDENTITY, link_wire_color, None, &curve);
         }
@@ -4635,11 +4632,11 @@ impl BoardHost {
         scene.append(&stroke_layer, None);
         if let Some(c) = self.active_link_wire_curve() {
             let link_wire_stroke = Stroke::new(ui_styling::strokes::WIRE_HIGHLIGHT);
-            let link_wire_color = self.vello_theme.node_stroke;
-            let p0 = self.draw_space_point(c.p0, false);
-            let p1 = self.draw_space_point(c.p1, false);
-            let p2 = self.draw_space_point(c.p2, false);
-            let p3 = self.draw_space_point(c.p3, false);
+            let link_wire_color = self.canvas_theme.node_stroke;
+            let p0 = self.draw_space_point(c.p0(), false);
+            let p1 = self.draw_space_point(c.p1(), false);
+            let p2 = self.draw_space_point(c.p2(), false);
+            let p3 = self.draw_space_point(c.p3(), false);
             let curve = CubicBez::new(p0, p1, p2, p3);
             scene.stroke(&link_wire_stroke, Affine::IDENTITY, link_wire_color, None, &curve);
         }
@@ -4682,7 +4679,7 @@ impl BoardHost {
         let mut inner = Scene::new();
         let lod = self.draw_lod_for_frame();
         if !self.wheel_zoom_active {
-            let grid_color = self.vello_theme.grid_minor_stroke;
+            let grid_color = self.canvas_theme.grid_minor_stroke;
             if lod != BoardDrawLod::Minimap {
                 self.stroke_world_step_grid(&mut inner, grid_color, ui_styling::strokes::GRID_LARGE, self.grid_step_large_world(), 0.0);
                 match lod {
@@ -4701,18 +4698,18 @@ impl BoardHost {
         }
         if let Some(ref pts) = self.selection_screen_preview {
             if pts.len() >= 2 {
-                let mut path = infinite_cavas::vello::kurbo::BezPath::new();
+                let mut path = infinite_cavas::BezPath::new();
                 path.move_to(pts[0]);
                 for p in pts.iter().skip(1) {
                     path.line_to(*p);
                 }
                 path.close_path();
-                inner.fill(Fill::NonZero, Affine::IDENTITY, self.vello_theme.selection_preview_fill, None, &path);
+                inner.fill(FillRule::NonZero, Affine::IDENTITY, self.canvas_theme.selection_preview_fill, None, &path);
                 let mut preview_stroke = Stroke::new(ui_styling::strokes::SELECTION_PREVIEW);
                 if self.selection_preview_crossing {
-                    preview_stroke.dash_pattern = vec![5.0, 4.0].into();
+                    preview_stroke.set_dash_pattern(vec![5.0, 4.0]);
                 }
-                inner.stroke(&preview_stroke, Affine::IDENTITY, self.vello_theme.selection_preview_stroke, None, &path);
+                inner.stroke(&preview_stroke, Affine::IDENTITY, self.canvas_theme.selection_preview_stroke, None, &path);
             }
         }
         self.append_cached_world_content(&mut inner, lod);
@@ -4721,14 +4718,14 @@ impl BoardHost {
             inner
         } else {
             let mut scene = Scene::new();
-            scene.append(&inner, Some(Affine::scale(scale)));
+            scene.append(&inner, Some(Affine::IDENTITY.scale(scale)));
             scene
         }
     }
 
     pub fn encoded_scene_hint(&self) -> usize {
         let s = self.build_vector_scene();
-        s.encoding().path_tags.len()
+        s.path_count()
     }
 
     pub fn update_hover_from_world(&mut self, world: Point) {
@@ -5691,7 +5688,7 @@ impl infinite_cavas::canvas_content::CanvasContent for BoardHost {
     }
 
     fn clear_color(&self) -> Color {
-        self.vello_theme.raster_clear
+        self.canvas_theme.raster_clear
     }
 }
 // #endregion board_host

@@ -263,7 +263,7 @@ impl SequenceHost {
 
     pub fn pick_step_id_at_screen(&self, sx: f64, sy: f64, width: u32, height: u32, dpr: f64) -> Option<String> {
         use infinite_cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
-        use infinite_cavas::vello::kurbo::Point;
+        use infinite_cavas::Point;
         let viewport = Viewport {
             width: width.max(1),
             height: height.max(1),
@@ -901,8 +901,8 @@ mod wasm_session {
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
             inner.host.fixture.camera = inner.host.dag.fixture.camera.clone();
-            let mut scene = infinite_cavas::vello::Scene::new();
-            let clear = inner.host.dag.vello_theme.raster_clear;
+            let mut scene = infinite_cavas::Scene::new();
+            let clear = inner.host.dag.canvas_theme.raster_clear;
             inner.host.dag.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
             let scene = infinite_cavas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
             inner.gpu.render_frame(&scene, clear)
@@ -911,7 +911,7 @@ mod wasm_session {
         #[wasm_bindgen(js_name = worldFromScreen)]
         pub fn world_from_screen(&self, sx: f64, sy: f64) -> Result<String, JsValue> {
             use infinite_cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
-            use infinite_cavas::vello::kurbo::Point;
+            use infinite_cavas::Point;
             let inner = self.state.borrow();
             let viewport = Viewport {
                 width: inner.width.max(1),
@@ -1021,9 +1021,9 @@ mod wasm_session {
             self.state.borrow().host.dag.draw_lod_label().to_string()
         }
 
-        #[wasm_bindgen(js_name = setVelloThemeJson)]
-        pub fn set_vello_theme_json(&mut self, json: &str) {
-            let _ = self.state.borrow_mut().host.dag.set_vello_theme_from_json(json);
+        #[wasm_bindgen(js_name = setCanvasThemeJson)]
+        pub fn set_canvas_theme_json(&mut self, json: &str) {
+            let _ = self.state.borrow_mut().host.dag.set_canvas_theme_from_json(json);
         }
 
         #[wasm_bindgen(js_name = selectedNodeIds)]

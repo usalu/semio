@@ -416,4 +416,18 @@ if (import.meta.vitest) {
 		});
 	});
 }
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
 
+/** @emoji 🔷 S app VCS handler for lowpoly fixtures. */
+export function createLowpolyAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly objects: readonly unknown[] };
+	type Op = { readonly op: "setDocument"; readonly document: Doc };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"lowpoly.fixture",
+		"lowpoly.fixture",
+		() => ({ schema: "lowpoly.fixture", objects: [] }),
+		(doc, op) => (op.op === "setDocument" ? op.document : doc),
+	);
+}
+//#endregion 🔖DocumentVcs

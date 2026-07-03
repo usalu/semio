@@ -2,9 +2,6 @@
 
 pub use infinite_cavas::{self as cavas, *};
 pub use std::sync::Arc;
-pub use vello::kurbo::{Affine, Point, Rect, Stroke, Vec2};
-pub use vello::peniko::{Blob, Color, Fill, ImageAlphaType, ImageData, ImageFormat};
-pub use vello::Scene;
 
 use cavas::lod::{Lod, LodScale};
 
@@ -1359,7 +1356,7 @@ pub struct MapHost {
     pub positions: std::collections::BTreeMap<String, PositionData>,
     pub routes: std::collections::BTreeMap<String, RouteData>,
     pub regions: std::collections::BTreeMap<String, RegionData>,
-    tile_images: std::collections::BTreeMap<String, std::sync::Arc<ImageData>>,
+    tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
     last_raster_visible: std::collections::BTreeSet<String>,
     vector_tiles: std::collections::BTreeMap<String, vector_tiles::VectorTile>,
     last_vector_visible: std::collections::BTreeSet<String>,
@@ -1794,8 +1791,7 @@ impl MapHost {
         let img = image::load_from_memory(png_bytes).map_err(|e| e.to_string())?;
         let rgba = img.to_rgba8();
         let (w, h) = rgba.dimensions();
-        let data = Blob::new(Arc::new(rgba.into_raw()));
-        let image = ImageData { data, format: ImageFormat::Rgba8, width: w, height: h, alpha_type: ImageAlphaType::Alpha };
+        let image = RasterImage::rgba8(w, h, Arc::new(rgba.into_raw()));
         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
         Ok(())
     }
@@ -2128,8 +2124,8 @@ impl MapHost {
     fn tile_local_to_screen(&self, z: u32, x: u32, y: u32, extent: u32, tx: f64, ty: f64) -> Point {
         let rect = projection::tile_world_rect(z, x, y);
         let step = rect.width() / extent as f64;
-        let wx = rect.x0 + tx * step;
-        let wy = rect.y1 - ty * step;
+        let wx = rect.x0() + tx * step;
+        let wy = rect.y1() - ty * step;
         map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(wx, wy))
     }
 
@@ -2137,10 +2133,10 @@ impl MapHost {
         let w = self.viewport.width as f64;
         let h = self.viewport.height as f64;
         let corners = [
-            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y1)),
-            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y1)),
-            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y0)),
-            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y0)),
+            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y1())),
+            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1(), rect.y1())),
+            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1(), rect.y0())),
+            map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y0())),
         ];
         let mut min_x = f64::INFINITY;
         let mut max_x = f64::NEG_INFINITY;
@@ -2156,9 +2152,9 @@ impl MapHost {
     }
 
     fn tile_raster_affine(&self, rect: Rect, img_w: u32, img_h: u32) -> Affine {
-        let nw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y1));
-        let ne = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y1));
-        let sw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y0));
+        let nw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y1()));
+        let ne = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1(), rect.y1()));
+        let sw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y0()));
         let w = img_w.max(1) as f64;
         let h = img_h.max(1) as f64;
         Affine::new([(ne.x - nw.x) / w, (ne.y - nw.y) / w, (sw.x - nw.x) / h, (sw.y - nw.y) / h, nw.x, nw.y])
@@ -2172,8 +2168,8 @@ impl MapHost {
 
     fn tile_screen_segment_jump_limit(&self, z: u32, x: u32, y: u32) -> f64 {
         let rect = projection::tile_world_rect(z, x, y);
-        let nw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y1));
-        let se = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y0));
+        let nw = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y1()));
+        let se = map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1(), rect.y0()));
         nw.distance(se) * 1.2
     }
 
@@ -2201,40 +2197,40 @@ impl MapHost {
         }
         let bleed = 1.0;
         let corners = Self::bleed_screen_quad_corners([Point::new(0.0, 0.0), Point::new(w, 0.0), Point::new(w, h), Point::new(0.0, h)], bleed);
-        let mut path = vello::kurbo::BezPath::new();
+        let mut path = BezPath::new();
         path.move_to(corners[0]);
         for p in &corners[1..] {
             path.line_to(*p);
         }
         path.close_path();
-        scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &path);
+        scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &path);
     }
 
     fn append_vector_tile_quad_backdrop(&self, scene: &mut Scene, z: u32, x: u32, y: u32, fill: Color) {
         let rect = projection::tile_world_rect(z, x, y);
         let corners = Self::bleed_screen_quad_corners(
             [
-                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y1)),
-                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y1)),
-                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1, rect.y0)),
-                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0, rect.y0)),
+                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y1())),
+                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1(), rect.y1())),
+                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x1(), rect.y0())),
+                map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(rect.x0(), rect.y0())),
             ],
             2.0,
         );
-        let mut path = vello::kurbo::BezPath::new();
+        let mut path = BezPath::new();
         path.move_to(corners[0]);
         for p in &corners[1..] {
             path.line_to(*p);
         }
         path.close_path();
-        scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &path);
+        scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &path);
     }
 
     fn append_vector_tile_land_backdrop(&self, scene: &mut Scene, z: u32, x: u32, y: u32, fill: Color) {
         self.append_vector_tile_quad_backdrop(scene, z, x, y, fill);
     }
 
-    fn append_screen_polyline(path: &mut vello::kurbo::BezPath, pts: &[(f64, f64)], to_screen: impl Fn(f64, f64) -> Point, jump_limit: f64) {
+    fn append_screen_polyline(path: &mut BezPath, pts: &[(f64, f64)], to_screen: impl Fn(f64, f64) -> Point, jump_limit: f64) {
         if pts.len() < 2 {
             return;
         }
@@ -2251,7 +2247,7 @@ impl MapHost {
         }
     }
 
-    fn append_screen_ring(path: &mut vello::kurbo::BezPath, ring: &[(f64, f64)], to_screen: impl Fn(f64, f64) -> Point, jump_limit: f64) {
+    fn append_screen_ring(path: &mut BezPath, ring: &[(f64, f64)], to_screen: impl Fn(f64, f64) -> Point, jump_limit: f64) {
         if ring.len() < 3 {
             return;
         }
@@ -2264,17 +2260,19 @@ impl MapHost {
             return;
         }
         let jump = self.tile_screen_segment_jump_limit(tz, tx, ty);
-        let mut path = vello::kurbo::BezPath::new();
+        let mut path = BezPath::new();
+        let mut has_path = false;
         for ring in rings {
             if ring.len() < 3 {
                 continue;
             }
+            has_path = true;
             Self::append_screen_ring(&mut path, ring, |lx, ly| self.tile_local_to_screen(tz, tx, ty, extent, lx, ly), jump);
         }
-        if path.is_empty() {
+        if !has_path {
             return;
         }
-        scene.fill(Fill::EvenOdd, Affine::IDENTITY, fill, None, &path);
+        scene.fill(FillRule::EvenOdd, Affine::IDENTITY, fill, None, &path);
         if stroke.to_rgba8().a > 5 {
             scene.stroke(&Stroke::new(stroke_width), Affine::IDENTITY, stroke, None, &path);
         }
@@ -2303,7 +2301,7 @@ impl MapHost {
                 continue;
             }
             let jump = self.tile_screen_segment_jump_limit(tz, tx, ty);
-            let mut path = vello::kurbo::BezPath::new();
+            let mut path = BezPath::new();
             let mut prev: Option<Point> = None;
             for window in line.windows(2) {
                 let a = (window[0].0, window[0].1);
@@ -2626,7 +2624,7 @@ impl MapHost {
         if !self.layer_visibility.raster {
             return;
         }
-        let mut draw: Vec<(u32, u32, u32, std::sync::Arc<ImageData>)> = Vec::new();
+        let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
         for (key, img) in &self.tile_images {
             let Some((tz, tx, ty)) = tiles::parse_tile_key(key) else {
                 continue;
@@ -2640,7 +2638,7 @@ impl MapHost {
         draw.sort_by_key(|(z, x, y, _)| (*z, *x, *y));
         for (tz, tx, ty, img) in draw {
             let rect = projection::tile_world_rect(tz, tx, ty);
-            let aff = self.tile_raster_affine(rect, img.width, img.height);
+            let aff = self.tile_raster_affine(rect, img.width(), img.height());
             cavas::raster::draw_image_arc(scene, &img, aff);
         }
     }
@@ -2656,7 +2654,7 @@ impl MapHost {
             if reg.ring.len() < 3 {
                 continue;
             }
-            let mut path = vello::kurbo::BezPath::new();
+            let mut path = BezPath::new();
             let ring: Vec<(f64, f64)> = reg
                 .ring
                 .iter()
@@ -2666,7 +2664,7 @@ impl MapHost {
                 })
                 .collect();
             Self::append_screen_ring(&mut path, &ring, |wx, wy| map_viewport::world_to_screen(&self.camera, &self.viewport, Point::new(wx, wy)), jump);
-            scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &path);
+            scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &path);
             scene.stroke(&Stroke::new(2.0 * self.layer_stroke_scale.regions), Affine::IDENTITY, stroke, None, &path);
         }
     }
@@ -2684,7 +2682,7 @@ impl MapHost {
             }
             let selected = self.selected_routes.contains(&route.id);
             let hovered = self.hovered_kind.as_deref() == Some("route") && self.hovered_id.as_deref() == Some(route.id.as_str());
-            let mut path = vello::kurbo::BezPath::new();
+            let mut path = BezPath::new();
             for (i, [lon, lat]) in route.points.iter().enumerate() {
                 let w = projection::lonlat_to_world(*lon, *lat);
                 let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
@@ -2743,14 +2741,14 @@ impl MapHost {
             let w = projection::lonlat_to_world(pos.lon, pos.lat);
             let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
             let r = ui_styling::radii::MAP_POSITION_MARKER * pos_scale;
-            let circle = vello::kurbo::Circle::new(s, r);
+            let circle = Circle::new(s, r);
             if selected || hovered {
                 let halo_r = r * 1.75;
-                let halo = vello::kurbo::Circle::new(s, halo_r);
+                let halo = Circle::new(s, halo_r);
                 let halo_color = if selected { self.theme.selection_stroke } else { self.theme.hover_stroke };
-                scene.fill(Fill::NonZero, Affine::IDENTITY, halo_color, None, &halo);
+                scene.fill(FillRule::NonZero, Affine::IDENTITY, halo_color, None, &halo);
             }
-            scene.fill(Fill::NonZero, Affine::IDENTITY, fill, None, &circle);
+            scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &circle);
             let stroke_width = if selected || hovered {
                 ui_styling::strokes::MAP_POSITION_MULT * pos_scale * 1.5
             } else {
@@ -2791,7 +2789,7 @@ impl MapHost {
             return inner;
         }
         let mut scene = Scene::new();
-        scene.append(&inner, Some(Affine::scale(scale)));
+        scene.append(&inner, Some(Affine::IDENTITY.scale(scale)));
         scene
     }
 }
@@ -3460,8 +3458,8 @@ mod tests {
         host.set_size(256, 256, 1.0);
         host.fit_world_camera();
         let rect = super::projection::tile_world_rect(1, 0, 0);
-        let nw = super::map_viewport::world_to_screen(&host.camera, &host.viewport, super::Point::new(rect.x0, rect.y1));
-        let sw = super::map_viewport::world_to_screen(&host.camera, &host.viewport, super::Point::new(rect.x0, rect.y0));
+        let nw = super::map_viewport::world_to_screen(&host.camera, &host.viewport, super::Point::new(rect.x0(), rect.y1()));
+        let sw = super::map_viewport::world_to_screen(&host.camera, &host.viewport, super::Point::new(rect.x0(), rect.y0()));
         assert!(nw.y < sw.y, "north edge should be above south edge on screen");
         let aff = host.tile_raster_affine(rect, 256, 256);
         let coeffs = aff.as_coeffs();
@@ -3819,8 +3817,8 @@ mod tests {
     fn zoom_host_over_tile(host: &mut super::MapHost, lod_id: &str, tz: u32, tx: u32, ty: u32) {
         zoom_host_to_representative_lod(host, lod_id);
         let rect = super::projection::tile_world_rect(tz, tx, ty);
-        let cx = (rect.x0 + rect.x1) * 0.5;
-        let cy = (rect.y0 + rect.y1) * 0.5;
+        let cx = (rect.x0() + rect.x1()) * 0.5;
+        let cy = (rect.y0() + rect.y1()) * 0.5;
         host.set_camera(cx, -cy, host.camera.zoom);
     }
 

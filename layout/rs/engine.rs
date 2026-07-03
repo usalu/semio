@@ -7,9 +7,7 @@ use parley::{
     StyleProperty,
 };
 use infinite_cavas::camera::{self, Camera, Viewport};
-use vello::kurbo::{Affine, Point, Rect, RoundedRect, RoundedRectRadii, Stroke};
-use vello::peniko::{Brush, Color, Fill};
-use vello::Scene;
+use infinite_cavas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
 
 use crate::display::{
     bounds_to_display_rect, page_margin_guides, DisplayColor, DisplayGlyph, DisplayGuide, DisplayImage, DisplayList, DisplayTextRun,
@@ -279,11 +277,11 @@ fn append_drop_preview(scene: &mut Scene, transform: Affine, preview: &LayoutDro
         "image" => Color::new([0.85, 0.45, 0.2, 0.25]),
         _ => Color::new([0.5, 0.5, 0.5, 0.3]),
     };
-    scene.fill(Fill::NonZero, transform, Brush::Solid(fill), None, &shape);
+    scene.fill(FillRule::NonZero, transform, fill, None, &shape);
     scene.stroke(
         &Stroke::new(2.0),
         transform,
-        Brush::Solid(Color::new([0.1, 0.45, 0.95, 0.85])),
+        Color::new([0.1, 0.45, 0.95, 0.85]),
         None,
         &shape,
     );
@@ -304,9 +302,9 @@ pub fn display_list_to_scene(
         Color::new([1.0, 1.0, 1.0, 1.0])
     };
     scene.fill(
-        Fill::NonZero,
+        FillRule::NonZero,
         transform,
-        Brush::Solid(page_bg),
+        page_bg,
         None,
         &Rect::new(0.0, 0.0, list.page_width as f64, list.page_height as f64),
     );
@@ -323,15 +321,18 @@ pub fn display_list_to_scene(
                 scene.stroke(
                     &Stroke::new(1.0),
                     transform,
-                    Brush::Solid(stroke),
+                    stroke,
                     None,
-                    &vello::kurbo::Line::new((guide.rect.x, guide.rect.y), (guide.rect.x + guide.rect.width, guide.rect.y)),
+                    &Line::new(
+                        Point::new(guide.rect.x, guide.rect.y),
+                        Point::new(guide.rect.x + guide.rect.width, guide.rect.y),
+                    ),
                 );
             } else {
                 scene.stroke(
                     &Stroke::new(1.0),
                     transform,
-                    Brush::Solid(stroke),
+                    stroke,
                     None,
                     &Rect::new(guide.rect.x, guide.rect.y, guide.rect.x + guide.rect.width, guide.rect.y + guide.rect.height),
                 );
@@ -341,14 +342,16 @@ pub fn display_list_to_scene(
 
     for rect in &list.rects {
         let shape = RoundedRect::new(
-            rect.x as f64,
-            rect.y as f64,
-            (rect.x + rect.width) as f64,
-            (rect.y + rect.height) as f64,
+            Rect::new(
+                rect.x as f64,
+                rect.y as f64,
+                (rect.x + rect.width) as f64,
+                (rect.y + rect.height) as f64,
+            ),
             RoundedRectRadii::new(0.0, 0.0, 0.0, 0.0),
         );
         if let Some(fill) = &rect.fill {
-            scene.fill(Fill::NonZero, transform, Brush::Solid(color_from(fill)), None, &shape);
+            scene.fill(FillRule::NonZero, transform, color_from(fill), None, &shape);
         }
         if let Some(stroke) = &rect.stroke {
             let width = if rect.selected {
@@ -361,7 +364,7 @@ pub fn display_list_to_scene(
             scene.stroke(
                 &Stroke::new(width),
                 transform,
-                Brush::Solid(color_from(stroke)),
+                color_from(stroke),
                 None,
                 &shape,
             );
@@ -369,7 +372,7 @@ pub fn display_list_to_scene(
             scene.stroke(
                 &Stroke::new(2.0),
                 transform,
-                Brush::Solid(Color::new([0.1, 0.45, 0.95, 1.0])),
+                Color::new([0.1, 0.45, 0.95, 1.0]),
                 None,
                 &shape,
             );
@@ -377,7 +380,7 @@ pub fn display_list_to_scene(
             scene.stroke(
                 &Stroke::new(1.5),
                 transform,
-                Brush::Solid(Color::new([0.95, 0.72, 0.15, 1.0])),
+                Color::new([0.95, 0.72, 0.15, 1.0]),
                 None,
                 &shape,
             );
@@ -391,12 +394,12 @@ pub fn display_list_to_scene(
             Color::new([0.85, 0.85, 0.85, 1.0])
         };
         let shape = Rect::new(image.x as f64, image.y as f64, (image.x + image.width) as f64, (image.y + image.height) as f64);
-        scene.fill(Fill::NonZero, transform, Brush::Solid(color), None, &shape);
+        scene.fill(FillRule::NonZero, transform, color, None, &shape);
         if image.placeholder {
             scene.stroke(
                 &Stroke::new(1.0),
                 transform,
-                Brush::Solid(Color::new([0.75, 0.35, 0.2, 1.0])),
+                Color::new([0.75, 0.35, 0.2, 1.0]),
                 None,
                 &shape,
             );
@@ -406,9 +409,9 @@ pub fn display_list_to_scene(
     for run in &list.text_runs {
         for glyph in &run.glyphs {
             scene.fill(
-                Fill::NonZero,
-                transform * Affine::translate((glyph.x as f64, glyph.y as f64)) * Affine::scale((glyph.font_size / 16.0) as f64),
-                Brush::Solid(color_from(&glyph.color)),
+                FillRule::NonZero,
+                transform * Affine::IDENTITY.translate(Vec2::new(glyph.x as f64, glyph.y as f64)) * Affine::IDENTITY.scale((glyph.font_size / 16.0) as f64),
+                color_from(&glyph.color),
                 None,
                 &Rect::new(0.0, -glyph.font_size as f64, 0.45, 0.0),
             );

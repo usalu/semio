@@ -189,11 +189,15 @@ export function buildVcsPlayAppRuntime(ctrl: VcsPlayController): AppRuntime {
 }
 
 /** @emoji 🧩 Registers VCS play window bodies. */
+export const vcsPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[VCS_PLAY_BODY_KEY_EDITOR]: () =>
+		buildVcsWindowBody(VCS_PLAY_SURFACE_ID_EDITOR, VCS_PLAY_CONTROLLER_ID, "editor", "editor"),
+	[VCS_PLAY_BODY_KEY_HISTORY]: () =>
+		buildVcsWindowBody(VCS_PLAY_SURFACE_ID_HISTORY, VCS_PLAY_CONTROLLER_ID, "history", "history"),
+};
+
 export function registerVcsPlayDeclarativeBodies(): void {
-	registerWindowBody(VCS_PLAY_BODY_KEY_EDITOR, () =>
-		buildVcsWindowBody(VCS_PLAY_SURFACE_ID_EDITOR, VCS_PLAY_CONTROLLER_ID, "editor", "editor"));
-	registerWindowBody(VCS_PLAY_BODY_KEY_HISTORY, () =>
-		buildVcsWindowBody(VCS_PLAY_SURFACE_ID_HISTORY, VCS_PLAY_CONTROLLER_ID, "history", "history"));
+	for (const [key, build] of Object.entries(vcsPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export { vcsPlayCmd };
@@ -391,6 +395,39 @@ export function buildVcsProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { createTypedAppVcsHandler, mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🗄️ S app VCS handler for vcs demo documents. */
+function createVcsDemoAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly title: string; readonly counter: number };
+	type Op = { readonly op: "setDocument"; readonly document: Doc } | { readonly op: "setCounter"; readonly counter: number };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"vcs.demo",
+		"vcs.demo",
+		() => ({ schema: "vcs.demo", title: "VCS Demo", counter: 0 }),
+		(doc, op) => {
+			if (op.op === "setDocument") return op.document;
+			return { ...doc, counter: op.counter };
+		},
+	);
+}
+
+const vcsProgramContributionResources = {
+		"vcs": { ...osBaselineResource("vcs.document", "vcs.demo", "vcs", [{ id: "explore", label: "Explore" }]), parameterFields: [{ fieldPath: "/counter", label: "Counter", type: "numeric" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for vcs. */
+export const vcsProgramContribution: OsProgramContribution = {
+	programId: "vcs",
+	register() {
+		mergeOsProgramDefinition("vcs", buildVcsProgramDefinition(), vcsProgramContributionResources);
+		registerAppVcsHandler(createVcsDemoAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+
 
 //#region 🔖Play
 
@@ -414,13 +451,7 @@ export const vcsPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildVcsPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerVcsPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootVcsPlay } = await import("@semio-tech/vcs-react/play");
-		bootVcsPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/vcs-react/play")).vcsAppRenderer,
 });
 //#endregion 🔖Play
 

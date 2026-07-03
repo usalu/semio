@@ -6,7 +6,7 @@ import {
 	resolveColorHex,
 	resolveColorRgba,
 	resolveSemanticColorHex,
-	serializeGraphVelloThemePaletteJson,
+	serializeGraphCanvasThemePaletteJson,
 	tokenHex,
 	tokenVar,
 } from "./index.ts";
@@ -22,8 +22,8 @@ describe("styling resolve", () => {
 		expect(tokenHex("primary")).toBe("#ff344f");
 	});
 
-	it("serializeGraphVelloThemePaletteJson emits token board theme fields", () => {
-		const parsed = JSON.parse(serializeGraphVelloThemePaletteJson("light")) as {
+	it("serializeGraphCanvasThemePaletteJson emits token board theme fields", () => {
+		const parsed = JSON.parse(serializeGraphCanvasThemePaletteJson("light")) as {
 			rasterClear: number[];
 			labelFill: number[];
 			gridMinorStroke: number[];
@@ -31,7 +31,7 @@ describe("styling resolve", () => {
 		expect(parsed.rasterClear).toEqual(STYLING_BOARD_THEMES.light.rasterClear);
 		expect(parsed.labelFill).toEqual([123, 130, 125, 255]);
 		expect(parsed.gridMinorStroke[3]).toBeLessThan(255);
-		const dark = JSON.parse(serializeGraphVelloThemePaletteJson("dark")) as { rasterClear: number[] };
+		const dark = JSON.parse(serializeGraphCanvasThemePaletteJson("dark")) as { rasterClear: number[] };
 		expect(dark.rasterClear).toEqual(STYLING_BOARD_THEMES.dark.rasterClear);
 	});
 

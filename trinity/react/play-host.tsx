@@ -1,19 +1,20 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Trinity — loaded only via `./play` subpath. */
+/** @emoji 🛝 Trinity app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiPuzzle2dSurfaceHost, registerUiTrinitySurfaceHost, registerUiTableSurfaceHost, registerUiFormsSurfaceHost, registerUiWriterSurfaceHost, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig, UiTableHostSurfaceNode, UiPuzzle2dHostSurfaceNode } from "@semio-tech/framework-playground-core";
 import {
   TRINITY_JACK_PLAY_CONTROLLER_ID,
-  TRINITY_JACK_PLAY_APP_ID,
   TRINITY_JACK_PLAY_CATALOGUE_TAB_ID,
   TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON,
   TRINITY_JACK_PLAY_DEFAULT_QUERY,
   TRINITY_JACK_PLAY_EDITOR_SURFACE_ID,
+  TRINITY_JACK_PLAY_EXAMPLE_OPTIONS,
   TRINITY_JACK_PLAY_HIERARCHY_TAB_ID,
   TRINITY_JACK_PLAY_INSPECTION_TAB_ID,
   TRINITY_JACK_PLAY_RESULTS_SURFACE_ID,
@@ -21,12 +22,11 @@ import {
   TRINITY_JACK_PLAY_WINDOW_KIND_ID,
   TrinityJackPlayController,
   buildTrinityJackPlayCatalogueTree,
-  registerTrinityJackPlayDeclarativeBodies,
+  trinityJackPlayWindowBodies,
 } from "@semio-tech/trinity-jack-host-core";
 
 import {
   TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-  TRINITY_REWRITE_PLAY_APP_ID,
   TRINITY_REWRITE_PLAY_SURFACE_ID_AFTER,
   TRINITY_REWRITE_PLAY_SURFACE_ID_BEFORE,
   TRINITY_REWRITE_PLAY_SURFACE_ID_JACK,
@@ -35,8 +35,6 @@ import {
   TRINITY_REWRITE_PLAY_SURFACE_ID_RHS,
   TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER,
   TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE,
-  TRINITY_REWRITE_PLAY_WINDOW_KIND_LHS,
-  TRINITY_REWRITE_PLAY_WINDOW_KIND_RHS,
   TrinityRewritePlayController,
   REWRITE_DEFAULT_LHS_FIXTURE,
   REWRITE_DEFAULT_LHS_FIXTURE_JSON,
@@ -45,13 +43,26 @@ import {
   rewriteLhsKindCatalogs,
   rewriteRhsKindCatalogs,
   parseRewriteGraphFixtureJson,
-  registerTrinityRewritePlayDeclarativeBodies,
+  trinityRewritePlayWindowBodies,
 } from "@semio-tech/trinity-rewrite-core";
 
 import { createWorkerLspTransport as createTrinityWriterLspTransport, createWriterDocument as createTrinityWriterDocument } from "@semio-tech/writer-core";
 import { WriterCanvas as TrinityWriterCanvas } from "@semio-tech/writer-react";
+import { FormRenderer } from "@semio-tech/forms-react";
+import type { UiFormsHostSurfaceNode, UiTrinityHostSurfaceNode, UiWriterHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { Puzzle2dCanvas, buildPuzzle2dSceneDescriptorFromFixture, type Puzzle2dHoverPayload } from "@semio-tech/puzzle-2d-react";
+import {
+  TrinityCanvas,
+  TRINITY_DEFAULT_FIXTURE_JSON,
+  TRINITY_LOD_MODE_AUTOMATIC,
+  trinityLodCanvasProps,
+  buildTrinityPlayHierarchyTree,
+  buildTrinityPlayCatalogueTree,
+  buildTrinityPlayInspectorTree,
+  createJackLspWorker,
+  type TrinityDrawLodKind,
+} from "./index.tsx";
 
-let trinityPlayChromeRegistered = false;
 const trinityJackControllerRef: { current: TrinityJackPlayController | null } = { current: null };
 const trinityRewriteControllerRef: { current: TrinityRewritePlayController | null } = { current: null };
 
@@ -119,7 +130,7 @@ function useTrinityRewriteController(runtimeOverride?: Platform): TrinityRewrite
   return ctrl;
 }
 
-function TrinityJackPlaySurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }): ReactElement {
+function TrinityJackPlaySurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityJackInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityJackController();
@@ -152,7 +163,7 @@ function TrinityJackPlaySurfaceHost({ node }: { readonly node: import("@semio-te
   );
 }
 
-function TrinityJackEditorSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+function TrinityJackEditorSurfaceHost({ node }: { readonly node: UiWriterHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityJackInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityJackController();
@@ -230,7 +241,7 @@ function TrinityJackResultsSurfaceHost({ node }: { readonly node: UiTableHostSur
   );
 }
 
-function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }): ReactElement {
+function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -267,7 +278,7 @@ function TrinityRewriteBeforeSurfaceHost({ node }: { readonly node: import("@sem
   );
 }
 
-function TrinityRewriteAfterSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiTrinityHostSurfaceNode }): ReactElement {
+function TrinityRewriteAfterSurfaceHost({ node }: { readonly node: UiTrinityHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -294,7 +305,7 @@ function TrinityRewriteAfterSurfaceHost({ node }: { readonly node: import("@semi
   );
 }
 
-function TrinityRewriteLhsSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiPuzzle2dHostSurfaceNode }): ReactElement {
+function TrinityRewriteLhsSurfaceHost({ node: _node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -347,7 +358,7 @@ function TrinityRewriteLhsSurfaceHost({ node: _node }: { readonly node: import("
   );
 }
 
-function TrinityRewriteRhsSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiPuzzle2dHostSurfaceNode }): ReactElement {
+function TrinityRewriteRhsSurfaceHost({ node: _node }: { readonly node: UiPuzzle2dHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -400,7 +411,7 @@ function TrinityRewriteRhsSurfaceHost({ node: _node }: { readonly node: import("
   );
 }
 
-function TrinityRewriteJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+function TrinityRewriteJackSurfaceHost({ node: _node }: { readonly node: UiWriterHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -429,7 +440,7 @@ function TrinityRewriteJackSurfaceHost({ node: _node }: { readonly node: import(
   );
 }
 
-function TrinityRewriteParametersSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiFormsHostSurfaceNode }): ReactElement {
+function TrinityRewriteParametersSurfaceHost({ node: _node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
   const appCtx = reactHostPort.useContext(PlaygroundContext);
   const revision = useTrinityRewriteInteractionRevision(appCtx?.runtime);
   const ctrl = useTrinityRewriteController();
@@ -449,24 +460,7 @@ function TrinityRewriteParametersSurfaceHost({ node: _node }: { readonly node: i
   );
 }
 
-export function registerTrinityJackPlaySurfaceHosts(): void {
-  if (trinityPlayChromeRegistered) return;
-  trinityPlayChromeRegistered = true;
-  registerUiTrinitySurfaceHost(TRINITY_JACK_PLAY_SURFACE_ID, TrinityJackPlaySurfaceHost);
-  registerUiWriterSurfaceHost(TRINITY_JACK_PLAY_EDITOR_SURFACE_ID, TrinityJackEditorSurfaceHost);
-  registerUiTableSurfaceHost(TRINITY_JACK_PLAY_RESULTS_SURFACE_ID, TrinityJackResultsSurfaceHost);
-  registerTrinityJackPlayDeclarativeBodies();
-}
 
-export function registerTrinityRewritePlaySurfaceHosts(): void {
-  registerUiTrinitySurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_BEFORE, TrinityRewriteBeforeSurfaceHost);
-  registerUiTrinitySurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_AFTER, TrinityRewriteAfterSurfaceHost);
-  registerUiPuzzle2dSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_LHS, TrinityRewriteLhsSurfaceHost);
-  registerUiPuzzle2dSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_RHS, TrinityRewriteRhsSurfaceHost);
-  registerUiWriterSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_JACK, TrinityRewriteJackSurfaceHost);
-  registerUiFormsSurfaceHost(TRINITY_REWRITE_PLAY_SURFACE_ID_PARAMETERS, TrinityRewriteParametersSurfaceHost);
-  registerTrinityRewritePlayDeclarativeBodies();
-}
 
 class TrinityJackHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
@@ -583,57 +577,34 @@ class TrinityRewriteInspectionPanelDefinition extends PureSidePanelTabDefinition
   }
 }
 
-function TrinityJackPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  useTrinityJackController(runtime);
-  const hierarchy = reactHostPort.useMemo(() => new TrinityJackHierarchyPanelDefinition(), []);
-  const catalogue = reactHostPort.useMemo(() => new TrinityJackCataloguePanelDefinition(), []);
-  const inspection = reactHostPort.useMemo(() => new TrinityJackInspectionPanelDefinition(), []);
-  return (
-    <PlaygroundView
-      runtime={runtime}
-      defaultAppId={TRINITY_JACK_PLAY_APP_ID}
-      augmentPanelTabs={{ workbench: [hierarchy, catalogue], details: [inspection] }}
-    />
-  );
-}
-
-function TrinityRewritePlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  useTrinityRewriteController(runtime);
-  const hierarchy = reactHostPort.useMemo(() => new TrinityRewriteHierarchyPanelDefinition(), []);
-  const catalogue = reactHostPort.useMemo(() => new TrinityRewriteCataloguePanelDefinition(), []);
-  const inspection = reactHostPort.useMemo(() => new TrinityRewriteInspectionPanelDefinition(), []);
-  return (
-    <PlaygroundView
-      runtime={runtime}
-      defaultAppId={TRINITY_REWRITE_PLAY_APP_ID}
-      augmentPanelTabs={{ workbench: [hierarchy, catalogue], details: [inspection] }}
-    />
-  );
-}
-
-export function mountTrinityJackPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<TrinityJackPlayInner runtime={playground.runtime} />, rootId);
-}
-
-export function mountTrinityRewritePlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<TrinityRewritePlayInner runtime={playground.runtime} />, rootId);
-}
-
-const trinityJackPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerTrinityJackPlaySurfaceHosts,
-  mount: mountTrinityJackPlayChrome,
+/** @emoji 🛝 Trinity Jack app renderer for playground and OS shells. */
+export const trinityJackAppRenderer: AppRendererContribution = {
+  windowBodies: trinityJackPlayWindowBodies,
+  surfaceHosts: {
+    [TRINITY_JACK_PLAY_SURFACE_ID]: TrinityJackPlaySurfaceHost,
+    [TRINITY_JACK_PLAY_EDITOR_SURFACE_ID]: TrinityJackEditorSurfaceHost,
+    [TRINITY_JACK_PLAY_RESULTS_SURFACE_ID]: TrinityJackResultsSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new TrinityJackHierarchyPanelDefinition(), new TrinityJackCataloguePanelDefinition()],
+    details: [new TrinityJackInspectionPanelDefinition()],
+  },
+  examples: controllerBackedExampleContribution(TRINITY_JACK_PLAY_CONTROLLER_ID, TRINITY_JACK_PLAY_EXAMPLE_OPTIONS),
 };
 
-const trinityRewritePlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerTrinityRewritePlaySurfaceHosts,
-  mount: mountTrinityRewritePlayChrome,
+/** @emoji 🛝 Trinity Rewrite app renderer for playground and OS shells. */
+export const trinityRewriteAppRenderer: AppRendererContribution = {
+  windowBodies: trinityRewritePlayWindowBodies,
+  surfaceHosts: {
+    [TRINITY_REWRITE_PLAY_SURFACE_ID_BEFORE]: TrinityRewriteBeforeSurfaceHost,
+    [TRINITY_REWRITE_PLAY_SURFACE_ID_AFTER]: TrinityRewriteAfterSurfaceHost,
+    [TRINITY_REWRITE_PLAY_SURFACE_ID_LHS]: TrinityRewriteLhsSurfaceHost,
+    [TRINITY_REWRITE_PLAY_SURFACE_ID_RHS]: TrinityRewriteRhsSurfaceHost,
+    [TRINITY_REWRITE_PLAY_SURFACE_ID_JACK]: TrinityRewriteJackSurfaceHost,
+    [TRINITY_REWRITE_PLAY_SURFACE_ID_PARAMETERS]: TrinityRewriteParametersSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new TrinityRewriteHierarchyPanelDefinition(), new TrinityRewriteCataloguePanelDefinition()],
+    details: [new TrinityRewriteInspectionPanelDefinition()],
+  },
 };
-
-export function bootTrinityJackPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, trinityJackPlayChromeBoot, rootId);
-}
-
-export function bootTrinityRewritePlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, trinityRewritePlayChromeBoot, rootId);
-}
-//#endregion 🔖TrinityPlayHost

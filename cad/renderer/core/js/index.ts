@@ -1171,12 +1171,16 @@ export function buildCadPlayAppRuntime(controller: CadPlayShellController): AppR
   return app;
 }
 
+export const cadPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+  [CAD_PLAY_SHAPE_BODY_KEY]: buildCadPlayShapeDeclarativeBody,
+  [CAD_PLAY_BUILDING_BODY_KEY]: buildCadPlayBuildingDeclarativeBody,
+  [CAD_PLAY_ENERGY_BODY_KEY]: buildCadPlayEnergyDeclarativeBody,
+  [CAD_PLAY_STRUCTURE_CLASSIC_BODY_KEY]: buildCadPlayStructureClassicDeclarativeBody,
+};
+
 /** @emoji 📝 Registers CAD play window bodies on the playground host. */
 export function registerCadPlayDeclarativeBodies(): void {
-  registerWindowBody(CAD_PLAY_SHAPE_BODY_KEY, buildCadPlayShapeDeclarativeBody);
-  registerWindowBody(CAD_PLAY_BUILDING_BODY_KEY, buildCadPlayBuildingDeclarativeBody);
-  registerWindowBody(CAD_PLAY_ENERGY_BODY_KEY, buildCadPlayEnergyDeclarativeBody);
-  registerWindowBody(CAD_PLAY_STRUCTURE_CLASSIC_BODY_KEY, buildCadPlayStructureClassicDeclarativeBody);
+  for (const [key, build] of Object.entries(cadPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 /** @emoji 🚀 Creates CAD play {@link Platform} with declarative viewport body registered. */
@@ -1802,6 +1806,25 @@ export function buildCadProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+const cadProgramContributionResources = {
+		"cad": osBaselineResource("3d.cad", "cad.scene", "cad"),
+	};
+
+/** @emoji 🧩 OS program contribution for cad. */
+export const cadProgramContribution: OsProgramContribution = {
+	programId: "cad",
+	register() {
+		mergeOsProgramDefinition("cad", buildCadProgramDefinition(), cadProgramContributionResources);
+		registerAppVcsHandler(createCadSceneAppVcsHandler());
+		registerCadMediaExportHandlers();
+	},
+};
+//#endregion 🔖OsProgram
 
 
 //#region 🧪Tests
@@ -2637,17 +2660,25 @@ export const cadPlayAppDefinition = createPlaygroundApp({
 	},
 	createRuntime: () => {
 		const runtime = createProductPlaygroundPlatform(CAD_PLAY_APP_ID);
-			registerCadPlayDeclarativeBodies();
 			const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
 			runtime.addApp(buildCadPlayAppRuntime(controller));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerCadPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootCadPlay } = await import("@semio-tech/cad-js-renderer-react/play");
-		bootCadPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/cad-js-renderer-react/play")).cadAppRenderer,
 });
 //#endregion 🔖Play
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+
+/** @emoji 📐 S app VCS handler for cad scene documents. */
+export function createCadSceneAppVcsHandler() {
+	return createTypedAppVcsHandler<
+		{ readonly schema: string; readonly id: string; readonly nodes: readonly { readonly id: string; readonly label: string }[] },
+		| { readonly op: "addNode"; readonly node: { readonly id: string; readonly label: string } }
+		| { readonly op: "removeNode"; readonly nodeId: string }
+	>("cad.scene", "cad.scene", () => ({ schema: "cad.scene", id: "cad", nodes: [] }), (doc, op) => {
+		if (op.op === "addNode") return { ...doc, nodes: [...doc.nodes, op.node] };
+		return { ...doc, nodes: doc.nodes.filter((node) => node.id !== op.nodeId) };
+	});
+}
+//#endregion 🔖DocumentVcs

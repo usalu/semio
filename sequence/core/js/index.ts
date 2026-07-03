@@ -943,10 +943,14 @@ function buildSequencePlayCompiledDagDeclarativeBody(_ctx: WindowBodyViewContext
 	return buildWriterWindowBody(SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG, SEQUENCE_PLAY_CONTROLLER_ID, SEQUENCE_PLAY_WINDOW_KIND_COMPILED_DAG);
 }
 
+export const sequencePlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[SEQUENCE_PLAY_BODY_KEY_MAIN]: buildSequencePlayMainDeclarativeBody,
+	[SEQUENCE_PLAY_BODY_KEY_SCRIPT]: buildSequencePlayScriptDeclarativeBody,
+	[SEQUENCE_PLAY_BODY_KEY_COMPILED_DAG]: buildSequencePlayCompiledDagDeclarativeBody,
+};
+
 export function registerSequencePlayDeclarativeBodies(): void {
-	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_MAIN, buildSequencePlayMainDeclarativeBody);
-	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_SCRIPT, buildSequencePlayScriptDeclarativeBody);
-	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_COMPILED_DAG, buildSequencePlayCompiledDagDeclarativeBody);
+	for (const [key, build] of Object.entries(sequencePlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildSequencePlayAppRuntime(controller: SequencePlayController): AppRuntime {
@@ -1000,6 +1004,25 @@ export function buildSequenceProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createSequenceAppVcsHandler } from "./internal.ts";
+
+const sequenceProgramContributionResources = {
+		"sequence": { ...osBaselineResource("computation.sequence", "sequence.fixture", "sequence"), parameterFields: [{ fieldPath: "/camera/zoom", label: "Camera zoom", type: "numeric" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for sequence. */
+export const sequenceProgramContribution: OsProgramContribution = {
+	programId: "sequence",
+	register() {
+		mergeOsProgramDefinition("sequence", buildSequenceProgramDefinition(), sequenceProgramContributionResources);
+		registerAppVcsHandler(createSequenceAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+
 //#region 🔖Play
 
 /** @emoji 🛝 Sequence playground app. */
@@ -1023,12 +1046,6 @@ export const sequencePlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildSequencePlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerSequencePlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootSequencePlay } = await import("@semio-tech/sequence-react/play");
-		bootSequencePlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/sequence-react/play")).sequenceAppRenderer,
 });
 //#endregion 🔖Play

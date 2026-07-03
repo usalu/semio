@@ -1477,8 +1477,12 @@ function buildMapPlayAppRuntime(ctrl: MapPlayController): AppRuntime {
 }
 
 /** @emoji 🧩 Registers GIS map play window bodies. */
+export const mapPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+  [GIS_MAP_PLAY_BODY_KEY_MAIN]: buildMapPlayMainDeclarativeBody,
+};
+
 export function registerMapPlayDeclarativeBodies(): void {
-  registerWindowBody(GIS_MAP_PLAY_BODY_KEY_MAIN, buildMapPlayMainDeclarativeBody);
+  for (const [key, build] of Object.entries(mapPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export { buildMapPlayAppRuntime };
@@ -1497,6 +1501,25 @@ export function buildGisMapProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+const gisMapProgramContributionResources = {
+		"map": { ...osBaselineResource("2d.map", "gis.map", "gismap"), parameterFields: [{ fieldPath: "/view/zoom", label: "Map zoom", type: "numeric" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for gis.map. */
+export const gisMapProgramContribution: OsProgramContribution = {
+	programId: "gis.map",
+	register() {
+		mergeOsProgramDefinition("gis.map", buildGisMapProgramDefinition(), gisMapProgramContributionResources);
+		registerGisMediaExportHandlers();
+		registerAppVcsHandler(createGisMapAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 
 if (import.meta.vitest) {
@@ -1800,13 +1823,7 @@ export const gis2dPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildMapPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerMapPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootMapPlay } = await import("@semio-tech/gis-2d-react/play");
-		bootMapPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/gis-2d-react/play")).mapAppRenderer,
 });
 //#endregion 🔖Play
 
@@ -1911,3 +1928,13 @@ export function registerGisMediaExportHandlers(): void {
 	});
 }
 //#endregion 🔖MediaExport
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+
+/** @emoji 🗺️ S app VCS handler for GIS map documents. */
+export function createGisMapAppVcsHandler() {
+	type Doc = { readonly layers: readonly unknown[] };
+	type Op = { readonly op: "setLayers"; readonly layers: readonly unknown[] };
+	return createTypedAppVcsHandler<Doc, Op>("gis.map", "gis.map", () => ({ layers: [] }), (doc, op) => ({ layers: op.layers }));
+}
+//#endregion 🔖DocumentVcs

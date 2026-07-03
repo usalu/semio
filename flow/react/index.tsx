@@ -3,9 +3,9 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { borderNormalBottomClass, canvasViewportClass, cn, CanvasPickMenu, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, isUiTypingTarget, menuListItemClassName, SelectionMarquee, shouldRouteKeysToWindowEngagement, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@semio-tech/ui-react";
+import { borderNormalBottomClass, canvasViewportClass, cn, CanvasPickMenu, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, isUiTypingTarget, menuListItemClassName, SelectionMarquee, shouldRouteKeysToWindowEngagement, useCanvasPickInteraction, useCanvasThemeSync, type CanvasPickTarget, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@semio-tech/ui-react";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
-import { resolveColorHex, resolveSemanticColorHex, syncSessionVelloTheme, tokenVar } from "@semio-tech/ui-styling";
+import { resolveColorHex, resolveSemanticColorHex, syncSessionCanvasTheme, tokenVar } from "@semio-tech/ui-styling";
 import { isDagDrawLodKind, DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, parseDagLodScaleJson, type DagDrawLodKind, type DagLodEntry, type DagLodModeKind, DagSelectionBoundsBox, computeDagMarqueeOverlay, dagElementInteractionChrome, dagOverlayLabelFill, dagSelectionUnionBoundsEqual, dagWorldToScreen, parseDagNodeIdArray, parseDagPreselectJson, parseDagSelectionPreviewPoints, parseDagSelectionUnionBoundsScreen, paintDagLabelOverlays, type DagPreselectSnapshot, type DagSelectionUnionBoundsScreen } from "@semio-tech/dag-react";
 import initFlowWasm, { FlowSession, initSync } from "../core/rs/pkg/flow_core.js";
 import flowCoreWasmUrl from "../core/rs/pkg/flow_core_bg.wasm?url";
@@ -3017,11 +3017,11 @@ export function FlowCanvas({
   const selectionBoundsCountRef = useRef(0);
   const alignSelectionRef = useRef<(mode: FlowSelectionAlignMode) => void>(() => {});
 
-  const syncVelloTheme = useCallback(() => {
-    syncSessionVelloTheme(sessionRef.current);
+  const syncCanvasTheme = useCallback(() => {
+    syncSessionCanvasTheme(sessionRef.current);
   }, []);
 
-  useVelloThemeSync(syncVelloTheme);
+  useCanvasThemeSync(syncCanvasTheme);
 
   useEffect(() => {
     onPreviewTextRef.current = onPreviewText;
@@ -3218,7 +3218,7 @@ export function FlowCanvas({
     try {
       syncLodMode();
       syncProximityDistance();
-      syncVelloTheme();
+      syncCanvasTheme();
       const session = sessionRef.current;
       session?.renderFrame();
       const overlay = textOverlayRef.current;
@@ -3250,7 +3250,7 @@ export function FlowCanvas({
     } catch {
       /* gpu not ready */
     }
-  }, [reportDrawLod, syncLodMode, syncProximityDistance, syncSelectionBoundsOverlay, syncVelloTheme]);
+  }, [reportDrawLod, syncLodMode, syncProximityDistance, syncSelectionBoundsOverlay, syncCanvasTheme]);
 
   useEffect(() => {
     lastAutomaticLodRef.current = null;
@@ -3768,7 +3768,7 @@ export function FlowCanvas({
         setSchemaCatalogue([]);
       }
       syncExtensionSurface(session);
-      syncVelloTheme();
+      syncCanvasTheme();
       evaluate();
       try {
         onCompiledWireLiteralChangeRef.current?.(session.compiledWireLiteral());

@@ -45,6 +45,7 @@ import {
   uiInspectorAllEqual,
   JackHoverBridge,
 	buildWriterWindowBody,
+	registerWindowBody,
 } from "@semio-tech/framework-playground-core";
 import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
 import { exportPuzzle3dFixtureGlb, exportPuzzle3dFixtureObj } from "@semio-tech/puzzle-3d-core";
@@ -1986,6 +1987,16 @@ export function buildPuzzle5d3dDeclarativeBody(ctx: WindowBodyViewContext): UiNo
 export function buildPuzzle5dJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
   return buildWriterWindowBody(PUZZLE_5D_PLAY_JACK_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_JACK_WINDOW_ID);
 }
+
+export const puzzle5dPlayWindowBodies: Readonly<Record<string, (ctx: WindowBodyViewContext) => UiNode>> = {
+  [PUZZLE_5D_PLAY_2D_BODY_KEY]: buildPuzzle5d2dDeclarativeBody,
+  [PUZZLE_5D_PLAY_3D_BODY_KEY]: buildPuzzle5d3dDeclarativeBody,
+  [PUZZLE_5D_PLAY_JACK_BODY_KEY]: buildPuzzle5dJackDeclarativeBody,
+};
+
+export function registerPuzzle5dPlayDeclarativeBodies(): void {
+  for (const [key, build] of Object.entries(puzzle5dPlayWindowBodies)) registerWindowBody(key, build);
+}
 //#endregion 🔖DeclarativeBodies
 
 //#region 🧪Tests
@@ -2250,6 +2261,55 @@ if (import.meta.vitest) {
 
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+import {
+	parseModel,
+	project2d,
+	project3d,
+	type KindCatalogBundle,
+	type Model,
+} from "@semio-tech/puzzle-5d-react";
+
+function meshUrlFromPuzzle5dModel(model: Model): string | null {
+	const fixture3d = project3d(model);
+	for (const object of fixture3d.objects) {
+		if (object.meshUrl) return object.meshUrl;
+	}
+	return null;
+}
+
+/** @emoji 🧩 OS app VCS handler for puzzle 5d documents. */
+export function createPuzzle5dAppVcsHandler() {
+	return createTypedAppVcsHandler<Model, { readonly op: "setRevision"; readonly revision: number }>(
+		"puzzle.5d",
+		"puzzle.5d",
+		() => ({
+			schema: "puzzle.5d",
+			domain: "architecture",
+			camera2d: { x: 0, y: 0, zoom: 1 },
+			camera3d: { position: [0, 0, 0], target: [0, 0, 0], zoom: 1 },
+			parts: [],
+			fasteners: [],
+		}),
+		(doc) => doc,
+		undefined,
+		{
+			applyInputBindings: (model, inputBindings) => {
+				const catalogue = inputBindings.catalogue as KindCatalogBundle | undefined;
+				if (!catalogue) return model;
+				return { ...model, kindCatalogs: catalogue };
+			},
+			projectOutput: (model, portId) => {
+				if (portId === "graph2d") return project2d(model);
+				if (portId === "mesh3d") {
+					const url = meshUrlFromPuzzle5dModel(model);
+					return { url: url ?? "/mesh/base.glb" };
+				}
+				return model;
+			},
+		},
+	);
+}
 
 /** @emoji 🧩 S program definition for puzzle 5d. */
 export function buildPuzzle5dProgramDefinition(): PlatformDefinition {
@@ -2262,6 +2322,27 @@ export function buildPuzzle5dProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { createCatalogueKindsAppVcsHandler, mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler, osInPort, osOutPort } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { puzzle5dDefaultManifestCatalogBundle } from "@semio-tech/puzzle-5d-react";
+
+const puzzle5dProgramContributionResources = {
+		"puzzle5d": { inputs: [osInPort("catalogue.kinds", "catalogue", "Catalogue")], outputs: [osOutPort("2d.puzzle", "graph2d", "2D Graph"), osOutPort("3d.mesh", "mesh3d", "3D Mesh")], sourceFormat: "puzzle.5d", componentKind: "puzzle5d", modes: [{ id: "edit", label: "Edit" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for puzzle.5d. */
+export const puzzle5dProgramContribution: OsProgramContribution = {
+	programId: "puzzle.5d",
+	register() {
+		mergeOsProgramDefinition("puzzle.5d", buildPuzzle5dProgramDefinition(), puzzle5dProgramContributionResources);
+		registerAppVcsHandler(createCatalogueKindsAppVcsHandler(() => puzzle5dDefaultManifestCatalogBundle() ?? {}));
+		registerPuzzle5dMediaExportHandlers();
+		registerAppVcsHandler(createPuzzle5dAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 //#region 🔖Play
 
@@ -2337,13 +2418,7 @@ export const puzzle5dPlayAppDefinition = createPlaygroundApp({
 	createRuntime: () => {
 		return buildPuzzle5dPlayRuntime();
 	},
-	registerBodies: () => {
-		/* window bodies registered with surface hosts in {@link registerPuzzle5dPlaySurfaceHosts} */
-	},
-	bootRenderer: async (pg) => {
-		const { boot5dPlay } = await import("@semio-tech/puzzle-5d-react/play");
-		boot5dPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/puzzle-5d-react/play")).puzzle5dAppRenderer,
 });
 //#endregion 🔖Play
 

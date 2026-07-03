@@ -18,7 +18,8 @@
     "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*",
     "@semio-tech/procedural-2d-react": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -34,10 +35,11 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "procedural-2d",
       "aliases": [
-        "procedural-2d"
+        "procedural-2d",
+        "procedural 2d"
       ],
       "packageRoot": "procedural/2d",
       "corePackage": "@semio-tech/procedural-2d-core",
@@ -47,7 +49,9 @@
         "dev": 6021,
         "test": 6033,
         "env": "PROCEDURAL_2D_PLAY_PORT"
-      }
+      },
+      "programExport": "procedural2dProgramContribution",
+      "programId": "procedural.2d"
     }
   }
 }

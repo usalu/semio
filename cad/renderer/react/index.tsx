@@ -7,7 +7,6 @@ import "./globals.css";
 import {
   Button,
   Label,
-  NavbarExampleSelect,
   NAVBAR_NO_EXAMPLE_ID,
   reactHostPort,
   formatNumber,
@@ -38,7 +37,7 @@ import {
   uiTreeNodeToTreePanelConfig,
   type SidePanelTabConfig,
 } from "@semio-tech/framework-playground-renderer-react";
-import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode, Platform, isPlaygroundExampleLocked, playgroundLockedExampleId, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL } from "@semio-tech/framework-playground-core";
+import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode, Platform, playgroundLockedExampleId, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL } from "@semio-tech/framework-playground-core";
 import { AppPointerFocusStore } from "@semio-tech/framework-core";
 import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@semio-tech/framework-platform-renderer-react";
 import { defaultConstructRunner } from "@semio-tech/cad-js-query";
@@ -401,7 +400,7 @@ function useCadPlayChromePublish(): (snapshot: CadPlayChromeSnapshot | null) => 
 
 const cadPlayChromeSnapshotRef: { current: CadPlayChromeSnapshot | null } = { current: null };
 
-class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+export class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: CAD_PLAY_HIERARCHY_TAB_ID,
@@ -1615,20 +1614,29 @@ function CadPlayLoadInput(): ReactNode {
   return <input ref={loadInputRef} type="file" accept=".json,.spatial.json" hidden onChange={(event) => void handleLoadRaw(event)} />;
 }
 
-/** @emoji 🧪 Navbar example dropdown for CAD play shape sources (replaces workbench catalog picker). */
-function CadPlayExampleNavbarSelect(): ReactNode {
+/** @emoji 🧪 Bridges CAD shape assets into {@link PlaygroundView} example dropdown. */
+function CadPlayExampleBridge({
+  runtime,
+  defaultAppId,
+  augmentPanelTabs,
+}: {
+  readonly runtime: Platform;
+  readonly defaultAppId: string;
+  readonly augmentPanelTabs: { readonly workbench: readonly SidePanelTabConfig[]; readonly details: readonly SidePanelTabConfig[] };
+}): ReactNode {
   const { shapeAssetId, handleShapeAssetChange } = useCadPlayModelSpace();
-  return (
-    <NavbarExampleSelect
-      id="cad.play.example"
-      value={shapeAssetId || NAVBAR_NO_EXAMPLE_ID}
-      options={CAD_PLAY_SHAPE_ASSETS.map((row) => ({
+  const exampleContribution = reactHostPort.useMemo(
+    () => ({
+      options: CAD_PLAY_SHAPE_ASSETS.map((row) => ({
         id: row.id,
         label: `[${row.key}] ${row.label} (${modelVertexCount(row.json)} verts)`,
-      }))}
-      onValueChange={(exampleId) => handleShapeAssetChange(exampleId === NAVBAR_NO_EXAMPLE_ID ? "" : exampleId)}
-    />
+      })),
+      activeExampleId: () => shapeAssetId || NAVBAR_NO_EXAMPLE_ID,
+      onSelect: (exampleId: string) => handleShapeAssetChange(exampleId === NAVBAR_NO_EXAMPLE_ID ? "" : exampleId),
+    }),
+    [shapeAssetId, handleShapeAssetChange],
   );
+  return <PlaygroundView runtime={runtime} defaultAppId={defaultAppId} augmentPanelTabs={augmentPanelTabs} exampleContribution={exampleContribution} />;
 }
 
 /** @emoji 🎮 One quad pane: interaction editing for its model definition with window engagement. */
@@ -1799,7 +1807,7 @@ function registerCadPlayChrome(): void {
 }
 
 /** @emoji 🧊 Viewport for one CAD play quad pane. */
-function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): ReactNode {
+export function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): ReactNode {
   if (node.controllerId !== CAD_PLAY_CONTROLLER_ID) {
     return <div className="p-single text-destructive text-xs">Invalid CAD play surface binding</div>;
   }
@@ -1818,7 +1826,7 @@ function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNode }): 
 }
 
 
-class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
+export class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: "cad-play-catalog",
@@ -1832,11 +1840,7 @@ class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
-  constructor(private readonly commandBus: CommandBus) {
-    super();
-  }
-
+export class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
       id: "cad-play-details",
@@ -1844,7 +1848,7 @@ class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
       name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
       order: 0,
       tree: new CallbackTreePanelDefinition(() =>
-        uiTreeNodeToTreePanelConfig(buildCadPlayDetailsTree(cadPlayChromeSnapshotRef.current), this.commandBus),
+        uiTreeNodeToTreePanelConfig(buildCadPlayDetailsTree(cadPlayChromeSnapshotRef.current), new CommandBus()),
       ),
     };
   }
@@ -1871,24 +1875,17 @@ export function CadPlayRoot({ runtime: runtimeOverride }: { readonly runtime?: P
   const chromeContextValue = reactHostPort.useMemo<CadPlayChromeContextValue>(() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }), [chromeSnapshot]);
   const cadPlayHierarchyPanel = reactHostPort.useMemo(() => new CadPlayHierarchyPanelDefinition(), []);
   const cadPlayCatalogPanel = reactHostPort.useMemo(() => new CadPlayCatalogPanelDefinition(), []);
-  const cadPlayDetailsPanel = reactHostPort.useMemo(
-    () => new CadPlayDetailsPanelDefinition(runtimeRef.current!.commandBus),
-    [],
-  );
+  const cadPlayDetailsPanel = reactHostPort.useMemo(() => new CadPlayDetailsPanelDefinition(), []);
   const workbenchTabs = reactHostPort.useMemo(
     () => [cadPlayHierarchyPanel.resolveTab(), cadPlayCatalogPanel.resolveTab()],
     [cadPlayHierarchyPanel, cadPlayCatalogPanel],
   );
   const detailsTabs = reactHostPort.useMemo(() => [cadPlayDetailsPanel.resolveTab()], [cadPlayDetailsPanel]);
-  const slotNavbarCenter = reactHostPort.useMemo(
-    () => (isPlaygroundExampleLocked() ? null : <CadPlayExampleNavbarSelect />),
-    [],
-  );
   return (
     <CadPlayChromeContext.Provider value={chromeContextValue}>
       <CadPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>
         <CadPlayLoadInput />
-        <PlaygroundView runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} slotNavbarCenter={slotNavbarCenter} />
+        <CadPlayExampleBridge runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} />
       </CadPlayModelSpaceProvider>
     </CadPlayChromeContext.Provider>
   );

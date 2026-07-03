@@ -10524,8 +10524,9 @@ let sketchpadHomeDropzoneDragDepth = 0;
 const SKETCHPAD_HOME_DROPZONE_OVERLAY_ID = "compose-sketchpad-home-dropzone-overlay";
 const SKETCHPAD_HOME_KIT_FILE_INPUT_ID = "compose-sketchpad-home-kit-file-input";
 
-function sketchpadHomeRouteActive(): boolean {
-	return (getSketchpadPlatform()?.uri.split("?")[0] ?? "/") === "/";
+function sketchpadKitRouteActive(): boolean {
+	const path = getSketchpadPlatform()?.uri.split("?")[0] ?? "/";
+	return path.startsWith("/kits/");
 }
 
 function sketchpadTransferHasKitArchive(transfer: DataTransfer | null): boolean {
@@ -10595,25 +10596,25 @@ export function sketchpadInstallHomeDropzone(): void {
 		ctrl.run("importKitFromDrop", { file });
 	});
 	const onDragEnter = (event: DragEvent) => {
-		if (!sketchpadHomeRouteActive()) return;
+		if (!sketchpadKitRouteActive()) return;
 		if (!sketchpadTransferHasKitArchive(event.dataTransfer)) return;
 		event.preventDefault();
 		sketchpadHomeDropzoneDragDepth += 1;
 		sketchpadSetHomeDropzoneOverlayVisible(true);
 	};
 	const onDragOver = (event: DragEvent) => {
-		if (!sketchpadHomeRouteActive()) return;
+		if (!sketchpadKitRouteActive()) return;
 		if (!sketchpadTransferHasKitArchive(event.dataTransfer)) return;
 		event.preventDefault();
 	};
 	const onDragLeave = (event: DragEvent) => {
-		if (!sketchpadHomeRouteActive()) return;
+		if (!sketchpadKitRouteActive()) return;
 		if (sketchpadHomeDropzoneDragDepth <= 0) return;
 		sketchpadHomeDropzoneDragDepth -= 1;
 		if (sketchpadHomeDropzoneDragDepth === 0) sketchpadSetHomeDropzoneOverlayVisible(false);
 	};
 	const onDrop = (event: DragEvent) => {
-		if (!sketchpadHomeRouteActive()) return;
+		if (!sketchpadKitRouteActive()) return;
 		event.preventDefault();
 		sketchpadHomeDropzoneDragDepth = 0;
 		sketchpadSetHomeDropzoneOverlayVisible(false);
@@ -11269,11 +11270,10 @@ export function sketchpadAppIdFromPath(path: string): string {
 	const isUuidPattern = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 	if (pathParts[0] === "docs") return SKETCHPAD_DOCS_APP_ID;
 	if (pathParts[0] === "feedback") return SKETCHPAD_FEEDBACK_APP_ID;
-	if (pathParts[0] !== "kits") return SKETCHPAD_HOME_APP_ID;
-	if (pathParts.length >= 4 && pathParts[2] === "design" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_DESIGN_APP_ID;
-	if (pathParts.length >= 4 && pathParts[2] === "type" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_TYPE_APP_ID;
-	if (pathParts.length >= 2 && isUuidPattern(pathParts[1] ?? "")) return SKETCHPAD_KIT_APP_ID;
-	return SKETCHPAD_HOME_APP_ID;
+	if (pathParts.length >= 4 && pathParts[0] === "kits" && pathParts[2] === "design" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_DESIGN_APP_ID;
+	if (pathParts.length >= 4 && pathParts[0] === "kits" && pathParts[2] === "type" && isUuidPattern(pathParts[3] ?? "")) return SKETCHPAD_TYPE_APP_ID;
+	if (pathParts[0] === "kits" && pathParts.length >= 2 && isUuidPattern(pathParts[1] ?? "")) return SKETCHPAD_KIT_APP_ID;
+	return SKETCHPAD_KIT_APP_ID;
 }
 //#endregion 🔖SketchpadRouteScope
 
@@ -13843,17 +13843,12 @@ function sketchpadHomeVfsChildren(
 
 export const SKETCHPAD_SHELL_CONTROLLER_ID = "compose.sketchpad.shell";
 const SKETCHPAD_EXTENSION_ID = "compose.sketchpad.builtin";
-export const SKETCHPAD_HOME_APP_ID = "home";
 export const SKETCHPAD_KIT_APP_ID = "kit";
 export const SKETCHPAD_DESIGN_APP_ID = "design";
 export const SKETCHPAD_TYPE_APP_ID = "type";
 export const SKETCHPAD_DOCS_APP_ID = "docs";
 export const SKETCHPAD_FEEDBACK_APP_ID = "feedback";
 
-/** @emoji 🏠 Home virtual file system surface id. */
-export const SKETCHPAD_SURFACE_HOME_VFS = virtualFileSystemSurfaceId(SKETCHPAD_HOME_APP_ID);
-
-const SKETCHPAD_BODY_HOME = "compose.sketchpad.window.home";
 const SKETCHPAD_BODY_KIT_VFS = "compose.sketchpad.window.kit.vfs";
 const SKETCHPAD_BODY_KIT_WIRES = "compose.sketchpad.window.kit.wires";
 const SKETCHPAD_BODY_DESIGN_SCENE = "compose.sketchpad.window.design.scene";
@@ -14079,10 +14074,6 @@ class SketchpadAppVirtualFileSystem extends SketchpadRoutedComponent<VirtualFile
 		}
 		if (this.vfsAppId === SKETCHPAD_DESIGN_APP_ID && (!this.route.kitId || !this.route.designId)) {
 			return { rows: [], emptyMessage: "Open a design to browse the file system" };
-		}
-		if (this.vfsAppId === SKETCHPAD_HOME_APP_ID) {
-			const shell = ctrl.getStore<SketchpadShellSnapshot>(SKETCHPAD_SHELL_STORE_SHELL)?.getSnapshot();
-			ctrl.expandedStore(sketchpadVfsScope(SKETCHPAD_HOME_APP_ID)).setAll(shell?.home.expandedRowIds ?? []);
 		}
 		if (this.vfsAppId === SKETCHPAD_KIT_APP_ID && this.route.kitId) {
 			ctrl.syncVirtualFileSystemRoute(sketchpadVfsScope(SKETCHPAD_KIT_APP_ID), this.route.kitId);
@@ -14685,7 +14676,6 @@ class SketchpadPlatformComponents {
 
 	constructor(platform: Platform) {
 		this.components = [
-			new SketchpadAppVirtualFileSystem(SKETCHPAD_HOME_APP_ID, platform),
 			new SketchpadAppVirtualFileSystem(SKETCHPAD_KIT_APP_ID, platform),
 			new SketchpadAppVirtualFileSystem(SKETCHPAD_DESIGN_APP_ID, platform),
 			new SketchpadKitWires(platform),
@@ -15030,24 +15020,11 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	}
 
 	protected override getSchema(scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
-		if (scope.appId === SKETCHPAD_HOME_APP_ID) return SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_HOME_SCHEMA_MODEL;
 		return SKETCHPAD_KIT_VIRTUAL_FILE_SYSTEM_TREE_SCHEMA_MODEL;
 	}
 
 	protected override getRoot(scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
 		const route = parseSketchpadRouteScopeFromPath(this.shellStore.get().navigationPath);
-		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
-			return {
-				id: "sketchpad-home",
-				fileNodeKindId: "kit",
-				name: "Home",
-				path: "/",
-				parentId: null,
-				hasChildren: true,
-				canDrag: false,
-				descriptorValues: sketchpadKitVirtualFileSystemDescriptorValues("kit", { path: "/" }),
-			};
-		}
 		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
 			if (!route.kitId) {
 				return {
@@ -15110,18 +15087,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 		};
 	}
 
-	protected override loadChildren(parentId: string, scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
-		const route = parseSketchpadRouteScopeFromPath(this.shellStore.get().navigationPath);
-		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
-			const shell = this.shellStore.get();
-			return sketchpadHomeVfsChildren(
-				this.listOpenKitIds(),
-				(kitId) => this.getKitStore(kitId)?.getSnapshot().kit,
-				(kitId) => this.getKitPersistenceKind(kitId) ?? "",
-				shell.home,
-				parentId,
-			);
-		}
+	protected override loadChildren(parentId: string, _scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
 		return [];
 	}
 
@@ -15190,12 +15156,6 @@ export class SketchpadShellController extends VirtualFileSystemController {
 
 	/** @emoji 🔄 Home vfs stays synchronous; kit/design use async rs-backed children. */
 	protected override ensureChildrenLoaded(parentId: string, scope: VirtualFileSystemScope): void {
-		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
-			const childrenStore = this.childrenStore(scope);
-			const key = parentId === this.getRoot(scope).id ? "__root__" : parentId;
-			childrenStore.setChildren(key, this.loadChildren(parentId, scope));
-			return;
-		}
 		if (scope.appId === SKETCHPAD_KIT_APP_ID || scope.appId === SKETCHPAD_DESIGN_APP_ID) {
 			super.ensureChildrenLoaded(parentId, scope);
 			return;
@@ -15234,17 +15194,11 @@ export class SketchpadShellController extends VirtualFileSystemController {
 	}
 
 	protected override selectedRows(scope: VirtualFileSystemScope): string[] {
-		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
-			return this.shellStore.get().home.selectedKitIds.map((kitId) => `kit:${kitId}`);
-		}
 		return super.selectedRows(scope);
 	}
 
 	protected override buildVirtualFileSystemModel(scope: VirtualFileSystemScope): VirtualFileSystemModel {
 		const model = super.buildVirtualFileSystemModel(scope);
-		if (scope.appId === SKETCHPAD_HOME_APP_ID) {
-			return { ...model, dragDropEnabled: false };
-		}
 		if (scope.appId === SKETCHPAD_KIT_APP_ID) {
 			return {
 				...model,
@@ -15280,36 +15234,6 @@ export class SketchpadShellController extends VirtualFileSystemController {
 			if (command === "virtualFileSystemRowHover") {
 				const rowId = (args as { rowId?: string | null }).rowId ?? null;
 				this.setKitWiresHoveredNodeId(rowId);
-				return true;
-			}
-		}
-		if (scope?.appId === SKETCHPAD_HOME_APP_ID) {
-			const payload = (args ?? {}) as { nodeId?: string; rowId?: string };
-			if (command === "toggleVirtualFileSystemExpand" && payload.nodeId) {
-				const shell = this.shellStore.get();
-				const expanded = new Set(shell.home.expandedRowIds);
-				if (expanded.has(payload.nodeId)) expanded.delete(payload.nodeId);
-				else expanded.add(payload.nodeId);
-				const expandedRowIds = [...expanded];
-				this.updateHome({ ...shell.home, expandedRowIds });
-				const homeScope = sketchpadVfsScope(SKETCHPAD_HOME_APP_ID);
-				const expandedStore = this.expandedStore(homeScope);
-				expandedStore.setAll(expandedRowIds);
-				if (expanded.has(payload.nodeId)) {
-					this.ensureChildrenLoaded(payload.nodeId, homeScope);
-				}
-				this.emit();
-				return true;
-			}
-			if (command === "setVirtualFileSystemRowSelection") {
-				const selectionPayload = args as { rowIds?: readonly string[] };
-				const kitIds = (selectionPayload.rowIds ?? [])
-					.filter((rowId) => rowId.startsWith("kit:"))
-					.map((rowId) => rowId.slice(4));
-				const shell = this.shellStore.get();
-				const selectedKitIds = kitIds.filter((kitId) => shell.openKitIds.includes(kitId));
-				this.updateHome({ ...shell.home, selectedKitIds });
-				this.emit();
 				return true;
 			}
 		}
@@ -15583,39 +15507,20 @@ function sketchpadShellCommand(
 	return { id, label, category, controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, command, args };
 }
 
-function sketchpadHomeCommands(): readonly SearchItemSpec[] {
-	return [
-		sketchpadShellCommand("compose.sketchpad.home.createKit", "Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
-		sketchpadShellCommand("compose.sketchpad.home.importFile", "Import kit from file", "importKitFromFile"),
-		sketchpadShellCommand("compose.sketchpad.home.openFolder", "Open folder kit", "openKit", { kind: "folder" }),
-		sketchpadShellCommand("compose.sketchpad.home.openFile", "Open file kit", "openKit", { kind: "file" }),
-		sketchpadShellCommand("compose.sketchpad.home.openRemote", "Open remote kit", "openKit", { kind: "remote" }),
-		sketchpadShellCommand("compose.sketchpad.home.filterTemporary", "Filter · temporary kits", "setHomeFilters", { kind: "temporary" }),
-		sketchpadShellCommand("compose.sketchpad.home.filterFile", "Filter · file kits", "setHomeFilters", { kind: "file" }),
-		sketchpadShellCommand("compose.sketchpad.home.clearFilters", "Clear home filters", "setHomeFilters", {
-			kind: null,
-			q: "",
-			name: null,
-			version: null,
-		}),
-		sketchpadShellCommand("compose.sketchpad.home.sortUpdated", "Sort home by updated", "setHomeSort", {
-			columnId: "updated",
-			descending: true,
-		}),
-		sketchpadShellCommand("compose.sketchpad.home.sortName", "Sort home by name", "setHomeSort", { columnId: "name", descending: false }),
-		sketchpadShellCommand("compose.sketchpad.home.openDocs", "Open documentation", "navigate", { path: "/doc/getting-started/index" }),
-		sketchpadShellCommand("compose.sketchpad.home.openFeedback", "Open feedback", "navigate", { path: "/feedback" }),
-	];
-}
-
 function sketchpadKitAppCommands(): readonly SearchItemSpec[] {
 	return [
-		sketchpadShellCommand("compose.sketchpad.kit.goHome", "Go to Home", "navigate", { path: "/" }),
+		sketchpadShellCommand("compose.sketchpad.kit.createKit", "Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
+		sketchpadShellCommand("compose.sketchpad.kit.importFile", "Import kit from file", "importKitFromFile"),
+		sketchpadShellCommand("compose.sketchpad.kit.openFolder", "Open folder kit", "openKit", { kind: "folder" }),
+		sketchpadShellCommand("compose.sketchpad.kit.openFile", "Open file kit", "openKit", { kind: "file" }),
+		sketchpadShellCommand("compose.sketchpad.kit.openRemote", "Open remote kit", "openKit", { kind: "remote" }),
 		sketchpadShellCommand("compose.sketchpad.kit.close", "Close active kit", "closeActiveKit"),
 		sketchpadShellCommand("compose.sketchpad.kit.rename", "Rename kit", "renameActiveKit", { name: "Renamed kit" }),
 		sketchpadShellCommand("compose.sketchpad.kit.createDesign", "Create design", "createDesignInActiveKit", { name: "New design" }),
 		sketchpadShellCommand("compose.sketchpad.kit.export", "Export active kit JSON", "exportActiveKit"),
 		sketchpadShellCommand("compose.sketchpad.kit.copyJson", "Copy active kit JSON", "copyActiveKitJson"),
+		sketchpadShellCommand("compose.sketchpad.kit.openDocs", "Open documentation", "navigate", { path: "/doc/getting-started/index" }),
+		sketchpadShellCommand("compose.sketchpad.kit.openFeedback", "Open feedback", "navigate", { path: "/feedback" }),
 	];
 }
 
@@ -15641,16 +15546,6 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 		label: "Compose Sketchpad",
 		contributes: {
 			apps: [
-				{
-					id: SKETCHPAD_HOME_APP_ID,
-					label: "Home",
-					controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
-					modes: [{ id: "explore", label: "Explore" }],
-					windowKinds: [{ id: "home-main", label: "Home", bodyKey: SKETCHPAD_BODY_HOME }],
-					defaultLayout: createTabStackLayout(["home-main"], ["Home"]),
-					commands: sketchpadHomeCommands(),
-					panelTabs: sketchpadHomePanelTabs(),
-				},
 				{
 					id: SKETCHPAD_KIT_APP_ID,
 					label: "Kit",
@@ -15709,9 +15604,6 @@ function buildSketchpadExtensionManifest(): PluginManifest {
 function registerSketchpadWindowBodies(): void {
 	if (sketchpadBodiesRegistered) return;
 	sketchpadBodiesRegistered = true;
-	registerWindowBody(SKETCHPAD_BODY_HOME, () =>
-		buildVirtualFileSystemWindowBody(SKETCHPAD_SURFACE_HOME_VFS, SKETCHPAD_SHELL_CONTROLLER_ID, "home-main"),
-	);
 	registerWindowBody(SKETCHPAD_BODY_KIT_VFS, () =>
 		buildVirtualFileSystemWindowBody(SKETCHPAD_SURFACE_KIT_VFS, SKETCHPAD_SHELL_CONTROLLER_ID, "vfs"),
 	);
@@ -15935,7 +15827,7 @@ export function sketchpadNavigation(platform: Platform, uri: string): Navigation
 const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
 	id: "compose.sketchpad",
 	name: "Compose Sketchpad",
-	defaultActiveAppId: SKETCHPAD_HOME_APP_ID,
+	defaultActiveAppId: SKETCHPAD_KIT_APP_ID,
 	initialPanelVisibility: PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
 };
 
@@ -15946,7 +15838,6 @@ export function buildSketchpadProgramDefinition(): PlatformDefinition {
 		name: SKETCHPAD_PLATFORM_SPEC.name,
 		apiVersion: "1",
 		apps: [
-			{ id: SKETCHPAD_HOME_APP_ID, label: "Home", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: "Explore" }] },
 			{ id: SKETCHPAD_KIT_APP_ID, label: "Kit", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "explore", label: "Explore" }] },
 			{ id: SKETCHPAD_DESIGN_APP_ID, label: "Design", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }] },
 			{ id: SKETCHPAD_TYPE_APP_ID, label: "Type", controllerId: SKETCHPAD_SHELL_CONTROLLER_ID, modes: [{ id: "edit", label: "Edit" }] },
@@ -15974,7 +15865,7 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
 	platform.applyUri = (uri) => applySketchpadUri(platform, uri);
 	platform.navigation = (uri) => sketchpadNavigation(platform, uri);
 	if (typeof window === "undefined") {
-		platform.activeAppId = SKETCHPAD_HOME_APP_ID;
+		platform.activeAppId = SKETCHPAD_KIT_APP_ID;
 		platform.notify();
 	}
 	sketchpadPlatformSingleton = platform;
@@ -16145,7 +16036,7 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new SketchpadShellController(bus, () => platform.notify());
 			const app = new AppRuntime(
-				SKETCHPAD_HOME_APP_ID,
+				SKETCHPAD_KIT_APP_ID,
 				"Home",
 				undefined,
 				ctrl,
@@ -16239,7 +16130,7 @@ if (import.meta.vitest) {
 				const kitId = ctrl.listOpenKitIds()[0];
 				expect(kitId).toBeTruthy();
 				expect(platform.uri.split("?")[0]).toBe("/");
-				expect(platform.activeAppId).toBe(SKETCHPAD_HOME_APP_ID);
+				expect(platform.activeAppId).toBe(SKETCHPAD_KIT_APP_ID);
 				expect(ctrl.listOpenKitIds()).toContain(kitId);
 				expect(ctrl.getKitAssetBaseUrl(kitId!)).toBe("/fixture/kit/dev/metabolism/wip/initialKit");
 			} finally {
@@ -16360,7 +16251,7 @@ if (import.meta.vitest) {
 
 		it("navigateTo syncs platform uri before onNavigate", () => {
 			const bus = new CommandBus();
-			const platform = new Platform({ id: "t", name: "T", defaultActiveAppId: SKETCHPAD_HOME_APP_ID });
+			const platform = new Platform({ id: "t", name: "T", defaultActiveAppId: SKETCHPAD_KIT_APP_ID });
 			platform.applyUri = (uri) => applySketchpadUri(platform, uri);
 			let uriWhenHistoryUpdates: string | undefined;
 			platform.onNavigate = (uri: string) => {
@@ -17078,7 +16969,7 @@ if (import.meta.vitest) {
 			);
 			ctrl.navigateTo("/");
 			platform.uri = "/";
-			const scope = sketchpadVfsScope(SKETCHPAD_HOME_APP_ID);
+			const scope = sketchpadVfsScope(SKETCHPAD_KIT_APP_ID);
 			const snap = ctrl.buildVirtualFileSystemModel(scope);
 			expect(snap.rows.map((row) => row.id)).toContain("kit:k-home");
 			expect(snap.rows.find((row) => row.id === "kit:k-home")?.name).toBe("Demo Kit");
@@ -17893,3 +17784,113 @@ if (typeof __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__ !== "undefined" && __COMPOSE
 	});
 }
 //#endregion 🧪E2E
+
+//#region 🔖Play
+import { createPlaygroundApp } from "@semio-tech/framework-playground-core";
+import type { AppInstanceHostComponent, AppRendererContribution } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { PlaygroundView } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import type { ReactElement } from "react";
+
+/** @emoji 🖥️ OS instance host mounting sketchpad for a spawned app instance. */
+const SketchpadInstanceHost: AppInstanceHostComponent = ({ instance }: { readonly instance: OsAppInstance }): ReactElement => {
+	const [platform, setPlatform] = reactHostPort.useState<Platform | null>(null);
+	reactHostPort.useEffect(() => {
+		let active = true;
+		void ensureSketchpadPlatform().then((runtime) => {
+			if (!active) return;
+			runtime.activeAppId = instance.appId;
+			runtime.notify();
+			setPlatform(runtime);
+		});
+		return () => {
+			active = false;
+		};
+	}, [instance.appId]);
+	if (!platform) {
+		return reactHostPort.createElement(
+			"div",
+			{ className: "flex h-full items-center justify-center p-6 text-sm text-muted-foreground" },
+			"Loading sketchpad…",
+		);
+	}
+	return reactHostPort.createElement(PlaygroundView, { runtime: platform, defaultAppId: instance.appId });
+};
+
+/** @emoji 🛝 Sketchpad app renderer for playground and OS shells. */
+export const sketchpadAppRenderer: AppRendererContribution = {
+	surfaceHosts: {},
+	instanceHost: SketchpadInstanceHost,
+};
+
+/** @emoji 🛝 Compose sketchpad playground app. */
+export const sketchpadPlayAppDefinition = createPlaygroundApp({
+	id: SKETCHPAD_PLATFORM_SPEC.id,
+	label: "Sketchpad",
+	controllerId: SKETCHPAD_SHELL_CONTROLLER_ID,
+	modes: [{ id: "explore", label: "Explore" }],
+	defaultModeId: "explore",
+	devHost: {
+		playEntryKind: "sketchpad",
+		resolveDedupe: ["react", "react-dom"],
+	},
+	createRuntime: () => {
+		void ensureSketchpadPlatform();
+		return new Platform(SKETCHPAD_PLATFORM_SPEC);
+	},
+	loadRenderer: async () => sketchpadAppRenderer,
+});
+//#endregion 🔖Play
+
+//#region 🔖OsProgram
+import { createTypedAppVcsHandler, mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+/** @emoji 🏘️ S app VCS handler for compose design documents. */
+export function createComposeDesignAppVcsHandler() {
+	return createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
+		"compose.design",
+		"compose.design",
+		() => ({ id: "design" }),
+		(doc, op) => ({ id: op.id }),
+	);
+}
+
+/** @emoji 🏷️ S app VCS handler for compose type documents. */
+export function createComposeTypeAppVcsHandler() {
+	return createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
+		"compose.type",
+		"compose.type",
+		() => ({ id: "type" }),
+		(doc, op) => ({ id: op.id }),
+	);
+}
+
+/** @emoji 📦 S app VCS handler for compose kit documents. */
+export function createComposeKitAppVcsHandler() {
+	return createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
+		"compose.kit",
+		"compose.kit",
+		() => ({ id: "kit" }),
+		(doc, op) => ({ id: op.id }),
+	);
+}
+
+/** @emoji 🧩 OS program contribution for compose sketchpad. */
+export const sketchpadProgramContribution: OsProgramContribution = {
+	programId: "compose.sketchpad",
+	register() {
+		mergeOsProgramDefinition("compose.sketchpad", buildSketchpadProgramDefinition(), {
+			kit: osBaselineResource("kit.compose", "compose.kit", "virtualFileSystem", [{ id: "explore", label: "Explore" }]),
+			design: osBaselineResource("5d.puzzle", "compose.design", "puzzle5d", [{ id: "edit", label: "Edit" }]),
+			type: osBaselineResource("3d.puzzle", "compose.type", "puzzle3d", [{ id: "edit", label: "Edit" }]),
+			docs: osBaselineResource("text.document", "writer.document", "panel", [{ id: "explore", label: "Explore" }]),
+			feedback: osBaselineResource("form.dictionary", "forms.dictionary", "panel", [{ id: "explore", label: "Explore" }]),
+		});
+		registerAppVcsHandler(createComposeDesignAppVcsHandler());
+		registerAppVcsHandler(createComposeTypeAppVcsHandler());
+		registerAppVcsHandler(createComposeKitAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram

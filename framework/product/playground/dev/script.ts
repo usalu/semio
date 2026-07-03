@@ -56,7 +56,7 @@ class DevScript extends BundleScript {
 		const env = {
 			...playPollingEnv(),
 			PLAYGROUND_APP: appEntry,
-			PUZZLE_PLAY_ENTRY: playEntryKind,
+			PLAYGROUND_APP_KIND: playEntryKind,
 			PLAYGROUND_PACKAGE_ROOT: PACKAGE_ROOT_BY_ENTRY[appEntry] ?? "",
 		};
 		runViteBunxDev(this.root, viteArgs, {
@@ -75,7 +75,7 @@ class BuildScript extends BundleScript {
 		runBun(["run", "vite", "build", "--config", "vite.config.ts", ...viteArgs], this.root, {
 			...playPollingEnv(),
 			PLAYGROUND_APP: appEntry,
-			PUZZLE_PLAY_ENTRY: appEntry,
+			PLAYGROUND_APP_KIND: appEntry,
 			PLAYGROUND_PACKAGE_ROOT: PACKAGE_ROOT_BY_ENTRY[appEntry] ?? "",
 		});
 	}

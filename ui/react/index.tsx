@@ -2024,7 +2024,7 @@ export function useElementsSurfaceChrome({ theme, device, expertise, compact = f
 /**
  * @emoji 🌓 Observes document theme attributes and runs `sync` on mount and whenever the root theme changes.
  */
-export function useVelloThemeSync(sync: () => void, enabled = true): void {
+export function useCanvasThemeSync(sync: () => void, enabled = true): void {
   reactHostPort.useEffect(() => {
     if (!enabled || typeof document === "undefined" || typeof MutationObserver === "undefined") return;
     sync();

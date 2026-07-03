@@ -26,6 +26,8 @@
     "@semio-tech/writer-core": "workspace:*",
     "@semio-tech/writer-react": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-renderer-react": "workspace:*",
     "@semio-tech/puzzle-2d-core": "workspace:*",
     "@semio-tech/reasoning-mindmap-wires-core": "workspace:*"
   },

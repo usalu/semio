@@ -659,6 +659,10 @@ if (typeof document !== "undefined" && !import.meta.vitest) {
 }
 //#endregion 🔖Deck
 
+//#region 🔖Play
+export { presentationPlayAppDefinition as projektetagePlayAppDefinition } from "@semio-tech/framework-presentation-core";
+//#endregion 🔖Play
+
 //#region 🧪Tests
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;

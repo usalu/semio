@@ -21,12 +21,31 @@
     "@semio-tech/vcs-core": "workspace:*"
   },
   "devDependencies": {
+    "@semio-tech/cad-js-renderer-core": "workspace:*",
+    "@semio-tech/compose-sketchpad": "workspace:*",
+    "@semio-tech/dag-host-core": "workspace:*",
     "@semio-tech/draw-core": "workspace:*",
-    "@semio-tech/note-core": "workspace:*",
     "@semio-tech/flow-core": "workspace:*",
     "@semio-tech/forms-core": "workspace:*",
     "@semio-tech/framework-presentation-core": "workspace:*",
+    "@semio-tech/gis-2d-core": "workspace:*",
+    "@semio-tech/imperative-core": "workspace:*",
+    "@semio-tech/layout-core": "workspace:*",
+    "@semio-tech/lowpoly-core": "workspace:*",
+    "@semio-tech/note-core": "workspace:*",
+    "@semio-tech/procedural-2d-core": "workspace:*",
+    "@semio-tech/procedural-3d-core": "workspace:*",
+    "@semio-tech/puzzle-2d-core": "workspace:*",
+    "@semio-tech/puzzle-3d-core": "workspace:*",
+    "@semio-tech/puzzle-5d-core": "workspace:*",
+    "@semio-tech/puzzle-5d-react": "workspace:*",
     "@semio-tech/raster-core": "workspace:*",
+    "@semio-tech/reasoning-mindmap-wires-core": "workspace:*",
+    "@semio-tech/sequence-core": "workspace:*",
+    "@semio-tech/shooting-core": "workspace:*",
+    "@semio-tech/trinity-jack-host-core": "workspace:*",
+    "@semio-tech/trinity-rewrite-core": "workspace:*",
+    "@semio-tech/vcs-core": "workspace:*",
     "@semio-tech/writer-core": "workspace:*",
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"
@@ -37,5 +56,17 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "s/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "app": {
+      "kind": "s",
+      "aliases": ["s"],
+      "packageRoot": "framework/product/os",
+      "corePackage": "@semio-tech/s-core",
+      "definitionExport": "sPlayAppDefinition",
+      "hostKind": "s",
+      "port": { "dev": 6066, "test": 6067, "env": "S_OS_PORT" },
+      "assets": ["sketchpad-mdx", "playwright-dev-stub", "vitest-dev-stub", "react-all-extensions"]
+    }
+  }
 }

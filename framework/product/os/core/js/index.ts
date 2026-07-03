@@ -646,268 +646,10 @@ export function createTypedAppVcsHandler<TProjection, TOp>(
 	};
 }
 
-type ShootingAsset = { readonly id: string; readonly name: string; readonly url: string; readonly format: "glb" };
-type ShootingFixture = {
-	readonly schema: "shooting.fixture";
-	readonly assets: readonly ShootingAsset[];
-	readonly camera: { readonly position: readonly [number, number, number]; readonly target: readonly [number, number, number]; readonly zoom: number };
-	readonly savedCameras: readonly unknown[];
-	readonly scene: Record<string, unknown>;
-	readonly shots: readonly unknown[];
-	readonly activeShotId?: string;
-	readonly activeAssetId?: string;
-};
-type ShootingOp =
-	| { readonly op: "addAsset"; readonly asset: ShootingAsset }
-	| { readonly op: "removeAsset"; readonly assetId: string }
-	| { readonly op: "setActiveAsset"; readonly assetId: string };
-
-function defaultShootingFixture(): ShootingFixture {
-	return {
-		schema: "shooting.fixture",
-		assets: [{ id: "base", name: "Base", url: "/mesh/base.glb", format: "glb" }],
-		camera: { position: [420, -420, 320], target: [0, 0, 40], zoom: 1 },
-		savedCameras: [],
-		scene: {},
-		shots: [{ id: "overview-svg", label: "Overview", width: 256, height: 256, format: "svg" }],
-		activeShotId: "overview-svg",
-		activeAssetId: "base",
-	};
-}
-
-function applyShootingOp(fixture: ShootingFixture, op: ShootingOp): ShootingFixture {
-	switch (op.op) {
-		case "addAsset":
-			return { ...fixture, assets: [...fixture.assets, op.asset] };
-		case "removeAsset":
-			return { ...fixture, assets: fixture.assets.filter((asset) => asset.id !== op.assetId) };
-		case "setActiveAsset":
-			return { ...fixture, activeAssetId: op.assetId };
-	}
-}
-
-/** @emoji 📸 S app VCS handler for shooting scene documents. */
-export function createShootingAppVcsHandler() {
-	return createTypedAppVcsHandler<ShootingFixture, ShootingOp>(
-		"shooting.scene",
-		"shooting.fixture",
-		defaultShootingFixture,
-		applyShootingOp,
-		undefined,
-		{
-			applyInputBindings: (fixture, inputBindings) => {
-				const mesh = inputBindings.mesh as { readonly url?: string } | undefined;
-				if (!mesh?.url) return fixture;
-				const activeId = fixture.activeAssetId ?? fixture.assets[0]?.id;
-				if (!activeId) return fixture;
-				return {
-					...fixture,
-					assets: fixture.assets.map((asset) => (asset.id === activeId ? { ...asset, url: mesh.url! } : asset)),
-				};
-			},
-		},
-	);
-}
-
-/** @emoji 🌊 S app VCS handler for flow documents. */
-export function createFlowDocumentAppVcsHandler() {
-	return createTypedAppVcsHandler("flow.document", "flow.document", () => ({ flow: {}, tree: {} }), (doc, op) => {
-		if (op.op === "setFlow") return { ...doc, flow: op.flow };
-		return { ...doc, tree: op.tree };
-	});
-}
-
-/** @emoji 🌳 S app VCS handler for DAG documents. */
-export function createFlowDagAppVcsHandler() {
-	type DagDoc = { readonly nodes: readonly unknown[]; readonly edges: readonly unknown[] };
-	type DagOp = { readonly op: "setNodes"; readonly nodes: readonly unknown[] } | { readonly op: "setEdges"; readonly edges: readonly unknown[] };
-	return createTypedAppVcsHandler<DagDoc, DagOp>("flow.dag", "flow.dag", () => ({ nodes: [], edges: [] }), (doc, op) => {
-		if (op.op === "setNodes") return { ...doc, nodes: op.nodes };
-		return { ...doc, edges: op.edges };
-	});
-}
-
-/** @emoji 📏 S app VCS handler for procedural 2d documents. */
-export function createProcedural2dAppVcsHandler() {
-	type Doc = { readonly revision: number };
-	type Op = { readonly op: "setRevision"; readonly revision: number };
-	return createTypedAppVcsHandler<Doc, Op>("procedural.2d", "procedural.2d", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
-}
-
-/** @emoji 📐 S app VCS handler for procedural 3d documents. */
-export function createProcedural3dAppVcsHandler() {
-	type Doc = { readonly revision: number };
-	type Op = { readonly op: "setRevision"; readonly revision: number };
-	return createTypedAppVcsHandler<Doc, Op>("procedural.3d", "procedural.3d", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
-}
-
-/** @emoji 🔺 S app VCS handler for trinity graph documents. */
-export function createTrinityGraphAppVcsHandler() {
-	type Doc = { readonly nodes: readonly unknown[] };
-	type Op = { readonly op: "setNodes"; readonly nodes: readonly unknown[] };
-	return createTypedAppVcsHandler<Doc, Op>("trinity.graph", "trinity.graph", () => ({ nodes: [] }), (doc, op) => ({ nodes: op.nodes }));
-}
-
-/** @emoji 🗺️ S app VCS handler for GIS map documents. */
-export function createGisMapAppVcsHandler() {
-	type Doc = { readonly layers: readonly unknown[] };
-	type Op = { readonly op: "setLayers"; readonly layers: readonly unknown[] };
-	return createTypedAppVcsHandler<Doc, Op>("gis.map", "gis.map", () => ({ layers: [] }), (doc, op) => ({ layers: op.layers }));
-}
-
-/** @emoji 📽 S app VCS handler for presentation deck documents. */
-export function createPresentationDeckAppVcsHandler() {
-	type Tile = { readonly id: string; readonly name: string };
-	type Doc = { readonly schema: string; readonly tiles: readonly Tile[] };
-	type Op = { readonly op: "addTile"; readonly tile: Tile } | { readonly op: "removeTile"; readonly tileId: string };
-	return createTypedAppVcsHandler<Doc, Op>(
-		"presentation.deck",
-		"presentation.deck",
-		() => ({ schema: "presentation.deck", tiles: [] }),
-		(doc, op) => {
-			if (op.op === "addTile") return { ...doc, tiles: [...doc.tiles, op.tile] };
-			return { ...doc, tiles: doc.tiles.filter((tile) => tile.id !== op.tileId) };
-		},
-	);
-}
-
-/** @emoji 🩻 S app VCS handler for puzzle 2d documents. */
-export function createPuzzle2dAppVcsHandler() {
-	type Doc = { readonly nodes: readonly string[] };
-	type Op = { readonly op: "addNode"; readonly nodeId: string } | { readonly op: "removeNode"; readonly nodeId: string };
-	return createTypedAppVcsHandler<Doc, Op>("puzzle.2d", "puzzle.2d", () => ({ nodes: [] }), (doc, op) => {
-		if (op.op === "addNode") return { ...doc, nodes: [...doc.nodes, op.nodeId] };
-		return { ...doc, nodes: doc.nodes.filter((id) => id !== op.nodeId) };
-	});
-}
-
-/** @emoji 🏙️ S app VCS handler for puzzle 3d documents. */
-export function createPuzzle3dAppVcsHandler() {
-	type Doc = { readonly revision: number };
-	type Op = { readonly op: "setRevision"; readonly revision: number };
-	return createTypedAppVcsHandler<Doc, Op>("puzzle.3d", "puzzle.3d", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
-}
-
-/** @emoji 📜 S app VCS handler for sequence documents. */
-export function createSequenceAppVcsHandler() {
-	type Doc = { readonly schema: string; readonly steps: readonly unknown[]; readonly edges: readonly unknown[] };
-	type Op = { readonly op: "setDocument"; readonly document: Doc };
-	return createTypedAppVcsHandler<Doc, Op>(
-		"sequence.fixture",
-		"sequence.fixture",
-		() => ({ schema: "sequence.fixture", steps: [], edges: [] }),
-		(doc, op) => (op.op === "setDocument" ? op.document : doc),
-	);
-}
-
-/** @emoji 📄 S app VCS handler for layout documents. */
-export function createLayoutAppVcsHandler() {
-	type Doc = { readonly schema: string; readonly pages: readonly unknown[] };
-	type Op = { readonly op: "setDocument"; readonly document: Doc };
-	return createTypedAppVcsHandler<Doc, Op>(
-		"layout.fixture",
-		"layout.fixture",
-		() => ({ schema: "layout.fixture", pages: [] }),
-		(doc, op) => (op.op === "setDocument" ? op.document : doc),
-	);
-}
-
-/** @emoji ⚙️ S app VCS handler for imperative documents. */
-export function createImperativeAppVcsHandler() {
-	type Doc = { readonly schema: string; readonly path: { readonly steps: readonly unknown[] } };
-	type Op = { readonly op: "setDocument"; readonly document: Doc };
-	return createTypedAppVcsHandler<Doc, Op>(
-		"imperative.document",
-		"imperative.document",
-		() => ({ schema: "imperative.document", path: { steps: [] } }),
-		(doc, op) => (op.op === "setDocument" ? op.document : doc),
-	);
-}
-
-/** @emoji 🔷 S app VCS handler for lowpoly fixtures. */
-export function createLowpolyAppVcsHandler() {
-	type Doc = { readonly schema: string; readonly objects: readonly unknown[] };
-	type Op = { readonly op: "setDocument"; readonly document: Doc };
-	return createTypedAppVcsHandler<Doc, Op>(
-		"lowpoly.fixture",
-		"lowpoly.fixture",
-		() => ({ schema: "lowpoly.fixture", objects: [] }),
-		(doc, op) => (op.op === "setDocument" ? op.document : doc),
-	);
-}
-
-/** @emoji 🗄️ S app VCS handler for vcs demo documents. */
-export function createVcsDemoAppVcsHandler() {
-	type Doc = { readonly schema: string; readonly title: string; readonly counter: number };
-	type Op = { readonly op: "setDocument"; readonly document: Doc } | { readonly op: "setCounter"; readonly counter: number };
-	return createTypedAppVcsHandler<Doc, Op>(
-		"vcs.demo",
-		"vcs.demo",
-		() => ({ schema: "vcs.demo", title: "VCS Demo", counter: 0 }),
-		(doc, op) => {
-			if (op.op === "setDocument") return op.document;
-			return { ...doc, counter: op.counter };
-		},
-	);
-}
-
 /** @emoji 📚 Registers a catalogue.kinds VCS handler backed by a bundle factory. */
 export function createCatalogueKindsAppVcsHandler(bundle: () => unknown) {
 	return createTypedAppVcsHandler("catalogue.kinds", "catalogue.kinds", bundle, (doc) => doc);
 }
-
-/** @emoji 👯 S app VCS handler for puzzle 5d documents. */
-export function createPuzzle5dAppVcsHandler() {
-	type Doc = { readonly revision: number };
-	type Op = { readonly op: "setRevision"; readonly revision: number };
-	return createTypedAppVcsHandler<Doc, Op>("puzzle.5d", "puzzle.5d", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
-}
-
-registerAppVcsHandler(createFlowDocumentAppVcsHandler());
-registerAppVcsHandler(createFlowDagAppVcsHandler());
-registerAppVcsHandler(createProcedural2dAppVcsHandler());
-registerAppVcsHandler(createProcedural3dAppVcsHandler());
-registerAppVcsHandler(createShootingAppVcsHandler());
-registerAppVcsHandler(createTrinityGraphAppVcsHandler());
-registerAppVcsHandler(createGisMapAppVcsHandler());
-registerAppVcsHandler(createPresentationDeckAppVcsHandler());
-registerAppVcsHandler(createPuzzle2dAppVcsHandler());
-registerAppVcsHandler(createPuzzle3dAppVcsHandler());
-registerAppVcsHandler(createPuzzle5dAppVcsHandler());
-registerAppVcsHandler(
-	createTypedAppVcsHandler<
-		{ readonly schema: string; readonly id: string; readonly nodes: readonly { readonly id: string; readonly label: string }[] },
-		| { readonly op: "addNode"; readonly node: { readonly id: string; readonly label: string } }
-		| { readonly op: "removeNode"; readonly nodeId: string }
-	>("cad.scene", "cad.scene", () => ({ schema: "cad.scene", id: "cad", nodes: [] }), (doc, op) => {
-		if (op.op === "addNode") return { ...doc, nodes: [...doc.nodes, op.node] };
-		return { ...doc, nodes: doc.nodes.filter((node) => node.id !== op.nodeId) };
-	}),
-);
-registerAppVcsHandler(
-	createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
-		"compose.design",
-		"compose.design",
-		() => ({ id: "design" }),
-		(doc, op) => ({ id: op.id }),
-	),
-);
-registerAppVcsHandler(
-	createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
-		"compose.type",
-		"compose.type",
-		() => ({ id: "type" }),
-		(doc, op) => ({ id: op.id }),
-	),
-);
-registerAppVcsHandler(
-	createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
-		"compose.kit",
-		"compose.kit",
-		() => ({ id: "kit" }),
-		(doc, op) => ({ id: op.id }),
-	),
-);
 
 export function resolvePayloadRef(payloadRef: string): string | null {
 	if (payloadRef.startsWith("fixture:")) return payloadRef.slice("fixture:".length);
@@ -2159,6 +1901,258 @@ export class OsStorageVirtualFileSystemController extends VirtualFileSystemContr
 }
 //#endregion 🔖MediaExport
 
+//#region 🔖OsStudioCatalog
+export const OS_HOME_VFS_ROOT_ID = "os-home-root";
+export const OS_STUDIO_BACKBONE_URI_PREFIX = "dev://studio/";
+
+export interface OsStudioCatalogEntry {
+	readonly id: string;
+	readonly name: string;
+	readonly backboneUri: string;
+	readonly appCount: number;
+	readonly nodeCount: number;
+	readonly updatedAt: string;
+}
+
+const OS_HOME_VFS_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
+	fileNodeKinds: {
+		studio: { name: "Studio", iconId: "layout-grid" },
+	},
+	descriptorColumnIds: ["apps", "nodes", "updated"],
+	descriptorColumns: {
+		apps: { label: "Apps" },
+		nodes: { label: "Nodes" },
+		updated: { label: "Updated" },
+	},
+};
+
+function osStudioCatalogDescriptorValues(entry: OsStudioCatalogEntry): Readonly<Record<string, import("@semio-tech/framework-platform-core").VirtualFileSystemDescriptorValueModel>> {
+	return virtualFileSystemDescriptorValues(OS_HOME_VFS_SCHEMA_MODEL, "studio", {
+		path: `/studios/${entry.id}`,
+		updatedIso: entry.updatedAt,
+		textByDescriptorId: {
+			apps: String(entry.appCount),
+			nodes: String(entry.nodeCount),
+		},
+	});
+}
+
+function osStudioBackboneUri(studioId: string): string {
+	return `${OS_STUDIO_BACKBONE_URI_PREFIX}${studioId}`;
+}
+
+function osStudioIdFromBackboneUri(uri: string): string | null {
+	if (!uri.startsWith(OS_STUDIO_BACKBONE_URI_PREFIX)) return null;
+	const id = uri.slice(OS_STUDIO_BACKBONE_URI_PREFIX.length);
+	return id.length > 0 ? id : null;
+}
+
+function osStudioCatalogEntryFromDocument(backboneUri: string, document: OsDocument): OsStudioCatalogEntry {
+	const studioId = osStudioIdFromBackboneUri(backboneUri) ?? document.id;
+	const projection = materializeOsProjection(document, document.vcs.checkpoints.at(-1)?.changeIds ?? []);
+	const lastOperation = document.vcs.operations.at(-1);
+	return {
+		id: studioId,
+		name: document.name,
+		backboneUri,
+		appCount: projection.appInstances.length,
+		nodeCount: projection.mediaGraph.nodes.length,
+		updatedAt: lastOperation?.savedAt ?? new Date(0).toISOString(),
+	};
+}
+
+const studioCatalogUrisByPort = new WeakMap<OsBackbonePort, Set<string>>();
+
+function trackOsStudioBackboneUri(port: OsBackbonePort, uri: string): void {
+	let uris = studioCatalogUrisByPort.get(port);
+	if (!uris) {
+		uris = new Set();
+		studioCatalogUrisByPort.set(port, uris);
+	}
+	uris.add(uri);
+}
+
+function untrackOsStudioBackboneUri(port: OsBackbonePort, uri: string): void {
+	studioCatalogUrisByPort.get(port)?.delete(uri);
+}
+
+function listOsStudioCatalogEntriesFromPort(port: OsBackbonePort): readonly OsStudioCatalogEntry[] {
+	const entries: OsStudioCatalogEntry[] = [];
+	const tracked = studioCatalogUrisByPort.get(port);
+	if (tracked) {
+		for (const uri of tracked) {
+			const json = port.read(uri);
+			if (!json) continue;
+			try {
+				entries.push(osStudioCatalogEntryFromDocument(uri, parseOsDocument(JSON.parse(json))));
+			} catch {
+				continue;
+			}
+		}
+		return entries.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.name.localeCompare(right.name));
+	}
+	return entries;
+}
+
+/** @emoji 📚 Lists persisted studio documents from the dev backbone namespace. */
+export function listOsStudioCatalogEntries(port: OsBackbonePort = defaultBrowserBackbonePort): readonly OsStudioCatalogEntry[] {
+	if (typeof localStorage === "undefined") return listOsStudioCatalogEntriesFromPort(port);
+	const entries: OsStudioCatalogEntry[] = [];
+	for (const key of Object.keys(localStorage)) {
+		if (!key.startsWith("s:backbone:")) continue;
+		const uri = key.slice("s:backbone:".length);
+		if (!uri.startsWith(OS_STUDIO_BACKBONE_URI_PREFIX)) continue;
+		const json = port.read(uri);
+		if (!json) continue;
+		try {
+			entries.push(osStudioCatalogEntryFromDocument(uri, parseOsDocument(JSON.parse(json))));
+		} catch {
+			continue;
+		}
+	}
+	return entries.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt) || left.name.localeCompare(right.name));
+}
+
+/** @emoji 🆕 Creates an empty studio document on the dev backbone. */
+export function createOsStudio(name = "Untitled Studio", port: OsBackbonePort = defaultBrowserBackbonePort): OsStudioCatalogEntry {
+	const id = createOsId("studio");
+	const document = createEmptyOsDocument(id, name.trim() || "Untitled Studio");
+	const backboneUri = osStudioBackboneUri(id);
+	const backbone = new DevJsonBackbone(port);
+	backbone.attach(backboneUri);
+	backbone.sync({ ...document, backbone: { kind: "dev", uri: backboneUri } });
+	trackOsStudioBackboneUri(port, backboneUri);
+	return osStudioCatalogEntryFromDocument(backboneUri, document);
+}
+
+/** @emoji 🗑️ Deletes a studio document from the dev backbone. */
+export function deleteOsStudio(studioId: string, port: OsBackbonePort = defaultBrowserBackbonePort): void {
+	const uri = osStudioBackboneUri(studioId);
+	untrackOsStudioBackboneUri(port, uri);
+	if (typeof localStorage !== "undefined") {
+		localStorage.removeItem(`s:backbone:${uri}`);
+		return;
+	}
+	port.write(uri, "");
+}
+
+/** @emoji 📥 Imports a studio document JSON onto the dev backbone. */
+export function importOsStudioFromJson(json: string, port: OsBackbonePort = defaultBrowserBackbonePort): OsStudioCatalogEntry {
+	const document = parseOsDocument(JSON.parse(json));
+	const studioId = document.id || createOsId("studio");
+	const backboneUri = osStudioBackboneUri(studioId);
+	const backbone = new DevJsonBackbone(port);
+	backbone.attach(backboneUri);
+	const synced = { ...document, id: studioId, backbone: { kind: "dev" as const, uri: backboneUri } };
+	backbone.sync(synced);
+	trackOsStudioBackboneUri(port, backboneUri);
+	return osStudioCatalogEntryFromDocument(backboneUri, synced);
+}
+
+/** @emoji 📂 Loads a studio document from the dev backbone. */
+export function loadOsStudioDocument(studioId: string, port: OsBackbonePort = defaultBrowserBackbonePort): OsDocument {
+	const backbone = new DevJsonBackbone(port);
+	const backboneUri = osStudioBackboneUri(studioId);
+	backbone.attach(backboneUri);
+	const document = backbone.loadAttached();
+	if (!document) throw new Error(`unknown os studio: ${studioId}`);
+	return document;
+}
+
+/** @emoji 🌱 Seeds the demo studio when the catalog is empty. */
+export function seedOsStudioCatalogIfEmpty(seedDocument: OsDocument, port: OsBackbonePort = defaultBrowserBackbonePort): OsStudioCatalogEntry | null {
+	if (listOsStudioCatalogEntries(port).length > 0) return null;
+	const studioId = seedDocument.id || "default";
+	const backboneUri = osStudioBackboneUri(studioId);
+	const backbone = new DevJsonBackbone(port);
+	backbone.attach(backboneUri);
+	const seeded = { ...seedDocument, id: studioId, backbone: { kind: "dev" as const, uri: backboneUri } };
+	backbone.sync(seeded);
+	trackOsStudioBackboneUri(port, backboneUri);
+	return osStudioCatalogEntryFromDocument(backboneUri, seeded);
+}
+
+/** @emoji 🏠 VFS controller listing studio catalog entries for the OS home app. */
+export class OsHomeVirtualFileSystemController extends VirtualFileSystemController {
+	private readonly onOpenStudio?: (studioId: string) => void;
+	private readonly onDeleteStudio?: (studioId: string) => void;
+	private readonly port: OsBackbonePort;
+
+	constructor(
+		id: string,
+		commandBus: CommandBus,
+		hostNotify: () => void,
+		options?: {
+			readonly onOpenStudio?: (studioId: string) => void;
+			readonly onDeleteStudio?: (studioId: string) => void;
+			readonly port?: OsBackbonePort;
+		},
+	) {
+		super(id, commandBus, hostNotify);
+		this.onOpenStudio = options?.onOpenStudio;
+		this.onDeleteStudio = options?.onDeleteStudio;
+		this.port = options?.port ?? defaultBrowserBackbonePort;
+	}
+
+	invalidateHomeVirtualFileSystem(scope: VirtualFileSystemScope): void {
+		this.invalidateVirtualFileSystem(scope);
+	}
+
+	protected override getSchema(_scope: VirtualFileSystemScope): VirtualFileSystemSchemaModel {
+		return OS_HOME_VFS_SCHEMA_MODEL;
+	}
+
+	protected override getRoot(_scope: VirtualFileSystemScope): VirtualFileSystemNodeRecord {
+		return {
+			id: OS_HOME_VFS_ROOT_ID,
+			fileNodeKindId: "studio",
+			name: "Studios",
+			path: "/",
+			parentId: null,
+			hasChildren: true,
+			canDrag: false,
+			descriptorValues: virtualFileSystemDescriptorValues(OS_HOME_VFS_SCHEMA_MODEL, "studio", { path: "/" }),
+		};
+	}
+
+	protected override loadChildren(parentId: string, _scope: VirtualFileSystemScope): readonly VirtualFileSystemNodeRecord[] {
+		if (parentId !== OS_HOME_VFS_ROOT_ID) return [];
+		return listOsStudioCatalogEntries(this.port).map((entry) => ({
+			id: `studio:${entry.id}`,
+			fileNodeKindId: "studio",
+			name: entry.name,
+			path: `/studios/${entry.id}`,
+			parentId: OS_HOME_VFS_ROOT_ID,
+			hasChildren: false,
+			canDrag: false,
+			navigateUri: `/studios/${entry.id}`,
+			descriptorValues: osStudioCatalogDescriptorValues(entry),
+		}));
+	}
+
+	protected override runVirtualFileSystemCommand(command: string, args?: unknown): boolean {
+		if (command === "navigateVirtualFileSystemNode") {
+			const payload = (args ?? {}) as { nodeId?: string };
+			const studioId = payload.nodeId?.startsWith("studio:") ? payload.nodeId.slice("studio:".length) : null;
+			if (studioId) {
+				this.onOpenStudio?.(studioId);
+				return true;
+			}
+		}
+		if (command === "deleteVirtualFileSystemNode") {
+			const payload = (args ?? {}) as { nodeId?: string };
+			const studioId = payload.nodeId?.startsWith("studio:") ? payload.nodeId.slice("studio:".length) : null;
+			if (studioId) {
+				this.onDeleteStudio?.(studioId);
+				this.invalidateVirtualFileSystem();
+				return true;
+			}
+		}
+		return super.runVirtualFileSystemCommand(command, args);
+	}
+}
+//#endregion 🔖OsStudioCatalog
+
 //#region 🔖OsStore
 export type OsCommand =
 	| { readonly kind: "spawnAppInstance"; readonly programId: string; readonly appId: string; readonly label?: string; readonly sourceInline?: string; readonly payloadRef?: string; readonly position?: { readonly x: number; readonly y: number } }
@@ -2638,14 +2632,19 @@ export interface OsBackbonePort {
 	readonly write: (uri: string, json: string) => void;
 }
 
+const memoryOsBackboneStore = new Map<string, string>();
+
 const defaultBrowserBackbonePort: OsBackbonePort = {
 	read(uri) {
-		if (typeof localStorage === "undefined") return null;
-		return localStorage.getItem(`s:backbone:${uri}`);
+		if (typeof localStorage !== "undefined") return localStorage.getItem(`s:backbone:${uri}`);
+		return memoryOsBackboneStore.get(uri) ?? null;
 	},
 	write(uri, json) {
-		if (typeof localStorage === "undefined") return;
-		localStorage.setItem(`s:backbone:${uri}`, json);
+		if (typeof localStorage !== "undefined") {
+			localStorage.setItem(`s:backbone:${uri}`, json);
+			return;
+		}
+		memoryOsBackboneStore.set(uri, json);
 	},
 };
 
@@ -3066,6 +3065,21 @@ if (import.meta.vitest) {
 				"i1",
 			);
 			expect((overridden as { brushSize: number }).brushSize).toBe(42);
+		});
+
+		it("creates and lists studio catalog entries", () => {
+			const memory = new Map<string, string>();
+			const port: OsBackbonePort = {
+				read: (uri) => memory.get(uri) ?? null,
+				write: (uri, json) => {
+					memory.set(uri, json);
+				},
+			};
+			const entry = createOsStudio("Catalog Studio", port);
+			const listed = listOsStudioCatalogEntries(port);
+			expect(listed.some((row) => row.id === entry.id)).toBe(true);
+			deleteOsStudio(entry.id, port);
+			expect(listOsStudioCatalogEntries(port).some((row) => row.id === entry.id)).toBe(false);
 		});
 	});
 }

@@ -1007,77 +1007,58 @@ export function runVitest(bundleRoot: string, segments: string[], config = "vite
 }
 
 //#region 🔌PlaygroundDevPorts
-export type PlaygroundHostKind =
-	| "storybook"
-	| "compose"
-	| "puzzle-2d"
-	| "puzzle-3d"
-	| "puzzle-5d"
-	| "wires"
-	| "flow"
-	| "dag"
-	| "imperative"
-	| "sequence"
-	| "layout"
-	| "lowpoly"
-	| "trinity-jack"
-	| "trinity-rewrite"
-	| "procedural-3d"
-	| "procedural-2d"
-	| "shooting"
-	| "forms"
-	| "raster"
-	| "draw"
-	| "note"
-	| "writer"
-	| "s"
-	| "vcs"
-	| "cad"
-	| "gis-2d"
-	| "projektetage"
-	| "presentation";
-
 type PlaygroundPortSpec = {
 	readonly dev: number;
 	readonly test?: number;
 	readonly env: string;
 };
 
-/** @emoji 🔌 Dev ports 6012–6020 are puzzle/graph/cad plays; 6040+ are map/presentation; test ports sit in 6027–6052. */
-export const PLAYGROUND_PORTS: Record<PlaygroundHostKind, PlaygroundPortSpec> = {
-	storybook: { dev: 6010, env: "STORYBOOK_PORT" },
-	compose: { dev: 4000, env: "COMPOSE_PLAY_PORT" },
-	"puzzle-2d": { dev: 6012, test: 6027, env: "PUZZLE_2D_PLAY_PORT" },
-	"puzzle-3d": { dev: 6013, test: 6028, env: "PUZZLE_3D_PLAY_PORT" },
-	"puzzle-5d": { dev: 6014, test: 6035, env: "PUZZLE_5D_PLAY_PORT" },
-	wires: { dev: 6015, env: "WIRES_PLAY_PORT" },
-	flow: { dev: 6016, test: 6029, env: "FLOW_PLAY_PORT" },
-	dag: { dev: 6017, test: 6030, env: "DAG_PLAY_PORT" },
-	imperative: { dev: 6076, env: "IMPERATIVE_PLAY_PORT" },
-	sequence: { dev: 6077, env: "SEQUENCE_PLAY_PORT" },
-	layout: { dev: 6079, env: "LAYOUT_PLAY_PORT" },
-	lowpoly: { dev: 6078, env: "LOWPOLY_PLAY_PORT" },
-	"trinity-jack": { dev: 6054, test: 6055, env: "TRINITY_JACK_PLAY_PORT" },
-	"trinity-rewrite": { dev: 6056, test: 6057, env: "TRINITY_REWRITE_PLAY_PORT" },
-	forms: { dev: 6058, test: 6059, env: "FORMS_PLAY_PORT" },
-	raster: { dev: 6060, test: 6061, env: "RASTER_PLAY_PORT" },
-	draw: { dev: 6064, test: 6065, env: "DRAW_PLAY_PORT" },
-	note: { dev: 6080, test: 6081, env: "NOTE_PLAY_PORT" },
-	writer: { dev: 6062, test: 6063, env: "WRITER_PLAY_PORT" },
-	s: { dev: 6066, test: 6067, env: "S_OS_PORT" },
-	vcs: { dev: 6075, env: "VCS_PLAY_PORT" },
-	"procedural-3d": { dev: 6018, test: 6031, env: "PROCEDURAL_3D_PLAY_PORT" },
-	"procedural-2d": { dev: 6021, test: 6033, env: "PROCEDURAL_2D_PLAY_PORT" },
-	shooting: { dev: 6019, test: 6032, env: "SHOOTING_PLAY_PORT" },
-	cad: { dev: 6020, test: 6041, env: "CAD_JS_RENDERER_PLAY_PORT" },
-	"gis-2d": { dev: 6040, env: "GIS_2D_PLAY_PORT" },
-	projektetage: { dev: 6050, env: "PRAESENTATION_PROJEKTETAGE_PORT" },
-	presentation: { dev: 6051, test: 6052, env: "PRESENTATION_PLAY_PORT" },
-};
+/** @emoji 🔌 Builds playground port table from semio.app manifests plus non-app hosts. */
+function buildPlaygroundPortsFromManifests(): Record<string, PlaygroundPortSpec> {
+	const ports: Record<string, PlaygroundPortSpec> = {
+		storybook: { dev: 6010, env: "STORYBOOK_PORT" },
+	};
+	for (const manifest of scanPlaygroundAppManifests(getWorkspaceRoot())) {
+		if (!manifest.port) continue;
+		const hostKind = manifest.hostKind ?? manifest.kind;
+		const spec: PlaygroundPortSpec = {
+			dev: manifest.port.dev,
+			test: manifest.port.test,
+			env: manifest.port.env ?? `${hostKind.toUpperCase().replaceAll("-", "_")}_PORT`,
+		};
+		ports[hostKind] = spec;
+	}
+	return ports;
+}
+
+let playgroundPortsCache: Record<string, PlaygroundPortSpec> | undefined;
+
+function resolvePlaygroundPorts(): Record<string, PlaygroundPortSpec> {
+	playgroundPortsCache ??= buildPlaygroundPortsFromManifests();
+	return playgroundPortsCache;
+}
+
+export const PLAYGROUND_PORTS: Record<string, PlaygroundPortSpec> = new Proxy({} as Record<string, PlaygroundPortSpec>, {
+	get(_target, prop: string) {
+		return resolvePlaygroundPorts()[prop];
+	},
+	ownKeys() {
+		return Reflect.ownKeys(resolvePlaygroundPorts());
+	},
+	getOwnPropertyDescriptor(_target, prop) {
+		const value = resolvePlaygroundPorts()[prop as string];
+		if (value === undefined) return undefined;
+		return { configurable: true, enumerable: true, value };
+	},
+});
+
+export type PlaygroundHostKind = string;
 
 /** @emoji 🔌 Local dev port for a playground host. */
 export function playgroundDevPort(kind: PlaygroundHostKind): number {
-	return PLAYGROUND_PORTS[kind].dev;
+	const spec = resolvePlaygroundPorts()[kind];
+	if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
+	return spec.dev;
 }
 
 /** @emoji 🔌 String dev port (vite `--port`, nx `env`). */
@@ -1087,7 +1068,7 @@ export function playgroundDevPortString(kind: PlaygroundHostKind): string {
 
 /** @emoji 🧪 Vitest/playwright port when set; otherwise `undefined`. */
 export function playgroundTestPort(kind: PlaygroundHostKind): number | undefined {
-	return PLAYGROUND_PORTS[kind].test;
+	return resolvePlaygroundPorts()[kind]?.test;
 }
 
 /** @emoji 🧪 String test port for nx `env` / playwright. */
@@ -1098,13 +1079,15 @@ export function playgroundTestPortString(kind: PlaygroundHostKind): string | und
 
 /** @emoji 🔌 Process env var holding the dev port override. */
 export function playgroundPortEnv(kind: PlaygroundHostKind): string {
-	return PLAYGROUND_PORTS[kind].env;
+	const spec = resolvePlaygroundPorts()[kind];
+	if (!spec) throw new Error(`unknown playground host kind: ${kind}`);
+	return spec.env;
 }
 
 /** @emoji 🚧 Every assigned playground dev + test port (for strict binding). */
 export function allPlaygroundReservedPorts(): ReadonlySet<number> {
 	const ports = new Set<number>();
-	for (const spec of Object.values(PLAYGROUND_PORTS)) {
+	for (const spec of Object.values(resolvePlaygroundPorts())) {
 		ports.add(spec.dev);
 		if (spec.test !== undefined) ports.add(spec.test);
 	}
@@ -1117,16 +1100,38 @@ export const OS_HUB_PORT = 6070;
 /** @emoji 🔌 Process env var for {@link OS_HUB_PORT}. */
 export const OS_HUB_PORT_ENV = "OS_HUB_PORT";
 
-/** @emoji 🌐 Subset used by iframe static-site embed URLs (`compose`, `cad`, puzzle dims). */
-export const PLAYGROUND_EMBED_SITE_DEV_PORTS = {
-	compose: playgroundDevPortString("compose"),
-	cad: playgroundDevPortString("cad"),
-	"2d": playgroundDevPortString("puzzle-2d"),
-	"3d": playgroundDevPortString("puzzle-3d"),
-	"5d": playgroundDevPortString("puzzle-5d"),
-} as const;
+/** @emoji 🌐 Subset used by iframe static-site embed URLs (derived from manifest `site.embedKind`). */
+export type PlaygroundEmbedSiteKind = string;
 
-export type PlaygroundEmbedSiteKind = keyof typeof PLAYGROUND_EMBED_SITE_DEV_PORTS;
+let playgroundEmbedSiteDevPortsCache: Readonly<Record<string, string>> | undefined;
+
+/** @emoji 🌐 Builds embed-site dev port map from semio.app manifest `site.embedKind`. */
+function buildPlaygroundEmbedSiteDevPortsFromManifests(): Readonly<Record<string, string>> {
+	const ports: Record<string, string> = {};
+	for (const manifest of scanPlaygroundAppManifests(getWorkspaceRoot())) {
+		if (!manifest.site) continue;
+		const hostKind = manifest.hostKind ?? manifest.kind;
+		ports[manifest.site.embedKind] = playgroundDevPortString(hostKind);
+	}
+	return ports;
+}
+
+/** @emoji 🌐 Resolves iframe embed dev ports after manifest scan is available. */
+export function resolvePlaygroundEmbedSiteDevPorts(): Readonly<Record<string, string>> {
+	playgroundEmbedSiteDevPortsCache ??= buildPlaygroundEmbedSiteDevPortsFromManifests();
+	return playgroundEmbedSiteDevPortsCache;
+}
+
+export const PLAYGROUND_EMBED_SITE_DEV_PORTS: Readonly<Record<string, string>> = new Proxy(
+	{} as Record<string, string>,
+	{
+		get(_target, prop: string) {
+			return resolvePlaygroundEmbedSiteDevPorts()[prop];
+		},
+	},
+);
+
+export type PlaygroundSiteKind = string;
 
 /** @emoji 🔒 Process env var locking a playground to one example (hides navbar dropdown). */
 export const PLAYGROUND_LOCKED_EXAMPLE_ENV = "PLAYGROUND_LOCKED_EXAMPLE_ID";
@@ -1146,16 +1151,29 @@ export function playgroundPlayViteDefine(extra: Record<string, string> = {}): Re
 	};
 }
 
-/** @emoji 🌐 Latest-only GitHub Pages hostnames for iframe-embeddable playground static sites. */
-export const PLAYGROUND_SITE_HOSTS = {
-	compose: "play.semio-tech.com",
-	cad: "play.cad.semio-tech.com",
-	"2d": "play.2d.semio-tech.com",
-	"3d": "play.3d.semio-tech.com",
-	"5d": "play.5d.semio-tech.com",
-} as const;
+let playgroundSiteHostsCache: Readonly<Record<string, string>> | undefined;
 
-export type PlaygroundSiteKind = PlaygroundEmbedSiteKind;
+/** @emoji 🌐 Builds production iframe hostnames from semio.app manifest `site.host`. */
+function buildPlaygroundSiteHostsFromManifests(): Readonly<Record<string, string>> {
+	const hosts: Record<string, string> = {};
+	for (const manifest of scanPlaygroundAppManifests(getWorkspaceRoot())) {
+		if (!manifest.site) continue;
+		hosts[manifest.site.embedKind] = manifest.site.host;
+	}
+	return hosts;
+}
+
+function resolvePlaygroundSiteHosts(): Readonly<Record<string, string>> {
+	playgroundSiteHostsCache ??= buildPlaygroundSiteHostsFromManifests();
+	return playgroundSiteHostsCache;
+}
+
+/** @emoji 🌐 Latest-only GitHub Pages hostnames for iframe-embeddable playground static sites. */
+export const PLAYGROUND_SITE_HOSTS: Readonly<Record<string, string>> = new Proxy({} as Record<string, string>, {
+	get(_target, prop: string) {
+		return resolvePlaygroundSiteHosts()[prop];
+	},
+});
 
 /** @emoji 🔌 Local dev ports for iframe-embeddable playground static sites (from `playground-dev-ports.ts`). */
 export const PLAYGROUND_SITE_DEV_PORTS = PLAYGROUND_EMBED_SITE_DEV_PORTS;
@@ -1171,21 +1189,90 @@ export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): st
 
 //#region 🔖PlaygroundAppManifest
 
+export type PlaygroundAssetKind =
+	| "puzzle3d-meshes"
+	| "gis-tiles"
+	| "sketchpad-mdx"
+	| "playwright-dev-stub"
+	| "vitest-dev-stub"
+	| "react-all-extensions";
+
 export type PlaygroundAppManifest = {
 	readonly kind: string;
 	readonly aliases?: readonly string[];
 	readonly packageRoot: string;
 	readonly corePackage: string;
 	readonly definitionExport: string;
+	readonly programExport?: string;
+	readonly programId?: string;
+	readonly programIds?: readonly string[];
 	readonly hostKind?: PlaygroundHostKind;
 	readonly port?: { readonly dev: number; readonly test?: number; readonly env?: string };
+	readonly site?: { readonly embedKind: string; readonly host: string };
+	readonly assets?: readonly PlaygroundAssetKind[];
+	readonly lockedExampleFixtures?: Readonly<Record<string, readonly string[]>>;
+	readonly optimizeDepsExclude?: readonly string[];
 };
 
 export type PlaygroundAppManifestEntry = PlaygroundAppManifest & { readonly corePackageJsonPath: string };
 
+/** @emoji 🗺 programId -> playground app kind (from manifest scan). */
+export function buildProgramIdToPlaygroundKind(manifests: readonly PlaygroundAppManifestEntry[]): Readonly<Record<string, string>> {
+	const map: Record<string, string> = {};
+	for (const manifest of manifests) {
+		if (manifest.programId) map[manifest.programId] = manifest.kind;
+		for (const programId of manifest.programIds ?? []) map[programId] = manifest.kind;
+	}
+	return map;
+}
+
+/** @emoji 📦 Union of Vite asset plugins required by manifests (optionally filtered to one app kind). */
+export function collectPlaygroundManifestAssets(
+	manifests: readonly PlaygroundAppManifestEntry[],
+	activeKind?: string,
+): ReadonlySet<PlaygroundAssetKind> {
+	const assets = new Set<PlaygroundAssetKind>();
+	for (const manifest of manifests) {
+		if (activeKind && manifest.kind !== activeKind && !(manifest.aliases ?? []).includes(activeKind)) continue;
+		for (const asset of manifest.assets ?? []) assets.add(asset);
+	}
+	return assets;
+}
+
+/** @emoji 🔒 Merged locked-example fixture paths from all manifests. */
+export function collectLockedExampleFixturesFromManifests(
+	manifests: readonly PlaygroundAppManifestEntry[],
+): Readonly<Record<string, readonly string[]>> {
+	const merged: Record<string, string[]> = {};
+	for (const manifest of manifests) {
+		if (!manifest.lockedExampleFixtures) continue;
+		for (const [exampleId, paths] of Object.entries(manifest.lockedExampleFixtures)) {
+			const bucket = merged[exampleId] ?? [];
+			for (const path of paths) {
+				if (!bucket.includes(path)) bucket.push(path);
+			}
+			merged[exampleId] = bucket;
+		}
+	}
+	return merged;
+}
+
+/** @emoji ⚡ Merged optimizeDeps.exclude entries from all manifests (optionally filtered to one app kind). */
+export function collectPlaygroundOptimizeDepsExclude(
+	manifests: readonly PlaygroundAppManifestEntry[],
+	activeKind?: string,
+): readonly string[] {
+	const exclude = new Set<string>();
+	for (const manifest of manifests) {
+		if (activeKind && manifest.kind !== activeKind && !(manifest.aliases ?? []).includes(activeKind)) continue;
+		for (const entry of manifest.optimizeDepsExclude ?? []) exclude.add(entry);
+	}
+	return [...exclude];
+}
+
 const PLAYGROUND_MANIFEST_SKIP_DIRS = new Set(["node_modules", ".git", ".nx", "dist", "target", "storybook-static", ".repo-cache"]);
 
-/** @emoji 📋 Scans workspace package.json files for semio.playgroundApp manifests. */
+/** @emoji 📋 Scans workspace package.json files for semio.app / semio.playgroundApp manifests. */
 export function scanPlaygroundAppManifests(repoRoot: string): readonly PlaygroundAppManifestEntry[] {
 	const entries: PlaygroundAppManifestEntry[] = [];
 	const rootPkg = resolve(repoRoot, "package.json");
@@ -1194,9 +1281,9 @@ export function scanPlaygroundAppManifests(repoRoot: string): readonly Playgroun
 		if (existsSync(pkgPath) && pkgPath !== rootPkg) {
 			try {
 				const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as {
-					semio?: { playgroundApp?: PlaygroundAppManifest };
+					semio?: { app?: PlaygroundAppManifest; playgroundApp?: PlaygroundAppManifest };
 				};
-				const manifest = pkg.semio?.playgroundApp;
+				const manifest = pkg.semio?.app ?? pkg.semio?.playgroundApp;
 				if (manifest?.kind && manifest.packageRoot && manifest.corePackage && manifest.definitionExport) {
 					entries.push({ ...manifest, corePackageJsonPath: pkgPath });
 				}
@@ -1226,25 +1313,19 @@ export function playgroundAppManifestByKind(
 	return map;
 }
 
-/** @emoji 🧭 CLI segment -> app kind (replaces resolvePlaygroundDevApp hardcoded logic) */
+/** @emoji 🧭 CLI segment -> app kind (derived from manifest aliases). */
 export function resolvePlaygroundDevAppFromManifests(
 	segments: string[],
 	manifests: readonly PlaygroundAppManifestEntry[],
 ): { readonly app: string; readonly rest: string[] } | null {
 	const byAlias = playgroundAppManifestByKind(manifests);
-	const [head, second, third, ...tail] = segments;
-	if (!head) return null;
-	const resolve = (key: string, rest: string[]): { readonly app: string; readonly rest: string[] } | null => {
+	if (segments.length === 0) return null;
+	for (let len = Math.min(3, segments.length); len >= 1; len -= 1) {
+		const key = segments.slice(0, len).join(" ");
 		const entry = byAlias.get(key);
-		return entry ? { app: entry.kind, rest } : null;
-	};
-	if (head === "puzzle" && second) return resolve(second, third ? [third, ...tail] : tail);
-	if (head === "procedural" && second) return resolve(`procedural-${second}`, third ? [third, ...tail] : tail);
-	if (head === "trinity" && second === "jack") return resolve("trinity-jack", third ? [third, ...tail] : tail);
-	if (head === "trinity" && second === "rewrite") return resolve("trinity-rewrite", third ? [third, ...tail] : tail);
-	if (head === "gis" && second === "2d") return resolve("gis-2d", third ? [third, ...tail] : tail);
-	if (head === "presentation" || head === "vcs" || head === "layout") return resolve(head, segments.slice(1));
-	return resolve(head, segments.slice(1));
+		if (entry) return { app: entry.kind, rest: segments.slice(len) };
+	}
+	return null;
 }
 
 //#endregion 🔖PlaygroundAppManifest
@@ -1303,13 +1384,13 @@ export function devServerUrl(host: string, port: number): string {
   return `http://${probeHost}:${port}/`;
 }
 
-/** @emoji 🎯 Reads `import.meta.env.PUZZLE_PLAY_ENTRY` baked into a running playground dev server. */
+/** @emoji 🎯 Reads `import.meta.env.PLAYGROUND_APP_KIND` baked into a running playground dev server. */
 export function devServerPlayEntry(host: string, port: number): string | undefined {
   const url = `${devServerUrl(host, port)}index.ts`;
   const probe = `const res = await fetch(${JSON.stringify(url)}, { signal: AbortSignal.timeout(2000) });
 if (!res.ok) process.exit(1);
 const text = await res.text();
-const match = text.match(/PUZZLE_PLAY_ENTRY\\":\\s*\\"([^\\"]+)\\"/);
+const match = text.match(/PLAYGROUND_APP_KIND\\":\\s*\\"([^\\"]+)\\"/);
 process.stdout.write(match?.[1] ?? "");
 `;
   const result = spawnSync(process.execPath, ["--input-type=module", "-e", probe], { encoding: "utf8", timeout: 3000 });

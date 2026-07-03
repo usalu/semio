@@ -14,7 +14,8 @@
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -30,10 +31,11 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "gis-2d",
       "aliases": [
-        "gis-2d"
+        "gis-2d",
+        "gis 2d"
       ],
       "packageRoot": "gis/2d",
       "corePackage": "@semio-tech/gis-2d-core",
@@ -42,7 +44,10 @@
       "port": {
         "dev": 6040,
         "env": "GIS_2D_PLAY_PORT"
-      }
+      },
+      "programExport": "gisMapProgramContribution",
+      "programId": "gis.map",
+      "assets": ["gis-tiles"]
     }
   }
 }

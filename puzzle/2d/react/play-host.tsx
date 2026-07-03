@@ -3,8 +3,11 @@
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, type PlaygroundKeybinding, bootPlayground, mountPlaygroundApp, PlaygroundView, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiPuzzle2dSurfaceHost, registerUiWriterSurfaceHost, registerTabIcon, buildPuzzle2dPlayInspectorTree, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, useShellWindowInstance, registerWindowBody, registerSidePanelBody, uiDeclarativeSectionsToTree, uiInspectorAllEqual, isPlaygroundExampleLocked, playgroundResolvedExampleId, PLAYGROUND_NO_EXAMPLE_ID, isPlaygroundNoExampleId } from "@semio-tech/framework-playground-renderer-react";
-import { reactHostPort, Icon, Tree, createIconComponent, NavbarExampleSelect } from "@semio-tech/ui-react";
+import type { AppRendererContribution, PlaygroundMountProps } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { type PlaygroundKeybinding, PureSidePanelTabDefinition, CallbackTreePanelDefinition, buildPuzzle2dPlayInspectorTree, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, useShellWindowInstance, registerSidePanelBody, uiDeclarativeSectionsToTree, uiInspectorAllEqual, playgroundResolvedExampleId, PLAYGROUND_NO_EXAMPLE_ID, isPlaygroundNoExampleId, PlaygroundView } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort, Icon, Tree, createIconComponent } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig, type TreeDataSection, UiNode, UiTreeNode, UiSectionNode, UiPuzzle2dHostSurfaceNode } from "@semio-tech/framework-playground-core";
 // #region 🔌Adapters
 import {
@@ -58,10 +61,12 @@ import {
     puzzle2dPlaySelectSameKindIds,
     puzzle2dPlayToggleEntityFlag,
     puzzle2dPlayTriptychCamerasFromFixture,
+    parsePuzzle2dFixture,
     subscribePuzzle2dFillSessionReady,
     type Puzzle2dPlayHostBridge,
     type Puzzle2dPlayPaneId,
     type Puzzle2dPlayStructuralDeleteItem,
+    puzzle2dPlayWindowBodies,
 } from "@semio-tech/puzzle-2d-core";
 
 import {
@@ -81,9 +86,10 @@ import {
     wiresPlayRelationshipKindDisplayName,
 } from "@semio-tech/reasoning-mindmap-wires-core";
 import type { ReactNode } from "react";
+import { buildPuzzle2dSceneDescriptorFromFixture, Puzzle2dCanvas, puzzle2dSetBrushPlaceCommitHandler, puzzle2dFixturePaletteTreeDragController, PUZZLE_2D_FIXTURE_DRAG_MIME } from "./index.tsx";
 // #endregion 🔌Adapters
 
-const PUZZLE_2D_PLAY_IS_WIRES = import.meta.env.PUZZLE_PLAY_ENTRY === "wires";
+const PUZZLE_2D_PLAY_IS_WIRES = import.meta.env.PLAYGROUND_APP_KIND === "wires";
 
 function puzzle2dPlayHierarchyTreeSelectedIdsForFixture(fixture: Puzzle2dFixture, graphSelectionIds: readonly string[]): string[] {
   return PUZZLE_2D_PLAY_IS_WIRES
@@ -1115,21 +1121,6 @@ function Puzzle2dPlayCompiledDagSurfaceHost({ node: _node }: { readonly node: im
   );
 }
 
-let puzzle2dPlayChromeRegistered = false;
-
-/** @emoji 🧊 Registers puzzle 2d play surface host, window bodies, and tab icons (called from `@semio-tech/framework-playground-renderer-react`). */
-export function registerPuzzle2dPlaySurfaceHosts(): void {
-  if (puzzle2dPlayChromeRegistered) return;
-  puzzle2dPlayChromeRegistered = true;
-  registerUiPuzzle2dSurfaceHost(PUZZLE_2D_PLAY_SURFACE_ID, Puzzle2dPlayPaneSurfaceHost);
-  registerUiWriterSurfaceHost(PUZZLE_2D_PLAY_SURFACE_ID_COMPILED_DAG, Puzzle2dPlayCompiledDagSurfaceHost);
-  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildPuzzle2dPlayOverviewDeclarativeBody);
-  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildPuzzle2dPlayDetailDeclarativeBody);
-  registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildPuzzle2dPlaySelectionDeclarativeBody);
-  registerTabIcon(PUZZLE_2D_PLAY_ICON_KINDS, "tags");
-  registerTabIcon("puzzle.2d-play.icon.inspector", "clipboard-list");
-  registerTabIcon("puzzle.2d-play.icon.settings", "settings");
-}
 // #endregion 🔖Panes
 
 // #region 🔖SidePanels
@@ -2970,17 +2961,11 @@ function Puzzle2dPlayInner({
     [activeExampleId, bumpSceneAuthoringEpoch, triptychCamerasForFixture],
   );
 
-  const slotNavbarCenter = reactHostPort.useMemo(() => {
-    if (isPlaygroundExampleLocked()) return null;
-    return (
-      <NavbarExampleSelect
-        id="puzzle2d.play.fixture"
-        value={activeExampleId}
-        options={PUZZLE_2D_PLAY_NAVBAR_EXAMPLE_OPTIONS}
-        onValueChange={applyNavbarFixtureId}
-      />
-    );
-  }, [activeExampleId, applyNavbarFixtureId]);
+  const exampleContribution = reactHostPort.useMemo(() => ({
+    options: PUZZLE_2D_PLAY_NAVBAR_EXAMPLE_OPTIONS,
+    activeExampleId: () => activeExampleId,
+    onSelect: applyNavbarFixtureId,
+  }), [activeExampleId, applyNavbarFixtureId]);
 
   puzzle2dPlayRuntimeRef.current = puzzle2dRuntime;
   puzzle2dPlayShellControllerRef.current = puzzle2dShellController ?? null;
@@ -3002,7 +2987,7 @@ function Puzzle2dPlayInner({
         <Puzzle2dPlayCanvasSelectionContext.Provider value={canvasSelectionValue}>
           <Puzzle2dPlayCamerasContext.Provider value={camerasValue}>
             <Puzzle2dPlayLodRuntimeContext.Provider value={setPuzzle2dEffectiveLodForPane}>
-              <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playgroundKeybindings} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} slotNavbarCenter={slotNavbarCenter} />
+              <PlaygroundView runtime={puzzle2dRuntime} defaultAppId={PUZZLE_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playgroundKeybindings} onActiveWindowChange={onPuzzle2dPlayActiveWindowChange} exampleContribution={exampleContribution} />
             </Puzzle2dPlayLodRuntimeContext.Provider>
           </Puzzle2dPlayCamerasContext.Provider>
         </Puzzle2dPlayCanvasSelectionContext.Provider>
@@ -3011,29 +2996,57 @@ function Puzzle2dPlayInner({
   );
 }
 
-function Puzzle2dPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
-  return <Puzzle2dPlayInner puzzle2dRuntime={playground.runtime} playgroundKeybindings={playground.keybindings} />;
+function puzzle2dMountChrome({ runtime }: PlaygroundMountProps): ReactElement {
+  return <Puzzle2dPlayInner puzzle2dRuntime={runtime as Platform} />;
 }
 
-/** @emoji 🚀 Mounts puzzle 2d play chrome for a {@link Playground}. */
-export function mountPuzzle2dPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<Puzzle2dPlayChrome playground={playground} />, rootId);
+function Puzzle2dOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bundle = useOsInstanceMaterialization(instance);
+  const fixture = reactHostPort.useMemo(() => {
+    if (bundle.projection && typeof bundle.projection === "object") {
+      return parsePuzzle2dFixture(bundle.projection) ?? PUZZLE_2D_PLAY_EMPTY_FIXTURE;
+    }
+    if (instance.sourceDocument.inline) {
+      try {
+        return parsePuzzle2dFixture(JSON.parse(instance.sourceDocument.inline)) ?? PUZZLE_2D_PLAY_EMPTY_FIXTURE;
+      } catch {
+        return PUZZLE_2D_PLAY_EMPTY_FIXTURE;
+      }
+    }
+    return PUZZLE_2D_PLAY_EMPTY_FIXTURE;
+  }, [bundle.projection, instance.sourceDocument.inline]);
+  const declarativeSceneDescriptor = reactHostPort.useMemo(() => buildPuzzle2dSceneDescriptorFromFixture(fixture), [fixture]);
+  return (
+    <div className="relative h-full min-h-0">
+      <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+      <Puzzle2dCanvas className="h-full" declarativeSceneDescriptor={declarativeSceneDescriptor} />
+    </div>
+  );
 }
 
-const puzzle2dPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerPuzzle2dPlaySurfaceHosts,
-  mount: mountPuzzle2dPlayChrome,
+/** @emoji 🛝 Puzzle 2D app renderer contribution for playground and OS shells. */
+export const puzzle2dAppRenderer: AppRendererContribution = {
+  windowBodies: puzzle2dPlayWindowBodies,
+  surfaceHosts: {
+    [PUZZLE_2D_PLAY_SURFACE_ID]: Puzzle2dPlayPaneSurfaceHost,
+    [PUZZLE_2D_PLAY_SURFACE_ID_COMPILED_DAG]: Puzzle2dPlayCompiledDagSurfaceHost,
+  },
+  tabIcons: {
+    [PUZZLE_2D_PLAY_ICON_KINDS]: "tags",
+    "puzzle.2d-play.icon.inspector": "clipboard-list",
+    "puzzle.2d-play.icon.settings": "settings",
+  },
+  mountChrome: puzzle2dMountChrome,
+  instanceHost: Puzzle2dOsInstanceHost,
+  treeDragController: (dragByItemId) => {
+    const sample = dragByItemId.values().next().value;
+    if (sample && PUZZLE_2D_FIXTURE_DRAG_MIME in sample) return puzzle2dFixturePaletteTreeDragController(dragByItemId);
+    return undefined;
+  },
 };
 
-/** @emoji 🛝 Puzzle 2D play entry: register hosts, bodies, mount chrome (from `puzzle/2d/play/index.ts`). */
-export function boot2dPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, puzzle2dPlayChromeBoot, rootId);
-}
-
-/** @emoji 🔗 WIRES play entry: shared play chrome with WIRES fixture and domain labels (`reasoning/mindmap/wires/play`). */
-export function bootWiresPlay(playground: Playground, rootId = "root"): void {
-  boot2dPlay(playground, rootId);
-}
+/** @emoji 🔗 WIRES play renderer — same chrome as puzzle 2D play. */
+export const wiresAppRenderer: AppRendererContribution = puzzle2dAppRenderer;
 
 // #endregion 🔖Entrypoint
 

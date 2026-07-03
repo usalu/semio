@@ -311,9 +311,28 @@ export function buildReasoningWiresProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createPuzzle2dAppVcsHandler } from "@semio-tech/puzzle-2d-core";
+
+const wiresProgramContributionResources = {
+		"wires": osBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d"),
+	};
+
+/** @emoji 🧩 OS program contribution for reasoning.wires. */
+export const wiresProgramContribution: OsProgramContribution = {
+	programId: "reasoning.wires",
+	register() {
+		mergeOsProgramDefinition("reasoning.wires", buildReasoningWiresProgramDefinition(), wiresProgramContributionResources);
+		registerAppVcsHandler(createPuzzle2dAppVcsHandler());
+		mergeOsProgramDefinition("reasoning.mindmap", { id: "reasoning.mindmap", name: "Reasoning Mindmap", apiVersion: "1", apps: [{ id: "mindmap", label: "Mindmap", controllerId: "reasoning-mindmap", modes: [{ id: "explore", label: "Explore" }], defaultModeId: "explore" }], createPlatformApi: () => ({}) }, { mindmap: osBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d", [{ id: "explore", label: "Explore" }]) });
+	},
+};
+//#endregion 🔖OsProgram
+
 //#region 🔖Play
 import { createPlaygroundApp } from "@semio-tech/framework-playground-core";
-import { registerPuzzle2dPlayDeclarativeBodies } from "@semio-tech/puzzle-2d-core";
 
 export const wiresPlayAppDefinition = createPlaygroundApp({
 	id: WIRES_PLAY_APP_ID,
@@ -347,10 +366,6 @@ export const wiresPlayAppDefinition = createPlaygroundApp({
 		},
 	},
 	createRuntime: () => buildPuzzle2dPlayRuntime(),
-	registerBodies: () => registerPuzzle2dPlayDeclarativeBodies(),
-	bootRenderer: async (pg) => {
-		const { bootWiresPlay } = await import("@semio-tech/puzzle-2d-react/play");
-		bootWiresPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/puzzle-2d-react/play")).wiresAppRenderer,
 });
 //#endregion 🔖Play

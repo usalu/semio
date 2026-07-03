@@ -12,7 +12,9 @@
     "test": "bun nx run @semio-tech/note-core:test"
   },
   "dependencies": {
-    "@semio-tech/vcs-core": "workspace:*"
+    "@semio-tech/vcs-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -26,7 +28,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "note",
       "aliases": [
         "note"
@@ -39,7 +41,9 @@
         "dev": 6080,
         "test": 6081,
         "env": "NOTE_PLAY_PORT"
-      }
+      },
+      "programExport": "noteProgramContribution",
+      "programId": "note"
     }
   }
 }

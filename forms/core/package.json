@@ -12,7 +12,9 @@
     "test": "bun nx run @semio-tech/forms-core:test"
   },
   "dependencies": {
-    "@semio-tech/vcs-core": "workspace:*"
+    "@semio-tech/vcs-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -26,7 +28,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "forms",
       "aliases": [
         "forms"
@@ -39,7 +41,9 @@
         "dev": 6058,
         "test": 6059,
         "env": "FORMS_PLAY_PORT"
-      }
+      },
+      "programExport": "formsProgramContribution",
+      "programId": "forms"
     }
   }
 }

@@ -13,14 +13,14 @@ import {
 	selectionMergeIds,
 	screenRectFromPoints,
 	useCanvasPickInteraction,
-	useVelloThemeSync,
+	useCanvasThemeSync,
 	type SelectionMarqueeCoverage,
 	type SelectionMarqueePoint,
 	type SelectionMarqueeMethod,
 	type SelectionMarqueeRect,
 	type SelectionMergeMode,
 } from "@semio-tech/ui-react";
-import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
+import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import { parseCanvasPickTargetKey, type CanvasPickTarget } from "@semio-tech/framework-core";
 import {
 	decodeRasterImageAsset,
@@ -271,11 +271,11 @@ export const RasterCanvas: React.FC<RasterCanvasProps> = ({
 	onSelect,
 }) => {
 	const renderer = React.useMemo(() => new RasterRenderer(), []);
-	const syncVelloTheme = useCallback(() => {
-		syncSessionVelloTheme(renderer.session);
+	const syncCanvasTheme = useCallback(() => {
+		syncSessionCanvasTheme(renderer.session);
 		renderer.invalidate();
 	}, [renderer]);
-	useVelloThemeSync(syncVelloTheme);
+	useCanvasThemeSync(syncCanvasTheme);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const viewportRef = useRef({ width: 1, height: 1 });

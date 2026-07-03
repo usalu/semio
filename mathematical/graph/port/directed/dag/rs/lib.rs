@@ -10,7 +10,7 @@ use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
 pub use infinite_cavas as cavas;
 pub use mathematical_graph_port_directed::{
     self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outward_at_node_rim, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node,
-    NodeId, RenderSnapshot, Selection, VelloThemePalette,
+    NodeId, RenderSnapshot, Selection, CanvasThemePalette,
 };
 
 /// 🌳 DAG board engine alias.
@@ -381,8 +381,7 @@ fn preview_media_natural_size(src: &str) -> (f64, f64) {
     match board_resolve_icon_kind(src, |_| None) {
         BoardResolvedIcon::RasterRgba8 { w, h, .. } => (f64::from(w), f64::from(h)),
         BoardResolvedIcon::SvgPlain(s) | BoardResolvedIcon::SvgThemed(s) => {
-            if let Ok(tree) = cavas::usvg::Tree::from_str(&s, cavas::svg_icon_vello09::usvg_options_icons()) {
-                let (_, _, bw, bh) = cavas::svg_icon_vello09::svg_icon_content_bounds(&tree);
+            if let Ok((_, _, bw, bh)) = cavas::svg_icon::svg_icon_content_bounds_from_str(&s) {
                 if bw > 0.0 && bh > 0.0 && bw.is_finite() && bh.is_finite() {
                     return (bw, bh);
                 }
@@ -1130,7 +1129,7 @@ fn port_angle_on_side(index: usize, count: usize, left: bool) -> f64 {
 
 /// 📐 Rectangle-layout port angle (north-zero CCW) aligned with painted IO labels.
 pub fn io_node_rect_port_angle(x: f64, y: f64, width: f64, height: f64, index: usize, count: usize, left: bool) -> f64 {
-    use cavas::vello::kurbo::Point;
+    use cavas::Point;
     use graph::rectangle_handle_angle_toward;
     let hw = width * 0.5;
     let row_count = computation_io_row_count(count, count, false, false);
@@ -1147,7 +1146,7 @@ pub fn io_node_rect_port_angle(x: f64, y: f64, width: f64, height: f64, index: u
 }
 
 fn io_node_rect_port_angle_for_node(node: &DagNodeSpec, port_index: usize, left: bool) -> f64 {
-    use cavas::vello::kurbo::Point;
+    use cavas::Point;
     use graph::rectangle_handle_angle_toward;
     let hw = node.width * 0.5;
     let count = if left { node.inputs().len() } else { node.outputs().len() };
@@ -1445,9 +1444,9 @@ fn dag_label_compact_paint_px(zoom: f64, lod_index: usize) -> f64 {
     cavas::lod::lod_band_label_screen_px(DAG_LABEL_COMPACT_SCREEN_PX, zoom, dag_lod_band_floor_zoom(lod_index))
 }
 
-fn dag_node_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
+fn dag_node_body_fill(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
-        vello_color_with_alpha(theme.node_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
+        canvas_color_with_alpha(theme.node_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
     } else if selected {
         theme.node_fill_selected
     } else if highlighted {
@@ -1459,9 +1458,9 @@ fn dag_node_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, h
     }
 }
 
-pub(crate) fn dag_node_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_node_body_stroke(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
-        vello_color_with_alpha(theme.node_stroke, ui_styling::opacities::DIM_STROKE_ALPHA)
+        canvas_color_with_alpha(theme.node_stroke, ui_styling::opacities::DIM_STROKE_ALPHA)
     } else if selected {
         theme.node_stroke_selected
     } else if highlighted {
@@ -1473,9 +1472,9 @@ pub(crate) fn dag_node_body_stroke(theme: &VelloThemePalette, dimmed: bool, sele
     }
 }
 
-pub(crate) fn dag_node_label_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_node_label_fill(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
-        vello_color_with_alpha(theme.label_fill, ui_styling::opacities::DIM_LABEL_ALPHA)
+        canvas_color_with_alpha(theme.label_fill, ui_styling::opacities::DIM_LABEL_ALPHA)
     } else if selected {
         theme.label_fill_hovered
     } else if highlighted {
@@ -1488,7 +1487,7 @@ pub(crate) fn dag_node_label_fill(theme: &VelloThemePalette, dimmed: bool, selec
 }
 
 /// @emoji 🧱 Internal column/row chrome inside a node body; selection/hover matches label emphasis.
-pub(crate) fn dag_node_internal_chrome_stroke(body_stroke: cavas::vello::peniko::Color, label_fill: cavas::vello::peniko::Color, emphasized: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_node_internal_chrome_stroke(body_stroke: cavas::Color, label_fill: cavas::Color, emphasized: bool) -> cavas::Color {
     if emphasized {
         label_fill
     } else {
@@ -1496,9 +1495,9 @@ pub(crate) fn dag_node_internal_chrome_stroke(body_stroke: cavas::vello::peniko:
     }
 }
 
-pub(crate) fn dag_handle_body_fill(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_handle_body_fill(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
-        vello_color_with_alpha(theme.handle_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
+        canvas_color_with_alpha(theme.handle_fill_disabled, ui_styling::opacities::DISABLED_FILL_ALPHA)
     } else if selected {
         theme.handle_fill_selected
     } else if highlighted {
@@ -1510,9 +1509,9 @@ pub(crate) fn dag_handle_body_fill(theme: &VelloThemePalette, dimmed: bool, sele
     }
 }
 
-pub(crate) fn dag_handle_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_handle_body_stroke(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
-        vello_color_with_alpha(theme.handle_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
+        canvas_color_with_alpha(theme.handle_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
     } else if selected {
         theme.handle_stroke_selected
     } else if highlighted {
@@ -1524,9 +1523,9 @@ pub(crate) fn dag_handle_body_stroke(theme: &VelloThemePalette, dimmed: bool, se
     }
 }
 
-pub(crate) fn dag_edge_body_stroke(theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::vello::peniko::Color {
+pub(crate) fn dag_edge_body_stroke(theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> cavas::Color {
     if dimmed {
-        vello_color_with_alpha(theme.edge_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
+        canvas_color_with_alpha(theme.edge_stroke_disabled, ui_styling::opacities::DISABLED_STROKE_ALPHA)
     } else if selected {
         theme.edge_stroke_selected
     } else if highlighted {
@@ -1551,7 +1550,7 @@ fn dag_node_stroke_screen_px(dimmed: bool, selected: bool, highlighted: bool, ho
 }
 
 /// @emoji 🎨 Node body fill when painted; `None` means stroke/text only (puzzle 2d overview+).
-pub(crate) fn dag_node_paint_fill(lod: DagDrawLod, theme: &VelloThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> Option<cavas::vello::peniko::Color> {
+pub(crate) fn dag_node_paint_fill(lod: DagDrawLod, theme: &CanvasThemePalette, dimmed: bool, selected: bool, highlighted: bool, hovered: bool) -> Option<cavas::Color> {
     if lod == DagDrawLod::Minimap {
         return Some(dag_node_body_stroke(theme, dimmed, selected, highlighted, hovered));
     }
@@ -1778,7 +1777,7 @@ struct NoteEditState {
 pub struct DagHost {
     pub fixture: DagFixture,
     pub engine: DagBoardEngine,
-    pub vello_theme: VelloThemePalette,
+    pub canvas_theme: CanvasThemePalette,
     width: u32,
     height: u32,
     dpr: f64,
@@ -1836,8 +1835,8 @@ pub fn dag_take_pending_open_instance_id(host: &mut DagHost) -> Option<String> {
     host.pending_open_instance_id.take()
 }
 
-fn vello_color_with_alpha(color: cavas::vello::peniko::Color, alpha: u8) -> cavas::vello::peniko::Color {
-    use cavas::vello::peniko::Color;
+fn canvas_color_with_alpha(color: cavas::Color, alpha: u8) -> cavas::Color {
+    use cavas::Color;
     let rgba = color.to_rgba8();
     Color::from_rgba8(rgba.r, rgba.g, rgba.b, alpha)
 }
@@ -2026,7 +2025,7 @@ impl DagHost {
         let mut host = Self {
             fixture,
             engine: DagBoardEngine::new(),
-            vello_theme: VelloThemePalette::default(),
+            canvas_theme: CanvasThemePalette::default(),
             width: 1,
             height: 1,
             dpr: 1.0,
@@ -2317,8 +2316,7 @@ impl DagHost {
             return;
         };
         if let Some(engine_node) = self.engine.nodes.get_mut(&nid) {
-            engine_node.center.x = node.x;
-            engine_node.center.y = node.y;
+            engine_node.center = cavas::Point::new(node.x, node.y);
         }
     }
 
@@ -2329,7 +2327,7 @@ impl DagHost {
             return "null".into();
         }
         use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let pad_world = 4.0 / self.fixture.camera.zoom.max(0.05);
         let mut corners = Vec::new();
         for (_, node) in &selected {
@@ -2356,7 +2354,7 @@ impl DagHost {
 
     /// 📐 Aligns or distributes the current multi-node selection.
     pub fn align_selection(&mut self, mode: &str) -> Result<(), String> {
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let mut selected = self.selected_fixture_nodes();
         if selected.is_empty() {
             return Ok(());
@@ -2486,8 +2484,7 @@ impl DagHost {
             return Ok(());
         };
         if let Some(node) = self.engine.nodes.get_mut(&nid) {
-            node.center.x = x;
-            node.center.y = y;
+            node.center = cavas::Point::new(x, y);
         }
         Ok(())
     }
@@ -2848,9 +2845,9 @@ impl DagHost {
         format!("{}:{}:{}", node_id, if input { "in" } else { "out" }, port_id)
     }
 
-    fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::vello::kurbo::Point {
+    fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::Point {
         use cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
@@ -2991,7 +2988,7 @@ impl DagHost {
         if !self.draw_lod_for_frame().allows_connection_hit_picking() {
             return None;
         }
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let p = Point::new(world_x, world_y);
         for (&hid, handle) in self.engine.handles.iter().rev() {
             let Some(node) = self.engine.nodes.get(&handle.node_id) else {
@@ -3091,7 +3088,7 @@ impl DagHost {
         let Some(node_id) = self.fixture_draggable_node_hit(world_x, world_y) else {
             return false;
         };
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         use graph::pick_merge_mode_for_modifiers;
 
         let point = Point::new(world_x, world_y);
@@ -3516,8 +3513,8 @@ impl DagHost {
         self.sync_camera_from_engine();
     }
 
-    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.vello_theme.merge_from_json(json)?;
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+        self.canvas_theme.merge_from_json(json)?;
         self.icon_paint_cache.clear();
         Ok(())
     }
@@ -3525,7 +3522,7 @@ impl DagHost {
     /// 🖼 Screen-node overlay rects in CSS pixel space for DOM media layers.
     pub fn node_overlays_json(&self) -> Result<String, String> {
         use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
         let mut overlays = Vec::new();
@@ -3558,8 +3555,8 @@ impl DagHost {
         serde_json::to_string(&overlays).map_err(|e| e.to_string())
     }
 
-    fn node_handle_centers(node: &DagNodeSpec) -> Vec<cavas::vello::kurbo::Point> {
-        use cavas::vello::kurbo::Point;
+    fn node_handle_centers(node: &DagNodeSpec) -> Vec<cavas::Point> {
+        use cavas::Point;
         use graph::handle_position_on_rectangle;
         let center = Point::new(node.x, node.y);
         let mut centers = Vec::new();
@@ -3574,28 +3571,28 @@ impl DagHost {
         centers
     }
 
-    fn handle_cap_peak(&self, center: cavas::vello::kurbo::Point, outward: cavas::vello::kurbo::Vec2, radius: f64, shape: PortShape) -> cavas::vello::kurbo::Point {
+    fn handle_cap_peak(&self, center: cavas::Point, outward: cavas::Vec2, radius: f64, shape: PortShape) -> cavas::Point {
         match shape {
             PortShape::Semicircle => handle_exterior_cap_peak(center, outward, radius),
             PortShape::Triangle => handle_exterior_cap_triangle_peak(center, outward, radius),
         }
     }
 
-    fn handle_cap_fill_path(&self, center: cavas::vello::kurbo::Point, outward: cavas::vello::kurbo::Vec2, radius: f64, shape: PortShape) -> cavas::vello::kurbo::BezPath {
+    fn handle_cap_fill_path(&self, center: cavas::Point, outward: cavas::Vec2, radius: f64, shape: PortShape) -> cavas::BezPath {
         match shape {
             PortShape::Semicircle => handle_exterior_cap_fill_path(center, outward, radius),
             PortShape::Triangle => handle_exterior_cap_triangle_fill_path(center, outward, radius),
         }
     }
 
-    fn handle_cap_stroke_path(&self, center: cavas::vello::kurbo::Point, outward: cavas::vello::kurbo::Vec2, radius: f64, shape: PortShape) -> cavas::vello::kurbo::BezPath {
+    fn handle_cap_stroke_path(&self, center: cavas::Point, outward: cavas::Vec2, radius: f64, shape: PortShape) -> cavas::BezPath {
         match shape {
             PortShape::Semicircle => handle_exterior_cap_stroke_path(center, outward, radius),
             PortShape::Triangle => handle_exterior_cap_triangle_stroke_path(center, outward, radius),
         }
     }
 
-    fn edge_sharp_path(&self, eid: EdgeId) -> Option<cavas::vello::kurbo::BezPath> {
+    fn edge_sharp_path(&self, eid: EdgeId) -> Option<cavas::BezPath> {
         let edge = self.engine.edges.get(&eid)?;
         let source_handle = self.engine.handles.get(&edge.source)?;
         let target_handle = self.engine.handles.get(&edge.target)?;
@@ -3612,20 +3609,20 @@ impl DagHost {
         Some(compute_edge_sharp_sz_path(source_wire, target_wire, source_out, target_out))
     }
 
-    fn paint_node_handles_for_spec(&self, scene: &mut cavas::vello::Scene, aff: &cavas::vello::kurbo::Affine, cam: &cavas::camera::Camera, node: &DagNodeSpec, chrome: &DagNodePaintChrome) {
-        use cavas::vello::kurbo::Stroke;
-        use cavas::vello::kurbo::{Circle, Point};
-        use cavas::vello::peniko::Fill;
+    fn paint_node_handles_for_spec(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, cam: &cavas::camera::Camera, node: &DagNodeSpec, chrome: &DagNodePaintChrome) {
+        use cavas::Stroke;
+        use cavas::{Circle, Point};
+        use cavas::FillRule;
         use graph::{handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
 
-        let theme = &self.vello_theme;
+        let theme = &self.canvas_theme;
         let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
         let tint = chrome.tint_highlighted();
         let fill = dag_handle_body_fill(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
         let stroke_c = dag_handle_body_stroke(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
         let handle_chrome = chrome.has_interaction_chrome();
         let center = Point::new(node.x, node.y);
-        let paint_port = |scene: &mut cavas::vello::Scene, port_idx: usize, inputs: bool, port: &IoPortSpec| {
+        let paint_port = |scene: &mut cavas::Scene, port_idx: usize, inputs: bool, port: &IoPortSpec| {
             if !port.visible {
                 return;
             }
@@ -3634,13 +3631,13 @@ impl DagHost {
             let outward = handle_outward_at_node_rim(handle_center, center, NodeShape::Rectangle, 0.0, node.width, node.height);
             if let Some(out) = outward {
                 if handle_chrome {
-                    scene.fill(Fill::NonZero, *aff, fill, None, &self.handle_cap_fill_path(handle_center, out, DAG_HANDLE_WORLD_RADIUS, port.shape));
+                    scene.fill(FillRule::NonZero, *aff, fill, None, &self.handle_cap_fill_path(handle_center, out, DAG_HANDLE_WORLD_RADIUS, port.shape));
                 }
                 scene.stroke(&Stroke::new(handle_stroke_px), *aff, stroke_c, None, &self.handle_cap_stroke_path(handle_center, out, DAG_HANDLE_WORLD_RADIUS, port.shape));
             } else {
                 let circle = Circle::new(handle_center, DAG_HANDLE_WORLD_RADIUS);
                 if handle_chrome {
-                    scene.fill(Fill::NonZero, *aff, fill, None, &circle);
+                    scene.fill(FillRule::NonZero, *aff, fill, None, &circle);
                 }
                 scene.stroke(&Stroke::new(handle_stroke_px), *aff, stroke_c, None, &circle);
             }
@@ -3890,21 +3887,21 @@ impl DagHost {
         .map_err(|e| e.to_string())
     }
 
-    fn paint_variadic_plus_controls(scene: &mut cavas::vello::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, px: f64, fill: cavas::vello::peniko::Color, halo: cavas::vello::peniko::Color) {
+    fn paint_variadic_plus_controls(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, px: f64, fill: cavas::Color, halo: cavas::Color) {
         use cavas::camera::world_to_screen;
         use cavas::text::append_label;
         for (_, px_world, py_world) in variadic_input_insert_positions(node) {
-            let screen = world_to_screen(cam, viewport, cavas::vello::kurbo::Point::new(px_world, py_world));
+            let screen = world_to_screen(cam, viewport, cavas::Point::new(px_world, py_world));
             append_label(scene, "+", screen, px * 0.95, fill, halo);
         }
         for (_, px_world, py_world) in variadic_output_insert_positions(node) {
-            let screen = world_to_screen(cam, viewport, cavas::vello::kurbo::Point::new(px_world, py_world));
+            let screen = world_to_screen(cam, viewport, cavas::Point::new(px_world, py_world));
             append_label(scene, "+", screen, px * 0.95, fill, halo);
         }
     }
 
     fn paint_port_labels(
-        scene: &mut cavas::vello::Scene,
+        scene: &mut cavas::Scene,
         cam: &cavas::camera::Camera,
         viewport: &cavas::camera::Viewport,
         node: &DagNodeSpec,
@@ -3912,15 +3909,15 @@ impl DagHost {
         layout_px: f64,
         paint_px: f64,
         lod_index: usize,
-        label_fill: cavas::vello::peniko::Color,
-        label_halo: cavas::vello::peniko::Color,
+        label_fill: cavas::Color,
+        label_halo: cavas::Color,
     ) {
         if Self::port_labels_delegated_to_js_overlay(lod) {
             return;
         }
         use cavas::camera::world_to_screen;
         use cavas::text::{append_label, label_extent};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let hw = node.width * 0.5;
         let handle_inset = 8.0 / cam.zoom.max(0.05);
         let inputs = node.inputs();
@@ -3947,21 +3944,21 @@ impl DagHost {
         }
     }
 
-    fn paint_node_name_vertical(scene: &mut cavas::vello::Scene, center_screen: cavas::vello::kurbo::Point, name: &str, px: f64, label_fill: cavas::vello::peniko::Color, label_halo: cavas::vello::peniko::Color) {
+    fn paint_node_name_vertical(scene: &mut cavas::Scene, center_screen: cavas::Point, name: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
         use cavas::text::{append_label, label_extent};
-        use cavas::vello::kurbo::{Affine, Point};
+        use cavas::{Affine, Point};
         let trimmed = name.trim();
         if trimmed.is_empty() {
             return;
         }
         let (w, h) = label_extent(trimmed, px);
-        let mut label_scene = cavas::vello::Scene::new();
+        let mut label_scene = cavas::Scene::new();
         append_label(&mut label_scene, trimmed, Point::new(0.0, 0.0), px, label_fill, label_halo);
-        let rot = Affine::translate((center_screen.x, center_screen.y)) * Affine::rotate(-std::f64::consts::FRAC_PI_2) * Affine::translate((-w * 0.5, -h * 0.5));
+        let rot = Affine::IDENTITY.translate((center_screen.x, center_screen.y)) * Affine::IDENTITY.rotate(-std::f64::consts::FRAC_PI_2) * Affine::IDENTITY.translate((-w * 0.5, -h * 0.5));
         scene.append(&label_scene, Some(rot));
     }
 
-    fn paint_node_name(scene: &mut cavas::vello::Scene, center_screen: cavas::vello::kurbo::Point, node: &DagNodeSpec, px: f64, label_fill: cavas::vello::peniko::Color, label_halo: cavas::vello::peniko::Color) {
+    fn paint_node_name(scene: &mut cavas::Scene, center_screen: cavas::Point, node: &DagNodeSpec, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
         if node.width >= node.height {
             Self::paint_node_name_horizontal(scene, center_screen, &node.name, px, label_fill, label_halo);
         } else {
@@ -3969,8 +3966,8 @@ impl DagHost {
         }
     }
 
-    fn paint_computation_column_divider(scene: &mut cavas::vello::Scene, aff: cavas::vello::kurbo::Affine, node: &DagNodeSpec, chrome_stroke: f64, stroke: cavas::vello::peniko::Color) {
-        use cavas::vello::kurbo::{Line, Point, Stroke};
+    fn paint_computation_column_divider(scene: &mut cavas::Scene, aff: cavas::Affine, node: &DagNodeSpec, chrome_stroke: f64, stroke: cavas::Color) {
+        use cavas::{Line, Point, Stroke};
         let Some(divider_x) = computation_column_divider_x(node) else {
             return;
         };
@@ -3981,15 +3978,15 @@ impl DagHost {
         scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(divider_x, top), Point::new(divider_x, bottom)));
     }
 
-    fn paint_computation_channel_row_highlights(&self, scene: &mut cavas::vello::Scene, aff: &cavas::vello::kurbo::Affine, node: &DagNodeSpec, theme: &VelloThemePalette, is_dimmed: bool) {
-        use cavas::vello::kurbo::Rect;
-        use cavas::vello::peniko::Fill;
+    fn paint_computation_channel_row_highlights(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, node: &DagNodeSpec, theme: &CanvasThemePalette, is_dimmed: bool) {
+        use cavas::Rect;
+        use cavas::FillRule;
         let mut paint_bounds = |(x0, y0, x1, y1): (f64, f64, f64, f64), selected: bool, highlighted: bool, hovered: bool| {
             if !selected && !highlighted && !hovered {
                 return;
             }
             let fill = dag_handle_body_fill(theme, is_dimmed, selected, highlighted, hovered);
-            scene.fill(Fill::NonZero, *aff, fill, None, &Rect::new(x0, y0, x1, y1));
+            scene.fill(FillRule::NonZero, *aff, fill, None, &Rect::new(x0, y0, x1, y1));
         };
         for (port_idx, port) in node.inputs().iter().enumerate() {
             let Some(bounds) = input_port_row_hit_bounds(node, port_idx) else {
@@ -4013,7 +4010,7 @@ impl DagHost {
         }
     }
 
-    fn computation_channel_row_divider_stroke(&self, node: &DagNodeSpec, port_id: &str, body_stroke: cavas::vello::peniko::Color, label_fill: cavas::vello::peniko::Color, default_stroke: cavas::vello::peniko::Color) -> cavas::vello::peniko::Color {
+    fn computation_channel_row_divider_stroke(&self, node: &DagNodeSpec, port_id: &str, body_stroke: cavas::Color, label_fill: cavas::Color, default_stroke: cavas::Color) -> cavas::Color {
         let Some(hid) = self.handle_id_for_port(&node.id, port_id) else {
             return default_stroke;
         };
@@ -4027,16 +4024,16 @@ impl DagHost {
 
     fn paint_computation_channel_row_dividers(
         &self,
-        scene: &mut cavas::vello::Scene,
-        aff: cavas::vello::kurbo::Affine,
+        scene: &mut cavas::Scene,
+        aff: cavas::Affine,
         node: &DagNodeSpec,
         chrome_stroke: f64,
-        stroke: cavas::vello::peniko::Color,
-        body_stroke: cavas::vello::peniko::Color,
-        label_fill: cavas::vello::peniko::Color,
+        stroke: cavas::Color,
+        body_stroke: cavas::Color,
+        label_fill: cavas::Color,
         channel_row_pick: bool,
     ) {
-        use cavas::vello::kurbo::{Line, Point, Stroke};
+        use cavas::{Line, Point, Stroke};
         let grid_rows = computation_channel_row_count(node);
         if grid_rows <= 1 {
             return;
@@ -4070,10 +4067,10 @@ impl DagHost {
         }
     }
 
-    fn paint_preview_image_content(&self, scene: &mut cavas::vello::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, src: &str, label_fill: cavas::vello::peniko::Color, bg: cavas::vello::peniko::Color) {
+    fn paint_preview_image_content(&self, scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, src: &str, label_fill: cavas::Color, bg: cavas::Color) {
         use cavas::camera::world_to_screen;
         use cavas::text::append_label;
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         if src.is_empty() {
             let (x0, y0, x1, y1) = preview_content_bounds(node);
             let pos = world_to_screen(cam, viewport, Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
@@ -4089,20 +4086,20 @@ impl DagHost {
 
     fn paint_preview_content(
         &self,
-        scene: &mut cavas::vello::Scene,
+        scene: &mut cavas::Scene,
         cam: &cavas::camera::Camera,
         viewport: &cavas::camera::Viewport,
         node: &DagNodeSpec,
         content: &DagPreviewContent,
         expanded: &BTreeSet<String>,
         paint_px: f64,
-        label_fill: cavas::vello::peniko::Color,
-        label_halo: cavas::vello::peniko::Color,
-        bg: cavas::vello::peniko::Color,
+        label_fill: cavas::Color,
+        label_halo: cavas::Color,
+        bg: cavas::Color,
     ) {
         use cavas::camera::world_to_screen;
         use cavas::text::append_label;
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         match content {
             DagPreviewContent::Empty => {
                 let (x0, y0, x1, y1) = preview_content_bounds(node);
@@ -4147,8 +4144,8 @@ impl DagHost {
         }
     }
 
-    fn paint_io_widget_channel_borders(scene: &mut cavas::vello::Scene, aff: cavas::vello::kurbo::Affine, node: &DagNodeSpec, px: f64, chrome_stroke: f64, stroke: cavas::vello::peniko::Color) {
-        use cavas::vello::kurbo::{Line, Point, Stroke};
+    fn paint_io_widget_channel_borders(scene: &mut cavas::Scene, aff: cavas::Affine, node: &DagNodeSpec, px: f64, chrome_stroke: f64, stroke: cavas::Color) {
+        use cavas::{Line, Point, Stroke};
         let (name_left, top, name_right, bottom) = io_widget_name_column_bounds(node, px);
         let stroke_style = Stroke::new(chrome_stroke);
         scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(name_left, top), Point::new(name_left, bottom)));
@@ -4186,7 +4183,7 @@ impl DagHost {
         !uses_computation_layout(&node.kind) || !lod.shows_computation_layout()
     }
 
-    fn paint_node_lod_icon(&self, scene: &mut cavas::vello::Scene, lod: DagDrawLod, center_screen: cavas::vello::kurbo::Point, node: &DagNodeSpec, zoom: f64, fg: cavas::vello::peniko::Color, bg: cavas::vello::peniko::Color) {
+    fn paint_node_lod_icon(&self, scene: &mut cavas::Scene, lod: DagDrawLod, center_screen: cavas::Point, node: &DagNodeSpec, zoom: f64, fg: cavas::Color, bg: cavas::Color) {
         if !Self::should_paint_node_lod_icon(node, lod) {
             return;
         }
@@ -4199,10 +4196,10 @@ impl DagHost {
         self.icon_paint_cache.append_icon_at_screen_rect(scene, icon, center_screen, screen_w, screen_h, fg, bg, false);
     }
 
-    fn paint_cluster_affordances(scene: &mut cavas::vello::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, paint_px: f64, label_fill: cavas::vello::peniko::Color, label_halo: cavas::vello::peniko::Color) {
+    fn paint_cluster_affordances(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, paint_px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
         use cavas::camera::world_to_screen;
         use cavas::text::append_label;
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let (name_x, name_y) = computation_name_world_center(node, &node.name, paint_px, cam.zoom);
         let glyph_pos = world_to_screen(cam, viewport, Point::new(name_x - paint_px * 0.55, name_y));
         append_label(scene, "🧩", glyph_pos, paint_px * 0.85, label_fill, label_halo);
@@ -4215,39 +4212,39 @@ impl DagHost {
     }
 
     fn paint_computation_node_name(
-        scene: &mut cavas::vello::Scene,
+        scene: &mut cavas::Scene,
         cam: &cavas::camera::Camera,
         viewport: &cavas::camera::Viewport,
         node: &DagNodeSpec,
         label: &str,
         px: f64,
-        label_fill: cavas::vello::peniko::Color,
-        label_halo: cavas::vello::peniko::Color,
+        label_fill: cavas::Color,
+        label_halo: cavas::Color,
     ) {
         use cavas::camera::world_to_screen;
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let (label_x, label_y) = computation_name_world_center(node, label, px, cam.zoom);
         let anchor = world_to_screen(cam, viewport, Point::new(label_x, label_y));
         Self::paint_node_name_horizontal(scene, anchor, label, px, label_fill, label_halo);
     }
 
-    fn paint_slider_name(scene: &mut cavas::vello::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, label: &str, px: f64, label_fill: cavas::vello::peniko::Color, label_halo: cavas::vello::peniko::Color) {
+    fn paint_slider_name(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, label: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
         Self::paint_computation_node_name(scene, cam, viewport, node, label, px, label_fill, label_halo);
     }
 
     fn paint_io_widget_name(
-        scene: &mut cavas::vello::Scene,
+        scene: &mut cavas::Scene,
         cam: &cavas::camera::Camera,
         viewport: &cavas::camera::Viewport,
         node: &DagNodeSpec,
         lod: DagDrawLod,
         label: &str,
         px: f64,
-        label_fill: cavas::vello::peniko::Color,
-        label_halo: cavas::vello::peniko::Color,
+        label_fill: cavas::Color,
+        label_halo: cavas::Color,
     ) {
         use cavas::camera::world_to_screen;
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         if lod.node_label() == DagNodeLabel::None && !lod.shows_controls() {
             return;
         }
@@ -4256,9 +4253,9 @@ impl DagHost {
         Self::paint_node_name_vertical(scene, name_anchor, label, px, label_fill, label_halo);
     }
 
-    fn paint_node_name_horizontal(scene: &mut cavas::vello::Scene, center_screen: cavas::vello::kurbo::Point, name: &str, px: f64, label_fill: cavas::vello::peniko::Color, label_halo: cavas::vello::peniko::Color) {
+    fn paint_node_name_horizontal(scene: &mut cavas::Scene, center_screen: cavas::Point, name: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
         use cavas::text::{append_label, label_extent};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let trimmed = name.trim();
         if trimmed.is_empty() {
             return;
@@ -4267,8 +4264,8 @@ impl DagHost {
         append_label(scene, trimmed, Point::new(center_screen.x - w * 0.5, center_screen.y - h * 0.5), px, label_fill, label_halo);
     }
 
-    fn paint_computing_border_arc(&self, scene: &mut cavas::vello::Scene, aff: &cavas::vello::kurbo::Affine, rect: &cavas::vello::kurbo::Rect, cam_zoom: f64, color: cavas::vello::peniko::Color, start_t: f64, dashed: bool) {
-        use cavas::vello::kurbo::{BezPath, Stroke};
+    fn paint_computing_border_arc(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, color: cavas::Color, start_t: f64, dashed: bool) {
+        use cavas::{BezPath, Stroke};
         const SEGMENTS: usize = 40;
         const ARC_FRACTION: f64 = 0.24;
         let mut path = BezPath::new();
@@ -4285,55 +4282,55 @@ impl DagHost {
         let stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX * 1.75, cam_zoom);
         let mut stroke = Stroke::new(stroke_px);
         if dashed {
-            stroke.dash_pattern = vec![stroke_px * 2.5, stroke_px * 2.0].into();
+            stroke.set_dash_pattern(vec![stroke_px * 2.5, stroke_px * 2.0]);
         }
         scene.stroke(&stroke, *aff, color, None, &path);
     }
 
-    fn paint_computing_active_border(&self, scene: &mut cavas::vello::Scene, aff: &cavas::vello::kurbo::Affine, rect: &cavas::vello::kurbo::Rect, cam_zoom: f64, theme: &VelloThemePalette) {
+    fn paint_computing_active_border(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, theme: &CanvasThemePalette) {
         self.paint_computing_border_arc(scene, aff, rect, cam_zoom, theme.node_stroke_selected, self.computing_active_anim_phase.get(), false);
     }
 
-    fn paint_computing_stale_border(&self, scene: &mut cavas::vello::Scene, aff: &cavas::vello::kurbo::Affine, rect: &cavas::vello::kurbo::Rect, cam_zoom: f64, theme: &VelloThemePalette) {
-        let highlight = vello_color_with_alpha(theme.node_stroke_selected, 220);
+    fn paint_computing_stale_border(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, theme: &CanvasThemePalette) {
+        let highlight = canvas_color_with_alpha(theme.node_stroke_selected, 220);
         self.paint_computing_border_arc(scene, aff, rect, cam_zoom, highlight, self.computing_stale_anim_phase.get(), true);
     }
 
-    fn rect_perimeter_point(rect: &cavas::vello::kurbo::Rect, t: f64) -> cavas::vello::kurbo::Point {
-        use cavas::vello::kurbo::Point;
+    fn rect_perimeter_point(rect: &cavas::Rect, t: f64) -> cavas::Point {
+        use cavas::Point;
         let t = t.fract();
         let w = rect.width();
         let h = rect.height();
         let perim = 2.0 * (w + h);
         let mut d = t * perim;
         if d <= w {
-            return Point::new(rect.x0 + d, rect.y0);
+            return Point::new(rect.x0() + d, rect.y0());
         }
         d -= w;
         if d <= h {
-            return Point::new(rect.x1, rect.y0 + d);
+            return Point::new(rect.x1(), rect.y0() + d);
         }
         d -= h;
         if d <= w {
-            return Point::new(rect.x1 - d, rect.y1);
+            return Point::new(rect.x1() - d, rect.y1());
         }
         d -= w;
-        Point::new(rect.x0, rect.y1 - d)
+        Point::new(rect.x0(), rect.y1() - d)
     }
 
     fn paint_note_caret_bar(
-        scene: &mut cavas::vello::Scene,
-        aff: &cavas::vello::kurbo::Affine,
+        scene: &mut cavas::Scene,
+        aff: &cavas::Affine,
         node: &DagNodeSpec,
         caret_byte: usize,
         text: &str,
         font_px: f64,
-        fill: cavas::vello::peniko::Color,
+        fill: cavas::Color,
         zoom: f64,
     ) {
         use cavas::text::label_byte_world_x;
-        use cavas::vello::kurbo::Rect;
-        use cavas::vello::peniko::Fill;
+        use cavas::Rect;
+        use cavas::FillRule;
         let (x0, y0, _x1, y1) = preview_content_bounds(node);
         let origin_x = x0 + DAG_PREVIEW_PAD;
         let caret_x = label_byte_world_x(text, caret_byte.min(text.len()), origin_x, font_px);
@@ -4341,13 +4338,13 @@ impl DagHost {
         let lh = font_px * 1.2;
         let bar_w = 1.5 / zoom.max(0.05);
         let rect = Rect::new(caret_x, caret_y - lh * 0.4, caret_x + bar_w, caret_y + lh * 0.4);
-        scene.fill(Fill::NonZero, *aff, fill, None, &rect);
+        scene.fill(FillRule::NonZero, *aff, fill, None, &rect);
     }
 
     fn paint_node_visual(
         &self,
-        scene: &mut cavas::vello::Scene,
-        aff: &cavas::vello::kurbo::Affine,
+        scene: &mut cavas::Scene,
+        aff: &cavas::Affine,
         cam: &cavas::camera::Camera,
         viewport: &cavas::camera::Viewport,
         lod: DagDrawLod,
@@ -4358,22 +4355,22 @@ impl DagHost {
     ) {
         use cavas::camera::world_to_screen;
         use cavas::text::append_label;
-        use cavas::vello::kurbo::{Circle, Line, Point, Rect, Stroke};
-        use cavas::vello::peniko::Fill;
+        use cavas::{Circle, Line, Point, Rect, Stroke};
+        use cavas::FillRule;
 
-        let theme = &self.vello_theme;
+        let theme = &self.canvas_theme;
         let label_halo = theme.label_halo;
         let hw = node.width * 0.5;
         let hh = node.height * 0.5;
         let rect = Rect::new(node.x - hw, node.y - hh, node.x + hw, node.y + hh);
         let tint = chrome.tint_highlighted();
-        let fill = dag_node_paint_fill(lod, theme, chrome.is_dimmed, chrome.is_selected, chrome.is_highlighted, chrome.is_hovered).map(|color| vello_color_with_alpha(color, chrome.body_fill_alpha));
+        let fill = dag_node_paint_fill(lod, theme, chrome.is_dimmed, chrome.is_selected, chrome.is_highlighted, chrome.is_hovered).map(|color| canvas_color_with_alpha(color, chrome.body_fill_alpha));
         let stroke = dag_node_body_stroke(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
         let label_fill = dag_node_label_fill(theme, chrome.is_dimmed, chrome.is_selected, tint, chrome.is_hovered);
         let internal_chrome_stroke = dag_node_internal_chrome_stroke(stroke, label_fill, chrome.is_hovered || chrome.is_selected || chrome.is_highlighted);
         let stroke_screen_px = dag_node_stroke_screen_px(chrome.is_dimmed, chrome.is_selected, chrome.is_highlighted, chrome.is_hovered);
         if let Some(fill) = fill {
-            scene.fill(Fill::NonZero, *aff, fill, None, &rect);
+            scene.fill(FillRule::NonZero, *aff, fill, None, &rect);
         }
         if !chrome.is_selected {
             scene.stroke(&Stroke::new(dag_world_stroke(stroke_screen_px, cam.zoom)), *aff, stroke, None, &rect);
@@ -4436,7 +4433,7 @@ impl DagHost {
                         let thumb_x = x0 + t * (x1 - x0);
                         let knob_dragging = widget_drag_idx.is_some();
                         let knob_fill = if knob_dragging { theme.handle_fill_selected } else { label_fill };
-                        scene.fill(Fill::NonZero, *aff, knob_fill, None, &Circle::new(Point::new(thumb_x, track_y), DAG_SLIDER_KNOB_SCREEN_PX / cam.zoom.max(0.05)));
+                        scene.fill(FillRule::NonZero, *aff, knob_fill, None, &Circle::new(Point::new(thumb_x, track_y), DAG_SLIDER_KNOB_SCREEN_PX / cam.zoom.max(0.05)));
                         let value_text = format!("{value:.1}");
                         let value_px = paint_px * 0.9;
                         let (vx, vy) = slider_value_world_center(node, &value_text, value_px, cam.zoom);
@@ -4485,7 +4482,7 @@ impl DagHost {
                                 DagMediaKind::Video => "video",
                             };
                             let hint = world_to_screen(cam, viewport, Point::new(node.x, node.y + hh * 0.1));
-                            append_label(scene, kind_label, hint, paint_px * 0.85, vello_color_with_alpha(label_fill, ui_styling::opacities::KIND_HINT_ALPHA), label_halo);
+                            append_label(scene, kind_label, hint, paint_px * 0.85, canvas_color_with_alpha(label_fill, ui_styling::opacities::KIND_HINT_ALPHA), label_halo);
                         }
                     }
                 }
@@ -4588,12 +4585,12 @@ impl DagHost {
         }
     }
 
-    pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
+    pub fn paint_scene(&self, scene: &mut cavas::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
         use cavas::camera::{camera_content_affine, Camera as CavasCamera, Viewport};
-        use cavas::vello::kurbo::{Circle, Rect, Stroke};
-        use cavas::vello::peniko::Fill;
+        use cavas::{Circle, Rect, Stroke};
+        use cavas::FillRule;
 
-        let theme = &self.vello_theme;
+        let theme = &self.canvas_theme;
         self.tick_computing_animation();
         let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: viewport_w.max(1), height: viewport_h.max(1), dpr: dpr.max(1.0) };
@@ -4629,7 +4626,7 @@ impl DagHost {
             scene.stroke(&Stroke::new(edge_stroke), aff, dag_edge_body_stroke(theme, false, true, false, false), None, &preview);
         }
         let handle_stroke_px = dag_world_stroke(DAG_CHROME_STROKE_SCREEN_PX, cam.zoom);
-        let paint_snap_handle = |scene: &mut cavas::vello::Scene, hid: &HandleId, center: &cavas::vello::kurbo::Point, shape_filter: Option<PortShape>| {
+        let paint_snap_handle = |scene: &mut cavas::Scene, hid: &HandleId, center: &cavas::Point, shape_filter: Option<PortShape>| {
             if self.handle_port_visible.get(hid) == Some(&false) {
                 return;
             }
@@ -4651,13 +4648,13 @@ impl DagHost {
             let outward = node_id.and_then(|nid| self.engine.nodes.get(&nid).and_then(|node| handle_outward_at_node_rim(*center, node.center, node.shape, node.radius, node.width, node.height)));
             if let Some(out) = outward {
                 if chrome {
-                    scene.fill(Fill::NonZero, aff, fill, None, &self.handle_cap_fill_path(*center, out, DAG_HANDLE_WORLD_RADIUS, shape));
+                    scene.fill(FillRule::NonZero, aff, fill, None, &self.handle_cap_fill_path(*center, out, DAG_HANDLE_WORLD_RADIUS, shape));
                 }
                 scene.stroke(&Stroke::new(handle_stroke_px), aff, stroke_c, None, &self.handle_cap_stroke_path(*center, out, DAG_HANDLE_WORLD_RADIUS, shape));
             } else {
                 let circle = Circle::new(*center, DAG_HANDLE_WORLD_RADIUS);
                 if chrome {
-                    scene.fill(Fill::NonZero, aff, fill, None, &circle);
+                    scene.fill(FillRule::NonZero, aff, fill, None, &circle);
                 }
                 scene.stroke(&Stroke::new(handle_stroke_px), aff, stroke_c, None, &circle);
             }
@@ -4665,7 +4662,7 @@ impl DagHost {
         for (hid, center, _radius) in &snap.handles {
             paint_snap_handle(scene, hid, center, Some(PortShape::Semicircle));
         }
-        let paint_minimap_node = |scene: &mut cavas::vello::Scene, idx: usize, fixture_node: &DagNodeSpec| {
+        let paint_minimap_node = |scene: &mut cavas::Scene, idx: usize, fixture_node: &DagNodeSpec| {
             let node = self.node_spec_for_paint(idx, fixture_node);
             let node = node.as_ref();
             let hw = node.width * 0.5;
@@ -4675,7 +4672,7 @@ impl DagHost {
             let is_dimmed = engine_nid.is_some_and(|nid| self.dimmed.contains(&nid));
             let (is_selected, is_highlighted, is_hovered) = engine_nid.map(|nid| self.node_interaction_chrome(nid)).unwrap_or((false, false, false));
             if let Some(fill) = dag_node_paint_fill(lod, theme, is_dimmed, is_selected, is_highlighted, is_hovered) {
-                scene.fill(Fill::NonZero, aff, fill, None, &rect);
+                scene.fill(FillRule::NonZero, aff, fill, None, &rect);
             }
         };
         if lod == DagDrawLod::Minimap {
@@ -4894,16 +4891,16 @@ mod wasm_session {
             self.state.borrow_mut().host.reorganize(&opts).map_err(|e| JsValue::from_str(&e))
         }
 
-        #[wasm_bindgen(js_name = setVelloThemeJson)]
-        pub fn set_vello_theme_json(&mut self, json: &str) {
-            let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+        #[wasm_bindgen(js_name = setCanvasThemeJson)]
+        pub fn set_canvas_theme_json(&mut self, json: &str) {
+            let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
         }
 
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
-            let mut scene = cavas::vello::Scene::new();
-            let clear = inner.host.vello_theme.raster_clear;
+            let mut scene = cavas::Scene::new();
+            let clear = inner.host.canvas_theme.raster_clear;
             inner.host.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
             let scene = cavas::render::scale_scene_for_device_pixel_ratio(scene, inner.dpr);
             inner.gpu.render_frame(&scene, clear)
@@ -5153,7 +5150,7 @@ mod tests {
     #[test]
     fn idle_pointer_move_updates_hover() {
         use cavas::camera::{world_to_screen, Camera, Viewport};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
 
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
@@ -5343,7 +5340,7 @@ mod tests {
         host.set_viewport(800, 600, 1.0);
         let (x0, y0, x1, y1) = slider_track_bounds(&host.fixture.nodes[0]);
         let mid_y = (y0 + y1) * 0.5;
-        let (sx, sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, mid_y));
+        let (sx, sy) = world_to_screen_px(&host, cavas::Point::new((x0 + x1) * 0.5, mid_y));
         host.pointer_down(sx, sy, false);
         host.pointer_up(sx, sy);
         let DagNodeKind::Slider { value, .. } = host.fixture.nodes[0].kind else {
@@ -5377,7 +5374,7 @@ mod tests {
         host.set_viewport(800, 600, 1.0);
         let (x0, y0, x1, y1) = slider_track_bounds(&host.fixture.nodes[0]);
         let mid_y = (y0 + y1) * 0.5;
-        let (sx, sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, mid_y));
+        let (sx, sy) = world_to_screen_px(&host, cavas::Point::new((x0 + x1) * 0.5, mid_y));
         host.pointer_down(sx, sy, false);
         host.pointer_up(sx, sy);
         let DagNodeKind::Slider { value, .. } = host.fixture.nodes[0].kind else {
@@ -5407,7 +5404,7 @@ mod tests {
         });
         host.set_viewport(800, 600, 1.0);
         let (x0, y0, x1, y1) = select_control_bounds(&host.fixture.nodes[0]);
-        let (sx, sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
+        let (sx, sy) = world_to_screen_px(&host, cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
         host.pointer_down(sx, sy, false);
         let DagNodeKind::Select { selected, .. } = host.fixture.nodes[0].kind else {
             panic!("expected select");
@@ -5565,12 +5562,12 @@ mod tests {
         assert!(overlays[0]["rect"]["w"].as_f64().unwrap_or(0.0) > 10.0);
     }
 
-    fn handle_world(host: &DagHost, port_key: &str) -> cavas::vello::kurbo::Point {
+    fn handle_world(host: &DagHost, port_key: &str) -> cavas::Point {
         let hid = host.handle_key_map.iter().find(|(_, key)| key.as_str() == port_key).map(|(id, _)| *id).expect("handle");
         host.engine.render_snapshot().handles.iter().find(|(id, _, _)| *id == hid).map(|(_, p, _)| *p).expect("handle pos")
     }
 
-    fn world_to_screen_px(host: &DagHost, p: cavas::vello::kurbo::Point) -> (f64, f64) {
+    fn world_to_screen_px(host: &DagHost, p: cavas::Point) -> (f64, f64) {
         (p.x + host.width as f64 * 0.5, p.y + host.height as f64 * 0.5)
     }
 
@@ -5643,7 +5640,7 @@ mod tests {
         host.set_selection(&["scale".into(), "combine".into()]);
         let scale_before = host.fixture.nodes.iter().find(|n| n.id == "scale").expect("scale").clone();
         let combine_before = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
-        let gap = cavas::vello::kurbo::Point::new(0.0, 0.0);
+        let gap = cavas::Point::new(0.0, 0.0);
         use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
         let cam = CavasCamera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
@@ -5667,7 +5664,7 @@ mod tests {
         host.set_viewport(1280, 800, 1.0);
         let mut dragged = false;
         for (nid, node) in host.engine.nodes.clone() {
-            let grab = cavas::vello::kurbo::Point::new(node.center.x - node.width * 0.4, node.center.y);
+            let grab = cavas::Point::new(node.center.x - node.width * 0.4, node.center.y);
             let (sx, sy) = world_to_screen_px(&host, grab);
             host.pointer_down(sx, sy, false);
             if !matches!(host.engine.interaction, InteractionMode::DragNode { node_id, .. } if node_id == nid) {
@@ -5728,7 +5725,7 @@ mod tests {
         host.set_proximity_distance(120.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("normal");
-        let src_center = cavas::vello::kurbo::Point::new(0.0, 0.0);
+        let src_center = cavas::Point::new(0.0, 0.0);
         let (sx, sy) = world_to_screen_px(&host, src_center);
         host.pointer_down_screen(sx, sy, 0, false, false, false);
         host.pointer_move_screen(sx + 200.0, sy, false, false, false);
@@ -5760,7 +5757,7 @@ mod tests {
         host.set_proximity_distance(160.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("normal");
-        let cut_center = cavas::vello::kurbo::Point::new(240.0, 0.0);
+        let cut_center = cavas::Point::new(240.0, 0.0);
         let (sx, sy) = world_to_screen_px(&host, cut_center);
         host.pointer_down_screen(sx, sy, 0, false, false, false);
         host.pointer_move_screen(sx - 180.0, sy, false, false, false);
@@ -5817,7 +5814,7 @@ mod tests {
         host.set_proximity_distance(0.0);
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("normal");
-        let (sx, sy) = world_to_screen_px(&host, cavas::vello::kurbo::Point::new(0.0, 0.0));
+        let (sx, sy) = world_to_screen_px(&host, cavas::Point::new(0.0, 0.0));
         host.pointer_down_screen(sx, sy, 0, false, false, false);
         host.pointer_move_screen(sx + 200.0, sy, false, false, false);
         assert!(host.engine.render_snapshot().pending_edge.is_none());
@@ -5833,7 +5830,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine");
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(combine, port_idx).expect("row bounds");
-        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let handle = handle_world(&host, "combine:b");
         for lod in ["minimap", "overview", "compact"] {
             host.set_forced_draw_lod_label(lod);
@@ -5858,7 +5855,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine");
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(combine, port_idx).expect("row bounds");
-        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let handle = handle_world(&host, "combine:b");
         assert!((row_center.x - handle.x).abs() > 4.0, "row center should sit away from the painted handle anchor");
         let (sx, sy) = world_to_screen_px(&host, row_center);
@@ -5900,7 +5897,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
-        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let (sx, sy) = world_to_screen_px(&host, row_center);
         host.pointer_move_screen(sx, sy, false, false, false);
         assert_eq!(host.hovered_channel(), Some(DagChannelRef { widget_id: "combine".into(), port: "b".into(), direction: "in".into() }));
@@ -5915,7 +5912,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
-        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let (sx, sy) = world_to_screen_px(&host, row_center);
         host.pointer_move_screen(sx, sy, false, false, false);
         assert!(host.hovered_node_id().as_deref() == Some("combine"));
@@ -5923,7 +5920,7 @@ mod tests {
         assert!(!host.engine.selection.node_ids.contains(&host.node_id_for_widget_id("combine").expect("combine node id")));
         let divider_x = computation_column_divider_x(&combine).expect("divider");
         let (_, header_top, _, header_bottom) = channel_row_bounds(&combine, 0);
-        let title_probe = cavas::vello::kurbo::Point::new(divider_x, (header_top + header_bottom) * 0.5);
+        let title_probe = cavas::Point::new(divider_x, (header_top + header_bottom) * 0.5);
         let (body_sx, body_sy) = world_to_screen_px(&host, title_probe);
         host.pointer_move_screen(body_sx, body_sy, false, false, false);
         assert!(host.hovered_node_id().as_deref() == Some("combine"));
@@ -5942,7 +5939,7 @@ mod tests {
         let scale = host.fixture.nodes.iter().find(|n| n.id == "scale").expect("scale");
         let port_idx = scale.outputs().iter().position(|p| p.id == "out").expect("port out");
         let (x0, y0, x1, y1) = output_port_row_hit_bounds(scale, port_idx).expect("row bounds");
-        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let handle = handle_world(&host, "scale:out");
         assert!((row_center.x - handle.x).abs() > 4.0, "row center should sit away from the painted handle anchor");
         let (sx, sy) = world_to_screen_px(&host, row_center);
@@ -5962,7 +5959,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
-        let row_center = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let handle = handle_world(&host, "combine:b");
         assert!((row_center.x - handle.x).abs() > 4.0);
         let (sx, sy) = world_to_screen_px(&host, row_center);
@@ -5980,7 +5977,7 @@ mod tests {
         let combine = host.fixture.nodes.iter().find(|n| n.id == "combine").expect("combine").clone();
         let port_idx = combine.inputs().iter().position(|p| p.id == "a").expect("port a");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
-        let title_probe = cavas::vello::kurbo::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
+        let title_probe = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
         let (sx, sy) = world_to_screen_px(&host, title_probe);
         host.pointer_down(sx, sy, false);
         assert!(matches!(host.engine.interaction, InteractionMode::DragNode { .. }));
@@ -6258,7 +6255,7 @@ mod tests {
 
     #[test]
     fn io_node_rect_port_angles_on_edges() {
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         use graph::handle_position_on_rectangle;
         let inputs = vec![IoPortSpec { id: "a".into(), label: "a".into(), ..Default::default() }, IoPortSpec { id: "b".into(), label: "b".into(), ..Default::default() }];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }];
@@ -6277,7 +6274,7 @@ mod tests {
 
     #[test]
     fn computation_port_handle_caps_bulge_outward() {
-        use cavas::vello::kurbo::{Point, Shape};
+        use cavas::Point;
         use graph::{handle_exterior_cap_fill_path, handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
         let inputs = vec![IoPortSpec { id: "0".into(), label: "0".into(), ..Default::default() }, IoPortSpec { id: "1".into(), label: "1".into(), ..Default::default() }];
         let outputs = vec![IoPortSpec { id: "out".into(), label: "dictionary".into(), ..Default::default() }];
@@ -6294,8 +6291,8 @@ mod tests {
         assert!((right_out.x - 1.0).abs() < 1e-9 && right_out.y.abs() < 1e-9);
         let left_cap = handle_exterior_cap_fill_path(left_pos, left_out, DAG_HANDLE_WORLD_RADIUS);
         let right_cap = handle_exterior_cap_fill_path(right_pos, right_out, DAG_HANDLE_WORLD_RADIUS);
-        assert!(left_cap.bounding_box().x0 < left_pos.x - 1.0, "left input cap must bulge outside the west edge");
-        assert!(right_cap.bounding_box().x1 > right_pos.x + 1.0, "right output cap must bulge outside the east edge");
+        assert!(left_cap.bounding_box().x0() < left_pos.x - 1.0, "left input cap must bulge outside the west edge");
+        assert!(right_cap.bounding_box().x1() > right_pos.x + 1.0, "right output cap must bulge outside the east edge");
     }
 
     #[test]
@@ -6370,22 +6367,22 @@ mod tests {
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("compact");
         host.fixture.camera.zoom = 0.25;
-        let mut scene = cavas::vello::Scene::new();
+        let mut scene = cavas::Scene::new();
         host.paint_scene(&mut scene, 1280, 800, 1.0);
-        assert!(scene.encoding().path_tags.len() > 12, "compact LOD at low zoom should still paint abbreviation labels");
+        assert!(scene.path_count() > 12, "compact LOD at low zoom should still paint abbreviation labels");
     }
 
     #[test]
     fn dag_label_colors_use_theme_label_fields() {
-        use cavas::vello::peniko::Color;
-        let theme = VelloThemePalette { label_fill: Color::from_rgba8(240, 241, 245, 255), label_halo: Color::from_rgba8(10, 12, 16, 180), node_stroke: Color::from_rgba8(90, 100, 110, 255), ..VelloThemePalette::default() };
+        use cavas::Color;
+        let theme = CanvasThemePalette { label_fill: Color::from_rgba8(240, 241, 245, 255), label_halo: Color::from_rgba8(10, 12, 16, 180), node_stroke: Color::from_rgba8(90, 100, 110, 255), ..CanvasThemePalette::default() };
         assert_ne!(theme.label_fill.to_rgba8(), theme.node_stroke.to_rgba8());
     }
 
     #[test]
     fn dag_node_paint_fill_matches_puzzle2d_lod_chrome() {
-        use cavas::vello::peniko::Color;
-        let theme = VelloThemePalette {
+        use cavas::Color;
+        let theme = CanvasThemePalette {
             node_fill: Color::from_rgba8(10, 20, 30, 255),
             node_stroke: Color::from_rgba8(200, 210, 220, 255),
             node_fill_hovered: Color::from_rgba8(40, 50, 60, 255),
@@ -6394,7 +6391,7 @@ mod tests {
             node_stroke_selected: Color::from_rgba8(120, 130, 140, 255),
             node_fill_selection_exit: Color::from_rgba8(196, 228, 213, 255),
             node_stroke_selection_exit: Color::from_rgba8(80, 140, 110, 255),
-            ..VelloThemePalette::default()
+            ..CanvasThemePalette::default()
         };
         assert_eq!(dag_node_paint_fill(DagDrawLod::Minimap, &theme, false, false, false, false).expect("minimap neutral").to_rgba8(), theme.node_stroke.to_rgba8());
         assert!(dag_node_paint_fill(DagDrawLod::Overview, &theme, false, false, false, false).is_none());
@@ -6423,15 +6420,15 @@ mod tests {
 
     #[test]
     fn dag_handle_and_edge_stroke_use_theme_defaults() {
-        use cavas::vello::peniko::Color;
-        let theme = VelloThemePalette {
+        use cavas::Color;
+        let theme = CanvasThemePalette {
             edge_stroke: Color::from_rgba8(100, 110, 120, 255),
             edge_stroke_hovered: Color::from_rgba8(10, 20, 30, 255),
             edge_stroke_selected: Color::from_rgba8(40, 50, 60, 255),
             handle_stroke: Color::from_rgba8(130, 140, 150, 255),
             handle_stroke_hovered: Color::from_rgba8(20, 30, 40, 255),
             handle_stroke_selected: Color::from_rgba8(50, 60, 70, 255),
-            ..VelloThemePalette::default()
+            ..CanvasThemePalette::default()
         };
         assert_eq!(dag_edge_body_stroke(&theme, false, false, false, false).to_rgba8(), theme.edge_stroke.to_rgba8());
         assert_eq!(dag_handle_body_stroke(&theme, false, false, false, false).to_rgba8(), theme.handle_stroke.to_rgba8());
@@ -6688,7 +6685,7 @@ mod tests {
         let world_x = x0 + (x1 - x0) * 0.75;
         let world_y = (y0 + y1) * 0.5;
         use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let cam = CavasCamera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let screen = world_to_screen(&cam, &viewport, Point::new(world_x, world_y));
@@ -6705,7 +6702,7 @@ mod tests {
     fn dag_paint_scene_smoke_at_overview_and_micro_zoom() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
-        let mut scene = cavas::vello::Scene::new();
+        let mut scene = cavas::Scene::new();
         host.fixture.camera.zoom = 0.3;
         host.paint_scene(&mut scene, 1280, 800, 1.0);
         host.fixture.camera.zoom = 5.0;

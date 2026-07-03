@@ -17,7 +17,9 @@
     "vitest": "^4.0.17"
   },
   "dependencies": {
-    "@semio-tech/vcs-core": "workspace:*"
+    "@semio-tech/vcs-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {
@@ -27,7 +29,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "lowpoly",
       "aliases": [
         "lowpoly"
@@ -39,7 +41,9 @@
       "port": {
         "dev": 6078,
         "env": "LOWPOLY_PLAY_PORT"
-      }
+      },
+      "programExport": "lowpolyProgramContribution",
+      "programId": "lowpoly"
     }
   }
 }

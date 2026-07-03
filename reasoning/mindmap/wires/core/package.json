@@ -15,7 +15,8 @@
     "@semio-tech/framework-playground-core": "workspace:*",
     "@semio-tech/puzzle-2d-core": "workspace:*",
     "@semio-tech/reasoning-mindmap-wires-react": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -31,7 +32,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "wires",
       "aliases": [
         "wires"
@@ -43,7 +44,9 @@
       "port": {
         "dev": 6015,
         "env": "WIRES_PLAY_PORT"
-      }
+      },
+      "programExport": "wiresProgramContribution",
+      "programId": "reasoning.wires"
     }
   }
 }

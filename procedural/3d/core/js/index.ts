@@ -1844,13 +1844,17 @@ export class ProceduralPlayController extends Controller implements PlaygroundEx
 
 }
 
+export const proceduralPlayWindowBodies: Readonly<Record<string, (ctx: WindowBodyViewContext) => UiNode>> = {
+	[PROCEDURAL_PLAY_BODY_KEY_MAIN]: (_ctx: WindowBodyViewContext) =>
+		buildFlowWindowBody(PROCEDURAL_PLAY_SURFACE_ID, PROCEDURAL_3D_PLAY_CONTROLLER_ID, PROCEDURAL_PLAY_WINDOW_KIND_ID),
+	[PROCEDURAL_PLAY_BODY_KEY_PREVIEW]: (_ctx: WindowBodyViewContext) =>
+		buildPuzzle3dWindowBody(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, PROCEDURAL_3D_PLAY_CONTROLLER_ID),
+	[PROCEDURAL_PLAY_BODY_KEY_GENERATE]: (_ctx: WindowBodyViewContext) =>
+		buildFormsWindowBody(PROCEDURAL_PLAY_SURFACE_ID_GENERATE, PROCEDURAL_3D_PLAY_CONTROLLER_ID, "generate"),
+};
+
 export function registerProceduralPlayDeclarativeBodies(): void {
-	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_MAIN, (_ctx: WindowBodyViewContext) =>
-		buildFlowWindowBody(PROCEDURAL_PLAY_SURFACE_ID, PROCEDURAL_3D_PLAY_CONTROLLER_ID, PROCEDURAL_PLAY_WINDOW_KIND_ID));
-	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_PREVIEW, (_ctx: WindowBodyViewContext) =>
-		buildPuzzle3dWindowBody(PROCEDURAL_PLAY_SURFACE_ID_PREVIEW, PROCEDURAL_3D_PLAY_CONTROLLER_ID));
-	registerWindowBody(PROCEDURAL_PLAY_BODY_KEY_GENERATE, (_ctx: WindowBodyViewContext) =>
-		buildFormsWindowBody(PROCEDURAL_PLAY_SURFACE_ID_GENERATE, PROCEDURAL_3D_PLAY_CONTROLLER_ID, "generate"));
+	for (const [key, build] of Object.entries(proceduralPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildProceduralPlayAppRuntime(controller: ProceduralPlayController): AppRuntime {
@@ -1953,18 +1957,12 @@ export const procedural3dPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildProceduralPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerProceduralPlayDeclarativeBodies();
-	},
 	keybindings: [
 		{ key: "ctrl+a,meta+a", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "selectAll" },
 		{ key: "Delete", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 		{ key: "Backspace", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 	],
-	bootRenderer: async (pg) => {
-		const { bootProceduralPlay } = await import("@semio-tech/procedural-3d-react/play");
-		bootProceduralPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/procedural-3d-react/play")).proceduralAppRenderer,
 });
 //#endregion 🔖Play
 
@@ -2754,3 +2752,31 @@ export function buildProcedural3dProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+const procedural3dProgramContributionResources = {
+		"procedural3d": osBaselineResource("3d.procedural", "procedural.3d", "puzzle3d"),
+	};
+
+/** @emoji 🧩 OS program contribution for procedural.3d. */
+export const procedural3dProgramContribution: OsProgramContribution = {
+	programId: "procedural.3d",
+	register() {
+		mergeOsProgramDefinition("procedural.3d", buildProcedural3dProgramDefinition(), procedural3dProgramContributionResources);
+		registerProcedural3dMediaExportHandlers();
+		registerAppVcsHandler(createProcedural3dAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+
+/** @emoji 📐 S app VCS handler for procedural 3d documents. */
+export function createProcedural3dAppVcsHandler() {
+	type Doc = { readonly revision: number };
+	type Op = { readonly op: "setRevision"; readonly revision: number };
+	return createTypedAppVcsHandler<Doc, Op>("procedural.3d", "procedural.3d", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
+}
+//#endregion 🔖DocumentVcs

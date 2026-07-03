@@ -13,7 +13,7 @@ export const policy = defineLint("@semio-tech/framework-playground-renderer-reac
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runBunx(["vitest", "run", "--config", "vitest.config.ts", "--passWithNoTests", ...segments], this.root, devToolingEnv({ PLAYGROUND_RENDERER_SHELL_ONLY: "1" }));
+    runBunx(["vitest", "run", "--config", "vitest.config.ts", "--passWithNoTests", ...segments], this.root, devToolingEnv());
   }
 }
 

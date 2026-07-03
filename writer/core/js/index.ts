@@ -347,9 +347,8 @@ export class WriterPlayController extends Controller implements PlaygroundExampl
 
 	getExampleCatalog(): PlaygroundExampleCatalog {
 		return {
+			activeExampleId: playgroundResolvedExampleId(WRITER_PLAY_EXAMPLE_DEFAULT_ID, resolveWriterPlayExampleSlug),
 			options: this.fixtureAccess.options,
-			defaultId: WRITER_PLAY_EXAMPLE_DEFAULT_ID,
-			resolveSlug: resolveWriterPlayExampleSlug,
 		};
 	}
 
@@ -641,8 +640,12 @@ export function buildWriterPlayMainDeclarativeBody(): UiNode {
 	return buildWriterWindowBody(WRITER_PLAY_SURFACE_ID, WRITER_PLAY_CONTROLLER_ID);
 }
 
+export const writerPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[WRITER_PLAY_BODY_KEY]: () => buildWriterPlayMainDeclarativeBody(),
+};
+
 export function registerWriterPlayDeclarativeBodies(): void {
-	registerWindowBody(WRITER_PLAY_BODY_KEY, () => buildWriterPlayMainDeclarativeBody());
+	for (const [key, build] of Object.entries(writerPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildWriterPlayAppRuntime(ctrl: WriterPlayController): AppRuntime {
@@ -664,6 +667,25 @@ export function buildWriterProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createWriterAppVcsHandler } from "./internal.ts";
+
+const writerProgramContributionResources = {
+		"writer": osBaselineResource("text.document", "writer.document", "writer"),
+	};
+
+/** @emoji 🧩 OS program contribution for writer. */
+export const writerProgramContribution: OsProgramContribution = {
+	programId: "writer",
+	register() {
+		mergeOsProgramDefinition("writer", buildWriterProgramDefinition(), writerProgramContributionResources);
+		registerAppVcsHandler(createWriterAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 
 //#region 🔖Play
@@ -732,13 +754,7 @@ export const writerPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildWriterPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerWriterPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootWriterPlay } = await import("@semio-tech/writer-react/play");
-		bootWriterPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/writer-react/play")).writerAppRenderer,
 });
 //#endregion 🔖Play
 

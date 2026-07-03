@@ -4,7 +4,7 @@ pub use infinite_cavas as cavas;
 use mathematical_graph_port_directed::{
     force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions},
     geometry::{compute_edge_bezier_points, distance_between},
-    BoardEngine, HandleRole, VelloThemePalette,
+    BoardEngine, HandleRole, CanvasThemePalette,
 };
 use mathematical_graph_port_directed_normal::BoardHost;
 use serde::{Deserialize, Serialize};
@@ -528,7 +528,7 @@ pub struct TrinityHost {
     store: TrinityGraphStore,
     pub engine: TrinityBoardEngine,
     board: BoardHost,
-    pub vello_theme: VelloThemePalette,
+    pub canvas_theme: CanvasThemePalette,
     width: u32,
     height: u32,
     dpr: f64,
@@ -550,7 +550,7 @@ impl TrinityHost {
             store,
             engine: TrinityBoardEngine::new(),
             board: BoardHost::new(),
-            vello_theme: VelloThemePalette::default(),
+            canvas_theme: CanvasThemePalette::default(),
             width: 1,
             height: 1,
             dpr: 1.0,
@@ -629,9 +629,9 @@ impl TrinityHost {
         self.board.set_camera_silent(x, y, zoom);
     }
 
-    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.vello_theme.merge_from_json(json)?;
-        self.board.vello_theme = self.vello_theme.clone();
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+        self.canvas_theme.merge_from_json(json)?;
+        self.board.canvas_theme = self.canvas_theme.clone();
         Ok(())
     }
 
@@ -781,9 +781,9 @@ impl TrinityHost {
         Ok(())
     }
 
-    fn screen_to_world(&self, sx: f64, sy: f64) -> cavas::vello::kurbo::Point {
+    fn screen_to_world(&self, sx: f64, sy: f64) -> cavas::Point {
         use cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let cam = CavasCamera { x: self.graph.camera.x, y: self.graph.camera.y, zoom: self.graph.camera.zoom };
         let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
@@ -836,7 +836,7 @@ impl TrinityHost {
             eprintln!("[DEBUG] trinity board fixture parse failed");
         }
         self.board.set_size(self.width, self.height, self.dpr);
-        self.board.vello_theme = self.vello_theme.clone();
+        self.board.canvas_theme = self.canvas_theme.clone();
         self.board.set_automatic_lod(self.automatic_lod);
         if let Some(lod) = self.forced_draw_lod {
             self.board.set_forced_draw_lod_label(lod.label());
@@ -905,7 +905,7 @@ impl TrinityHost {
         self.sync_board_from_graph();
     }
 
-    pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, _viewport_w: u32, _viewport_h: u32, _dpr: f64) {
+    pub fn paint_scene(&self, scene: &mut cavas::Scene, _viewport_w: u32, _viewport_h: u32, _dpr: f64) {
         let lod_index = trinity_lod_index(self.graph.camera.zoom) as i8;
         if self.last_logged_lod.get() != lod_index {
             self.last_logged_lod.set(lod_index);
@@ -1148,15 +1148,15 @@ mod wasm_session {
             Ok(())
         }
 
-        #[wasm_bindgen(js_name = setVelloThemeJson)]
-        pub fn set_vello_theme_json(&mut self, json: &str) {
-            let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+        #[wasm_bindgen(js_name = setCanvasThemeJson)]
+        pub fn set_canvas_theme_json(&mut self, json: &str) {
+            let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
         }
 
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
-            let clear = inner.host.vello_theme.raster_clear;
+            let clear = inner.host.canvas_theme.raster_clear;
             let scene = inner.host.board.build_vector_scene();
             inner.gpu.render_frame(&scene, clear)
         }

@@ -1,17 +1,18 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Note — loaded only via `./play` subpath. */
+/** @emoji 🛝 Note app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiNoteSurfaceHost, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution, UiNoteHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceHostBridge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_CATALOG, CANVAS_HOVER_SOURCE_HIERARCHY } from "@semio-tech/framework-core";
 import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
 import * as React from "react";
-import type { UiNoteHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import {
-  NOTE_PLAY_APP_ID,
   NOTE_PLAY_CATALOGUE_TAB_ID,
   NOTE_PLAY_CONTROLLER_ID,
   NOTE_PLAY_HIERARCHY_TAB_ID,
@@ -22,12 +23,16 @@ import {
   buildNotePlayCatalogueTree,
   buildNotePlayHierarchyTree,
   buildNotePlayInspectorTree,
+  createNotePlayExampleHost,
   createNotePlayHierarchyTreeDragController,
-  registerNotePlayDeclarativeBodies,
+  defaultNoteDocument,
+  noteDocumentToJson,
+  type NoteDocument,
   type NotePlayHostBridge,
+  notePlayWindowBodies,
 } from "@semio-tech/note-core";
+import { NoteCanvas } from "./index.tsx";
 
-let notePlayChromeRegistered = false;
 const notePlayControllerRef: { current: NotePlayController | null } = { current: null };
 
 function useNotePlayController(runtimeOverride?: Platform): NotePlayController | undefined {
@@ -55,26 +60,61 @@ function useNotePlayController(runtimeOverride?: Platform): NotePlayController |
   return ctrl;
 }
 
-function useNotePlayInteractionRevision(runtime: Platform): void {
-  reactHostPort.useSyncExternalStore(
-    (listener) => {
-      const unsubscribeRuntime = runtime.subscribe(listener);
-      const ctrl = runtime.getActiveApp()?.controller as NotePlayController | undefined;
-      const unsubscribeCtrl = ctrl?.subscribe(listener);
-      return () => {
-        unsubscribeRuntime();
-        unsubscribeCtrl?.();
-      };
+function NotePlayFileBridge(): ReactElement | null {
+  const ctrl = useNotePlayController();
+  const loadInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+  const downloadFixture = reactHostPort.useCallback(async () => {
+    if (!ctrl) return;
+    const text = ctrl.getDocumentJson();
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "semio.note.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    console.log("[DEBUG] note play exported document");
+  }, [ctrl]);
+  const handleLoadFile = reactHostPort.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file || !ctrl) return;
+      void file.text().then((text) => {
+        ctrl.run("setFixtureJson", { json: text, resetInteraction: true });
+        console.log("[DEBUG] note play imported document from file");
+      });
     },
-    () => (runtime.getActiveApp()?.controller as NotePlayController | undefined)?.getInteractionRevision() ?? 0,
-    () => 0,
+    [ctrl],
   );
+  reactHostPort.useEffect(() => {
+    if (!ctrl) return;
+    const bridge: NotePlayHostBridge = {
+      runHostCommand: (command) => {
+        if (command === "saveDownload") {
+          void downloadFixture();
+          return;
+        }
+        if (command === "loadRequest") loadInputRef.current?.click();
+      },
+    };
+    ctrl.setHostBridge(bridge);
+    return () => ctrl.setHostBridge(null);
+  }, [ctrl, downloadFixture]);
+  return <input ref={loadInputRef} type="file" accept=".json,.note.json,application/json" className="hidden" onChange={handleLoadFile} />;
 }
 
 function NotePlayPaneSurfaceHost({ node }: { readonly node: UiNoteHostSurfaceNode }): ReactElement {
   const ctrl = useNotePlayController();
   const doc = ctrl?.getDocument();
-  if (!doc) return <div className="p-double text-sm text-muted-foreground">No note document</div>;
+  if (!doc) {
+    return (
+      <>
+        {node.view !== "navigator" ? <NotePlayFileBridge /> : null}
+        <div className="p-double text-sm text-muted-foreground">No note document</div>
+      </>
+    );
+  }
   const common = {
     document: doc,
     selectedIds: ctrl?.getSelectedIds() ?? [],
@@ -88,8 +128,12 @@ function NotePlayPaneSurfaceHost({ node }: { readonly node: UiNoteHostSurfaceNod
     onCameraChange: (camera: typeof doc.camera) => ctrl?.run("setCamera", { camera }),
     className: "h-full",
   };
-  if (node.view === "navigator") return <NoteCanvas {...common} viewMode="navigator" />;
-  return <NoteCanvas {...common} viewMode="composite" />;
+  return (
+    <>
+      {node.view !== "navigator" ? <NotePlayFileBridge /> : null}
+      {node.view === "navigator" ? <NoteCanvas {...common} viewMode="navigator" /> : <NoteCanvas {...common} viewMode="composite" />}
+    </>
+  );
 }
 
 class NotePlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
@@ -166,94 +210,40 @@ class NotePlayPropertiesPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-function NotePlayFileBridge(): ReactElement | null {
-  const ctrl = useNotePlayController();
-  const loadInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
-  const downloadFixture = reactHostPort.useCallback(async () => {
-    if (!ctrl) return;
-    const text = ctrl.getDocumentJson();
-    const blob = new Blob([text], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "semio.note.json";
-    anchor.click();
-    URL.revokeObjectURL(url);
-    console.log("[DEBUG] note play exported document");
-  }, [ctrl]);
-  const handleLoadFile = reactHostPort.useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      event.target.value = "";
-      if (!file || !ctrl) return;
-      void file.text().then((text) => {
-        ctrl.run("setFixtureJson", { json: text, resetInteraction: true });
-        console.log("[DEBUG] note play imported document from file");
-      });
+function NoteOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bridge = useOsInstanceHostBridge();
+  const bundle = useOsInstanceMaterialization(instance);
+  const materialized = bundle.projection;
+  const noteDoc = reactHostPort.useMemo(() => {
+    if (materialized && typeof materialized === "object" && (materialized as NoteDocument).schema === "note.document") return materialized as NoteDocument;
+    return defaultNoteDocument(instance.id);
+  }, [instance.id, materialized]);
+  const dispatchNote = reactHostPort.useCallback(
+    (document: NoteDocument) => {
+      bridge.dispatch({ kind: "patchAppSource", instanceId: instance.id, inline: noteDocumentToJson(document) });
     },
-    [ctrl],
+    [bridge, instance.id],
   );
-  reactHostPort.useEffect(() => {
-    if (!ctrl) return;
-    const bridge: NotePlayHostBridge = {
-      runHostCommand: (command) => {
-        if (command === "saveDownload") {
-          void downloadFixture();
-          return;
-        }
-        if (command === "loadRequest") loadInputRef.current?.click();
-      },
-    };
-    ctrl.setHostBridge(bridge);
-    return () => ctrl.setHostBridge(null);
-  }, [ctrl, downloadFixture]);
-  return <input ref={loadInputRef} type="file" accept=".json,.note.json,application/json" className="hidden" onChange={handleLoadFile} />;
-}
-
-function NotePlayInner({ playground }: { readonly playground: Playground }): ReactElement {
-  useNotePlayController(playground.runtime);
-  useNotePlayInteractionRevision(playground.runtime);
-  const hierarchyPanel = reactHostPort.useMemo(() => new NotePlayHierarchyPanelDefinition(), []);
-  const cataloguePanel = reactHostPort.useMemo(() => new NotePlayCataloguePanelDefinition(), []);
-  const propertiesPanel = reactHostPort.useMemo(() => new NotePlayPropertiesPanelDefinition(), []);
   return (
-    <>
-      <NotePlayFileBridge />
-      <PlaygroundView
-        runtime={playground.runtime}
-        defaultAppId={NOTE_PLAY_APP_ID}
-        playgroundKeybindings={playground.keybindings}
-        augmentPanelTabs={{
-          workbench: [hierarchyPanel, cataloguePanel],
-          details: [propertiesPanel],
-        }}
-      />
-    </>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+      <NoteCanvas document={noteDoc} onCommit={(document) => dispatchNote(document)} className="min-h-0 flex-1" viewMode="composite" />
+    </div>
   );
 }
 
-export function registerNotePlaySurfaceHosts(): void {
-  if (notePlayChromeRegistered) return;
-  notePlayChromeRegistered = true;
-  registerUiNoteSurfaceHost(NOTE_PLAY_SURFACE_ID_COMPOSITE, NotePlayPaneSurfaceHost);
-  registerUiNoteSurfaceHost(NOTE_PLAY_SURFACE_ID_NAVIGATOR, NotePlayPaneSurfaceHost);
-  registerNotePlayDeclarativeBodies();
-}
-
-function NotePlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
-  return <NotePlayInner playground={playground} />;
-}
-
-export function mountNotePlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<NotePlayChrome playground={playground} />, rootId);
-}
-
-const notePlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerNotePlaySurfaceHosts,
-  mount: mountNotePlayChrome,
+/** @emoji 🛝 Note app renderer contribution for playground and OS shells. */
+export const noteAppRenderer: AppRendererContribution = {
+  windowBodies: notePlayWindowBodies,
+  surfaceHosts: {
+    [NOTE_PLAY_SURFACE_ID_COMPOSITE]: NotePlayPaneSurfaceHost,
+    [NOTE_PLAY_SURFACE_ID_NAVIGATOR]: NotePlayPaneSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new NotePlayHierarchyPanelDefinition(), new NotePlayCataloguePanelDefinition()],
+    details: [new NotePlayPropertiesPanelDefinition()],
+  },
+  instanceHost: NoteOsInstanceHost,
+  examples: controllerBackedExampleContribution(NOTE_PLAY_CONTROLLER_ID, createNotePlayExampleHost().options),
 };
-
-export function bootNotePlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, notePlayChromeBoot, rootId);
-}
 //#endregion 🔖NotePlayHost

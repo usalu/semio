@@ -1,0 +1,13 @@
+{
+  "title": "Repair Repo CLI MCP Transport and Native Metadata",
+  "emoji": "🛠️",
+  "status": "open",
+  "description": "Fix repo CLI and MCP server JSON transport corruption, native client inference, and current LLM validation so ticket tools work from Codex without invalid stdout or redundant metadata.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1820"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp",
+  "sessions": [
+    "⚪b56b959fbe9d42bfa3fd180875ad1a84"
+  ]
+}

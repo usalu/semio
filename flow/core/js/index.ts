@@ -1271,10 +1271,14 @@ function buildFlowPlayCompiledDagDeclarativeBody(_ctx: WindowBodyViewContext): U
   return buildWriterWindowBody(FLOW_PLAY_SURFACE_ID_COMPILED_DAG, FLOW_PLAY_CONTROLLER_ID, FLOW_PLAY_WINDOW_KIND_COMPILED_DAG);
 }
 
+export const flowPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+  [FLOW_PLAY_BODY_KEY_MAIN]: buildFlowPlayMainDeclarativeBody,
+  [FLOW_PLAY_BODY_KEY_GENERATE]: buildFlowPlayGenerateDeclarativeBody,
+  [FLOW_PLAY_BODY_KEY_COMPILED_DAG]: buildFlowPlayCompiledDagDeclarativeBody,
+};
+
 export function registerFlowPlayDeclarativeBodies(): void {
-  registerWindowBody(FLOW_PLAY_BODY_KEY_MAIN, buildFlowPlayMainDeclarativeBody);
-  registerWindowBody(FLOW_PLAY_BODY_KEY_GENERATE, buildFlowPlayGenerateDeclarativeBody);
-  registerWindowBody(FLOW_PLAY_BODY_KEY_COMPILED_DAG, buildFlowPlayCompiledDagDeclarativeBody);
+  for (const [key, build] of Object.entries(flowPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildFlowPlayAppRuntime(controller: FlowPlayController): AppRuntime {
@@ -1372,6 +1376,24 @@ export function buildFlowProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+const flowProgramContributionResources = {
+		"flow": { ...osBaselineResource("computation.flow", "flow.document", "flow"), parameterFields: [{ fieldPath: "/camera/zoom", label: "Camera zoom", type: "numeric" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for flow. */
+export const flowProgramContribution: OsProgramContribution = {
+	programId: "flow",
+	register() {
+		mergeOsProgramDefinition("flow", buildFlowProgramDefinition(), flowProgramContributionResources);
+		registerAppVcsHandler(createFlowAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+
 
 //#region 🔖Play
 
@@ -1406,13 +1428,7 @@ export const flowPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildFlowPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerFlowPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootFlowPlay } = await import("@semio-tech/flow-react/play");
-		bootFlowPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/flow-react/play")).flowAppRenderer,
 });
 //#endregion 🔖Play
 

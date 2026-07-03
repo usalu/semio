@@ -570,7 +570,7 @@ function mapProbeCssComputed(property: "color" | "backgroundColor", value: strin
 }
 
 /** @emoji 🎨 Serializes UI semantic CSS (`--canvas`, `--foreground`, accents) for WASM map Vello paints. */
-export function serializeMapVelloThemeJson(): string {
+export function serializeMapCanvasThemeJson(): string {
   const fb = MAP_VELLO_THEME_FALLBACK_RGBA;
   const pc = (prop: "color" | "backgroundColor", expr: string, fall: [number, number, number, number]): number[] => {
     const raw = mapProbeCssComputed(prop, expr);
@@ -869,7 +869,7 @@ export class MapRenderer {
       return;
     }
     try {
-      const json = serializeMapVelloThemeJson();
+      const json = serializeMapCanvasThemeJson();
       if (json !== this.lastMapThemeJson) {
         this.lastMapThemeJson = json;
         this.session.setMapThemeJson(json);
@@ -1648,14 +1648,14 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("serializeMapVelloThemeJson", () => {
+  describe("serializeMapCanvasThemeJson", () => {
     it("includes landStroke with zero alpha to avoid tile seams", () => {
-      const parsed = JSON.parse(serializeMapVelloThemeJson()) as { landStroke: number[] };
+      const parsed = JSON.parse(serializeMapCanvasThemeJson()) as { landStroke: number[] };
       expect(parsed.landStroke[3]).toBe(0);
     });
 
     it("includes selection and hover stroke colors", () => {
-      const parsed = JSON.parse(serializeMapVelloThemeJson()) as { selectionStroke: number[]; hoverStroke: number[] };
+      const parsed = JSON.parse(serializeMapCanvasThemeJson()) as { selectionStroke: number[]; hoverStroke: number[] };
       expect(parsed.selectionStroke.length).toBe(4);
       expect(parsed.hoverStroke.length).toBe(4);
     });

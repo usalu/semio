@@ -1,33 +1,31 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Dag — loaded only via `./play` subpath. */
+/** @emoji 🛝 Dag app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import { createWriterDocument } from "@semio-tech/writer-core";
 import { WriterCanvas } from "@semio-tech/writer-react";
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiDagSurfaceHost, registerUiWriterSurfaceHost, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution, UiDagHostSurfaceNode, UiWriterHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
 import {
-    DAG_PLAY_APP_ID,
-    DAG_PLAY_CATALOGUE_TAB_ID,
-    DAG_PLAY_DEFAULT_FIXTURE_JSON,
-    DAG_PLAY_HIERARCHY_TAB_ID,
-    DAG_PLAY_INSPECTION_TAB_ID,
-    DAG_PLAY_SURFACE_ID,
-    DAG_PLAY_SURFACE_ID_JACK,
-    DAG_PLAY_WINDOW_KIND_ID,
-    DagPlayController,
-    buildDagPlayCatalogueTree,
-    buildDagPlayHierarchyTree,
-    buildDagPlayInspectorTree,
-    registerDagPlayDeclarativeBodies
+  DAG_PLAY_CATALOGUE_TAB_ID,
+  DAG_PLAY_DEFAULT_FIXTURE_JSON,
+  DAG_PLAY_HIERARCHY_TAB_ID,
+  DAG_PLAY_INSPECTION_TAB_ID,
+  DAG_PLAY_SURFACE_ID,
+  DAG_PLAY_SURFACE_ID_JACK,
+  DAG_PLAY_WINDOW_KIND_ID,
+  DagPlayController,
+  buildDagPlayCatalogueTree,
+  buildDagPlayHierarchyTree,
+  buildDagPlayInspectorTree,
+  dagPlayWindowBodies,
 } from "@semio-tech/dag-host-core";
+import { DAG_LOD_MODE_AUTOMATIC, DagCanvas, dagLodCanvasProps, ensureDagWasmLoaded } from "./index.tsx";
 
-import type { UiDagHostSurfaceNode } from "@semio-tech/framework-platform-core";
-
-let dagPlayChromeRegistered = false;
 const dagPlayControllerRef: { current: DagPlayController | null } = { current: null };
 
 function useDagPlayController(runtimeOverride?: Platform): DagPlayController | undefined {
@@ -43,27 +41,10 @@ function useDagPlayController(runtimeOverride?: Platform): DagPlayController | u
   return ctrl;
 }
 
-function useDagPlayInteractionRevision(runtime: Platform): number {
-  return reactHostPort.useSyncExternalStore(
-    (listener) => {
-      const ctrl = runtime.getActiveApp()?.controller as DagPlayController | undefined;
-      dagPlayControllerRef.current = ctrl ?? null;
-      const unsubscribeRuntime = runtime.subscribe(listener);
-      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
-      return () => {
-        unsubscribeRuntime();
-        unsubscribeSnapshot?.();
-      };
-    },
-    () => (runtime.getActiveApp()?.controller as DagPlayController | undefined)?.getInteractionRevision() ?? 0,
-    () => 0,
-  );
-}
-
 function DagPlayPaneSurfaceHost({ node }: { readonly node: UiDagHostSurfaceNode }): ReactElement {
   const ctrl = useDagPlayController();
   const scopeId = node.paneId ?? DAG_PLAY_WINDOW_KIND_ID;
-  const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_HOST_LOD_AUTOMATIC);
+  const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
   const onLodChange = reactHostPort.useCallback(
     (lod: import("@semio-tech/dag-react").DagDrawLodKind) => {
       ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
@@ -88,7 +69,7 @@ function DagPlayPaneSurfaceHost({ node }: { readonly node: UiDagHostSurfaceNode 
   );
 }
 
-function DagPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+function DagPlayJackSurfaceHost({ node: _node }: { readonly node: UiWriterHostSurfaceNode }): ReactElement {
   const ctrl = useDagPlayController();
   void ctrl?.getHoverEpoch();
   void ctrl?.getSelectEpoch();
@@ -111,14 +92,6 @@ function DagPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio
       externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
     />
   );
-}
-
-export function registerDagPlaySurfaceHosts(): void {
-  if (dagPlayChromeRegistered) return;
-  dagPlayChromeRegistered = true;
-  registerUiDagSurfaceHost(DAG_PLAY_SURFACE_ID, DagPlayPaneSurfaceHost);
-  registerUiWriterSurfaceHost(DAG_PLAY_SURFACE_ID_JACK, DagPlayJackSurfaceHost);
-  registerDagPlayDeclarativeBodies();
 }
 
 class DagPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
@@ -170,36 +143,17 @@ class DagPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-function DagPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  useDagPlayController(runtime);
-  const interactionRevision = useDagPlayInteractionRevision(runtime);
-  const dagPlayHierarchyPanel = reactHostPort.useMemo(() => new DagPlayHierarchyPanelDefinition(), []);
-  const dagPlayCataloguePanel = reactHostPort.useMemo(() => new DagPlayCataloguePanelDefinition(), []);
-  const dagPlayInspectionPanel = reactHostPort.useMemo(() => new DagPlayInspectionPanelDefinition(), []);
-  const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [dagPlayHierarchyPanel, dagPlayCataloguePanel],
-      details: [dagPlayInspectionPanel],
-    }),
-    [interactionRevision, dagPlayCataloguePanel, dagPlayHierarchyPanel, dagPlayInspectionPanel],
-  );
-  return <PlaygroundView runtime={runtime} defaultAppId={DAG_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
-}
-
-function DagPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <DagPlayInner runtime={runtime} />;
-}
-
-export function mountDagPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<DagPlayChrome runtime={playground.runtime} />, rootId);
-}
-
-const dagPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerDagPlaySurfaceHosts,
-  mount: mountDagPlayChrome,
+/** @emoji 🛝 Dag app renderer contribution for playground and OS shells. */
+export const dagAppRenderer: AppRendererContribution = {
+  windowBodies: dagPlayWindowBodies,
+  surfaceHosts: {
+    [DAG_PLAY_SURFACE_ID]: DagPlayPaneSurfaceHost,
+    [DAG_PLAY_SURFACE_ID_JACK]: DagPlayJackSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new DagPlayHierarchyPanelDefinition(), new DagPlayCataloguePanelDefinition()],
+    details: [new DagPlayInspectionPanelDefinition()],
+  },
+  preload: ensureDagWasmLoaded,
 };
-
-export function bootDagPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, dagPlayChromeBoot, rootId);
-}
 //#endregion 🔖DagPlayHost

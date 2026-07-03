@@ -15,7 +15,8 @@
     "@semio-tech/dag-react": "workspace:*",
     "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/framework-playground-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -31,7 +32,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "dag",
       "aliases": [
         "dag"
@@ -44,7 +45,9 @@
         "dev": 6017,
         "test": 6030,
         "env": "DAG_PLAY_PORT"
-      }
+      },
+      "programExport": "dagProgramContribution",
+      "programId": "dag"
     }
   }
 }

@@ -20,7 +20,8 @@
     "@semio-tech/trinity-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/writer-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -36,10 +37,11 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "trinity-rewrite",
       "aliases": [
-        "trinity-rewrite"
+        "trinity-rewrite",
+        "trinity rewrite"
       ],
       "packageRoot": "trinity/rewrite",
       "corePackage": "@semio-tech/trinity-rewrite-core",
@@ -49,7 +51,9 @@
         "dev": 6056,
         "test": 6057,
         "env": "TRINITY_REWRITE_PLAY_PORT"
-      }
+      },
+      "programExport": "trinityRewriteProgramContribution",
+      "programId": "trinity.rewrite"
     }
   }
 }

@@ -925,9 +925,13 @@ function buildLowpolyPlayUvDeclarativeBody(_ctx: WindowBodyViewContext): UiNode 
 	return buildPuzzle3dWindowBody(LOWPOLY_PLAY_UV_SURFACE_ID, LOWPOLY_PLAY_CONTROLLER_ID, LOWPOLY_PLAY_UV_WINDOW_KIND_ID);
 }
 
+export const lowpolyPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[LOWPOLY_PLAY_BODY_KEY_MAIN]: buildLowpolyPlayMainDeclarativeBody,
+	[LOWPOLY_PLAY_BODY_KEY_UV]: buildLowpolyPlayUvDeclarativeBody,
+};
+
 export function registerLowpolyPlayDeclarativeBodies(): void {
-	registerWindowBody(LOWPOLY_PLAY_BODY_KEY_MAIN, buildLowpolyPlayMainDeclarativeBody);
-	registerWindowBody(LOWPOLY_PLAY_BODY_KEY_UV, buildLowpolyPlayUvDeclarativeBody);
+	for (const [key, build] of Object.entries(lowpolyPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildLowpolyPlayAppRuntime(controller: LowpolyPlayController): AppRuntime {
@@ -1073,6 +1077,26 @@ export function buildLowpolyProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createLowpolyAppVcsHandler } from "./internal.ts";
+
+const lowpolyProgramContributionResources = {
+		"lowpoly": { ...osBaselineResource("3d.lowpoly", "lowpoly.fixture", "lowpoly"), parameterFields: [{ fieldPath: "/paint/opacity", label: "Paint opacity", type: "numeric" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for lowpoly. */
+export const lowpolyProgramContribution: OsProgramContribution = {
+	programId: "lowpoly",
+	register() {
+		mergeOsProgramDefinition("lowpoly", buildLowpolyProgramDefinition(), lowpolyProgramContributionResources);
+		registerLowpolyMediaExportHandlers();
+		registerAppVcsHandler(createLowpolyAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+
 //#region 🔖Play
 
 /** @emoji 🛝 Lowpoly playground app. */
@@ -1096,12 +1120,6 @@ export const lowpolyPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildLowpolyPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerLowpolyPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootLowpolyPlay } = await import("@semio-tech/lowpoly-react/play");
-		await bootLowpolyPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/lowpoly-react/play")).lowpolyAppRenderer,
 });
 //#endregion 🔖Play

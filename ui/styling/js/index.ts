@@ -16,7 +16,7 @@ export {
 	type StylingThemeName,
 	type StylingTokenKey,
 } from "./tokens.generated.ts";
-import { STYLING_METRICS, STYLING_TOKENS, type StylingTokenKey } from "./tokens.generated.ts";
+import { STYLING_BOARD_THEMES, STYLING_METRICS, STYLING_TOKENS, type StylingTokenKey } from "./tokens.generated.ts";
 
 //#region 🔖sizing
 //#region 🔑SizeVars
@@ -311,7 +311,7 @@ export function resolveBackgroundColorHex(ref: string, fallbackKey: StylingToken
 	});
 }
 
-/** @emoji 🎨 Resolves a CSS color expression to RGBA8888 for Vello/WASM theme payloads. */
+/** @emoji 🎨 Resolves a CSS color expression to RGBA8888 for canvas WASM theme payloads. */
 export function resolveColorRgba(
 	ref: string,
 	fallbackKey: StylingTokenKey | string = "gray",
@@ -372,22 +372,22 @@ export function currentStylingThemeName(): StylingThemeName {
 	return "light";
 }
 
-/** @emoji 🎨 Serializes token board theme paints for DAG/flow Vello WASM (`VelloThemePalette` JSON). */
-export function serializeGraphVelloThemePaletteJson(themeName: StylingThemeName = currentStylingThemeName()): string {
+/** @emoji 🎨 Serializes token board theme paints for DAG/flow canvas WASM (`CanvasThemePalette` JSON). */
+export function serializeGraphCanvasThemePaletteJson(themeName: StylingThemeName = currentStylingThemeName()): string {
 	return JSON.stringify(STYLING_BOARD_THEMES[themeName]);
 }
 
-/** @emoji 🎨 WASM session surface that accepts serialized Vello theme palette JSON. */
-export interface VelloThemeSession {
-	setVelloThemeJson(json: string): void;
+/** @emoji 🎨 WASM session surface that accepts serialized canvas theme palette JSON. */
+export interface CanvasThemeSession {
+	setCanvasThemeJson(json: string): void;
 }
 
-/** @emoji 🌓 Pushes the active document theme palette into a Vello WASM session. */
-export function syncSessionVelloTheme(session: VelloThemeSession | null | undefined): void {
+/** @emoji 🌓 Pushes the active document theme palette into a canvas WASM session. */
+export function syncSessionCanvasTheme(session: CanvasThemeSession | null | undefined): void {
 	if (!session) return;
 	try {
 		clearColorResolveCache();
-		session.setVelloThemeJson(serializeGraphVelloThemePaletteJson());
+		session.setCanvasThemeJson(serializeGraphCanvasThemePaletteJson());
 	} catch {
 		/* theme tokens not ready */
 	}
@@ -441,8 +441,8 @@ if (import.meta.vitest) {
 			expect(resolveColorHex("var(--color-element)", "gray")).not.toBe(tokenHex("dark"));
 		});
 
-		it("serializeGraphVelloThemePaletteJson emits token board theme fields", () => {
-			const parsed = JSON.parse(serializeGraphVelloThemePaletteJson("light")) as {
+		it("serializeGraphCanvasThemePaletteJson emits token board theme fields", () => {
+			const parsed = JSON.parse(serializeGraphCanvasThemePaletteJson("light")) as {
 				rasterClear: number[];
 				nodeFill: number[];
 				nodeStroke: number[];
@@ -466,15 +466,15 @@ if (import.meta.vitest) {
 			expect(parsed.nodeStrokeSelected).toEqual(STYLING_BOARD_THEMES.light.nodeStrokeSelected);
 			expect(parsed.handleFill[3]).toBe(0);
 			expect(parsed.gridMinorStroke[3]).toBeLessThan(255);
-			const dark = JSON.parse(serializeGraphVelloThemePaletteJson("dark")) as { rasterClear: number[] };
+			const dark = JSON.parse(serializeGraphCanvasThemePaletteJson("dark")) as { rasterClear: number[] };
 			expect(dark.rasterClear).toEqual(STYLING_BOARD_THEMES.dark.rasterClear);
 			expect(dark.rasterClear).not.toEqual(parsed.rasterClear);
 		});
 
-		it("syncSessionVelloTheme pushes serialized palette into a session", () => {
+		it("syncSessionCanvasTheme pushes serialized palette into a session", () => {
 			const calls: string[] = [];
-			syncSessionVelloTheme({
-				setVelloThemeJson(json: string) {
+			syncSessionCanvasTheme({
+				setCanvasThemeJson(json: string) {
 					calls.push(json);
 				},
 			});

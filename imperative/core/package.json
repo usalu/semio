@@ -13,7 +13,9 @@
     "test": "bun nx run @semio-tech/imperative-core:test"
   },
   "dependencies": {
-    "@semio-tech/vcs-core": "workspace:*"
+    "@semio-tech/vcs-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -27,7 +29,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "imperative",
       "aliases": [
         "imperative"
@@ -39,7 +41,9 @@
       "port": {
         "dev": 6076,
         "env": "IMPERATIVE_PLAY_PORT"
-      }
+      },
+      "programExport": "imperativeProgramContribution",
+      "programId": "imperative"
     }
   }
 }

@@ -63,4 +63,18 @@ if (import.meta.vitest) {
 		});
 	});
 }
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
 
+/** @emoji 📜 S app VCS handler for sequence documents. */
+export function createSequenceAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly steps: readonly unknown[]; readonly edges: readonly unknown[] };
+	type Op = { readonly op: "setDocument"; readonly document: Doc };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"sequence.fixture",
+		"sequence.fixture",
+		() => ({ schema: "sequence.fixture", steps: [], edges: [] }),
+		(doc, op) => (op.op === "setDocument" ? op.document : doc),
+	);
+}
+//#endregion 🔖DocumentVcs

@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@semio-tech/vcs-core": "workspace:*",
-    "@semio-tech/graph-manifest": "workspace:*"
+    "@semio-tech/graph-manifest": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -25,7 +27,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "flow",
       "aliases": [
         "flow"
@@ -38,7 +40,20 @@
         "dev": 6016,
         "test": 6029,
         "env": "FLOW_PLAY_PORT"
-      }
+      },
+      "programExport": "flowProgramContribution",
+      "programId": "flow",
+      "optimizeDepsExclude": [
+        "@semio-tech/flow-module-core",
+        "@semio-tech/flow-core",
+        "@semio-tech/flow-module-math",
+        "@semio-tech/flow-module-text",
+        "@semio-tech/flow-module-logic",
+        "@semio-tech/flow-module-dictionary",
+        "@semio-tech/flow-module-list",
+        "@semio-tech/flow-module-brep",
+        "@semio-tech/flow-module-draw"
+      ]
     }
   }
 }

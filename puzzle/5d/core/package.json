@@ -23,7 +23,8 @@
     "@semio-tech/puzzle-5d-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/vcs-core": "workspace:*",
-    "@semio-tech/writer-core": "workspace:*"
+    "@semio-tech/writer-core": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -39,10 +40,12 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "5d",
       "aliases": [
-        "5d"
+        "5d",
+        "puzzle 5d",
+        "puzzle-5d"
       ],
       "packageRoot": "puzzle/5d",
       "corePackage": "@semio-tech/puzzle-5d-core",
@@ -52,6 +55,14 @@
         "dev": 6014,
         "test": 6035,
         "env": "PUZZLE_5D_PLAY_PORT"
+      },
+      "programExport": "puzzle5dProgramContribution",
+      "programId": "puzzle.5d",
+      "site": { "embedKind": "5d", "host": "play.5d.semio-tech.com" },
+      "assets": ["puzzle3d-meshes"],
+      "lockedExampleFixtures": {
+        "nakagin": ["puzzle/5d/example/nakagin-capsule-tower.5d.json"],
+        "concrete-forest": ["puzzle/5d/example/concrete-forest.5d.json"]
       }
     }
   }

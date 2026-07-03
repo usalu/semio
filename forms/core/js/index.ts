@@ -1033,9 +1033,13 @@ function buildFormsPlayTryBody(_ctx: unknown): UiNode {
 	return buildFormsWindowBody(FORMS_PLAY_SURFACE_ID_TRY, FORMS_PLAY_CONTROLLER_ID, "preview");
 }
 
+export const formsPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[FORMS_PLAY_BODY_KEY_EDIT]: buildFormsPlayEditBody,
+	[FORMS_PLAY_BODY_KEY_TRY]: buildFormsPlayTryBody,
+};
+
 export function registerFormsPlayDeclarativeBodies(): void {
-	registerWindowBody(FORMS_PLAY_BODY_KEY_EDIT, buildFormsPlayEditBody);
-	registerWindowBody(FORMS_PLAY_BODY_KEY_TRY, buildFormsPlayTryBody);
+	for (const [key, build] of Object.entries(formsPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildFormsPlayAppRuntime(controller: FormsPlayController): AppRuntime {
@@ -1070,13 +1074,7 @@ export const formsPlayAppDefinition = createPlaygroundApp({
 		runtime.addApp(buildFormsPlayAppRuntime(ctrl));
 		return runtime;
 	},
-	registerBodies: () => {
-		registerFormsPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootFormsPlay } = await import("@semio-tech/forms-react/play");
-		bootFormsPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/forms-react/play")).formsAppRenderer,
 });
 //#endregion 🔖Play
 
@@ -1270,6 +1268,25 @@ export function buildFormsProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createFormsAppVcsHandler } from "./internal.ts";
+
+const formsProgramContributionResources = {
+		"forms": osBaselineResource("form.dictionary", "forms.form", "forms"),
+	};
+
+/** @emoji 🧩 OS program contribution for forms. */
+export const formsProgramContribution: OsProgramContribution = {
+	programId: "forms",
+	register() {
+		mergeOsProgramDefinition("forms", buildFormsProgramDefinition(), formsProgramContributionResources);
+		registerAppVcsHandler(createFormsAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 
 // #region 🧪Tests

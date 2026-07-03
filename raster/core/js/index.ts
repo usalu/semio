@@ -1231,11 +1231,15 @@ export function buildRasterPlayAppRuntime(ctrl: RasterPlayController): AppRuntim
 	return createPlayAppRuntime(RASTER_PLAY_APP_ID, "Raster", ctrl, RASTER_PLAY_LAYOUT, ctrl.mainMode);
 }
 
+export const rasterPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[RASTER_PLAY_BODY_KEY_COMPOSITE]: () =>
+		buildRasterWindowBody(RASTER_PLAY_SURFACE_ID_COMPOSITE, RASTER_PLAY_CONTROLLER_ID, "composite", "composite"),
+	[RASTER_PLAY_BODY_KEY_NAVIGATOR]: () =>
+		buildRasterWindowBody(RASTER_PLAY_SURFACE_ID_NAVIGATOR, RASTER_PLAY_CONTROLLER_ID, "navigator", "navigator"),
+};
+
 export function registerRasterPlayDeclarativeBodies(): void {
-	registerWindowBody(RASTER_PLAY_BODY_KEY_COMPOSITE, () =>
-		buildRasterWindowBody(RASTER_PLAY_SURFACE_ID_COMPOSITE, RASTER_PLAY_CONTROLLER_ID, "composite", "composite"));
-	registerWindowBody(RASTER_PLAY_BODY_KEY_NAVIGATOR, () =>
-		buildRasterWindowBody(RASTER_PLAY_SURFACE_ID_NAVIGATOR, RASTER_PLAY_CONTROLLER_ID, "navigator", "navigator"));
+	for (const [key, build] of Object.entries(rasterPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 
@@ -1268,14 +1272,8 @@ export const rasterPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildRasterPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerRasterPlayDeclarativeBodies();
-	},
 	keybindings: [{ key: "ctrl+a,meta+a", controllerId: RASTER_PLAY_CONTROLLER_ID, command: "selectAll" }],
-	bootRenderer: async (pg) => {
-		const { bootRasterPlay } = await import("@semio-tech/raster-react/play");
-		bootRasterPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/raster-react/play")).rasterAppRenderer,
 });
 //#endregion 🔖Play
 
@@ -1422,6 +1420,26 @@ export function buildRasterProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createRasterAppVcsHandler } from "./internal.ts";
+
+const rasterProgramContributionResources = {
+		"raster": { ...osBaselineResource("2d.raster", "raster.document", "raster"), parameterFields: [{ fieldPath: "/brushSize", label: "Brush size", type: "numeric" }, { fieldPath: "/brushOpacity", label: "Brush opacity", type: "numeric" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for raster. */
+export const rasterProgramContribution: OsProgramContribution = {
+	programId: "raster",
+	register() {
+		mergeOsProgramDefinition("raster", buildRasterProgramDefinition(), rasterProgramContributionResources);
+		registerRasterMediaExportHandlers();
+		registerAppVcsHandler(createRasterAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 
 // #region 🧪Tests

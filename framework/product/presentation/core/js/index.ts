@@ -777,11 +777,19 @@ function buildPresentationPlayCatalogueBody(ctx: SidePanelBodyViewContext): UiTr
 	]);
 }
 
+export const presentationPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[PRESENTATION_PLAY_BODY_KEY_MAIN]: buildPresentationPlayMainBody,
+};
+
+export const presentationPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[PRESENTATION_PLAY_BODY_KEY_HIERARCHY]: buildPresentationPlayHierarchyBody,
+	[PRESENTATION_PLAY_BODY_KEY_CATALOGUE]: buildPresentationPlayCatalogueBody,
+	[PRESENTATION_PLAY_BODY_KEY_DETAILS]: buildPresentationPlayDetailsBody,
+};
+
 export function registerPresentationPlayDeclarativeBodies(): void {
-	registerWindowBody(PRESENTATION_PLAY_BODY_KEY_MAIN, buildPresentationPlayMainBody);
-	registerSidePanelBody(PRESENTATION_PLAY_BODY_KEY_HIERARCHY, buildPresentationPlayHierarchyBody);
-	registerSidePanelBody(PRESENTATION_PLAY_BODY_KEY_CATALOGUE, buildPresentationPlayCatalogueBody);
-	registerSidePanelBody(PRESENTATION_PLAY_BODY_KEY_DETAILS, buildPresentationPlayDetailsBody);
+	for (const [key, build] of Object.entries(presentationPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(presentationPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
 export function buildPresentationPlayAppRuntime(controller: PresentationPlayController): AppRuntime {
@@ -1027,6 +1035,27 @@ export function buildPresentationProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createPresentationAppVcsHandler } from "./internal.ts";
+
+const presentationProgramContributionResources = {
+		"presentation": osBaselineResource("presentation.deck", "presentation.deck", "panel", [{ id: "edit", label: "Edit" }]),
+	};
+
+/** @emoji 🧩 OS program contribution for presentation. */
+export const presentationProgramContribution: OsProgramContribution = {
+	programId: "presentation",
+	register() {
+		mergeOsProgramDefinition("presentation", buildPresentationProgramDefinition(), presentationProgramContributionResources);
+		registerPresentationMediaExportHandlers();
+		registerAppVcsHandler(createPresentationAppVcsHandler());
+		mergeOsProgramDefinition("presentation.deck", buildPresentationDeckProgramDefinition(), { "presentation.deck": osBaselineResource("presentation.deck", "presentation.deck", "panel", [{ id: "edit", label: "Edit" }]) });
+	},
+};
+//#endregion 🔖OsProgram
+
 //#region 🔖Play
 import {
 	createPlaygroundApp,
@@ -1054,11 +1083,7 @@ export const presentationPlayAppDefinition = createPlaygroundApp({
 		runtime.addApp(buildPresentationPlayAppRuntime(ctrl));
 		return runtime;
 	},
-	registerBodies: () => registerPresentationPlayDeclarativeBodies(),
-	bootRenderer: async (pg) => {
-		const { bootPresentationPlay } = await import("@semio-tech/framework-presentation-renderer-react/play");
-		bootPresentationPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/framework-presentation-renderer-react/play")).presentationAppRenderer,
 });
 //#endregion 🔖Play
 

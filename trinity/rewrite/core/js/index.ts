@@ -237,13 +237,17 @@ export function buildTrinityRewritePlayParametersDeclarativeBody(_ctx: WindowBod
   return buildFormsWindowBody(TRINITY_REWRITE_PLAY_SURFACE_ID_PARAMETERS, TRINITY_REWRITE_PLAY_CONTROLLER_ID, "preview");
 }
 
+export const trinityRewritePlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+  [TRINITY_REWRITE_PLAY_BODY_KEY_BEFORE]: buildTrinityRewritePlayBeforeDeclarativeBody,
+  [TRINITY_REWRITE_PLAY_BODY_KEY_AFTER]: buildTrinityRewritePlayAfterDeclarativeBody,
+  [TRINITY_REWRITE_PLAY_BODY_KEY_LHS]: buildTrinityRewritePlayLhsDeclarativeBody,
+  [TRINITY_REWRITE_PLAY_BODY_KEY_RHS]: buildTrinityRewritePlayRhsDeclarativeBody,
+  [TRINITY_REWRITE_PLAY_BODY_KEY_JACK]: buildTrinityRewritePlayJackDeclarativeBody,
+  [TRINITY_REWRITE_PLAY_BODY_KEY_PARAMETERS]: buildTrinityRewritePlayParametersDeclarativeBody,
+};
+
 export function registerTrinityRewritePlayDeclarativeBodies(): void {
-  registerWindowBody(TRINITY_REWRITE_PLAY_BODY_KEY_BEFORE, buildTrinityRewritePlayBeforeDeclarativeBody);
-  registerWindowBody(TRINITY_REWRITE_PLAY_BODY_KEY_AFTER, buildTrinityRewritePlayAfterDeclarativeBody);
-  registerWindowBody(TRINITY_REWRITE_PLAY_BODY_KEY_LHS, buildTrinityRewritePlayLhsDeclarativeBody);
-  registerWindowBody(TRINITY_REWRITE_PLAY_BODY_KEY_RHS, buildTrinityRewritePlayRhsDeclarativeBody);
-  registerWindowBody(TRINITY_REWRITE_PLAY_BODY_KEY_JACK, buildTrinityRewritePlayJackDeclarativeBody);
-  registerWindowBody(TRINITY_REWRITE_PLAY_BODY_KEY_PARAMETERS, buildTrinityRewritePlayParametersDeclarativeBody);
+  for (const [key, build] of Object.entries(trinityRewritePlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export class TrinityRewritePlayController extends Controller {
@@ -901,6 +905,24 @@ export function buildTrinityRewriteProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+const trinityRewriteProgramContributionResources = {
+		"trinity-rewrite": osBaselineResource("graph.trinity", "trinity.graph", "trinityRewrite", [{ id: "edit", label: "Edit" }]),
+	};
+
+/** @emoji 🧩 OS program contribution for trinity.rewrite. */
+export const trinityRewriteProgramContribution: OsProgramContribution = {
+	programId: "trinity.rewrite",
+	register() {
+		mergeOsProgramDefinition("trinity.rewrite", buildTrinityRewriteProgramDefinition(), trinityRewriteProgramContributionResources);
+		registerAppVcsHandler(createTrinityGraphAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+
 //#region 🔖Play
 
 /** @emoji 🛝 Trinity Rewrite playground app. */
@@ -924,12 +946,16 @@ export const trinityRewritePlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildTrinityRewritePlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerTrinityRewritePlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootTrinityRewritePlay } = await import("@semio-tech/trinity-react/play");
-		bootTrinityRewritePlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/trinity-react/play")).trinityRewriteAppRenderer,
 });
 //#endregion 🔖Play
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+
+/** @emoji 🔺 S app VCS handler for trinity graph documents. */
+export function createTrinityGraphAppVcsHandler() {
+	type Doc = { readonly nodes: readonly unknown[] };
+	type Op = { readonly op: "setNodes"; readonly nodes: readonly unknown[] };
+	return createTypedAppVcsHandler<Doc, Op>("trinity.graph", "trinity.graph", () => ({ nodes: [] }), (doc, op) => ({ nodes: op.nodes }));
+}
+//#endregion 🔖DocumentVcs

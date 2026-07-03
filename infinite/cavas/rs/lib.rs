@@ -1,18 +1,689 @@
-//! 🖼️ Application-neutral tile-based infinite canvas (Vello/WebGPU); extend via `CanvasExtension`.
+//! 🖼️ Application-neutral tile-based infinite canvas; extend via `CanvasExtension`.
 #![allow(clippy::missing_errors_doc, reason = "Canvas bundle is internal infrastructure.")]
 
-pub use vello_svg;
-pub use vello_svg::usvg;
-pub use vello_svg::vello;
+// #region 🔖Renderer
+mod renderer {
+    // #region 🏷️VelloBackend
+    pub(super) mod vello_backend {
+        pub use vello;
+        pub use vello::kurbo;
+        pub use vello::peniko;
+        pub use vello::util;
+        pub use vello::wgpu;
+        pub use vello::Scene;
+        pub use vello_svg;
+        pub use vello_svg::usvg;
+    }
+    // #endregion 🏷️VelloBackend
+
+    use vello_backend as backend;
+    use std::ops::{Mul, Sub};
+    use std::sync::Arc as SharedArc;
+
+    macro_rules! with_shape_ref {
+        ($shape:expr, |$s:ident| $body:expr) => {
+            match $shape {
+                ShapeRef::Rect($s) => $body,
+                ShapeRef::RoundedRect($s) => $body,
+                ShapeRef::Circle($s) => $body,
+                ShapeRef::Line($s) => $body,
+                ShapeRef::Arc($s) => $body,
+                ShapeRef::CubicBez($s) => $body,
+                ShapeRef::BezPath($s) => $body,
+            }
+        };
+    }
+
+    #[derive(Clone, Copy, Debug)]
+    pub enum ShapeRef<'a> {
+        Rect(&'a Rect),
+        RoundedRect(&'a RoundedRect),
+        Circle(&'a Circle),
+        Line(&'a Line),
+        Arc(&'a Arc),
+        CubicBez(&'a CubicBez),
+        BezPath(&'a BezPath),
+    }
+
+    impl<'a> From<&'a Rect> for ShapeRef<'a> {
+        fn from(value: &'a Rect) -> Self {
+            Self::Rect(value)
+        }
+    }
+
+    impl<'a> From<&'a RoundedRect> for ShapeRef<'a> {
+        fn from(value: &'a RoundedRect) -> Self {
+            Self::RoundedRect(value)
+        }
+    }
+
+    impl<'a> From<&'a Circle> for ShapeRef<'a> {
+        fn from(value: &'a Circle) -> Self {
+            Self::Circle(value)
+        }
+    }
+
+    impl<'a> From<&'a Line> for ShapeRef<'a> {
+        fn from(value: &'a Line) -> Self {
+            Self::Line(value)
+        }
+    }
+
+    impl<'a> From<&'a Arc> for ShapeRef<'a> {
+        fn from(value: &'a Arc) -> Self {
+            Self::Arc(value)
+        }
+    }
+
+    impl<'a> From<&'a CubicBez> for ShapeRef<'a> {
+        fn from(value: &'a CubicBez) -> Self {
+            Self::CubicBez(value)
+        }
+    }
+
+    impl<'a> From<&'a BezPath> for ShapeRef<'a> {
+        fn from(value: &'a BezPath) -> Self {
+            Self::BezPath(value)
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Point(pub(crate) backend::kurbo::Point);
+
+    impl Point {
+        pub const ZERO: Self = Self(backend::kurbo::Point::ZERO);
+        pub fn new(x: f64, y: f64) -> Self {
+            Self(backend::kurbo::Point::new(x, y))
+        }
+        pub fn distance(self, other: Self) -> f64 {
+            self.0.distance(other.0)
+        }
+        pub fn x(&self) -> f64 {
+            self.0.x
+        }
+        pub fn y(&self) -> f64 {
+            self.0.y
+        }
+    }
+
+    impl std::ops::Add<Vec2> for Point {
+        type Output = Self;
+        fn add(self, rhs: Vec2) -> Self {
+            Self(self.0 + rhs.0)
+        }
+    }
+
+    impl std::ops::Sub<Vec2> for Point {
+        type Output = Self;
+        fn sub(self, rhs: Vec2) -> Self {
+            Self(self.0 - rhs.0)
+        }
+    }
+
+    impl std::ops::Sub for Point {
+        type Output = Vec2;
+        fn sub(self, rhs: Self) -> Vec2 {
+            Vec2(self.0 - rhs.0)
+        }
+    }
+
+    impl std::ops::Deref for Point {
+        type Target = backend::kurbo::Point;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Vec2(pub(crate) backend::kurbo::Vec2);
+
+    impl std::ops::Deref for Vec2 {
+        type Target = backend::kurbo::Vec2;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl Vec2 {
+        pub fn new(x: f64, y: f64) -> Self {
+            Self(backend::kurbo::Vec2::new(x, y))
+        }
+        pub fn hypot(self) -> f64 {
+            self.0.hypot()
+        }
+        pub fn dot(self, other: Self) -> f64 {
+            self.0.dot(other.0)
+        }
+        pub fn x(&self) -> f64 {
+            self.0.x
+        }
+        pub fn y(&self) -> f64 {
+            self.0.y
+        }
+    }
+
+    impl From<(f64, f64)> for Vec2 {
+        fn from((x, y): (f64, f64)) -> Self {
+            Self::new(x, y)
+        }
+    }
+
+    impl std::ops::Div<f64> for Vec2 {
+        type Output = Self;
+        fn div(self, rhs: f64) -> Self {
+            Self(self.0 / rhs)
+        }
+    }
+
+    impl std::ops::Mul<f64> for Vec2 {
+        type Output = Self;
+        fn mul(self, rhs: f64) -> Self {
+            Self(self.0 * rhs)
+        }
+    }
+
+    impl std::ops::Neg for Vec2 {
+        type Output = Self;
+        fn neg(self) -> Self {
+            Self(-self.0)
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Affine(pub(crate) backend::kurbo::Affine);
+
+    impl Affine {
+        pub const IDENTITY: Self = Self(backend::kurbo::Affine::IDENTITY);
+        pub fn new(coeffs: [f64; 6]) -> Self {
+            Self(backend::kurbo::Affine::new(coeffs))
+        }
+        pub fn translate(self, offset: impl Into<Vec2>) -> Self {
+            let offset = offset.into();
+            Self(self.0 * backend::kurbo::Affine::translate(offset.0))
+        }
+        pub fn scale(self, s: f64) -> Self {
+            Self(self.0 * backend::kurbo::Affine::scale(s))
+        }
+        pub fn rotate(self, angle: f64) -> Self {
+            Self(self.0 * backend::kurbo::Affine::rotate(angle))
+        }
+    }
+
+    impl Mul for Affine {
+        type Output = Self;
+        fn mul(self, rhs: Self) -> Self {
+            Self(self.0 * rhs.0)
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Rect(pub(crate) backend::kurbo::Rect);
+
+    impl Rect {
+        pub fn new(x0: f64, y0: f64, x1: f64, y1: f64) -> Self {
+            Self(backend::kurbo::Rect::new(x0, y0, x1, y1))
+        }
+        pub fn from_points(p0: Point, p1: Point) -> Self {
+            Self(backend::kurbo::Rect::from_points(p0.0, p1.0))
+        }
+        pub fn inflate(self, dx: f64, dy: f64) -> Self {
+            Self(self.0.inflate(dx, dy))
+        }
+        pub fn x0(self) -> f64 {
+            self.0.x0
+        }
+        pub fn y0(self) -> f64 {
+            self.0.y0
+        }
+        pub fn x1(self) -> f64 {
+            self.0.x1
+        }
+        pub fn y1(self) -> f64 {
+            self.0.y1
+        }
+        pub fn width(self) -> f64 {
+            self.0.width()
+        }
+        pub fn height(self) -> f64 {
+            self.0.height()
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct RoundedRectRadii(pub(crate) backend::kurbo::RoundedRectRadii);
+
+    impl RoundedRectRadii {
+        pub fn new(top_left: f64, top_right: f64, bottom_right: f64, bottom_left: f64) -> Self {
+            Self(backend::kurbo::RoundedRectRadii::new(top_left, top_right, bottom_right, bottom_left))
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct RoundedRect(pub(crate) backend::kurbo::RoundedRect);
+
+    impl RoundedRect {
+        pub fn new(rect: Rect, radii: RoundedRectRadii) -> Self {
+            let r = rect.0;
+            Self(backend::kurbo::RoundedRect::new(r.x0, r.y0, r.x1, r.y1, radii.0))
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Circle(pub(crate) backend::kurbo::Circle);
+
+    impl Circle {
+        pub fn new(center: Point, radius: f64) -> Self {
+            Self(backend::kurbo::Circle::new(center.0, radius))
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Line(pub(crate) backend::kurbo::Line);
+
+    impl Line {
+        pub fn new(p0: Point, p1: Point) -> Self {
+            Self(backend::kurbo::Line::new(p0.0, p1.0))
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Arc(pub(crate) backend::kurbo::Arc);
+
+    impl Arc {
+        pub fn new(center: Point, radii: (f64, f64), start_angle: f64, sweep: f64, x_rotation: f64) -> Self {
+            Self(backend::kurbo::Arc::new(center.0, radii, start_angle, sweep, x_rotation))
+        }
+        pub fn eval(self, t: f64) -> Point {
+            Point(backend::kurbo::ParamCurve::eval(&self.0, t))
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct CubicBez(pub(crate) backend::kurbo::CubicBez);
+
+    impl std::ops::Deref for CubicBez {
+        type Target = backend::kurbo::CubicBez;
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl CubicBez {
+        pub fn new(p0: Point, p1: Point, p2: Point, p3: Point) -> Self {
+            Self(backend::kurbo::CubicBez::new(p0.0, p1.0, p2.0, p3.0))
+        }
+        pub fn eval(self, t: f64) -> Point {
+            Point(backend::kurbo::ParamCurve::eval(&self.0, t))
+        }
+        pub fn p0(self) -> Point {
+            Point(self.0.p0)
+        }
+        pub fn p1(self) -> Point {
+            Point(self.0.p1)
+        }
+        pub fn p2(self) -> Point {
+            Point(self.0.p2)
+        }
+        pub fn p3(self) -> Point {
+            Point(self.0.p3)
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum PathEl {
+        MoveTo(Point),
+        LineTo(Point),
+        QuadTo(Point, Point),
+        CurveTo(Point, Point, Point),
+        ClosePath,
+    }
+
+    impl From<backend::kurbo::PathEl> for PathEl {
+        fn from(value: backend::kurbo::PathEl) -> Self {
+            match value {
+                backend::kurbo::PathEl::MoveTo(p) => Self::MoveTo(Point(p)),
+                backend::kurbo::PathEl::LineTo(p) => Self::LineTo(Point(p)),
+                backend::kurbo::PathEl::QuadTo(p0, p1) => Self::QuadTo(Point(p0), Point(p1)),
+                backend::kurbo::PathEl::CurveTo(p0, p1, p2) => Self::CurveTo(Point(p0), Point(p1), Point(p2)),
+                backend::kurbo::PathEl::ClosePath => Self::ClosePath,
+            }
+        }
+    }
+
+    impl From<PathEl> for backend::kurbo::PathEl {
+        fn from(value: PathEl) -> Self {
+            match value {
+                PathEl::MoveTo(p) => Self::MoveTo(p.0),
+                PathEl::LineTo(p) => Self::LineTo(p.0),
+                PathEl::QuadTo(p0, p1) => Self::QuadTo(p0.0, p1.0),
+                PathEl::CurveTo(p0, p1, p2) => Self::CurveTo(p0.0, p1.0, p2.0),
+                PathEl::ClosePath => Self::ClosePath,
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq)]
+    pub struct BezPath(pub(crate) backend::kurbo::BezPath);
+
+    impl BezPath {
+        pub fn new() -> Self {
+            Self(backend::kurbo::BezPath::new())
+        }
+        pub fn move_to(&mut self, p: impl Into<(f64, f64)>) {
+            let (x, y) = p.into();
+            self.0.move_to((x, y));
+        }
+        pub fn line_to(&mut self, p: impl Into<(f64, f64)>) {
+            let (x, y) = p.into();
+            self.0.line_to((x, y));
+        }
+        pub fn quad_to(&mut self, p1: Point, p2: Point) {
+            self.0.quad_to(p1.0, p2.0);
+        }
+        pub fn curve_to(&mut self, p1: Point, p2: Point, p3: Point) {
+            self.0.curve_to(p1.0, p2.0, p3.0);
+        }
+        pub fn close_path(&mut self) {
+            self.0.close_path();
+        }
+        pub fn push(&mut self, el: PathEl) {
+            self.0.push(el.into());
+        }
+        pub fn elements(&self) -> Vec<PathEl> {
+            self.0.elements().iter().copied().map(Into::into).collect()
+        }
+        pub fn bounding_box(&self) -> Rect {
+            Rect(backend::kurbo::Shape::bounding_box(&self.0))
+        }
+    }
+
+    impl From<Point> for (f64, f64) {
+        fn from(value: Point) -> Self {
+            (value.0.x, value.0.y)
+        }
+    }
+
+    impl From<Vec2> for (f64, f64) {
+        fn from(value: Vec2) -> Self {
+            (value.0.x, value.0.y)
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum Cap {
+        Butt,
+        Round,
+        Square,
+    }
+
+    impl From<Cap> for backend::kurbo::Cap {
+        fn from(value: Cap) -> Self {
+            match value {
+                Cap::Butt => Self::Butt,
+                Cap::Round => Self::Round,
+                Cap::Square => Self::Square,
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct Stroke(pub(crate) backend::kurbo::Stroke);
+
+    impl Stroke {
+        pub fn new(width: f64) -> Self {
+            Self(backend::kurbo::Stroke::new(width))
+        }
+        pub fn set_dash_pattern(&mut self, pattern: Vec<f64>) {
+            self.0.dash_pattern = pattern.into();
+        }
+        pub fn set_start_cap(&mut self, cap: Cap) {
+            self.0.start_cap = cap.into();
+        }
+        pub fn set_end_cap(&mut self, cap: Cap) {
+            self.0.end_cap = cap.into();
+        }
+    }
+
+    /// @emoji 📐 Appends flattened path elements from a shape into a path buffer.
+    pub fn append_shape_to_path<'a>(path: &mut BezPath, shape: impl Into<ShapeRef<'a>>, tolerance: f64) {
+        let shape = shape.into();
+        with_shape_ref!(shape, |s| {
+            for el in backend::kurbo::Shape::path_elements(&s.0, tolerance) {
+                path.push(el.into());
+            }
+        });
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Rgba8 {
+        pub r: u8,
+        pub g: u8,
+        pub b: u8,
+        pub a: u8,
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq)]
+    pub struct Color(pub(crate) backend::peniko::Color);
+
+    impl Color {
+        pub fn new(rgba: [f32; 4]) -> Self {
+            Self(backend::peniko::Color::new(rgba))
+        }
+        pub fn from_rgba8(r: u8, g: u8, b: u8, a: u8) -> Self {
+            Self(backend::peniko::Color::from_rgba8(r, g, b, a))
+        }
+        pub fn to_rgba8(self) -> Rgba8 {
+            let c = self.0.to_rgba8();
+            Rgba8 { r: c.r, g: c.g, b: c.b, a: c.a }
+        }
+        pub fn components(self) -> [f32; 4] {
+            self.0.components
+        }
+        pub fn multiply_alpha(self, alpha: f32) -> Self {
+            Self(self.0.multiply_alpha(alpha))
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum FillRule {
+        NonZero,
+        EvenOdd,
+    }
+
+    impl From<FillRule> for backend::peniko::Fill {
+        fn from(value: FillRule) -> Self {
+            match value {
+                FillRule::NonZero => Self::NonZero,
+                FillRule::EvenOdd => Self::EvenOdd,
+            }
+        }
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum BlendMode {
+        Normal,
+        Multiply,
+        Screen,
+        Overlay,
+        Darken,
+        Lighten,
+        ColorDodge,
+        ColorBurn,
+        HardLight,
+        SoftLight,
+        Difference,
+        Exclusion,
+        Hue,
+        Saturation,
+        Color,
+        Luminosity,
+    }
+
+    impl From<BlendMode> for backend::peniko::Mix {
+        fn from(value: BlendMode) -> Self {
+            match value {
+                BlendMode::Normal => Self::Normal,
+                BlendMode::Multiply => Self::Multiply,
+                BlendMode::Screen => Self::Screen,
+                BlendMode::Overlay => Self::Overlay,
+                BlendMode::Darken => Self::Darken,
+                BlendMode::Lighten => Self::Lighten,
+                BlendMode::ColorDodge => Self::ColorDodge,
+                BlendMode::ColorBurn => Self::ColorBurn,
+                BlendMode::HardLight => Self::HardLight,
+                BlendMode::SoftLight => Self::SoftLight,
+                BlendMode::Difference => Self::Difference,
+                BlendMode::Exclusion => Self::Exclusion,
+                BlendMode::Hue => Self::Hue,
+                BlendMode::Saturation => Self::Saturation,
+                BlendMode::Color => Self::Color,
+                BlendMode::Luminosity => Self::Luminosity,
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub enum Paint {
+        Solid(Color),
+    }
+
+    impl From<Color> for Paint {
+        fn from(value: Color) -> Self {
+            Self::Solid(value)
+        }
+    }
+
+    impl Paint {
+        fn into_brush(self) -> backend::peniko::Brush {
+            match self {
+                Self::Solid(c) => backend::peniko::Brush::Solid(c.0),
+            }
+        }
+    }
+
+    #[derive(Clone, Debug, PartialEq)]
+    pub struct RasterImage(pub(crate) backend::peniko::ImageData);
+
+    impl RasterImage {
+        /// @emoji 🖼️ Builds an RGBA8 raster image for scene drawing.
+        pub fn rgba8(width: u32, height: u32, data: SharedArc<Vec<u8>>) -> Self {
+            Self(backend::peniko::ImageData {
+                data: backend::peniko::Blob::new(data),
+                format: backend::peniko::ImageFormat::Rgba8,
+                alpha_type: backend::peniko::ImageAlphaType::Alpha,
+                width,
+                height,
+            })
+        }
+        pub fn clone_data(&self) -> Self {
+            Self(self.0.clone())
+        }
+        pub fn width(&self) -> u32 {
+            self.0.width
+        }
+        pub fn height(&self) -> u32 {
+            self.0.height
+        }
+    }
+
+    #[derive(Clone, Default)]
+    pub struct Scene(pub(crate) backend::Scene);
+
+    impl Scene {
+        pub fn new() -> Self {
+            Self(backend::Scene::new())
+        }
+        pub fn fill<'a>(&mut self, rule: FillRule, transform: Affine, paint: impl Into<Paint>, brush_transform: Option<Affine>, shape: impl Into<ShapeRef<'a>>) {
+            let paint = paint.into();
+            let brush_transform = brush_transform.map(|a| a.0);
+            match (paint, shape.into()) {
+                (Paint::Solid(color), ShapeRef::Rect(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::RoundedRect(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::Circle(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::Line(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::Arc(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::CubicBez(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::BezPath(s)) => self.0.fill(rule.into(), transform.0, color.0, brush_transform, &s.0),
+            }
+        }
+        pub fn stroke<'a>(&mut self, stroke: &Stroke, transform: Affine, paint: impl Into<Paint>, brush_transform: Option<Affine>, shape: impl Into<ShapeRef<'a>>) {
+            let paint = paint.into();
+            let brush_transform = brush_transform.map(|a| a.0);
+            match (paint, shape.into()) {
+                (Paint::Solid(color), ShapeRef::Rect(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::RoundedRect(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::Circle(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::Line(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::Arc(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::CubicBez(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
+                (Paint::Solid(color), ShapeRef::BezPath(s)) => self.0.stroke(&stroke.0, transform.0, color.0, brush_transform, &s.0),
+            }
+        }
+        pub fn draw_image(&mut self, image: &RasterImage, transform: Affine) {
+            self.0.draw_image(&backend::peniko::ImageBrush::new(image.0.clone()), transform.0);
+        }
+        pub fn append(&mut self, other: &Scene, transform: Option<Affine>) {
+            self.0.append(&other.0, transform.map(|a| a.0));
+        }
+        pub fn push_layer<'a>(&mut self, rule: FillRule, blend: BlendMode, alpha: f32, transform: Affine, clip: impl Into<ShapeRef<'a>>) {
+            let style: backend::peniko::Fill = rule.into();
+            let blend: backend::peniko::Mix = blend.into();
+            with_shape_ref!(clip.into(), |s| {
+                self.0.push_layer(style, blend, alpha, transform.0, &s.0);
+            });
+        }
+        pub fn pop_layer(&mut self) {
+            self.0.pop_layer();
+        }
+        pub fn push_clip_layer<'a>(&mut self, rule: FillRule, transform: Affine, clip: impl Into<ShapeRef<'a>>) {
+            let style: backend::peniko::Fill = rule.into();
+            with_shape_ref!(clip.into(), |s| {
+                self.0.push_clip_layer(style, transform.0, &s.0);
+            });
+        }
+        pub fn is_empty(&self) -> bool {
+            self.0.encoding().is_empty()
+        }
+        pub fn path_count(&self) -> usize {
+            self.0.encoding().path_tags.len()
+        }
+    }
+
+    /// @emoji 🏷️ Parsed SVG document for icon and label rasterization.
+    pub struct SvgDocument(pub(crate) backend::usvg::Tree);
+
+    impl SvgDocument {
+        pub(crate) fn from_tree(tree: backend::usvg::Tree) -> Self {
+            Self(tree)
+        }
+
+        /// @emoji 🏷️ Appends the SVG tree into a scene.
+        pub fn append_to_scene(&self, scene: &mut Scene) {
+            let _ = backend::vello_svg::append_tree(&mut scene.0, &self.0);
+        }
+    }
+
+    /// @emoji 🏷️ Appends a parsed SVG document into a scene.
+    pub fn append_svg_document(scene: &mut Scene, doc: &SvgDocument) {
+        doc.append_to_scene(scene);
+    }
+}
+
+pub use renderer::{
+    append_shape_to_path, append_svg_document, Affine, Arc, BezPath, BlendMode, Cap, Circle, Color, CubicBez, FillRule, Line, Paint, PathEl,
+    Point, RasterImage, Rect, Rgba8, RoundedRect, RoundedRectRadii, Scene, ShapeRef, Stroke, SvgDocument, Vec2,
+};
+pub(crate) use renderer::vello_backend::usvg;
+// #endregion 🔖Renderer
 
 pub mod theme {
 // #region theme
-//! @emoji 🎨 Default Vello canvas paint helpers from centralized styling tokens.
+//! @emoji 🎨 Default canvas paint helpers from centralized styling tokens.
 
-use crate::vello::peniko::Color;
+use crate::Color;
 use ui_styling::{theme::ThemeName, CANVAS_LIGHT};
 
-/// @emoji 🌈 Maps a linear-sRGB token color to `peniko::Color`.
+/// @emoji 🌈 Maps a linear-sRGB token color to `Color`.
 pub fn linear_color(rgba: [f32; 4]) -> Color {
     Color::new(rgba)
 }
@@ -37,7 +708,7 @@ pub fn canvas_clear_for(theme: ThemeName) -> Color {
     linear_color(theme.canvas().raster_clear)
 }
 
-/// @emoji 🌈 Parses an sRGB8888 JSON array into `peniko::Color`.
+/// @emoji 🌈 Parses an sRGB8888 JSON array into `Color`.
 pub fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
     let r = u8::try_from(arr.first()?.as_u64().unwrap_or(0).min(255)).ok()?;
     let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
@@ -46,7 +717,7 @@ pub fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
     Some(Color::from_rgba8(r, g, b, a))
 }
 
-/// @emoji 🎨 Merges one camelCase color field from a Vello theme JSON object.
+/// @emoji 🎨 Merges one camelCase color field from a canvas theme JSON object.
 pub fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
     if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
         if let Some(c) = color_from_json_rgba8(arr) {
@@ -57,7 +728,7 @@ pub fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
 
 /// @emoji 🌓 Returns whether a canvas clear color reads as a light background.
 pub fn clear_is_light(clear: Color) -> bool {
-    let [r, g, b, _] = clear.components;
+    let [r, g, b, _] = clear.components();
     0.2126 * f64::from(r) + 0.7152 * f64::from(g) + 0.0722 * f64::from(b) > 0.5
 }
 
@@ -85,7 +756,7 @@ pub mod icon_assets {
 // #endregion 🏷️IconAssets
 
 pub mod geom_sel {
-    use crate::vello::kurbo::{CubicBez, ParamCurve, Point};
+    use crate::{CubicBez, Point};
 
     #[derive(Clone, Copy, Debug)]
     pub struct WorldBox {
@@ -241,13 +912,11 @@ pub mod geom_sel {
     }
 }
 
-pub mod svg_icon_vello09 {
+pub mod svg_icon {
     use std::sync::{Arc, OnceLock};
 
     use crate::usvg;
-    use crate::vello::kurbo::{Affine, BezPath, Point, Stroke};
-    use crate::vello::peniko::{Color, Fill};
-    use crate::vello::Scene;
+    use crate::{Affine, BezPath, Color, FillRule, Point, Scene, ShapeRef, Stroke};
 
     // #region 🔖IconUsvgParseOptions
 
@@ -330,7 +999,7 @@ pub mod svg_icon_vello09 {
         if let Some(stroke) = path.stroke() {
             if let Some(color) = map_solid_icon_paint(stroke.paint(), stroke.opacity(), fg, bg) {
                 let conv = Stroke::new(f64::from(stroke.width().get()));
-                scene.stroke(&conv, transform, color, None, local_path);
+                scene.stroke(&conv, transform, color, None, ShapeRef::BezPath(local_path));
             }
         }
     }
@@ -340,13 +1009,13 @@ pub mod svg_icon_vello09 {
             if let Some(color) = map_solid_icon_paint(fill.paint(), fill.opacity(), fg, bg) {
                 scene.fill(
                     match fill.rule() {
-                        usvg::FillRule::NonZero => Fill::NonZero,
-                        usvg::FillRule::EvenOdd => Fill::EvenOdd,
+                        usvg::FillRule::NonZero => FillRule::NonZero,
+                        usvg::FillRule::EvenOdd => FillRule::EvenOdd,
                     },
                     transform,
                     color,
                     None,
-                    local_path,
+                    ShapeRef::BezPath(local_path),
                 );
             }
         }
@@ -389,7 +1058,7 @@ pub mod svg_icon_vello09 {
         if let Some(stroke) = path.stroke() {
             if let Some(color) = literal_paint(stroke.paint(), stroke.opacity()) {
                 let conv = Stroke::new(f64::from(stroke.width().get()));
-                scene.stroke(&conv, transform, color, None, local_path);
+                scene.stroke(&conv, transform, color, None, ShapeRef::BezPath(local_path));
             }
         }
     }
@@ -399,13 +1068,13 @@ pub mod svg_icon_vello09 {
             if let Some(color) = literal_paint(fill.paint(), fill.opacity()) {
                 scene.fill(
                     match fill.rule() {
-                        usvg::FillRule::NonZero => Fill::NonZero,
-                        usvg::FillRule::EvenOdd => Fill::EvenOdd,
+                        usvg::FillRule::NonZero => FillRule::NonZero,
+                        usvg::FillRule::EvenOdd => FillRule::EvenOdd,
                     },
                     transform,
                     color,
                     None,
-                    local_path,
+                    ShapeRef::BezPath(local_path),
                 );
             }
         }
@@ -547,17 +1216,44 @@ pub mod svg_icon_vello09 {
     pub fn append_svg_str(scene: &mut Scene, svg: &str) -> Result<(), String> {
         append_svg_str_themed(scene, svg, crate::theme::default_icon_fg(), crate::theme::default_icon_bg())
     }
+
+    /// @emoji 📐 Parses SVG and returns visible content bounds in absolute SVG space.
+    pub fn svg_icon_content_bounds_from_str(svg: &str) -> Result<(f64, f64, f64, f64), String> {
+        let tree = usvg::Tree::from_str(svg, usvg_options_icons()).map_err(|e| e.to_string())?;
+        Ok(svg_icon_content_bounds(&tree))
+    }
+}
+
+impl SvgDocument {
+    /// @emoji 🏷️ Parses icon SVG with bundled emoji font options.
+    pub fn parse_icons(svg: &str) -> Result<Self, String> {
+        let tree = usvg::Tree::from_str(svg, svg_icon::usvg_options_icons()).map_err(|e| e.to_string())?;
+        Ok(Self::from_tree(tree))
+    }
+
+    /// @emoji 📐 Visible content bounds in absolute SVG space.
+    pub fn content_bounds(&self) -> (f64, f64, f64, f64) {
+        svg_icon::svg_icon_content_bounds(&self.0)
+    }
+
+    /// @emoji 🏷️ Renders themed icon paints into a scene.
+    pub fn render_themed(&self, scene: &mut Scene, fg: Color, bg: Color) {
+        svg_icon::render_svg_tree_themed(scene, &self.0, fg, bg);
+    }
+
+    /// @emoji 🏷️ Renders literal SVG paints into a scene.
+    pub fn render_literal(&self, scene: &mut Scene) {
+        svg_icon::render_svg_tree_literal(scene, &self.0);
+    }
 }
 
 // #region 🔖Text
 pub mod text {
     use std::sync::{Arc, OnceLock};
 
-    use crate::svg_icon_vello09::render_svg_tree_literal;
+    use crate::svg_icon::render_svg_tree_literal;
     use crate::usvg;
-    use crate::vello::kurbo::Point;
-    use crate::vello::peniko::Color;
-    use crate::vello::Scene;
+    use crate::{Affine, Color, Point, Scene, Vec2};
 
     static MAP_LABEL_USVG_OPTIONS: OnceLock<usvg::Options<'static>> = OnceLock::new();
 
@@ -644,7 +1340,7 @@ pub mod text {
             text = escape_xml_attr(body),
         );
         let tree = usvg::Tree::from_str(&svg, usvg_options_map_labels()).ok()?;
-        let (bx, _, bw, bh) = crate::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        let (bx, _, bw, bh) = crate::svg_icon::svg_icon_content_bounds(&tree);
         if bw <= 0.0 || bh <= 0.0 {
             return None;
         }
@@ -679,7 +1375,7 @@ pub mod text {
         let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
             return label_advance(prefix, px);
         };
-        let (bx, _, bw, bh) = crate::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        let (bx, _, bw, bh) = crate::svg_icon::svg_icon_content_bounds(&tree);
         if bw <= 0.0 || bh <= 0.0 {
             return label_advance(prefix, px);
         }
@@ -729,14 +1425,16 @@ pub mod text {
         let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
             return;
         };
-        let (bx, by, bw, bh) = crate::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        let (bx, by, bw, bh) = crate::svg_icon::svg_icon_content_bounds(&tree);
         if bw <= 0.0 || bh <= 0.0 {
             return;
         }
         let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
         let mut label_scene = Scene::new();
         render_svg_tree_literal(&mut label_scene, &tree);
-        let aff = vello::kurbo::Affine::translate((origin.x - bx * scale, origin.y - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)) * vello::kurbo::Affine::scale(scale);
+        let aff = Affine::IDENTITY
+            .translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO))
+            .scale(scale);
         scene.append(&label_scene, Some(aff));
     }
 
@@ -780,14 +1478,16 @@ pub mod text {
         let Ok(tree) = usvg::Tree::from_str(&svg, usvg_options_map_labels()) else {
             return;
         };
-        let (bx, by, bw, bh) = crate::svg_icon_vello09::svg_icon_content_bounds(&tree);
+        let (bx, by, bw, bh) = crate::svg_icon::svg_icon_content_bounds(&tree);
         if bw <= 0.0 || bh <= 0.0 {
             return;
         }
         let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
         let mut label_scene = Scene::new();
         render_svg_tree_literal(&mut label_scene, &tree);
-        let aff = vello::kurbo::Affine::translate((origin.x - bx * scale, origin.y - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)) * vello::kurbo::Affine::scale(scale);
+        let aff = Affine::IDENTITY
+            .translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO))
+            .scale(scale);
         scene.append(&label_scene, Some(aff));
     }
 }
@@ -795,7 +1495,7 @@ pub mod text {
 
 // #region 🔖Camera
 pub mod camera {
-    use crate::vello::kurbo::{Affine, Point};
+    use crate::{Affine, Point};
 
     pub const CANVAS_CAMERA_ZOOM_MIN: f64 = ui_styling::metrics::camera::ZOOM_MIN;
     pub const CANVAS_CAMERA_ZOOM_MAX: f64 = ui_styling::metrics::camera::ZOOM_MAX;
@@ -924,31 +1624,29 @@ pub mod lod {
 
 // #region 🔖Raster
 pub mod raster {
-    use crate::vello::kurbo::Affine;
-    use crate::vello::peniko::{ImageBrush, ImageData};
-    use crate::vello::Scene;
+    use crate::{Affine, RasterImage, Scene};
     use std::collections::HashMap;
     use std::sync::Arc;
 
-    pub fn draw_image(scene: &mut Scene, image: &ImageData, transform: Affine) {
-        scene.draw_image(&ImageBrush::new(image.clone()), transform);
+    pub fn draw_image(scene: &mut Scene, image: &RasterImage, transform: Affine) {
+        scene.draw_image(image, transform);
     }
 
-    pub fn draw_image_arc(scene: &mut Scene, image: &Arc<ImageData>, transform: Affine) {
-        scene.draw_image(&ImageBrush::new((**image).clone()), transform);
+    pub fn draw_image_arc(scene: &mut Scene, image: &std::sync::Arc<RasterImage>, transform: Affine) {
+        scene.draw_image(image, transform);
     }
 
     #[derive(Clone, Default)]
     pub struct RasterImageCache {
-        entries: HashMap<String, Arc<ImageData>>,
+        entries: HashMap<String, Arc<RasterImage>>,
     }
 
     impl RasterImageCache {
-        pub fn get(&self, key: &str) -> Option<Arc<ImageData>> {
+        pub fn get(&self, key: &str) -> Option<Arc<RasterImage>> {
             self.entries.get(key).cloned()
         }
 
-        pub fn insert(&mut self, key: String, image: ImageData) -> Arc<ImageData> {
+        pub fn insert(&mut self, key: String, image: RasterImage) -> Arc<RasterImage> {
             let arc = Arc::new(image);
             self.entries.insert(key, arc.clone());
             arc
@@ -959,8 +1657,7 @@ pub mod raster {
 
 // #region 🔖Render
 pub mod render {
-    use crate::vello::kurbo::Affine;
-    use crate::vello::Scene;
+    use crate::{Affine, Scene};
 
     /// @emoji 📐 Scales a logical-viewport scene to the physical GPU surface (device pixel ratio).
     pub fn scale_scene_for_device_pixel_ratio(scene: Scene, dpr: f64) -> Scene {
@@ -969,7 +1666,7 @@ pub mod render {
             return scene;
         }
         let mut scaled = Scene::new();
-        scaled.append(&scene, Some(Affine::scale(scale)));
+        scaled.append(&scene, Some(Affine::IDENTITY.scale(scale)));
         scaled
     }
 }
@@ -977,8 +1674,7 @@ pub mod render {
 
 // #region 🔖CanvasContent
 pub mod canvas_content {
-    use crate::vello::peniko::Color;
-    use crate::vello::Scene;
+    use crate::{Color, Scene};
 
     pub trait CanvasContent {
         fn build_scene(&self) -> Scene;
@@ -990,18 +1686,17 @@ pub mod canvas_content {
 // #region 🔖GpuSession
 #[cfg(target_arch = "wasm32")]
 pub mod gpu_session {
-    use crate::vello::peniko::Color;
-    use crate::vello::util::{RenderContext, RenderSurface};
-    use crate::vello::Scene;
+    use crate::{Color, Scene};
+    use crate::renderer::vello_backend::{util, vello, wgpu};
     use wasm_bindgen::prelude::JsValue;
     use web_sys::HtmlCanvasElement;
 
     pub struct CanvasGpuSession {
         #[allow(dead_code, reason = "Retains canvas for the WebGPU surface lifetime.")]
         canvas: Option<HtmlCanvasElement>,
-        render_ctx: Option<RenderContext>,
-        renderer: Option<crate::vello::Renderer>,
-        surface: Option<RenderSurface<'static>>,
+        render_ctx: Option<util::RenderContext>,
+        renderer: Option<vello::Renderer>,
+        surface: Option<util::RenderSurface<'static>>,
     }
 
     impl Default for CanvasGpuSession {
@@ -1015,16 +1710,16 @@ pub mod gpu_session {
             self.surface.is_some()
         }
 
-        pub async fn create_canvas_surface(canvas: HtmlCanvasElement, pw: u32, ph: u32) -> Result<(RenderContext, crate::vello::Renderer, RenderSurface<'static>), String> {
-            let mut render_ctx = RenderContext::new();
-            let surface = render_ctx.create_surface(crate::vello::wgpu::SurfaceTarget::Canvas(canvas), pw, ph, crate::vello::wgpu::PresentMode::AutoVsync).await.map_err(|err| format!("{err:?}"))?;
+        pub async fn create_canvas_surface(canvas: HtmlCanvasElement, pw: u32, ph: u32) -> Result<(util::RenderContext, vello::Renderer, util::RenderSurface<'static>), String> {
+            let mut render_ctx = util::RenderContext::new();
+            let surface = render_ctx.create_surface(wgpu::SurfaceTarget::Canvas(canvas), pw, ph, wgpu::PresentMode::AutoVsync).await.map_err(|err| format!("{err:?}"))?;
             let dev = &render_ctx.devices[surface.dev_id].device;
-            let renderer = crate::vello::Renderer::new(dev, crate::vello::RendererOptions { use_cpu: false, antialiasing_support: crate::vello::AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
+            let renderer = vello::Renderer::new(dev, vello::RendererOptions { use_cpu: false, antialiasing_support: vello::AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
                 .map_err(|err| format!("{err:?}"))?;
             Ok((render_ctx, renderer, surface))
         }
 
-        pub fn finish_attach(&mut self, canvas: HtmlCanvasElement, render_ctx: RenderContext, renderer: crate::vello::Renderer, surface: RenderSurface<'static>) {
+        pub fn finish_attach(&mut self, canvas: HtmlCanvasElement, render_ctx: util::RenderContext, renderer: vello::Renderer, surface: util::RenderSurface<'static>) {
             self.canvas = Some(canvas);
             self.render_ctx = Some(render_ctx);
             self.renderer = Some(renderer);
@@ -1057,26 +1752,26 @@ pub mod gpu_session {
                 let dh = &render_ctx.devices[surface.dev_id];
                 let pw = surface.config.width.max(1);
                 let ph = surface.config.height.max(1);
-                let params = crate::vello::RenderParams { base_color: clear_color, width: pw, height: ph, antialiasing_method: crate::vello::AaConfig::Area };
-                renderer.render_to_texture(&dh.device, &dh.queue, scene, &surface.target_view, &params).map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
+                let params = vello::RenderParams { base_color: clear_color.0, width: pw, height: ph, antialiasing_method: vello::AaConfig::Area };
+                renderer.render_to_texture(&dh.device, &dh.queue, &scene.0, &surface.target_view, &params).map_err(|err| JsValue::from_str(&format!("{err:?}")))?;
 
                 let surface_tex = match surface.surface.get_current_texture() {
                     Ok(t) => t,
-                    Err(crate::vello::wgpu::SurfaceError::Outdated) => {
+                    Err(wgpu::SurfaceError::Outdated) => {
                         surface.surface.configure(&dh.device, &surface.config);
                         continue;
                     }
-                    Err(crate::vello::wgpu::SurfaceError::Timeout) | Err(crate::vello::wgpu::SurfaceError::Other) => return Ok(()),
-                    Err(crate::vello::wgpu::SurfaceError::Lost) | Err(crate::vello::wgpu::SurfaceError::OutOfMemory) => {
+                    Err(wgpu::SurfaceError::Timeout) | Err(wgpu::SurfaceError::Other) => return Ok(()),
+                    Err(wgpu::SurfaceError::Lost) | Err(wgpu::SurfaceError::OutOfMemory) => {
                         return Err(JsValue::from_str("surface lost or validation error"));
                     }
                 };
-                let view = surface_tex.texture.create_view(&crate::vello::wgpu::TextureViewDescriptor::default());
-                let mut encoder = dh.device.create_command_encoder(&crate::vello::wgpu::CommandEncoderDescriptor { label: Some("infinite_cavas_surface_blit") });
+                let view = surface_tex.texture.create_view(&wgpu::TextureViewDescriptor::default());
+                let mut encoder = dh.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("infinite_cavas_surface_blit") });
                 surface.blitter.copy(&dh.device, &mut encoder, &surface.target_view, &view);
                 dh.queue.submit(std::iter::once(encoder.finish()));
                 surface_tex.present();
-                let _ = dh.device.poll(crate::vello::wgpu::PollType::Poll).ok();
+                let _ = dh.device.poll(wgpu::PollType::Poll).ok();
                 return Ok(());
             }
             Ok(())
@@ -1630,28 +2325,27 @@ mod tests {
     use super::lod::{Lod, LodScale};
     use super::text;
     use super::theme;
-    use crate::vello::kurbo::Point;
-    use crate::vello::Scene;
+    use crate::{Affine, Point, Scene, Vec2};
 
     #[test]
     fn scale_scene_for_device_pixel_ratio_scales_logical_scene() {
         let mut scene = Scene::new();
         text::append_label(&mut scene, "A", Point::new(10.0, 10.0), 12.0, theme::default_icon_fg(), theme::default_icon_bg());
-        let logical = scene.encoding().path_tags.len();
+        let logical = scene.path_count();
         let scaled = super::render::scale_scene_for_device_pixel_ratio(scene, 2.0);
-        assert!(scaled.encoding().path_tags.len() >= logical);
+        assert!(scaled.path_count() >= logical);
         let identity = super::render::scale_scene_for_device_pixel_ratio(Scene::new(), 1.0);
-        assert_eq!(identity.encoding().path_tags.len(), 0);
+        assert_eq!(identity.path_count(), 0);
     }
 
     #[test]
     fn append_label_renders_glyphs() {
         let mut scene = Scene::new();
         text::append_label(&mut scene, "Zürich", Point::new(40.0, 40.0), 14.0, theme::default_icon_fg(), theme::default_icon_bg());
-        assert!(!scene.encoding().path_tags.is_empty());
+        assert!(!scene.path_count().eq(&0));
         let mut empty = Scene::new();
         text::append_label(&mut empty, "  ", Point::new(0.0, 0.0), 14.0, theme::default_icon_fg(), theme::default_icon_bg());
-        assert!(empty.encoding().path_tags.is_empty());
+        assert!(empty.is_empty());
     }
 
     #[test]

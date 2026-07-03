@@ -34,6 +34,11 @@ import {
   type PlaygroundHostKind,
   type PlaygroundSiteKind,
   scanPlaygroundAppManifests,
+  buildProgramIdToPlaygroundKind,
+  collectLockedExampleFixturesFromManifests,
+  collectPlaygroundManifestAssets,
+  collectPlaygroundOptimizeDepsExclude,
+  type PlaygroundAssetKind,
 } from "../../repo/lib/js/index.ts";
 // #endregion 🔌Adapters
 
@@ -219,8 +224,8 @@ export function buildSketchpadProgramDefinition() {
   };
 }
 
-/** @emoji 📄 MDX support for s playground sketchpad host, or a stub elsewhere. */
-export function playgroundComposeSketchpadVitePlugins(repoRoot: string, playEntryKind?: string): Plugin[] {
+/** @emoji 📄 MDX support for sketchpad when manifest declares `sketchpad-mdx`, or a stub elsewhere. */
+export function playgroundComposeSketchpadVitePlugins(repoRoot: string, enableSketchpadMdx: boolean): Plugin[] {
   const sketchpadIndex = resolve(repoRoot, "compose/client/lib/sketchpad/js/index.ts");
   const mdxStubPlugins: Plugin[] = [
     {
@@ -241,7 +246,7 @@ export function playgroundComposeSketchpadVitePlugins(repoRoot: string, playEntr
       },
     },
   ];
-  if (playEntryKind === "s") {
+  if (enableSketchpadMdx) {
     const docsMdxStub = resolve(repoRoot, "framework/product/playground/core/sketchpad-docs-mdx-stub.ts");
     const sketchpadMdxStubSource = "export default function SketchpadMdxStub() { return null; }";
     return [
@@ -419,16 +424,12 @@ export function createPuzzle3dMeshesMiddleware(meshRoots: readonly string[], pla
   };
 }
 
-const PUZZLE_3D_LOCKED_FIXTURE_JSON_REL: Readonly<Record<string, readonly string[]>> = {
-  nakagin: [
-    "puzzle/3d/fixture/nakagin-capsule-tower.3d.json",
-    "puzzle/5d/fixture/nakagin-capsule-tower.5d.json",
-  ],
-  "concrete-forest": [
-    "puzzle/3d/fixture/concrete-forest.3d.json",
-    "puzzle/5d/fixture/concrete-forest.5d.json",
-  ],
-};
+const PUZZLE_3D_LOCKED_FIXTURE_JSON_REL: Readonly<Record<string, readonly string[]>> = {};
+
+/** @emoji 🔒 Resolves locked-example fixture paths from semio.app manifests. */
+export function resolvePuzzle3dLockedFixtureJsonRel(repoRoot: string): Readonly<Record<string, readonly string[]>> {
+  return collectLockedExampleFixturesFromManifests(scanPlaygroundAppManifests(repoRoot));
+}
 
 /** @emoji 🔎 Collects `/mesh/*.glb` basenames referenced anywhere in fixture JSON. */
 export function puzzle3dMeshBasenamesInJson(value: unknown, out = new Set<string>()): Set<string> {
@@ -459,7 +460,7 @@ export function puzzle3dLockedExampleMeshBasenames(repoRoot: string): Set<string
   if (!exampleId) {
     return undefined;
   }
-  const relPaths = PUZZLE_3D_LOCKED_FIXTURE_JSON_REL[exampleId];
+  const relPaths = resolvePuzzle3dLockedFixtureJsonRel(repoRoot)[exampleId];
   if (!relPaths?.length) {
     return undefined;
   }
@@ -690,101 +691,8 @@ export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
   ];
 }
 
-/** @emoji 🛝 Shared Vite preset for puzzle play harnesses (assets, renderer subpaths, workspace aliases). */
-const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
-const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
-const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
-
-export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "lowpoly" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting" | "forms" | "raster" | "writer" | "s" | "vcs" | "cad";
-
-const S_PLAYGROUND_HOST_MARKERS: readonly { readonly start: string; readonly end: string }[] = [
-  { start: "//#region 🔖Puzzle3dPlayHost", end: "//#endregion 🔖Puzzle3dPlayHost" },
-  { start: "//#region 🔖Puzzle5dPlayHost", end: "//#endregion 🔖Puzzle5dPlayHost" },
-  { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
-  { start: "//#region 🔖MapPlayHost", end: "//#endregion 🔖MapPlayHost" },
-  { start: "//#region 🔖FlowPlayHost", end: "//#endregion 🔖FlowPlayHost" },
-  { start: "//#region 🔖DagPlayHost", end: "//#endregion 🔖DagPlayHost" },
-  { start: "//#region 🔖TrinityPlayHost", end: "//#endregion 🔖TrinityPlayHost" },
-  { start: "//#region 🔖ProceduralPlayHost", end: "//#endregion 🔖ProceduralPlayHost" },
-  { start: "//#region 🔖Procedural2dPlayHost", end: "//#endregion 🔖Procedural2dPlayHost" },
-  { start: "//#region 🔖ShootingPlayHost", end: "//#endregion 🔖ShootingPlayHost" },
-  { start: "//#region 🔖FormsPlayHost", end: "//#endregion 🔖FormsPlayHost" },
-  { start: "//#region 🔖RasterPlayHost", end: "//#endregion 🔖RasterPlayHost" },
-  { start: "//#region 🔖DrawPlayHost", end: "//#endregion 🔖DrawPlayHost" },
-  { start: "//#region 🔖WriterPlayHost", end: "//#endregion 🔖WriterPlayHost" },
-  { start: "//#region 🔖PresentationPlayHost", end: "//#endregion 🔖PresentationPlayHost" },
-  { start: "//#region 🔖SPlayHost", end: "//#endregion 🔖SPlayHost" },
-];
-
-/** @emoji ✂️ Removes duplicate writer jack imports before concatenating play host slices. */
-function stripPlaygroundRendererWriterJackImports(source: string): string {
-	return source
-		.replace(/import\s*\{\s*createWriterDocument\s*\}\s*from\s*["']@semio-tech\/writer-core["'];\s*\n/g, "")
-		.replace(/import\s*\{\s*WriterCanvas\s*\}\s*from\s*["']@semio-tech\/writer-react["'];\s*\n/g, "");
-}
-
-/** @emoji ✂️ Drops trinity-rewrite cross-host imports when puzzle2d/forms hosts already supply them. */
-function stripPlaygroundRendererTrinityRewriteCrossHostImports(source: string): string {
-	return source
-		.replace(/import\s*\{\s*FormRenderer\s*\}\s*from\s*["']@semio-tech\/forms-react["'];\s*\n/g, "")
-		.replace(
-			/import\s*\{[^}]*\}\s*from\s*["']@semio-tech\/puzzle-2d-react["'];\s*\n/g,
-			(match) => (match.includes("Puzzle2dCanvas") && match.includes("buildPuzzle2dSceneDescriptorFromFixture") ? "" : match),
-		);
-}
-
-const PLAYGROUND_RENDERER_WRITER_JACK_IMPORTS = `import { createWriterDocument } from "@semio-tech/writer-core";
-import { WriterCanvas } from "@semio-tech/writer-react";
-`;
-
-/** @emoji ✂️ Shell + s-relevant play hosts + boot (excludes lowpoly/vcs/imperative/sequence). */
-export function stripPlaygroundRendererForS(source: string): string {
-	const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
-	const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
-	const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
-	if (puzzleStart < 0 || bootStart < 0) return source;
-	const bootEnd = testsStart >= 0 ? testsStart : source.length;
-	const hosts =
-		PLAYGROUND_RENDERER_WRITER_JACK_IMPORTS +
-		S_PLAYGROUND_HOST_MARKERS.map((markers) => {
-			let host = slicePlaygroundRendererRegion(source, markers.start, markers.end);
-			host = stripPlaygroundRendererWriterJackImports(host);
-			if (markers.start === "//#region 🔖TrinityPlayHost") {
-				host = stripPlaygroundRendererTrinityRewriteCrossHostImports(host);
-			}
-			return host;
-		}).join("\n");
-	return `${source.slice(0, puzzleStart)}${hosts}${source.slice(bootStart, bootEnd)}`;
-}
-
-function slicePlaygroundRendererRegion(source: string, startMarker: string, endMarker: string): string {
-  const start = source.indexOf(startMarker);
-  if (start < 0) return "";
-  const end = source.indexOf(endMarker, start);
-  if (end < 0) return "";
-  return source.slice(start, end + endMarker.length);
-}
-
-/** @emoji ✂️ Drops puzzle play hosts from monolithic renderer `index.tsx` (shell + boot + optional vitest). */
-export function stripPlaygroundRendererPuzzleHosts(source: string, options: { readonly includeVitest?: boolean } = {}): string {
-  const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
-  const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
-  const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
-  if (puzzleStart < 0 || bootStart < 0) return source;
-  const bootEnd = testsStart >= 0 ? testsStart : source.length;
-  let out = `${source.slice(0, puzzleStart)}${source.slice(bootStart, bootEnd)}`;
-  if (options.includeVitest && testsStart >= 0) out += source.slice(testsStart);
-  return out;
-}
-
-/** @emoji ✂️ Injects jack writer imports when a sliced host uses WriterCanvas without importing it. */
-function ensurePlaygroundRendererWriterJackImports(host: string): string {
-	if (!host.includes("WriterCanvas") || /import\s*\{\s*WriterCanvas\s*\}/.test(host)) {
-		return host;
-	}
-	const insertAt = host.indexOf("\n", host.indexOf("//")) + 1;
-	return `${host.slice(0, insertAt)}${PLAYGROUND_RENDERER_WRITER_JACK_IMPORTS}${host.slice(insertAt)}`;
-}
+/** @emoji 🛝 Playground app kind for Vite play harness config (validated against manifest scan). */
+export type PlaygroundRendererPuzzleKind = string;
 
 function namedImportSpecifiersForModule(source: string, moduleId: string): string[] {
   const escaped = moduleId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -814,20 +722,6 @@ export function duplicateNamedImportsForModule(source: string, moduleId: string)
   return dupes;
 }
 
-/** @emoji 🧪 Vitest load: shell-only slice of renderer `index.tsx` when `PLAYGROUND_RENDERER_SHELL_ONLY=1`. */
-export function playgroundRendererVitestShellOnlyPlugin(rendererIndexPath: string): Plugin {
-  return {
-    name: "playground-renderer-vitest-shell-only",
-    enforce: "pre",
-    load(id) {
-      if (process.env.PLAYGROUND_RENDERER_SHELL_ONLY !== "1") return;
-      const filePath = id.split("?")[0];
-      if (filePath !== rendererIndexPath) return;
-      return stripPlaygroundRendererPuzzleHosts(readFileSync(rendererIndexPath, "utf8"), { includeVitest: true });
-    },
-  };
-}
-
 const PRESENTATION_RENDERER_VITEST_START = "//#region 🧪Tests";
 
 /** @emoji ✂️ Drops vitest regions (and hoisted slide globs) from presentation renderer in browser dev. */
@@ -850,8 +744,8 @@ export function presentationRendererVitestStripPlugin(presentationIndexPath: str
 export type PlaygroundPlayViteOptions = {
   readonly playDir: string;
   readonly repoRoot: string;
-  /** @emoji 🎯 When set, `import.meta.env.PUZZLE_PLAY_ENTRY` gates browser boot in that play's `index.ts`. */
-  readonly playEntryKind?: PlaygroundRendererPuzzleKind;
+  /** @emoji 🎯 When set, `import.meta.env.PLAYGROUND_APP_KIND` gates browser boot in that play's `index.ts`. */
+  readonly playEntryKind?: string;
   readonly extraAliases?: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }>;
   readonly extraPlugins?: readonly Plugin[];
   readonly watchIgnored?: readonly string[];
@@ -1331,7 +1225,19 @@ export function playgroundAppsVirtualModulePlugin(repoRoot: string): Plugin {
             `  ${JSON.stringify(manifest.kind)}: async () => (await import(${JSON.stringify(manifest.corePackage)}))[${JSON.stringify(manifest.definitionExport)}]`,
         )
         .join(",\n");
-      return `export const playgroundAppImports = {\n${entries}\n};\n`;
+      const programEntries = manifests
+        .filter((manifest) => manifest.programExport)
+        .map(
+          (manifest) =>
+            `  ${JSON.stringify(manifest.kind)}: async () => (await import(${JSON.stringify(manifest.corePackage)}))[${JSON.stringify(manifest.programExport!)}]`,
+        )
+        .join(",\n");
+      const programIdMap = buildProgramIdToPlaygroundKind(manifests);
+      const programIdEntries = Object.entries(programIdMap)
+        .map(([programId, kind]) => `  ${JSON.stringify(programId)}: ${JSON.stringify(kind)}`)
+        .join(",\n");
+      const programIdMapExport = `export const programIdToPlaygroundKind = {\n${programIdEntries}\n};\n`;
+      return `export const playgroundAppImports = {\n${entries}\n};\nexport const playgroundProgramImports = {\n${programEntries}\n};\n${programIdMapExport}`;
     },
   };
 }
@@ -1501,7 +1407,16 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
   const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
   const uiAssetsRoot = resolve(repoRoot, "ui/asset");
   const presentationIndex = resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx");
+  const manifests = scanPlaygroundAppManifests(repoRoot);
+  const assets = collectPlaygroundManifestAssets(manifests, playEntryKind);
+  const manifestOptimizeExclude = collectPlaygroundOptimizeDepsExclude(manifests, playEntryKind);
   const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, extraAliases);
+  const sketchpadMdx = assets.has("sketchpad-mdx");
+  const workerStubPlugins = [
+    ...(assets.has("sketchpad-mdx") ? [playgroundSketchpadMdxGlobalStubPlugin()] : []),
+    ...(assets.has("playwright-dev-stub") ? [playgroundPlaywrightDevStubPlugin()] : []),
+    ...(assets.has("vitest-dev-stub") ? [playgroundVitestDevStubPlugin()] : []),
+  ];
   return defineConfig({
     root: playDir,
     base: "./",
@@ -1509,33 +1424,33 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     assetsInclude: ["**/*.wasm"],
     worker: {
       format: "es",
-      ...(playEntryKind === "s"
-        ? { plugins: () => [playgroundSketchpadMdxGlobalStubPlugin(), playgroundPlaywrightDevStubPlugin(), playgroundVitestDevStubPlugin()] }
-        : {}),
+      ...(workerStubPlugins.length ? { plugins: () => workerStubPlugins } : {}),
     },
     define: {
       ...playgroundPlayViteDefine(
-        playEntryKind ? { "import.meta.env.PUZZLE_PLAY_ENTRY": JSON.stringify(playEntryKind) } : {},
+        playEntryKind ? { "import.meta.env.PLAYGROUND_APP_KIND": JSON.stringify(playEntryKind) } : {},
       ),
     },
     plugins: [
       playgroundAppsVirtualModulePlugin(repoRoot),
-      ...(playEntryKind === "s" ? [playgroundSketchpadMdxGlobalStubPlugin()] : []),
+      ...(sketchpadMdx ? [playgroundSketchpadMdxGlobalStubPlugin()] : []),
       playgroundPlayBootHtmlPlugin(),
       playgroundFlowWasmDevStubPlugin(repoRoot),
-      ...playgroundComposeSketchpadVitePlugins(repoRoot, playEntryKind),
+      ...(sketchpadMdx
+        ? playgroundComposeSketchpadVitePlugins(repoRoot, true)
+        : [playgroundComposeSketchpadStubPlugin(repoRoot)]),
       ...uiAssetsVitePlugin(uiAssetsRoot),
       ...semioFaviconVitePlugin(repoRoot),
       ...cadFixtureVitePlugin(repoRoot),
       infiniteFixtureVitePlugin(repoRoot),
-      ...(playEntryKind === "3d" || playEntryKind === "5d" || playEntryKind === "shooting" ? puzzle3dMeshesVitePlugin(repoRoot) : []),
-      ...(playEntryKind === "map"
+      ...(assets.has("puzzle3d-meshes") ? puzzle3dMeshesVitePlugin(repoRoot) : []),
+      ...(assets.has("gis-tiles")
         ? gisMapTilesVitePlugins(repoRoot, resolveGisMapTileServeMode(process.env[GIS_MAP_TILE_SERVE_MODE_ENV]))
         : []),
       tailwindcss(),
-      react(playEntryKind === "s" ? { include: /\.(tsx?|jsx?)$/ } : undefined),
-      playgroundPlaywrightDevStubPlugin(),
-      playgroundVitestDevStubPlugin(),
+      react(assets.has("react-all-extensions") ? { include: /\.(tsx?|jsx?)$/ } : undefined),
+      ...(assets.has("playwright-dev-stub") ? [playgroundPlaywrightDevStubPlugin()] : []),
+      ...(assets.has("vitest-dev-stub") ? [playgroundVitestDevStubPlugin()] : []),
       playgroundIframeEmbedHeadersPlugin(),
       playgroundStaleOptimizeDepPlugin(),
       presentationRendererVitestStripPlugin(presentationIndex),
@@ -1554,7 +1469,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
     optimizeDeps: {
       ...workspaceResolve.optimizeDeps,
       ...optimizeDeps,
-      exclude: [...(workspaceResolve.optimizeDeps?.exclude ?? []), ...(optimizeDeps?.exclude ?? [])],
+      exclude: [...(workspaceResolve.optimizeDeps?.exclude ?? []), ...manifestOptimizeExclude, ...(optimizeDeps?.exclude ?? [])],
     },
   });
 }
@@ -1694,20 +1609,6 @@ if (import.meta.vitest) {
       expect(config.resolve?.dedupe).toContain("three");
       expect(config.server?.fs?.allow).toContain(repoRoot);
       expect(config.optimizeDeps?.exclude).toContain("@semio-tech/flow-module-core");
-    });
-  });
-
-  describe("stripPlaygroundRendererForS", () => {
-    it("s virtual entry imports WriterCanvas once for concatenated hosts", () => {
-      const rendererIndex = playgroundRendererIndexPath(repoRoot);
-      const stripped = stripPlaygroundRendererForS(readFileSync(rendererIndex, "utf8"));
-      expect(stripped).toContain("//#region 🔖SPlayHost");
-      expect(stripped).toContain("bootSPlay");
-      expect(stripped).toMatch(/import\s*\{[^}]*WriterCanvas[^}]*\}\s*from\s*["']@semio-tech\/writer-react["']/);
-      expect(stripped.match(/import\s*\{\s*WriterCanvas\s*\}\s*from\s*["']@semio-tech\/writer-react["']/g)?.length).toBe(1);
-      expect(stripped).not.toContain("//#region 🔖LowpolyPlayHost");
-      expect(duplicateNamedImportsForModule(stripped, "@semio-tech/puzzle-2d-react")).toEqual([]);
-      expect(duplicateNamedImportsForModule(stripped, "@semio-tech/forms-react")).toEqual([]);
     });
   });
 }

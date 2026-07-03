@@ -1,9 +1,10 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Presentation — loaded only via `./play` subpath. */
+/** @emoji 🛝 Presentation app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, useApp, registerTabIcon, registerUiPanelSurfaceHost, useControllerStore } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution, UiPanelHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { useApp, CommandBus, useControllerStore, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { reactHostPort, cn, Icon, Button, floatingFieldSurfaceClass, floatingMenuSurfaceClass, shellChromeTitleClassName } from "@semio-tech/ui-react";
 import * as React from "react";
 import {
@@ -25,8 +26,9 @@ import {
     PRESENTATION_PLAY_STORE_ID,
     PRESENTATION_PLAY_SURFACE_ID,
     PresentationPlayController,
-    registerPresentationPlayDeclarativeBodies,
-    type PresentationPlaySnapshot
+    type PresentationPlaySnapshot,
+    presentationPlayWindowBodies,
+    presentationPlaySidePanelBodies,
 } from "@semio-tech/framework-presentation-core";
 
 const PRESENTATION_TILE_HANDLES: readonly NormalizedRectHandle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
@@ -630,39 +632,16 @@ function FigureTilesSurfaceHost({ node }: { readonly node: UiPanelHostSurfaceNod
 	);
 }
 
-let presentationPlayChromeRegistered = false;
-
-export function registerPresentationPlaySurfaceHosts(): void {
-	if (presentationPlayChromeRegistered) {
-		return;
-	}
-	presentationPlayChromeRegistered = true;
-	registerUiPanelSurfaceHost(PRESENTATION_PLAY_SURFACE_ID, FigureTilesSurfaceHost);
-	registerPresentationPlayDeclarativeBodies();
-	registerTabIcon(PRESENTATION_PLAY_ICON_HIERARCHY, "list-tree");
-	registerTabIcon(PRESENTATION_PLAY_ICON_DETAILS, "clipboard-list");
-}
-
-function PresentationPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
-	return (
-		<PlaygroundView
-			runtime={playground.runtime}
-			defaultAppId={PRESENTATION_PLAY_CONTROLLER_ID}
-			playgroundKeybindings={playground.keybindings}
-		/>
-	);
-}
-
-export function mountPresentationPlayChrome(playground: Playground, rootId = "root"): void {
-	mountPlaygroundApp(<PresentationPlayChrome playground={playground} />, rootId);
-}
-
-const presentationPlayChromeBoot: PlaygroundChromeBoot = {
-	registerHosts: registerPresentationPlaySurfaceHosts,
-	mount: mountPresentationPlayChrome,
+/** @emoji 🛝 Presentation app renderer for playground and OS shells. */
+export const presentationAppRenderer: AppRendererContribution = {
+  windowBodies: presentationPlayWindowBodies,
+  sidePanelBodies: presentationPlaySidePanelBodies,
+  surfaceHosts: {
+    [PRESENTATION_PLAY_SURFACE_ID]: FigureTilesSurfaceHost,
+  },
+  tabIcons: {
+    [PRESENTATION_PLAY_ICON_HIERARCHY]: "list-tree",
+    [PRESENTATION_PLAY_ICON_DETAILS]: "clipboard-list",
+  },
+  examples: controllerBackedExampleContribution(PRESENTATION_PLAY_CONTROLLER_ID, []),
 };
-
-export function bootPresentationPlay(playground: Playground, rootId = "root"): void {
-	bootPlayground(playground, presentationPlayChromeBoot, rootId);
-}
-//#endregion 🔖PresentationPlayHost

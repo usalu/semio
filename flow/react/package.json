@@ -25,7 +25,8 @@
     "@semio-tech/procedural-2d-react": "workspace:*",
     "@semio-tech/forms-react": "workspace:*",
     "@semio-tech/forms-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/framework-os-renderer-react": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",

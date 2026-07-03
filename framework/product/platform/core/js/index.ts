@@ -2335,6 +2335,92 @@ export interface AppDevHostConfig {
 	readonly watchIgnored?: readonly string[];
 }
 
+//#region 🔖AppRendererContribution
+export type PanelTabGroup = "workbench" | "details" | "settings";
+
+/** @emoji 🖼 Opaque surface host component bound by {@link surfaceId}. */
+export type SurfaceHostComponent = (props: {
+	readonly node: UiComponentHostSurfaceNode;
+	readonly platform?: Platform;
+}) => unknown;
+
+/** @emoji 🖥 Opaque OS drill-in host for a spawned app instance. */
+export type AppInstanceHostComponent = (props: {
+	readonly instance: unknown;
+	readonly platform?: Platform;
+}) => unknown;
+
+/** @emoji 📑 Opaque side-panel tab definition (resolved by shell renderer). */
+export interface SidePanelTabDefinitionLike {
+	resolveTab?(): unknown;
+	buildTab?(): unknown;
+}
+
+/** @emoji 🧪 One selectable playground example row for the navbar dropdown. */
+export interface AppExampleOption {
+	readonly id: string;
+	readonly label: string;
+}
+
+/** @emoji 📋 App-declared example catalog wired into the generic playground navbar dropdown. */
+export interface AppExampleContribution {
+	readonly options: readonly AppExampleOption[];
+	readonly activeExampleId: (runtime: Platform) => string;
+	readonly onSelect: (exampleId: string, runtime: Platform) => void;
+}
+
+/** @emoji 🌲 Opaque tree palette drag controller factory (resolved by shell renderer). */
+export type TreeDragControllerFactory = (dragByItemId: ReadonlyMap<string, Record<string, unknown>>) => unknown;
+
+/** @emoji 🧩 Props passed to optional custom playground chrome mount. */
+export interface PlaygroundMountProps {
+	readonly runtime: Platform;
+	readonly appId: string;
+	readonly panelTabs?: Partial<Record<PanelTabGroup, readonly SidePanelTabDefinitionLike[]>>;
+	readonly examples?: AppExampleContribution;
+}
+
+/** @emoji 🪟 Declarative window body factory registered by {@link AppRendererContribution.windowBodies}. */
+export type WindowBodyFactory = (ctx: WindowBodyViewContext) => UiNode;
+
+/** @emoji 📑 Declarative side-panel body factory registered by {@link AppRendererContribution.sidePanelBodies}. */
+export type SidePanelBodyFactory = (ctx: SidePanelBodyViewContext) => UiTreeNode;
+
+/** @emoji 🎨 Declarative renderer contribution exported by each app react package. */
+export interface AppRendererContribution {
+	readonly surfaceHosts: Readonly<Record<string, SurfaceHostComponent>>;
+	readonly windowBodies?: Readonly<Record<string, WindowBodyFactory>>;
+	readonly sidePanelBodies?: Readonly<Record<string, SidePanelBodyFactory>>;
+	readonly panelTabs?: Partial<Record<PanelTabGroup, readonly SidePanelTabDefinitionLike[]>>;
+	readonly tabIcons?: Readonly<Record<string, unknown>>;
+	readonly instanceHost?: AppInstanceHostComponent;
+	readonly examples?: AppExampleContribution;
+	readonly treeDragController?: TreeDragControllerFactory;
+	readonly preload?: () => Promise<void>;
+	readonly mountChrome?: (props: PlaygroundMountProps) => unknown;
+}
+
+/** @emoji 🧩 Generic host-bound surface node (`surfaceId` is the binding key). */
+export interface UiSurfaceHostNode {
+	readonly type: string;
+	readonly componentKind: ComponentKind;
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly layout?: "canvas" | "panel";
+	readonly paneId?: string;
+	readonly bindingId?: string;
+	readonly view?: string;
+	readonly chromeMode?: string;
+	readonly layerId?: string;
+}
+
+/** @emoji 📦 OS program registration contributed by an app core package. */
+export interface OsProgramContribution {
+	readonly programId: string;
+	readonly register: () => void | Promise<void>;
+}
+//#endregion 🔖AppRendererContribution
+
 export interface AppDefinition {
 	readonly id: string;
 	readonly label: string;
@@ -2343,9 +2429,9 @@ export interface AppDefinition {
 	readonly modes: readonly ModeDefinition[];
 	readonly defaultModeId?: string;
 	readonly createController?: (commandBus: CommandBus, notify: () => void) => Controller;
-	readonly registerBodies?: () => void;
-	readonly registerSurfaceHosts?: () => void;
 	readonly devHost?: AppDevHostConfig;
+	readonly loadRenderer?: () => Promise<AppRendererContribution>;
+	readonly program?: OsProgramContribution;
 }
 
 export interface PlatformDefinition<TProductApi = unknown> {

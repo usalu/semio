@@ -1,17 +1,19 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Shooting — loaded only via `./play` subpath. */
+/** @emoji 🛝 Shooting app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiShootingSurfaceHost, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
 import * as React from "react";
 import type { UiShootingHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import {
-    SHOOTING_PLAY_APP_ID,
     SHOOTING_PLAY_CATALOGUE_TAB_ID,
+    SHOOTING_PLAY_CONTROLLER_ID,
+    SHOOTING_PLAY_EXAMPLE_OPTIONS,
     SHOOTING_PLAY_HIERARCHY_TAB_ID,
     SHOOTING_PLAY_INSPECTION_TAB_ID,
     SHOOTING_PLAY_SURFACE_ID_ICON,
@@ -20,12 +22,12 @@ import {
     buildShootingPlayCatalogueTree,
     buildShootingPlayHierarchyTree,
     buildShootingPlayInspectorTree,
-    registerShootingPlayDeclarativeBodies,
-    type ShootingPlayHostBridge
+  type ShootingPlayHostBridge,
+  shootingPlayWindowBodies,
 } from "@semio-tech/shooting-core";
+import { ShootingModelCanvas, ShootingIconCanvas, renderShootingShot, resolveActiveShot } from "./index.tsx";
 
 const shootingPlayControllerRef: { current: ShootingPlayController | null } = { current: null };
-let shootingPlayChromeRegistered = false;
 
 
 function useShootingPlayController(runtimeOverride?: Platform): ShootingPlayController | undefined {
@@ -146,15 +148,18 @@ function ShootingModelSurfaceHost({ node }: { readonly node: UiShootingHostSurfa
 		return <div className="absolute inset-0 min-h-0 min-w-0" />;
 	}
 	return (
-		<div className="absolute inset-0 min-h-0 min-w-0">
-			<ShootingModelCanvas
+		<>
+			<ShootingPlayFileBridge />
+			<div className="absolute inset-0 min-h-0 min-w-0">
+				<ShootingModelCanvas
 				fixture={fixture}
 				className="h-full w-full"
 				centerModel={ctrl?.getCenterModel() ?? true}
 				fitRevision={ctrl?.getFitRevision() ?? 0}
 				onCamera={(camera) => ctrl?.run("setCamera", { camera })}
 			/>
-		</div>
+			</div>
+		</>
 	);
 }
 
@@ -174,24 +179,7 @@ function ShootingIconSurfaceHost({ node }: { readonly node: UiShootingHostSurfac
 	);
 }
 
-function useShootingPlayInteractionRevision(runtime: Platform): number {
-	return reactHostPort.useSyncExternalStore(
-		(listener) => {
-			const ctrl = runtime.getActiveApp()?.controller as ShootingPlayController | undefined;
-			shootingPlayControllerRef.current = ctrl ?? null;
-			const unsubscribeRuntime = runtime.subscribe(listener);
-			const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
-			return () => {
-				unsubscribeRuntime();
-				unsubscribeSnapshot?.();
-			};
-		},
-		() => (runtime.getActiveApp()?.controller as ShootingPlayController | undefined)?.getInteractionRevision() ?? 0,
-		() => 0,
-	);
-}
-
-class ShootingPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+function ShootingPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
 	buildTab(): SidePanelTabConfig {
 		return {
 			id: SHOOTING_PLAY_HIERARCHY_TAB_ID,
@@ -248,50 +236,16 @@ class ShootingPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
 	}
 }
 
-function ShootingPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
-	const interactionRevision = useShootingPlayInteractionRevision(playground.runtime);
-	const ctrl = useShootingPlayController(playground.runtime);
-	shootingPlayControllerRef.current = ctrl ?? null;
-	const shootingPlayHierarchyPanel = reactHostPort.useMemo(() => new ShootingPlayHierarchyPanelDefinition(), []);
-	const shootingPlayCataloguePanel = reactHostPort.useMemo(() => new ShootingPlayCataloguePanelDefinition(), []);
-	const shootingPlayInspectionPanel = reactHostPort.useMemo(() => new ShootingPlayInspectionPanelDefinition(), []);
-	const augmentPanelTabs = reactHostPort.useMemo(
-		() => ({
-			workbench: [shootingPlayHierarchyPanel, shootingPlayCataloguePanel],
-			details: [shootingPlayInspectionPanel],
-		}),
-		[interactionRevision, shootingPlayCataloguePanel, shootingPlayHierarchyPanel, shootingPlayInspectionPanel],
-	);
-	return (
-		<>
-			<ShootingPlayFileBridge />
-			<PlaygroundView runtime={playground.runtime} defaultAppId={SHOOTING_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playground.keybindings} />
-		</>
-	);
-}
-
-export function registerShootingPlaySurfaceHosts(): void {
-	if (shootingPlayChromeRegistered) return;
-	shootingPlayChromeRegistered = true;
-	registerUiShootingSurfaceHost(SHOOTING_PLAY_SURFACE_ID_MODEL, ShootingModelSurfaceHost);
-	registerUiShootingSurfaceHost(SHOOTING_PLAY_SURFACE_ID_ICON, ShootingIconSurfaceHost);
-	registerShootingPlayDeclarativeBodies();
-}
-
-function ShootingPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
-	return <ShootingPlayInner playground={playground} />;
-}
-
-export function mountShootingPlayChrome(playground: Playground, rootId = "root"): void {
-	mountPlaygroundApp(<ShootingPlayChrome playground={playground} />, rootId);
-}
-
-const shootingPlayChromeBoot: PlaygroundChromeBoot = {
-	registerHosts: registerShootingPlaySurfaceHosts,
-	mount: mountShootingPlayChrome,
+/** @emoji 🛝 shooting app renderer for playground and OS shells. */
+export const shootingAppRenderer: AppRendererContribution = {
+  windowBodies: shootingPlayWindowBodies,
+  surfaceHosts: {
+    [SHOOTING_PLAY_SURFACE_ID_MODEL]: ShootingModelSurfaceHost,
+    [SHOOTING_PLAY_SURFACE_ID_ICON]: ShootingIconSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new ShootingPlayHierarchyPanelDefinition(), new ShootingPlayCataloguePanelDefinition()],
+    details: [new ShootingPlayInspectionPanelDefinition()],
+  },
+  examples: controllerBackedExampleContribution(SHOOTING_PLAY_CONTROLLER_ID, SHOOTING_PLAY_EXAMPLE_OPTIONS),
 };
-
-export function bootShootingPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, shootingPlayChromeBoot, rootId);
-}
-//#endregion 🔖ShootingPlayHost

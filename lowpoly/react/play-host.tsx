@@ -1,14 +1,14 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Lowpoly — loaded only via `./play` subpath. */
+/** @emoji 🛝 Lowpoly app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiPuzzle3dSurfaceHost, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig, UiPuzzle3dHostSurfaceNode } from "@semio-tech/framework-playground-core";
 import {
-  LOWPOLY_PLAY_APP_ID,
   LOWPOLY_PLAY_CATALOGUE_TAB_ID,
   LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON,
   LOWPOLY_PLAY_HIERARCHY_TAB_ID,
@@ -16,18 +16,31 @@ import {
   LOWPOLY_PLAY_LAYERS_TAB_ID,
   LOWPOLY_PLAY_SURFACE_ID,
   LOWPOLY_PLAY_UV_SURFACE_ID,
-  LOWPOLY_PLAY_WINDOW_KIND_ID,
   LowpolyPlayController,
   buildLowpolyPlayCatalogueTree,
   buildLowpolyPlayHierarchyTree,
   buildLowpolyPlayInspectorTree,
   buildLowpolyPlayLayersTree,
-  registerLowpolyPlayDeclarativeBodies,
+  lowpolyPlayWindowBodies,
 } from "@semio-tech/lowpoly-core";
 
 import { decodeLowpolySelectionTargets, isLowpolyFixtureReady, parseLowpolyFixtureJson, type LowpolySceneObject } from "@semio-tech/lowpoly-core";
+import {
+  LowpolyCanvas,
+  LowpolyUvCanvas,
+  createLowpolySession,
+  loadDefaultLowpolyFixtureJson,
+  safeLoadLowpolyFixture,
+  tessellateAllLowpolySession,
+  syncLowpolySessionSelection,
+  type LowpolySessionWasm,
+} from "./index.tsx";
 
-let lowpolyPlayChromeRegistered = false;
+/** @emoji 📦 Warms default lowpoly fixture fetch before first surface mount. */
+async function preloadLowpolyPlay(): Promise<void> {
+  await loadDefaultLowpolyFixtureJson();
+}
+
 const lowpolyPlayControllerRef: { current: LowpolyPlayController | null } = { current: null };
 
 type LowpolySharedPlaySnapshot = {
@@ -331,8 +344,10 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
   }, []);
 
   return (
-    <div className="absolute inset-0 min-h-0 min-w-0">
-      <LowpolyCanvas
+    <>
+      <LowpolyPlaySessionBridge runtime={runtime} />
+      <div className="absolute inset-0 min-h-0 min-w-0">
+        <LowpolyCanvas
         fixtureJson={fixtureJson}
         sceneObjects={sceneObjects}
         selectionTargets={selectionTargets}
@@ -357,7 +372,8 @@ function LowpolyPlaySurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHost
         onPaintTextureRefresh={bumpLowpolyPaintTextureRevision}
         className="h-full w-full"
       />
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -423,13 +439,6 @@ function LowpolyUvSurfaceHost({ node: _node }: { readonly node: UiPuzzle3dHostSu
   );
 }
 
-export function registerLowpolyPlaySurfaceHosts(): void {
-  if (lowpolyPlayChromeRegistered) return;
-  lowpolyPlayChromeRegistered = true;
-  registerUiPuzzle3dSurfaceHost(LOWPOLY_PLAY_SURFACE_ID, LowpolyPlaySurfaceHost);
-  registerUiPuzzle3dSurfaceHost(LOWPOLY_PLAY_UV_SURFACE_ID, LowpolyUvSurfaceHost);
-  registerLowpolyPlayDeclarativeBodies();
-}
 
 class LowpolyPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
@@ -507,51 +516,16 @@ class LowpolyPlayLayersPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-function LowpolyPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  useLowpolyPlayController(runtime);
-  const interactionRevision = useLowpolyPlayInteractionRevision(runtime);
-  const hierarchyPanel = reactHostPort.useMemo(() => new LowpolyPlayHierarchyPanelDefinition(), []);
-  const cataloguePanel = reactHostPort.useMemo(() => new LowpolyPlayCataloguePanelDefinition(), []);
-  const inspectionPanel = reactHostPort.useMemo(() => new LowpolyPlayInspectionPanelDefinition(), []);
-  const layersPanel = reactHostPort.useMemo(() => new LowpolyPlayLayersPanelDefinition(), []);
-  const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [hierarchyPanel, cataloguePanel],
-      details: [inspectionPanel, layersPanel],
-    }),
-    [interactionRevision, cataloguePanel, hierarchyPanel, inspectionPanel, layersPanel],
-  );
-  return (
-    <>
-      <LowpolyPlaySessionBridge runtime={runtime} />
-      <PlaygroundView runtime={runtime} defaultAppId={LOWPOLY_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
-    </>
-  );
-}
-
-function LowpolyPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <LowpolyPlayInner runtime={runtime} />;
-}
-
-export function mountLowpolyPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<LowpolyPlayChrome runtime={playground.runtime} />, rootId);
-}
-
-const lowpolyPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerLowpolyPlaySurfaceHosts,
-  mount: mountLowpolyPlayChrome,
+/** @emoji 🛝 lowpoly app renderer for playground and OS shells. */
+export const lowpolyAppRenderer: AppRendererContribution = {
+  windowBodies: lowpolyPlayWindowBodies,
+  surfaceHosts: {
+    [LOWPOLY_PLAY_SURFACE_ID]: LowpolyPlaySurfaceHost,
+    [LOWPOLY_PLAY_UV_SURFACE_ID]: LowpolyUvSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new LowpolyPlayHierarchyPanelDefinition(), new LowpolyPlayCataloguePanelDefinition()],
+    details: [new LowpolyPlayInspectionPanelDefinition(), new LowpolyPlayLayersPanelDefinition()],
+  },
+  preload: preloadLowpolyPlay,
 };
-
-export async function bootLowpolyPlay(playground: Playground, rootId = "root"): Promise<void> {
-  const ctrl = playground.runtime.getActiveApp()?.controller as LowpolyPlayController | undefined;
-  if (ctrl && !isLowpolyFixtureReady(ctrl.getFixtureJson())) {
-    const json = await loadDefaultLowpolyFixtureJson();
-    ctrl.run("setFixtureJson", { json });
-    const fixture = parseLowpolyFixtureJson(json);
-    if (fixture) {
-      ctrl.run("setSelection", { mode: fixture.selection.mode, ids: [...fixture.selection.ids] });
-    }
-  }
-  bootPlayground(playground, lowpolyPlayChromeBoot, rootId);
-}
-//#endregion 🔖LowpolyPlayHost

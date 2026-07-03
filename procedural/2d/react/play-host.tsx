@@ -1,34 +1,44 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Procedural2d — loaded only via `./play` subpath. */
+/** @emoji 🛝 Procedural2d app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiPuzzle2dSurfaceHost, registerUiFlowSurfaceHost, registerUiFormsSurfaceHost, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, useApp, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig, UiPuzzle2dHostSurfaceNode } from "@semio-tech/framework-playground-core";
+import type { UiFlowHostSurfaceNode, UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
 
 import { flowWidgetPaletteTreeDragController as procedural2dWidgetPaletteTreeDragController } from "@semio-tech/flow-react";
 import {
-    PROCEDURAL_2D_PLAY_APP_ID,
     PROCEDURAL_2D_PLAY_CATALOGUE_TAB_ID,
+    PROCEDURAL_2D_PLAY_CONTROLLER_ID,
+    PROCEDURAL_2D_PLAY_EXAMPLE_OPTIONS,
     PROCEDURAL_2D_PLAY_HIERARCHY_TAB_ID,
     PROCEDURAL_2D_PLAY_INSPECTION_TAB_ID,
     PROCEDURAL_2D_PLAY_SURFACE_ID,
     PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE,
     PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW,
-    PROCEDURAL_2D_PLAY_WINDOW_KIND_ID,
     Procedural2dPlayController,
     buildProcedural2dPlayCanvasContextMenu,
     buildProcedural2dPlayCatalogueTree,
     buildProcedural2dPlayHierarchyTree,
     buildProcedural2dPlayInspectorTree,
-    registerProcedural2dPlayDeclarativeBodies,
     type Procedural2dPlayHostBridge,
+    procedural2dPlayWindowBodies,
 } from "@semio-tech/procedural-2d-core";
 import { PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON } from "@semio-tech/procedural-2d-core";
+import { FlowGenerateSurface } from "@semio-tech/forms-react";
+import { parseFormSpec } from "@semio-tech/forms-core";
+import { downloadFlowOutputExport } from "@semio-tech/flow-react/play";
+import {
+  Procedural2dFlowEditor,
+  Procedural2dPreview,
+  useProcedural2dDrawingBridge,
+  canvasDrawingPngExportPort,
+} from "./index.tsx";
 
-let procedural2dPlayChromeRegistered = false;
 const procedural2dPlayControllerRef: { current: Procedural2dPlayController | null } = { current: null };
 
 function useProcedural2dPlaySnapshotRevision(runtime: Platform, selector: (ctrl: Procedural2dPlayController) => number): number {
@@ -50,10 +60,6 @@ function useProcedural2dPlaySnapshotRevision(runtime: Platform, selector: (ctrl:
     },
     () => 0,
   );
-}
-
-function useProcedural2dPlayCatalogueRevision(runtime: Platform): number {
-  return useProcedural2dPlaySnapshotRevision(runtime, (c) => c.getCatalogueRevision());
 }
 
 function useProcedural2dPlayExtensionRevision(runtime: Platform): number {
@@ -270,7 +276,9 @@ function Procedural2dPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSu
     [],
   );
   return (
-    <Procedural2dFlowEditor
+    <>
+      <Procedural2dPlayToolbarHostBridge runtime={runtime} ctrl={ctrl} />
+      <Procedural2dFlowEditor
       fixtureJson={ctrl?.getFixtureJson() ?? PROCEDURAL_2D_PLAY_EMPTY_FIXTURE_JSON}
       reorganize={ctrl?.getReorganize()}
       commandRequest={ctrl?.getCommandRequest()}
@@ -298,6 +306,7 @@ function Procedural2dPlayPaneSurfaceHost({ node }: { readonly node: UiFlowHostSu
       contextMenu={(ctx) => buildProcedural2dPlayCanvasContextMenu(ctx, onCanvasCommand)}
       className="h-full w-full"
     />
+    </>
   );
 }
 
@@ -406,28 +415,6 @@ class Procedural2dPlayInspectionPanelDefinition extends PureSidePanelTabDefiniti
   }
 }
 
-function Procedural2dPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  const ctrl = useProcedural2dPlayController(runtime);
-  const catalogueRevision = useProcedural2dPlayCatalogueRevision(runtime);
-  const extensionRevision = useProcedural2dPlayExtensionRevision(runtime);
-  const interactionRevision = useProcedural2dPlayInteractionRevision(runtime);
-  const procedural2dPlayHierarchyPanel = reactHostPort.useMemo(() => new Procedural2dPlayHierarchyPanelDefinition(), []);
-  const procedural2dPlayCataloguePanel = reactHostPort.useMemo(() => new Procedural2dPlayCataloguePanelDefinition(), []);
-  const procedural2dPlayInspectionPanel = reactHostPort.useMemo(() => new Procedural2dPlayInspectionPanelDefinition(), []);
-  const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [procedural2dPlayHierarchyPanel, procedural2dPlayCataloguePanel],
-      details: [procedural2dPlayInspectionPanel],
-    }),
-    [catalogueRevision, extensionRevision, interactionRevision, procedural2dPlayCataloguePanel, procedural2dPlayHierarchyPanel, procedural2dPlayInspectionPanel],
-  );
-  return (
-    <>
-      <Procedural2dPlayToolbarHostBridge runtime={runtime} ctrl={ctrl} />
-      <PlaygroundView runtime={runtime} defaultAppId={PROCEDURAL_2D_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />
-    </>
-  );
-}
 
 function Procedural2dGenerateSurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
   const ctrl = useProcedural2dPlayController();
@@ -454,29 +441,17 @@ function Procedural2dGenerateSurfaceHost({ node }: { readonly node: UiFormsHostS
   );
 }
 
-export function registerProcedural2dPlaySurfaceHosts(): void {
-  if (procedural2dPlayChromeRegistered) return;
-  procedural2dPlayChromeRegistered = true;
-  registerUiFlowSurfaceHost(PROCEDURAL_2D_PLAY_SURFACE_ID, Procedural2dPlayPaneSurfaceHost);
-  registerUiPuzzle2dSurfaceHost(PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW, Procedural2dPreviewSurfaceHost);
-  registerUiFormsSurfaceHost(PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE, Procedural2dGenerateSurfaceHost);
-  registerProcedural2dPlayDeclarativeBodies();
-}
-
-function Procedural2dPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <Procedural2dPlayInner runtime={runtime} />;
-}
-
-export function mountProcedural2dPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<Procedural2dPlayChrome runtime={playground.runtime} />, rootId);
-}
-
-const procedural2dPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerProcedural2dPlaySurfaceHosts,
-  mount: mountProcedural2dPlayChrome,
+/** @emoji 🛝 procedural2d app renderer for playground and OS shells. */
+export const procedural2dAppRenderer: AppRendererContribution = {
+  windowBodies: procedural2dPlayWindowBodies,
+  surfaceHosts: {
+    [PROCEDURAL_2D_PLAY_SURFACE_ID]: Procedural2dPlayPaneSurfaceHost,
+    [PROCEDURAL_2D_PLAY_SURFACE_ID_PREVIEW]: Procedural2dPreviewSurfaceHost,
+    [PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE]: Procedural2dGenerateSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new Procedural2dPlayHierarchyPanelDefinition(), new Procedural2dPlayCataloguePanelDefinition()],
+    details: [new Procedural2dPlayInspectionPanelDefinition()],
+  },
+  examples: controllerBackedExampleContribution(PROCEDURAL_2D_PLAY_CONTROLLER_ID, PROCEDURAL_2D_PLAY_EXAMPLE_OPTIONS),
 };
-
-export function bootProcedural2dPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, procedural2dPlayChromeBoot, rootId);
-}
-//#endregion 🔖Procedural2dPlayHost

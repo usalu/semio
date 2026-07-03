@@ -20,7 +20,7 @@ class DevScript extends BundleScript {
 			fixedPort: true,
 			env: {
 				...playPollingEnv(),
-				PUZZLE_PLAY_ENTRY: "s",
+				PLAYGROUND_APP_KIND: "s",
 			},
 			expectedPlayEntry: "s",
 		});

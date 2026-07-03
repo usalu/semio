@@ -1,16 +1,13 @@
-//! ✍️ Text editor engine on Vello/WebGPU.
+//! ✍️ Text editor engine on the infinite canvas.
 
 pub use infinite_cavas::{self as cavas, *};
 use cavas::camera::{Camera, Viewport};
 use cavas::text as canvas_text;
 use serde::Deserialize;
-use vello::kurbo::{Affine, Point, Rect};
-use vello::peniko::Color;
-use vello::Scene;
 
 // #region 🔖Theme
 #[derive(Clone, Copy, Debug)]
-struct WriterVelloTheme {
+struct WriterCanvasTheme {
     raster_clear: Color,
     grid_minor_stroke: Color,
     label_fill: Color,
@@ -20,13 +17,13 @@ struct WriterVelloTheme {
     selection_fill: Color,
 }
 
-impl Default for WriterVelloTheme {
+impl Default for WriterCanvasTheme {
     fn default() -> Self {
         Self::from_board(&ui_styling::BOARD_LIGHT)
     }
 }
 
-impl WriterVelloTheme {
+impl WriterCanvasTheme {
     fn from_board(t: &ui_styling::BoardTheme) -> Self {
         Self {
             raster_clear: Color::new(t.raster_clear),
@@ -196,7 +193,7 @@ pub struct WriterHost {
     drag_selecting: bool,
     hover_token_start: Option<usize>,
     hover_token_end: Option<usize>,
-    theme: WriterVelloTheme,
+    theme: WriterCanvasTheme,
     caret_visible: bool,
     dead_line_y: f64,
     chrome_edgeless_scroll: bool,
@@ -230,7 +227,7 @@ impl WriterHost {
             drag_selecting: false,
             hover_token_start: None,
             hover_token_end: None,
-            theme: WriterVelloTheme::default(),
+            theme: WriterCanvasTheme::default(),
             caret_visible: true,
             dead_line_y: 0.0,
             chrome_edgeless_scroll: false,
@@ -247,7 +244,7 @@ impl WriterHost {
         self.clamp_camera();
     }
 
-    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
         self.theme.merge_from_json(json)
     }
 
@@ -929,7 +926,7 @@ impl WriterHost {
         }
         let lh = self.line_height;
         let rect = Rect::new(left, y - lh * 0.8, right, y + lh * 0.2);
-        scene.fill(vello::peniko::Fill::NonZero, Affine::IDENTITY, fill, None, &rect);
+        scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &rect);
     }
 
     fn hit_test_offset(&self, world: Point) -> usize {
@@ -983,7 +980,7 @@ impl WriterHost {
         let mut world_scene = Scene::new();
         let bg = self.theme.raster_clear;
         world_scene.fill(
-            vello::peniko::Fill::NonZero,
+            FillRule::NonZero,
             Affine::IDENTITY,
             bg,
             None,
@@ -994,14 +991,14 @@ impl WriterHost {
         if self.show_line_numbers {
             let gutter_bg = self.theme.grid_minor_stroke.multiply_alpha(0.12);
             world_scene.fill(
-                vello::peniko::Fill::NonZero,
+                FillRule::NonZero,
                 Affine::IDENTITY,
                 gutter_bg,
                 None,
                 &Rect::new(0.0, 0.0, self.gutter_width(), content_h),
             );
             world_scene.fill(
-                vello::peniko::Fill::NonZero,
+                FillRule::NonZero,
                 Affine::IDENTITY,
                 self.theme.grid_minor_stroke.multiply_alpha(0.35),
                 None,
@@ -1138,7 +1135,7 @@ impl WriterHost {
         let lh = self.line_height;
         let rect = Rect::new(x, y - lh * 0.8, x + 1.5, y + lh * 0.2);
         scene.fill(
-            vello::peniko::Fill::NonZero,
+            FillRule::NonZero,
             Affine::IDENTITY,
             self.theme.label_fill,
             None,
@@ -1161,7 +1158,7 @@ impl WriterHost {
             _ => self.theme.label_fill_hovered,
         };
         let rect = Rect::new(x, y + 2.0, x2.max(x + 8.0), y + 4.0);
-        scene.fill(vello::peniko::Fill::NonZero, Affine::IDENTITY, color, None, &rect);
+        scene.fill(FillRule::NonZero, Affine::IDENTITY, color, None, &rect);
     }
 }
 
@@ -1421,9 +1418,9 @@ impl WriterSession {
         self.state.borrow().host.camera_json()
     }
 
-    #[wasm_bindgen(js_name = setVelloThemeJson)]
-    pub fn set_vello_theme_json(&mut self, json: &str) {
-        let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+    #[wasm_bindgen(js_name = setCanvasThemeJson)]
+    pub fn set_canvas_theme_json(&mut self, json: &str) {
+        let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
     }
 
     #[wasm_bindgen(js_name = setCaretVisible)]
@@ -1639,7 +1636,7 @@ mod tests {
     fn theme_merge_from_json_updates_clear() {
         let mut host = WriterHost::new();
         let json = r#"{"rasterClear":[240,236,221,255],"labelFill":[0,17,23,255]}"#;
-        host.set_vello_theme_from_json(json).expect("theme json");
+        host.set_canvas_theme_from_json(json).expect("theme json");
         let scene = host.build_scene();
         assert!(!scene.encoding().is_empty());
     }

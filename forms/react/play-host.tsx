@@ -1,16 +1,20 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Forms — loaded only via `./play` subpath. */
+/** @emoji 🛝 Forms app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiFormsSurfaceHost, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceHostBridge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, Platform, CommandBus, collectUiTreeItemDragData, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
+import type { UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
 import {
-  FORMS_PLAY_APP_ID,
   FORMS_PLAY_CATALOGUE_TAB_ID,
   FORMS_PLAY_CONTROLLER_ID,
+  FORMS_PLAY_EXAMPLE_OPTIONS,
   FORMS_PLAY_HIERARCHY_TAB_ID,
   FORMS_PLAY_INSPECTION_TAB_ID,
   FORMS_PLAY_SURFACE_ID_EDIT,
@@ -21,10 +25,19 @@ import {
   buildFormsPlayInspectorTree,
   commitFormsPlayQuestionDropAtClient,
   createFormsPlayHierarchyTreeDragController,
-  registerFormsPlayDeclarativeBodies,
+  parseFormSpec,
+  type FormSpec,
+  formsPlayWindowBodies,
 } from "@semio-tech/forms-core";
+import {
+  FormEditSurface,
+  FormRenderer,
+  defaultFormSpec,
+  formsQuestionPaletteTreeDragController,
+  FormsQuestionPaletteDragBridge,
+  FormsQuestionPaletteDragGhost,
+} from "./index.tsx";
 
-let formsPlayChromeRegistered = false;
 const formsPlayControllerRef: { current: FormsPlayController | null } = { current: null };
 
 function useFormsPlayController(runtimeOverride?: Platform): FormsPlayController | undefined {
@@ -40,52 +53,27 @@ function useFormsPlayController(runtimeOverride?: Platform): FormsPlayController
   return ctrl;
 }
 
-function useFormsPlayInteractionRevision(runtime: Platform): number {
-  return reactHostPort.useSyncExternalStore(
-    (listener) => {
-      const ctrl = runtime.getActiveApp()?.controller as FormsPlayController | undefined;
-      formsPlayControllerRef.current = ctrl ?? null;
-      const unsubscribeRuntime = runtime.subscribe(listener);
-      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
-      return () => {
-        unsubscribeRuntime();
-        unsubscribeSnapshot?.();
-      };
-    },
-    () => (runtime.getActiveApp()?.controller as FormsPlayController | undefined)?.getInteractionRevision() ?? 0,
-    () => 0,
-  );
-}
-
-function useFormsPlayExtensionRevision(runtime: Platform): number {
-  return reactHostPort.useSyncExternalStore(
-    (listener) => {
-      const ctrl = runtime.getActiveApp()?.controller as FormsPlayController | undefined;
-      formsPlayControllerRef.current = ctrl ?? null;
-      const unsubscribeRuntime = runtime.subscribe(listener);
-      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
-      return () => {
-        unsubscribeRuntime();
-        unsubscribeSnapshot?.();
-      };
-    },
-    () => (runtime.getActiveApp()?.controller as FormsPlayController | undefined)?.getExtensionRevision() ?? 0,
-    () => 0,
-  );
-}
-
 function FormsEditSurfaceHost({ node: _node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
   const ctrl = useFormsPlayController();
   const spec = ctrl?.getSpec() ?? defaultFormSpec("empty");
   const selectedIds = ctrl?.getSelectedIds() ?? [];
+  const onPaletteDrop = reactHostPort.useCallback(
+    (detail: { kind: string; clientX: number; clientY: number }) =>
+      commitFormsPlayQuestionDropAtClient(ctrl ?? undefined, detail.clientX, detail.clientY, detail.kind),
+    [ctrl],
+  );
   return (
-    <FormEditSurface
+    <>
+      <FormsQuestionPaletteDragBridge enabled onCommitDrop={onPaletteDrop} />
+      <FormsQuestionPaletteDragGhost />
+      <FormEditSurface
       spec={spec}
       className="h-full"
       selectedIds={selectedIds}
       onSelectionChange={(ids) => ctrl?.run("setSelection", { ids: [...ids] })}
       onChange={(next) => ctrl?.run("setSpecJson", { json: JSON.stringify(next) })}
     />
+    </>
   );
 }
 
@@ -163,56 +151,51 @@ class FormsPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
   }
 }
 
-function FormsPlayInner({ playground }: { readonly playground: Playground }): ReactElement {
-  useFormsPlayController(playground.runtime);
-  const interactionRevision = useFormsPlayInteractionRevision(playground.runtime);
-  const extensionRevision = useFormsPlayExtensionRevision(playground.runtime);
-  const formsPlayHierarchyPanel = reactHostPort.useMemo(() => new FormsPlayHierarchyPanelDefinition(), []);
-  const formsPlayCataloguePanel = reactHostPort.useMemo(() => new FormsPlayCataloguePanelDefinition(), []);
-  const formsPlayInspectionPanel = reactHostPort.useMemo(() => new FormsPlayInspectionPanelDefinition(), []);
-  const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [formsPlayHierarchyPanel, formsPlayCataloguePanel],
-      details: [formsPlayInspectionPanel],
-    }),
-    [interactionRevision, extensionRevision, formsPlayCataloguePanel, formsPlayHierarchyPanel, formsPlayInspectionPanel],
-  );
-  const onPaletteDrop = reactHostPort.useCallback(
-    (detail: { kind: string; clientX: number; clientY: number }) =>
-      commitFormsPlayQuestionDropAtClient(formsPlayControllerRef.current ?? undefined, detail.clientX, detail.clientY, detail.kind),
-    [],
+function FormsOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bridge = useOsInstanceHostBridge();
+  const bundle = useOsInstanceMaterialization(instance);
+  const materialized = bundle.projection;
+  const formsSpec = reactHostPort.useMemo(() => {
+    if (materialized && typeof materialized === "object" && (materialized as FormSpec).schema === "forms.form") return materialized as FormSpec;
+    if (instance.sourceDocument.inline) {
+      try {
+        return parseFormSpec(JSON.parse(instance.sourceDocument.inline));
+      } catch {
+        return defaultFormSpec(instance.id);
+      }
+    }
+    return defaultFormSpec(instance.id);
+  }, [instance, materialized]);
+  const dispatchForms = reactHostPort.useCallback(
+    (spec: FormSpec) => {
+      bridge.dispatch({
+        kind: "applyAppOperation",
+        instanceId: instance.id,
+        forwards: [{ op: "replaceProjection", projection: spec }],
+        backwards: [{ op: "replaceProjection", projection: formsSpec }],
+      });
+    },
+    [bridge, instance.id, formsSpec],
   );
   return (
-    <>
-      <FormsQuestionPaletteDragBridge enabled onCommitDrop={onPaletteDrop} />
-      <FormsQuestionPaletteDragGhost />
-      <PlaygroundView runtime={playground.runtime} defaultAppId={FORMS_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} playgroundKeybindings={playground.keybindings} />
-    </>
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+      <FormEditSurface spec={formsSpec} onChange={(spec) => dispatchForms(spec)} className="min-h-0 flex-1 overflow-auto p-4" />
+    </div>
   );
 }
 
-export function registerFormsPlaySurfaceHosts(): void {
-  if (formsPlayChromeRegistered) return;
-  formsPlayChromeRegistered = true;
-  registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_EDIT, FormsEditSurfaceHost);
-  registerUiFormsSurfaceHost(FORMS_PLAY_SURFACE_ID_TRY, FormsTrySurfaceHost);
-  registerFormsPlayDeclarativeBodies();
-}
-
-function FormsPlayChrome({ playground }: { readonly playground: Playground }): ReactElement {
-  return <FormsPlayInner playground={playground} />;
-}
-
-export function mountFormsPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<FormsPlayChrome playground={playground} />, rootId);
-}
-
-const formsPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerFormsPlaySurfaceHosts,
-  mount: mountFormsPlayChrome,
+/** @emoji 🛝 forms app renderer for playground and OS shells. */
+export const formsAppRenderer: AppRendererContribution = {
+  windowBodies: formsPlayWindowBodies,
+  surfaceHosts: {
+    [FORMS_PLAY_SURFACE_ID_EDIT]: FormsEditSurfaceHost,
+    [FORMS_PLAY_SURFACE_ID_TRY]: FormsTrySurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new FormsPlayHierarchyPanelDefinition(), new FormsPlayCataloguePanelDefinition()],
+    details: [new FormsPlayInspectionPanelDefinition()],
+  },
+  instanceHost: FormsOsInstanceHost,
+  examples: controllerBackedExampleContribution(FORMS_PLAY_CONTROLLER_ID, FORMS_PLAY_EXAMPLE_OPTIONS),
 };
-
-export function bootFormsPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, formsPlayChromeBoot, rootId);
-}
-//#endregion 🔖FormsPlayHost

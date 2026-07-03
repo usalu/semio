@@ -67,8 +67,12 @@ function buildImperativePlayMainDeclarativeBody(_ctx: WindowBodyViewContext): Ui
 }
 
 /** @emoji 🧩 Registers imperative play window bodies. */
+export const imperativePlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[IMPERATIVE_PLAY_BODY_KEY_MAIN]: buildImperativePlayMainDeclarativeBody,
+};
+
 export function registerImperativePlayDeclarativeBodies(): void {
-	registerWindowBody(IMPERATIVE_PLAY_BODY_KEY_MAIN, buildImperativePlayMainDeclarativeBody);
+	for (const [key, build] of Object.entries(imperativePlayWindowBodies)) registerWindowBody(key, build);
 }
 
 /** @emoji 🛝 Builds imperative play {@link AppRuntime}. */
@@ -100,6 +104,25 @@ export function buildImperativeProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createImperativeAppVcsHandler } from "./internal.ts";
+
+const imperativeProgramContributionResources = {
+		"imperative": { ...osBaselineResource("computation.imperative", "imperative.document", "imperative"), parameterFields: [{ fieldPath: "/camera/zoom", label: "Camera zoom", type: "numeric" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for imperative. */
+export const imperativeProgramContribution: OsProgramContribution = {
+	programId: "imperative",
+	register() {
+		mergeOsProgramDefinition("imperative", buildImperativeProgramDefinition(), imperativeProgramContributionResources);
+		registerAppVcsHandler(createImperativeAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 
 if (import.meta.vitest) {
@@ -134,12 +157,6 @@ export const imperativePlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildImperativePlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerImperativePlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootImperativePlay } = await import("@semio-tech/imperative-react/play");
-		bootImperativePlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/imperative-react/play")).imperativeAppRenderer,
 });
 //#endregion 🔖Play

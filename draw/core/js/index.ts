@@ -98,6 +98,7 @@ import {
 } from "./internal.ts";
 import type { DrawShapeKind } from "./internal.ts";
 export * from "./internal.ts";
+export { DRAW_PLAY_EXAMPLE_DEFAULT_ID } from "./example-slugs.ts";
 
 export const DRAW_PLAY_APP_ID = "draw-play";
 export const DRAW_PLAY_CONTROLLER_ID = "draw-play";
@@ -1351,9 +1352,13 @@ export function buildDrawPlayAppRuntime(ctrl: DrawPlayController): AppRuntime {
 	return createPlayAppRuntime(DRAW_PLAY_APP_ID, "Draw", ctrl, DRAW_PLAY_LAYOUT, ctrl.mainMode);
 }
 
+export const drawPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[DRAW_PLAY_BODY_KEY_COMPOSITE]: () =>
+		buildDrawWindowBody(DRAW_PLAY_SURFACE_ID_COMPOSITE, DRAW_PLAY_CONTROLLER_ID, "composite", "composite"),
+};
+
 export function registerDrawPlayDeclarativeBodies(): void {
-	registerWindowBody(DRAW_PLAY_BODY_KEY_COMPOSITE, () =>
-		buildDrawWindowBody(DRAW_PLAY_SURFACE_ID_COMPOSITE, DRAW_PLAY_CONTROLLER_ID, "composite", "composite"));
+	for (const [key, build] of Object.entries(drawPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 //#region 🔖SExtension
@@ -1370,6 +1375,26 @@ export function buildDrawProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createDrawAppVcsHandler } from "./internal.ts";
+
+const drawProgramContributionResources = {
+		"draw": osBaselineResource("2d.drawing", "draw.document", "draw"),
+	};
+
+/** @emoji 🧩 OS program contribution for draw. */
+export const drawProgramContribution: OsProgramContribution = {
+	programId: "draw",
+	register() {
+		mergeOsProgramDefinition("draw", buildDrawProgramDefinition(), drawProgramContributionResources);
+		registerDrawMediaExportHandlers();
+		registerAppVcsHandler(createDrawAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 
 //#region 🔖Play
@@ -1410,11 +1435,7 @@ export const drawPlayAppDefinition = createPlaygroundApp({
 		runtime.addApp(buildDrawPlayAppRuntime(ctrl));
 		return runtime;
 	},
-	registerBodies: () => registerDrawPlayDeclarativeBodies(),
-	bootRenderer: async (pg) => {
-		const { bootDrawPlay } = await import("@semio-tech/draw-react/play");
-		bootDrawPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/draw-react/play")).drawAppRenderer,
 });
 //#endregion 🔖Play
 

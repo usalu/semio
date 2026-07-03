@@ -4,9 +4,9 @@ pub mod geometry {
     // #region geometry
     //! 📐 Graph geometry: handle positions, edge beziers, hit-test distances.
 
-    use crate::cavas::vello::kurbo::{Affine, Arc, BezPath, Circle, CubicBez, ParamCurve, Point, Rect, Shape, Stroke, Vec2};
-    use crate::cavas::vello::peniko::Color;
-    use crate::cavas::vello::Scene;
+    use crate::cavas::{append_shape_to_path, Affine, Arc, BezPath, Circle, CubicBez, PathEl, Point, Rect, Stroke, Vec2};
+    use crate::cavas::Color;
+    use crate::cavas::Scene;
     use crate::NodeShape;
 
     #[inline]
@@ -56,24 +56,18 @@ pub mod geometry {
         let margin = (handle_radius * 2.5).max(4.0);
         let outer = Rect::new(handle_center.x - margin, handle_center.y - margin, handle_center.x + margin, handle_center.y + margin);
         let mut path = BezPath::new();
-        append_shape_elements(&mut path, &outer);
+        append_shape_to_path(&mut path, &outer, 0.1);
         match node_shape {
             NodeShape::Circle => {
-                append_shape_elements(&mut path, &Circle::new(node_center, node_radius.max(1e-9)));
+                append_shape_to_path(&mut path, &Circle::new(node_center, node_radius.max(1e-9)), 0.1);
             }
             NodeShape::Rectangle => {
                 let hw = node_width.max(1e-9) * 0.5;
                 let hh = node_height.max(1e-9) * 0.5;
-                append_shape_elements(&mut path, &Rect::new(node_center.x - hw, node_center.y - hh, node_center.x + hw, node_center.y + hh));
+                append_shape_to_path(&mut path, &Rect::new(node_center.x - hw, node_center.y - hh, node_center.x + hw, node_center.y + hh), 0.1);
             }
         }
         path
-    }
-
-    fn append_shape_elements(path: &mut BezPath, shape: &impl Shape) {
-        for element in shape.path_elements(0.1) {
-            path.push(element);
-        }
     }
 
     /// 🧭 Outward normal for a handle on a node rim: edge-normal on rectangles, radial on circles.
@@ -128,11 +122,11 @@ pub mod geometry {
         let r = radius.max(1e-9);
         let mut path = BezPath::new();
         if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
-            append_shape_elements(&mut path, &arc);
+            append_shape_to_path(&mut path, &arc, 0.1);
             path.close_path();
             return path;
         }
-        append_shape_elements(&mut path, &Circle::new(center, r));
+        append_shape_to_path(&mut path, &Circle::new(center, r), 0.1);
         path
     }
 
@@ -141,10 +135,10 @@ pub mod geometry {
         let r = radius.max(1e-9);
         let mut path = BezPath::new();
         if let Some(arc) = handle_exterior_cap_arc(center, outward, r) {
-            append_shape_elements(&mut path, &arc);
+            append_shape_to_path(&mut path, &arc, 0.1);
             return path;
         }
-        append_shape_elements(&mut path, &Circle::new(center, r));
+        append_shape_to_path(&mut path, &Circle::new(center, r), 0.1);
         path
     }
 
@@ -256,21 +250,21 @@ pub mod geometry {
     }
 
     pub fn distance_point_to_polyline(point: Point, path: &BezPath, _segments: usize) -> f64 {
-        use crate::cavas::vello::kurbo::PathEl;
+        use crate::cavas::PathEl;
         let mut smallest = f64::INFINITY;
         let mut start: Option<Point> = None;
         let mut previous: Option<Point> = None;
         for el in path.elements() {
             match el {
                 PathEl::MoveTo(p) => {
-                    start = Some(*p);
-                    previous = Some(*p);
+                    start = Some(p);
+                    previous = Some(p);
                 }
                 PathEl::LineTo(p) => {
                     if let Some(prev) = previous {
-                        smallest = smallest.min(distance_to_segment(point, prev, *p));
+                        smallest = smallest.min(distance_to_segment(point, prev, p));
                     }
-                    previous = Some(*p);
+                    previous = Some(p);
                 }
                 PathEl::ClosePath => {
                     if let (Some(first), Some(prev)) = (start, previous) {
@@ -427,7 +421,7 @@ pub mod geometry {
             assert_cap_bulges_outward(Point::new(0.0, 30.0), Vec2::new(0.0, 1.0), radius);
             assert_cap_bulges_outward(Point::new(0.0, -30.0), Vec2::new(0.0, -1.0), radius);
             let stroke = handle_exterior_cap_stroke_path(Point::new(40.0, 0.0), Vec2::new(1.0, 0.0), radius);
-            assert!(!stroke.elements().iter().any(|el| matches!(el, crate::cavas::vello::kurbo::PathEl::ClosePath)));
+            assert!(!stroke.elements().iter().any(|el| matches!(el, crate::cavas::PathEl::ClosePath)));
         }
 
         #[test]
@@ -448,7 +442,7 @@ pub mod geometry {
             let path = compute_edge_sharp_sz_path(source, target, Vec2::new(1.0, 0.0), Vec2::new(-1.0, 0.0));
             let mut line_count = 0;
             for el in path.elements() {
-                if matches!(el, crate::cavas::vello::kurbo::PathEl::LineTo(_)) {
+                if matches!(el, crate::cavas::PathEl::LineTo(_)) {
                     line_count += 1;
                 }
             }
@@ -580,7 +574,7 @@ pub trait GraphExtension: cavas::CanvasExtension {}
 // #region 🔖Kinds
 use std::collections::{BTreeMap, BTreeSet};
 
-use cavas::vello::kurbo::{CubicBez, ParamCurve, Point, Vec2};
+use cavas::{CubicBez, Point, Vec2};
 
 /// 🧭 Camera state in world units with a zoom scalar suitable for a WASM host bridge.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -1441,7 +1435,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 }
                 if let Some(node) = self.nodes.get_mut(&node_id) {
                     node.center = point - offset;
-                    self.events.push(BoardEvent::NodeMoved { id: node_id, x: node.center.x, y: node.center.y });
+                    self.events.push(BoardEvent::NodeMoved { id: node_id, x: node.center.x(), y: node.center.y() });
                 }
                 self.update_node_drag_proximity(&[node_id]);
                 if alt {
@@ -1639,7 +1633,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             snapshot.pending_edge = self.proximity_preview_curve(conn);
         }
         let _stroke_scene = encode_board_stroke_scene(&snapshot.edges, 2.0);
-        let _ = _stroke_scene.encoding().path_tags.len();
+        let _ = _stroke_scene.path_count();
         snapshot
     }
 
@@ -2266,7 +2260,7 @@ mod tests {
 
     #[test]
     fn hit_test_pick_targets_collects_node_and_handle() {
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
 
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.create_rect_node(1, 0.0, 0.0, 80.0, 56.0, true);
@@ -2281,7 +2275,7 @@ mod tests {
 
     #[test]
     fn selection_union_drag_starts_inside_bounds_without_node_hit() {
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
 
         let mut engine = GraphEngine::<Ported, Directed>::new();
         engine.create_rect_node(1, 0.0, 0.0, 80.0, 56.0, true);
@@ -2301,7 +2295,7 @@ mod tests {
 
     #[test]
     fn selection_drag_enclosing_lasso_uses_first_horizontal_step() {
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
 
         let start = Point::new(100.0, 100.0);
         let left_first = vec![start, Point::new(80.0, 100.0), Point::new(120.0, 100.0)];
@@ -2355,7 +2349,7 @@ mod tests {
         engine.set_handle_role(11, HandleRole::Source);
         engine.set_handle_role(12, HandleRole::Target);
         engine.create_edge(4, 11, 12);
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let tgt = handle_position_on_rectangle(Point::new(320.0, 0.0), 80.0, 56.0, std::f64::consts::FRAC_PI_2);
         let src = handle_position_on_rectangle(Point::new(0.0, 0.0), 80.0, 56.0, 3.0 * std::f64::consts::FRAC_PI_2);
         engine.pointer_down(tgt.x, tgt.y, false);
@@ -2369,11 +2363,11 @@ mod tests {
 
     #[test]
     fn draw_edge_preview_uses_bezier_from_source_and_target() {
-        use cavas::vello::kurbo::{ParamCurve, Point};
+        use cavas::Point;
 
         fn midpoint_bulge(curve: CubicBez) -> f64 {
-            let p0 = curve.p0;
-            let p3 = curve.p3;
+            let p0 = curve.p0()();
+            let p3 = curve.p3()();
             let mid = curve.eval(0.5);
             let chord = p3 - p0;
             let len = chord.hypot();

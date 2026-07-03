@@ -2,9 +2,6 @@
 
 pub use infinite_cavas::{self as cavas, *};
 pub use std::sync::Arc;
-pub use vello::kurbo::{Affine, Point, Rect, Stroke, Vec2};
-pub use vello::peniko::{Blob, Color, Fill, ImageAlphaType, ImageData, ImageFormat, Mix};
-pub use vello::Scene;
 
 use cavas::camera::{Camera, Viewport};
 use serde::Deserialize;
@@ -157,7 +154,7 @@ enum LayerNode {
         id: String,
         visible: bool,
         opacity: f32,
-        blend: Mix,
+        blend: BlendMode,
         transform: Affine,
         width: u32,
         height: u32,
@@ -168,7 +165,7 @@ enum LayerNode {
         id: String,
         visible: bool,
         opacity: f32,
-        blend: Mix,
+        blend: BlendMode,
         transform: Affine,
         children: Vec<LayerNode>,
         mask: Option<MaskState>,
@@ -177,7 +174,7 @@ enum LayerNode {
         id: String,
         visible: bool,
         opacity: f32,
-        blend: Mix,
+        blend: BlendMode,
         kind: String,
         params: AdjustmentParamsJson,
     },
@@ -196,29 +193,38 @@ struct RasterDocument {
     layers: Vec<LayerNode>,
 }
 
-fn blend_from_str(raw: &str) -> Mix {
+fn blend_from_str(raw: &str) -> BlendMode {
     match raw {
-        "multiply" => Mix::Multiply,
-        "screen" => Mix::Screen,
-        "overlay" => Mix::Overlay,
-        "darken" => Mix::Darken,
-        "lighten" => Mix::Lighten,
-        "colorDodge" => Mix::ColorDodge,
-        "colorBurn" => Mix::ColorBurn,
-        "hardLight" => Mix::HardLight,
-        "softLight" => Mix::SoftLight,
-        "difference" => Mix::Difference,
-        "exclusion" => Mix::Exclusion,
-        "hue" => Mix::Hue,
-        "saturation" => Mix::Saturation,
-        "color" => Mix::Color,
-        "luminosity" => Mix::Luminosity,
-        _ => Mix::Normal,
+        "multiply" => BlendMode::Multiply,
+        "screen" => BlendMode::Screen,
+        "overlay" => BlendMode::Overlay,
+        "darken" => BlendMode::Darken,
+        "lighten" => BlendMode::Lighten,
+        "colorDodge" => BlendMode::ColorDodge,
+        "colorBurn" => BlendMode::ColorBurn,
+        "hardLight" => BlendMode::HardLight,
+        "softLight" => BlendMode::SoftLight,
+        "difference" => BlendMode::Difference,
+        "exclusion" => BlendMode::Exclusion,
+        "hue" => BlendMode::Hue,
+        "saturation" => BlendMode::Saturation,
+        "color" => BlendMode::Color,
+        "luminosity" => BlendMode::Luminosity,
+        _ => BlendMode::Normal,
     }
 }
 
 fn affine_from_json(t: &TransformJson) -> Affine {
-    Affine::translate((t.x, t.y)) * Affine::rotate(t.rotation) * Affine::scale_non_uniform(t.scale_x, t.scale_y)
+    let cos_r = t.rotation.cos();
+    let sin_r = t.rotation.sin();
+    Affine::new([
+        t.scale_x * cos_r,
+        t.scale_x * sin_r,
+        -t.scale_y * sin_r,
+        t.scale_y * cos_r,
+        t.x,
+        t.y,
+    ])
 }
 
 fn parse_mask(m: &MaskJson) -> MaskState {
@@ -320,14 +326,8 @@ fn checkerboard_rgba(width: u32, height: u32, light_cell: u8, dark_cell: u8) -> 
     rgba
 }
 
-fn image_from_rgba(width: u32, height: u32, rgba: Vec<u8>) -> ImageData {
-    ImageData {
-        data: Blob::new(Arc::new(rgba)),
-        format: ImageFormat::Rgba8,
-        alpha_type: ImageAlphaType::Alpha,
-        width,
-        height,
-    }
+fn image_from_rgba(width: u32, height: u32, rgba: Vec<u8>) -> RasterImage {
+    RasterImage::rgba8(width, height, Arc::new(rgba))
 }
 
 fn apply_brightness_contrast(rgba: &mut [u8], brightness: f32, contrast: f32) {
@@ -428,7 +428,7 @@ impl RasterHost {
         }
     }
 
-    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
         let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
         cavas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(self.theme_clear);
@@ -610,7 +610,7 @@ impl RasterHost {
         serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }).to_string()
     }
 
-    fn layer_image(&mut self, id: &str, width: u32, height: u32, image_key: &Option<String>) -> Arc<ImageData> {
+    fn layer_image(&mut self, id: &str, width: u32, height: u32, image_key: &Option<String>) -> Arc<RasterImage> {
         let key = image_key.clone().unwrap_or_else(|| Self::layer_pixel_buffer_key(id));
         if let Some(img) = self.images.get(&key) {
             return img;
@@ -646,9 +646,9 @@ impl RasterHost {
                     }
                 }
                 let img = self.layer_image(id, *width, *height, image_key);
-                let world = cam * (*transform) * Affine::translate(Vec2::new(-(*width as f64) * 0.5, -(*height as f64) * 0.5));
+                let world = cam * (*transform) * Affine::IDENTITY.translate(Vec2::new(-(*width as f64) * 0.5, -(*height as f64) * 0.5));
                 let clip = Rect::new(0.0, 0.0, *width as f64, *height as f64);
-                scene.push_layer(Fill::NonZero, *blend, *opacity, world, &clip);
+                scene.push_layer(FillRule::NonZero, *blend, *opacity, world, &clip);
                 if let Some(mask_state) = mask {
                     if mask_state.enabled {
                         let mask_key = format!("mask:{id}");
@@ -675,7 +675,7 @@ impl RasterHost {
                     scene.stroke(
                         &Stroke::new(2.0 / self.camera.zoom.max(0.1)),
                         world,
-                        &vello::peniko::Brush::Solid(Color::from_rgba8(80, 160, 255, 220)),
+                        Color::from_rgba8(80, 160, 255, 220),
                         None,
                         &stroke,
                     );
@@ -702,7 +702,7 @@ impl RasterHost {
                         return;
                     }
                 }
-                scene.push_layer(Fill::NonZero, *blend, *opacity, cam * (*transform), &Rect::new(-1e6, -1e6, 1e6, 1e6));
+                scene.push_layer(FillRule::NonZero, *blend, *opacity, cam * (*transform), &Rect::new(-1e6, -1e6, 1e6, 1e6));
                 for child in children {
                     self.append_layer_node(scene, cam, child, isolated_id);
                 }
@@ -956,9 +956,9 @@ impl RasterSession {
             .map_err(|e| JsValue::from_str(&e))
     }
 
-    #[wasm_bindgen(js_name = setVelloThemeJson)]
-    pub fn set_vello_theme_json(&mut self, json: &str) {
-        let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+    #[wasm_bindgen(js_name = setCanvasThemeJson)]
+    pub fn set_canvas_theme_json(&mut self, json: &str) {
+        let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
     }
 
     #[wasm_bindgen(js_name = cameraJson)]
@@ -991,7 +991,7 @@ mod tests {
 
     #[test]
     fn blend_mapping() {
-        assert!(matches!(blend_from_str("multiply"), Mix::Multiply));
+        assert!(matches!(blend_from_str("multiply"), BlendMode::Multiply));
     }
 
     #[test]

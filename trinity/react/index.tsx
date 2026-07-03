@@ -10,8 +10,8 @@ import {
   uiInspectorMixedText,
   uiInspectorReadonlyField,
 } from "@semio-tech/framework-playground-core";
-import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
-import { useVelloThemeSync } from "@semio-tech/ui-react";
+import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
+import { useCanvasThemeSync } from "@semio-tech/ui-react";
 import initTrinityWasm, { TrinitySession, ruleQueryJson } from "../rewrite/engine/rs/pkg/trinity_rewrite.js";
 import nakaginFixtureJson from "../example/nakagin-capsule-tower.trinity.json";
 
@@ -412,11 +412,11 @@ export function TrinityCanvas({
   const lastReportedLodRef = useRef<TrinityDrawLodKind | null>(null);
   const lastHighlightedJsonRef = useRef<string>("[]");
 
-  const syncVelloTheme = useCallback(() => {
-    syncSessionVelloTheme(sessionRef.current);
+  const syncCanvasTheme = useCallback(() => {
+    syncSessionCanvasTheme(sessionRef.current);
   }, []);
 
-  useVelloThemeSync(syncVelloTheme);
+  useCanvasThemeSync(syncCanvasTheme);
 
   const syncLodMode = useCallback(() => {
     const session = sessionRef.current;
@@ -462,13 +462,13 @@ export function TrinityCanvas({
     try {
       if (!sessionRef.current?.gpuReady()) return;
       syncLodMode();
-      syncVelloTheme();
+      syncCanvasTheme();
       sessionRef.current?.renderFrame();
       reportDrawLod();
     } catch {
       /* gpu not ready */
     }
-  }, [reportDrawLod, syncLodMode, syncVelloTheme]);
+  }, [reportDrawLod, syncLodMode, syncCanvasTheme]);
 
   useEffect(() => {
     onFixtureChangeRef.current = onFixtureChange;

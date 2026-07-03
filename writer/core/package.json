@@ -14,7 +14,9 @@
   },
   "dependencies": {
     "@semio-tech/vcs-core": "workspace:*",
-    "@semio-tech/graph-manifest": "workspace:*"
+    "@semio-tech/graph-manifest": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -28,7 +30,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "writer",
       "aliases": [
         "writer"
@@ -41,7 +43,9 @@
         "dev": 6062,
         "test": 6063,
         "env": "WRITER_PLAY_PORT"
-      }
+      },
+      "programExport": "writerProgramContribution",
+      "programId": "writer"
     }
   }
 }

@@ -12,24 +12,8 @@ import {
 	appVcsHandlerForFormat,
 	createCatalogueKindsAppVcsHandler,
 	createEmptyOsDocument,
-	createFlowDagAppVcsHandler,
-	createFlowDocumentAppVcsHandler,
-	createGisMapAppVcsHandler,
-	createImperativeAppVcsHandler,
-	createLayoutAppVcsHandler,
-	createLowpolyAppVcsHandler,
 	createOsId,
-	createPresentationDeckAppVcsHandler,
-	createProcedural2dAppVcsHandler,
-	createProcedural3dAppVcsHandler,
-	createPuzzle2dAppVcsHandler,
-	createPuzzle3dAppVcsHandler,
-	createPuzzle5dAppVcsHandler,
-	createSequenceAppVcsHandler,
-	createShootingAppVcsHandler,
-	createTrinityGraphAppVcsHandler,
 	createTypedAppVcsHandler,
-	createVcsDemoAppVcsHandler,
 	listOsPrograms,
 	listOsResourceDescriptors,
 	materializeAppInstanceProjection,
@@ -151,22 +135,6 @@ export {
 	materializeAppInstanceProjection,
 	registerAppVcsHandler,
 	createTypedAppVcsHandler,
-	createFlowDocumentAppVcsHandler,
-	createFlowDagAppVcsHandler,
-	createProcedural2dAppVcsHandler,
-	createProcedural3dAppVcsHandler,
-	createShootingAppVcsHandler,
-	createTrinityGraphAppVcsHandler,
-	createGisMapAppVcsHandler,
-	createPresentationDeckAppVcsHandler,
-	createPuzzle2dAppVcsHandler,
-	createPuzzle3dAppVcsHandler,
-	createPuzzle5dAppVcsHandler,
-	createSequenceAppVcsHandler,
-	createLayoutAppVcsHandler,
-	createImperativeAppVcsHandler,
-	createLowpolyAppVcsHandler,
-	createVcsDemoAppVcsHandler,
 	createCatalogueKindsAppVcsHandler,
 	applyAppOperationToSource,
 	createAppSourceDocument,
@@ -241,68 +209,8 @@ function registerGlbObjResourceHandlers(
 	}));
 }
 
-/** @emoji 💾 Registers export handlers for all 2d/3d/5d media resource kinds. */
-export async function registerAllMediaExportHandlers(): Promise<void> {
-	const [
-		draw,
-		raster,
-		note,
-		gis,
-		procedural2d,
-		shooting,
-		layout,
-		presentation,
-		cad,
-		lowpoly,
-		procedural3d,
-		puzzle2d,
-		puzzle3d,
-	] = await Promise.all([
-		import("@semio-tech/draw-core"),
-		import("@semio-tech/raster-core"),
-		import("@semio-tech/note-core"),
-		import("@semio-tech/gis-2d-core"),
-		import("@semio-tech/procedural-2d-core"),
-		import("@semio-tech/shooting-core"),
-		import("@semio-tech/layout-core"),
-		import("@semio-tech/framework-presentation-core"),
-		import("@semio-tech/cad-js-renderer-core"),
-		import("@semio-tech/lowpoly-core"),
-		import("@semio-tech/procedural-3d-core"),
-		import("@semio-tech/puzzle-2d-core"),
-		import("@semio-tech/puzzle-3d-core"),
-	]);
-	draw.registerDrawMediaExportHandlers();
-	raster.registerRasterMediaExportHandlers();
-	note.registerNoteMediaExportHandlers();
-	gis.registerGisMediaExportHandlers();
-	procedural2d.registerProcedural2dMediaExportHandlers();
-	shooting.registerShootingMediaExportHandlers();
-	layout.registerLayoutMediaExportHandlers();
-	presentation.registerPresentationMediaExportHandlers();
-	cad.registerCadMediaExportHandlers();
-	lowpoly.registerLowpolyMediaExportHandlers();
-	procedural3d.registerProcedural3dMediaExportHandlers();
-	puzzle2d.registerPuzzle2dMediaExportHandlers();
-	puzzle3d.registerPuzzle3dMediaExportHandlers();
-	registerGlbObjResourceHandlers(
-		"5d.puzzle",
-		"puzzle5d",
-		async (doc) => {
-			const [{ project3d }, { exportPuzzle3dFixtureObj }] = await Promise.all([
-				import("@semio-tech/puzzle-5d-react"),
-				import("@semio-tech/puzzle-3d-core"),
-			]);
-			return exportPuzzle3dFixtureObj(project3d(doc as Parameters<typeof project3d>[0]));
-		},
-		async (doc) => {
-			const [{ project3d }, { exportPuzzle3dFixtureGlb }] = await Promise.all([
-				import("@semio-tech/puzzle-5d-react"),
-				import("@semio-tech/puzzle-3d-core"),
-			]);
-			return exportPuzzle3dFixtureGlb(project3d(doc as Parameters<typeof project3d>[0]));
-		},
-	);
+/** @emoji 💾 Registers generic 3d.mesh media export handlers. */
+export function registerGenericMeshMediaExportHandlers(): void {
 	registerSvgPngResourceHandlers("3d.mesh", "mesh", (doc) => {
 		const mesh = doc as { readonly url?: string };
 		return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><text x="8" y="24">${mesh.url ?? "mesh"}</text></svg>`;
@@ -336,7 +244,6 @@ function sBaselineResource(
 export const COMPOSE_SKETCHPAD_PROGRAM_ID = "compose.sketchpad" as const;
 
 const SKETCHPAD_APP_RESOURCE: Readonly<Record<string, SAppResourceSpec>> = {
-	home: { inputs: [], outputs: [osOutPort("kit.compose")], sourceFormat: "compose.kit", componentKind: "virtualFileSystem", modes: [{ id: "explore", label: "Explore" }] },
 	kit: { inputs: [], outputs: [osOutPort("kit.compose")], sourceFormat: "compose.kit", componentKind: "virtualFileSystem", modes: [{ id: "explore", label: "Explore" }] },
 	design: { inputs: [], outputs: [osOutPort("5d.puzzle")], sourceFormat: "compose.design", componentKind: "puzzle5d", modes: [{ id: "edit", label: "Edit" }] },
 	type: { inputs: [], outputs: [osOutPort("3d.puzzle")], sourceFormat: "compose.type", componentKind: "puzzle3d", modes: [{ id: "edit", label: "Edit" }] },
@@ -345,100 +252,7 @@ const SKETCHPAD_APP_RESOURCE: Readonly<Record<string, SAppResourceSpec>> = {
 };
 
 export const TECHNOLOGY_APP_RESOURCE_BY_PROGRAM: Readonly<Record<string, Readonly<Record<string, SAppResourceSpec>>>> = {
-	draw: { draw: sBaselineResource("2d.drawing", "draw.document", "draw") },
-	note: { note: sBaselineResource("2d.note", "note.document", "note") },
-	writer: { writer: sBaselineResource("text.document", "writer.document", "writer") },
-	raster: {
-		raster: {
-			...sBaselineResource("2d.raster", "raster.document", "raster"),
-			parameterFields: [
-				sParameterField("/brushSize", "Brush size", "numeric"),
-				sParameterField("/brushOpacity", "Brush opacity", "numeric"),
-			],
-		},
-	},
-	flow: {
-		flow: {
-			...sBaselineResource("computation.flow", "flow.document", "flow"),
-			parameterFields: [sParameterField("/camera/zoom", "Camera zoom", "numeric")],
-		},
-	},
-	"puzzle.2d": { puzzle2d: sBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d") },
-	"puzzle.3d": { puzzle3d: sBaselineResource("3d.puzzle", "puzzle.3d", "puzzle3d") },
-	"puzzle.5d": {
-		puzzle5d: {
-			inputs: [osInPort("catalogue.kinds", "catalogue", "Catalogue")],
-			outputs: [osOutPort("2d.puzzle", "graph2d", "2D Graph"), osOutPort("3d.mesh", "mesh3d", "3D Mesh")],
-			sourceFormat: "puzzle.5d",
-			componentKind: "puzzle5d",
-			modes: [{ id: "edit", label: "Edit" }],
-		},
-	},
-	trinity: {
-		"trinity-jack": sBaselineResource("graph.trinity", "trinity.graph", "trinity", [{ id: "query", label: "Query" }]),
-	},
-	"trinity.rewrite": {
-		"trinity-rewrite": sBaselineResource("graph.trinity", "trinity.graph", "trinityRewrite", [{ id: "edit", label: "Edit" }]),
-	},
-	forms: { forms: sBaselineResource("form.dictionary", "forms.form", "forms") },
-	shooting: {
-		shooting: {
-			inputs: [osInPort("3d.mesh", "mesh", "Mesh")],
-			outputs: [osOutPort("2d.shooting")],
-			sourceFormat: "shooting.scene",
-			componentKind: "shooting",
-			modes: [{ id: "edit", label: "Edit" }],
-			parameterFields: [sParameterField("/camera/zoom", "Camera zoom", "numeric")],
-		},
-	},
-	"gis.map": {
-		map: {
-			...sBaselineResource("2d.map", "gis.map", "gismap"),
-			parameterFields: [sParameterField("/view/zoom", "Map zoom", "numeric")],
-		},
-	},
-	cad: { cad: sBaselineResource("3d.cad", "cad.scene", "cad") },
-	dag: { dag: sBaselineResource("graph.dag", "flow.dag", "dag") },
-	"procedural.2d": { procedural2d: sBaselineResource("2d.procedural", "procedural.2d", "puzzle2d") },
-	"procedural.3d": { procedural3d: sBaselineResource("3d.procedural", "procedural.3d", "puzzle3d") },
-	"reasoning.wires": { wires: sBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d") },
-	"reasoning.mindmap": { mindmap: sBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d", [{ id: "explore", label: "Explore" }]) },
-	presentation: { presentation: sBaselineResource("presentation.deck", "presentation.deck", "panel", [{ id: "edit", label: "Edit" }]) },
-	"presentation.deck": { "presentation.deck": sBaselineResource("presentation.deck", "presentation.deck", "panel", [{ id: "edit", label: "Edit" }]) },
 	[COMPOSE_SKETCHPAD_PROGRAM_ID]: SKETCHPAD_APP_RESOURCE,
-	lowpoly: {
-		lowpoly: {
-			...sBaselineResource("3d.lowpoly", "lowpoly.fixture", "lowpoly"),
-			parameterFields: [sParameterField("/paint/opacity", "Paint opacity", "numeric")],
-		},
-	},
-	sequence: {
-		sequence: {
-			...sBaselineResource("computation.sequence", "sequence.fixture", "sequence"),
-			parameterFields: [sParameterField("/camera/zoom", "Camera zoom", "numeric")],
-		},
-	},
-	layout: {
-		layout: {
-			...sBaselineResource("2d.layout", "layout.fixture", "layout"),
-			parameterFields: [
-				sParameterField("/pages/0/width", "Page width", "numeric"),
-				sParameterField("/pages/0/height", "Page height", "numeric"),
-			],
-		},
-	},
-	imperative: {
-		imperative: {
-			...sBaselineResource("computation.imperative", "imperative.document", "imperative"),
-			parameterFields: [sParameterField("/camera/zoom", "Camera zoom", "numeric")],
-		},
-	},
-	vcs: {
-		vcs: {
-			...sBaselineResource("vcs.document", "vcs.demo", "vcs", [{ id: "explore", label: "Explore" }]),
-			parameterFields: [sParameterField("/counter", "Counter", "numeric")],
-		},
-	},
 };
 
 const S_SYSTEM_PROGRAM: SProgramDefinition = {
@@ -446,6 +260,16 @@ const S_SYSTEM_PROGRAM: SProgramDefinition = {
 	name: "S System",
 	apiVersion: "1",
 	apps: [
+		{
+			id: "home",
+			label: "Home",
+			inputs: [],
+			outputs: [],
+			sourceFormat: "os.storage",
+			componentKind: "virtualFileSystem",
+			modes: [{ id: "explore", label: "Explore" }],
+			defaultModeId: "explore",
+		},
 		{
 			id: "studio",
 			label: "Studio",
@@ -580,28 +404,12 @@ if (import.meta.vitest) {
 
 	beforeAll(async () => {
 		seedSProgramRegistryFromResourceMap();
-		const [
-			{ createDrawAppVcsHandler },
-			{ createNoteAppVcsHandler },
-			{ createWriterAppVcsHandler },
-			{ createRasterAppVcsHandler },
-			{ createFormsAppVcsHandler },
-			{ createPresentationAppVcsHandler },
-		] = await Promise.all([
-			import("@semio-tech/draw-core"),
-			import("@semio-tech/note-core"),
-			import("@semio-tech/writer-core"),
-			import("@semio-tech/raster-core"),
-			import("@semio-tech/forms-core"),
-			import("@semio-tech/framework-presentation-core"),
-		]);
-		registerAppVcsHandler(createDrawAppVcsHandler());
-		registerAppVcsHandler(createNoteAppVcsHandler());
-		registerAppVcsHandler(createWriterAppVcsHandler());
-		registerAppVcsHandler(createRasterAppVcsHandler());
-		registerAppVcsHandler(createFormsAppVcsHandler());
-		registerAppVcsHandler(createPresentationAppVcsHandler());
-		await registerAllMediaExportHandlers();
+		const { loadAllOsProgramContributions } = await import("@semio-tech/framework-playground-core/app-registry");
+		const contributions = await loadAllOsProgramContributions();
+		for (const contribution of contributions) {
+			await contribution.register();
+		}
+		registerGenericMeshMediaExportHandlers();
 	});
 
 	describe("s studio", () => {

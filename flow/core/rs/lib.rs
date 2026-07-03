@@ -2217,9 +2217,9 @@ impl FlowHost {
     pub fn reorganize(&mut self, opts_json: &str) -> Result<(), String> {
         self.begin_change();
         let opts: DagLayoutOptions = if opts_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(opts_json).map_err(|e| e.to_string())? };
-        let theme = self.dag.vello_theme;
+        let theme = self.dag.canvas_theme;
         self.dag = DagHost::from_fixture_without_layout(self.build_dag_fixture_v1());
-        self.dag.vello_theme = theme;
+        self.dag.canvas_theme = theme;
         self.dag.reorganize(&opts)?;
         self.sync_from_dag();
         Ok(())
@@ -2494,12 +2494,12 @@ impl FlowHost {
 
     fn rebuild_dag(&mut self) {
         let fixture = self.build_dag_fixture_v1();
-        let theme = self.dag.vello_theme;
+        let theme = self.dag.canvas_theme;
         let automatic_lod = self.dag.automatic_lod();
         let forced_draw_lod = self.dag.forced_draw_lod_label().map(str::to_string);
         let ghost = self.ghost_node.clone();
         self.dag = DagHost::from_fixture_without_layout(fixture);
-        self.dag.vello_theme = theme;
+        self.dag.canvas_theme = theme;
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.set_automatic_lod(automatic_lod);
         if let Some(label) = forced_draw_lod {
@@ -2679,9 +2679,9 @@ impl FlowHost {
         DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
     }
 
-    fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::vello::kurbo::Point {
+    fn screen_to_world_point(&self, sx: f64, sy: f64) -> cavas::Point {
         use cavas::camera::{screen_to_world, Camera, Viewport};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let cam = Camera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
         let viewport = Viewport { width: self.viewport_w, height: self.viewport_h, dpr: self.viewport_dpr };
         screen_to_world(&cam, &viewport, Point::new(sx, sy))
@@ -2877,11 +2877,11 @@ impl FlowHost {
             .unwrap_or_else(|| "—".into())
     }
 
-    pub fn set_vello_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.dag.set_vello_theme_from_json(json)
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+        self.dag.set_canvas_theme_from_json(json)
     }
 
-    pub fn paint_scene(&self, scene: &mut cavas::vello::Scene, width: u32, height: u32, dpr: f64) {
+    pub fn paint_scene(&self, scene: &mut cavas::Scene, width: u32, height: u32, dpr: f64) {
         self.dag.paint_scene(scene, width, height, dpr);
     }
 
@@ -3295,8 +3295,8 @@ impl FlowSessionInner {
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         self.host.sync_dag_ghost();
-        let mut scene = cavas::vello::Scene::new();
-        let clear = self.host.dag.vello_theme.raster_clear;
+        let mut scene = cavas::Scene::new();
+        let clear = self.host.dag.canvas_theme.raster_clear;
         self.host.paint_scene(&mut scene, self.width, self.height, self.dpr);
         let scene = cavas::render::scale_scene_for_device_pixel_ratio(scene, self.dpr);
         self.gpu.render_frame(&scene, clear)
@@ -3743,9 +3743,9 @@ impl FlowSession {
         inner.set_logical_size_and_maybe_resize_surface(lw, lh, dpr, pw, ph);
     }
 
-    #[wasm_bindgen(js_name = setVelloThemeJson)]
-    pub fn set_vello_theme_json(&mut self, json: &str) {
-        let _ = self.state.borrow_mut().host.set_vello_theme_from_json(json);
+    #[wasm_bindgen(js_name = setCanvasThemeJson)]
+    pub fn set_canvas_theme_json(&mut self, json: &str) {
+        let _ = self.state.borrow_mut().host.set_canvas_theme_from_json(json);
     }
 
     #[wasm_bindgen(js_name = reorganize)]
@@ -4051,7 +4051,7 @@ mod flow_vcs_tests {
 mod tests {
     use super::*;
     use cavas::camera::{world_to_screen, Camera, Viewport};
-    use cavas::vello::kurbo::Point;
+    use cavas::Point;
     use dag::HandleRole;
     use neural::{ChannelSpec as InputSpec, OperatorInfo as NeuronKindInfo, Registry};
     use std::sync::{Mutex, OnceLock};
@@ -4489,12 +4489,12 @@ mod tests {
     }
 
     #[test]
-    fn rebuild_dag_preserves_vello_theme() {
-        use cavas::vello::peniko::Color;
+    fn rebuild_dag_preserves_canvas_theme() {
+        use cavas::Color;
         let mut host = FlowHost::default();
-        host.dag.vello_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
+        host.dag.canvas_theme.node_fill = Color::from_rgba8(12, 34, 56, 255);
         host.rebuild_dag();
-        assert_eq!(host.dag.vello_theme.node_fill.to_rgba8(), Color::from_rgba8(12, 34, 56, 255).to_rgba8());
+        assert_eq!(host.dag.canvas_theme.node_fill.to_rgba8(), Color::from_rgba8(12, 34, 56, 255).to_rgba8());
     }
 
     #[test]
@@ -4906,7 +4906,7 @@ mod tests {
             assert_eq!(ghost_row["layout"], placed_row["layout"]);
             assert_eq!(ghost_row["align"], placed_row["align"]);
         }
-        let mut scene = cavas::vello::Scene::new();
+        let mut scene = cavas::Scene::new();
         host.paint_scene(&mut scene, 1280, 800, 1.0);
     }
 
@@ -4944,7 +4944,7 @@ mod tests {
         let mut host = host_with_test_bridge();
         host.set_viewport(800, 600, 1.0);
         host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"math.add"}"#, 10.0, 20.0).unwrap();
-        let mut scene = cavas::vello::Scene::new();
+        let mut scene = cavas::Scene::new();
         host.paint_scene(&mut scene, 800, 600, 1.0);
     }
 
@@ -5039,7 +5039,7 @@ mod tests {
     #[test]
     fn node_drag_proximity_skips_wired_cut_inputs_in_flow() {
         use cavas::camera::{world_to_screen, Camera, Viewport};
-        use cavas::vello::kurbo::Point;
+        use cavas::Point;
         let mut host = FlowHost::default();
         host.set_viewport(1280, 800, 1.0);
         host.fixture.widgets = vec![

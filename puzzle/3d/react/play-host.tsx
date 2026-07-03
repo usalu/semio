@@ -1,19 +1,19 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Puzzle3d — loaded only via `./play` subpath. */
+/** @emoji 🛝 Puzzle 3D app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, useApp, registerUiPuzzle3dSurfaceHost, registerUiWriterSurfaceHost, registerTabIcon, engagementSpecControlMirror, enforcePuzzle3dPlayWindowEngagement, puzzle3dPlayEngagementMirror, CommandBus, useControllerStore, useShellWindowInstance, registerWindowBody, enforcePlaygroundWindowEngagementInput, playgroundResolvedExampleId } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { useApp, engagementSpecControlMirror, enforcePuzzle3dPlayWindowEngagement, puzzle3dPlayEngagementMirror, CommandBus, useControllerStore, useShellWindowInstance, enforcePlaygroundWindowEngagementInput, playgroundResolvedExampleId, controllerBackedExampleContribution } from "@semio-tech/framework-playground-renderer-react";
 import { reactHostPort, engagementCommandTokenEquals, normalizeEngagementCommandText } from "@semio-tech/ui-react";
 import { type WindowEngagement, type WindowEngagementControl, UiPuzzle3dHostSurfaceNode } from "@semio-tech/framework-playground-core";
 import * as React from "react";
 // #region 🔌Adapters
 import {
     PUZZLE_3D_FILL_COUNT_MAX,
-    PUZZLE_3D_PLAY_APP_ID,
-    PUZZLE_3D_PLAY_BODY_KEY_JACK,
     PUZZLE_3D_PLAY_CONTROLLER_ID,
     PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID,
+    PUZZLE_3D_PLAY_EXAMPLE_OPTIONS,
     PUZZLE_3D_PLAY_ICON_HIERARCHY,
     PUZZLE_3D_PLAY_ICON_INSPECTOR,
     PUZZLE_3D_PLAY_ICON_KINDS,
@@ -23,7 +23,6 @@ import {
     PUZZLE_3D_PLAY_STORE_ID,
     PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID,
     PUZZLE_3D_PLAY_SURFACE_ID_JACK,
-    PUZZLE_3D_PLAY_WINDOW_KIND_JACK,
     Puzzle3dPlayShellController,
     clearPuzzle3dFillSession,
     getPuzzle3dFillSessionReadyEpoch,
@@ -41,13 +40,42 @@ import {
     subscribePuzzle3dFillSessionReady,
     subscribePuzzle3dFillTargetVolumesInvalidated,
     type Puzzle3dPlayHostBridge,
-    type Puzzle3dPlaySnapshot
+    type Puzzle3dPlaySnapshot,
+    puzzle3dPlayWindowBodies,
+    puzzle3dPlaySidePanelBodies,
 } from "@semio-tech/puzzle-3d-core";
 
-import { buildWriterWindowBody } from "@semio-tech/framework-platform-core";
 import { createWriterDocument } from "@semio-tech/writer-core";
 import { WriterCanvas } from "@semio-tech/writer-react";
 import { sceneHostPort } from "@semio-tech/ui-react";
+import {
+  ORBIT_CAMERA_VIEW_COMMAND,
+  PlayCanvas,
+  ObjectStateProvider,
+  applyConnectToFixture,
+  applyPaletteObjectDropToFixture,
+  blockedVortexFullIdsFromAttractions,
+  brushMeshUrlsForFillSession,
+  buildPuzzle3dPlayEngagement,
+  computeOrbitCameraViewState,
+  getPuzzle3dBrushEngagementEpoch,
+  isLoadableMeshUrl,
+  orbitCameraDistance,
+  orbitCameraProjectionForView,
+  parseFixture,
+  puzzle3dBrushEngagementSourceRef,
+  requestPuzzle3dZoomToSelection,
+  resolveOrbitCameraViewFromTemplateId,
+  resolvePuzzle3dFixtureDrop,
+  subscribePuzzle3dBrushEngagementSource,
+  PUZZLE_3D_ENGAGEMENT_ZOOM_ID,
+  type CameraState,
+  type EngagementSpec,
+  type Fixture,
+  type Puzzle3dHoverPayload,
+  type RelocatePayload,
+  puzzle3dFixturePaletteTreeDragController,
+} from "./index.tsx";
 // #endregion 🔌Adapters
 
 function usePuzzle3dPlayController(): Puzzle3dPlayShellController | undefined {
@@ -733,47 +761,34 @@ function Puzzle3dPlayJackSurfaceHost({ node: _node }: { readonly node: import("@
   );
 }
 
-let puzzle3dPlayChromeRegistered = false;
-
-/** @emoji 🧊 Registers puzzle 3D play surface host, tab icons, and mesh preload. */
-export function registerPuzzle3dPlaySurfaceHosts(): void {
-  if (puzzle3dPlayChromeRegistered) return;
-  puzzle3dPlayChromeRegistered = true;
-  registerUiPuzzle3dSurfaceHost(PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID, Puzzle3dPlayViewportHost);
-  registerUiWriterSurfaceHost(PUZZLE_3D_PLAY_SURFACE_ID_JACK, Puzzle3dPlayJackSurfaceHost);
-  registerWindowBody(PUZZLE_3D_PLAY_BODY_KEY_JACK, () =>
-    buildWriterWindowBody(PUZZLE_3D_PLAY_SURFACE_ID_JACK, PUZZLE_3D_PLAY_CONTROLLER_ID, PUZZLE_3D_PLAY_WINDOW_KIND_JACK));
-  registerTabIcon(PUZZLE_3D_PLAY_ICON_INSPECTOR, "clipboard-list");
-  registerTabIcon(PUZZLE_3D_PLAY_ICON_KINDS, "tags");
-  registerTabIcon(PUZZLE_3D_PLAY_ICON_HIERARCHY, "list-tree");
-  registerTabIcon(PUZZLE_3D_PLAY_ICON_SETTINGS, "settings");
+/** @emoji 🧊 Preloads GLTF meshes for the default puzzle 3D play fixture. */
+async function preloadPuzzle3dPlayMeshes(): Promise<void> {
   const fixture = parseFixture(puzzle3dPlayFixtureJson(playgroundResolvedExampleId(PUZZLE_3D_PLAY_EXAMPLE_CONCRETE_FOREST_ID)) as unknown);
-  if (fixture) {
-    const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
-    const compatibility = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
-    for (const url of brushMeshUrlsForFillSession(fixture, catalogs, compatibility)) {
-      if (isLoadableMeshUrl(url)) {
-        sceneHostPort.drei.useGLTF.preload(url);
-      }
+  if (!fixture) return;
+  const catalogs = parseKindCatalogs(fixture.meta as Record<string, unknown> | undefined);
+  const compatibility = parseKindCompatibility(fixture.meta as Record<string, unknown> | undefined);
+  for (const url of brushMeshUrlsForFillSession(fixture, catalogs, compatibility)) {
+    if (isLoadableMeshUrl(url)) {
+      sceneHostPort.drei.useGLTF.preload(url);
     }
   }
 }
 
-/** @emoji 🚀 Mounts puzzle 3d play via standard {@link PlaygroundView} (bodies registered in {@link Playground3d}). */
-export function mountPuzzle3dPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(
-    <PlaygroundView runtime={playground.runtime} defaultAppId={PUZZLE_3D_PLAY_APP_ID} playgroundKeybindings={playground.keybindings} />,
-    rootId,
-  );
-}
-
-const puzzle3dPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerPuzzle3dPlaySurfaceHosts,
-  mount: mountPuzzle3dPlayChrome,
+/** @emoji 🛝 Puzzle 3D app renderer for playground and OS shells. */
+export const puzzle3dAppRenderer: AppRendererContribution = {
+  windowBodies: puzzle3dPlayWindowBodies,
+  sidePanelBodies: puzzle3dPlaySidePanelBodies,
+  surfaceHosts: {
+    [PUZZLE_3D_PLAY_VIEWPORT_SURFACE_ID]: Puzzle3dPlayViewportHost,
+    [PUZZLE_3D_PLAY_SURFACE_ID_JACK]: Puzzle3dPlayJackSurfaceHost,
+  },
+  tabIcons: {
+    [PUZZLE_3D_PLAY_ICON_INSPECTOR]: "clipboard-list",
+    [PUZZLE_3D_PLAY_ICON_KINDS]: "tags",
+    [PUZZLE_3D_PLAY_ICON_HIERARCHY]: "list-tree",
+    [PUZZLE_3D_PLAY_ICON_SETTINGS]: "settings",
+  },
+  preload: preloadPuzzle3dPlayMeshes,
+  examples: controllerBackedExampleContribution(PUZZLE_3D_PLAY_CONTROLLER_ID, PUZZLE_3D_PLAY_EXAMPLE_OPTIONS),
+  treeDragController: puzzle3dFixturePaletteTreeDragController,
 };
-
-/** @emoji 🛝 Puzzle 3D play entry: register hosts, bodies, mount chrome (from `puzzle/3d/play/index.ts`). */
-export function bootPuzzle3dPlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, puzzle3dPlayChromeBoot, rootId);
-}
-//#endregion 🔖Puzzle3dPlayHost

@@ -1,21 +1,21 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Imperative — loaded only via `./play` subpath. */
+/** @emoji 🛝 Imperative app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, registerUiImperativeSurfaceHost, Platform } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { PlaygroundContext, Platform } from "@semio-tech/framework-playground-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import {
   IMPERATIVE_PLAY_APP_ID,
   IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON,
   IMPERATIVE_PLAY_SURFACE_ID,
   ImperativePlayController,
-  registerImperativePlayDeclarativeBodies,
+  imperativePlayWindowBodies,
 } from "@semio-tech/imperative-core";
+import { ImperativeEditor } from "./index.tsx";
 
 import type { UiImperativeHostSurfaceNode } from "@semio-tech/framework-platform-core";
-
-let imperativePlayChromeRegistered = false;
 const imperativePlayControllerRef: { current: ImperativePlayController | null } = { current: null };
 
 function useImperativePlayController(runtimeOverride?: Platform): ImperativePlayController | undefined {
@@ -48,32 +48,11 @@ function ImperativePlayPaneSurfaceHost(_props: { readonly node: UiImperativeHost
   );
 }
 
-export function registerImperativePlaySurfaceHosts(): void {
-  if (imperativePlayChromeRegistered) return;
-  imperativePlayChromeRegistered = true;
-  registerUiImperativeSurfaceHost(IMPERATIVE_PLAY_SURFACE_ID, ImperativePlayPaneSurfaceHost);
-  registerImperativePlayDeclarativeBodies();
-}
-
-function ImperativePlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  useImperativePlayController(runtime);
-  return <PlaygroundView runtime={runtime} defaultAppId={IMPERATIVE_PLAY_APP_ID} />;
-}
-
-function ImperativePlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <ImperativePlayInner runtime={runtime} />;
-}
-
-export function mountImperativePlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<ImperativePlayChrome runtime={playground.runtime} />, rootId);
-}
-
-const imperativePlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerImperativePlaySurfaceHosts,
-  mount: mountImperativePlayChrome,
+/** @emoji 🛝 Imperative app renderer for playground and OS shells. */
+export const imperativeAppRenderer: AppRendererContribution = {
+  windowBodies: imperativePlayWindowBodies,
+  surfaceHosts: {
+    [IMPERATIVE_PLAY_SURFACE_ID]: ImperativePlayPaneSurfaceHost,
+  },
 };
-
-export function bootImperativePlay(playground: Playground, rootId = "root"): void {
-  bootPlayground(playground, imperativePlayChromeBoot, rootId);
-}
 //#endregion 🔖ImperativePlayHost

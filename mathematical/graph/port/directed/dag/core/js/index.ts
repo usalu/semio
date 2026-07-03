@@ -757,9 +757,13 @@ function buildDagPlayJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
   return buildWriterWindowBody(DAG_PLAY_SURFACE_ID_JACK, DAG_PLAY_CONTROLLER_ID, DAG_PLAY_WINDOW_KIND_JACK);
 }
 
+export const dagPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+  [DAG_PLAY_BODY_KEY_MAIN]: buildDagPlayMainDeclarativeBody,
+  [DAG_PLAY_BODY_KEY_JACK]: buildDagPlayJackDeclarativeBody,
+};
+
 export function registerDagPlayDeclarativeBodies(): void {
-  registerWindowBody(DAG_PLAY_BODY_KEY_MAIN, buildDagPlayMainDeclarativeBody);
-  registerWindowBody(DAG_PLAY_BODY_KEY_JACK, buildDagPlayJackDeclarativeBody);
+  for (const [key, build] of Object.entries(dagPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 export function buildDagPlayAppRuntime(controller: DagPlayController): AppRuntime {
@@ -789,13 +793,7 @@ export const dagPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildDagPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerDagPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootDagPlay } = await import("@semio-tech/dag-react/play");
-		bootDagPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/dag-react/play")).dagAppRenderer,
 });
 //#endregion 🔖Play
 
@@ -882,3 +880,33 @@ export function buildDagProgramDefinition(): PlatformDefinition {
 }
 //#endregion 🔖SExtension
 
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+const dagProgramContributionResources = {
+		"dag": osBaselineResource("graph.dag", "flow.dag", "dag"),
+	};
+
+/** @emoji 🧩 OS program contribution for dag. */
+export const dagProgramContribution: OsProgramContribution = {
+	programId: "dag",
+	register() {
+		mergeOsProgramDefinition("dag", buildDagProgramDefinition(), dagProgramContributionResources);
+		registerAppVcsHandler(createFlowDagAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+
+/** @emoji 🌳 S app VCS handler for DAG documents. */
+export function createFlowDagAppVcsHandler() {
+	type DagDoc = { readonly nodes: readonly unknown[]; readonly edges: readonly unknown[] };
+	type DagOp = { readonly op: "setNodes"; readonly nodes: readonly unknown[] } | { readonly op: "setEdges"; readonly edges: readonly unknown[] };
+	return createTypedAppVcsHandler<DagDoc, DagOp>("flow.dag", "flow.dag", () => ({ nodes: [], edges: [] }), (doc, op) => {
+		if (op.op === "setNodes") return { ...doc, nodes: op.nodes };
+		return { ...doc, edges: op.edges };
+	});
+}
+//#endregion 🔖DocumentVcs

@@ -3,8 +3,8 @@
 // #endregion 🧲Header
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
-import { CanvasPickMenu, ContextMenuController, canvasViewportClass, reactHostPort, isWindowContentDeadLineHost, readWindowContentDeadLinePx, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget, type ContextMenuItem } from "@semio-tech/ui-react";
+import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
+import { CanvasPickMenu, ContextMenuController, canvasViewportClass, reactHostPort, isWindowContentDeadLineHost, readWindowContentDeadLinePx, useCanvasPickInteraction, useCanvasThemeSync, type CanvasPickTarget, type ContextMenuItem } from "@semio-tech/ui-react";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
 import {
 	applyTextEdits,
@@ -255,10 +255,10 @@ export function WriterCanvas({
 	const documentRef = useRef(document);
 	const diagnosticsRef = useRef<readonly LspDiagnostic[]>([]);
 	const lastLocalTextRef = useRef(document.text);
-	const syncVelloTheme = useCallback(() => {
-		syncSessionVelloTheme(sessionRef.current);
+	const syncCanvasTheme = useCallback(() => {
+		syncSessionCanvasTheme(sessionRef.current);
 	}, []);
-	useVelloThemeSync(syncVelloTheme);
+	useCanvasThemeSync(syncCanvasTheme);
 	const [completions, setCompletions] = useState<readonly LspCompletionItem[]>([]);
 	const [completionIndex, setCompletionIndex] = useState(0);
 	const [completionsOpen, setCompletionsOpen] = useState(false);
@@ -465,7 +465,7 @@ export function WriterCanvas({
 		const session = sessionRef.current;
 		if (!session?.gpuReady()) return;
 		try {
-			syncSessionVelloTheme(session);
+			syncSessionCanvasTheme(session);
 			const blinkOn = Math.floor(performance.now() / 530) % 2 === 0;
 			session.setCaretVisible(blinkOn);
 			syncSemanticVisuals(session);

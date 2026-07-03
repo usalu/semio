@@ -10,7 +10,9 @@
     "./internal": "./js/internal.ts"
   },
   "dependencies": {
-    "@semio-tech/vcs-rs": "workspace:*"
+    "@semio-tech/vcs-rs": "workspace:*",
+    "@semio-tech/framework-os-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
@@ -23,7 +25,7 @@
   },
   "bundleKind": "library",
   "semio": {
-    "playgroundApp": {
+    "app": {
       "kind": "vcs",
       "aliases": [
         "vcs"
@@ -35,7 +37,9 @@
       "port": {
         "dev": 6075,
         "env": "VCS_PLAY_PORT"
-      }
+      },
+      "programExport": "vcsProgramContribution",
+      "programId": "vcs"
     }
   }
 }

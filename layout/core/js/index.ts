@@ -764,9 +764,13 @@ function buildLayoutPlayPreviewBody(_ctx: WindowBodyViewContext): UiNode {
 }
 
 /** @emoji 🧩 Registers layout play window bodies. */
+export const layoutPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+	[LAYOUT_PLAY_BODY_KEY_BLUEPRINT]: buildLayoutPlayBlueprintBody,
+	[LAYOUT_PLAY_BODY_KEY_PREVIEW]: buildLayoutPlayPreviewBody,
+};
+
 export function registerLayoutPlayDeclarativeBodies(): void {
-	registerWindowBody(LAYOUT_PLAY_BODY_KEY_BLUEPRINT, buildLayoutPlayBlueprintBody);
-	registerWindowBody(LAYOUT_PLAY_BODY_KEY_PREVIEW, buildLayoutPlayPreviewBody);
+	for (const [key, build] of Object.entries(layoutPlayWindowBodies)) registerWindowBody(key, build);
 }
 
 /** @emoji 🛝 Builds layout play {@link AppRuntime}. */
@@ -790,6 +794,26 @@ export function buildLayoutProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+import { createLayoutAppVcsHandler } from "./internal.ts";
+
+const layoutProgramContributionResources = {
+		"layout": { ...osBaselineResource("2d.layout", "layout.fixture", "layout"), parameterFields: [{ fieldPath: "/pages/0/width", label: "Page width", type: "numeric" }, { fieldPath: "/pages/0/height", label: "Page height", type: "numeric" }] },
+	};
+
+/** @emoji 🧩 OS program contribution for layout. */
+export const layoutProgramContribution: OsProgramContribution = {
+	programId: "layout",
+	register() {
+		mergeOsProgramDefinition("layout", buildLayoutProgramDefinition(), layoutProgramContributionResources);
+		registerLayoutMediaExportHandlers();
+		registerAppVcsHandler(createLayoutAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 //#region 🔖MediaExport
 let layoutExportWasmReady: Promise<void> | null = null;
@@ -916,12 +940,6 @@ export const layoutPlayAppDefinition = createPlaygroundApp({
 			runtime.addApp(buildLayoutPlayAppRuntime(ctrl));
 			return runtime;
 	},
-	registerBodies: () => {
-		registerLayoutPlayDeclarativeBodies();
-	},
-	bootRenderer: async (pg) => {
-		const { bootLayoutPlay } = await import("@semio-tech/layout-react/play");
-		await bootLayoutPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/layout-react/play")).layoutAppRenderer,
 });
 //#endregion 🔖Play

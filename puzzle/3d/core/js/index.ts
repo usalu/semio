@@ -4439,14 +4439,22 @@ export function buildPuzzle3dPlayKindsPanelBody(ctx: WindowBodyViewContext): UiT
   return buildPuzzle3dPlayKindsTree(catalogs, snap?.fixture ?? undefined);
 }
 
+export const puzzle3dPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
+  [PUZZLE_3D_PLAY_BODY_KEY]: buildPuzzle3dPlayDeclarativeBody,
+  [PUZZLE_3D_PLAY_BODY_KEY_JACK]: buildPuzzle3dPlayJackDeclarativeBody,
+};
+
+export const puzzle3dPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+  [PUZZLE_3D_PLAY_HIERARCHY_BODY_KEY]: buildPuzzle3dPlayHierarchyPanelBody,
+  [PUZZLE_3D_PLAY_KINDS_BODY_KEY]: buildPuzzle3dPlayKindsPanelBody,
+  [PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY]: buildPuzzle3dPlayInspectorBody,
+  [PUZZLE_3D_PLAY_SETTINGS_BODY_KEY]: buildPuzzle3dPlaySettingsBody,
+};
+
 /** @emoji 🧩 Registers puzzle 3D play window and panel bodies. */
 export function registerPuzzle3dPlayDeclarativeBodies(): void {
-  registerWindowBody(PUZZLE_3D_PLAY_BODY_KEY, buildPuzzle3dPlayDeclarativeBody);
-  registerWindowBody(PUZZLE_3D_PLAY_BODY_KEY_JACK, buildPuzzle3dPlayJackDeclarativeBody);
-  registerSidePanelBody(PUZZLE_3D_PLAY_HIERARCHY_BODY_KEY, buildPuzzle3dPlayHierarchyPanelBody);
-  registerSidePanelBody(PUZZLE_3D_PLAY_KINDS_BODY_KEY, buildPuzzle3dPlayKindsPanelBody);
-  registerSidePanelBody(PUZZLE_3D_PLAY_INSPECTOR_BODY_KEY, buildPuzzle3dPlayInspectorBody);
-  registerSidePanelBody(PUZZLE_3D_PLAY_SETTINGS_BODY_KEY, buildPuzzle3dPlaySettingsBody);
+  for (const [key, build] of Object.entries(puzzle3dPlayWindowBodies)) registerWindowBody(key, build);
+  for (const [key, build] of Object.entries(puzzle3dPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
 
@@ -4464,6 +4472,25 @@ export function buildPuzzle3dProgramDefinition(): PlatformDefinition {
 	};
 }
 //#endregion 🔖SExtension
+
+//#region 🔖OsProgram
+import { mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
+
+const puzzle3dProgramContributionResources = {
+		"puzzle3d": osBaselineResource("3d.puzzle", "puzzle.3d", "puzzle3d"),
+	};
+
+/** @emoji 🧩 OS program contribution for puzzle.3d. */
+export const puzzle3dProgramContribution: OsProgramContribution = {
+	programId: "puzzle.3d",
+	register() {
+		mergeOsProgramDefinition("puzzle.3d", buildPuzzle3dProgramDefinition(), puzzle3dProgramContributionResources);
+		registerPuzzle3dMediaExportHandlers();
+		registerAppVcsHandler(createPuzzle3dAppVcsHandler());
+	},
+};
+//#endregion 🔖OsProgram
 
 //#region 🔖MediaExport
 function puzzle3dObjectBoxMesh(origin: readonly [number, number, number], size = 1): MeshTransfer {
@@ -4566,11 +4593,7 @@ export const puzzle3dPlayAppDefinition = createPlaygroundApp({
 		},
 	},
 	createRuntime: () => buildPuzzle3dPlayRuntime(),
-	registerBodies: () => registerPuzzle3dPlayDeclarativeBodies(),
-	bootRenderer: async (pg) => {
-		const { bootPuzzle3dPlay } = await import("@semio-tech/puzzle-3d-react/play");
-		bootPuzzle3dPlay(pg);
-	},
+	loadRenderer: async () => (await import("@semio-tech/puzzle-3d-react/play")).puzzle3dAppRenderer,
 });
 //#endregion 🔖Play
 
@@ -6156,3 +6179,13 @@ if (import.meta.vitest) {
     });
   });
 }
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
+
+/** @emoji 🏙️ S app VCS handler for puzzle 3d documents. */
+export function createPuzzle3dAppVcsHandler() {
+	type Doc = { readonly revision: number };
+	type Op = { readonly op: "setRevision"; readonly revision: number };
+	return createTypedAppVcsHandler<Doc, Op>("puzzle.3d", "puzzle.3d", () => ({ revision: 0 }), (doc, op) => ({ revision: op.revision }));
+}
+//#endregion 🔖DocumentVcs

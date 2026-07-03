@@ -10,7 +10,9 @@
     "./boot": "./boot.tsx"
   },
   "dependencies": {
+    "@semio-tech/framework-os-core": "workspace:*",
     "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework-playground-core": "workspace:*",
     "@semio-tech/framework-platform-core": "workspace:*",
     "@semio-tech/framework-platform-renderer-react": "workspace:*",
     "@mdx-js/react": "^3.1.1",
@@ -55,5 +57,20 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "compose/client/lib/sketchpad/js"
   },
-  "bundleKind": "ui"
+  "bundleKind": "ui",
+  "semio": {
+    "app": {
+      "kind": "sketchpad",
+      "aliases": ["sketchpad", "compose"],
+      "packageRoot": "compose/client/lib/sketchpad",
+      "corePackage": "@semio-tech/compose-sketchpad",
+      "definitionExport": "sketchpadPlayAppDefinition",
+      "programExport": "sketchpadProgramContribution",
+      "programId": "compose.sketchpad",
+      "hostKind": "sketchpad",
+      "port": { "dev": 4000, "env": "COMPOSE_PLAY_PORT" },
+      "site": { "embedKind": "compose", "host": "play.semio-tech.com" },
+      "assets": ["sketchpad-mdx"]
+    }
+  }
 }

@@ -1,23 +1,24 @@
 // #region 🧲Header
-/** @emoji 🛝 Playground play host for Layout — loaded only via `./play` subpath. */
+/** @emoji 🛝 Layout app renderer contribution — loaded only via `./play` subpath. */
 // #endregion 🧲Header
 
 import type { ReactElement } from "react";
-import { type Playground, type PlaygroundChromeBoot, bootPlayground, mountPlaygroundApp, PlaygroundView, PlaygroundContext, PureSidePanelTabDefinition, CallbackTreePanelDefinition, registerUiLayoutSurfaceHost, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { PureSidePanelTabDefinition, CallbackTreePanelDefinition, PlaygroundContext, Platform, CommandBus, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, uiTreeNodeToTreePanelConfig } from "@semio-tech/framework-playground-renderer-react";
 import { shellTabIconComponent } from "@semio-tech/framework-platform-renderer-react";
 import { reactHostPort } from "@semio-tech/ui-react";
 import { CANVAS_HOVER_SOURCE_CANVAS, CANVAS_HOVER_SOURCE_CATALOG, CANVAS_HOVER_SOURCE_HIERARCHY } from "@semio-tech/framework-core";
 import { type SidePanelTabConfig } from "@semio-tech/framework-playground-core";
+import { LayoutCanvas, createLayoutPlayCatalogueTreeDragController, ensureLayoutWasm } from "./index.tsx";
 import {
-  LAYOUT_PLAY_APP_ID,
   LAYOUT_PLAY_CATALOGUE_TAB_ID,
-  LAYOUT_PLAY_CONTROLLER_ID,
   LAYOUT_PLAY_HIERARCHY_TAB_ID,
   LAYOUT_PLAY_INSPECTION_TAB_ID,
   LAYOUT_PLAY_PREFLIGHT_TAB_ID,
   LAYOUT_PLAY_SURFACE_BLUEPRINT,
   LAYOUT_PLAY_SURFACE_PREVIEW,
-  LAYOUT_PLAY_WINDOW_BLUEPRINT,
   LAYOUT_PLAY_WINDOW_PREVIEW,
   LayoutPlayController,
   buildLayoutPlayCatalogueTree,
@@ -25,13 +26,11 @@ import {
   buildLayoutPlayInspectorTree,
   buildLayoutPlayPreflightTree,
   findPage,
-  registerLayoutPlayDeclarativeBodies,
   type LayoutHoverPayload,
+  layoutPlayWindowBodies,
 } from "@semio-tech/layout-core";
-
 import { DEFAULT_LAYOUT_DOCUMENT_JSON } from "@semio-tech/layout-core";
 
-let layoutPlayChromeRegistered = false;
 const layoutPlayControllerRef: { current: LayoutPlayController | null } = { current: null };
 
 function useLayoutPlayController(runtimeOverride?: Platform): LayoutPlayController | undefined {
@@ -45,23 +44,6 @@ function useLayoutPlayController(runtimeOverride?: Platform): LayoutPlayControll
   const ctrl = runtime?.getActiveApp()?.controller as LayoutPlayController | undefined;
   layoutPlayControllerRef.current = ctrl ?? null;
   return ctrl;
-}
-
-function useLayoutPlayInteractionRevision(runtime: Platform): number {
-  return reactHostPort.useSyncExternalStore(
-    (listener) => {
-      const ctrl = runtime.getActiveApp()?.controller as LayoutPlayController | undefined;
-      layoutPlayControllerRef.current = ctrl ?? null;
-      const unsubscribeRuntime = runtime.subscribe(listener);
-      const unsubscribeSnapshot = ctrl?.subscribeSnapshot(listener);
-      return () => {
-        unsubscribeRuntime();
-        unsubscribeSnapshot?.();
-      };
-    },
-    () => (runtime.getActiveApp()?.controller as LayoutPlayController | undefined)?.getInteractionRevision() ?? 0,
-    () => 0,
-  );
 }
 
 function LayoutPlayPaneSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiLayoutHostSurfaceNode }): ReactElement {
@@ -108,14 +90,6 @@ function LayoutPlayPaneSurfaceHost({ node }: { readonly node: import("@semio-tec
   );
 }
 
-export function registerLayoutPlaySurfaceHosts(): void {
-  if (layoutPlayChromeRegistered) return;
-  layoutPlayChromeRegistered = true;
-  registerUiLayoutSurfaceHost(LAYOUT_PLAY_SURFACE_BLUEPRINT, LayoutPlayPaneSurfaceHost);
-  registerUiLayoutSurfaceHost(LAYOUT_PLAY_SURFACE_PREVIEW, LayoutPlayPaneSurfaceHost);
-  registerLayoutPlayDeclarativeBodies();
-}
-
 class LayoutPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
   buildTab(): SidePanelTabConfig {
     return {
@@ -134,16 +108,11 @@ class LayoutPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
             ctrl?.getHoveredId() ?? null,
             hoverSink,
           );
-          const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
-          return config;
+          return uiTreeNodeToTreePanelConfig(treeNode, bus);
         },
         () => {
           const ctrl = layoutPlayControllerRef.current;
-          const treeNode = buildLayoutPlayHierarchyTree(
-            ctrl?.getDocumentJson() ?? DEFAULT_LAYOUT_DOCUMENT_JSON,
-            [],
-            ctrl?.getHoveredId() ?? null,
-          );
+          const treeNode = buildLayoutPlayHierarchyTree(ctrl?.getDocumentJson() ?? DEFAULT_LAYOUT_DOCUMENT_JSON, [], ctrl?.getHoveredId() ?? null);
           return [...(treeNode.type === "tree" ? (treeNode.highlightedIds ?? []) : [])];
         },
       ),
@@ -163,11 +132,7 @@ class LayoutPlayCataloguePanelDefinition extends PureSidePanelTabDefinition {
         const bus = new CommandBus();
         const hoverSink = (payload: LayoutHoverPayload) => ctrl?.run("setHover", { id: payload.id, sourceId: CANVAS_HOVER_SOURCE_CATALOG });
         const treeNode = buildLayoutPlayCatalogueTree(hoverSink);
-        const config = uiTreeNodeToTreePanelConfig(treeNode, bus);
-        return {
-          ...config,
-          dragAndDropController: createLayoutPlayCatalogueTreeDragController(),
-        };
+        return { ...uiTreeNodeToTreePanelConfig(treeNode, bus), dragAndDropController: createLayoutPlayCatalogueTreeDragController() };
       }),
     };
   }
@@ -183,8 +148,7 @@ class LayoutPlayPreflightPanelDefinition extends PureSidePanelTabDefinition {
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = layoutPlayControllerRef.current;
         const bus = new CommandBus();
-        const treeNode = buildLayoutPlayPreflightTree(ctrl?.getDocumentJson() ?? DEFAULT_LAYOUT_DOCUMENT_JSON);
-        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+        return uiTreeNodeToTreePanelConfig(buildLayoutPlayPreflightTree(ctrl?.getDocumentJson() ?? DEFAULT_LAYOUT_DOCUMENT_JSON), bus);
       }),
     };
   }
@@ -200,45 +164,46 @@ class LayoutPlayInspectionPanelDefinition extends PureSidePanelTabDefinition {
       tree: new CallbackTreePanelDefinition(() => {
         const ctrl = layoutPlayControllerRef.current;
         const bus = new CommandBus();
-        const treeNode = buildLayoutPlayInspectorTree(ctrl?.getDocumentJson() ?? DEFAULT_LAYOUT_DOCUMENT_JSON, ctrl?.getSelectedIds() ?? []);
-        return uiTreeNodeToTreePanelConfig(treeNode, bus);
+        return uiTreeNodeToTreePanelConfig(buildLayoutPlayInspectorTree(ctrl?.getDocumentJson() ?? DEFAULT_LAYOUT_DOCUMENT_JSON, ctrl?.getSelectedIds() ?? []), bus);
       }),
     };
   }
 }
 
-const layoutPlayHierarchyPanel = new LayoutPlayHierarchyPanelDefinition();
-const layoutPlayCataloguePanel = new LayoutPlayCataloguePanelDefinition();
-const layoutPlayPreflightPanel = new LayoutPlayPreflightPanelDefinition();
-const layoutPlayInspectionPanel = new LayoutPlayInspectionPanelDefinition();
-
-function LayoutPlayInner({ runtime }: { readonly runtime: Platform }): ReactElement {
-  const interactionRevision = useLayoutPlayInteractionRevision(runtime);
-  const augmentPanelTabs = reactHostPort.useMemo(
-    () => ({
-      workbench: [layoutPlayHierarchyPanel, layoutPlayCataloguePanel, layoutPlayPreflightPanel],
-      details: [layoutPlayInspectionPanel],
-    }),
-    [interactionRevision],
+function LayoutOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bundle = useOsInstanceMaterialization(instance);
+  const materialized = bundle.projection;
+  const documentJson = reactHostPort.useMemo(() => {
+    if (materialized && typeof materialized === "object") return JSON.stringify(materialized);
+    return instance.sourceDocument.inline || DEFAULT_LAYOUT_DOCUMENT_JSON;
+  }, [instance.sourceDocument.inline, materialized]);
+  const pageId = reactHostPort.useMemo(() => {
+    try {
+      const parsed = JSON.parse(documentJson) as { pages?: readonly { id: string }[] };
+      return parsed.pages?.[0]?.id ?? "page-1";
+    } catch {
+      return "page-1";
+    }
+  }, [documentJson]);
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+      <LayoutCanvas documentJson={documentJson} pageId={pageId} className="min-h-0 flex-1" chromeMode="blueprint" />
+    </div>
   );
-  return <PlaygroundView runtime={runtime} defaultAppId={LAYOUT_PLAY_APP_ID} augmentPanelTabs={augmentPanelTabs} />;
 }
 
-function LayoutPlayChrome({ runtime }: { readonly runtime: Platform }): ReactElement {
-  return <LayoutPlayInner runtime={runtime} />;
-}
-
-export function mountLayoutPlayChrome(playground: Playground, rootId = "root"): void {
-  mountPlaygroundApp(<LayoutPlayChrome runtime={playground.runtime} />, rootId);
-}
-
-const layoutPlayChromeBoot: PlaygroundChromeBoot = {
-  registerHosts: registerLayoutPlaySurfaceHosts,
-  mount: mountLayoutPlayChrome,
+/** @emoji 🛝 Layout app renderer contribution for playground and OS shells. */
+export const layoutAppRenderer: AppRendererContribution = {
+  windowBodies: layoutPlayWindowBodies,
+  surfaceHosts: {
+    [LAYOUT_PLAY_SURFACE_BLUEPRINT]: LayoutPlayPaneSurfaceHost,
+    [LAYOUT_PLAY_SURFACE_PREVIEW]: LayoutPlayPaneSurfaceHost,
+  },
+  panelTabs: {
+    workbench: [new LayoutPlayHierarchyPanelDefinition(), new LayoutPlayCataloguePanelDefinition(), new LayoutPlayPreflightPanelDefinition()],
+    details: [new LayoutPlayInspectionPanelDefinition()],
+  },
+  preload: ensureLayoutWasm,
+  instanceHost: LayoutOsInstanceHost,
 };
-
-export async function bootLayoutPlay(playground: Playground, rootId = "root"): Promise<void> {
-  await ensureLayoutWasm();
-  bootPlayground(playground, layoutPlayChromeBoot, rootId);
-}
-//#endregion 🔖LayoutPlayHost

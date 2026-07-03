@@ -189,7 +189,19 @@ function SketchpadFeedbackFormHost({
 registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_DOCS_PAGE, SketchpadDocsMdxHost);
 registerUiPanelSurfaceHost(SKETCHPAD_SURFACE_FEEDBACK_FORM, SketchpadFeedbackFormHost);
 
-void ensureSketchpadPlatform().then((platform) => {
+void ensureSketchpadPlatform().then(async (platform) => {
+	if (typeof window !== "undefined") {
+		const pathOnly = `${window.location.pathname}${window.location.search}`.split("?")[0] ?? "/";
+		if (pathOnly === "/" || pathOnly === "") {
+			const ctrl = getSketchpadShellController();
+			if (ctrl && ctrl.listOpenKitIds().length === 0) {
+				await ctrl.createTemporaryKit();
+			} else if (ctrl) {
+				const kitId = ctrl.listOpenKitIds().at(-1);
+				if (kitId) platform.applyUri?.(`/kits/${kitId}`);
+			}
+		}
+	}
 	mountReactApp(
 		<PlatformShell>
 			<PlatformViewWithHistory platform={platform} />

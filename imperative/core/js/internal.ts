@@ -355,4 +355,18 @@ export function parseImperativeDocumentJson(json: string): ImperativeDocument | 
 		});
 	});
 }
+//#region 🔖DocumentVcs
+import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
 
+/** @emoji ⚙️ S app VCS handler for imperative documents. */
+export function createImperativeAppVcsHandler() {
+	type Doc = { readonly schema: string; readonly path: { readonly steps: readonly unknown[] } };
+	type Op = { readonly op: "setDocument"; readonly document: Doc };
+	return createTypedAppVcsHandler<Doc, Op>(
+		"imperative.document",
+		"imperative.document",
+		() => ({ schema: "imperative.document", path: { steps: [] } }),
+		(doc, op) => (op.op === "setDocument" ? op.document : doc),
+	);
+}
+//#endregion 🔖DocumentVcs
