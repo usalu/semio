@@ -24,7 +24,7 @@
     "onView:compose.filter",
     "onView:compose.sections"
   ],
-  "main": "./js/out/extension.js",
+  "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
       "activitybar": [

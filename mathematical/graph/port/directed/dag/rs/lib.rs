@@ -420,6 +420,62 @@ fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
     }
 }
 
+fn truncate_label_to_fit_width(text: &str, max_width: f64, px: f64) -> String {
+    use cavas::text::label_extent;
+    let trimmed = text.trim();
+    if trimmed.is_empty() || max_width <= 0.0 || px < 4.0 {
+        return text.to_string();
+    }
+    let (full_w, _) = label_extent(trimmed, px);
+    if full_w <= max_width {
+        return text.to_string();
+    }
+    let ellipsis = "…";
+    let mut best = ellipsis.to_string();
+    for (byte_idx, ch) in trimmed.char_indices() {
+        let end = byte_idx + ch.len_utf8();
+        let candidate = format!("{}{ellipsis}", &trimmed[..end]);
+        let (w, _) = label_extent(&candidate, px);
+        if w <= max_width {
+            best = candidate;
+        } else {
+            break;
+        }
+    }
+    best
+}
+
+fn note_text_origin_x(node: &DagNodeSpec) -> f64 {
+    let (x0, _, _, _) = preview_content_bounds(node);
+    x0 + DAG_PREVIEW_PAD
+}
+
+fn hit_byte_in_note_line(line: &str, world_x: f64, line_origin_x: f64, font_px: f64) -> usize {
+    use cavas::text::label_byte_world_x;
+    if line.is_empty() {
+        return 0;
+    }
+    let mut boundaries = vec![0usize];
+    for (index, _) in line.char_indices() {
+        if index > 0 {
+            boundaries.push(index);
+        }
+    }
+    if boundaries.last().copied() != Some(line.len()) {
+        boundaries.push(line.len());
+    }
+    for pair in boundaries.windows(2) {
+        let start = pair[0];
+        let end = pair[1];
+        let x0 = label_byte_world_x(line, start, line_origin_x, font_px);
+        let x1 = label_byte_world_x(line, end, line_origin_x, font_px);
+        if world_x < (x0 + x1) * 0.5 {
+            return start;
+        }
+    }
+    line.len()
+}
+
 fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
     let mut rows = Vec::new();
     match json {
@@ -828,7 +884,7 @@ fn select_control_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
 
 /// 📐 Note node size from its text payload.
 pub fn note_widget_size(_text: &str) -> (f64, f64) {
-    (DAG_COMPONENT_WIDTH, DAG_PREVIEW_ROW_HEIGHT.max(DAG_PREVIEW_MIN_SIZE) + DAG_PREVIEW_PAD * 2.0)
+    (DAG_COMPONENT_WIDTH, DAG_CHANNEL_ROW_HEIGHT)
 }
 
 fn preview_content_bounds(node: &DagNodeSpec) -> (f64, f64, f64, f64) {
@@ -1705,6 +1761,17 @@ impl DagChannelRef {
 }
 // #endregion 🔖ChannelRef
 
+// #region 🔖NoteEdit
+
+#[derive(Clone, Debug)]
+struct NoteEditState {
+    node_id: String,
+    caret: usize,
+    anchor: usize,
+}
+
+// #endregion 🔖NoteEdit
+
 // #region 🔖DagHost
 
 /// 🌳 Retained DAG host: typed nodes, edges, engine, camera.
@@ -1743,6 +1810,8 @@ pub struct DagHost {
     computing_stale: HashSet<NodeId>,
     computing_active_anim_phase: Cell<f64>,
     computing_stale_anim_phase: Cell<f64>,
+    editing_note: Option<NoteEditState>,
+    caret_visible: bool,
 }
 
 fn pointer_event_now_ms() -> f64 {
@@ -1989,6 +2058,8 @@ impl DagHost {
             computing_stale: HashSet::new(),
             computing_active_anim_phase: Cell::new(0.0),
             computing_stale_anim_phase: Cell::new(0.0),
+            editing_note: None,
+            caret_visible: true,
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -3103,6 +3174,153 @@ impl DagHost {
         fit_node_size(node);
     }
 
+    /// ✏️ Begins inline note text editing at a world-space click position.
+    pub fn begin_note_edit(&mut self, node_id: &str, world_x: f64, _world_y: f64) -> bool {
+        let Some(node) = self.fixture.nodes.iter().find(|n| n.id == node_id) else {
+            return false;
+        };
+        let DagNodeKind::Note { text, .. } = &node.kind else {
+            return false;
+        };
+        let lod_index = dag_lod_index(self.fixture.camera.zoom);
+        let font_px = dag_label_paint_px(self.fixture.camera.zoom, lod_index) * 1.05;
+        let origin_x = note_text_origin_x(node);
+        let offset = hit_byte_in_note_line(text, world_x, origin_x, font_px);
+        self.editing_note = Some(NoteEditState { node_id: node_id.to_string(), caret: offset, anchor: offset });
+        self.caret_visible = true;
+        true
+    }
+
+    /// ✏️ Inserts text at the active note caret, replacing any selection.
+    pub fn note_insert_text(&mut self, chunk: &str) -> bool {
+        let Some(node_id) = self.editing_note.as_ref().map(|edit| edit.node_id.clone()) else {
+            return false;
+        };
+        let Some(idx) = self.fixture.nodes.iter().position(|n| n.id == node_id) else {
+            return false;
+        };
+        let DagNodeKind::Note { text, .. } = &mut self.fixture.nodes[idx].kind else {
+            return false;
+        };
+        let edit = self.editing_note.as_mut().expect("editing note");
+        let start = edit.caret.min(edit.anchor);
+        let end = edit.caret.max(edit.anchor);
+        text.replace_range(start..end, chunk);
+        let pos = start + chunk.len();
+        edit.caret = pos;
+        edit.anchor = pos;
+        true
+    }
+
+    /// ✏️ Deletes the selection or the character before the note caret.
+    pub fn note_backspace(&mut self) -> bool {
+        let Some(node_id) = self.editing_note.as_ref().map(|edit| edit.node_id.clone()) else {
+            return false;
+        };
+        let Some(idx) = self.fixture.nodes.iter().position(|n| n.id == node_id) else {
+            return false;
+        };
+        let DagNodeKind::Note { text, .. } = &mut self.fixture.nodes[idx].kind else {
+            return false;
+        };
+        let edit = self.editing_note.as_mut().expect("editing note");
+        let start = edit.caret.min(edit.anchor);
+        let end = edit.caret.max(edit.anchor);
+        if start < end {
+            text.replace_range(start..end, "");
+            edit.caret = start;
+            edit.anchor = start;
+            return true;
+        }
+        if start == 0 {
+            return false;
+        }
+        let prev = text[..start].char_indices().last().map(|(i, _)| i).unwrap_or(0);
+        text.replace_range(prev..start, "");
+        edit.caret = prev;
+        edit.anchor = prev;
+        true
+    }
+
+    /// ✏️ Deletes the selection or the character after the note caret.
+    pub fn note_delete_forward(&mut self) -> bool {
+        let Some(node_id) = self.editing_note.as_ref().map(|edit| edit.node_id.clone()) else {
+            return false;
+        };
+        let Some(idx) = self.fixture.nodes.iter().position(|n| n.id == node_id) else {
+            return false;
+        };
+        let DagNodeKind::Note { text, .. } = &mut self.fixture.nodes[idx].kind else {
+            return false;
+        };
+        let edit = self.editing_note.as_mut().expect("editing note");
+        let start = edit.caret.min(edit.anchor);
+        let end = edit.caret.max(edit.anchor);
+        if start < end {
+            text.replace_range(start..end, "");
+            edit.caret = start;
+            edit.anchor = start;
+            return true;
+        }
+        if start >= text.len() {
+            return false;
+        }
+        let next = text[start..].char_indices().nth(1).map(|(i, _)| start + i).unwrap_or(text.len());
+        text.replace_range(start..next, "");
+        edit.caret = start;
+        edit.anchor = start;
+        true
+    }
+
+    /// ✏️ Moves the note caret (`left` | `right` | `home` | `end`).
+    pub fn note_move_caret(&mut self, direction: &str, extend: bool) -> bool {
+        let Some(node_id) = self.editing_note.as_ref().map(|edit| edit.node_id.clone()) else {
+            return false;
+        };
+        let Some(idx) = self.fixture.nodes.iter().position(|n| n.id == node_id) else {
+            return false;
+        };
+        let DagNodeKind::Note { text, .. } = &self.fixture.nodes[idx].kind else {
+            return false;
+        };
+        let edit = self.editing_note.as_mut().expect("editing note");
+        let pos = match direction {
+            "left" => {
+                if edit.caret == 0 {
+                    0
+                } else {
+                    text[..edit.caret].char_indices().last().map(|(i, _)| i).unwrap_or(0)
+                }
+            }
+            "right" => text[edit.caret..].char_indices().nth(1).map(|(i, _)| edit.caret + i).unwrap_or(text.len()),
+            "home" => 0,
+            "end" => text.len(),
+            _ => return false,
+        };
+        if extend {
+            edit.caret = pos;
+        } else {
+            edit.caret = pos;
+            edit.anchor = pos;
+        }
+        true
+    }
+
+    /// ✏️ Ends inline note editing.
+    pub fn note_commit_edit(&mut self) {
+        self.editing_note = None;
+    }
+
+    /// ✏️ Toggles native caret visibility for the active note editor.
+    pub fn set_note_caret_visible(&mut self, visible: bool) {
+        self.caret_visible = visible;
+    }
+
+    /// ✏️ Returns the widget id currently being edited inline, if any.
+    pub fn editing_note_id(&self) -> Option<&str> {
+        self.editing_note.as_ref().map(|edit| edit.node_id.as_str())
+    }
+
     /// 📐 Recomputes preview and image node sizes after content changes.
     pub fn fit_preview_sizes(&mut self) {
         for idx in 0..self.fixture.nodes.len() {
@@ -3901,15 +4119,16 @@ impl DagHost {
                 self.paint_preview_image_content(scene, cam, viewport, node, src, label_fill, bg);
             }
             DagPreviewContent::Tree { json } => {
-                let (x0, y0, _, _) = preview_content_bounds(node);
+                let (x0, y0, x1, _) = preview_content_bounds(node);
                 let rows = preview_tree_rows(json, expanded, "", 0);
+                let row_font_px = paint_px * 0.9;
                 for (index, row) in rows.iter().enumerate() {
                     let row_y = y0 + index as f64 * DAG_PREVIEW_ROW_HEIGHT + DAG_PREVIEW_ROW_HEIGHT * 0.5;
                     let indent = row.depth as f64 * DAG_PREVIEW_TREE_INDENT;
                     if row.has_children {
                         let glyph = if row.expanded { "▾" } else { "▸" };
                         let toggle_pos = world_to_screen(cam, viewport, Point::new(x0 + indent + DAG_PREVIEW_TOGGLE_WIDTH * 0.5, row_y));
-                        append_label(scene, glyph, toggle_pos, paint_px * 0.9, label_fill, label_halo);
+                        append_label(scene, glyph, toggle_pos, row_font_px, label_fill, label_halo);
                     }
                     let text_x = x0 + indent + if row.has_children { DAG_PREVIEW_TOGGLE_WIDTH } else { 0.0 } + 2.0;
                     let line = if row.has_children && !row.expanded {
@@ -3919,8 +4138,10 @@ impl DagHost {
                     } else {
                         row.label.clone()
                     };
+                    let max_w = (x1 - text_x).max(1.0);
+                    let shown = truncate_label_to_fit_width(&line, max_w, row_font_px);
                     let text_pos = world_to_screen(cam, viewport, Point::new(text_x, row_y));
-                    append_label(scene, &line, text_pos, paint_px * 0.9, label_fill, label_halo);
+                    append_label(scene, &shown, text_pos, row_font_px, label_fill, label_halo);
                 }
             }
         }
@@ -4100,6 +4321,29 @@ impl DagHost {
         Point::new(rect.x0, rect.y1 - d)
     }
 
+    fn paint_note_caret_bar(
+        scene: &mut cavas::vello::Scene,
+        aff: &cavas::vello::kurbo::Affine,
+        node: &DagNodeSpec,
+        caret_byte: usize,
+        text: &str,
+        font_px: f64,
+        fill: cavas::vello::peniko::Color,
+        zoom: f64,
+    ) {
+        use cavas::text::label_byte_world_x;
+        use cavas::vello::kurbo::Rect;
+        use cavas::vello::peniko::Fill;
+        let (x0, y0, _x1, y1) = preview_content_bounds(node);
+        let origin_x = x0 + DAG_PREVIEW_PAD;
+        let caret_x = label_byte_world_x(text, caret_byte.min(text.len()), origin_x, font_px);
+        let caret_y = (y0 + y1) * 0.5;
+        let lh = font_px * 1.2;
+        let bar_w = 1.5 / zoom.max(0.05);
+        let rect = Rect::new(caret_x, caret_y - lh * 0.4, caret_x + bar_w, caret_y + lh * 0.4);
+        scene.fill(Fill::NonZero, *aff, fill, None, &rect);
+    }
+
     fn paint_node_visual(
         &self,
         scene: &mut cavas::vello::Scene,
@@ -4248,9 +4492,18 @@ impl DagHost {
                 DagNodeKind::Note { text, .. } => {
                     if lod.shows_detail_text() || lod.shows_controls() {
                         let (x0, y0, x1, y1) = preview_content_bounds(node);
+                        let font_px = paint_px * 1.05;
+                        let text_x = x0 + DAG_PREVIEW_PAD;
+                        let max_w = (x1 - text_x).max(1.0);
                         let display = if text.is_empty() { "…" } else { text.as_str() };
-                        let pos = world_to_screen(cam, viewport, Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5));
-                        append_label(scene, display, pos, paint_px * 1.05, label_fill, label_halo);
+                        let shown = truncate_label_to_fit_width(display, max_w, font_px);
+                        let pos = world_to_screen(cam, viewport, Point::new(text_x, (y0 + y1) * 0.5));
+                        append_label(scene, &shown, pos, font_px, label_fill, label_halo);
+                        if let Some(edit) = &self.editing_note {
+                            if edit.node_id == node.id && self.caret_visible {
+                                Self::paint_note_caret_bar(scene, aff, node, edit.caret, text, font_px, label_fill, cam.zoom);
+                            }
+                        }
                     }
                 }
                 DagNodeKind::Image { src, .. } => {
@@ -6204,10 +6457,12 @@ mod tests {
         let long = note_widget_size("some longer note text");
         assert_eq!(short.0, DAG_COMPONENT_WIDTH);
         assert_eq!(long.0, DAG_COMPONENT_WIDTH);
+        assert_eq!(short.1, DAG_CHANNEL_ROW_HEIGHT);
+        assert_eq!(long.1, DAG_CHANNEL_ROW_HEIGHT);
     }
 
     #[test]
-    fn fit_note_sizes_resizes_after_text_change() {
+    fn fit_note_sizes_keeps_slider_height() {
         let mut host = DagHost::from_fixture(DagFixture {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
@@ -6225,14 +6480,64 @@ mod tests {
             }],
             edges: vec![],
         });
-        let short_h = host.fixture.nodes[0].height;
+        host.fit_note_sizes();
+        assert_eq!(host.fixture.nodes[0].height, DAG_CHANNEL_ROW_HEIGHT);
         let DagNodeKind::Note { text, .. } = &mut host.fixture.nodes[0].kind else {
             panic!("expected note");
         };
         *text = "a much longer note body".into();
         host.fit_note_sizes();
-        assert!(host.fixture.nodes[0].height >= short_h);
+        assert_eq!(host.fixture.nodes[0].height, DAG_CHANNEL_ROW_HEIGHT);
         assert_eq!(host.fixture.nodes[0].width, DAG_COMPONENT_WIDTH);
+    }
+
+    #[test]
+    fn truncate_label_to_fit_width_adds_ellipsis() {
+        let px = 12.0;
+        let max_w = 40.0;
+        let truncated = truncate_label_to_fit_width("alpha beta gamma delta", max_w, px);
+        assert!(truncated.ends_with('…'));
+        assert!(truncated.len() < "alpha beta gamma delta".len());
+    }
+
+    #[test]
+    fn begin_note_edit_inserts_and_backspaces_text() {
+        let mut host = DagHost::from_fixture(DagFixture {
+            schema: "dag.fixture".into(),
+            camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+            nodes: vec![DagNodeSpec {
+                id: "note".into(),
+                name: "Note".into(),
+                abbreviation: "Note".into(),
+                icon: "emoji:📝".into(),
+                x: 0.0,
+                y: 0.0,
+                width: note_widget_size("hi").0,
+                height: note_widget_size("hi").1,
+                kind: DagNodeKind::Note { text: "hi".into(), output: IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() } },
+                ..Default::default()
+            }],
+            edges: vec![],
+        });
+        let origin_x = note_text_origin_x(&host.fixture.nodes[0]);
+        assert!(host.begin_note_edit("note", origin_x + 100.0, 0.0));
+        assert_eq!(host.editing_note_id(), Some("note"));
+        assert!(host.note_insert_text("!"));
+        {
+            let DagNodeKind::Note { text, .. } = &host.fixture.nodes[0].kind else {
+                panic!("expected note");
+            };
+            assert_eq!(text, "hi!");
+        }
+        assert!(host.note_backspace());
+        {
+            let DagNodeKind::Note { text, .. } = &host.fixture.nodes[0].kind else {
+                panic!("expected note");
+            };
+            assert_eq!(text, "hi");
+        }
+        host.note_commit_edit();
+        assert_eq!(host.editing_note_id(), None);
     }
 
     #[test]

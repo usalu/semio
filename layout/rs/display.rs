@@ -23,6 +23,7 @@ pub struct DisplayRect {
     pub stroke: Option<DisplayColor>,
     pub inherited: bool,
     pub selected: bool,
+    pub hovered: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -88,7 +89,7 @@ pub fn page_margin_guides(page: &Page) -> Vec<DisplayGuide> {
     ]
 }
 
-pub fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inherited: bool, selected: bool, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> DisplayRect {
+pub fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inherited: bool, selected: bool, hovered: bool, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]>) -> DisplayRect {
     DisplayRect {
         object_id: object_id.into(),
         x: bounds.x as f32,
@@ -99,5 +100,6 @@ pub fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inherited:
         stroke: stroke.map(DisplayColor),
         inherited,
         selected,
+        hovered,
     }
 }

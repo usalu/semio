@@ -1,7 +1,7 @@
 /** @emoji 👷 Dedicated imperative run worker — executes paths off the UI thread. */
 
-import initImperativeWasm, { ImperativeSession, initSync } from "./pkg/imperative_core.js";
-import imperativeCoreWasmUrl from "./pkg/imperative_core_bg.wasm?url";
+import initImperativeWasm, { ImperativeSession, initSync } from "../rs/pkg/imperative_core.js";
+import imperativeCoreWasmUrl from "../rs/pkg/imperative_core_bg.wasm?url";
 
 type ImperativeWorkerRequest =
 	| { readonly op: "init" }

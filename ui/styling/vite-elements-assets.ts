@@ -107,11 +107,19 @@ function playgroundWasmStubKeyDecode(key: string): string {
 
 const PLAYGROUND_WASM_JS_STUB = `const wasmMissing = () => { throw new Error("wasm pkg not built — run the matching nx wasm target"); };
 const wasmJson = () => "{}";
+const dagLodScaleJson = () => ${JSON.stringify(JSON.stringify([
+  { id: "minimap", name: "Minimap", description: "Whole-graph silhouette; fill only.", maxZoom: 0.4 },
+  { id: "overview", name: "Overview", description: "Node icons only.", maxZoom: 0.6 },
+  { id: "compact", name: "Compact", description: "Horizontal abbreviations.", maxZoom: 0.8 },
+  { id: "normal", name: "Normal", description: "Vertical names with sections; channel abbreviations on ports.", maxZoom: 1.5 },
+  { id: "detail", name: "Detail", description: "Channel names on ports, port handles, and control text.", maxZoom: 2.75 },
+  { id: "micro", name: "Micro", description: "Full channel names on ports and maximum node fidelity.", maxZoom: Number.MAX_VALUE },
+]))};
 export default async function initWasm() {}
 export const initSync = () => {};
-export class FlowSession {}
-export class DagSession {}
-export class BoardSession {}
+export class FlowSession { lodScaleJson() { return dagLodScaleJson(); } }
+export class DagSession { lodScaleJson() { return dagLodScaleJson(); } }
+export class BoardSession { lodScaleJson() { return dagLodScaleJson(); } }
 export class WriterSession {}
 export class ImperativeSession {}
 export class SequenceSession {}
@@ -521,6 +529,36 @@ export function puzzle3dMeshesVitePlugin(repoRoot: string): Plugin[] {
       },
     },
   ];
+}
+
+/** @emoji 🎬 Inline shell paint before Tailwind finishes compiling the play stylesheet. */
+export const PLAYGROUND_PLAY_BOOT_INLINE_STYLE =
+  "html{color-scheme:light dark}html,body,#root{height:100%;margin:0}body{background-color:#f7f3e3;color:#001117}html.dark body{background-color:#001117;color:#f7f3e3}html:not([data-semio-styled]) body{visibility:hidden}";
+
+/** @emoji 🌓 Synchronous system theme bootstrap for play `index.html` heads. */
+export const PLAYGROUND_PLAY_BOOT_THEME_SCRIPT = `(function(){var d=document.documentElement,m=window.matchMedia("(prefers-color-scheme: dark)");var dark=m.matches;d.classList.toggle("dark",dark);d.dataset.uiTheme=dark?"dark":"light";d.style.colorScheme=dark?"dark":"light";if(document.body){document.body.style.colorScheme=dark?"dark":"light";document.body.style.backgroundColor=dark?"#001117":"#f7f3e3";document.body.style.color=dark?"#f7f3e3":"#001117";}})();`;
+
+/** @emoji 👁️ Reveals the play shell after the linked globals stylesheet finishes loading. */
+export const PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT = `(function(){function reveal(){document.documentElement.dataset.semioStyled="ready"}var link=document.getElementById("semio-play-styles");if(link){if(link.sheet)reveal();else link.addEventListener("load",reveal,{once:true})}else{reveal()}setTimeout(reveal,8000)})();`;
+
+/** @emoji 🎬 Vite: inject early theme + stylesheet link into play `index.html` to avoid unstyled flashes. */
+export function playgroundPlayBootHtmlPlugin(): Plugin {
+  return {
+    name: "playground-play-boot-html",
+    transformIndexHtml: {
+      order: "pre",
+      handler() {
+        return {
+          tags: [
+            { tag: "style", children: PLAYGROUND_PLAY_BOOT_INLINE_STYLE, injectTo: "head-prepend" },
+            { tag: "script", children: PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, injectTo: "head-prepend" },
+            { tag: "link", attrs: { rel: "stylesheet", href: "./globals.css", id: "semio-play-styles" }, injectTo: "head" },
+            { tag: "script", children: PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, injectTo: "head" },
+          ],
+        };
+      },
+    },
+  };
 }
 
 /** @emoji 🔖 Canonical semio emblem favicon `<link>` tags for playground and app `index.html` heads. */
@@ -1333,13 +1371,13 @@ function packageEntry(repoRoot: string, ...segments: string[]): string {
   return resolve(repoRoot, ...segments, "js/index.ts");
 }
 
-/** @emoji ⚛️ Vite alias for workspace React packages whose entry moved under `react/js/index.tsx`. */
+/** @emoji ⚛️ Vite alias for workspace React packages at `react/index.tsx`. */
 function reactEntry(repoRoot: string, ...segments: string[]): string {
-  return resolve(repoRoot, ...segments, "react/js/index.tsx");
+  return resolve(repoRoot, ...segments, "react/index.tsx");
 }
 
 function playgroundRendererIndexPath(repoRoot: string): string {
-  return resolve(repoRoot, "framework/product/playground/renderer/react/js/index.tsx");
+  return resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
 }
 
 /** @emoji 🔀 Vite resolve aliases shared by playground play hosts and renderer vitest graphs. */
@@ -1354,35 +1392,35 @@ export function playgroundRendererResolveAliases(
     { find: /^@framework\/playground\/renderer\/react$/, replacement: rendererIndex },
     { find: /^@framework\/playground\/core$/, replacement: resolve(repoRoot, "framework/product/playground/core/js/index.ts") },
     { find: /^@framework\/platform\/core$/, replacement: resolve(repoRoot, "framework/product/platform/core/js/index.ts") },
-    { find: /^@framework\/platform\/renderer\/react$/, replacement: resolve(repoRoot, "framework/product/platform/renderer/react/js/index.tsx") },
+    { find: /^@framework\/platform\/renderer\/react$/, replacement: resolve(repoRoot, "framework/product/platform/renderer/react/index.tsx") },
     { find: /^@framework\/core$/, replacement: resolve(repoRoot, "framework/core/js/index.ts") },
     { find: "@semio-tech/ui-react/globals.css", replacement: resolve(repoRoot, "ui/react/globals.css") },
     { find: "@semio-tech/ui-react/globals-ui.css", replacement: resolve(repoRoot, "ui/react/globals-ui.css") },
-    { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "ui/react/js/index.tsx") },
+    { find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "ui/react/index.tsx") },
     { find: "@compose/ui", replacement: resolve(repoRoot, "ui/react") },
     { find: "@semio-tech/ui-styling/ui.css", replacement: resolve(repoRoot, "ui/styling/js/ui.css") },
     { find: "@semio-tech/ui-styling/palette.css", replacement: resolve(repoRoot, "ui/styling/js/palette.css") },
     { find: "@semio-tech/ui-asset", replacement: resolve(repoRoot, "ui/asset/js/index.ts") },
-    { find: "@semio-tech/infinite-cavas-react-renderer", replacement: resolve(repoRoot, "infinite/cavas/react-renderer/js/index.tsx") },
-    { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "infinite/world/r3f/js/index.tsx") },
+    { find: "@semio-tech/infinite-cavas-react-renderer", replacement: resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx") },
+    { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "infinite/world/r3f/index.tsx") },
     { find: "@semio-tech/puzzle-2d-core", replacement: packageEntry(repoRoot, "puzzle/2d/core") },
     { find: "@semio-tech/puzzle-3d-core", replacement: packageEntry(repoRoot, "puzzle/3d/core") },
     { find: "@semio-tech/puzzle-5d-core", replacement: packageEntry(repoRoot, "puzzle/5d/core") },
-    { find: "@semio-tech/puzzle-2d-react", replacement: resolve(repoRoot, "puzzle/2d/react/js/index.tsx") },
-    { find: "@semio-tech/puzzle-3d-react", replacement: resolve(repoRoot, "puzzle/3d/react/js/index.tsx") },
-    { find: "@semio-tech/puzzle-5d-react", replacement: resolve(repoRoot, "puzzle/5d/react/js/index.tsx") },
+    { find: "@semio-tech/puzzle-2d-react", replacement: resolve(repoRoot, "puzzle/2d/react/index.tsx") },
+    { find: "@semio-tech/puzzle-3d-react", replacement: resolve(repoRoot, "puzzle/3d/react/index.tsx") },
+    { find: "@semio-tech/puzzle-5d-react", replacement: resolve(repoRoot, "puzzle/5d/react/index.tsx") },
     { find: "@semio-tech/gis-2d-core", replacement: packageEntry(repoRoot, "gis/2d/core") },
-    { find: "@semio-tech/gis-2d-react", replacement: resolve(repoRoot, "gis/2d/react/js/index.tsx") },
+    { find: "@semio-tech/gis-2d-react", replacement: resolve(repoRoot, "gis/2d/react/index.tsx") },
     { find: "@semio-tech/reasoning-mindmap-wires-core", replacement: packageEntry(repoRoot, "reasoning/mindmap/wires/core") },
-    { find: "@semio-tech/reasoning-mindmap-wires-react", replacement: resolve(repoRoot, "reasoning/mindmap/wires/react/js/index.ts") },
-    { find: "@semio-tech/reasoning-mindmap-react", replacement: resolve(repoRoot, "reasoning/mindmap/react/js/index.tsx") },
+    { find: "@semio-tech/reasoning-mindmap-wires-react", replacement: resolve(repoRoot, "reasoning/mindmap/wires/react/index.ts") },
+    { find: "@semio-tech/reasoning-mindmap-react", replacement: resolve(repoRoot, "reasoning/mindmap/react/index.tsx") },
     { find: "@semio-tech/framework-presentation-core", replacement: packageEntry(repoRoot, "framework/product/presentation/core") },
-    { find: "@semio-tech/framework-presentation-renderer-react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/js/index.tsx") },
+    { find: "@semio-tech/framework-presentation-renderer-react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
     { find: "@semio-tech/framework-playground-core/app-registry", replacement: resolve(repoRoot, "framework/product/playground/core/js/app-registry.ts") },
     { find: "@semio-tech/framework-playground-core", replacement: resolve(repoRoot, "framework/product/playground/core/js/index.ts") },
     { find: "@semio-tech/flow-core/pkg/flow_core.js", replacement: resolve(repoRoot, "flow/core/rs/pkg/flow_core.js") },
     { find: "@semio-tech/flow-core", replacement: packageEntry(repoRoot, "flow/core") },
-    { find: "@semio-tech/flow-react", replacement: resolve(repoRoot, "flow/react/js/index.tsx") },
+    { find: "@semio-tech/flow-react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
     { find: "@semio-tech/flow-module-core", replacement: resolve(repoRoot, "flow/module/core/rs/pkg/flow_module_core.js") },
     { find: "@semio-tech/flow-module-brep", replacement: resolve(repoRoot, "flow/module/brep/rs/pkg/flow_module_brep.js") },
     { find: "@semio-tech/flow-module-draw", replacement: resolve(repoRoot, "flow/module/draw/rs/pkg/flow_module_draw.js") },
@@ -1394,49 +1432,49 @@ export function playgroundRendererResolveAliases(
     { find: "@semio-tech/flow-module-bim", replacement: resolve(repoRoot, "flow/module/bim/rs/pkg/flow_module_bim.js") },
     { find: "@semio-tech/dag-core", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/rs/pkg/mathematical_graph_port_directed_dag.js") },
     { find: "@semio-tech/dag-host-core", replacement: packageEntry(repoRoot, "mathematical/graph/port/directed/dag/core") },
-    { find: "@semio-tech/dag-react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/js/index.tsx") },
-    { find: "@semio-tech/imperative-react", replacement: resolve(repoRoot, "imperative/react/js/index.tsx") },
+    { find: "@semio-tech/dag-react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
+    { find: "@semio-tech/imperative-react", replacement: resolve(repoRoot, "imperative/react/index.tsx") },
     { find: "@semio-tech/imperative-core", replacement: packageEntry(repoRoot, "imperative/core") },
     { find: "@semio-tech/imperative-core/pkg/imperative_core.js", replacement: resolve(repoRoot, "imperative/core/rs/pkg/imperative_core.js") },
-    { find: "@semio-tech/sequence-react", replacement: resolve(repoRoot, "sequence/react/js/index.tsx") },
+    { find: "@semio-tech/sequence-react", replacement: resolve(repoRoot, "sequence/react/index.tsx") },
     { find: "@semio-tech/sequence-core", replacement: packageEntry(repoRoot, "sequence/core") },
     { find: "@semio-tech/sequence-core/pkg/sequence_core.js", replacement: resolve(repoRoot, "sequence/core/rs/pkg/sequence_core.js") },
-    { find: "@semio-tech/layout-react", replacement: resolve(repoRoot, "layout/react/js/index.tsx") },
+    { find: "@semio-tech/layout-react", replacement: resolve(repoRoot, "layout/react/index.tsx") },
     { find: "@semio-tech/layout-core", replacement: packageEntry(repoRoot, "layout/core") },
     { find: "@semio-tech/layout-rs", replacement: resolve(repoRoot, "layout/rs/pkg/layout_rs.js") },
-    { find: "@semio-tech/lowpoly-react", replacement: resolve(repoRoot, "lowpoly/react/js/index.tsx") },
+    { find: "@semio-tech/lowpoly-react", replacement: resolve(repoRoot, "lowpoly/react/index.tsx") },
     { find: "@semio-tech/lowpoly-core", replacement: packageEntry(repoRoot, "lowpoly/core") },
     { find: "@semio-tech/lowpoly-core/pkg/lowpoly_core.js", replacement: resolve(repoRoot, "lowpoly/core/rs/pkg/lowpoly_core.js") },
     { find: "@semio-tech/trinity-jack-host-core", replacement: packageEntry(repoRoot, "trinity/jack/host-core") },
     { find: "@semio-tech/trinity-rewrite-core", replacement: packageEntry(repoRoot, "trinity/rewrite/core") },
-    { find: "@semio-tech/trinity-react", replacement: resolve(repoRoot, "trinity/react/js/index.tsx") },
+    { find: "@semio-tech/trinity-react", replacement: resolve(repoRoot, "trinity/react/index.tsx") },
     { find: "@semio-tech/procedural-3d-core", replacement: packageEntry(repoRoot, "procedural/3d/core") },
-    { find: "@semio-tech/procedural-3d-react", replacement: resolve(repoRoot, "procedural/3d/react/js/index.tsx") },
+    { find: "@semio-tech/procedural-3d-react", replacement: resolve(repoRoot, "procedural/3d/react/index.tsx") },
     { find: "@semio-tech/procedural-2d-core", replacement: packageEntry(repoRoot, "procedural/2d/core") },
-    { find: "@semio-tech/procedural-2d-react", replacement: resolve(repoRoot, "procedural/2d/react/js/index.tsx") },
+    { find: "@semio-tech/procedural-2d-react", replacement: resolve(repoRoot, "procedural/2d/react/index.tsx") },
     { find: "@semio-tech/shooting-core", replacement: packageEntry(repoRoot, "shooting/core") },
-    { find: "@semio-tech/shooting-react", replacement: resolve(repoRoot, "shooting/react/js/index.tsx") },
+    { find: "@semio-tech/shooting-react", replacement: resolve(repoRoot, "shooting/react/index.tsx") },
     { find: "@semio-tech/draw-core", replacement: packageEntry(repoRoot, "draw/core") },
-    { find: "@semio-tech/draw-react", replacement: resolve(repoRoot, "draw/react/js/index.tsx") },
+    { find: "@semio-tech/draw-react", replacement: resolve(repoRoot, "draw/react/index.tsx") },
     { find: "@semio-tech/note-core", replacement: packageEntry(repoRoot, "note/core") },
-    { find: "@semio-tech/note-react", replacement: resolve(repoRoot, "note/react/js/index.tsx") },
+    { find: "@semio-tech/note-react", replacement: resolve(repoRoot, "note/react/index.tsx") },
     { find: "@semio-tech/writer-core/internal", replacement: resolve(repoRoot, "writer/core/js/internal.ts") },
     { find: "@semio-tech/writer-core", replacement: packageEntry(repoRoot, "writer/core") },
     { find: "@semio-tech/draw-core/internal", replacement: resolve(repoRoot, "draw/core/js/internal.ts") },
     { find: "@semio-tech/note-core/internal", replacement: resolve(repoRoot, "note/core/js/internal.ts") },
     { find: "@semio-tech/s-core/internal", replacement: resolve(repoRoot, "s/core/js/internal.ts") },
-    { find: "@semio-tech/writer-react", replacement: resolve(repoRoot, "writer/react/js/index.tsx") },
+    { find: "@semio-tech/writer-react", replacement: resolve(repoRoot, "writer/react/index.tsx") },
     { find: "@semio-tech/forms-core", replacement: packageEntry(repoRoot, "forms/core") },
-    { find: "@semio-tech/forms-react", replacement: resolve(repoRoot, "forms/react/js/index.tsx") },
+    { find: "@semio-tech/forms-react", replacement: resolve(repoRoot, "forms/react/index.tsx") },
     { find: "@semio-tech/raster-core", replacement: packageEntry(repoRoot, "raster/core") },
-    { find: "@semio-tech/raster-react", replacement: resolve(repoRoot, "raster/react/js/index.tsx") },
+    { find: "@semio-tech/raster-react", replacement: resolve(repoRoot, "raster/react/index.tsx") },
     { find: "@semio-tech/s-core", replacement: packageEntry(repoRoot, "s/core") },
-    { find: "@semio-tech/s-react", replacement: resolve(repoRoot, "s/react/js/index.tsx") },
+    { find: "@semio-tech/s-react", replacement: resolve(repoRoot, "s/react/index.tsx") },
     { find: "@semio-tech/graph-manifest", replacement: resolve(repoRoot, "mathematical/graph/manifest/core/index.ts") },
     { find: "@semio-tech/kernel-2d-js", replacement: resolve(repoRoot, "kernel/2d/js/index.ts") },
     { find: "@semio-tech/vcs-core/internal", replacement: resolve(repoRoot, "vcs/core/js/internal.ts") },
     { find: "@semio-tech/vcs-core", replacement: packageEntry(repoRoot, "vcs/core") },
-    { find: "@semio-tech/vcs-react", replacement: resolve(repoRoot, "vcs/react/js/index.tsx") },
+    { find: "@semio-tech/vcs-react", replacement: resolve(repoRoot, "vcs/react/index.tsx") },
     { find: "@semio-tech/cad-js-renderer-core", replacement: packageEntry(repoRoot, "cad/renderer/core") },
     { find: "@semio-tech/cad-js-renderer-react", replacement: reactEntry(repoRoot, "cad/renderer") },
     { find: "@semio-tech/cad-js-core", replacement: packageEntry(repoRoot, "cad/core") },
@@ -1585,7 +1623,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
   const uiAssetsRoot = resolve(repoRoot, "ui/asset");
   const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
   const rendererIndex = playgroundRendererIndexPath(repoRoot);
-  const presentationIndex = resolve(repoRoot, "framework/product/presentation/renderer/react/js/index.tsx");
+  const presentationIndex = resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx");
   const rendererAliases = playgroundRendererResolveAliases(repoRoot, playEntryKind);
   return defineConfig({
     root: playDir,
@@ -1599,6 +1637,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       ),
     },
     plugins: [
+      playgroundPlayBootHtmlPlugin(),
       playgroundFlowWasmDevStubPlugin(repoRoot),
       ...playgroundComposeSketchpadVitePlugins(repoRoot, playEntryKind),
       ...uiAssetsVitePlugin(uiAssetsRoot),
@@ -1707,6 +1746,18 @@ if (import.meta.vitest) {
         const { unlinkSync } = await import("node:fs");
         unlinkSync(filePath);
       }
+    });
+  });
+
+  describe("playgroundPlayBootHtmlPlugin", () => {
+    it("registers index html boot injection", () => {
+      expect(playgroundPlayBootHtmlPlugin().name).toBe("playground-play-boot-html");
+    });
+
+    it("exposes inline theme and reveal scripts", () => {
+      expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("prefers-color-scheme");
+      expect(PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT).toContain("semio-play-styles");
+      expect(PLAYGROUND_PLAY_BOOT_INLINE_STYLE).toContain("data-semio-styled");
     });
   });
 

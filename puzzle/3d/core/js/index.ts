@@ -182,7 +182,7 @@ import {
   puzzle3dHoverTargetsEqual,
   puzzle3dKindHoversEqual,
   PUZZLE_3D_GUMBALL_CONFIG,
-} from "../../react/js/index.tsx";
+} from "../../react/index.tsx";
 
 //#region 🏗️NakaginCatalog
 function cadVec3FromKitPoint(row: { readonly x: number; readonly y: number; readonly z: number }): [number, number, number] {
@@ -1311,7 +1311,7 @@ export function updatePuzzle3dAttractionInFixture(fixture: Fixture, attractionId
   };
 }
 
-export { cameraStateNearEqual, updatePuzzle3dCameraInFixture } from "../../react/js/index.tsx";
+export { cameraStateNearEqual, updatePuzzle3dCameraInFixture } from "../../react/index.tsx";
 
 /** @emoji 🎯 Maps {@link SelectionSnapshot} to play selection. */
 export function selectionSnapshotToPlaySelection(snap: SelectionSnapshot): Puzzle3dPlaySelection {
@@ -6040,7 +6040,7 @@ if (import.meta.vitest) {
     });
 
     it("buildPuzzle3dPlayKindsTree marks object catalog rows draggable with fixture drag payload", async () => {
-      const { FIXTURE_DRAG_MIME, decodePuzzle3dFixtureFromDrag } = await import("../../react/js/index.tsx");
+      const { FIXTURE_DRAG_MIME, decodePuzzle3dFixtureFromDrag } = await import("../../react/index.tsx");
       const catalogs = parseKindCatalogs({
         kindCatalogs: {
           objects: [{ id: "J", label: "J", name: "J", meshUrl: "/mesh/capsule_J.glb", vortices: [] }],

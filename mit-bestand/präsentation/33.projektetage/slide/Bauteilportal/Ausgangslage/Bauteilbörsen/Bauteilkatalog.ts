@@ -6,7 +6,7 @@ import {
 	catalogueFocusMorphTo,
 	mediaEmbodiments,
 	mediaParticipants,
-} from "../../../../index.ts";
+} from "@semio-tech/mit-bestand-praesentation-projektetage-spec";
 
 export default {
 	order: 1,

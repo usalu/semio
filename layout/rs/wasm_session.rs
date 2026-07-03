@@ -14,6 +14,7 @@ struct LayoutSessionInner {
     document_json: String,
     page_id: String,
     selected_ids: Vec<String>,
+    hovered_id: Option<String>,
     chrome_blueprint: bool,
     gpu: infinite_cavas::gpu_session::CanvasGpuSession,
 }
@@ -32,6 +33,7 @@ impl LayoutSession {
                 document_json: String::new(),
                 page_id: "page-1".into(),
                 selected_ids: Vec::new(),
+                hovered_id: None,
                 chrome_blueprint: true,
                 gpu: infinite_cavas::gpu_session::CanvasGpuSession::default(),
             })),
@@ -98,6 +100,11 @@ impl LayoutSession {
         Ok(())
     }
 
+    #[wasm_bindgen(js_name = setHoveredId)]
+    pub fn set_hovered_id(&mut self, hovered_id: Option<String>) {
+        self.state.borrow_mut().hovered_id = hovered_id;
+    }
+
     #[wasm_bindgen(js_name = setChromeMode)]
     pub fn set_chrome_mode(&mut self, blueprint: bool) {
         self.state.borrow_mut().chrome_blueprint = blueprint;
@@ -106,7 +113,8 @@ impl LayoutSession {
     #[wasm_bindgen(js_name = renderFrame)]
     pub fn render_frame(&self) -> Result<(), JsValue> {
         let mut inner = self.state.borrow_mut();
-        let scene = build_scene_from_document_json(&inner.document_json, &inner.page_id, &inner.selected_ids, inner.chrome_blueprint)
+        let hovered = inner.hovered_id.as_deref();
+        let scene = build_scene_from_document_json(&inner.document_json, &inner.page_id, &inner.selected_ids, hovered, inner.chrome_blueprint)
             .map_err(|e| JsValue::from_str(&e))?;
         let clear = vello::peniko::Color::new([0.12, 0.13, 0.15, 1.0]);
         inner.gpu.render_frame(&scene, clear).map_err(|e| e)
@@ -115,7 +123,8 @@ impl LayoutSession {
     #[wasm_bindgen(js_name = hitTest)]
     pub fn hit_test(&self, x: f32, y: f32) -> Result<JsValue, JsValue> {
         let inner = self.state.borrow();
-        let hit = hit_test_document_json(&inner.document_json, &inner.page_id, x, y, &inner.selected_ids).map_err(|e| JsValue::from_str(&e))?;
+        let hovered = inner.hovered_id.as_deref();
+        let hit = hit_test_document_json(&inner.document_json, &inner.page_id, x, y, &inner.selected_ids, hovered).map_err(|e| JsValue::from_str(&e))?;
         Ok(hit.map(|id| JsValue::from_str(&id)).unwrap_or(JsValue::NULL))
     }
 

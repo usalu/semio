@@ -186,12 +186,28 @@ export type LayoutDocument = {
 	readonly printTarget?: "screen" | "print";
 };
 
+export type LayoutPagePropsPatch = Partial<Pick<Page, "name" | "width" | "height" | "margins" | "columns">>;
+
+export type LayoutFramePropsPatch = Partial<
+	Pick<RectFrame, "fill" | "stroke"> &
+		Pick<TextFrame, "wrapMode" | "columns"> &
+		Pick<ImageFrame, "linkId"> & { readonly storyContent?: string; readonly linkPath?: string }
+>;
+
+export type LayoutCatalogueKind = "page" | FrameKind;
+
 export type LayoutCommand =
 	| { readonly type: "set_object_bounds"; readonly objectId: string; readonly before: LayoutBounds; readonly after: LayoutBounds }
 	| { readonly type: "set_selection"; readonly before: readonly string[]; readonly after: readonly string[] }
 	| { readonly type: "set_story_content"; readonly storyId: string; readonly before: string; readonly after: string }
 	| { readonly type: "apply_parent_page"; readonly pageId: string; readonly before?: string; readonly after?: string }
 	| { readonly type: "reorder_pages"; readonly spreadId: string; readonly before: readonly string[]; readonly after: readonly string[] }
+	| { readonly type: "add_page"; readonly spreadId: string; readonly page: Page }
+	| { readonly type: "remove_page"; readonly spreadId: string; readonly page: Page }
+	| { readonly type: "add_frame"; readonly pageId: string; readonly frame: Frame; readonly story?: TextStory; readonly link?: ImageLink }
+	| { readonly type: "remove_frame"; readonly pageId: string; readonly frame: Frame; readonly story?: TextStory; readonly link?: ImageLink }
+	| { readonly type: "patch_page_props"; readonly pageId: string; readonly before: LayoutPagePropsPatch; readonly after: LayoutPagePropsPatch }
+	| { readonly type: "patch_frame_props"; readonly objectId: string; readonly before: LayoutFramePropsPatch; readonly after: LayoutFramePropsPatch }
 	| { readonly type: "composite"; readonly commands: readonly LayoutCommand[] };
 
 export type ResolvedFrame = Frame & { readonly inherited: boolean; readonly sourcePageId?: string };
@@ -502,6 +518,191 @@ export function resolveSnap(
 	return { x: snapAxis(point.x, targetsX), y: snapAxis(point.y, targetsY) };
 }
 
+let layoutEntityCounter = 0;
+
+function nextLayoutEntityId(prefix: string): string {
+	layoutEntityCounter += 1;
+	return `${prefix}-${Date.now().toString(36)}-${layoutEntityCounter}`;
+}
+
+/** @emoji 🧩 Creates a default page for catalogue drops. */
+export function createDefaultPage(spreadId: string, index: number): Page {
+	const id = nextLayoutEntityId("page");
+	const layerId = `layer-${id}`;
+	return {
+		id,
+		name: `Page ${index + 1}`,
+		spreadId,
+		width: 595,
+		height: 842,
+		margins: { top: 48, right: 36, bottom: 48, left: 36 },
+		columns: { count: 1, gutter: 12 },
+		guides: [],
+		layerIds: [layerId],
+		layers: [{ id: layerId, name: "Content", visible: true, locked: false, objectIds: [] }],
+		frames: [],
+		overrides: [],
+	};
+}
+
+/** @emoji 🧩 Creates a default frame for catalogue drops. */
+export function createDefaultFrame(kind: FrameKind, layerId: string): { readonly frame: Frame; readonly story?: TextStory; readonly link?: ImageLink } {
+	const id = nextLayoutEntityId(`frame-${kind}`);
+	const bounds: LayoutBounds = { x: 72, y: 120, w: 200, h: 120, rotation: 0 };
+	if (kind === "rect") {
+		return {
+			frame: {
+				id,
+				layerId,
+				kind: "rect",
+				bounds,
+				fill: [0.85, 0.88, 0.92, 1],
+				stroke: [0.2, 0.35, 0.55, 1],
+			},
+		};
+	}
+	if (kind === "text") {
+		const storyId = nextLayoutEntityId("story");
+		const story: TextStory = {
+			id: storyId,
+			content: "New text frame",
+			styleRuns: [{ start: 0, end: 14, paragraphStyleId: "paragraph.body" }],
+		};
+		return {
+			frame: {
+				id,
+				layerId,
+				kind: "text",
+				bounds,
+				storyId,
+				columns: 1,
+				inset: { x: 4, y: 4, w: bounds.w - 8, h: bounds.h - 8 },
+				wrapMode: "box",
+			},
+			story,
+		};
+	}
+	const linkId = nextLayoutEntityId("link");
+	const link: ImageLink = {
+		id: linkId,
+		path: "assets/placeholder.png",
+		hash: "sha256:missing",
+		width: 800,
+		height: 600,
+		dpi: 72,
+		state: "missing",
+	};
+	return {
+		frame: {
+			id,
+			layerId,
+			kind: "image",
+			bounds,
+			linkId,
+		},
+		link,
+	};
+}
+
+function addPageToDocument(doc: LayoutDocument, spreadId: string, page: Page): LayoutDocument {
+	return {
+		...doc,
+		spreads: doc.spreads.map((spread) => (spread.id === spreadId ? { ...spread, pageIds: [...spread.pageIds, page.id] } : spread)),
+		pages: [...doc.pages, page],
+	};
+}
+
+function removePageFromDocument(doc: LayoutDocument, spreadId: string, page: Page): LayoutDocument {
+	return {
+		...doc,
+		spreads: doc.spreads.map((spread) => (spread.id === spreadId ? { ...spread, pageIds: spread.pageIds.filter((id) => id !== page.id) } : spread)),
+		pages: doc.pages.filter((entry) => entry.id !== page.id),
+	};
+}
+
+function addFrameToDocument(doc: LayoutDocument, pageId: string, frame: Frame, story?: TextStory, link?: ImageLink): LayoutDocument {
+	return {
+		...doc,
+		stories: story ? [...doc.stories, story] : doc.stories,
+		links: link ? [...doc.links, link] : doc.links,
+		pages: doc.pages.map((page) => {
+			if (page.id !== pageId) return page;
+			const layers = page.layers.map((layer) =>
+				layer.id === frame.layerId ? { ...layer, objectIds: [...layer.objectIds, frame.id] } : layer,
+			);
+			return { ...page, layers, frames: [...page.frames, frame] };
+		}),
+	};
+}
+
+function removeFrameFromDocument(doc: LayoutDocument, pageId: string, frame: Frame, story?: TextStory, link?: ImageLink): LayoutDocument {
+	return {
+		...doc,
+		stories: story ? doc.stories.filter((entry) => entry.id !== story.id) : doc.stories,
+		links: link ? doc.links.filter((entry) => entry.id !== link.id) : doc.links,
+		pages: doc.pages.map((page) => {
+			if (page.id !== pageId) return page;
+			const layers = page.layers.map((layer) =>
+				layer.id === frame.layerId ? { ...layer, objectIds: layer.objectIds.filter((id) => id !== frame.id) } : layer,
+			);
+			return { ...page, layers, frames: page.frames.filter((entry) => entry.id !== frame.id) };
+		}),
+	};
+}
+
+function patchPageProps(doc: LayoutDocument, pageId: string, patch: LayoutPagePropsPatch): LayoutDocument {
+	return {
+		...doc,
+		pages: doc.pages.map((page) => (page.id === pageId ? { ...page, ...patch } : page)),
+	};
+}
+
+function patchFrameProps(doc: LayoutDocument, objectId: string, patch: LayoutFramePropsPatch): LayoutDocument {
+	const patchFrames = (frames: readonly Frame[]) =>
+		frames.map((frame) => {
+			if (frame.id !== objectId) return frame;
+			if (frame.kind === "rect") {
+				return {
+					...frame,
+					...(patch.fill !== undefined ? { fill: patch.fill } : {}),
+					...(patch.stroke !== undefined ? { stroke: patch.stroke } : {}),
+				};
+			}
+			if (frame.kind === "text") {
+				return {
+					...frame,
+					...(patch.wrapMode !== undefined ? { wrapMode: patch.wrapMode } : {}),
+					...(patch.columns !== undefined ? { columns: patch.columns } : {}),
+				};
+			}
+			if (frame.kind === "image" && patch.linkId !== undefined) {
+				return { ...frame, linkId: patch.linkId };
+			}
+			return frame;
+		});
+	let next: LayoutDocument = {
+		...doc,
+		pages: doc.pages.map((page) => ({ ...page, frames: patchFrames(page.frames) })),
+		parentPages: doc.parentPages.map((parent) => ({ ...parent, frames: patchFrames(parent.frames) })),
+	};
+	if (patch.storyContent !== undefined) {
+		const frame = findFrame(next, objectId);
+		if (frame?.kind === "text") {
+			next = patchStoryContent(next, frame.storyId, patch.storyContent);
+		}
+	}
+	if (patch.linkPath !== undefined) {
+		const frame = findFrame(next, objectId);
+		if (frame?.kind === "image") {
+			next = {
+				...next,
+				links: next.links.map((link) => (link.id === frame.linkId ? { ...link, path: patch.linkPath! } : link)),
+			};
+		}
+	}
+	return next;
+}
+
 export function invertLayoutCommand(command: LayoutCommand): LayoutCommand {
 	if (command.type === "composite") {
 		return { type: "composite", commands: [...command.commands].reverse().map(invertLayoutCommand) };
@@ -511,6 +712,12 @@ export function invertLayoutCommand(command: LayoutCommand): LayoutCommand {
 	if (command.type === "set_story_content") return { ...command, before: command.after, after: command.before };
 	if (command.type === "apply_parent_page") return { ...command, before: command.after, after: command.before };
 	if (command.type === "reorder_pages") return { ...command, before: command.after, after: command.before };
+	if (command.type === "add_page") return { type: "remove_page", spreadId: command.spreadId, page: command.page };
+	if (command.type === "remove_page") return { type: "add_page", spreadId: command.spreadId, page: command.page };
+	if (command.type === "add_frame") return { type: "remove_frame", pageId: command.pageId, frame: command.frame, story: command.story, link: command.link };
+	if (command.type === "remove_frame") return { type: "add_frame", pageId: command.pageId, frame: command.frame, story: command.story, link: command.link };
+	if (command.type === "patch_page_props") return { ...command, before: command.after, after: command.before };
+	if (command.type === "patch_frame_props") return { ...command, before: command.after, after: command.before };
 	return command;
 }
 
@@ -558,6 +765,12 @@ export function applyLayoutCommand(doc: LayoutDocument, command: LayoutCommand):
 	if (command.type === "set_story_content") return patchStoryContent(doc, command.storyId, command.after);
 	if (command.type === "apply_parent_page") return patchParentPage(doc, command.pageId, command.after);
 	if (command.type === "reorder_pages") return patchPageOrder(doc, command.spreadId, command.after);
+	if (command.type === "add_page") return addPageToDocument(doc, command.spreadId, command.page);
+	if (command.type === "remove_page") return removePageFromDocument(doc, command.spreadId, command.page);
+	if (command.type === "add_frame") return addFrameToDocument(doc, command.pageId, command.frame, command.story, command.link);
+	if (command.type === "remove_frame") return removeFrameFromDocument(doc, command.pageId, command.frame, command.story, command.link);
+	if (command.type === "patch_page_props") return patchPageProps(doc, command.pageId, command.after);
+	if (command.type === "patch_frame_props") return patchFrameProps(doc, command.objectId, command.after);
 	return doc;
 }
 
@@ -743,6 +956,43 @@ if (import.meta.vitest) {
 			const issues = runLayoutPreflight(DEFAULT_LAYOUT_DOCUMENT);
 			expect(issues.some((i) => i.code === "asset.missing")).toBe(true);
 			expect(issues.some((i) => i.code === "text.below_minimum_size")).toBe(true);
+		});
+		it("add_page and remove_page undo round-trip", () => {
+			const history = new LayoutHistory(DEFAULT_LAYOUT_DOCUMENT);
+			const page = createDefaultPage("spread-1", 2);
+			history.apply({ type: "add_page", spreadId: "spread-1", page });
+			expect(history.getDocument().pages.some((entry) => entry.id === page.id)).toBe(true);
+			history.undo();
+			expect(history.getDocument().pages.some((entry) => entry.id === page.id)).toBe(false);
+		});
+		it("add_frame and patch_frame_props undo round-trip", () => {
+			const history = new LayoutHistory(DEFAULT_LAYOUT_DOCUMENT);
+			const page = history.getDocument().pages[0]!;
+			const layerId = page.layerIds[0]!;
+			const created = createDefaultFrame("rect", layerId);
+			history.apply({ type: "add_frame", pageId: page.id, frame: created.frame });
+			expect(findFrame(history.getDocument(), created.frame.id)?.kind).toBe("rect");
+			history.apply({
+				type: "patch_frame_props",
+				objectId: created.frame.id,
+				before: { fill: created.frame.fill },
+				after: { fill: [1, 0, 0, 1] },
+			});
+			expect(findFrame(history.getDocument(), created.frame.id)?.kind === "rect" && findFrame(history.getDocument(), created.frame.id)?.fill).toEqual([1, 0, 0, 1]);
+			history.undo();
+			history.undo();
+			expect(findFrame(history.getDocument(), created.frame.id)).toBeUndefined();
+		});
+		it("patch_page_props updates page name", () => {
+			const history = new LayoutHistory(DEFAULT_LAYOUT_DOCUMENT);
+			const page = history.getDocument().pages[0]!;
+			history.apply({
+				type: "patch_page_props",
+				pageId: page.id,
+				before: { name: page.name },
+				after: { name: "Renamed Page" },
+			});
+			expect(findPage(history.getDocument(), page.id)?.name).toBe("Renamed Page");
 		});
 	});
 }

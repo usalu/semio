@@ -8,7 +8,7 @@ const flowCoreWasmScript = join(import.meta.dir, "../../flow/core/script.ts");
 class TestScript extends BundleScript {
 	run(segments: string[]): void {
 		runBun([flowCoreWasmScript, "wasm"], this.root);
-		runVitest(this.root, segments, "js/vitest.config.ts");
+		runVitest(this.root, segments, "vitest.config.ts");
 	}
 }
 

@@ -1,1 +1,10 @@
-@import "@semio-tech/ui-styling/ui.css";
+@import "../../../../ui/react/globals.css";
+@source "../core";
+@source "../renderer/react";
+@source "../../playground/core";
+@source "../../playground/renderer/react";
+@source "../../platform/renderer/react";
+@source "../../../../s/core";
+@source "../../../../s/react";
+@source "../../../../ui/react";
+@source "../../../../**/react";

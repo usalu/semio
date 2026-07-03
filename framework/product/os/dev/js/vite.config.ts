@@ -10,5 +10,5 @@ export default createPlaygroundPlayViteConfig({
 	playDir,
 	repoRoot,
 	playEntryKind: "s",
-	resolveDedupe: ["react", "react-dom", "@semio-tech/s-react"],
+	resolveDedupe: ["react", "react-dom", "@semio-tech/s-react", "three", "@react-three/fiber", "@react-three/drei"],
 });

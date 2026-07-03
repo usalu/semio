@@ -1022,7 +1022,7 @@ mod wasm_session {
     impl TrinitySession {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            let fixture = include_str!("../../fixture/nakagin-capsule-tower.trinity.json");
+            let fixture = include_str!("../../../example/nakagin-capsule-tower.trinity.json");
             let host = TrinityHost::load_fixture_json(fixture).unwrap_or_else(|_| TrinityHost::from_graph(Graph::from_fixture(GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None }).unwrap()));
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
@@ -1240,7 +1240,7 @@ mod tests {
     use super::*;
 
     fn nakagin_graph() -> Graph {
-        let json = include_str!("../../fixture/nakagin-capsule-tower.trinity.json");
+        let json = include_str!("../../../example/nakagin-capsule-tower.trinity.json");
         let mut g = Graph::load_json(json).unwrap();
         g.recompute_derived();
         g
@@ -1319,7 +1319,7 @@ mod tests {
 
     #[test]
     fn rewrite_labeled_fixture_reloads() {
-        let json = include_str!("../../fixture/nakagin-capsule-tower.trinity.json");
+        let json = include_str!("../../../example/nakagin-capsule-tower.trinity.json");
         let mut g = Graph::load_json(json).unwrap();
         let rule = Rule {
             name: "label-core".into(),

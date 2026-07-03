@@ -35,7 +35,7 @@ export {
   type WiresFixtureIdentity,
   type WiresFixtureRelationship,
   type WiresFixture,
-} from "../../react/js/index.ts";
+} from "../../react/index.ts";
 
 import type { KindCatalogBundle, Puzzle2dFixture } from "@semio-tech/puzzle-2d-react";
 import { type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@semio-tech/framework-playground-core";
@@ -50,7 +50,7 @@ import {
   wiresRelationshipKindForEdgeId,
   type WiresFixtureKindCatalogs,
   type WiresFixture,
-} from "../../react/js/index.ts";
+} from "../../react/index.ts";
 
 export type WiresPlayHierarchyBuildOptions = Puzzle2dPlayHierarchyBuildOptions;
 
@@ -242,7 +242,7 @@ if (import.meta.vitest) {
 
   describe("wires play fixture", () => {
     it("metabolism board has seven identities and nine relationships", async () => {
-      const { METABOLISM_WIRES_FIXTURE, wiresRelationshipKindForEdgeId } = await import("../../react/js/index.ts");
+      const { METABOLISM_WIRES_FIXTURE, wiresRelationshipKindForEdgeId } = await import("../../react/index.ts");
       expect(METABOLISM_WIRES_FIXTURE.board.nodes.length).toBe(7);
       expect(METABOLISM_WIRES_FIXTURE.board.edges.length).toBe(9);
       expect(wiresRelationshipKindForEdgeId(METABOLISM_WIRES_FIXTURE, "wires-rel-owns-capsule")).toBe("owns");

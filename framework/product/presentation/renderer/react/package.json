@@ -6,8 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./js/index.tsx",
-    "./globals.css": "./js/globals.css"
+    ".": "./index.tsx",
+    "./globals.css": "./globals.css"
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",

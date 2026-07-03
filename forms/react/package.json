@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./js/index.tsx"
+    ".": "./index.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/forms-react:test"

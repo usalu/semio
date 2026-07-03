@@ -26,7 +26,7 @@ import {
 	uiDeclarativeSectionsToTree,
 	uiInspectorAllEqual,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-	JackHoverBridge,
+	FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 	buildWriterWindowBody,
   createPlaygroundApp,
   createProductPlaygroundPlatform,
@@ -39,7 +39,7 @@ import {
 } from "@semio-tech/framework-platform-core";
 import { downloadMediaExportResult } from "@semio-tech/framework-core";
 import { createWriterDocument, type WriterDocument } from "@semio-tech/writer-core/internal";
-import { runJackOnMediaGraph, wireLiteralFromDagFixtureJson } from "@semio-tech/graph-dsl-core";
+import { wireLiteralFromDagFixtureJson } from "@semio-tech/graph-dsl-core";
 import {
 	DevJsonBackbone,
 	RemoteOsBackbone,
@@ -81,38 +81,29 @@ import {
 	type OsMediaExportResult,
 	TECHNOLOGY_APP_RESOURCE_BY_PROGRAM,
 	sAppRegistration,
+	osParameterTypesCompatible,
+	osParameterValue,
+	type OsParameter,
+	type OsParameterType,
 } from "./internal.ts";
 
 export const S_PLAY_APP_ID = "s-play";
 export const S_PLAY_CONTROLLER_ID = "s-play";
 export const S_PLAY_SURFACE_MEDIA_GRAPH = "s.play.media-graph";
 export const S_PLAY_SURFACE_MEDIA_VFS = "s.play.media-vfs";
-export const S_PLAY_SURFACE_APP_HOST = "s.play.app-host";
-export const S_PLAY_SURFACE_LAUNCHER = "s.play.launcher";
-export const S_PLAY_SURFACE_HISTORY = "s.play.history";
-export const S_PLAY_BODY_LAUNCHER = "s.play.launcher";
-export const S_PLAY_BODY_HISTORY = "s.play.history";
-export const S_PLAY_WINDOW_LAUNCHER = "s-launcher";
-export const S_PLAY_WINDOW_HISTORY = "s-history";
 export const S_PLAY_BODY_MEDIA_GRAPH = "s.play.media-graph";
 export const S_PLAY_BODY_MEDIA_VFS = "s.play.media-vfs";
-export const S_PLAY_BODY_APP_HOST = "s.play.app-host";
 export const S_PLAY_WINDOW_MEDIA_GRAPH = "s-media-graph";
 export const S_PLAY_WINDOW_MEDIA_VFS = "s-media-vfs";
-export const S_PLAY_WINDOW_APP_HOST = "s-app-host";
-export const S_PLAY_WINDOW_JACK = "s-jack";
 export const S_PLAY_WINDOW_COMPILED_DAG = "s-compiled-dag";
-export const S_PLAY_BODY_JACK = "s.play.jack";
 export const S_PLAY_BODY_COMPILED_DAG = "s.play.compiled-dag";
-export const S_PLAY_SURFACE_JACK = "s.play.jack";
 export const S_PLAY_SURFACE_COMPILED_DAG = "s.play.compiled-dag";
-export const S_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:flow) RETURN n.id";
 
 export const S_PLAY_LAYOUT = createDefaultLayout(
-	[S_PLAY_WINDOW_MEDIA_GRAPH, S_PLAY_WINDOW_MEDIA_VFS, S_PLAY_WINDOW_APP_HOST, S_PLAY_WINDOW_LAUNCHER, S_PLAY_WINDOW_HISTORY, S_PLAY_WINDOW_JACK, S_PLAY_WINDOW_COMPILED_DAG],
+	[S_PLAY_WINDOW_MEDIA_GRAPH, S_PLAY_WINDOW_MEDIA_VFS, S_PLAY_WINDOW_COMPILED_DAG],
 	"row",
-	[22, 18, 28, 8, 8, 8, 8],
-	["Media Graph", "Media VFS", "App Host", "Launcher", "History", "Jack", "Compiled DAG"],
+	[40, 30, 30],
+	["Media Graph", "Media VFS", "Compiled DAG"],
 );
 
 export type SPlayFixtureLoader = (fixtureId: string) => SStudioDocument;
@@ -179,31 +170,6 @@ export async function bootstrapSPlayExtensions(): Promise<void> {
 }
 //#endregion 🔖SExtensionWiring
 
-/** @emoji 🃏 Builds a Jack-queryable media graph from studio projection. */
-export function sPlayMediaGraphForJack(projection: {
-	readonly mediaGraph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] };
-	readonly appInstances: readonly SAppInstance[];
-}): { readonly nodes: readonly { readonly id: string; readonly kind: string; readonly label?: string }[] } {
-	return {
-		nodes: projection.mediaGraph.nodes.map((node) => {
-			const instance = projection.appInstances.find((row) => row.id === node.instanceId);
-			return {
-				id: node.id,
-				kind: instance?.programId ?? "app",
-				label: instance?.label ?? node.id,
-			};
-		}),
-	};
-}
-
-function sPlayJackBoardFixtureJson(projection: ReturnType<StudioStore["projection"]>): string {
-	const graph = sPlayMediaGraphForJack(projection);
-	return JSON.stringify({
-		nodes: graph.nodes.map((node) => ({ id: node.id, nodeKind: node.kind, text: node.label ?? node.id })),
-		edges: [],
-	});
-}
-
 function sPlayMediaNodePointerKey(id: string): string {
 	return `media-node:${id}`;
 }
@@ -224,15 +190,9 @@ export class SPlayController extends Controller {
 	private store: StudioStore;
 	private activeInstanceId: string | null = null;
 	private fixtureId: string;
-	private launcherProgramId = listSPrograms()[0]?.id ?? "";
-	private launcherEngagementInput = "";
-	private historyEngagementInput = "";
-	private appHostEngagementInput = "";
-	private focusedInstanceId: string | null = null;
 	private mediaGraphEngagementInput = "";
 	private readonly mediaGraphVfsController: OsMediaGraphVirtualFileSystemController;
 	private mediaGraphVfsUnsubscribe?: () => void;
-	private readonly jackBridge = new JackHoverBridge();
 	private readonly snapshotListeners = new Set<() => void>();
 	readonly mainMode = new ModeRuntime("main", "S", undefined);
 
@@ -242,20 +202,12 @@ export class SPlayController extends Controller {
 		this.fixtureId = fixtureId;
 		const projection = this.store.projection();
 		this.activeInstanceId = projection.appInstances[0]?.id ?? null;
-		this.jackBridge.setJackQueryText(S_PLAY_DEFAULT_JACK_QUERY);
-		this.syncJackFixtureJson();
-		this.jackBridge.bindPointerFocus(this.pointerFocus);
 		this.mediaGraphVfsController = new OsMediaGraphVirtualFileSystemController(
 			`${S_PLAY_CONTROLLER_ID}-media-vfs`,
 			commandBus,
 			notify,
 			{
 				store: () => this.store,
-				onOpenInstance: (instanceId) => {
-					this.activeInstanceId = instanceId;
-					this.focusedInstanceId = instanceId;
-					this.emit();
-				},
 				onExport: async (instanceId, _portSpecId, format) => {
 					const projection = this.store.projection();
 					const instance = projection.appInstances.find((entry) => entry.id === instanceId);
@@ -274,7 +226,6 @@ export class SPlayController extends Controller {
 				appId: S_PLAY_APP_ID,
 				surfaceId: S_PLAY_SURFACE_MEDIA_VFS,
 			});
-			this.syncJackFixtureJson();
 			this.notifySnapshot();
 		});
 		this.rebuildShellMode();
@@ -292,69 +243,28 @@ export class SPlayController extends Controller {
 		this.mediaGraphVfsUnsubscribe?.();
 	}
 
-	private syncJackFixtureJson(): void {
-		this.jackBridge.setFixtureJson(sPlayJackBoardFixtureJson(this.store.projection()));
-	}
-
 	subscribeSnapshot(listener: () => void): () => void {
 		this.snapshotListeners.add(listener);
-		const unsubJack = this.jackBridge.subscribe(listener);
 		return () => {
 			this.snapshotListeners.delete(listener);
-			unsubJack();
 		};
-	}
-
-	getJackQueryText(): string {
-		return this.jackBridge.getJackQueryText();
-	}
-
-	getWriterDocumentJack(): WriterDocument {
-		return createWriterDocument({ id: "s-jack", languageId: "jack", text: this.jackBridge.getJackQueryText() });
 	}
 
 	getCompiledWireLiteral(): string {
 		const projection = this.store.projection();
-		return wireLiteralFromDagFixtureJson(sMediaGraphToDagFixtureJson(projection.mediaGraph, projection.appInstances));
+		return wireLiteralFromDagFixtureJson(
+			sMediaGraphToDagFixtureJson(projection.mediaGraph, projection.appInstances, undefined, projection.parameters),
+		);
 	}
 
 	getWriterDocumentCompiledDag(): WriterDocument {
 		return createWriterDocument({ id: "s-compiled-dag", languageId: "wire", text: this.getCompiledWireLiteral() });
 	}
 
-	getJackHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-		return this.jackBridge.getJackHoverOccurrences();
-	}
-
-	getJackSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-		return this.jackBridge.getJackSelectOccurrences();
-	}
-
-	getHoverEpoch(): number {
-		return this.jackBridge.getHoverEpoch();
-	}
-
-	getSelectEpoch(): number {
-		return this.jackBridge.getSelectEpoch();
-	}
-
-	getGraphHighlightedNodeIds(): readonly string[] {
-		return this.jackBridge.getGraphHoveredNodeIds();
-	}
-
 	private notifySnapshot(): void {
 		for (const listener of this.snapshotListeners) {
 			listener();
 		}
-	}
-
-	private syncJackGraphSelect(): void {
-		this.jackBridge.mirrorGraphSelect(this.getSelectedMediaNodeIds());
-		this.notifySnapshot();
-	}
-
-	getFocusedInstanceId(): string | null {
-		return this.focusedInstanceId;
 	}
 
 	private mediaGraphMeasures(): readonly WindowMeasure[] {
@@ -385,115 +295,6 @@ export class SPlayController extends Controller {
 		};
 	}
 
-	private appHostMeasures(): readonly WindowMeasure[] {
-		const projection = this.store.projection();
-		return [
-			{
-				kind: "select",
-				id: "s-app-host-instance",
-				label: "Instance",
-				value: this.activeInstanceId ?? "",
-				items: projection.appInstances.map((instance) => ({ id: instance.id, value: instance.id, label: instance.label })),
-				onChange: sPlayCmd("selectInstance"),
-			},
-		];
-	}
-
-	private appHostEngagement(): WindowEngagement {
-		const active = this.getActiveInstance();
-		return {
-			sessionActive: false,
-			input: {
-				id: "s-app-host-label",
-				value: this.appHostEngagementInput || active?.label || "",
-				placeholder: "Instance label",
-				onChange: sPlayCmd("appHostEngagementInput"),
-				onSubmit: sPlayCmd("appHostEngagementSubmit"),
-			},
-			status: active ? [{ id: "s-app-host-program", text: `${active.programId} · ${active.appId}` }] : [],
-		};
-	}
-
-	private launcherMeasures(): readonly WindowMeasure[] {
-		const programs = listSPrograms();
-		return [
-			{
-				kind: "select",
-				id: "s-launcher-program",
-				label: "Program",
-				value: this.launcherProgramId,
-				items: programs.map((program) => ({ id: program.id, value: program.id, label: program.name })),
-				onChange: sPlayCmd("setLauncherProgram"),
-			},
-		];
-	}
-
-	private launcherEngagement(): WindowEngagement {
-		const programs = listSPrograms();
-		return {
-			sessionActive: false,
-			input: {
-				id: "s-launcher-spawn",
-				value: this.launcherEngagementInput,
-				placeholder: "appId to spawn",
-				onChange: sPlayCmd("launcherEngagementInput"),
-				onSubmit: sPlayCmd("launcherEngagementSubmit"),
-			},
-			possibleEngagements: programs.slice(0, 4).map((program) => ({
-				id: `s-launcher-${program.id}`,
-				label: program.name,
-				command: sPlayCmd("spawnApp", { programId: program.id, appId: program.apps[0]?.id ?? program.id }),
-			})),
-		};
-	}
-
-	private historyMeasures(): readonly WindowMeasure[] {
-		const checkpoints = this.store.getDocument().vcs.checkpoints.length;
-		return [
-			{
-				kind: "slider",
-				id: "s-history-checkpoints",
-				label: "Checkpoints",
-				value: checkpoints,
-				min: 0,
-				max: Math.max(checkpoints, 1),
-				step: 1,
-				onChange: sPlayCmd("commitCheckpoint"),
-			},
-		];
-	}
-
-	private historyEngagement(): WindowEngagement {
-		return {
-			sessionActive: false,
-			input: {
-				id: "s-history-checkpoint",
-				value: this.historyEngagementInput,
-				placeholder: "Checkpoint message",
-				onChange: sPlayCmd("historyEngagementInput"),
-				onSubmit: sPlayCmd("historyEngagementSubmit"),
-			},
-			possibleEngagements: [
-				{ id: "s-history-undo", label: "Undo", command: sPlayCmd("undo") },
-				{ id: "s-history-redo", label: "Redo", command: sPlayCmd("redo") },
-			],
-		};
-	}
-
-	private jackEngagementInput = "";
-
-	private jackEngagement(): WindowEngagement {
-		return {
-			input: {
-				id: "s-jack-query",
-				value: this.jackEngagementInput,
-				placeholder: "Jack query on media graph",
-				onChange: sPlayCmd("jackEngagementInput"),
-				onSubmit: sPlayCmd("runJackQuery"),
-			},
-		};
-	}
-
 	private compiledDagEngagement(): WindowEngagement {
 		return {
 			sessionActive: false,
@@ -520,31 +321,6 @@ export class SPlayController extends Controller {
 				this.mediaGraphEngagement(),
 			),
 			new WindowKindRuntime(S_PLAY_WINDOW_MEDIA_VFS, "Media VFS", S_PLAY_BODY_MEDIA_VFS),
-			new WindowKindRuntime(
-				S_PLAY_WINDOW_APP_HOST,
-				"App Host",
-				S_PLAY_BODY_APP_HOST,
-				undefined,
-				this.appHostMeasures(),
-				this.appHostEngagement(),
-			),
-			new WindowKindRuntime(
-				S_PLAY_WINDOW_LAUNCHER,
-				"Launcher",
-				S_PLAY_BODY_LAUNCHER,
-				undefined,
-				this.launcherMeasures(),
-				this.launcherEngagement(),
-			),
-			new WindowKindRuntime(
-				S_PLAY_WINDOW_HISTORY,
-				"History",
-				S_PLAY_BODY_HISTORY,
-				undefined,
-				this.historyMeasures(),
-				this.historyEngagement(),
-			),
-			new WindowKindRuntime(S_PLAY_WINDOW_JACK, "Jack", S_PLAY_BODY_JACK, undefined, undefined, this.jackEngagement()),
 			new WindowKindRuntime(S_PLAY_WINDOW_COMPILED_DAG, "Compiled DAG", S_PLAY_BODY_COMPILED_DAG, undefined, undefined, this.compiledDagEngagement()),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
@@ -558,11 +334,6 @@ export class SPlayController extends Controller {
 
 	getActiveInstanceId(): string | null {
 		return this.activeInstanceId;
-	}
-
-	getActiveInstance(): SAppInstance | null {
-		if (!this.activeInstanceId) return null;
-		return this.store.projection().appInstances.find((instance) => instance.id === this.activeInstanceId) ?? null;
 	}
 
 	getSelectedMediaNodeIds(): readonly string[] {
@@ -579,60 +350,10 @@ export class SPlayController extends Controller {
 
 	dispatch(command: StudioCommand): void {
 		this.store.dispatch(command);
-		this.syncJackFixtureJson();
 		this.emit();
 	}
 
 	run(command: string, args?: Record<string, unknown>): void {
-		if (command === "setJackQuery") {
-			const text = typeof args?.text === "string" ? args.text : "";
-			if (text) {
-				this.jackBridge.setJackQueryText(text);
-				this.notifySnapshot();
-				this.emit();
-			}
-			return;
-		}
-		if (command === "setJackHover") {
-			this.jackBridge.setJackHover((args?.offset as number | null | undefined) ?? null);
-			this.notifySnapshot();
-			this.emit();
-			return;
-		}
-		if (command === "setJackSelect") {
-			this.jackBridge.setJackSelect((args as { start: number; end: number } | null) ?? null);
-			this.notifySnapshot();
-			this.emit();
-			return;
-		}
-		if (command === "setGraphHover") {
-			this.jackBridge.setGraphHover(typeof args?.id === "string" ? args.id : null);
-			this.notifySnapshot();
-			this.emit();
-			return;
-		}
-		if (command === "setGraphSelect") {
-			const ids = Array.isArray(args?.ids) ? args!.ids.map((id) => String(id)) : [];
-			const projection = this.store.projection();
-			const instanceIds = ids
-				.map((nodeId) => projection.mediaGraph.nodes.find((node) => node.id === nodeId)?.instanceId)
-				.filter((id): id is string => Boolean(id));
-			this.pointerFocus.setSelection([
-				...ids.map(sPlayMediaNodePointerKey),
-				...instanceIds.map(sPlayAppInstancePointerKey),
-			]);
-			this.jackBridge.mirrorGraphSelect(ids);
-			this.notifySnapshot();
-			this.emit();
-			return;
-		}
-		if (command === "runJackQuery") {
-			const projection = this.store.projection();
-			runJackOnMediaGraph(projection.mediaGraph, projection.appInstances, this.jackBridge.getJackQueryText());
-			this.notifySnapshot();
-			this.emit();
-			return;
-		}
 		switch (command) {
 			case "mediaGraphEngagementInput": {
 				const value = typeof args?.value === "string" ? args.value : "";
@@ -649,75 +370,9 @@ export class SPlayController extends Controller {
 				if (programId && appId) this.run("spawnApp", { programId, appId });
 				return;
 			}
-			case "appHostEngagementInput": {
-				const value = typeof args?.value === "string" ? args.value : "";
-				if (value !== this.appHostEngagementInput) {
-					this.appHostEngagementInput = value;
-					this.rebuildShellMode();
-					this.emit();
-				}
-				return;
-			}
-			case "appHostEngagementSubmit": {
-				const value = String(args?.value ?? this.appHostEngagementInput).trim();
-				if (this.activeInstanceId && value) {
-					this.store.dispatch({ kind: "patchAppInstances", instanceIds: [this.activeInstanceId], field: "label", value });
-					this.appHostEngagementInput = value;
-					this.rebuildShellMode();
-					this.emit();
-				}
-				return;
-			}
-			case "launcherEngagementInput": {
-				const value = typeof args?.value === "string" ? args.value : "";
-				if (value !== this.launcherEngagementInput) {
-					this.launcherEngagementInput = value;
-					this.rebuildShellMode();
-					this.emit();
-				}
-				return;
-			}
-			case "launcherEngagementSubmit": {
-				const appId = String(args?.value ?? this.launcherEngagementInput).trim();
-				if (this.launcherProgramId && appId) this.run("spawnApp", { programId: this.launcherProgramId, appId });
-				return;
-			}
-			case "jackEngagementInput": {
-				const value = typeof args?.value === "string" ? args.value : "";
-				if (value !== this.jackEngagementInput) {
-					this.jackEngagementInput = value;
-					this.rebuildShellMode();
-					this.emit();
-				}
-				return;
-			}
 			case "compiledDagEngagementInput":
 			case "compiledDagEngagementSubmit":
 				return;
-			case "historyEngagementInput": {
-				const value = typeof args?.value === "string" ? args.value : "";
-				if (value !== this.historyEngagementInput) {
-					this.historyEngagementInput = value;
-					this.rebuildShellMode();
-					this.emit();
-				}
-				return;
-			}
-			case "historyEngagementSubmit": {
-				this.run("commitCheckpoint", { message: String(args?.value ?? this.historyEngagementInput).trim() || undefined });
-				this.historyEngagementInput = "";
-				this.rebuildShellMode();
-				return;
-			}
-			case "setLauncherProgram": {
-				const programId = String(args?.value ?? "");
-				if (programId && programId !== this.launcherProgramId) {
-					this.launcherProgramId = programId;
-					this.rebuildShellMode();
-					this.emit();
-				}
-				return;
-			}
 			case "setMediaNodeSelection": {
 				const nodeIds = Array.isArray(args?.nodeIds) ? args!.nodeIds.map((id) => String(id)) : [];
 				const projection = this.store.projection();
@@ -731,7 +386,6 @@ export class SPlayController extends Controller {
 				if (instanceIds.length === 1) {
 					this.activeInstanceId = instanceIds[0]!;
 				}
-				this.syncJackGraphSelect();
 				this.emit();
 				return;
 			}
@@ -748,7 +402,6 @@ export class SPlayController extends Controller {
 				if (instanceIds.length === 1) {
 					this.activeInstanceId = instanceIds[0]!;
 				}
-				this.syncJackGraphSelect();
 				this.emit();
 				return;
 			}
@@ -790,7 +443,6 @@ export class SPlayController extends Controller {
 				} else {
 					this.pointerFocus.setSelection([]);
 				}
-				this.syncJackGraphSelect();
 				this.rebuildShellMode();
 				this.emit();
 				return;
@@ -806,19 +458,6 @@ export class SPlayController extends Controller {
 				this.store.dispatch({ kind: "spawnAppInstance", programId, appId, position });
 				const created = this.store.projection().appInstances.at(-1);
 				if (created) this.activeInstanceId = created.id;
-				this.rebuildShellMode();
-				this.emit();
-				return;
-			}
-			case "openInstance": {
-				this.focusedInstanceId = typeof args?.instanceId === "string" ? args.instanceId : null;
-				if (this.focusedInstanceId) this.activeInstanceId = this.focusedInstanceId;
-				this.rebuildShellMode();
-				this.emit();
-				return;
-			}
-			case "closeFocusedInstance": {
-				this.focusedInstanceId = null;
 				this.rebuildShellMode();
 				this.emit();
 				return;
@@ -844,8 +483,65 @@ export class SPlayController extends Controller {
 				this.store = createStudioStore(this.loadFixture(fixtureId));
 				const projection = this.store.projection();
 				this.activeInstanceId = projection.appInstances[0]?.id ?? null;
-				this.syncJackFixtureJson();
 				this.rebuildShellMode();
+				this.emit();
+				return;
+			}
+			case "addParameter": {
+				this.store.dispatch({
+					kind: "addParameter",
+					type: (args?.type as OsParameterType | undefined) ?? "numeric",
+					name: typeof args?.name === "string" ? args.name : undefined,
+				});
+				this.emit();
+				return;
+			}
+			case "removeParameter": {
+				const parameterId = String(args?.parameterId ?? "");
+				if (!parameterId) return;
+				this.store.dispatch({ kind: "removeParameter", parameterId });
+				this.emit();
+				return;
+			}
+			case "patchParameter": {
+				const parameterId = String(args?.parameterId ?? "");
+				const field = typeof args?.field === "string" ? args.field : undefined;
+				if (!parameterId || !field) return;
+				let patch: Record<string, unknown>;
+				if (field === "addOption" && typeof args?.value === "string") {
+					const current = this.store.projection().parameters.find((entry) => entry.id === parameterId);
+					if (current?.type !== "categorical") return;
+					patch = { options: [...current.options, args.value], value: args.value };
+				} else if (field === "removeOption" && typeof args?.value === "string") {
+					const current = this.store.projection().parameters.find((entry) => entry.id === parameterId);
+					if (current?.type !== "categorical") return;
+					const options = current.options.filter((option) => option !== args.value);
+					patch = { options, value: options.includes(current.value) ? current.value : (options[0] ?? "") };
+				} else {
+					patch = { [field]: args?.value };
+				}
+				this.store.dispatch({ kind: "patchParameter", parameterId, patch });
+				this.emit();
+				return;
+			}
+			case "bindParameterField": {
+				const instanceId = String(args?.instanceId ?? "");
+				const fieldPath = String(args?.fieldPath ?? "");
+				const parameterId = String(args?.parameterId ?? args?.value ?? "");
+				if (!instanceId || !fieldPath) return;
+				if (!parameterId || parameterId === "__direct__") {
+					this.store.dispatch({ kind: "unbindParameterField", instanceId, fieldPath });
+				} else {
+					this.store.dispatch({ kind: "bindParameterField", instanceId, fieldPath, parameterId });
+				}
+				this.emit();
+				return;
+			}
+			case "unbindParameterField": {
+				const instanceId = String(args?.instanceId ?? "");
+				const fieldPath = String(args?.fieldPath ?? "");
+				if (!instanceId || !fieldPath) return;
+				this.store.dispatch({ kind: "unbindParameterField", instanceId, fieldPath });
 				this.emit();
 				return;
 			}
@@ -872,6 +568,221 @@ export function buildSPlayToolbarTools(controllerId: string): AppTools {
 			{ kind: "button", id: "s.checkpoint", label: "Checkpoint", iconId: "git-commit", controllerId, command: "commitCheckpoint" },
 		]),
 	];
+}
+
+const S_PLAY_CATALOGUE_DRAG_MIME = "application/x-semio-catalogue-item";
+
+/** @emoji 📚 Declarative catalogue tree for spawning program apps into the studio media graph. */
+export function buildSPlayCatalogueTree(): UiTreeNode {
+	const programs = listSPrograms().filter((program) => program.id !== "s.system");
+	return uiDeclarativeSectionsToTree([
+		{
+			type: "section",
+			id: "s-play-catalogue",
+			label: "Apps",
+			children: programs.map((program) => ({
+				type: "section",
+				id: `s-play-catalogue.program.${program.id}`,
+				label: program.name,
+				children: program.apps.map((app) => ({
+					type: "item",
+					id: `s-play-catalogue.app.${program.id}.${app.id}`,
+					label: app.label,
+					dragData: { [S_PLAY_CATALOGUE_DRAG_MIME]: JSON.stringify({ programId: program.id, appId: app.id }) },
+					meta: sAppRegistration(program.id, app.id)?.outputs.map((port) => port.resourceKind).join(", ") ?? "",
+				})),
+			})),
+		},
+	]);
+}
+
+function sPlayParameterValueControl(parameter: OsParameter): UiNode {
+	switch (parameter.type) {
+		case "numeric":
+			return {
+				type: "numberStepper",
+				id: `s-play-parameters.${parameter.id}.value`,
+				value: parameter.value,
+				step: parameter.step ?? 1,
+				uniform: true,
+				onAbsolute: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "value" }),
+				onDelta: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "value" }),
+			};
+		case "categorical":
+			return {
+				type: "select",
+				id: `s-play-parameters.${parameter.id}.value`,
+				value: parameter.value,
+				items: parameter.options.map((option) => ({ id: option, value: option, label: option })),
+				onChange: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "value" }),
+			};
+		case "toggle":
+			return {
+				type: "toggle",
+				id: `s-play-parameters.${parameter.id}.value`,
+				iconId: "toggle-left",
+				pressed: parameter.value,
+				text: parameter.value ? "On" : "Off",
+				onChange: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "value" }),
+			};
+		case "text":
+			return {
+				type: "input",
+				id: `s-play-parameters.${parameter.id}.value`,
+				inputKind: "text",
+				value: parameter.value,
+				onChange: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "value" }),
+			};
+	}
+}
+
+function sPlayParameterConstraintFields(parameter: OsParameter): UiNode[] {
+	if (parameter.type === "numeric") {
+		return [
+			{
+				type: "field",
+				id: `s-play-parameters.${parameter.id}.min`,
+				label: "Min",
+				child: {
+					type: "input",
+					id: `s-play-parameters.${parameter.id}.min.input`,
+					inputKind: "number",
+					value: parameter.min !== undefined ? String(parameter.min) : "",
+					onChange: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "min" }),
+				},
+			},
+			{
+				type: "field",
+				id: `s-play-parameters.${parameter.id}.max`,
+				label: "Max",
+				child: {
+					type: "input",
+					id: `s-play-parameters.${parameter.id}.max.input`,
+					inputKind: "number",
+					value: parameter.max !== undefined ? String(parameter.max) : "",
+					onChange: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "max" }),
+				},
+			},
+			{
+				type: "field",
+				id: `s-play-parameters.${parameter.id}.step`,
+				label: "Step",
+				child: {
+					type: "input",
+					id: `s-play-parameters.${parameter.id}.step.input`,
+					inputKind: "number",
+					value: parameter.step !== undefined ? String(parameter.step) : "",
+					onChange: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "step" }),
+				},
+			},
+		];
+	}
+	if (parameter.type === "categorical") {
+		const optionRows: UiNode[] = parameter.options.map((option) => ({
+			type: "field",
+			id: `s-play-parameters.${parameter.id}.option.${option}`,
+			label: option,
+			child: {
+				type: "button",
+				id: `s-play-parameters.${parameter.id}.option.${option}.remove`,
+				iconId: "trash-2",
+				label: "Remove",
+				command: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "removeOption", value: option }),
+			},
+		}));
+		return [
+			...optionRows,
+			{
+				type: "field",
+				id: `s-play-parameters.${parameter.id}.add-option`,
+				label: "Add option",
+				child: {
+					type: "input",
+					id: `s-play-parameters.${parameter.id}.add-option.input`,
+					inputKind: "text",
+					value: "",
+					placeholder: "New option",
+					onChange: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "addOption" }),
+				},
+			},
+		];
+	}
+	return [];
+}
+
+/** @emoji 🎛️ Declarative parameters tree for studio-level parameter definitions. */
+export function buildSPlayParametersTree(ctrl: SPlayController): UiTreeNode {
+	const projection = ctrl.getStudioStore().projection();
+	const children: UiNode[] = [
+		{
+			type: "section",
+			id: "s-play-parameters.header",
+			label: FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+			children: [
+				{
+					type: "button",
+					id: "s-play-parameters.add",
+					iconId: "plus",
+					label: "Add Parameter",
+					command: sPlayCmd("addParameter", { type: "numeric" }),
+				},
+				{ type: "text", value: `${projection.parameters.length} parameter(s)` },
+			],
+		},
+	];
+	for (const parameter of projection.parameters) {
+		children.push({
+			type: "section",
+			id: `s-play-parameters.${parameter.id}`,
+			label: parameter.name,
+			children: [
+				{
+					type: "field",
+					id: `s-play-parameters.${parameter.id}.name`,
+					label: "Name",
+					child: {
+						type: "input",
+						id: `s-play-parameters.${parameter.id}.name.input`,
+						inputKind: "text",
+						value: parameter.name,
+						onChange: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "name" }),
+					},
+				},
+				{
+					type: "field",
+					id: `s-play-parameters.${parameter.id}.type`,
+					label: "Type",
+					child: {
+						type: "select",
+						id: `s-play-parameters.${parameter.id}.type.select`,
+						value: parameter.type,
+						items: [
+							{ id: "numeric", value: "numeric", label: "Numeric" },
+							{ id: "categorical", value: "categorical", label: "Categorical" },
+							{ id: "toggle", value: "toggle", label: "Toggle" },
+							{ id: "text", value: "text", label: "Text" },
+						],
+						onChange: sPlayCmd("patchParameter", { parameterId: parameter.id, field: "type" }),
+					},
+				},
+				{
+					type: "field",
+					id: `s-play-parameters.${parameter.id}.value-field`,
+					label: "Value",
+					child: sPlayParameterValueControl(parameter),
+				},
+				...sPlayParameterConstraintFields(parameter),
+				{
+					type: "button",
+					id: `s-play-parameters.${parameter.id}.remove`,
+					iconId: "trash-2",
+					label: "Remove",
+					command: sPlayCmd("removeParameter", { parameterId: parameter.id }),
+				},
+			],
+		});
+	}
+	return uiDeclarativeSectionsToTree(children);
 }
 
 /** @emoji 🔎 Declarative inspection tree for s play media graph and app instances. */
@@ -990,6 +901,61 @@ export function buildSPlayInspectorTree(ctrl: SPlayController): UiTreeNode {
 				child: { type: "text", value: appUniform ? (appIds[0] ?? "") : "Mixed" },
 			},
 		);
+		if (instanceIds.length === 1) {
+			const instance = instances[0]!;
+			const registration = sAppRegistration(instance.programId, instance.appId);
+			const parameterFields = registration?.parameterFields ?? [];
+			if (parameterFields.length > 0) {
+				const bindingRows: UiNode[] = parameterFields.flatMap((fieldSpec) => {
+					const binding = projection.parameterBindings.find(
+						(entry) => entry.instanceId === instance.id && entry.fieldPath === fieldSpec.fieldPath,
+					);
+					const compatibleParameters = projection.parameters.filter((parameter) =>
+						osParameterTypesCompatible(parameter.type, fieldSpec.type),
+					);
+					const boundParameter = binding
+						? projection.parameters.find((parameter) => parameter.id === binding.parameterId)
+						: undefined;
+					const rows: UiNode[] = [
+						{
+							type: "field",
+							id: `s-play-inspector.app-parameter.${fieldSpec.fieldPath}`,
+							label: fieldSpec.label,
+							child: {
+								type: "select",
+								id: `s-play-inspector.app-parameter.${fieldSpec.fieldPath}.select`,
+								value: binding?.parameterId ?? "__direct__",
+								items: [
+									{ id: "__direct__", value: "__direct__", label: "Direct value" },
+									...compatibleParameters.map((parameter) => ({
+										id: parameter.id,
+										value: parameter.id,
+										label: parameter.name,
+									})),
+								],
+								onChange: sPlayCmd("bindParameterField", {
+									instanceId: instance.id,
+									fieldPath: fieldSpec.fieldPath,
+								}),
+							},
+						},
+					];
+					if (boundParameter) {
+						rows.push({
+							type: "text",
+							value: `Bound value: ${String(osParameterValue(boundParameter))}`,
+						});
+					}
+					return rows;
+				});
+				instanceFields.push({
+					type: "section",
+					id: "s-play-inspector.app-parameters",
+					label: "Parameters",
+					children: bindingRows,
+				});
+			}
+		}
 		children.push({
 			type: "section",
 			id: "s-play-inspector.app-instances",
@@ -1006,14 +972,6 @@ export function buildSPlayInspectorTree(ctrl: SPlayController): UiTreeNode {
 export function registerSPlayDeclarativeBodies(): void {
 	registerWindowBody(S_PLAY_BODY_MEDIA_GRAPH, () =>
 		buildSWindowBody(S_PLAY_SURFACE_MEDIA_GRAPH, S_PLAY_CONTROLLER_ID, "mediaGraph", "media-graph"));
-	registerWindowBody(S_PLAY_BODY_APP_HOST, () =>
-		buildSWindowBody(S_PLAY_SURFACE_APP_HOST, S_PLAY_CONTROLLER_ID, "appHost", "app-host"));
-	registerWindowBody(S_PLAY_BODY_LAUNCHER, () =>
-		buildSWindowBody(S_PLAY_SURFACE_LAUNCHER, S_PLAY_CONTROLLER_ID, "launcher", "launcher"));
-	registerWindowBody(S_PLAY_BODY_HISTORY, () =>
-		buildSWindowBody(S_PLAY_SURFACE_HISTORY, S_PLAY_CONTROLLER_ID, "history", "history"));
-	registerWindowBody(S_PLAY_BODY_JACK, () =>
-		buildWriterWindowBody(S_PLAY_SURFACE_JACK, S_PLAY_CONTROLLER_ID, S_PLAY_WINDOW_JACK));
 	registerWindowBody(S_PLAY_BODY_COMPILED_DAG, () =>
 		buildWriterWindowBody(S_PLAY_SURFACE_COMPILED_DAG, S_PLAY_CONTROLLER_ID, S_PLAY_WINDOW_COMPILED_DAG));
 }
@@ -1158,8 +1116,8 @@ export const sPlayAppDefinition = createPlaygroundApp({
 	defaultModeId: "edit",
 	devHost: {
 		playEntryKind: "s",
-		resolveDedupe: ["react", "react-dom", "@semio-tech/s-react"],
-		optimizeDeps: { include: ["react", "react-dom"] },
+		resolveDedupe: ["react", "react-dom", "@semio-tech/s-react", "three", "@react-three/fiber", "@react-three/drei"],
+		optimizeDeps: { include: ["react", "react-dom", "three"] },
 	},
 	createRuntime: () => {
 		const runtime = createProductPlaygroundPlatform(S_PLAY_APP_ID, "S");
@@ -1237,25 +1195,20 @@ if (import.meta.vitest) {
 			expect(bundle?.projection).toBeTruthy();
 		});
 
-		it("openInstance and closeFocusedInstance toggle drill-in focus", async () => {
-			const ctrl = createSPlayTestController("demo");
-			const instanceId = ctrl.getStudioStore().projection().appInstances[0]?.id;
-			expect(instanceId).toBeTruthy();
-			ctrl.run("openInstance", { instanceId });
-			expect(ctrl.getFocusedInstanceId()).toBe(instanceId);
-			ctrl.run("closeFocusedInstance");
-			expect(ctrl.getFocusedInstanceId()).toBeNull();
-		});
-
 		it("spawns puzzle5d and shooting with multi-port registrations", async () => {
-			const ctrl = createSPlayTestController("demo");
-			ctrl.run("spawnApp", { programId: "puzzle.5d", appId: "puzzle5d", position: { x: 100, y: 100 } });
 			ctrl.run("spawnApp", { programId: "shooting", appId: "shooting", position: { x: 300, y: 100 } });
 			const projection = ctrl.getStudioStore().projection();
 			const puzzleNode = projection.mediaGraph.nodes.find((node) => node.instanceId === projection.appInstances.at(-2)?.id);
 			const shootingNode = projection.mediaGraph.nodes.find((node) => node.instanceId === projection.appInstances.at(-1)?.id);
 			expect(puzzleNode?.outputs.length).toBe(2);
 			expect(shootingNode?.inputs.length).toBe(1);
+		});
+
+		it("buildSPlayCatalogueTree returns declarative sections", async () => {
+			await bootstrapSPlayExtensions();
+			const tree = buildSPlayCatalogueTree();
+			expect(tree.sections.length).toBeGreaterThan(0);
+			expect(tree.sections[0]?.items.length).toBeGreaterThan(0);
 		});
 
 		it("buildSPlayInspectorTree exposes batch label editing for selected instances", async () => {

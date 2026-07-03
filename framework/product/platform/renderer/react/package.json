@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./js/index.tsx"
+    ".": "./index.tsx"
   },
   "dependencies": {
     "@semio-tech/cad-js-renderer": "workspace:*",

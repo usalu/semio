@@ -6,14 +6,14 @@
   "description": "ui · react",
   "type": "module",
   "exports": {
-    ".": "./js/index.tsx",
-    "./components.json": "./js/components.json",
+    ".": "./index.tsx",
+    "./components.json": "./components.json",
     "./globals.css": "./globals.css",
     "./globals-ui.css": "./globals-ui.css",
-    "./theme.css": "./js/theme.css",
-    "./tailwind.config": "./js/tailwind.config.ts",
-    "./postcss.config": "./js/index.tsx",
-    "./eslint.config": "./js/index.tsx"
+    "./theme.css": "./theme.css",
+    "./tailwind.config": "./tailwind.config.ts",
+    "./postcss.config": "./postcss.config.ts",
+    "./eslint.config": "./eslint.config.ts"
   },
   "targets": {
     "lint": {

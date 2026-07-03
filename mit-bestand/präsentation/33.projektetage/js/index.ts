@@ -17,7 +17,7 @@ import {
 	type SlideFile,
 	type Thought,
 } from "@semio-tech/framework-presentation-core";
-import "./globals.css";
+import "../globals.css";
 // #endregion 🔌Adapters
 
 //#region 🔖spec

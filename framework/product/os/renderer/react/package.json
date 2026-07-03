@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./js/index.tsx"
+    ".": "./index.tsx"
   },
   "dependencies": {
     "@semio-tech/framework-os-core": "workspace:*",

@@ -38,7 +38,7 @@ class BuildScript extends BundleScript {
 
 class TestScript extends BundleScript {
 	run(segments: string[]): void {
-		runVitest(this.root, segments, "js/vitest.config.ts");
+		runVitest(this.root, segments, "vitest.config.ts");
 	}
 }
 

@@ -72,9 +72,8 @@ import {
   buildWriterWindowBody,
   createPlayAppRuntime,
   createDefaultLayout,
-  createJackPlayWindowEngagement,
   enforcePlaygroundWindowEngagementInput,
-  JackHoverBridge,
+  WireHoverBridge,
   registerWindowBody,
   type CommandDescriptor,
   type WindowBodyViewContext,
@@ -134,7 +133,6 @@ import { FlowOrchestratorClient } from "../../worker-client.ts";
 import type { ContextMenuItem } from "@semio-tech/ui-react";
 import type { WindowMeasure } from "@semio-tech/framework-playground-core";
 import { createWriterDocument, type WriterDocument } from "@semio-tech/writer-core";
-import { runJackOnBoardFixture } from "@semio-tech/graph-dsl-core";
 
 export const FLOW_PLAY_APP_ID = "flow-play";
 export const FLOW_PLAY_CONTROLLER_ID = "flow-play";
@@ -143,13 +141,9 @@ export const FLOW_PLAY_BODY_KEY_MAIN = "flow.play.main";
 export const FLOW_PLAY_BODY_KEY_GENERATE = "flow.play.generate";
 export const FLOW_PLAY_SURFACE_ID_GENERATE = "flow.play.generate";
 export const FLOW_PLAY_WINDOW_KIND_ID = "flow-main";
-export const FLOW_PLAY_WINDOW_KIND_JACK = "flow-jack";
 export const FLOW_PLAY_WINDOW_KIND_COMPILED_DAG = "flow-compiled-dag";
-export const FLOW_PLAY_SURFACE_ID_JACK = "flow.play.jack";
 export const FLOW_PLAY_SURFACE_ID_COMPILED_DAG = "flow.play.compiled-dag";
-export const FLOW_PLAY_BODY_KEY_JACK = "flow.play.jack";
 export const FLOW_PLAY_BODY_KEY_COMPILED_DAG = "flow.play.compiled-dag";
-export const FLOW_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:computation) RETURN n.name";
 
 export const FLOW_ENGAGEMENT_REORGANIZE_ID = "flow.tool.reorganize";
 export const FLOW_ENGAGEMENT_ORIENTATION_LR_ID = "flow.layout.leftRight";
@@ -164,10 +158,10 @@ export const FLOW_PLAY_DEFAULT_FIXTURE: FlowFixture = FLOW_DEFAULT_FIXTURE;
 export const FLOW_PLAY_DEFAULT_FIXTURE_JSON = flowFixtureToJson(FLOW_PLAY_DEFAULT_FIXTURE);
 
 export const FLOW_PLAY_LAYOUT = createDefaultLayout(
-  [FLOW_PLAY_WINDOW_KIND_ID, FLOW_PLAY_WINDOW_KIND_JACK, FLOW_PLAY_WINDOW_KIND_COMPILED_DAG],
+  [FLOW_PLAY_WINDOW_KIND_ID, FLOW_PLAY_WINDOW_KIND_COMPILED_DAG],
   "row",
-  [55, 22, 23],
-  ["Flow", "Jack", "Compiled DAG"],
+  [68, 32],
+  ["Flow", "DSL"],
 );
 export const FLOW_PLAY_KINDS_BODY_KEY = "flow.play.kinds";
 export const FLOW_PLAY_KINDS_TAB_ID = "flow-play-kinds";
@@ -664,16 +658,13 @@ export class FlowPlayController extends Controller {
   private effectiveLod: DagDrawLodKind = "normal";
   private proximityDistance = FLOW_DEFAULT_PROXIMITY_DISTANCE;
   private generateEngagementInput = "";
-  private readonly jackBridge = new JackHoverBridge();
-  private jackEngagementInput = "";
+  private readonly wireBridge = new WireHoverBridge();
   private compiledWireLiteral = "";
 
   constructor(commandBus: CommandBus, hostNotify: () => void) {
     super(FLOW_PLAY_CONTROLLER_ID, commandBus, hostNotify);
     this.selectedGenerationId = this.generations[0]?.id ?? null;
-    this.jackBridge.setJackQueryText(FLOW_PLAY_DEFAULT_JACK_QUERY);
-    this.jackBridge.setFixtureJson(this.getFixtureJson());
-    this.jackBridge.bindPointerFocus(this.pointerFocus);
+    this.wireBridge.bindPointerFocus(this.pointerFocus);
     this.rebuildShellMode();
     this.rebuildGenerateMode();
   }
@@ -762,7 +753,6 @@ export class FlowPlayController extends Controller {
     const parsed = parseFlowPlayFixtureJson(json);
     if (!parsed || flowFixtureToJson(parsed) === this.getFixtureJson()) return;
     this.applyFixtureEdit({ op: "setDocument", document: parsed });
-    this.jackBridge.setFixtureJson(this.getFixtureJson());
     this.interactionRevision += 1;
     this.notifySnapshot();
     this.emit();
@@ -787,19 +777,11 @@ export class FlowPlayController extends Controller {
   /** @emoji 🔔 Subscribes to catalogue updates for workbench kinds panel refresh. */
   subscribeSnapshot(listener: () => void): () => void {
     this.snapshotListeners.add(listener);
-    const unsubJack = this.jackBridge.subscribe(listener);
+    const unsubWire = this.wireBridge.subscribe(listener);
     return () => {
       this.snapshotListeners.delete(listener);
-      unsubJack();
+      unsubWire();
     };
-  }
-
-  getJackQueryText(): string {
-    return this.jackBridge.getJackQueryText();
-  }
-
-  getWriterDocumentJack(): WriterDocument {
-    return createWriterDocument({ id: "flow-jack", languageId: "jack", text: this.jackBridge.getJackQueryText() });
   }
 
   getCompiledWireLiteral(): string {
@@ -810,24 +792,24 @@ export class FlowPlayController extends Controller {
     return createWriterDocument({ id: "flow-compiled-dag", languageId: "wire", text: this.compiledWireLiteral });
   }
 
-  getJackHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-    return this.jackBridge.getJackHoverOccurrences();
+  getWireHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+    return this.wireBridge.getWireHoverOccurrences();
   }
 
-  getJackSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-    return this.jackBridge.getJackSelectOccurrences();
+  getWireSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+    return this.wireBridge.getWireSelectOccurrences();
   }
 
   getHoverEpoch(): number {
-    return this.jackBridge.getHoverEpoch();
+    return this.wireBridge.getHoverEpoch();
   }
 
   getSelectEpoch(): number {
-    return this.jackBridge.getSelectEpoch();
+    return this.wireBridge.getSelectEpoch();
   }
 
   getGraphHighlightedNodeIds(): readonly string[] {
-    return this.jackBridge.getGraphHoveredNodeIds();
+    return this.wireBridge.getGraphHoveredNodeIds();
   }
 
   private notifySnapshot(): void {
@@ -949,16 +931,11 @@ export class FlowPlayController extends Controller {
     );
   }
 
-  private jackEngagement(): WindowEngagement {
-    return createJackPlayWindowEngagement(FLOW_PLAY_WINDOW_KIND_JACK, FLOW_PLAY_CONTROLLER_ID, this.jackEngagementInput);
-  }
-
   private rebuildShellMode(): void {
     this.mainMode.tools = buildFlowPlayToolbarTools(FLOW_PLAY_CONTROLLER_ID, this.orientation);
     this.mainMode.windowKinds = [
       new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_ID, "Flow", FLOW_PLAY_BODY_KEY_MAIN, undefined, this.windowMeasures(), this.windowEngagement()),
-      new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_JACK, "Jack", FLOW_PLAY_BODY_KEY_JACK, undefined, undefined, this.jackEngagement()),
-      new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_COMPILED_DAG, "Compiled DAG", FLOW_PLAY_BODY_KEY_COMPILED_DAG),
+      new WindowKindRuntime(FLOW_PLAY_WINDOW_KIND_COMPILED_DAG, "DSL", FLOW_PLAY_BODY_KEY_COMPILED_DAG),
     ];
     for (const windowKind of this.mainMode.windowKinds) {
       if (windowKind.engagement !== undefined) {
@@ -985,61 +962,38 @@ export class FlowPlayController extends Controller {
   }
 
   override run(command: string, args?: unknown): void {
-    if (command === "jackEngagementInput") {
-      const value = (args as { value?: string }).value;
-      if (typeof value === "string" && value !== this.jackEngagementInput) {
-        this.jackEngagementInput = value;
-        this.rebuildShellMode();
-        this.emit();
-      }
-      return;
-    }
     if (command === "setCompiledWireLiteral") {
       const text = (args as { text?: string }).text;
       if (typeof text === "string" && text !== this.compiledWireLiteral) {
         this.compiledWireLiteral = text;
+        this.wireBridge.setWireText(text);
         this.interactionRevision += 1;
         this.notifySnapshot();
         this.emit();
       }
       return;
     }
-    if (command === "setJackQuery") {
-      const text = (args as { text?: string }).text;
-      if (typeof text === "string") {
-        this.jackBridge.setJackQueryText(text);
-        this.notifySnapshot();
-        this.emit();
-      }
-      return;
-    }
-    if (command === "setJackHover") {
-      this.jackBridge.setJackHover((args as { offset?: number | null }).offset ?? null);
+    if (command === "setWireHover") {
+      this.wireBridge.setWireHover((args as { offset?: number | null }).offset ?? null);
       this.notifySnapshot();
       this.emit();
       return;
     }
-    if (command === "setJackSelect") {
-      this.jackBridge.setJackSelect((args as { start: number; end: number } | null) ?? null);
+    if (command === "setWireSelect") {
+      this.wireBridge.setWireSelect((args as { start: number; end: number } | null) ?? null);
       this.notifySnapshot();
       this.emit();
       return;
     }
     if (command === "setGraphHover") {
-      this.jackBridge.setGraphHover((args as { id?: string | null }).id ?? null);
+      this.wireBridge.setGraphHover((args as { id?: string | null }).id ?? null);
       this.notifySnapshot();
       this.emit();
       return;
     }
     if (command === "setGraphSelect") {
       const ids = (args as { ids?: readonly string[] }).ids ?? [];
-      this.jackBridge.setGraphSelect(ids);
-      this.notifySnapshot();
-      this.emit();
-      return;
-    }
-    if (command === "runJackQuery") {
-      runJackOnBoardFixture(this.getFixtureJson(), this.jackBridge.getJackQueryText());
+      this.wireBridge.setGraphSelect(ids);
       this.notifySnapshot();
       this.emit();
       return;
@@ -1277,10 +1231,6 @@ function buildFlowPlayGenerateDeclarativeBody(_ctx: WindowBodyViewContext): UiNo
   return buildFormsWindowBody(FLOW_PLAY_SURFACE_ID_GENERATE, FLOW_PLAY_CONTROLLER_ID, "generate");
 }
 
-function buildFlowPlayJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
-  return buildWriterWindowBody(FLOW_PLAY_SURFACE_ID_JACK, FLOW_PLAY_CONTROLLER_ID, FLOW_PLAY_WINDOW_KIND_JACK);
-}
-
 function buildFlowPlayCompiledDagDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
   return buildWriterWindowBody(FLOW_PLAY_SURFACE_ID_COMPILED_DAG, FLOW_PLAY_CONTROLLER_ID, FLOW_PLAY_WINDOW_KIND_COMPILED_DAG);
 }
@@ -1288,7 +1238,6 @@ function buildFlowPlayCompiledDagDeclarativeBody(_ctx: WindowBodyViewContext): U
 export function registerFlowPlayDeclarativeBodies(): void {
   registerWindowBody(FLOW_PLAY_BODY_KEY_MAIN, buildFlowPlayMainDeclarativeBody);
   registerWindowBody(FLOW_PLAY_BODY_KEY_GENERATE, buildFlowPlayGenerateDeclarativeBody);
-  registerWindowBody(FLOW_PLAY_BODY_KEY_JACK, buildFlowPlayJackDeclarativeBody);
   registerWindowBody(FLOW_PLAY_BODY_KEY_COMPILED_DAG, buildFlowPlayCompiledDagDeclarativeBody);
 }
 
@@ -1618,6 +1567,17 @@ if (import.meta.vitest) {
       ctrl.run("setSelection", { ids: ["slider"] });
       expect(ctrl.getSelectedNodeIds()).toEqual(["slider"]);
       expect(ctrl.getInteractionRevision()).toBeGreaterThan(0);
+    });
+
+    it("wire hover highlights node occurrences in compiled dsl", () => {
+      const bus = new CommandBus();
+      const ctrl = new FlowPlayController(bus, () => {});
+      const sample = "slider:core.number\nadd:math.add\nslider:core.number@number->add:math.add@a";
+      ctrl.run("setCompiledWireLiteral", { text: sample });
+      ctrl.run("setWireHover", { offset: 2 });
+      expect(ctrl.getWireHoverOccurrences().length).toBeGreaterThan(0);
+      ctrl.run("setGraphHover", { id: "add" });
+      expect(ctrl.getGraphHighlightedNodeIds()).toContain("add");
     });
 
     it("inspector tree exposes slider value field for single selection", () => {

@@ -1,0 +1,19 @@
+{
+  "title": "Flow Note and Preview Fixes",
+  "emoji": "📝",
+  "status": "closed",
+  "description": "Fix four Flow canvas issues: make Note default size match Slider, native double-click text editing on Notes, left-align Note text, and left-align/truncate dictionary preview tree while keeping fixed node width.",
+  "summary": "Fixed Flow note and preview canvas behavior: notes now default to slider size (40×14), text is left-aligned with truncation, dictionary preview tree rows truncate within fixed width, and double-click opens native Vello inline note editing (caret painted in WASM, keyboard on focusable container, no DOM overlay).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1807"
+  },
+  "goal": "🎯framework🎯playground",
+  "plan": {
+    "client": "cursor",
+    "id": "dbe59662",
+    "local": "flow_note_and_preview_fixes_dbe59662.plan.md"
+  },
+  "sessions": [
+    "⚪7ae9f15813bc4c2db21efb6b0a75878b"
+  ]
+}

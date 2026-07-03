@@ -6,7 +6,7 @@
   "type": "module",
   "description": "🧩 Minimal stub so workspace installs resolve; replace with real `@semio-tech/compose-react` bundle when restored.",
   "exports": {
-    ".": "./js/index.ts"
+    ".": "./index.ts"
   },
   "dependencies": {
     "@semio-tech/compose-js": "workspace:*"

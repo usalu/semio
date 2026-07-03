@@ -2,7 +2,7 @@
 
 pub mod queryable;
 
-pub use queryable::TrinityQueryableGraph;
+pub use queryable::{OwnedTrinityQueryableGraph, TrinityQueryableGraph};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use trinity_ram::{

@@ -30,6 +30,6 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "./js/index.tsx"
+    ".": "./index.tsx"
   }
 }

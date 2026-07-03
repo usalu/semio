@@ -6,7 +6,7 @@ import {
 	type LanguageServer,
 	type LspMessage,
 } from "@semio-tech/writer-core";
-import init, { JackLspSession } from "./pkg/trinity_jack_lsp.js";
+import init, { JackLspSession } from "../rs/pkg/trinity_jack_lsp.js";
 
 let session: JackLspSession | null = null;
 let fixtureJson = "";

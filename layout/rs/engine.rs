@@ -100,7 +100,7 @@ pub fn layout_story_in_frame(story: &TextStory, paragraph: &ParagraphStyle, fram
     engine().lock().expect("layout engine").layout_story(story, paragraph, frame_width, frame_height)
 }
 
-pub fn build_display_list_for_page(doc: &LayoutDocument, page: &Page, active_page_id: &str, selected_ids: &[String], chrome_blueprint: bool) -> DisplayList {
+pub fn build_display_list_for_page(doc: &LayoutDocument, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> DisplayList {
     let resolved = resolve_page(doc, page);
     let mut rects = Vec::new();
     let mut text_runs = Vec::new();
@@ -154,6 +154,7 @@ pub fn build_display_list_for_page(doc: &LayoutDocument, page: &Page, active_pag
             continue;
         }
         let selected = selected_ids.iter().any(|id| id == item.frame.id());
+        let hovered = hovered_id.is_some_and(|id| id == item.frame.id());
         match &item.frame {
             Frame::Rect { id, bounds, fill, stroke, .. } => {
                 rects.push(bounds_to_display_rect(
@@ -161,6 +162,7 @@ pub fn build_display_list_for_page(doc: &LayoutDocument, page: &Page, active_pag
                     bounds,
                     item.inherited,
                     selected,
+                    hovered,
                     *fill,
                     stroke.or(if chrome_blueprint && item.inherited {
                         Some([0.4, 0.5, 0.7, 0.8])
@@ -176,6 +178,7 @@ pub fn build_display_list_for_page(doc: &LayoutDocument, page: &Page, active_pag
                         bounds,
                         item.inherited,
                         selected,
+                        hovered,
                         None,
                         Some([0.2, 0.55, 0.9, 0.9]),
                     ));
@@ -221,6 +224,7 @@ pub fn build_display_list_for_page(doc: &LayoutDocument, page: &Page, active_pag
                         bounds,
                         item.inherited,
                         selected,
+                        hovered,
                         None,
                         Some([0.85, 0.45, 0.2, 0.9]),
                     ));
@@ -308,7 +312,13 @@ pub fn display_list_to_scene(list: &DisplayList, chrome_blueprint: bool, camera:
             scene.fill(Fill::NonZero, transform, Brush::Solid(color_from(fill)), None, &shape);
         }
         if let Some(stroke) = &rect.stroke {
-            let width = if rect.selected { 2.5 } else { 1.0 };
+            let width = if rect.selected {
+                2.5
+            } else if rect.hovered {
+                1.75
+            } else {
+                1.0
+            };
             scene.stroke(
                 &Stroke::new(width),
                 transform,
@@ -321,6 +331,14 @@ pub fn display_list_to_scene(list: &DisplayList, chrome_blueprint: bool, camera:
                 &Stroke::new(2.0),
                 transform,
                 Brush::Solid(Color::new([0.1, 0.45, 0.95, 1.0])),
+                None,
+                &shape,
+            );
+        } else if rect.hovered && chrome_blueprint {
+            scene.stroke(
+                &Stroke::new(1.5),
+                transform,
+                Brush::Solid(Color::new([0.95, 0.72, 0.15, 1.0])),
                 None,
                 &shape,
             );
@@ -361,7 +379,7 @@ pub fn display_list_to_scene(list: &DisplayList, chrome_blueprint: bool, camera:
     scene
 }
 
-pub fn build_scene_from_document_json(json: &str, page_id: &str, selected_ids: &[String], chrome_blueprint: bool) -> Result<Scene, String> {
+pub fn build_scene_from_document_json(json: &str, page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> Result<Scene, String> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
     let camera = if chrome_blueprint {
@@ -369,14 +387,14 @@ pub fn build_scene_from_document_json(json: &str, page_id: &str, selected_ids: &
     } else {
         (doc.preview_camera.x, doc.preview_camera.y, doc.preview_camera.zoom)
     };
-    let list = build_display_list_for_page(&doc, page, page_id, selected_ids, chrome_blueprint);
+    let list = build_display_list_for_page(&doc, page, page_id, selected_ids, hovered_id, chrome_blueprint);
     Ok(display_list_to_scene(&list, chrome_blueprint, camera))
 }
 
-pub fn hit_test_document_json(json: &str, page_id: &str, x: f32, y: f32, selected_ids: &[String]) -> Result<Option<String>, String> {
+pub fn hit_test_document_json(json: &str, page_id: &str, x: f32, y: f32, selected_ids: &[String], hovered_id: Option<&str>) -> Result<Option<String>, String> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
-    let list = build_display_list_for_page(&doc, page, page_id, selected_ids, true);
+    let list = build_display_list_for_page(&doc, page, page_id, selected_ids, hovered_id, true);
     Ok(list.hit_test(x, y))
 }
 
@@ -387,7 +405,17 @@ mod tests {
     #[test]
     fn builds_scene_from_empty_document() {
         let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
-        let scene = build_scene_from_document_json(json, "page-1", &[], true).expect("scene");
+        let scene = build_scene_from_document_json(json, "page-1", &[], None, true).expect("scene");
         let _ = scene;
+    }
+
+    #[test]
+    fn marks_hovered_frame_rect() {
+        let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
+        let doc = parse_layout_document(json).expect("doc");
+        let page = doc.pages.first().expect("page");
+        let list = build_display_list_for_page(&doc, page, "page-1", &[], Some("frame-1"), true);
+        assert!(list.rects.iter().any(|rect| rect.object_id == "frame-1" && rect.hovered));
+        assert!(list.rects.iter().all(|rect| rect.object_id != "frame-1" || rect.hovered));
     }
 }

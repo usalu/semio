@@ -6,7 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./js/index.ts"
+    ".": "./index.ts"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/reasoning-mindmap-wires-react:test"

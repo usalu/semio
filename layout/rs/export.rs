@@ -74,13 +74,13 @@ pub fn export_display_list_svg(list: &DisplayList) -> String {
 
 pub fn export_document_svg(doc: &LayoutDocument, page_id: &str) -> Result<String, String> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
-    let list = build_display_list_for_page(doc, page, page_id, &[], false);
+    let list = build_display_list_for_page(doc, page, page_id, &[], None, false);
     Ok(export_display_list_svg(&list))
 }
 
 pub fn export_document_pdf(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8>, String> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
-    let list = build_display_list_for_page(doc, page, page_id, &[], false);
+    let list = build_display_list_for_page(doc, page, page_id, &[], None, false);
     let mut body = String::new();
     body.push_str("BT\n/F1 12 Tf\n");
     body.push_str(&format!("{} {} {} {} re\nf\n", 0, 0, page.width, page.height));
@@ -118,7 +118,7 @@ pub fn export_document_pdf(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8
 
 pub fn export_document_png_cpu(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8>, String> {
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
-    let list = build_display_list_for_page(doc, page, page_id, &[], false);
+    let list = build_display_list_for_page(doc, page, page_id, &[], None, false);
     let width = list.page_width.max(1.0) as u32;
     let height = list.page_height.max(1.0) as u32;
     let mut img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_pixel(width, height, Rgba([255, 255, 255, 255]));

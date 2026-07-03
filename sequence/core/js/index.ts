@@ -14,11 +14,10 @@ import {
 	buildSequenceWindowBody,
 	createPlayAppRuntime,
 	createDefaultLayout,
-	createJackPlayWindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
 	registerWindowBody,
 	buildWriterWindowBody,
-	JackHoverBridge,
+	WireHoverBridge,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -63,7 +62,6 @@ import {
 	type SequenceStep,
 } from "./internal.ts";
 import { createWriterDocument, type WriterDocument } from "@semio-tech/writer-core";
-import { runJackOnBoardFixture } from "@semio-tech/graph-dsl-core";
 
 export const SEQUENCE_PLAY_APP_ID = "sequence-play";
 export const SEQUENCE_PLAY_CONTROLLER_ID = "sequence-play";
@@ -73,19 +71,15 @@ export const SEQUENCE_PLAY_SURFACE_ID = "sequence.play";
 export const SEQUENCE_PLAY_SCRIPT_SURFACE_ID = "sequence.play.script";
 export const SEQUENCE_PLAY_WINDOW_KIND_ID = "sequence-main";
 export const SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID = "sequence-script";
-export const SEQUENCE_PLAY_WINDOW_KIND_JACK = "sequence-jack";
 export const SEQUENCE_PLAY_WINDOW_KIND_COMPILED_DAG = "sequence-compiled-dag";
 export const SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG = "sequence.play.compiled-dag";
 export const SEQUENCE_PLAY_BODY_KEY_COMPILED_DAG = "sequence.play.compiled-dag";
-export const SEQUENCE_PLAY_SURFACE_ID_JACK = "sequence.play.jack";
-export const SEQUENCE_PLAY_BODY_KEY_JACK = "sequence.play.jack";
-export const SEQUENCE_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:step) RETURN n.name";
 export const SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON = sequenceFixtureToJson(DEFAULT_SEQUENCE_FIXTURE);
 export const SEQUENCE_PLAY_LAYOUT = createDefaultLayout(
-	[SEQUENCE_PLAY_WINDOW_KIND_ID, SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID, SEQUENCE_PLAY_WINDOW_KIND_JACK, SEQUENCE_PLAY_WINDOW_KIND_COMPILED_DAG],
+	[SEQUENCE_PLAY_WINDOW_KIND_ID, SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID, SEQUENCE_PLAY_WINDOW_KIND_COMPILED_DAG],
 	"row",
-	[40, 20, 20, 20],
-	["Sequence", "Compiled Script", "Jack", "Compiled DAG"],
+	[45, 25, 30],
+	["Sequence", "Compiled Script", "DSL"],
 );
 export const SEQUENCE_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const SEQUENCE_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
@@ -390,14 +384,11 @@ export class SequencePlayController extends Controller {
 	private effectLog: EffectLogEntry[] = [];
 	private interactionRevision = 0;
 	private readonly snapshotListeners = new Set<() => void>();
-	private readonly jackBridge = new JackHoverBridge();
-	private jackEngagementInput = "";
+	private readonly wireBridge = new WireHoverBridge();
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(SEQUENCE_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-		this.jackBridge.setJackQueryText(SEQUENCE_PLAY_DEFAULT_JACK_QUERY);
-		this.jackBridge.setFixtureJson(this.getFixtureJson());
-		this.jackBridge.bindPointerFocus(this.pointerFocus);
+		this.wireBridge.bindPointerFocus(this.pointerFocus);
 		this.rebuildShellMode();
 	}
 
@@ -460,39 +451,31 @@ export class SequencePlayController extends Controller {
 
 	subscribeSnapshot(listener: () => void): () => void {
 		this.snapshotListeners.add(listener);
-		const unsubJack = this.jackBridge.subscribe(listener);
+		const unsubWire = this.wireBridge.subscribe(listener);
 		return () => {
 			this.snapshotListeners.delete(listener);
-			unsubJack();
+			unsubWire();
 		};
 	}
 
-	getJackQueryText(): string {
-		return this.jackBridge.getJackQueryText();
+	getWireHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		return this.wireBridge.getWireHoverOccurrences();
 	}
 
-	getWriterDocumentJack(): WriterDocument {
-		return createWriterDocument({ id: "sequence-jack", languageId: "jack", text: this.jackBridge.getJackQueryText() });
-	}
-
-	getJackHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-		return this.jackBridge.getJackHoverOccurrences();
-	}
-
-	getJackSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-		return this.jackBridge.getJackSelectOccurrences();
+	getWireSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		return this.wireBridge.getWireSelectOccurrences();
 	}
 
 	getHoverEpoch(): number {
-		return this.jackBridge.getHoverEpoch();
+		return this.wireBridge.getHoverEpoch();
 	}
 
 	getSelectEpoch(): number {
-		return this.jackBridge.getSelectEpoch();
+		return this.wireBridge.getSelectEpoch();
 	}
 
 	getGraphHighlightedNodeIds(): readonly string[] {
-		return this.jackBridge.getGraphHoveredNodeIds();
+		return this.wireBridge.getGraphHoveredNodeIds();
 	}
 
 	private notifySnapshot(): void {
@@ -505,7 +488,6 @@ export class SequencePlayController extends Controller {
 		const json = sequenceFixtureToJson(next);
 		if (json === this.fixtureJson) return;
 		this.fixtureJson = json;
-		this.jackBridge.setFixtureJson(this.fixtureJson);
 		this.interactionRevision += 1;
 		this.notifySnapshot();
 		this.emit();
@@ -515,7 +497,6 @@ export class SequencePlayController extends Controller {
 		const parsed = parseSequencePlayFixtureJson(json);
 		if (!parsed || sequenceFixtureToJson(parsed) === this.fixtureJson) return;
 		this.fixtureJson = sequenceFixtureToJson(parsed);
-		this.jackBridge.setFixtureJson(this.fixtureJson);
 		this.interactionRevision += 1;
 		this.notifySnapshot();
 		this.emit();
@@ -532,6 +513,7 @@ export class SequencePlayController extends Controller {
 	private setCompiledWireLiteral(text: string): void {
 		if (text === this.compiledWireLiteral) return;
 		this.compiledWireLiteral = text;
+		this.wireBridge.setWireText(text);
 		this.interactionRevision += 1;
 		this.notifySnapshot();
 		this.emit();
@@ -705,10 +687,6 @@ export class SequencePlayController extends Controller {
 		};
 	}
 
-	private jackEngagement(): WindowEngagement {
-		return createJackPlayWindowEngagement(SEQUENCE_PLAY_WINDOW_KIND_JACK, SEQUENCE_PLAY_CONTROLLER_ID, this.jackEngagementInput);
-	}
-
 	private compiledDagWindowEngagement(): WindowEngagement {
 		return {
 			sessionActive: false,
@@ -737,8 +715,7 @@ export class SequencePlayController extends Controller {
 				[],
 				this.scriptWindowEngagement(),
 			),
-			new WindowKindRuntime(SEQUENCE_PLAY_WINDOW_KIND_JACK, "Jack", SEQUENCE_PLAY_BODY_KEY_JACK, undefined, undefined, this.jackEngagement()),
-			new WindowKindRuntime(SEQUENCE_PLAY_WINDOW_KIND_COMPILED_DAG, "Compiled DAG", SEQUENCE_PLAY_BODY_KEY_COMPILED_DAG, undefined, [], this.compiledDagWindowEngagement()),
+			new WindowKindRuntime(SEQUENCE_PLAY_WINDOW_KIND_COMPILED_DAG, "DSL", SEQUENCE_PLAY_BODY_KEY_COMPILED_DAG, undefined, [], this.compiledDagWindowEngagement()),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Sequence play window "${windowKind.id}"`);
@@ -776,51 +753,27 @@ export class SequencePlayController extends Controller {
 	}
 
 	override run(command: string, args?: unknown): void {
-		if (command === "jackEngagementInput") {
-			const value = (args as { value?: string }).value;
-			if (typeof value === "string" && value !== this.jackEngagementInput) {
-				this.jackEngagementInput = value;
-				this.rebuildShellMode();
-				this.emit();
-			}
-			return;
-		}
-		if (command === "setJackQuery") {
-			const text = (args as { text?: string }).text;
-			if (typeof text === "string") {
-				this.jackBridge.setJackQueryText(text);
-				this.notifySnapshot();
-				this.emit();
-			}
-			return;
-		}
-		if (command === "setJackHover") {
-			this.jackBridge.setJackHover((args as { offset?: number | null }).offset ?? null);
+		if (command === "setWireHover") {
+			this.wireBridge.setWireHover((args as { offset?: number | null }).offset ?? null);
 			this.notifySnapshot();
 			this.emit();
 			return;
 		}
-		if (command === "setJackSelect") {
-			this.jackBridge.setJackSelect((args as { start: number; end: number } | null) ?? null);
+		if (command === "setWireSelect") {
+			this.wireBridge.setWireSelect((args as { start: number; end: number } | null) ?? null);
 			this.notifySnapshot();
 			this.emit();
 			return;
 		}
 		if (command === "setGraphHover") {
-			this.jackBridge.setGraphHover((args as { id?: string | null }).id ?? null);
+			this.wireBridge.setGraphHover((args as { id?: string | null }).id ?? null);
 			this.notifySnapshot();
 			this.emit();
 			return;
 		}
 		if (command === "setGraphSelect") {
 			const ids = (args as { ids?: readonly string[] }).ids ?? [];
-			this.jackBridge.setGraphSelect(ids);
-			this.notifySnapshot();
-			this.emit();
-			return;
-		}
-		if (command === "runJackQuery") {
-			runJackOnBoardFixture(this.getFixtureJson(), this.jackBridge.getJackQueryText());
+			this.wireBridge.setGraphSelect(ids);
 			this.notifySnapshot();
 			this.emit();
 			return;
@@ -986,10 +939,6 @@ function buildSequencePlayScriptDeclarativeBody(_ctx: WindowBodyViewContext): Ui
 	return buildWriterWindowBody(SEQUENCE_PLAY_SCRIPT_SURFACE_ID, SEQUENCE_PLAY_CONTROLLER_ID, SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID);
 }
 
-function buildSequencePlayJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
-	return buildWriterWindowBody(SEQUENCE_PLAY_SURFACE_ID_JACK, SEQUENCE_PLAY_CONTROLLER_ID, SEQUENCE_PLAY_WINDOW_KIND_JACK);
-}
-
 function buildSequencePlayCompiledDagDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
 	return buildWriterWindowBody(SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG, SEQUENCE_PLAY_CONTROLLER_ID, SEQUENCE_PLAY_WINDOW_KIND_COMPILED_DAG);
 }
@@ -997,7 +946,6 @@ function buildSequencePlayCompiledDagDeclarativeBody(_ctx: WindowBodyViewContext
 export function registerSequencePlayDeclarativeBodies(): void {
 	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_MAIN, buildSequencePlayMainDeclarativeBody);
 	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_SCRIPT, buildSequencePlayScriptDeclarativeBody);
-	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_JACK, buildSequencePlayJackDeclarativeBody);
 	registerWindowBody(SEQUENCE_PLAY_BODY_KEY_COMPILED_DAG, buildSequencePlayCompiledDagDeclarativeBody);
 }
 
@@ -1029,10 +977,10 @@ if (import.meta.vitest) {
 			ctrl.run("disconnectSteps", { from: "step-1", to: "step-2" });
 			expect(ctrl.getFixtureJson()).not.toContain('"from":"step-1","to":"step-2"');
 		});
-		it("layout exposes sequence, compiled script, and jack windows", () => {
+		it("layout exposes sequence, compiled script, and dsl windows", () => {
 			expect(SEQUENCE_PLAY_LAYOUT.root.kind).toBe("row");
 			expect(SEQUENCE_PLAY_SCRIPT_WINDOW_KIND_ID).toBe("sequence-script");
-			expect(SEQUENCE_PLAY_WINDOW_KIND_JACK).toBe("sequence-jack");
+			expect(SEQUENCE_PLAY_WINDOW_KIND_COMPILED_DAG).toBe("sequence-compiled-dag");
 		});
 	});
 }

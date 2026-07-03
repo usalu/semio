@@ -7,6 +7,31 @@
       "programs": ["draw", "writer", "raster", "compose.sketchpad"],
       "activeProgramId": null,
       "activeAlternativeId": null,
+      "parameters": [
+        {
+          "id": "param-brush-size",
+          "name": "Brush Size",
+          "type": "numeric",
+          "value": 32,
+          "min": 1,
+          "max": 128,
+          "step": 1
+        },
+        {
+          "id": "param-quality",
+          "name": "Quality",
+          "type": "categorical",
+          "value": "High",
+          "options": ["Draft", "High"]
+        }
+      ],
+      "parameterBindings": [
+        {
+          "parameterId": "param-brush-size",
+          "instanceId": "app-raster-1",
+          "fieldPath": "/brushSize"
+        }
+      ],
       "appInstances": [
         {
           "id": "app-draw-1",
@@ -102,7 +127,10 @@
             "y": 200,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-raster-1:out:in", "resourceKind": "2d.raster", "direction": "in" }],
+            "inputs": [
+              { "id": "app-raster-1:out:in", "resourceKind": "2d.raster", "direction": "in" },
+              { "id": "app-raster-1:param.param-brush-size:in", "resourceKind": "parameter.value", "direction": "in" }
+            ],
             "outputs": [{ "id": "app-raster-1:out:out", "resourceKind": "2d.raster", "direction": "out" }]
           },
           {

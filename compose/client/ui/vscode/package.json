@@ -19,7 +19,7 @@
     "Visualization"
   ],
   "activationEvents": [],
-  "main": "./js/out/extension.js",
+  "main": "./out/extension.js",
   "contributes": {
     "customEditors": [
       {

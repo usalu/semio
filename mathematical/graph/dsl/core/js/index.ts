@@ -270,3 +270,59 @@ export function wireLiteralFromDagFixtureJson(fixtureJson: string): string {
   }
   return lines.join("\n");
 }
+
+function escapeWireRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** @emoji 📍 Highlight spans for a node id across wire-literal node declarations and edge endpoints. */
+export function wireNodeOccurrences(text: string, nodeId: string): readonly { readonly start: number; readonly end: number }[] {
+  if (!nodeId) return [];
+  const escaped = escapeWireRegex(nodeId);
+  const re = new RegExp(`(?:^|[\\n\\r]|->|-)(${escaped})(?=:)`, "gm");
+  const out: { start: number; end: number }[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text))) {
+    const start = match.index + match[0].length - match[1]!.length;
+    out.push({ start, end: start + match[1]!.length });
+  }
+  return out;
+}
+
+/** @emoji 🎯 Resolve the wire node id at a text offset (cursor must sit on the id token before `:`). */
+export function wireNodeIdAtOffset(text: string, offset: number | null): string | null {
+  if (offset == null || offset < 0 || offset > text.length) return null;
+  const clamped = Math.min(offset, Math.max(0, text.length - 1));
+  let start = clamped;
+  while (start > 0 && /[A-Za-z0-9_-]/.test(text[start - 1]!)) start -= 1;
+  let end = start;
+  while (end < text.length && /[A-Za-z0-9_-]/.test(text[end]!)) end += 1;
+  const id = text.slice(start, end);
+  if (!id || text[end] !== ":") return null;
+  return id;
+}
+
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  describe("wire node hover helpers", () => {
+    const sample = ["slider:core.number{value: 3}", "add:math.add", "slider:core.number@number->add:math.add@a"].join("\n");
+
+    it("collects all node id occurrences in wire text", () => {
+      expect(wireNodeOccurrences(sample, "slider")).toEqual([
+        { start: 0, end: 6 },
+        { start: 38, end: 44 },
+      ]);
+      expect(wireNodeOccurrences(sample, "add")).toEqual([
+        { start: 30, end: 33 },
+        { start: 59, end: 62 },
+      ]);
+    });
+
+    it("resolves node id at offset only on id tokens", () => {
+      expect(wireNodeIdAtOffset(sample, 2)).toBe("slider");
+      expect(wireNodeIdAtOffset(sample, 45)).toBe("slider");
+      expect(wireNodeIdAtOffset(sample, 20)).toBeNull();
+    });
+  });
+}

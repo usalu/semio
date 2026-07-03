@@ -41,6 +41,8 @@ import {
 	osInPort,
 	osMediaGraphToDagFixtureJson,
 	osOutPort,
+	osParameterTypesCompatible,
+	osParameterValue,
 	osProgramById,
 	osResourceDescriptor,
 	parseOsDocument,
@@ -56,6 +58,8 @@ import {
 	type OsDocument,
 	type OsMediaGraph,
 	type OsMediaGraphNode,
+	type OsParameterFieldSpec,
+	type OsParameterType,
 	type OsProgramDefinition,
 	type OsProjection,
 	type OsResourceDescriptor,
@@ -112,6 +116,10 @@ export type SProgramDefinition = OsProgramDefinition;
 export type SResourceDescriptor = OsResourceDescriptor;
 export type SAppResourceSpec = OsAppResourceSpec;
 export type StudioCommand = OsCommand;
+export type SParameterType = OsParameterType;
+export type SParameterFieldSpec = OsParameterFieldSpec;
+export type SParameter = import("@semio-tech/framework-os-core").OsParameter;
+export type SParameterFieldBinding = import("@semio-tech/framework-os-core").OsParameterFieldBinding;
 export { OsStore as StudioStore, DevJsonBackbone, LocalJsonBackbone, RemoteOsBackbone, buildOsHistoryColumns };
 export const createSId = createOsId;
 export const createEmptyStudioDocument = createEmptyOsDocument;
@@ -163,6 +171,8 @@ export {
 	validateMediaGraph,
 	osOutPort as sOutPort,
 	osInPort as sInPort,
+	osParameterTypesCompatible,
+	osParameterValue,
 	OsMediaGraphVirtualFileSystemController,
 	OS_MEDIA_GRAPH_VFS_ROOT_ID,
 	registerOsMediaExportHandler,
@@ -302,6 +312,10 @@ export async function registerAllMediaExportHandlers(): Promise<void> {
 //#endregion 🔖MediaExportHandlers
 
 //#region 🔖SProgramRegistry
+function sParameterField(fieldPath: string, label: string, type: OsParameterType): OsParameterFieldSpec {
+	return { fieldPath, label, type };
+}
+
 function sBaselineResource(
 	resourceKind: SResourceKindId,
 	sourceFormat: string,
@@ -326,8 +340,21 @@ export const TECHNOLOGY_APP_RESOURCE_BY_PROGRAM: Readonly<Record<string, Readonl
 	draw: { draw: sBaselineResource("2d.drawing", "draw.document", "draw") },
 	note: { note: sBaselineResource("2d.note", "note.document", "note") },
 	writer: { writer: sBaselineResource("text.document", "writer.document", "writer") },
-	raster: { raster: sBaselineResource("2d.raster", "raster.document", "raster") },
-	flow: { flow: sBaselineResource("computation.flow", "flow.document", "flow") },
+	raster: {
+		raster: {
+			...sBaselineResource("2d.raster", "raster.document", "raster"),
+			parameterFields: [
+				sParameterField("/brushSize", "Brush size", "numeric"),
+				sParameterField("/brushOpacity", "Brush opacity", "numeric"),
+			],
+		},
+	},
+	flow: {
+		flow: {
+			...sBaselineResource("computation.flow", "flow.document", "flow"),
+			parameterFields: [sParameterField("/camera/zoom", "Camera zoom", "numeric")],
+		},
+	},
 	"puzzle.2d": { puzzle2d: sBaselineResource("2d.puzzle", "puzzle.2d", "puzzle2d") },
 	"puzzle.3d": { puzzle3d: sBaselineResource("3d.puzzle", "puzzle.3d", "puzzle3d") },
 	"puzzle.5d": {
@@ -353,9 +380,15 @@ export const TECHNOLOGY_APP_RESOURCE_BY_PROGRAM: Readonly<Record<string, Readonl
 			sourceFormat: "shooting.scene",
 			componentKind: "shooting",
 			modes: [{ id: "edit", label: "Edit" }],
+			parameterFields: [sParameterField("/camera/zoom", "Camera zoom", "numeric")],
 		},
 	},
-	"gis.map": { map: sBaselineResource("2d.map", "gis.map", "gismap") },
+	"gis.map": {
+		map: {
+			...sBaselineResource("2d.map", "gis.map", "gismap"),
+			parameterFields: [sParameterField("/view/zoom", "Map zoom", "numeric")],
+		},
+	},
 	cad: { cad: sBaselineResource("3d.cad", "cad.scene", "cad") },
 	dag: { dag: sBaselineResource("graph.dag", "flow.dag", "dag") },
 	"procedural.2d": { procedural2d: sBaselineResource("2d.procedural", "procedural.2d", "puzzle2d") },
@@ -365,11 +398,39 @@ export const TECHNOLOGY_APP_RESOURCE_BY_PROGRAM: Readonly<Record<string, Readonl
 	presentation: { presentation: sBaselineResource("presentation.deck", "presentation.deck", "panel", [{ id: "edit", label: "Edit" }]) },
 	"presentation.deck": { "presentation.deck": sBaselineResource("presentation.deck", "presentation.deck", "panel", [{ id: "edit", label: "Edit" }]) },
 	[COMPOSE_SKETCHPAD_PROGRAM_ID]: SKETCHPAD_APP_RESOURCE,
-	lowpoly: { lowpoly: sBaselineResource("3d.lowpoly", "lowpoly.fixture", "lowpoly") },
-	sequence: { sequence: sBaselineResource("computation.sequence", "sequence.fixture", "sequence") },
-	layout: { layout: sBaselineResource("2d.layout", "layout.fixture", "layout") },
-	imperative: { imperative: sBaselineResource("computation.imperative", "imperative.document", "imperative") },
-	vcs: { vcs: sBaselineResource("vcs.document", "vcs.demo", "vcs", [{ id: "explore", label: "Explore" }]) },
+	lowpoly: {
+		lowpoly: {
+			...sBaselineResource("3d.lowpoly", "lowpoly.fixture", "lowpoly"),
+			parameterFields: [sParameterField("/paint/opacity", "Paint opacity", "numeric")],
+		},
+	},
+	sequence: {
+		sequence: {
+			...sBaselineResource("computation.sequence", "sequence.fixture", "sequence"),
+			parameterFields: [sParameterField("/camera/zoom", "Camera zoom", "numeric")],
+		},
+	},
+	layout: {
+		layout: {
+			...sBaselineResource("2d.layout", "layout.fixture", "layout"),
+			parameterFields: [
+				sParameterField("/pages/0/width", "Page width", "numeric"),
+				sParameterField("/pages/0/height", "Page height", "numeric"),
+			],
+		},
+	},
+	imperative: {
+		imperative: {
+			...sBaselineResource("computation.imperative", "imperative.document", "imperative"),
+			parameterFields: [sParameterField("/camera/zoom", "Camera zoom", "numeric")],
+		},
+	},
+	vcs: {
+		vcs: {
+			...sBaselineResource("vcs.document", "vcs.demo", "vcs", [{ id: "explore", label: "Explore" }]),
+			parameterFields: [sParameterField("/counter", "Counter", "numeric")],
+		},
+	},
 };
 
 const S_SYSTEM_PROGRAM: SProgramDefinition = {

@@ -32,18 +32,17 @@ import {
 	type UiTreeNode,
 	type WindowLayout,
 	enforcePlaygroundWindowEngagementInput,
-	createJackPlayWindowEngagement,
 	windowEngagementsEqual,
 	normalizeKindWeightGroup,
 	syncKindWeightMap,
 	type KindWeightMap,
-	JackHoverBridge,
+	WireHoverBridge,
 	buildWriterWindowBody,
 } from "@semio-tech/framework-playground-core";
 import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
 import { rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
 import { createWriterDocument, type WriterDocument } from "@semio-tech/writer-core";
-import { runJackOnBoardFixture, wireLiteralFromDagFixtureJson } from "@semio-tech/graph-dsl-core";
+import { wireLiteralFromDagFixtureJson } from "@semio-tech/graph-dsl-core";
 
 import {
 	DEFAULT_KIND_CATALOG_BUNDLE,
@@ -92,7 +91,7 @@ import {
 	type Puzzle2dBrushPlacePayload,
 	type Puzzle2dFillBuildProgress,
 	type Puzzle2dRenderer,
-} from "../../react/js/index.tsx";
+} from "../../react/index.tsx";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 
@@ -104,13 +103,9 @@ export type Puzzle2dPlayPaneId = "2d-overview" | "2d-detail" | "2d-selection";
 export const PUZZLE_2D_PLAY_APP_ID = "puzzle-2d-play";
 export const PUZZLE_2D_PLAY_CONTROLLER_ID = "puzzle-2d-play";
 export const PUZZLE_2D_PLAY_SURFACE_ID = "puzzle.2d.play";
-export const PUZZLE_2D_PLAY_WINDOW_KIND_JACK = "2d-jack";
 export const PUZZLE_2D_PLAY_WINDOW_KIND_COMPILED_DAG = "2d-compiled-dag";
-export const PUZZLE_2D_PLAY_SURFACE_ID_JACK = "puzzle.2d.play.jack";
 export const PUZZLE_2D_PLAY_SURFACE_ID_COMPILED_DAG = "puzzle.2d.play.compiled-dag";
-export const PUZZLE_2D_PLAY_BODY_KEY_JACK = "puzzle.2d.play.jack";
 export const PUZZLE_2D_PLAY_BODY_KEY_COMPILED_DAG = "puzzle.2d.play.compiled-dag";
-export const PUZZLE_2D_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:node) RETURN n.name";
 
 export const PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW = "puzzle.2d.play.overview";
 export const PUZZLE_2D_PLAY_BODY_KEY_DETAIL = "puzzle.2d.play.detail";
@@ -372,8 +367,7 @@ export const PUZZLE_2D_PLAY_LAYOUT: WindowLayout = {
 				children: [
 					{ kind: "stack", size: 25, children: [createWindowLayout("2d-detail", "Zoom")] },
 					{ kind: "stack", size: 25, children: [createWindowLayout("2d-selection", "Selection")] },
-					{ kind: "stack", size: 25, children: [createWindowLayout(PUZZLE_2D_PLAY_WINDOW_KIND_COMPILED_DAG, "Compiled DAG")] },
-					{ kind: "stack", size: 25, children: [createWindowLayout(PUZZLE_2D_PLAY_WINDOW_KIND_JACK, "Jack")] },
+					{ kind: "stack", size: 50, children: [createWindowLayout(PUZZLE_2D_PLAY_WINDOW_KIND_COMPILED_DAG, "DSL")] },
 				],
 			},
 		],
@@ -1317,16 +1311,13 @@ export class Puzzle2dPlayShellController extends Controller {
 	private nodeKindWeights: KindWeightMap = {};
 	private handleKindWeights: KindWeightMap = {};
 	private kindCatalogs: KindCatalogBundle = DEFAULT_KIND_CATALOG_BUNDLE;
-	private readonly jackBridge = new JackHoverBridge();
-	private jackEngagementInput = "";
+	private readonly wireBridge = new WireHoverBridge();
 	private readonly snapshotListeners = new Set<() => void>();
 
 	constructor(commandBus: CommandBus, hostNotify: () => void, hostChromeNotify: () => void) {
 		super(PUZZLE_2D_PLAY_CONTROLLER_ID, commandBus, hostNotify);
 		this.hostChromeNotify = hostChromeNotify;
-		this.jackBridge.setJackQueryText(PUZZLE_2D_PLAY_DEFAULT_JACK_QUERY);
-		this.jackBridge.setFixtureJson(puzzle2dFixtureToJackBoardJson(PUZZLE_2D_PLAY_DEFAULT_FIXTURE));
-		this.jackBridge.bindPointerFocus(this.pointerFocus);
+		this.wireBridge.bindPointerFocus(this.pointerFocus);
 		this.lodModeByPane = {
 			"2d-detail": "detail",
 			"2d-overview": PUZZLE_2D_LOD_MODE_AUTOMATIC,
@@ -1642,38 +1633,27 @@ export class Puzzle2dPlayShellController extends Controller {
 	/** @emoji 🔗 Attaches the React host bridge used for toolbar commands and snapshots. */
 	setHostBridge(bridge: Puzzle2dPlayHostBridge | null): void {
 		this.hostBridge = bridge;
-		this.syncJackFixtureJson();
+		this.syncWireText();
 		this.rebuildToolbarTools();
 	}
 
-	private syncJackFixtureJson(): void {
-		const json = this.hostBridge?.getFixtureJson();
-		if (json) {
-			this.jackBridge.setFixtureJson(puzzle2dFixtureToJackBoardJson(json));
-		}
+	private syncWireText(): void {
+		this.wireBridge.setWireText(this.getCompiledWireLiteral());
 	}
 
-	/** @emoji 🔄 Refreshes Jack bridge fixture JSON from the live React host fixture. */
+	/** @emoji 🔄 Refreshes wire DSL text from the live React host fixture. */
 	notifyFixtureRevision(): void {
-		this.syncJackFixtureJson();
+		this.syncWireText();
 		this.notifySnapshot();
 	}
 
 	subscribeSnapshot(listener: () => void): () => void {
 		this.snapshotListeners.add(listener);
-		const unsubJack = this.jackBridge.subscribe(listener);
+		const unsubWire = this.wireBridge.subscribe(listener);
 		return () => {
 			this.snapshotListeners.delete(listener);
-			unsubJack();
+			unsubWire();
 		};
-	}
-
-	getJackQueryText(): string {
-		return this.jackBridge.getJackQueryText();
-	}
-
-	getWriterDocumentJack(): WriterDocument {
-		return createWriterDocument({ id: "puzzle-2d-jack", languageId: "jack", text: this.jackBridge.getJackQueryText() });
 	}
 
 	getCompiledWireLiteral(): string {
@@ -1685,24 +1665,24 @@ export class Puzzle2dPlayShellController extends Controller {
 		return createWriterDocument({ id: "puzzle-2d-compiled-dag", languageId: "wire", text: this.getCompiledWireLiteral() });
 	}
 
-	getJackHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-		return this.jackBridge.getJackHoverOccurrences();
+	getWireHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		return this.wireBridge.getWireHoverOccurrences();
 	}
 
-	getJackSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-		return this.jackBridge.getJackSelectOccurrences();
+	getWireSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		return this.wireBridge.getWireSelectOccurrences();
 	}
 
 	getHoverEpoch(): number {
-		return this.jackBridge.getHoverEpoch();
+		return this.wireBridge.getHoverEpoch();
 	}
 
 	getSelectEpoch(): number {
-		return this.jackBridge.getSelectEpoch();
+		return this.wireBridge.getSelectEpoch();
 	}
 
 	getGraphHighlightedNodeIds(): readonly string[] {
-		return this.jackBridge.getGraphHoveredNodeIds();
+		return this.wireBridge.getGraphHoveredNodeIds();
 	}
 
 	private notifySnapshot(): void {
@@ -1762,8 +1742,7 @@ export class Puzzle2dPlayShellController extends Controller {
 						PUZZLE_2D_PANE_TEMPLATES[row.pane],
 					),
 			),
-			new WindowKindRuntime(PUZZLE_2D_PLAY_WINDOW_KIND_JACK, "Jack", PUZZLE_2D_PLAY_BODY_KEY_JACK, undefined, undefined, createJackPlayWindowEngagement(PUZZLE_2D_PLAY_WINDOW_KIND_JACK, PUZZLE_2D_PLAY_CONTROLLER_ID, this.jackEngagementInput)),
-			new WindowKindRuntime(PUZZLE_2D_PLAY_WINDOW_KIND_COMPILED_DAG, "Compiled DAG", PUZZLE_2D_PLAY_BODY_KEY_COMPILED_DAG),
+			new WindowKindRuntime(PUZZLE_2D_PLAY_WINDOW_KIND_COMPILED_DAG, "DSL", PUZZLE_2D_PLAY_BODY_KEY_COMPILED_DAG),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Puzzle 2D play window "${windowKind.id}"`);
@@ -1772,52 +1751,27 @@ export class Puzzle2dPlayShellController extends Controller {
 	}
 
 	override run(command: string, args?: unknown): void {
-		if (command === "jackEngagementInput") {
-			const value = (args as { value?: string }).value;
-			if (typeof value === "string" && value !== this.jackEngagementInput) {
-				this.jackEngagementInput = value;
-				this.rebuildShellMode();
-				this.emit();
-			}
-			return;
-		}
-		if (command === "setJackQuery") {
-			const text = (args as { text?: string }).text;
-			if (typeof text === "string") {
-				this.jackBridge.setJackQueryText(text);
-				this.notifySnapshot();
-				this.emit();
-			}
-			return;
-		}
-		if (command === "setJackHover") {
-			this.jackBridge.setJackHover((args as { offset?: number | null }).offset ?? null);
+		if (command === "setWireHover") {
+			this.wireBridge.setWireHover((args as { offset?: number | null }).offset ?? null);
 			this.notifySnapshot();
 			this.emit();
 			return;
 		}
-		if (command === "setJackSelect") {
-			this.jackBridge.setJackSelect((args as { start: number; end: number } | null) ?? null);
+		if (command === "setWireSelect") {
+			this.wireBridge.setWireSelect((args as { start: number; end: number } | null) ?? null);
 			this.notifySnapshot();
 			this.emit();
 			return;
 		}
 		if (command === "setGraphHover") {
-			this.jackBridge.setGraphHover((args as { id?: string | null }).id ?? null);
+			this.wireBridge.setGraphHover((args as { id?: string | null }).id ?? null);
 			this.notifySnapshot();
 			this.emit();
 			return;
 		}
 		if (command === "setGraphSelect") {
 			const ids = (args as { ids?: readonly string[] }).ids ?? [];
-			this.jackBridge.setGraphSelect(ids);
-			this.notifySnapshot();
-			this.emit();
-			return;
-		}
-		if (command === "runJackQuery") {
-			const fixtureJson = this.hostBridge?.getFixtureJson() ?? puzzle2dFixtureToJson(PUZZLE_2D_PLAY_DEFAULT_FIXTURE);
-			runJackOnBoardFixture(puzzle2dFixtureToJackBoardJson(fixtureJson), this.jackBridge.getJackQueryText());
+			this.wireBridge.setGraphSelect(ids);
 			this.notifySnapshot();
 			this.emit();
 			return;
@@ -2074,10 +2028,6 @@ export const buildPuzzle2dPlayOverviewDeclarativeBody = buildPuzzle2dPlayDeclara
 export const buildPuzzle2dPlayDetailDeclarativeBody = buildPuzzle2dPlayDeclarativeBody("2d-detail");
 export const buildPuzzle2dPlaySelectionDeclarativeBody = buildPuzzle2dPlayDeclarativeBody("2d-selection");
 
-function buildPuzzle2dPlayJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
-	return buildWriterWindowBody(PUZZLE_2D_PLAY_SURFACE_ID_JACK, PUZZLE_2D_PLAY_CONTROLLER_ID, PUZZLE_2D_PLAY_WINDOW_KIND_JACK);
-}
-
 function buildPuzzle2dPlayCompiledDagDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
 	return buildWriterWindowBody(PUZZLE_2D_PLAY_SURFACE_ID_COMPILED_DAG, PUZZLE_2D_PLAY_CONTROLLER_ID, PUZZLE_2D_PLAY_WINDOW_KIND_COMPILED_DAG);
 }
@@ -2113,7 +2063,6 @@ export function registerPuzzle2dPlayDeclarativeBodies(): void {
 	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW, buildPuzzle2dPlayOverviewDeclarativeBody);
 	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_DETAIL, buildPuzzle2dPlayDetailDeclarativeBody);
 	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_SELECTION, buildPuzzle2dPlaySelectionDeclarativeBody);
-	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_JACK, buildPuzzle2dPlayJackDeclarativeBody);
 	registerWindowBody(PUZZLE_2D_PLAY_BODY_KEY_COMPILED_DAG, buildPuzzle2dPlayCompiledDagDeclarativeBody);
 }
 

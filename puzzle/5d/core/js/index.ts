@@ -66,7 +66,7 @@ import {
   beginPuzzle2dFixturePalettePointerDrag,
   cancelPuzzle2dFixturePalettePointerDrag,
   puzzle2dFixturePaletteTreeDragController,
-} from "../../../2d/react/js/index.tsx";
+} from "../../../2d/react/index.tsx";
 import {
   PUZZLE_2D_LOD_MODE_AUTOMATIC,
   puzzle2dLodAutomaticSelectLabel,
@@ -83,7 +83,7 @@ import {
   type Puzzle2dSelectionMode,
   type Puzzle2dSelectionTargets,
   puzzle2dPlayNodeKindDragData,
-} from "../../../2d/react/js/index.tsx";
+} from "../../../2d/react/index.tsx";
 import { bootstrapElementsSurfaceChromeDocument, type GumballConfig } from "@semio-tech/ui-react";
 import { PUZZLE_3D_GUMBALL_CONFIG, PUZZLE_3D_GUMBALL_GROUPS, type Puzzle3dGumballGroupKey } from "@semio-tech/puzzle-3d-core";
 import {
@@ -91,7 +91,7 @@ import {
   beginPuzzle3dFixturePalettePointerDrag,
   cancelPuzzle3dFixturePalettePointerDrag,
   puzzle3dFixturePaletteTreeDragController,
-} from "../../../3d/react/js/index.tsx";
+} from "../../../3d/react/index.tsx";
 import {
   DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
@@ -108,7 +108,7 @@ import {
   isLoadableMeshUrl,
   puzzle3dPlayObjectKindDragData,
   resolveObjectKindMeshUrl,
-} from "../../../3d/react/js/index.tsx";
+} from "../../../3d/react/index.tsx";
 import {
   createStore,
   parseModel,
@@ -143,7 +143,7 @@ import {
   type PartKind,
   type RopeKind,
   type SelectionSnapshot as Puzzle5dSelectionSnapshot,
-} from "../../react/js/index.tsx";
+} from "../../react/index.tsx";
 
 //#region 🔖Ids
 export const PUZZLE_5D_PLAY_APP_ID = "puzzle-5d-play";
@@ -878,7 +878,7 @@ import {
   puzzle2dApplyLiveForceGraphLayoutTick,
   type Puzzle2dLiveForceGraphDragState,
   type Puzzle2dRedrawLayoutOptions,
-} from "../../../2d/react/js/index.tsx";
+} from "../../../2d/react/index.tsx";
 
 const FIVE_D_LIVE_FORCE_ITERS_PER_FRAME = 24;
 
@@ -1961,7 +1961,7 @@ export function buildPuzzle5d3dDeclarativeBody(ctx: WindowBodyViewContext): UiNo
   return buildPuzzle3dWindowBody(PUZZLE_5D_PLAY_3D_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID);
 }
 
-function buildPuzzle5dPlayJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
+export function buildPuzzle5dJackDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
   return buildWriterWindowBody(PUZZLE_5D_PLAY_JACK_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_JACK_WINDOW_ID);
 }
 //#endregion 🔖DeclarativeBodies
@@ -2258,33 +2258,19 @@ export function resolvePuzzle5dPlayExampleSlug(slug: string): string | undefined
 	return PUZZLE_5D_PLAY_EXAMPLE_OPTIONS.some((row) => row.id === normalized) ? normalized : undefined;
 }
 
-const PUZZLE_5D_PLAY_EXAMPLE_URL_BY_ID: Readonly<Record<string, string>> = {
-	[PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID]: "/puzzle-5d-fixture/concrete-forest.5d.json",
-	[PUZZLE_5D_PLAY_EXAMPLE_NAKAGIN_ID]: "/puzzle-5d-fixture/nakagin-capsule-tower.5d.json",
+import concreteForest5dExampleJson from "../../example/concrete-forest.5d.json";
+import nakagin5dExampleJson from "../../example/nakagin-capsule-tower.5d.json";
+
+const PUZZLE_5D_PLAY_EXAMPLE_JSON_BY_ID: Readonly<Record<string, unknown>> = {
+	[PUZZLE_5D_PLAY_EXAMPLE_CONCRETE_FOREST_ID]: concreteForest5dExampleJson,
+	[PUZZLE_5D_PLAY_EXAMPLE_NAKAGIN_ID]: nakagin5dExampleJson,
 };
 
-async function readPuzzle5dPlayModelFromDisk(exampleId: string): Promise<Puzzle5dModel | null> {
-	const url = PUZZLE_5D_PLAY_EXAMPLE_URL_BY_ID[exampleId];
-	if (!url) return null;
-	const fileName = url.split("/").pop();
-	if (!fileName) return null;
-	const { readFile } = await import("node:fs/promises");
-	const { join, dirname } = await import("node:path");
-	const { fileURLToPath } = await import("node:url");
-	const filePath = join(dirname(fileURLToPath(import.meta.url)), "../example", fileName);
-	return parseModel(JSON.parse(await readFile(filePath, "utf8")) as unknown);
-}
-
-/** @emoji 📥 Loads a play sample by catalog id (browser fetch or disk in non-browser hosts). */
+/** @emoji 📥 Loads a play sample by catalog id from bundled example JSON. */
 export async function fetchPuzzle5dPlayModel(exampleId: string): Promise<Puzzle5dModel | null> {
-	const url = PUZZLE_5D_PLAY_EXAMPLE_URL_BY_ID[exampleId];
-	if (!url) return null;
-	if (typeof window === "undefined") {
-		return readPuzzle5dPlayModelFromDisk(exampleId);
-	}
-	const response = await fetch(url);
-	if (!response.ok) return null;
-	return parseModel((await response.json()) as unknown);
+	const raw = PUZZLE_5D_PLAY_EXAMPLE_JSON_BY_ID[exampleId];
+	if (!raw) return null;
+	return parseModel(raw as unknown);
 }
 
 /** @emoji 📭 Empty puzzle 5d model for the no-example playground catalog entry. */

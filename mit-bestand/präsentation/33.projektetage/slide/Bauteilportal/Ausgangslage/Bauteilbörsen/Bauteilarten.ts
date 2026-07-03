@@ -1,5 +1,5 @@
 import type { SlideFile } from "@semio-tech/framework-presentation-core";
-import { catalogueFocusDispositions, mediaEmbodiments, mediaParticipants } from "../../../../index.ts";
+import { catalogueFocusDispositions, mediaEmbodiments, mediaParticipants } from "@semio-tech/mit-bestand-praesentation-projektetage-spec";
 
 export default {
 	order: 2,

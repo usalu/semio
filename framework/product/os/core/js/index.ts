@@ -102,12 +102,59 @@ export interface OsMediaGraph {
 	readonly edges: readonly OsMediaGraphEdge[];
 }
 
+export type OsParameterType = "numeric" | "categorical" | "toggle" | "text";
+
+export interface OsParameterFieldSpec {
+	readonly fieldPath: string;
+	readonly label: string;
+	readonly type: OsParameterType;
+}
+
+export interface OsParameterBase {
+	readonly id: string;
+	readonly name: string;
+}
+
+export interface OsNumericParameter extends OsParameterBase {
+	readonly type: "numeric";
+	readonly value: number;
+	readonly min?: number;
+	readonly max?: number;
+	readonly step?: number;
+}
+
+export interface OsCategoricalParameter extends OsParameterBase {
+	readonly type: "categorical";
+	readonly value: string;
+	readonly options: readonly string[];
+}
+
+export interface OsToggleParameter extends OsParameterBase {
+	readonly type: "toggle";
+	readonly value: boolean;
+}
+
+export interface OsTextParameter extends OsParameterBase {
+	readonly type: "text";
+	readonly value: string;
+}
+
+export type OsParameter = OsNumericParameter | OsCategoricalParameter | OsToggleParameter | OsTextParameter;
+
+export interface OsParameterFieldBinding {
+	readonly parameterId: string;
+	readonly instanceId: string;
+	readonly fieldPath: string;
+}
+
 export interface OsProjection {
 	readonly programs: readonly string[];
 	readonly activeProgramId: string | null;
 	readonly activeAlternativeId: string | null;
 	readonly appInstances: readonly OsAppInstance[];
 	readonly mediaGraph: OsMediaGraph;
+	readonly parameters: readonly OsParameter[];
+	readonly parameterBindings: readonly OsParameterFieldBinding[];
 }
 
 export interface OsOperation {
@@ -123,7 +170,13 @@ export interface OsOperation {
 		| "setStudioName"
 		| "setActiveProgram"
 		| "createAlternative"
-		| "switchAlternative";
+		| "switchAlternative"
+		| "addParameter"
+		| "removeParameter"
+		| "patchParameter"
+		| "bindParameterField"
+		| "unbindParameterField"
+		| "syncParameterPorts";
 	readonly payload: Record<string, unknown>;
 }
 
@@ -176,6 +229,7 @@ export interface OsAppRegistration {
 	readonly sourceFormat: string;
 	readonly componentKind: ComponentKind;
 	readonly defaultModeId?: string;
+	readonly parameterFields?: readonly OsParameterFieldSpec[];
 }
 
 export function osAppPrimaryOutputKind(registration: Pick<OsAppRegistration, "outputs">): OsResourceKindId {
@@ -198,6 +252,177 @@ export function mediaPortSpecId(portId: string): string | null {
 	const parts = portId.split(":");
 	if (parts.length < 3) return null;
 	return parts.slice(1, -1).join(":");
+}
+
+export const OS_PARAMETER_PORT_PREFIX = "param." as const;
+
+/** @emoji 🎛️ Builds the media graph input port id for a bound studio parameter. */
+export function parameterPortId(instanceId: string, parameterId: string): string {
+	return mediaPortIdForSpec(instanceId, `${OS_PARAMETER_PORT_PREFIX}${parameterId}`, "in");
+}
+
+/** @emoji 🎛️ Returns whether a media port id denotes a studio parameter input channel. */
+export function isParameterPortId(portId: string): boolean {
+	const specId = mediaPortSpecId(portId);
+	return specId?.startsWith(OS_PARAMETER_PORT_PREFIX) ?? false;
+}
+
+/** @emoji 🎛️ Extracts the studio parameter id from a parameter input port id. */
+export function parameterIdFromPortId(portId: string): string | null {
+	const specId = mediaPortSpecId(portId);
+	if (!specId?.startsWith(OS_PARAMETER_PORT_PREFIX)) return null;
+	return specId.slice(OS_PARAMETER_PORT_PREFIX.length);
+}
+
+/** @emoji 🎛️ Reads the runtime value from a studio parameter definition. */
+export function osParameterValue(parameter: OsParameter): unknown {
+	return parameter.value;
+}
+
+/** @emoji 🎛️ Returns whether a parameter type can drive a bindable field type. */
+export function osParameterTypesCompatible(parameterType: OsParameterType, fieldType: OsParameterType): boolean {
+	return parameterType === fieldType;
+}
+
+/** @emoji 🎛️ Creates a default studio parameter of the given type. */
+export function createDefaultOsParameter(type: OsParameterType = "numeric", name = "Parameter", id?: string): OsParameter {
+	const parameterId = id ?? `param-${Date.now()}`;
+	const base = { id: parameterId, name };
+	switch (type) {
+		case "numeric":
+			return { ...base, type, value: 0, min: 0, max: 100, step: 1 };
+		case "categorical":
+			return { ...base, type, value: "Option A", options: ["Option A", "Option B"] };
+		case "toggle":
+			return { ...base, type, value: false };
+		case "text":
+			return { ...base, type, value: "" };
+	}
+}
+
+function clampNumericValue(value: number, min?: number, max?: number, step?: number): number {
+	let next = value;
+	if (Number.isFinite(min)) next = Math.max(next, min!);
+	if (Number.isFinite(max)) next = Math.min(next, max!);
+	if (Number.isFinite(step) && step! > 0) {
+		const anchor = Number.isFinite(min) ? min! : 0;
+		next = anchor + Math.round((next - anchor) / step!) * step!;
+		if (Number.isFinite(min)) next = Math.max(next, min!);
+		if (Number.isFinite(max)) next = Math.min(next, max!);
+	}
+	return next;
+}
+
+/** @emoji 🎛️ Applies a partial patch to a studio parameter, enforcing type constraints. */
+export function patchOsParameter(parameter: OsParameter, patch: Record<string, unknown>): OsParameter {
+	const name = typeof patch.name === "string" ? patch.name : parameter.name;
+	if (patch.type === "numeric" || parameter.type === "numeric" && patch.type === undefined) {
+		const current = parameter.type === "numeric" ? parameter : createDefaultOsParameter("numeric", name);
+		const min = patch.min !== undefined ? Number(patch.min) : current.min;
+		const max = patch.max !== undefined ? Number(patch.max) : current.max;
+		const step = patch.step !== undefined ? Number(patch.step) : current.step;
+		const rawValue = patch.value !== undefined ? Number(patch.value) : current.value;
+		return {
+			id: parameter.id,
+			name,
+			type: "numeric",
+			min: Number.isFinite(min) ? min : undefined,
+			max: Number.isFinite(max) ? max : undefined,
+			step: Number.isFinite(step) ? step : undefined,
+			value: clampNumericValue(rawValue, Number.isFinite(min) ? min : undefined, Number.isFinite(max) ? max : undefined, Number.isFinite(step) ? step : undefined),
+		};
+	}
+	if (patch.type === "categorical" || parameter.type === "categorical" && patch.type === undefined) {
+		const current = parameter.type === "categorical" ? parameter : createDefaultOsParameter("categorical", name);
+		const options = Array.isArray(patch.options) ? patch.options.map((entry) => String(entry)) : [...current.options];
+		const uniqueOptions = options.length ? options : ["Option A"];
+		const value = typeof patch.value === "string" && uniqueOptions.includes(patch.value) ? patch.value : uniqueOptions.includes(current.value) ? current.value : uniqueOptions[0]!;
+		return { id: parameter.id, name, type: "categorical", options: uniqueOptions, value };
+	}
+	if (patch.type === "toggle" || parameter.type === "toggle" && patch.type === undefined) {
+		const current = parameter.type === "toggle" ? parameter : createDefaultOsParameter("toggle", name);
+		const value = typeof patch.value === "boolean" ? patch.value : current.value;
+		return { id: parameter.id, name, type: "toggle", value };
+	}
+	const current = parameter.type === "text" ? parameter : createDefaultOsParameter("text", name);
+	const value = typeof patch.value === "string" ? patch.value : current.value;
+	return { id: parameter.id, name, type: "text", value };
+}
+
+function jsonPointerSegments(pointer: string): readonly string[] {
+	if (pointer.startsWith("/")) return pointer.slice(1).split("/").filter(Boolean);
+	return pointer.split(".").filter(Boolean);
+}
+
+/** @emoji 🎛️ Deep-sets a JSON-pointer path on a plain object projection. */
+export function setJsonPointerValue(root: Record<string, unknown>, pointer: string, value: unknown): void {
+	const segments = jsonPointerSegments(pointer);
+	if (!segments.length) return;
+	let current: Record<string, unknown> = root;
+	for (let index = 0; index < segments.length - 1; index += 1) {
+		const segment = segments[index]!;
+		const next = current[segment];
+		if (typeof next !== "object" || next === null || Array.isArray(next)) current[segment] = {};
+		current = current[segment] as Record<string, unknown>;
+	}
+	current[segments[segments.length - 1]!] = value;
+}
+
+/** @emoji 🎛️ Applies bound studio parameter values onto an app projection via JSON pointers. */
+export function applyParameterValuesToProjection<T>(
+	projection: T,
+	bindings: readonly OsParameterFieldBinding[],
+	parameters: readonly OsParameter[],
+	instanceId: string,
+): T {
+	const instanceBindings = bindings.filter((binding) => binding.instanceId === instanceId);
+	if (!instanceBindings.length) return projection;
+	const clone = structuredClone(projection) as Record<string, unknown>;
+	for (const binding of instanceBindings) {
+		const parameter = parameters.find((entry) => entry.id === binding.parameterId);
+		if (!parameter) continue;
+		setJsonPointerValue(clone, binding.fieldPath, osParameterValue(parameter));
+	}
+	return clone as T;
+}
+
+function syncMediaNodeParameterPorts(
+	node: OsMediaGraphNode,
+	bindings: readonly OsParameterFieldBinding[],
+): OsMediaGraphNode {
+	const instanceBindings = bindings.filter((binding) => binding.instanceId === node.instanceId);
+	const baseInputs = node.inputs.filter((port) => !isParameterPortId(port.id));
+	const parameterInputs: OsMediaPort[] = instanceBindings.map((binding) => ({
+		id: parameterPortId(node.instanceId, binding.parameterId),
+		resourceKind: "parameter.value",
+		direction: "in",
+	}));
+	const inputs = [...baseInputs, ...parameterInputs];
+	const portCount = Math.max(inputs.length, node.outputs.length, 1);
+	return { ...node, inputs, height: 56 + portCount * 18 };
+}
+
+function syncMediaGraphParameterPorts(graph: OsMediaGraph, bindings: readonly OsParameterFieldBinding[]): OsMediaGraph {
+	return {
+		schema: OS_MEDIA_GRAPH_SCHEMA,
+		nodes: graph.nodes.map((node) => syncMediaNodeParameterPorts(node, bindings)),
+		edges: graph.edges.map((edge) => ({ ...edge })),
+	};
+}
+
+/** @emoji 🎛️ Resolves bound parameter values for an app instance as a field-path map. */
+export function resolveParameterValuesForInstance(
+	bindings: readonly OsParameterFieldBinding[],
+	parameters: readonly OsParameter[],
+	instanceId: string,
+): Readonly<Record<string, unknown>> {
+	const values: Record<string, unknown> = {};
+	for (const binding of bindings.filter((entry) => entry.instanceId === instanceId)) {
+		const parameter = parameters.find((entry) => entry.id === binding.parameterId);
+		if (!parameter) continue;
+		values[binding.fieldPath] = osParameterValue(parameter);
+	}
+	return values;
 }
 
 export interface OsProgramDefinition extends PlatformDefinition {
@@ -285,6 +510,7 @@ export function mergeOsProgramDefinition(
 				outputs: resource.outputs,
 				sourceFormat: resource.sourceFormat,
 				componentKind: resource.componentKind,
+				parameterFields: resource.parameterFields,
 				modes: app.modes.length > 0 ? app.modes : resource.modes,
 				defaultModeId: app.defaultModeId ?? resource.defaultModeId,
 			};
@@ -354,6 +580,7 @@ export interface AppMaterializeContext {
 	readonly graph?: OsMediaGraph;
 	readonly instances?: readonly OsAppInstance[];
 	readonly inputBindings?: Readonly<Record<string, unknown>>;
+	readonly parameterValues?: Readonly<Record<string, unknown>>;
 	readonly outputPortId?: string;
 }
 
@@ -732,7 +959,12 @@ export function materializeAppInstanceProjection(instance: OsAppInstance, contex
 		if (source.inline) return JSON.parse(source.inline);
 		return null;
 	}
-	const projection = handler.materializeProjection(source, context);
+	let projection = handler.materializeProjection(source, context);
+	if (context?.parameterValues && Object.keys(context.parameterValues).length > 0) {
+		const clone = structuredClone(projection) as Record<string, unknown>;
+		for (const [fieldPath, value] of Object.entries(context.parameterValues)) setJsonPointerValue(clone, fieldPath, value);
+		projection = clone;
+	}
 	if (context?.outputPortId && handler.projectOutput) return handler.projectOutput(projection, context.outputPortId, context);
 	return projection;
 }
@@ -887,7 +1119,9 @@ export function appInstanceResourceProjection(
 	instanceId: string,
 	options?: {
 		readonly outputPortId?: string;
-		readonly context?: Omit<AppMaterializeContext, "graph" | "instances">;
+		readonly context?: Omit<AppMaterializeContext, "graph" | "instances" | "parameterValues">;
+		readonly parameters?: readonly OsParameter[];
+		readonly parameterBindings?: readonly OsParameterFieldBinding[];
 	},
 ): {
 	readonly kind: OsResourceKindId;
@@ -907,6 +1141,8 @@ export function appInstanceResourceProjection(
 		const upstreamProjection = appInstanceResourceProjection(graph, instances, binding.upstreamInstanceId, {
 			outputPortId: upstreamSpecId ?? undefined,
 			context: options?.context,
+			parameters: options?.parameters,
+			parameterBindings: options?.parameterBindings,
 		});
 		if (upstreamProjection) inputProjections[binding.inputSpecId] = upstreamProjection.projection;
 	}
@@ -915,13 +1151,18 @@ export function appInstanceResourceProjection(
 		graph,
 		instances,
 		inputBindings: inputProjections,
+		parameterValues: resolveParameterValuesForInstance(options?.parameterBindings ?? [], options?.parameters ?? [], instanceId),
 		outputPortId: options?.outputPortId,
 	};
 	let projection = materializeAppInstanceProjection(instance, materializeContext);
 	const upstreamInstanceId = bindings[0]?.upstreamInstanceId ?? null;
 	let upstreamProjection: unknown | null = null;
 	if (upstreamInstanceId) {
-		const upstreamBundle = appInstanceResourceProjection(graph, instances, upstreamInstanceId, { context: options?.context });
+		const upstreamBundle = appInstanceResourceProjection(graph, instances, upstreamInstanceId, {
+			context: options?.context,
+			parameters: options?.parameters,
+			parameterBindings: options?.parameterBindings,
+		});
 		upstreamProjection = upstreamBundle?.projection ?? null;
 		if (!instance.sourceDocument.inline && !instance.sourceDocument.vcsJson && projection == null) {
 			projection = upstreamProjection;
@@ -951,6 +1192,7 @@ export function osMediaGraphToDagFixture(
 	graph: OsMediaGraph,
 	instances: readonly OsAppInstance[],
 	camera: { readonly x: number; readonly y: number; readonly zoom: number } = { x: 0, y: 0, zoom: 1 },
+	parameters: readonly OsParameter[] = [],
 ): {
 	readonly schema: "dag.fixture";
 	readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
@@ -958,6 +1200,7 @@ export function osMediaGraphToDagFixture(
 	readonly edges: readonly { readonly id: string; readonly source: string; readonly target: string }[];
 } {
 	const instanceById = new Map(instances.map((instance) => [instance.id, instance]));
+	const parameterById = new Map(parameters.map((parameter) => [parameter.id, parameter]));
 	const nodes = graph.nodes.map((node) => {
 		const instance = instanceById.get(node.instanceId);
 		const registration = instance ? osAppRegistration(instance.programId, instance.appId) : undefined;
@@ -975,11 +1218,15 @@ export function osMediaGraphToDagFixture(
 			instanceId: node.instanceId,
 			programId: instance?.programId ?? "",
 			appId: instance?.appId ?? "",
-			inputs: node.inputs.map((port) => ({
-				id: port.id,
-				label: mediaPortSpecId(port.id) ?? port.id,
-				resourceKind: port.resourceKind,
-			})),
+			inputs: node.inputs.map((port) => {
+				const parameterId = parameterIdFromPortId(port.id);
+				const parameter = parameterId ? parameterById.get(parameterId) : undefined;
+				return {
+					id: port.id,
+					label: parameter?.name ?? mediaPortSpecId(port.id) ?? port.id,
+					resourceKind: port.resourceKind,
+				};
+			}),
 			outputs: node.outputs.map((port) => ({
 				id: port.id,
 				label: mediaPortSpecId(port.id) ?? port.id,
@@ -999,8 +1246,9 @@ export function osMediaGraphToDagFixtureJson(
 	graph: OsMediaGraph,
 	instances: readonly OsAppInstance[],
 	camera?: { readonly x: number; readonly y: number; readonly zoom: number },
+	parameters?: readonly OsParameter[],
 ): string {
-	return JSON.stringify(osMediaGraphToDagFixture(graph, instances, camera));
+	return JSON.stringify(osMediaGraphToDagFixture(graph, instances, camera, parameters));
 }
 
 /** @emoji 🔁 Applies structural DAG fixture edits back onto the studio media graph. */
@@ -1058,7 +1306,7 @@ export function createOsId(prefix = "s"): string {
 }
 
 export function defaultOsProjection(): OsProjection {
-	return { programs: [], activeProgramId: null, activeAlternativeId: null, appInstances: [], mediaGraph: emptyMediaGraph() };
+	return { programs: [], activeProgramId: null, activeAlternativeId: null, appInstances: [], mediaGraph: emptyMediaGraph(), parameters: [], parameterBindings: [] };
 }
 
 export function createEmptyOsDocument(id = "studio", name = "Studio"): OsDocument {
@@ -1085,6 +1333,8 @@ function cloneProjection(projection: OsProjection): OsProjection {
 			...instance,
 			sourceDocument: { ...instance.sourceDocument },
 		})),
+		parameters: projection.parameters.map((parameter) => ({ ...parameter, ...(parameter.type === "categorical" ? { options: [...parameter.options] } : {}) })),
+		parameterBindings: projection.parameterBindings.map((binding) => ({ ...binding })),
 		mediaGraph: {
 			schema: OS_MEDIA_GRAPH_SCHEMA,
 			nodes: projection.mediaGraph.nodes.map((node) => ({
@@ -1121,12 +1371,14 @@ function applyOsOperation(projection: OsProjection, operation: OsOperation): OsP
 			if (!next.programs.includes(instance.programId)) next.programs.push(instance.programId);
 			next.appInstances.push(instance);
 			const position = (operation.payload.position as { x: number; y: number }) ?? { x: 0, y: 0 };
-			next.mediaGraph.nodes.push(mediaGraphNodeForInstance(instance, position));
+			const node = syncMediaNodeParameterPorts(mediaGraphNodeForInstance(instance, position), next.parameterBindings);
+			next.mediaGraph.nodes.push(node);
 			return next;
 		}
 		case "removeAppInstance": {
 			const instanceId = String(operation.payload.instanceId);
 			next.appInstances = next.appInstances.filter((instance) => instance.id !== instanceId);
+			next.parameterBindings = next.parameterBindings.filter((binding) => binding.instanceId !== instanceId);
 			const nodeId = next.mediaGraph.nodes.find((node) => node.instanceId === instanceId)?.id;
 			next.mediaGraph.nodes = next.mediaGraph.nodes.filter((node) => node.instanceId !== instanceId);
 			if (nodeId) next.mediaGraph.edges = next.mediaGraph.edges.filter((edge) => edge.sourceNodeId !== nodeId && edge.targetNodeId !== nodeId);
@@ -1165,13 +1417,55 @@ function applyOsOperation(projection: OsProjection, operation: OsOperation): OsP
 			);
 			return next;
 		}
+		case "addParameter": {
+			const parameter = operation.payload.parameter as OsParameter;
+			next.parameters = [...next.parameters, parameter];
+			return next;
+		}
+		case "removeParameter": {
+			const parameterId = String(operation.payload.parameterId);
+			next.parameters = next.parameters.filter((parameter) => parameter.id !== parameterId);
+			next.parameterBindings = next.parameterBindings.filter((binding) => binding.parameterId !== parameterId);
+			next.mediaGraph = syncMediaGraphParameterPorts(next.mediaGraph, next.parameterBindings);
+			return next;
+		}
+		case "patchParameter": {
+			const parameterId = String(operation.payload.parameterId);
+			const nextParameter = operation.payload.parameter as OsParameter;
+			next.parameters = next.parameters.map((parameter) => (parameter.id === parameterId ? nextParameter : parameter));
+			return next;
+		}
+		case "bindParameterField": {
+			const binding = operation.payload.binding as OsParameterFieldBinding;
+			next.parameterBindings = [
+				...next.parameterBindings.filter(
+					(entry) => !(entry.instanceId === binding.instanceId && entry.fieldPath === binding.fieldPath),
+				),
+				binding,
+			];
+			next.mediaGraph = syncMediaGraphParameterPorts(next.mediaGraph, next.parameterBindings);
+			return next;
+		}
+		case "unbindParameterField": {
+			const instanceId = String(operation.payload.instanceId);
+			const fieldPath = String(operation.payload.fieldPath);
+			next.parameterBindings = next.parameterBindings.filter(
+				(binding) => !(binding.instanceId === instanceId && binding.fieldPath === fieldPath),
+			);
+			next.mediaGraph = syncMediaGraphParameterPorts(next.mediaGraph, next.parameterBindings);
+			return next;
+		}
+		case "syncParameterPorts": {
+			next.mediaGraph = syncMediaGraphParameterPorts(next.mediaGraph, next.parameterBindings);
+			return next;
+		}
 		default:
 			return next;
 	}
 }
 
 export function materializeOsProjection(document: OsDocument, appliedChangeIds: readonly string[] = []): OsProjection {
-	let projection = cloneProjection(document.vcs.initialProjection);
+	let projection = normalizeOsProjection(cloneProjection(document.vcs.initialProjection));
 	for (const changeId of appliedChangeIds) {
 		const change = document.vcs.operations.find((entry) => entry.id === changeId);
 		if (!change) continue;
@@ -1180,11 +1474,25 @@ export function materializeOsProjection(document: OsDocument, appliedChangeIds: 
 	return { ...projection, activeAlternativeId: projection.activeAlternativeId ?? null };
 }
 
+function normalizeOsProjection(projection: OsProjection): OsProjection {
+	return {
+		...projection,
+		parameters: projection.parameters ?? [],
+		parameterBindings: projection.parameterBindings ?? [],
+	};
+}
+
 export function parseOsDocument(raw: unknown): OsDocument {
 	const value = raw as Partial<OsDocument>;
 	if (value.schema !== OS_STUDIO_SCHEMA) throw new Error(`expected schema ${OS_STUDIO_SCHEMA}`);
 	if (!value.id || !value.name || !value.vcs?.initialProjection) throw new Error("studio document requires id, name, and vcs.initialProjection");
-	return value as OsDocument;
+	return {
+		...(value as OsDocument),
+		vcs: {
+			...value.vcs,
+			initialProjection: normalizeOsProjection(value.vcs.initialProjection as OsProjection),
+		},
+	};
 }
 
 export function osDocumentToJson(document: OsDocument): string {
@@ -1434,7 +1742,9 @@ export class OsMediaGraphVirtualFileSystemController extends VirtualFileSystemCo
 					name: "inputs",
 					path: `/${instance.label}/inputs`,
 					parentId,
-					hasChildren: (registration?.inputs.length ?? 0) > 0,
+					hasChildren:
+						(registration?.inputs.length ?? 0) > 0 ||
+						projection.parameterBindings.some((binding) => binding.instanceId === instanceId),
 					icon: "folder-input",
 				},
 				{
@@ -1450,7 +1760,8 @@ export class OsMediaGraphVirtualFileSystemController extends VirtualFileSystemCo
 		}
 		if (parentId === osMediaGraphVfsInputsFolderId(instanceId)) {
 			const bindings = resolveInputBindingsForInstance(projection.mediaGraph, projection.appInstances, instanceId);
-			return (registration?.inputs ?? []).map((spec) => {
+			const parameterById = new Map(projection.parameters.map((parameter) => [parameter.id, parameter]));
+			const resourceRows = (registration?.inputs ?? []).map((spec) => {
 				const binding = bindings.find((entry) => entry.inputSpecId === spec.id);
 				return {
 					id: osMediaGraphVfsInputPortId(instanceId, spec.id),
@@ -1471,6 +1782,25 @@ export class OsMediaGraphVirtualFileSystemController extends VirtualFileSystemCo
 					}),
 				};
 			});
+			const parameterRows = projection.parameterBindings
+				.filter((binding) => binding.instanceId === instanceId)
+				.map((binding) => {
+					const parameter = parameterById.get(binding.parameterId);
+					return {
+						id: osMediaGraphVfsInputPortId(instanceId, `param.${binding.parameterId}`),
+						fileNodeKindId: "input",
+						name: parameter?.name ?? binding.fieldPath,
+						path: `/${instance.label}/inputs/param.${binding.parameterId}`,
+						parentId,
+						hasChildren: false,
+						icon: "sliders-horizontal",
+						descriptorValues: virtualFileSystemDescriptorValues(OS_MEDIA_GRAPH_VFS_SCHEMA, "input", {
+							path: `/${instance.label}/inputs/param.${binding.parameterId}`,
+							textByDescriptorId: { binding: parameter?.name ?? binding.parameterId },
+						}),
+					};
+				});
+			return [...resourceRows, ...parameterRows];
 		}
 		if (parentId === osMediaGraphVfsOutputsFolderId(instanceId)) {
 			const descriptor = osResourceDescriptor(instance.yields);
@@ -1679,6 +2009,11 @@ export type OsCommand =
 	| { readonly kind: "checkoutCheckpoint"; readonly checkpointId: string }
 	| { readonly kind: "createAlternative"; readonly name: string }
 	| { readonly kind: "switchAlternative"; readonly alternativeId: string }
+	| { readonly kind: "addParameter"; readonly type?: OsParameterType; readonly name?: string }
+	| { readonly kind: "removeParameter"; readonly parameterId: string }
+	| { readonly kind: "patchParameter"; readonly parameterId: string; readonly patch: Record<string, unknown> }
+	| { readonly kind: "bindParameterField"; readonly instanceId: string; readonly fieldPath: string; readonly parameterId: string }
+	| { readonly kind: "unbindParameterField"; readonly instanceId: string; readonly fieldPath: string }
 	| { readonly kind: "undo" }
 	| { readonly kind: "redo" };
 
@@ -2011,6 +2346,67 @@ export class OsStore {
 					id: createOsId("change"),
 					forwards: [{ op: "applyAppOperation", payload: { instanceId: command.instanceId, nextSource } }],
 					backwards: [{ op: "applyAppOperation", payload: { instanceId: command.instanceId, nextSource: previous } }],
+				};
+			}
+			case "addParameter": {
+				const parameter = createDefaultOsParameter(command.type ?? "numeric", command.name ?? "Parameter", createOsId("param"));
+				return {
+					id: createOsId("change"),
+					forwards: [{ op: "addParameter", payload: { parameter } }],
+					backwards: [{ op: "removeParameter", payload: { parameterId: parameter.id } }],
+				};
+			}
+			case "removeParameter": {
+				const projection = this.projection();
+				const parameter = projection.parameters.find((entry) => entry.id === command.parameterId);
+				if (!parameter) return null;
+				const removedBindings = projection.parameterBindings.filter((binding) => binding.parameterId === command.parameterId);
+				const forwards: OsOperation[] = [{ op: "removeParameter", payload: { parameterId: command.parameterId } }];
+				const backwards: OsOperation[] = [
+					{ op: "addParameter", payload: { parameter } },
+					...removedBindings.map((binding) => ({ op: "bindParameterField" as const, payload: { binding } })),
+				];
+				return { id: createOsId("change"), forwards, backwards };
+			}
+			case "patchParameter": {
+				const projection = this.projection();
+				const current = projection.parameters.find((entry) => entry.id === command.parameterId);
+				if (!current) return null;
+				const next = patchOsParameter(current, command.patch);
+				return {
+					id: createOsId("change"),
+					forwards: [{ op: "patchParameter", payload: { parameterId: command.parameterId, parameter: next } }],
+					backwards: [{ op: "patchParameter", payload: { parameterId: command.parameterId, parameter: current } }],
+				};
+			}
+			case "bindParameterField": {
+				const projection = this.projection();
+				const parameter = projection.parameters.find((entry) => entry.id === command.parameterId);
+				if (!parameter) return null;
+				const binding: OsParameterFieldBinding = {
+					parameterId: command.parameterId,
+					instanceId: command.instanceId,
+					fieldPath: command.fieldPath,
+				};
+				const previous = projection.parameterBindings.find(
+					(entry) => entry.instanceId === command.instanceId && entry.fieldPath === command.fieldPath,
+				);
+				const forwards: OsOperation[] = [{ op: "bindParameterField", payload: { binding } }];
+				const backwards: OsOperation[] = previous
+					? [{ op: "bindParameterField", payload: { binding: previous } }]
+					: [{ op: "unbindParameterField", payload: { instanceId: command.instanceId, fieldPath: command.fieldPath } }];
+				return { id: createOsId("change"), forwards, backwards };
+			}
+			case "unbindParameterField": {
+				const projection = this.projection();
+				const previous = projection.parameterBindings.find(
+					(entry) => entry.instanceId === command.instanceId && entry.fieldPath === command.fieldPath,
+				);
+				if (!previous) return null;
+				return {
+					id: createOsId("change"),
+					forwards: [{ op: "unbindParameterField", payload: { instanceId: command.instanceId, fieldPath: command.fieldPath } }],
+					backwards: [{ op: "bindParameterField", payload: { binding: previous } }],
 				};
 			}
 		}
@@ -2369,6 +2765,73 @@ if (import.meta.vitest) {
 			const columns = buildOsHistoryColumns(store.getDocument());
 			expect(columns.length).toBe(1);
 			expect(columns[0]?.authors[0]?.name).toBe("Dev");
+		});
+
+		it("adds patches and removes studio parameters with undo", () => {
+			const store = new OsStore(createEmptyOsDocument());
+			store.dispatch({ kind: "addParameter", type: "numeric", name: "Zoom" });
+			const parameter = store.projection().parameters[0]!;
+			expect(parameter.name).toBe("Zoom");
+			store.dispatch({ kind: "patchParameter", parameterId: parameter.id, patch: { value: 12, max: 10 } });
+			const patched = store.projection().parameters[0]!;
+			expect(patched.type).toBe("numeric");
+			if (patched.type === "numeric") expect(patched.value).toBe(10);
+			store.dispatch({ kind: "undo" });
+			expect(store.projection().parameters[0]?.name).toBe("Zoom");
+			store.dispatch({ kind: "removeParameter", parameterId: parameter.id });
+			expect(store.projection().parameters).toHaveLength(0);
+		});
+
+		it("binds parameter fields to app input channels", () => {
+			mergeOsProgramDefinition(
+				"raster",
+				{
+					id: "raster",
+					name: "Raster",
+					apiVersion: "1",
+					apps: [{ id: "raster", label: "Raster", controllerId: "raster-play", modes: [{ id: "edit", label: "Edit" }] }],
+					createPlatformApi: () => ({}),
+				},
+				{
+					raster: {
+						inputs: [],
+						outputs: [osOutPort("2d.raster")],
+						sourceFormat: "raster.document",
+						componentKind: "raster",
+						modes: [{ id: "edit", label: "Edit" }],
+						parameterFields: [{ fieldPath: "/brushSize", label: "Brush size", type: "numeric" }],
+					},
+				},
+			);
+			const store = new OsStore(createEmptyOsDocument());
+			store.dispatch({ kind: "addParameter", type: "numeric", name: "Brush" });
+			store.dispatch({ kind: "spawnAppInstance", programId: "raster", appId: "raster" });
+			const projection = store.projection();
+			const parameter = projection.parameters[0]!;
+			const instance = projection.appInstances[0]!;
+			store.dispatch({
+				kind: "bindParameterField",
+				instanceId: instance.id,
+				fieldPath: "/brushSize",
+				parameterId: parameter.id,
+			});
+			const node = store.projection().mediaGraph.nodes.find((entry) => entry.instanceId === instance.id);
+			expect(node?.inputs.some((port) => isParameterPortId(port.id))).toBe(true);
+			const values = resolveParameterValuesForInstance(store.projection().parameterBindings, store.projection().parameters, instance.id);
+			expect(values["/brushSize"]).toBe(0);
+		});
+
+		it("applies json pointer parameter overrides during materialization", () => {
+			const projection = {
+				brushSize: 8,
+			};
+			const overridden = applyParameterValuesToProjection(
+				projection,
+				[{ parameterId: "p1", instanceId: "i1", fieldPath: "/brushSize" }],
+				[{ id: "p1", name: "Brush", type: "numeric", value: 42 }],
+				"i1",
+			);
+			expect((overridden as { brushSize: number }).brushSize).toBe(42);
 		});
 	});
 }

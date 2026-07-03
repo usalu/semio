@@ -587,6 +587,12 @@ export const FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID = "framework.panel.hierarchy"
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID = "framework.panel.catalogue";
 /** @emoji 🔍 Canonical details inspection tab icon id. */
 export const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID = "framework.panel.inspection";
+/** @emoji 🎛️ Canonical workbench parameters tab id shared by all products. */
+export const FRAMEWORK_PANEL_TAB_PARAMETERS_ID = "framework.panel.parameters";
+/** @emoji 🎛️ Canonical workbench parameters tab label. */
+export const FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL = "Parameters";
+/** @emoji 🎛️ Canonical workbench parameters tab icon id. */
+export const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID = "framework.panel.parameters";
 //#endregion 🔖SideTab
 
 //#region 🔖Footer

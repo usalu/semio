@@ -2759,6 +2759,60 @@ impl FlowHost {
         let _ = self.evaluate();
     }
 
+    /// ✏️ Begins inline note editing for a widget at a world-space click.
+    pub fn begin_note_edit(&mut self, widget_id: &str, world_x: f64, world_y: f64) {
+        self.history.pending = Some(self.fixture.clone());
+        self.dag.begin_note_edit(widget_id, world_x, world_y);
+    }
+
+    /// ✏️ Inserts text into the active note editor.
+    pub fn note_insert_text(&mut self, chunk: &str) {
+        if !self.dag.note_insert_text(chunk) {
+            return;
+        }
+        self.sync_from_dag();
+        self.touch_channel_eval();
+    }
+
+    /// ✏️ Backspaces in the active note editor.
+    pub fn note_backspace(&mut self) {
+        if !self.dag.note_backspace() {
+            return;
+        }
+        self.sync_from_dag();
+        self.touch_channel_eval();
+    }
+
+    /// ✏️ Deletes forward in the active note editor.
+    pub fn note_delete_forward(&mut self) {
+        if !self.dag.note_delete_forward() {
+            return;
+        }
+        self.sync_from_dag();
+        self.touch_channel_eval();
+    }
+
+    /// ✏️ Moves the active note caret.
+    pub fn note_move_caret(&mut self, direction: &str, extend: bool) {
+        if !self.dag.note_move_caret(direction, extend) {
+            return;
+        }
+        self.sync_from_dag();
+    }
+
+    /// ✏️ Commits inline note editing into fixture history.
+    pub fn note_commit_edit(&mut self) {
+        self.dag.note_commit_edit();
+        self.sync_from_dag();
+        self.commit_gesture_history();
+        self.touch_channel_eval();
+    }
+
+    /// ✏️ Toggles native caret visibility while editing a note.
+    pub fn set_note_caret_visible(&mut self, visible: bool) {
+        self.dag.set_note_caret_visible(visible);
+    }
+
     pub fn schemas_json(&self) -> Result<String, String> {
         let refs = flow_registry().schema_refs();
         serde_json::to_string(&refs).map_err(|error| error.to_string())
@@ -3466,6 +3520,41 @@ impl FlowSession {
     #[wasm_bindgen(js_name = setNoteText)]
     pub fn set_note_text(&self, widget_id: &str, text: &str) {
         self.state.borrow_mut().host.set_note_text(widget_id, text);
+    }
+
+    #[wasm_bindgen(js_name = beginNoteEdit)]
+    pub fn begin_note_edit(&self, widget_id: &str, world_x: f64, world_y: f64) {
+        self.state.borrow_mut().host.begin_note_edit(widget_id, world_x, world_y);
+    }
+
+    #[wasm_bindgen(js_name = noteInsertText)]
+    pub fn note_insert_text(&self, chunk: &str) {
+        self.state.borrow_mut().host.note_insert_text(chunk);
+    }
+
+    #[wasm_bindgen(js_name = noteBackspace)]
+    pub fn note_backspace(&self) {
+        self.state.borrow_mut().host.note_backspace();
+    }
+
+    #[wasm_bindgen(js_name = noteDeleteForward)]
+    pub fn note_delete_forward(&self) {
+        self.state.borrow_mut().host.note_delete_forward();
+    }
+
+    #[wasm_bindgen(js_name = noteMoveCaret)]
+    pub fn note_move_caret(&self, direction: &str, extend: bool) {
+        self.state.borrow_mut().host.note_move_caret(direction, extend);
+    }
+
+    #[wasm_bindgen(js_name = noteCommitEdit)]
+    pub fn note_commit_edit(&self) {
+        self.state.borrow_mut().host.note_commit_edit();
+    }
+
+    #[wasm_bindgen(js_name = setNoteCaretVisible)]
+    pub fn set_note_caret_visible(&self, visible: bool) {
+        self.state.borrow_mut().host.set_note_caret_visible(visible);
     }
 
     #[wasm_bindgen(js_name = setImageSrc)]
@@ -4632,7 +4721,28 @@ mod tests {
         };
         assert_eq!(dag_text, "some text");
         assert!(node.width >= 40.0);
-        assert!(node.height > 20.0);
+        assert_eq!(node.height, dag::DAG_CHANNEL_ROW_HEIGHT);
+    }
+
+    #[test]
+    fn begin_note_edit_groups_undo_into_single_gesture() {
+        let mut host = host_with_test_bridge();
+        let id = host.add_widget(r#"{"kind":"inputNote","text":"hi"}"#, 0.0, 0.0).unwrap();
+        let node = host.dag.fixture.nodes.iter().find(|n| n.id == id).expect("node");
+        let origin_x = node.x - node.width * 0.5 + 4.0;
+        host.begin_note_edit(&id, origin_x + 40.0, node.y);
+        host.note_insert_text("!");
+        host.note_commit_edit();
+        let widget = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget");
+        let Widget::InputNote { text, .. } = widget else {
+            panic!("expected note widget");
+        };
+        assert_eq!(text, "hi!");
+        assert!(host.undo());
+        let Widget::InputNote { text: restored, .. } = host.fixture.widgets.iter().find(|w| widget_id_for(w) == id).expect("widget") else {
+            panic!("expected note widget");
+        };
+        assert_eq!(restored, "hi");
     }
 
     #[test]

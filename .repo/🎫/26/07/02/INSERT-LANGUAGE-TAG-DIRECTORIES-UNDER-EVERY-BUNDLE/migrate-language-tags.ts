@@ -18,6 +18,7 @@ function findRepoRoot(start: string): string {
 
 const REPO = findRepoRoot(import.meta.dir);
 const LANGUAGE_TAGS = new Set(["js", "rs", "py", "go", "cs", "ts"]);
+const FRAMEWORK_TAGS = new Set(["react", "r3f", "react-renderer"]);
 const SKIP_DIRS = new Set(["node_modules", "target", "dist", ".venv", "storybook-static", ".git", ".cursor", ".repo", "pkg", "generated"]);
 const SKIP_WALK = new Set([...SKIP_DIRS]);
 const ROOT_DATA_DIRS = new Set(["example", "manifest", "generated"]);
@@ -110,7 +111,8 @@ function nestedBundleSubdirs(dir: string): string[] {
 }
 
 function isCompliant(bundlePath: string): boolean {
-	return LANGUAGE_TAGS.has(basename(bundlePath));
+	const tag = basename(bundlePath);
+	return LANGUAGE_TAGS.has(tag) || FRAMEWORK_TAGS.has(tag);
 }
 
 function extLang(name: string): Lang | null {

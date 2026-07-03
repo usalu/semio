@@ -4,7 +4,7 @@ use mathematical_graph_dsl::{complete, format, hover, lint, semantic_tokens, Boa
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
-use trinity_jack::{TrinityQueryableGraph};
+use trinity_jack::{OwnedTrinityQueryableGraph};
 use trinity_ram::{Camera, Edge, Graph, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag};
 
 // #region 🔖LspTypes
@@ -82,14 +82,14 @@ struct FormattingParams {
 
 // #region 🔖JackLanguageServer
 enum JackGraphBackend {
-    Trinity(Graph),
+    Trinity(OwnedTrinityQueryableGraph),
     Board(BoardQueryableGraph),
 }
 
 impl JackGraphBackend {
     fn as_queryable(&self) -> &dyn QueryableGraph {
         match self {
-            Self::Trinity(graph) => &TrinityQueryableGraph(graph),
+            Self::Trinity(graph) => graph,
             Self::Board(board) => board,
         }
     }
@@ -148,7 +148,7 @@ impl JackLanguageServer {
         };
         let graph = Graph::from_fixture(fixture).expect("jack lsp default fixture");
         Self {
-            backend: JackGraphBackend::Trinity(graph),
+            backend: JackGraphBackend::Trinity(OwnedTrinityQueryableGraph(graph)),
             graph_domain: "trinity".into(),
             documents: BTreeMap::new(),
         }
@@ -169,7 +169,7 @@ impl JackLanguageServer {
     pub fn load_fixture_for_domain(&mut self, json: &str, domain: &str) -> Result<(), String> {
         self.graph_domain = domain.to_string();
         self.backend = match domain {
-            "trinity" | "nakagin" => JackGraphBackend::Trinity(Graph::load_json(json)?),
+            "trinity" | "nakagin" => JackGraphBackend::Trinity(OwnedTrinityQueryableGraph(Graph::load_json(json)?)),
             "dag" => JackGraphBackend::Board(BoardQueryableGraph::from_dag_fixture_json(json)?),
             "puzzle2d" | "2d" => JackGraphBackend::Board(BoardQueryableGraph::from_puzzle2d_fixture_json(json)?),
             "puzzle3d" | "3d" => JackGraphBackend::Board(BoardQueryableGraph::from_puzzle3d_fixture_json(json)?),

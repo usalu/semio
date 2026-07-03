@@ -7,7 +7,7 @@
   "private": true,
   "exports": {
     ".": "./js/index.tsx",
-    "./react": "./js/react/index.tsx"
+    "./react": "./react/index.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/cad-js-renderer:test"

@@ -304,7 +304,7 @@ export function sidePanelTreeRootItems(
 
 //#region 🔖ComponentKind
 /** @emoji 🧩 Fixed platform component vocabulary wired by renderers (`table`, `virtualFileSystem`, `puzzle2d`, …). */
-export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "trinity" | "trinityRewrite" | "shooting" | "forms" | "raster" | "draw" | "note" | "writer" | "s" | "vcs" | "panel" | "editor" | "mesh" | "catalogue" | "lowpoly";
+export type ComponentKind = "table" | "virtualFileSystem" | "puzzle2d" | "puzzle3d" | "puzzle5d" | "cad" | "gismap" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "trinity" | "trinityRewrite" | "shooting" | "forms" | "raster" | "draw" | "note" | "writer" | "s" | "vcs" | "panel" | "editor" | "mesh" | "catalogue" | "lowpoly" | "parameter";
 
 const CANVAS_COMPONENT_KINDS: readonly ComponentKind[] = ["table", "virtualFileSystem", "puzzle2d", "puzzle3d", "puzzle5d", "cad", "gismap", "flow", "dag", "imperative", "sequence", "layout", "trinity", "trinityRewrite", "shooting", "forms", "raster", "draw", "note", "writer", "s", "vcs", "editor", "mesh", "catalogue", "lowpoly"];
 
@@ -3047,6 +3047,196 @@ export class JackHoverBridge {
 	}
 }
 //#endregion 🔖JackHoverBridge
+
+//#region 🔖WireHoverBridge
+import { wireNodeIdAtOffset, wireNodeOccurrences } from "@semio-tech/graph-dsl-core";
+
+const WIRE_POINTER_HOVER_PREFIX = "wire:" as const;
+
+/** 🔌 Shared node-centric hover/selection bridge between graph canvases and wire DSL editors. */
+export class WireHoverBridge {
+	private activeHoverNodeId: string | null = null;
+	private activeSelectNodeId: string | null = null;
+	private hoverEpoch = 0;
+	private selectEpoch = 0;
+	private wireText = "";
+	private readonly listeners = new Set<() => void>();
+	private pointerFocus: AppPointerFocusStore<string> | null = null;
+	private pointerUnsub: (() => void) | null = null;
+	private syncingPointer = false;
+	private graphSourceId = "graph";
+	private wireSourceId = "wire";
+
+	/** @emoji 🖱️ Mirrors graph/wire hover+selection through {@link AppPointerFocusStore}. */
+	bindPointerFocus(
+		store: AppPointerFocusStore<string>,
+		sourceIds?: { readonly graph?: string; readonly wire?: string },
+	): () => void {
+		this.unbindPointerFocus();
+		this.pointerFocus = store;
+		if (sourceIds?.graph) this.graphSourceId = sourceIds.graph;
+		if (sourceIds?.wire) this.wireSourceId = sourceIds.wire;
+		this.pointerUnsub = store.subscribe(() => {
+			if (this.syncingPointer) return;
+			const snap = store.getSnapshot();
+			this.applyPointerSnapshot(snap.selection, snap.hover, snap.hoverSourceId);
+		});
+		const snap = store.getSnapshot();
+		this.applyPointerSnapshot(snap.selection, snap.hover, snap.hoverSourceId);
+		return () => this.unbindPointerFocus();
+	}
+
+	private unbindPointerFocus(): void {
+		this.pointerUnsub?.();
+		this.pointerUnsub = null;
+		this.pointerFocus = null;
+	}
+
+	private resolveGraphNodeKey(key: string): string {
+		const mediaPrefix = "media-node:";
+		return key.startsWith(mediaPrefix) ? key.slice(mediaPrefix.length) : key;
+	}
+
+	private applyPointerSnapshot(selection: readonly string[], hover: string | null, hoverSourceId: string | null): void {
+		const graphSelection = selection.filter((key) => !key.startsWith("app-instance:"));
+		const selectNodeId = graphSelection[0] ? this.resolveGraphNodeKey(graphSelection[0]) : null;
+		if (selectNodeId !== this.activeSelectNodeId) {
+			this.activeSelectNodeId = selectNodeId;
+			this.selectEpoch += 1;
+			this.notify();
+		}
+		let hoverNodeId: string | null = null;
+		if (hover) {
+			if (hover.startsWith(WIRE_POINTER_HOVER_PREFIX)) hoverNodeId = hover.slice(WIRE_POINTER_HOVER_PREFIX.length) || null;
+			else if (hoverSourceId === this.wireSourceId) hoverNodeId = hover;
+			else hoverNodeId = this.resolveGraphNodeKey(hover);
+		}
+		if (hoverNodeId !== this.activeHoverNodeId) {
+			this.activeHoverNodeId = hoverNodeId;
+			this.hoverEpoch += 1;
+			this.notify();
+		}
+	}
+
+	subscribe(listener: () => void): () => void {
+		this.listeners.add(listener);
+		return () => this.listeners.delete(listener);
+	}
+
+	private notify(): void {
+		for (const listener of this.listeners) {
+			listener();
+		}
+	}
+
+	setWireText(text: string): void {
+		this.wireText = text;
+	}
+
+	getWireText(): string {
+		return this.wireText;
+	}
+
+	getHoverEpoch(): number {
+		return this.hoverEpoch;
+	}
+
+	getSelectEpoch(): number {
+		return this.selectEpoch;
+	}
+
+	getActiveHoverNodeId(): string | null {
+		return this.activeHoverNodeId;
+	}
+
+	getActiveSelectNodeId(): string | null {
+		return this.activeSelectNodeId;
+	}
+
+	getWireHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		if (!this.activeHoverNodeId) return [];
+		return wireNodeOccurrences(this.wireText, this.activeHoverNodeId);
+	}
+
+	getWireSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
+		if (!this.activeSelectNodeId) return [];
+		return wireNodeOccurrences(this.wireText, this.activeSelectNodeId);
+	}
+
+	getGraphHoveredNodeIds(): readonly string[] {
+		const active = this.activeHoverNodeId ?? this.activeSelectNodeId;
+		return active ? [active] : [];
+	}
+
+	setGraphHover(nodeId: string | null): void {
+		this.activeHoverNodeId = nodeId;
+		this.hoverEpoch += 1;
+		if (this.pointerFocus) {
+			this.syncingPointer = true;
+			try {
+				if (nodeId) this.pointerFocus.setHoverFromSource(this.graphSourceId, nodeId);
+				else this.pointerFocus.clearHoverFromSource(this.graphSourceId);
+			} finally {
+				this.syncingPointer = false;
+			}
+		}
+		this.notify();
+	}
+
+	setWireHover(offset: number | null): void {
+		this.activeHoverNodeId = wireNodeIdAtOffset(this.wireText, offset);
+		this.hoverEpoch += 1;
+		if (this.pointerFocus) {
+			this.syncingPointer = true;
+			try {
+				const key = this.activeHoverNodeId ? `${WIRE_POINTER_HOVER_PREFIX}${this.activeHoverNodeId}` : null;
+				if (key) this.pointerFocus.setHoverFromSource(this.wireSourceId, key);
+				else this.pointerFocus.clearHoverFromSource(this.wireSourceId);
+			} finally {
+				this.syncingPointer = false;
+			}
+		}
+		this.notify();
+	}
+
+	setGraphSelect(nodeIds: readonly string[]): void {
+		const first = nodeIds[0] ?? null;
+		this.activeSelectNodeId = first;
+		this.selectEpoch += 1;
+		if (this.pointerFocus) {
+			this.syncingPointer = true;
+			try {
+				this.pointerFocus.setSelection([...nodeIds]);
+			} finally {
+				this.syncingPointer = false;
+			}
+		}
+		this.notify();
+	}
+
+	/** @emoji 🪞 Updates wire graph selection without writing {@link AppPointerFocusStore} (caller owns keys). */
+	mirrorGraphSelect(nodeIds: readonly string[]): void {
+		this.activeSelectNodeId = nodeIds[0] ?? null;
+		this.selectEpoch += 1;
+		this.notify();
+	}
+
+	setWireSelect(range: { start: number; end: number } | null): void {
+		this.activeSelectNodeId = range ? wireNodeIdAtOffset(this.wireText, range.start) : null;
+		this.selectEpoch += 1;
+		if (this.pointerFocus) {
+			this.syncingPointer = true;
+			try {
+				const ids = this.activeSelectNodeId ? [this.activeSelectNodeId] : [];
+				this.pointerFocus.setSelection(ids);
+			} finally {
+				this.syncingPointer = false;
+			}
+		}
+		this.notify();
+	}
+}
+//#endregion 🔖WireHoverBridge
 
 //#region 🧪Tests
 if (import.meta.vitest) {

@@ -11,7 +11,7 @@ import {
 	tokenVar,
 } from "./index.ts";
 import { STYLING_BOARD_THEMES } from "./tokens.generated.ts";
-import { puzzle3dLockedExampleMeshBasenames, puzzle3dMeshBasenamesInJson } from "../vite-elements-assets.ts";
+import { puzzle3dLockedExampleMeshBasenames, puzzle3dMeshBasenamesInJson, PLAYGROUND_PLAY_BOOT_INLINE_STYLE, PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, playgroundPlayBootHtmlPlugin } from "../vite-elements-assets.ts";
 import { PLAYGROUND_LOCKED_EXAMPLE_ENV } from "../../../repo/lib/js/index.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
@@ -107,5 +107,17 @@ describe("puzzle3d mesh build helpers", () => {
 			if (prev === undefined) delete process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV];
 			else process.env[PLAYGROUND_LOCKED_EXAMPLE_ENV] = prev;
 		}
+	});
+});
+
+describe("playground play boot html", () => {
+	it("registers the vite index html plugin", () => {
+		expect(playgroundPlayBootHtmlPlugin().name).toBe("playground-play-boot-html");
+	});
+
+	it("hides the body until the linked stylesheet loads", () => {
+		expect(PLAYGROUND_PLAY_BOOT_INLINE_STYLE).toContain("data-semio-styled");
+		expect(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT).toContain("prefers-color-scheme");
+		expect(PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT).toContain("semio-play-styles");
 	});
 });
