@@ -2,20 +2,17 @@
 /** @emoji 🗂️ `@semio-tech/framework-playground-core` — lazy registry of playground app definitions keyed by dev host entry kind. */
 // #endregion 🧲Header
 
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { scanPlaygroundAppManifests } from "../../../../../repo/lib/js/index.ts";
 import type { PlaygroundAppDefinition } from "./index.ts";
 
 //#region 🔖Registry
+function isVitestRuntime(): boolean {
+	if (import.meta.env?.VITEST) return true;
+	return typeof process !== "undefined" && Boolean(process.env?.VITEST);
+}
 const PLAY_ENTRY_KIND =
 	typeof import.meta.env !== "undefined" && typeof import.meta.env.PLAYGROUND_APP_KIND === "string"
 		? import.meta.env.PLAYGROUND_APP_KIND
 		: "";
-
-const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
-
-const ALL_PLAY_ENTRY_KINDS = scanPlaygroundAppManifests(REPO_ROOT).map((entry) => entry.kind);
 
 /** @emoji 🗂️ Loaded playground apps keyed by {@link AppDevHostConfig.playEntryKind}. */
 export const PLAYGROUND_APP_REGISTRY = new Map<string, PlaygroundAppDefinition>();
@@ -28,6 +25,26 @@ function registerPlaygroundApp(app: PlaygroundAppDefinition): void {
 
 type PlaygroundAppImports = Readonly<Record<string, () => Promise<PlaygroundAppDefinition>>>;
 
+async function repoRoot(): Promise<string> {
+	const { dirname, resolve } = await import("node:path");
+	const { fileURLToPath } = await import("node:url");
+	return resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
+}
+
+async function resolveAllPlayEntryKinds(): Promise<readonly string[]> {
+	if (PLAY_ENTRY_KIND) return [PLAY_ENTRY_KIND];
+	try {
+		const { playgroundAppImports } = (await import("virtual:semio-playground-apps")) as {
+			playgroundAppImports: PlaygroundAppImports;
+		};
+		return Object.keys(playgroundAppImports);
+	} catch (error) {
+		if (!isVitestRuntime()) throw error;
+		const { scanPlaygroundAppManifests } = await import("../../../../../repo/lib/js/playground-manifest.ts");
+		return scanPlaygroundAppManifests(await repoRoot()).map((entry) => entry.kind);
+	}
+}
+
 /** @emoji 📦 Imports one playground app; unreachable branches are dropped per {@link PLAY_ENTRY_KIND}. */
 async function importPlaygroundAppDefinition(kind: string): Promise<PlaygroundAppDefinition> {
 	try {
@@ -38,14 +55,47 @@ async function importPlaygroundAppDefinition(kind: string): Promise<PlaygroundAp
 		if (!loader) throw new Error(`unknown playground app: ${kind}`);
 		return loader();
 	} catch (error) {
-		if (!(import.meta.env.VITEST || process.env.VITEST)) throw error;
-		const { scanPlaygroundAppManifests } = await import("../../../../../repo/lib/js/index.ts");
-		const manifest = scanPlaygroundAppManifests(REPO_ROOT).find((entry) => entry.kind === kind);
+		if (!isVitestRuntime()) throw error;
+		const { scanPlaygroundAppManifests } = await import("../../../../../repo/lib/js/playground-manifest.ts");
+		const manifest = scanPlaygroundAppManifests(await repoRoot()).find((entry) => entry.kind === kind);
 		if (!manifest) throw new Error(`unknown playground app: ${kind}`);
 		const mod = (await import(manifest.corePackage)) as Record<string, PlaygroundAppDefinition>;
 		const app = mod[manifest.definitionExport];
 		if (!app) throw new Error(`missing ${manifest.definitionExport} on ${manifest.corePackage}`);
 		return app;
+	}
+}
+
+/** @emoji 📦 Resolves a renderer export — supports async factory functions. */
+export async function resolvePlaygroundRendererExport(exported: unknown): Promise<import("@semio-tech/framework-platform-core").AppRendererContribution> {
+	if (typeof exported === "function") {
+		const result = (exported as () => unknown | Promise<unknown>)();
+		if (result && typeof (result as Promise<unknown>).then === "function") {
+			return (await result) as import("@semio-tech/framework-platform-core").AppRendererContribution;
+		}
+		return result as import("@semio-tech/framework-platform-core").AppRendererContribution;
+	}
+	return exported as import("@semio-tech/framework-platform-core").AppRendererContribution;
+}
+
+/** @emoji 📦 Loads a renderer contribution by manifest kind (virtual module or vitest manifest scan). */
+export async function loadPlaygroundRendererContribution(playEntryKind: string): Promise<import("@semio-tech/framework-platform-core").AppRendererContribution> {
+	try {
+		const { playgroundRendererImports } = (await import("virtual:semio-playground-apps")) as {
+			playgroundRendererImports: Readonly<Record<string, () => Promise<import("@semio-tech/framework-platform-core").AppRendererContribution>>>;
+		};
+		const loader = playgroundRendererImports[playEntryKind];
+		if (!loader) throw new Error(`unknown playground renderer: ${playEntryKind}`);
+		return loader();
+	} catch (error) {
+		if (!isVitestRuntime()) throw error;
+		const { scanPlaygroundAppManifests } = await import("../../../../../repo/lib/js/playground-manifest.ts");
+		const manifest = scanPlaygroundAppManifests(await repoRoot()).find((entry) => entry.kind === playEntryKind);
+		if (!manifest) throw new Error(`unknown playground renderer: ${playEntryKind}`);
+		const mod = (await import(manifest.rendererPackage)) as Record<string, unknown>;
+		const exported = mod[manifest.rendererExport];
+		if (!exported) throw new Error(`missing ${manifest.rendererExport} on ${manifest.rendererPackage}`);
+		return resolvePlaygroundRendererExport(exported);
 	}
 }
 
@@ -66,7 +116,7 @@ export function playgroundAppByEntryKind(playEntryKind: string): PlaygroundAppDe
 
 /** @emoji 🗂️ Eagerly loads every registered playground app (tests, audits). */
 export async function loadAllPlaygroundApps(): Promise<readonly PlaygroundAppDefinition[]> {
-	const kinds = PLAY_ENTRY_KIND ? [PLAY_ENTRY_KIND] : ALL_PLAY_ENTRY_KINDS;
+	const kinds = await resolveAllPlayEntryKinds();
 	const apps: PlaygroundAppDefinition[] = [];
 	for (const kind of kinds) {
 		const app = await loadPlaygroundApp(kind);
@@ -83,24 +133,29 @@ export async function loadAllOsProgramContributions(): Promise<readonly import("
 		const { playgroundProgramImports } = (await import("virtual:semio-playground-apps")) as {
 			playgroundProgramImports: PlaygroundProgramImports;
 		};
-		return Promise.all(Object.values(playgroundProgramImports).map((loader) => loader()));
+		const loaders = Object.values(playgroundProgramImports);
+		if (loaders.length > 0) {
+			return Promise.all(loaders.map((loader) => loader()));
+		}
 	} catch (error) {
-		if (!(import.meta.env.VITEST || process.env.VITEST)) throw error;
-		const manifests = scanPlaygroundAppManifests(REPO_ROOT).filter((entry) => entry.programExport);
-		const loaded = await Promise.all(
-			manifests.map(async (manifest) => {
-				try {
-					const mod = (await import(manifest.corePackage)) as Record<string, import("@semio-tech/framework-platform-core").OsProgramContribution>;
-					const contribution = mod[manifest.programExport!];
-					if (!contribution) throw new Error(`missing ${manifest.programExport} on ${manifest.corePackage}`);
-					return contribution;
-				} catch (error) {
-					if (!(import.meta.env.VITEST || process.env.VITEST)) throw error;
-					return null;
-				}
-			}),
-		);
-		return loaded.filter((contribution): contribution is import("@semio-tech/framework-platform-core").OsProgramContribution => contribution !== null);
+		if (!isVitestRuntime()) throw error;
 	}
+	if (!isVitestRuntime()) return [];
+	const { scanPlaygroundAppManifests } = await import("../../../../../repo/lib/js/playground-manifest.ts");
+	const manifests = scanPlaygroundAppManifests(await repoRoot()).filter((entry) => entry.programExport);
+	const loaded = await Promise.all(
+		manifests.map(async (manifest) => {
+			try {
+				const mod = (await import(manifest.corePackage)) as Record<string, import("@semio-tech/framework-platform-core").OsProgramContribution>;
+				const contribution = mod[manifest.programExport!];
+				if (!contribution) throw new Error(`missing ${manifest.programExport} on ${manifest.corePackage}`);
+				return contribution;
+			} catch (error) {
+				if (!isVitestRuntime()) throw error;
+				return null;
+			}
+		}),
+	);
+	return loaded.filter((contribution): contribution is import("@semio-tech/framework-platform-core").OsProgramContribution => contribution !== null);
 }
 //#endregion 🔖Registry

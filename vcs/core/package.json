@@ -39,7 +39,9 @@
         "env": "VCS_PLAY_PORT"
       },
       "programExport": "vcsProgramContribution",
-      "programId": "vcs"
+      "programId": "vcs",
+      "rendererPackage": "@semio-tech/vcs-react",
+      "rendererExport": "vcsAppRenderer"
     }
   }
 }

@@ -9,7 +9,26 @@ import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, st
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
+import { scanPlaygroundAppManifests } from "./playground-manifest.ts";
 //#endregion 🔌Adapters
+
+export {
+	buildProgramIdToPlaygroundKind,
+	collectLockedExampleFixturesFromManifests,
+	collectPlaygroundManifestAssets,
+	collectPlaygroundOptimizeDepsExclude,
+	filterPlaygroundAppManifestsForActiveKind,
+	filterPlaygroundProgramManifestsForActiveKind,
+	playgroundAppManifestByKind,
+	playgroundManifestCoreEntry,
+	playgroundManifestCoreAliases,
+	resolvePlaygroundDevAppFromManifests,
+	scanPlaygroundAppManifests,
+	type PlaygroundAppManifest,
+	type PlaygroundAppManifestEntry,
+	type PlaygroundAssetKind,
+	type PlaygroundHostKind,
+} from "./playground-manifest.ts";
 
 //#region 🔖breach
 /** 🚫BreachRecord is one policy lint finding from `script.ts` (serialized to cache JSON). */
@@ -1052,8 +1071,6 @@ export const PLAYGROUND_PORTS: Record<string, PlaygroundPortSpec> = new Proxy({}
 	},
 });
 
-export type PlaygroundHostKind = string;
-
 /** @emoji 🔌 Local dev port for a playground host. */
 export function playgroundDevPort(kind: PlaygroundHostKind): number {
 	const spec = resolvePlaygroundPorts()[kind];
@@ -1186,149 +1203,6 @@ export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): st
 	return `https://${PLAYGROUND_SITE_HOSTS[kind]}`;
 }
 //#endregion 🔌PlaygroundDevPorts
-
-//#region 🔖PlaygroundAppManifest
-
-export type PlaygroundAssetKind =
-	| "puzzle3d-meshes"
-	| "gis-tiles"
-	| "sketchpad-mdx"
-	| "playwright-dev-stub"
-	| "vitest-dev-stub"
-	| "react-all-extensions";
-
-export type PlaygroundAppManifest = {
-	readonly kind: string;
-	readonly aliases?: readonly string[];
-	readonly packageRoot: string;
-	readonly corePackage: string;
-	readonly definitionExport: string;
-	readonly programExport?: string;
-	readonly programId?: string;
-	readonly programIds?: readonly string[];
-	readonly hostKind?: PlaygroundHostKind;
-	readonly port?: { readonly dev: number; readonly test?: number; readonly env?: string };
-	readonly site?: { readonly embedKind: string; readonly host: string };
-	readonly assets?: readonly PlaygroundAssetKind[];
-	readonly lockedExampleFixtures?: Readonly<Record<string, readonly string[]>>;
-	readonly optimizeDepsExclude?: readonly string[];
-};
-
-export type PlaygroundAppManifestEntry = PlaygroundAppManifest & { readonly corePackageJsonPath: string };
-
-/** @emoji 🗺 programId -> playground app kind (from manifest scan). */
-export function buildProgramIdToPlaygroundKind(manifests: readonly PlaygroundAppManifestEntry[]): Readonly<Record<string, string>> {
-	const map: Record<string, string> = {};
-	for (const manifest of manifests) {
-		if (manifest.programId) map[manifest.programId] = manifest.kind;
-		for (const programId of manifest.programIds ?? []) map[programId] = manifest.kind;
-	}
-	return map;
-}
-
-/** @emoji 📦 Union of Vite asset plugins required by manifests (optionally filtered to one app kind). */
-export function collectPlaygroundManifestAssets(
-	manifests: readonly PlaygroundAppManifestEntry[],
-	activeKind?: string,
-): ReadonlySet<PlaygroundAssetKind> {
-	const assets = new Set<PlaygroundAssetKind>();
-	for (const manifest of manifests) {
-		if (activeKind && manifest.kind !== activeKind && !(manifest.aliases ?? []).includes(activeKind)) continue;
-		for (const asset of manifest.assets ?? []) assets.add(asset);
-	}
-	return assets;
-}
-
-/** @emoji 🔒 Merged locked-example fixture paths from all manifests. */
-export function collectLockedExampleFixturesFromManifests(
-	manifests: readonly PlaygroundAppManifestEntry[],
-): Readonly<Record<string, readonly string[]>> {
-	const merged: Record<string, string[]> = {};
-	for (const manifest of manifests) {
-		if (!manifest.lockedExampleFixtures) continue;
-		for (const [exampleId, paths] of Object.entries(manifest.lockedExampleFixtures)) {
-			const bucket = merged[exampleId] ?? [];
-			for (const path of paths) {
-				if (!bucket.includes(path)) bucket.push(path);
-			}
-			merged[exampleId] = bucket;
-		}
-	}
-	return merged;
-}
-
-/** @emoji ⚡ Merged optimizeDeps.exclude entries from all manifests (optionally filtered to one app kind). */
-export function collectPlaygroundOptimizeDepsExclude(
-	manifests: readonly PlaygroundAppManifestEntry[],
-	activeKind?: string,
-): readonly string[] {
-	const exclude = new Set<string>();
-	for (const manifest of manifests) {
-		if (activeKind && manifest.kind !== activeKind && !(manifest.aliases ?? []).includes(activeKind)) continue;
-		for (const entry of manifest.optimizeDepsExclude ?? []) exclude.add(entry);
-	}
-	return [...exclude];
-}
-
-const PLAYGROUND_MANIFEST_SKIP_DIRS = new Set(["node_modules", ".git", ".nx", "dist", "target", "storybook-static", ".repo-cache"]);
-
-/** @emoji 📋 Scans workspace package.json files for semio.app / semio.playgroundApp manifests. */
-export function scanPlaygroundAppManifests(repoRoot: string): readonly PlaygroundAppManifestEntry[] {
-	const entries: PlaygroundAppManifestEntry[] = [];
-	const rootPkg = resolve(repoRoot, "package.json");
-	const walk = (dir: string): void => {
-		const pkgPath = join(dir, "package.json");
-		if (existsSync(pkgPath) && pkgPath !== rootPkg) {
-			try {
-				const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as {
-					semio?: { app?: PlaygroundAppManifest; playgroundApp?: PlaygroundAppManifest };
-				};
-				const manifest = pkg.semio?.app ?? pkg.semio?.playgroundApp;
-				if (manifest?.kind && manifest.packageRoot && manifest.corePackage && manifest.definitionExport) {
-					entries.push({ ...manifest, corePackageJsonPath: pkgPath });
-				}
-			} catch {
-				/* ignore malformed package.json */
-			}
-		}
-		for (const entry of readdirSync(dir)) {
-			if (PLAYGROUND_MANIFEST_SKIP_DIRS.has(entry)) continue;
-			const full = join(dir, entry);
-			if (statSync(full).isDirectory()) walk(full);
-		}
-	};
-	walk(repoRoot);
-	return entries.sort((a, b) => a.kind.localeCompare(b.kind));
-}
-
-/** @emoji 🗺 kind -> manifest entry */
-export function playgroundAppManifestByKind(
-	manifests: readonly PlaygroundAppManifestEntry[],
-): ReadonlyMap<string, PlaygroundAppManifestEntry> {
-	const map = new Map<string, PlaygroundAppManifestEntry>();
-	for (const entry of manifests) {
-		map.set(entry.kind, entry);
-		for (const alias of entry.aliases ?? []) map.set(alias, entry);
-	}
-	return map;
-}
-
-/** @emoji 🧭 CLI segment -> app kind (derived from manifest aliases). */
-export function resolvePlaygroundDevAppFromManifests(
-	segments: string[],
-	manifests: readonly PlaygroundAppManifestEntry[],
-): { readonly app: string; readonly rest: string[] } | null {
-	const byAlias = playgroundAppManifestByKind(manifests);
-	if (segments.length === 0) return null;
-	for (let len = Math.min(3, segments.length); len >= 1; len -= 1) {
-		const key = segments.slice(0, len).join(" ");
-		const entry = byAlias.get(key);
-		if (entry) return { app: entry.kind, rest: segments.slice(len) };
-	}
-	return null;
-}
-
-//#endregion 🔖PlaygroundAppManifest
 
 /** 🧰Play/vite dev env with optional file-watcher polling defaults. */
 export function playPollingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {

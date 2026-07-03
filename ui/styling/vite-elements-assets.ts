@@ -33,13 +33,18 @@ import {
   playgroundTestPortString,
   type PlaygroundHostKind,
   type PlaygroundSiteKind,
+} from "../../repo/lib/js/index.ts";
+import {
   scanPlaygroundAppManifests,
   buildProgramIdToPlaygroundKind,
   collectLockedExampleFixturesFromManifests,
   collectPlaygroundManifestAssets,
   collectPlaygroundOptimizeDepsExclude,
+  filterPlaygroundAppManifestsForActiveKind,
+  filterPlaygroundProgramManifestsForActiveKind,
+  playgroundManifestCoreAliases,
   type PlaygroundAssetKind,
-} from "../../repo/lib/js/index.ts";
+} from "../../repo/lib/js/playground-manifest.ts";
 // #endregion 🔌Adapters
 
 export {
@@ -1208,7 +1213,7 @@ export function createWorkspaceViteResolveConfig(
 }
 
 /** @emoji 📋 Vite virtual module with dynamic playground app definition imports from manifests. */
-export function playgroundAppsVirtualModulePlugin(repoRoot: string): Plugin {
+export function playgroundAppsVirtualModulePlugin(repoRoot: string, activeKind?: string): Plugin {
   const resolvedId = `\0${PLAYGROUND_APPS_VIRTUAL_MODULE_ID}`;
   return {
     name: "semio-playground-apps-virtual",
@@ -1218,26 +1223,42 @@ export function playgroundAppsVirtualModulePlugin(repoRoot: string): Plugin {
     },
     load(id) {
       if (id !== resolvedId) return;
-      const manifests = scanPlaygroundAppManifests(repoRoot);
-      const entries = manifests
+      const allManifests = scanPlaygroundAppManifests(repoRoot);
+      const appManifests = filterPlaygroundAppManifestsForActiveKind(allManifests, activeKind);
+      const programManifests = filterPlaygroundProgramManifestsForActiveKind(allManifests, activeKind);
+      const entries = appManifests
         .map(
           (manifest) =>
             `  ${JSON.stringify(manifest.kind)}: async () => (await import(${JSON.stringify(manifest.corePackage)}))[${JSON.stringify(manifest.definitionExport)}]`,
         )
         .join(",\n");
-      const programEntries = manifests
-        .filter((manifest) => manifest.programExport)
+      const programEntries = programManifests
         .map(
           (manifest) =>
             `  ${JSON.stringify(manifest.kind)}: async () => (await import(${JSON.stringify(manifest.corePackage)}))[${JSON.stringify(manifest.programExport!)}]`,
         )
         .join(",\n");
-      const programIdMap = buildProgramIdToPlaygroundKind(manifests);
+      const programIdMap = buildProgramIdToPlaygroundKind(programManifests);
       const programIdEntries = Object.entries(programIdMap)
         .map(([programId, kind]) => `  ${JSON.stringify(programId)}: ${JSON.stringify(kind)}`)
         .join(",\n");
       const programIdMapExport = `export const programIdToPlaygroundKind = {\n${programIdEntries}\n};\n`;
-      return `export const playgroundAppImports = {\n${entries}\n};\nexport const playgroundProgramImports = {\n${programEntries}\n};\n${programIdMapExport}`;
+      const rendererEntries = appManifests
+        .map(
+          (manifest) =>
+            `  ${JSON.stringify(manifest.kind)}: async () => {
+    const mod = await import(${JSON.stringify(manifest.rendererPackage)});
+    const exported = mod[${JSON.stringify(manifest.rendererExport)}];
+    if (typeof exported === "function") {
+      const result = exported();
+      return result && typeof result.then === "function" ? await result : result;
+    }
+    return exported;
+  }`,
+        )
+        .join(",\n");
+      const rendererImportsExport = `export const playgroundRendererImports = {\n${rendererEntries}\n};\n`;
+      return `export const playgroundAppImports = {\n${entries}\n};\nexport const playgroundProgramImports = {\n${programEntries}\n};\n${rendererImportsExport}${programIdMapExport}`;
     },
   };
 }
@@ -1410,7 +1431,59 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
   const manifests = scanPlaygroundAppManifests(repoRoot);
   const assets = collectPlaygroundManifestAssets(manifests, playEntryKind);
   const manifestOptimizeExclude = collectPlaygroundOptimizeDepsExclude(manifests, playEntryKind);
-  const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, extraAliases);
+  const virtualManifests = [
+    ...filterPlaygroundAppManifestsForActiveKind(manifests, playEntryKind),
+    ...filterPlaygroundProgramManifestsForActiveKind(manifests, playEntryKind),
+  ];
+  const uniqueVirtualManifests = [...new Map(virtualManifests.map((manifest) => [manifest.kind, manifest])).values()];
+  const manifestCoreAliases = uniqueVirtualManifests.flatMap((manifest) => playgroundManifestCoreAliases(manifest));
+  const osHubAliases =
+    playEntryKind === "s"
+      ? [
+          {
+            find: "@semio-tech/graph-dsl-core",
+            replacement: resolve(repoRoot, "mathematical/graph/dsl/core/js/index.ts"),
+          },
+          {
+            find: "@semio-tech/writer-core/internal",
+            replacement: resolve(repoRoot, "writer/core/js/internal.ts"),
+          },
+          {
+            find: "@semio-tech/writer-core",
+            replacement: resolve(repoRoot, "writer/core/js/index.ts"),
+          },
+          {
+            find: "@semio-tech/vcs-core/internal",
+            replacement: resolve(repoRoot, "vcs/core/js/internal.ts"),
+          },
+          {
+            find: "@semio-tech/vcs-core",
+            replacement: resolve(repoRoot, "vcs/core/js/index.ts"),
+          },
+        ]
+      : [];
+  const sketchpadComposeAliases = assets.has("sketchpad-mdx")
+    ? [
+        {
+          find: "@semio-tech/compose-rs-wasm",
+          replacement: resolve(repoRoot, "compose/client/lib/rs/pkg/compose.js"),
+        },
+        {
+          find: "@semio-tech/compose-js",
+          replacement: resolve(repoRoot, "compose/client/lib/js/index.ts"),
+        },
+        {
+          find: "@semio-tech/compose-react",
+          replacement: resolve(repoRoot, "compose/client/lib/react/index.ts"),
+        },
+      ]
+    : [];
+  const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [
+    ...extraAliases,
+    ...osHubAliases,
+    ...sketchpadComposeAliases,
+    ...manifestCoreAliases,
+  ]);
   const sketchpadMdx = assets.has("sketchpad-mdx");
   const workerStubPlugins = [
     ...(assets.has("sketchpad-mdx") ? [playgroundSketchpadMdxGlobalStubPlugin()] : []),
@@ -1432,7 +1505,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       ),
     },
     plugins: [
-      playgroundAppsVirtualModulePlugin(repoRoot),
+      playgroundAppsVirtualModulePlugin(repoRoot, playEntryKind),
       ...(sketchpadMdx ? [playgroundSketchpadMdxGlobalStubPlugin()] : []),
       playgroundPlayBootHtmlPlugin(),
       playgroundFlowWasmDevStubPlugin(repoRoot),

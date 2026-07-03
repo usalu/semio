@@ -4,7 +4,6 @@
 
 import {
 	createPlaygroundApp,
-	createProductPlaygroundPlatform,
   CommandBus,
   Controller,
   PLAYGROUND_NO_EXAMPLE_ID,
@@ -20,9 +19,12 @@ import {
   createStackLayout,
   enforcePlaygroundWindowEngagementInput,
   registerWindowBody,
-  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  registerSidePanelBody,
+  buildControllerTreeSidePanelBody,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  type SideTabSpec,
   UI_INSPECTOR_MIXED_PLACEHOLDER,
   uiDeclarativeSectionsToTree,
   uiInspectorGroupsToTree,
@@ -36,7 +38,11 @@ import {
   type UiNode,
   type UiSectionNode,
   type UiTreeItemNode,
+  type UiTreeNode,
   type UiTreeSectionNode,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   type WindowMeasure,
   type WindowTemplate,
   type AppTools,
@@ -129,6 +135,9 @@ export interface GisMapFixture {
 export const GIS_MAP_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const GIS_MAP_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const GIS_MAP_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const GIS_MAP_PLAY_HIERARCHY_BODY_KEY = "gis.map.play.hierarchy";
+export const GIS_MAP_PLAY_CATALOGUE_BODY_KEY = "gis.map.play.catalogue";
+export const GIS_MAP_PLAY_INSPECTION_BODY_KEY = "gis.map.play.inspection";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
@@ -1471,18 +1480,59 @@ export class MapPlayController extends Controller implements PlaygroundExampleHo
   }
 }
 
-function buildMapPlayAppRuntime(ctrl: MapPlayController): AppRuntime {
-  const layout = createStackLayout(["gis-map-main"], ["World Map"]);
-  return createPlayAppRuntime(GIS_MAP_PLAY_APP_ID, "Map", ctrl, layout, ctrl.mainMode);
-}
-
 /** @emoji 🧩 Registers GIS map play window bodies. */
 export const mapPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
   [GIS_MAP_PLAY_BODY_KEY_MAIN]: buildMapPlayMainDeclarativeBody,
 };
 
+function buildMapPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const mapCtrl = ctrl as MapPlayController;
+    return buildMapPlayHierarchyTree(
+      mapCtrl.getActiveFixture(),
+      mapCtrl.getSelectedPositionIds(),
+      mapCtrl.getSelectedRouteIds(),
+      mapCtrl.getHoveredFeature(),
+      (payload) => mapCtrl.run("setHover", payload),
+    ) as UiTreeNode;
+  });
+}
+
+function buildMapPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, () => buildMapPlayCatalogueTree() as UiTreeNode);
+}
+
+function buildMapPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const mapCtrl = ctrl as MapPlayController;
+    return buildMapPlayInspectorTree(
+      mapCtrl.getActiveFixture(),
+      mapCtrl.getSelectedPositionIds(),
+      mapCtrl.getSelectedRouteIds(),
+    ) as UiTreeNode;
+  });
+}
+
+export const mapPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+  [GIS_MAP_PLAY_HIERARCHY_BODY_KEY]: buildMapPlayHierarchyPanelBody,
+  [GIS_MAP_PLAY_CATALOGUE_BODY_KEY]: buildMapPlayCataloguePanelBody,
+  [GIS_MAP_PLAY_INSPECTION_BODY_KEY]: buildMapPlayInspectionPanelBody,
+};
+
+function buildMapPlayAppRuntime(ctrl: MapPlayController): AppRuntime {
+  const layout = createStackLayout(["gis-map-main"], ["World Map"]);
+  const app = createPlayAppRuntime(GIS_MAP_PLAY_APP_ID, "Map", ctrl, layout, ctrl.mainMode);
+  app.panelTabs = [
+    { id: GIS_MAP_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: GIS_MAP_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+    { id: GIS_MAP_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: GIS_MAP_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+    { id: GIS_MAP_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: GIS_MAP_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+  ] satisfies SideTabSpec[];
+  return app;
+}
+
 export function registerMapPlayDeclarativeBodies(): void {
   for (const [key, build] of Object.entries(mapPlayWindowBodies)) registerWindowBody(key, build);
+  for (const [key, build] of Object.entries(mapPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
 export { buildMapPlayAppRuntime };
@@ -1817,13 +1867,10 @@ export const gis2dPlayAppDefinition = createPlaygroundApp({
 		watchIgnored: ["../rs/lib.rs", "../rs/target/**", "../rs/Cargo.toml", "../rs/script.ts"],
 		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/infinite-cavas-react-renderer", "@semio-tech/gis-2d-react"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(GIS_MAP_PLAY_APP_ID);
-			const ctrl = new MapPlayController(runtime.commandBus, () => runtime.notify(), createGisMapPlayFixtureHost());
-			runtime.addApp(buildMapPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new MapPlayController(bus, notify, createGisMapPlayFixtureHost()),
+		buildAppRuntime: buildMapPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/gis-2d-react/play")).mapAppRenderer,
 });
 //#endregion 🔖Play
 

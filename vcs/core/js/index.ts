@@ -17,7 +17,6 @@ import {
 	type HistoryColumn,
 	type WindowEngagement,
   createPlaygroundApp,
-  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import {
 	DocumentVcsStore,
@@ -445,13 +444,10 @@ export const vcsPlayAppDefinition = createPlaygroundApp({
 		resolveDedupe: ["react", "react-dom", "@semio-tech/ui-react", "@semio-tech/vcs-react"],
 		optimizeDeps: { include: ["react", "react-dom"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(VCS_PLAY_APP_ID, "VCS");
-			const ctrl = new VcsPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildVcsPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new VcsPlayController(bus, notify),
+		buildAppRuntime: buildVcsPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/vcs-react/play")).vcsAppRenderer,
 });
 //#endregion 🔖Play
 

@@ -53,7 +53,9 @@
         "@semio-tech/flow-module-list",
         "@semio-tech/flow-module-brep",
         "@semio-tech/flow-module-draw"
-      ]
+      ],
+      "rendererPackage": "@semio-tech/flow-react",
+      "rendererExport": "flowAppRenderer"
     }
   }
 }

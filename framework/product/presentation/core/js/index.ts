@@ -1057,10 +1057,7 @@ export const presentationProgramContribution: OsProgramContribution = {
 //#endregion 🔖OsProgram
 
 //#region 🔖Play
-import {
-	createPlaygroundApp,
-	createProductPlaygroundPlatform,
-} from "@semio-tech/framework-playground-core";
+import { createPlaygroundApp } from "@semio-tech/framework-playground-core";
 
 export const presentationPlayAppDefinition = createPlaygroundApp({
 	id: PRESENTATION_PLAY_APP_ID,
@@ -1077,13 +1074,10 @@ export const presentationPlayAppDefinition = createPlaygroundApp({
 		resolveDedupe: ["react", "react-dom", "./internal.ts"],
 		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "./internal.ts"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(PRESENTATION_PLAY_APP_ID);
-		const ctrl = new PresentationPlayController(runtime.commandBus, () => runtime.notify());
-		runtime.addApp(buildPresentationPlayAppRuntime(ctrl));
-		return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new PresentationPlayController(bus, notify),
+		buildAppRuntime: buildPresentationPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/framework-presentation-renderer-react/play")).presentationAppRenderer,
 });
 //#endregion 🔖Play
 

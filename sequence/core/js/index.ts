@@ -16,11 +16,17 @@ import {
 	createDefaultLayout,
 	enforcePlaygroundWindowEngagementInput,
 	registerWindowBody,
+	registerSidePanelBody,
+	buildControllerTreeSidePanelBody,
 	buildWriterWindowBody,
 	WireHoverBridge,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	type SideTabSpec,
 	uiDeclarativeSectionsToTree,
 	uiInspectorGroupsToTree,
 	uiInspectorReadonlyField,
@@ -29,13 +35,13 @@ import {
 	type ToolLeaf,
 	type UiInspectorFieldGroup,
 	type UiNode,
+	type UiTreeNode,
 	type UiTreeItemNode,
 	type WindowBodyViewContext,
 	type WindowEngagement,
 	type WindowMeasure,
 	toolCollection,
   createPlaygroundApp,
-  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import {
 	type EffectLogEntry,
@@ -84,6 +90,9 @@ export const SEQUENCE_PLAY_LAYOUT = createDefaultLayout(
 export const SEQUENCE_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const SEQUENCE_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const SEQUENCE_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const SEQUENCE_PLAY_HIERARCHY_BODY_KEY = "sequence.play.hierarchy";
+export const SEQUENCE_PLAY_CATALOGUE_BODY_KEY = "sequence.play.catalogue";
+export const SEQUENCE_PLAY_INSPECTION_BODY_KEY = "sequence.play.inspection";
 
 export const SEQUENCE_ENGAGEMENT_REORGANIZE_ID = "sequence.tool.reorganize";
 export const SEQUENCE_ENGAGEMENT_RUN_ID = "sequence.tool.run";
@@ -951,10 +960,41 @@ export const sequencePlayWindowBodies: Readonly<Record<string, (ctx: import("@se
 
 export function registerSequencePlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(sequencePlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(sequencePlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
+function buildSequencePlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const sequenceCtrl = ctrl as SequencePlayController;
+		return buildSequencePlayHierarchyTree(sequenceCtrl.getFixtureJson(), sequenceCtrl.getSelectedStepIds()) as UiTreeNode;
+	});
+}
+
+function buildSequencePlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, () => buildSequencePlayCatalogueTree() as UiTreeNode);
+}
+
+function buildSequencePlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const sequenceCtrl = ctrl as SequencePlayController;
+		return buildSequencePlayInspectorTree(sequenceCtrl.getFixtureJson(), sequenceCtrl.getSelectedStepIds(), sequenceCtrl.getEffectLog()) as UiTreeNode;
+	});
+}
+
+export const sequencePlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[SEQUENCE_PLAY_HIERARCHY_BODY_KEY]: buildSequencePlayHierarchyPanelBody,
+	[SEQUENCE_PLAY_CATALOGUE_BODY_KEY]: buildSequencePlayCataloguePanelBody,
+	[SEQUENCE_PLAY_INSPECTION_BODY_KEY]: buildSequencePlayInspectionPanelBody,
+};
+
 export function buildSequencePlayAppRuntime(controller: SequencePlayController): AppRuntime {
-	return createPlayAppRuntime(SEQUENCE_PLAY_APP_ID, "Sequence", controller, SEQUENCE_PLAY_LAYOUT, controller.mainMode);
+	const app = createPlayAppRuntime(SEQUENCE_PLAY_APP_ID, "Sequence", controller, SEQUENCE_PLAY_LAYOUT, controller.mainMode);
+	app.panelTabs = [
+		{ id: SEQUENCE_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: SEQUENCE_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: SEQUENCE_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: SEQUENCE_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: SEQUENCE_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SEQUENCE_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
+	return app;
 }
 
 export { sequencePlayCmd };
@@ -1040,12 +1080,9 @@ export const sequencePlayAppDefinition = createPlaygroundApp({
 		watchIgnored: ["../core/lib.rs", "../../imperative/**", "../core/target/**", "../core/pkg/**"],
 		optimizeDeps: { include: ["react", "react-dom"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(SEQUENCE_PLAY_APP_ID);
-			const ctrl = new SequencePlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildSequencePlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new SequencePlayController(bus, notify),
+		buildAppRuntime: buildSequencePlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/sequence-react/play")).sequenceAppRenderer,
 });
 //#endregion 🔖Play

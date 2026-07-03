@@ -48,7 +48,11 @@
       },
       "programExport": "shootingProgramContribution",
       "programId": "shooting",
-      "assets": ["puzzle3d-meshes"]
+      "assets": [
+        "puzzle3d-meshes"
+      ],
+      "rendererPackage": "@semio-tech/shooting-react",
+      "rendererExport": "shootingAppRenderer"
     }
   }
 }

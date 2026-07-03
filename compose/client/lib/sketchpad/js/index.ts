@@ -17839,7 +17839,6 @@ export const sketchpadPlayAppDefinition = createPlaygroundApp({
 		void ensureSketchpadPlatform();
 		return new Platform(SKETCHPAD_PLATFORM_SPEC);
 	},
-	loadRenderer: async () => sketchpadAppRenderer,
 });
 //#endregion 🔖Play
 

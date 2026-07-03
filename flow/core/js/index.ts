@@ -75,6 +75,11 @@ import {
   enforcePlaygroundWindowEngagementInput,
   WireHoverBridge,
   registerWindowBody,
+  registerSidePanelBody,
+  buildControllerTreeSidePanelBody,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   type CommandDescriptor,
   type WindowBodyViewContext,
   type WindowEngagement,
@@ -90,12 +95,12 @@ import {
   type UiInspectorFieldGroup,
   type UiNode,
   type UiTreeItemNode,
+  type UiTreeNode,
   type UiTreeSectionNode,
   type AppTools,
   type ToolLeaf,
   toolCollection,
   createPlaygroundApp,
-  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
@@ -175,6 +180,9 @@ export const FLOW_PLAY_EXTENSIONS_TAB_ID = "flow-play-extensions";
 export const FLOW_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const FLOW_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const FLOW_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const FLOW_PLAY_HIERARCHY_BODY_KEY = "flow.play.hierarchy";
+export const FLOW_PLAY_CATALOGUE_BODY_KEY = "flow.play.catalogue";
+export const FLOW_PLAY_INSPECTION_BODY_KEY = "flow.play.inspection";
 
 /** @emoji 📚 Neuron module section ids expected in the flow play workbench catalogue. */
 export const FLOW_NEURON_MODULE_IDS = ["dictionary", "list", "logic", "math", "text"] as const;
@@ -1279,11 +1287,44 @@ export const flowPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-
 
 export function registerFlowPlayDeclarativeBodies(): void {
   for (const [key, build] of Object.entries(flowPlayWindowBodies)) registerWindowBody(key, build);
+  for (const [key, build] of Object.entries(flowPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
+
+function buildFlowPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const flowCtrl = ctrl as FlowPlayController;
+    return buildFlowPlayHierarchyTree(flowCtrl.getFixtureJson(), flowCtrl.getSelectedNodeIds()) as UiTreeNode;
+  });
+}
+
+function buildFlowPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const flowCtrl = ctrl as FlowPlayController;
+    return buildFlowPlayCatalogueTree(flowCtrl.getCatalogueSections(), flowCtrl.getExtensionEntries()) as UiTreeNode;
+  });
+}
+
+function buildFlowPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const flowCtrl = ctrl as FlowPlayController;
+    return buildFlowPlayInspectorTree(flowCtrl.getFixtureJson(), flowCtrl.getSelectedNodeIds()) as UiTreeNode;
+  });
+}
+
+export const flowPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+  [FLOW_PLAY_HIERARCHY_BODY_KEY]: buildFlowPlayHierarchyPanelBody,
+  [FLOW_PLAY_CATALOGUE_BODY_KEY]: buildFlowPlayCataloguePanelBody,
+  [FLOW_PLAY_INSPECTION_BODY_KEY]: buildFlowPlayInspectionPanelBody,
+};
 
 export function buildFlowPlayAppRuntime(controller: FlowPlayController): AppRuntime {
   const app = createPlayAppRuntime(FLOW_PLAY_APP_ID, "Flow", controller, FLOW_PLAY_LAYOUT, controller.mainMode);
   app.addMode(controller.generateMode);
+  app.panelTabs = [
+    { id: FLOW_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: FLOW_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+    { id: FLOW_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: FLOW_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+    { id: FLOW_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: FLOW_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+  ] satisfies SideTabSpec[];
   return app;
 }
 
@@ -1422,13 +1463,10 @@ export const flowPlayAppDefinition = createPlaygroundApp({
 		],
 		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/flow-react"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(FLOW_PLAY_APP_ID);
-			const ctrl = new FlowPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildFlowPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new FlowPlayController(bus, notify),
+		buildAppRuntime: buildFlowPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/flow-react/play")).flowAppRenderer,
 });
 //#endregion 🔖Play
 

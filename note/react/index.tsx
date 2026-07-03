@@ -985,3 +985,85 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖PlayHost
+import type { ReactElement } from "react";
+import type { AppRendererContribution, UiNoteHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { usePlayController, createFixtureFileBridge, createOsInstanceHost } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import { CANVAS_HOVER_SOURCE_CANVAS } from "@semio-tech/framework-core";
+import * as React from "react";
+import { NOTE_PLAY_SURFACE_ID_COMPOSITE, NOTE_PLAY_SURFACE_ID_NAVIGATOR, NotePlayController, defaultNoteDocument, noteDocumentToJson, createNotePlayHierarchyTreeDragController, notePlayWindowBodies, notePlaySidePanelBodies } from "@semio-tech/note-core";
+
+let resolveNotePlayControllerForTreeDrag: (() => NotePlayController | undefined) | undefined;
+
+const NotePlayFileBridge = createFixtureFileBridge<NotePlayController>({
+  filename: "semio.note.json",
+  accept: ".json,.note.json,application/json",
+  useController: usePlayController,
+  getJson: (ctrl) => ctrl.getDocumentJson(),
+  applyJson: (ctrl, json) => ctrl.run("setFixtureJson", { json, resetInteraction: true }),
+  hostCommands: { save: "saveDownload", load: "loadRequest" },
+});
+
+const NoteOsInstanceHost = createOsInstanceHost<NoteDocument>({
+  Canvas: (props) => <NoteCanvas {...props} viewMode="composite" />,
+  materialize: (instance, projection) => {
+    if (projection && typeof projection === "object" && (projection as NoteDocument).schema === "note.document") return projection as NoteDocument;
+    return defaultNoteDocument(instance.id);
+  },
+  dispatch: (bridge, instance, document) => {
+    bridge.dispatch({ kind: "patchAppSource", instanceId: instance.id, inline: noteDocumentToJson(document) });
+  },
+});
+
+function NotePlayPaneSurfaceHost({ node }: { readonly node: UiNoteHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<NotePlayController>();
+  reactHostPort.useEffect(() => {
+    resolveNotePlayControllerForTreeDrag = () => ctrl;
+    return () => {
+      resolveNotePlayControllerForTreeDrag = undefined;
+    };
+  }, [ctrl]);
+  const doc = ctrl?.getDocument();
+  if (!doc) {
+    return (
+      <>
+        {node.view !== "navigator" ? <NotePlayFileBridge /> : null}
+        <div className="p-double text-sm text-muted-foreground">No note document</div>
+      </>
+    );
+  }
+  const common = {
+    document: doc,
+    selectedIds: ctrl?.getSelectedIds() ?? [],
+    hoveredId: ctrl?.getHoveredId() ?? null,
+    kindHover: ctrl?.getHoveredKind() ?? null,
+    activeTool: doc.activeTool,
+    camera: doc.camera,
+    onHover: (payload: import("@semio-tech/note-core").NoteHoverPayload) => ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_CANVAS }),
+    onSelect: (ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }),
+    onCommit: (document: typeof doc, selectBlockId?: string) => ctrl?.run("commitDocument", { document, selectBlockId }),
+    onCameraChange: (camera: typeof doc.camera) => ctrl?.run("setCamera", { camera }),
+    className: "h-full",
+  };
+  return (
+    <>
+      {node.view !== "navigator" ? <NotePlayFileBridge /> : null}
+      {node.view === "navigator" ? <NoteCanvas {...common} viewMode="navigator" /> : <NoteCanvas {...common} viewMode="composite" />}
+    </>
+  );
+}
+
+/** @emoji 🛝 Note app renderer contribution for playground and OS shells. */
+export const noteAppRenderer: AppRendererContribution = {
+  windowBodies: notePlayWindowBodies,
+  sidePanelBodies: notePlaySidePanelBodies,
+  surfaceHosts: {
+    [NOTE_PLAY_SURFACE_ID_COMPOSITE]: NotePlayPaneSurfaceHost,
+    [NOTE_PLAY_SURFACE_ID_NAVIGATOR]: NotePlayPaneSurfaceHost,
+  },
+  instanceHost: NoteOsInstanceHost,
+  treeDragController: () => createNotePlayHierarchyTreeDragController(() => resolveNotePlayControllerForTreeDrag?.()),
+};
+//#endregion 🔖PlayHost

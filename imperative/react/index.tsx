@@ -436,3 +436,37 @@ if (import.meta.vitest) {
 		});
 	});
 }
+
+//#region 🔖PlayHost
+import type { ReactElement } from "react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import type { UiImperativeHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { usePlayController } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import { IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON, IMPERATIVE_PLAY_SURFACE_ID, ImperativePlayController, imperativePlayWindowBodies } from "@semio-tech/imperative-core";
+
+function ImperativePlayPaneSurfaceHost(_props: { readonly node: UiImperativeHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<ImperativePlayController>();
+  const onDocumentChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setDocumentJson", { json });
+    },
+    [ctrl],
+  );
+  return (
+    <ImperativeEditor
+      className="h-full min-h-0"
+      documentJson={ctrl?.getDocumentJson() ?? IMPERATIVE_PLAY_DEFAULT_DOCUMENT_JSON}
+      onDocumentChange={onDocumentChange}
+    />
+  );
+}
+
+/** @emoji 🛝 Imperative app renderer for playground and OS shells. */
+export const imperativeAppRenderer: AppRendererContribution = {
+  windowBodies: imperativePlayWindowBodies,
+  surfaceHosts: {
+    [IMPERATIVE_PLAY_SURFACE_ID]: ImperativePlayPaneSurfaceHost,
+  },
+};
+//#endregion 🔖PlayHost

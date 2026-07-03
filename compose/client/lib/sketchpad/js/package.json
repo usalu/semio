@@ -61,16 +61,29 @@
   "semio": {
     "app": {
       "kind": "sketchpad",
-      "aliases": ["sketchpad", "compose"],
+      "aliases": [
+        "sketchpad",
+        "compose"
+      ],
       "packageRoot": "compose/client/lib/sketchpad",
       "corePackage": "@semio-tech/compose-sketchpad",
       "definitionExport": "sketchpadPlayAppDefinition",
       "programExport": "sketchpadProgramContribution",
       "programId": "compose.sketchpad",
       "hostKind": "sketchpad",
-      "port": { "dev": 4000, "env": "COMPOSE_PLAY_PORT" },
-      "site": { "embedKind": "compose", "host": "play.semio-tech.com" },
-      "assets": ["sketchpad-mdx"]
+      "port": {
+        "dev": 4000,
+        "env": "COMPOSE_PLAY_PORT"
+      },
+      "site": {
+        "embedKind": "compose",
+        "host": "play.semio-tech.com"
+      },
+      "assets": [
+        "sketchpad-mdx"
+      ],
+      "rendererPackage": "@semio-tech/compose-sketchpad",
+      "rendererExport": "sketchpadAppRenderer"
     }
   }
 }

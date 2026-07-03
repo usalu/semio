@@ -1915,15 +1915,24 @@ export interface OsStudioCatalogEntry {
 }
 
 const OS_HOME_VFS_SCHEMA_MODEL: VirtualFileSystemSchemaModel = {
+	descriptorKinds: {
+		text: { id: "text", name: "Text", presentation: "text" },
+		time: { id: "time", name: "Time", presentation: "time", format: "relative" },
+	},
 	fileNodeKinds: {
-		studio: { name: "Studio", iconId: "layout-grid" },
+		studio: {
+			id: "studio",
+			name: "Studio",
+			icon: "layout-grid",
+			descriptors: [
+				{ id: "path", descriptorKindId: "text", label: "Path" },
+				{ id: "apps", descriptorKindId: "text", label: "Apps" },
+				{ id: "nodes", descriptorKindId: "text", label: "Nodes" },
+				{ id: "updated", descriptorKindId: "time", label: "Updated" },
+			],
+		},
 	},
-	descriptorColumnIds: ["apps", "nodes", "updated"],
-	descriptorColumns: {
-		apps: { label: "Apps" },
-		nodes: { label: "Nodes" },
-		updated: { label: "Updated" },
-	},
+	descriptorColumnIds: ["path", "apps", "nodes", "updated"],
 };
 
 function osStudioCatalogDescriptorValues(entry: OsStudioCatalogEntry): Readonly<Record<string, import("@semio-tech/framework-platform-core").VirtualFileSystemDescriptorValueModel>> {

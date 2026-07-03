@@ -40,7 +40,11 @@
       },
       "programExport": "presentationProgramContribution",
       "programId": "presentation",
-      "programIds": ["presentation.deck"]
+      "programIds": [
+        "presentation.deck"
+      ],
+      "rendererPackage": "@semio-tech/framework-presentation-renderer-react",
+      "rendererExport": "presentationAppRenderer"
     }
   }
 }

@@ -817,3 +817,164 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖PlayHost
+import type { ReactElement } from "react";
+import type { AppRendererContribution, UiShootingHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { usePlayController, useApp } from "@semio-tech/framework-playground-renderer-react";
+import * as React from "react";
+import {
+  SHOOTING_PLAY_SURFACE_ID_ICON,
+  SHOOTING_PLAY_SURFACE_ID_MODEL,
+  ShootingPlayController,
+  type ShootingPlayHostBridge,
+  shootingPlayWindowBodies,
+  shootingPlaySidePanelBodies,
+} from "@semio-tech/shooting-core";
+
+function ShootingPlayFileBridge(): ReactElement | null {
+  const ctrl = usePlayController<ShootingPlayController>();
+  const loadInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+  const assetInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+  const downloadFixture = reactHostPort.useCallback(async () => {
+    if (!ctrl) return;
+    const text = ctrl.getFixtureJson();
+    const blob = new Blob([`${text}\n`], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "shooting.fixture.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }, [ctrl]);
+  const downloadShot = reactHostPort.useCallback(
+    async (shotId?: string) => {
+      if (!ctrl) return;
+      const fixture = ctrl.getFixture();
+      const shots = shotId ? fixture.shots.filter((shot) => shot.id === shotId) : fixture.shots;
+      for (const shot of shots) {
+        const result = await renderShootingShot(fixture, shot);
+        const extension = shot.format === "svg" ? "svg" : "png";
+        const anchor = document.createElement("a");
+        anchor.href = result.dataUrl;
+        anchor.download = `${shot.id}.${extension}`;
+        anchor.click();
+        console.log(`[DEBUG] shooting exported shot ${shot.id}.${extension}`);
+      }
+    },
+    [ctrl],
+  );
+  const handleLoadFile = reactHostPort.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file || !ctrl) return;
+      void file.text().then((text) => {
+        ctrl.run("setFixtureJson", { json: text });
+        console.log("[DEBUG] shooting play loaded fixture from file");
+      });
+    },
+    [ctrl],
+  );
+  const handleImportAsset = reactHostPort.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file || !ctrl) return;
+      const objectUrl = URL.createObjectURL(file);
+      const id = file.name.replace(/\.[^.]+$/, "").replace(/[^\w-]+/g, "-") || `asset_${Date.now()}`;
+      ctrl.run("importAsset", {
+        asset: { id, name: file.name, url: objectUrl, format: "glb" },
+      });
+    },
+    [ctrl],
+  );
+  reactHostPort.useEffect(() => {
+    if (!ctrl) return;
+    const bridge: ShootingPlayHostBridge = {
+      getToolbarState: () => ({
+        hasStoredFixture: ctrl.hasStoredFixture(),
+        activeShotId: ctrl.getFixture().activeShotId ?? resolveActiveShot(ctrl.getFixture())?.id ?? null,
+      }),
+      runHostCommand: (command) => {
+        if (command === "saveDownload") {
+          void downloadFixture();
+          return;
+        }
+        if (command === "loadRequest") {
+          loadInputRef.current?.click();
+          return;
+        }
+        if (command === "importAssetRequest") {
+          assetInputRef.current?.click();
+          return;
+        }
+        if (command === "exportActiveShot") {
+          const active = resolveActiveShot(ctrl.getFixture());
+          if (active) void downloadShot(active.id);
+          return;
+        }
+        if (command === "exportAllShots") {
+          void downloadShot();
+        }
+      },
+    };
+    ctrl.setHostBridge(bridge);
+    return () => ctrl.setHostBridge(null);
+  }, [ctrl, downloadFixture, downloadShot]);
+  return (
+    <>
+      <input ref={loadInputRef} type="file" accept=".json,application/json" className="hidden" onChange={handleLoadFile} />
+      <input ref={assetInputRef} type="file" accept=".glb,model/gltf-binary" className="hidden" onChange={handleImportAsset} />
+    </>
+  );
+}
+
+function ShootingModelSurfaceHost({ node }: { readonly node: UiShootingHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<ShootingPlayController>();
+  const fixture = ctrl?.getFixture();
+  if (!fixture || node.view !== "model") {
+    return <div className="absolute inset-0 min-h-0 min-w-0" />;
+  }
+  return (
+    <>
+      <ShootingPlayFileBridge />
+      <div className="absolute inset-0 min-h-0 min-w-0">
+        <ShootingModelCanvas
+          fixture={fixture}
+          className="h-full w-full"
+          centerModel={ctrl?.getCenterModel() ?? true}
+          fitRevision={ctrl?.getFitRevision() ?? 0}
+          onCamera={(camera) => ctrl?.run("setCamera", { camera })}
+        />
+      </div>
+    </>
+  );
+}
+
+function ShootingIconSurfaceHost({ node }: { readonly node: UiShootingHostSurfaceNode }): ReactElement {
+  const { runtime } = useApp();
+  const ctrl = usePlayController<ShootingPlayController>();
+  const revision = ctrl?.getRenderRevision() ?? 0;
+  void runtime.generation;
+  const fixture = ctrl?.getFixture();
+  if (!fixture || node.view !== "icon") {
+    return <div className="absolute inset-0 min-h-0 min-w-0" />;
+  }
+  return (
+    <div className="absolute inset-0 min-h-0 min-w-0">
+      <ShootingIconCanvas fixture={fixture} className="h-full w-full" renderRevision={revision} />
+    </div>
+  );
+}
+
+/** @emoji 🛝 shooting app renderer for playground and OS shells. */
+export const shootingAppRenderer: AppRendererContribution = {
+  windowBodies: shootingPlayWindowBodies,
+  sidePanelBodies: shootingPlaySidePanelBodies,
+  surfaceHosts: {
+    [SHOOTING_PLAY_SURFACE_ID_MODEL]: ShootingModelSurfaceHost,
+    [SHOOTING_PLAY_SURFACE_ID_ICON]: ShootingIconSurfaceHost,
+  },
+};
+//#endregion 🔖PlayHost

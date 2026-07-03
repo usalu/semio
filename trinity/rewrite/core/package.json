@@ -53,7 +53,9 @@
         "env": "TRINITY_REWRITE_PLAY_PORT"
       },
       "programExport": "trinityRewriteProgramContribution",
-      "programId": "trinity.rewrite"
+      "programId": "trinity.rewrite",
+      "rendererPackage": "@semio-tech/trinity-react",
+      "rendererExport": "trinityRewriteAppRenderer"
     }
   }
 }

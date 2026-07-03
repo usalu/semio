@@ -15,10 +15,12 @@ import {
 	createDefaultLayout,
 	enforcePlaygroundWindowEngagementInput,
 	registerWindowBody,
-	windowEngagementsEqual,
-	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	registerSidePanelBody,
+	buildControllerTreeSidePanelBody,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+	type SideTabSpec,
 	uiDeclarativeSectionsToTree,
 	uiInspectorGroupsToTree,
 	uiInspectorReadonlyField,
@@ -28,12 +30,16 @@ import {
 	type UiInspectorFieldGroup,
 	type UiNode,
 	type UiTreeItemNode,
+	type UiTreeNode,
 	type WindowBodyViewContext,
 	type WindowEngagement,
 	type WindowMeasure,
+	windowEngagementsEqual,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 	toolCollection,
   createPlaygroundApp,
-  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
 import { meshTransferToGlb, type MeshTransfer } from "@semio-tech/kernel-3d-js";
@@ -85,6 +91,10 @@ export const LOWPOLY_PLAY_BODY_KEY_UV = "lowpoly.play.uv";
 export const LOWPOLY_PLAY_UV_SURFACE_ID = "lowpoly.play/uv";
 export const LOWPOLY_PLAY_UV_WINDOW_KIND_ID = "lowpoly-uv";
 export const LOWPOLY_PLAY_LAYERS_TAB_ID = "framework.panel.layers";
+export const LOWPOLY_PLAY_HIERARCHY_BODY_KEY = "lowpoly.play.hierarchy";
+export const LOWPOLY_PLAY_CATALOGUE_BODY_KEY = "lowpoly.play.catalogue";
+export const LOWPOLY_PLAY_INSPECTION_BODY_KEY = "lowpoly.play.inspection";
+export const LOWPOLY_PLAY_LAYERS_BODY_KEY = "lowpoly.play.layers";
 
 const EMPTY_FIXTURE: LowpolyFixture = {
 	schema: LOWPOLY_FIXTURE_SCHEMA,
@@ -932,11 +942,58 @@ export const lowpolyPlayWindowBodies: Readonly<Record<string, (ctx: import("@sem
 
 export function registerLowpolyPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(lowpolyPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(lowpolyPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
+
+function buildLowpolyPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const lowpolyCtrl = ctrl as LowpolyPlayController;
+		return buildLowpolyPlayHierarchyTree(
+			lowpolyCtrl.getFixtureJson(),
+			lowpolyCtrl.getSelectedTargets(),
+			{
+				hoveredTarget: lowpolyCtrl.getHoveredTarget(),
+				onHover: (target) => lowpolyCtrl.run("setHover", { target }),
+				onFlipFace: (objectId, faceId) => lowpolyCtrl.run("flipFace", { objectId, faceId }),
+			},
+		) as UiTreeNode;
+	});
+}
+
+function buildLowpolyPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, () => buildLowpolyPlayCatalogueTree() as UiTreeNode);
+}
+
+function buildLowpolyPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const lowpolyCtrl = ctrl as LowpolyPlayController;
+		return buildLowpolyPlayInspectorTree(lowpolyCtrl.getFixtureJson(), { ...(lowpolyCtrl.getToolParams() ?? {}) }) as UiTreeNode;
+	});
+}
+
+function buildLowpolyPlayLayersPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const lowpolyCtrl = ctrl as LowpolyPlayController;
+		return buildLowpolyPlayLayersTree(lowpolyCtrl.getFixtureJson(), lowpolyCtrl.getActivePaintLayerIndex()) as UiTreeNode;
+	});
+}
+
+export const lowpolyPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[LOWPOLY_PLAY_HIERARCHY_BODY_KEY]: buildLowpolyPlayHierarchyPanelBody,
+	[LOWPOLY_PLAY_CATALOGUE_BODY_KEY]: buildLowpolyPlayCataloguePanelBody,
+	[LOWPOLY_PLAY_INSPECTION_BODY_KEY]: buildLowpolyPlayInspectionPanelBody,
+	[LOWPOLY_PLAY_LAYERS_BODY_KEY]: buildLowpolyPlayLayersPanelBody,
+};
 
 export function buildLowpolyPlayAppRuntime(controller: LowpolyPlayController): AppRuntime {
 	const app = createPlayAppRuntime(LOWPOLY_PLAY_APP_ID, "Lowpoly", controller, LOWPOLY_PLAY_LAYOUT, controller.mainMode);
 	app.addMode(controller.paintMode);
+	app.panelTabs = [
+		{ id: LOWPOLY_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: LOWPOLY_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: LOWPOLY_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: LOWPOLY_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: LOWPOLY_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: LOWPOLY_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+		{ id: LOWPOLY_PLAY_LAYERS_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 1, bodyKey: LOWPOLY_PLAY_LAYERS_BODY_KEY, label: "Layers" },
+	] satisfies SideTabSpec[];
 	return app;
 }
 
@@ -1054,7 +1111,7 @@ export function registerLowpolyMediaExportHandlers(): void {
 	registerOsMediaExportHandler("3d.lowpoly", "glb", async (doc) => {
 		const fixture = doc as LowpolyFixture;
 		const session = await lowpolyFixtureToSession(fixture);
-		const { parseLowpolyTessellationJson } = await import("@semio-tech/lowpoly-react/play");
+		const { parseLowpolyTessellationJson } = await import("@semio-tech/lowpoly-react");
 		const tess = parseLowpolyTessellationJson(session.tessellateActive());
 		if (!tess) return { data: new Uint8Array([0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00]), mimeType: "model/gltf-binary", fileName: "lowpoly.glb" };
 		return { data: meshTransferToGlb(lowpolyTessellationToMeshTransfer(tess)), mimeType: "model/gltf-binary", fileName: "lowpoly.glb" };
@@ -1114,12 +1171,9 @@ export const lowpolyPlayAppDefinition = createPlaygroundApp({
 		watchIgnored: ["../core/lib.rs", "../core/target/**", "../core/pkg/**"],
 		optimizeDeps: { include: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(LOWPOLY_PLAY_APP_ID);
-			const ctrl = new LowpolyPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildLowpolyPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new LowpolyPlayController(bus, notify),
+		buildAppRuntime: buildLowpolyPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/lowpoly-react/play")).lowpolyAppRenderer,
 });
 //#endregion 🔖Play

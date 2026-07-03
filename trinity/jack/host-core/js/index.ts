@@ -14,17 +14,23 @@ import {
   buildWriterWindowBody,
   createPlayAppRuntime,
   createPlaygroundApp,
-  createProductPlaygroundPlatform,
   eagerPlayExampleGlob,
   createWindowLayout,
   registerWindowBody,
-  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  registerSidePanelBody,
+  buildControllerTreeSidePanelBody,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  type SideTabSpec,
   type PlaygroundExampleCatalog,
   type PlaygroundExampleHost,
   type UiNode,
+  type UiTreeNode,
   type WindowBodyViewContext,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   type WindowLayout,
   type WindowMeasure,
   type WindowEngagement,
@@ -85,6 +91,9 @@ export const TRINITY_JACK_PLAY_RESULTS_WINDOW_KIND_ID = "trinity-jack-results";
 export const TRINITY_JACK_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const TRINITY_JACK_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const TRINITY_JACK_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const TRINITY_JACK_PLAY_HIERARCHY_BODY_KEY = "trinity.jack.play.hierarchy";
+export const TRINITY_JACK_PLAY_CATALOGUE_BODY_KEY = "trinity.jack.play.catalogue";
+export const TRINITY_JACK_PLAY_INSPECTION_BODY_KEY = "trinity.jack.play.inspection";
 export const TRINITY_JACK_PLAY_DEFAULT_FIXTURE_JSON = TRINITY_DEFAULT_FIXTURE_JSON;
 
 const trinityExampleModules = eagerPlayExampleGlob("../../example/*.trinity.json");
@@ -191,7 +200,35 @@ export const trinityJackPlayWindowBodies: Readonly<Record<string, (ctx: import("
 
 export function registerTrinityJackPlayDeclarativeBodies(): void {
   for (const [key, build] of Object.entries(trinityJackPlayWindowBodies)) registerWindowBody(key, build);
+  for (const [key, build] of Object.entries(trinityJackPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
+
+function buildTrinityJackPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const jackCtrl = ctrl as TrinityJackPlayController;
+    return buildTrinityPlayHierarchyTree(jackCtrl.getFixtureJson(), jackCtrl.getSelectedNodeIds()) as UiTreeNode;
+  });
+}
+
+function buildTrinityJackPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const jackCtrl = ctrl as TrinityJackPlayController;
+    return buildTrinityJackPlayCatalogueTree(jackCtrl.getActiveExampleId()) as UiTreeNode;
+  });
+}
+
+function buildTrinityJackPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const jackCtrl = ctrl as TrinityJackPlayController;
+    return buildTrinityPlayInspectorTree(jackCtrl.getFixtureJson(), jackCtrl.getSelectedNodeIds(), TRINITY_JACK_PLAY_CONTROLLER_ID) as UiTreeNode;
+  });
+}
+
+export const trinityJackPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+  [TRINITY_JACK_PLAY_HIERARCHY_BODY_KEY]: buildTrinityJackPlayHierarchyPanelBody,
+  [TRINITY_JACK_PLAY_CATALOGUE_BODY_KEY]: buildTrinityJackPlayCataloguePanelBody,
+  [TRINITY_JACK_PLAY_INSPECTION_BODY_KEY]: buildTrinityJackPlayInspectionPanelBody,
+};
 
 export function buildTrinityJackPlayLayout(): WindowLayout {
   return {
@@ -625,7 +662,13 @@ export class TrinityJackPlayController extends Controller implements PlaygroundE
 }
 
 export function buildTrinityJackPlayAppRuntime(ctrl: TrinityJackPlayController): AppRuntime {
-  return createPlayAppRuntime(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack", ctrl, buildTrinityJackPlayLayout(), ctrl.mainMode);
+  const app = createPlayAppRuntime(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack", ctrl, buildTrinityJackPlayLayout(), ctrl.mainMode);
+  app.panelTabs = [
+    { id: TRINITY_JACK_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: TRINITY_JACK_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+    { id: TRINITY_JACK_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: TRINITY_JACK_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+    { id: TRINITY_JACK_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: TRINITY_JACK_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+  ] satisfies SideTabSpec[];
+  return app;
 }
 
 if (import.meta.vitest) {
@@ -822,12 +865,9 @@ export const trinityJackPlayAppDefinition = createPlaygroundApp({
 		watchIgnored: ["../../rewrite/engine/lib.rs", "../../rewrite/engine/target/**", "../../rewrite/engine/Cargo.toml"],
 		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(TRINITY_JACK_PLAY_APP_ID);
-			const ctrl = new TrinityJackPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildTrinityJackPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new TrinityJackPlayController(bus, notify),
+		buildAppRuntime: buildTrinityJackPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/trinity-react/play")).trinityJackAppRenderer,
 });
 //#endregion 🔖Play

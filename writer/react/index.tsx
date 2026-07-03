@@ -26,7 +26,16 @@ import {
 	WRITER_DEFAULT_EDITOR_SETTINGS,
 	type WriterEditorSettings,
 	type WriterDocument,
+	WRITER_PLAY_SURFACE_ID,
+	WriterPlayController,
+	writerPlayWindowBodies,
+	writerPlaySidePanelBodies,
 } from "@semio-tech/writer-core";
+import type { AppRendererContribution, UiWriterHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceHostBridge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { usePlayController } from "@semio-tech/framework-playground-renderer-react";
+import type { ReactElement } from "react";
 import initWriterWasm, { WriterSession, initSync } from "../rs/pkg/writer.js";
 
 // #region 🔖Wasm
@@ -1429,3 +1438,105 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖PlayHost
+function WriterPlaySurfaceHost({ node: _node }: { readonly node: UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<WriterPlayController>();
+  const document = ctrl?.getDocument() ?? createWriterDocument({ id: "jack", languageId: "jack", text: "" });
+  const formatSignal = ctrl?.getFormatSignal() ?? 0;
+  const lintSignal = ctrl?.getLintSignal() ?? 0;
+  const editorSelection = ctrl?.getEditorSelection();
+  const editorSelectionSignal = ctrl?.getEditorSelectionSignal() ?? 0;
+  const externalHoverRange = ctrl?.getHoveredAstSpan() ?? null;
+  const externalHoverSignal = ctrl?.getExternalHoverSignal() ?? 0;
+  const editorSettings = ctrl?.getEditorSettings();
+  const jackLspWorkerRef = reactHostPort.useRef<typeof import("@semio-tech/trinity-react").createJackLspWorker | null>(null);
+  const [jackLspReady, setJackLspReady] = reactHostPort.useState(false);
+  reactHostPort.useEffect(() => {
+    void import("@semio-tech/trinity-react").then(({ createJackLspWorker }) => {
+      jackLspWorkerRef.current = createJackLspWorker;
+      setJackLspReady(true);
+    });
+  }, []);
+  const createLspTransport = reactHostPort.useCallback(() => {
+    if (!jackLspWorkerRef.current) throw new Error("Jack LSP worker not loaded yet");
+    return createWorkerLspTransport(jackLspWorkerRef.current());
+  }, []);
+  const onChange = reactHostPort.useCallback((next: import("@semio-tech/writer-core").WriterDocument) => {
+    if (!ctrl) return;
+    const prev = ctrl.getDocument();
+    if (prev.id === next.id && prev.languageId === next.languageId && prev.uri === next.uri && prev.schema === next.schema) {
+      ctrl.run("setText", { text: next.text });
+      return;
+    }
+    ctrl.run("setDocument", { document: next });
+  }, [ctrl]);
+  const onLintMessages = reactHostPort.useCallback((messages: readonly string[]) => {
+    ctrl?.setLintMessages(messages);
+  }, [ctrl]);
+  const onSelectionChange = reactHostPort.useCallback((range: { readonly start: number; readonly end: number }) => {
+    ctrl?.run("setEditorSelection", range);
+  }, [ctrl]);
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    ctrl?.run("setEditorHover", { offset });
+  }, [ctrl]);
+  if (!jackLspReady) {
+    return <div className="h-full" />;
+  }
+  return (
+    <WriterCanvas
+      document={document}
+      onChange={onChange}
+      createLspTransport={createLspTransport}
+      formatSignal={formatSignal}
+      lintSignal={lintSignal}
+      onLintMessages={onLintMessages}
+      externalSelection={editorSelection}
+      externalSelectionSignal={editorSelectionSignal}
+      externalHoverRange={externalHoverRange}
+      externalHoverSignal={externalHoverSignal}
+      onSelectionChange={onSelectionChange}
+      onHoverChange={onHoverChange}
+      editorSettings={editorSettings}
+      className="h-full"
+    />
+  );
+}
+
+function WriterOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bridge = useOsInstanceHostBridge();
+  const bundle = useOsInstanceMaterialization(instance);
+  const materialized = bundle.projection;
+  const writerDoc = reactHostPort.useMemo(() => {
+    const doc = materialized as { text?: string } | null;
+    return createWriterDocument({
+      id: instance.id,
+      languageId: "jack",
+      text: doc?.text ?? instance.sourceDocument.inline ?? "",
+    });
+  }, [instance, materialized]);
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+      <WriterCanvas
+        document={writerDoc}
+        onChange={(document) => {
+          bridge.dispatch({ kind: "patchAppSource", instanceId: instance.id, inline: JSON.stringify(document) });
+        }}
+        createLspTransport={() => ({ dispose() {} } as never)}
+        className="min-h-0 flex-1"
+      />
+    </div>
+  );
+}
+
+/** @emoji 🛝 Writer app renderer contribution for playground and OS shells. */
+export const writerAppRenderer: AppRendererContribution = {
+  windowBodies: writerPlayWindowBodies,
+  sidePanelBodies: writerPlaySidePanelBodies,
+  surfaceHosts: {
+    [WRITER_PLAY_SURFACE_ID]: WriterPlaySurfaceHost,
+  },
+  instanceHost: WriterOsInstanceHost,
+};
+//#endregion 🔖PlayHost

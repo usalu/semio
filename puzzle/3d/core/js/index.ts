@@ -72,7 +72,6 @@ import { createWriterDocument, type WriterDocument } from "@semio-tech/writer-co
 import { runJackOnPuzzle3dFixture } from "@semio-tech/graph-dsl-core";
 
 import {
-  DEFAULT_MANUAL_LOD,
   PUZZLE_3D_LOD_SLIDER_MAX,
   PUZZLE_3D_LOD_SLIDER_MIN,
   BRUSH_PLACEMENT_OVERLAP_BUDGET_MAX,
@@ -91,7 +90,6 @@ import {
   readPuzzle3dFillWorkerSnapshot,
   schedulePuzzle3dPrecomputeSceneSync,
   publishPuzzle3dBrushHostRules,
-  PUZZLE_3D_FILL_COUNT_MAX,
   puzzle3dBrushKindWeightsRef,
   puzzle3dBrushMeshRootForFill,
   applyRelocateToFixture,
@@ -181,8 +179,18 @@ import {
   type Puzzle3dKindHoverDomain,
   puzzle3dHoverTargetsEqual,
   puzzle3dKindHoversEqual,
-  PUZZLE_3D_GUMBALL_CONFIG,
 } from "../../react/index.tsx";
+
+export const PUZZLE_3D_FILL_COUNT_MAX = 1000;
+export const DEFAULT_MANUAL_LOD = 100;
+export const PUZZLE_3D_GUMBALL_CONFIG: Readonly<Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">>> = {
+  moveAxes: true,
+  movePlanes: true,
+  rotate: true,
+  scaleAxes: false,
+  scalePlanes: false,
+  scaleUniform: false,
+};
 
 //#region 🏗️NakaginCatalog
 function cadVec3FromKitPoint(row: { readonly x: number; readonly y: number; readonly z: number }): [number, number, number] {
@@ -812,7 +820,6 @@ export const PUZZLE_3D_ENGAGEMENT_TOOL_SELECT_ID = "puzzle3d.tool.select";
 
 export {
   PUZZLE_3D_ENGAGEMENT_ZOOM_ID,
-  PUZZLE_3D_FILL_COUNT_MAX,
   applyBrushFillPlacementsToFixture,
   brushMeshUrlsForFillSession,
   buildBrushFillSequence,
@@ -869,8 +876,6 @@ export interface Puzzle3dPlayHostBridge {
 export type Puzzle3dPlaySelection = SelectionSnapshot;
 
 export type Puzzle3dGumballGroupKey = keyof Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate">;
-
-export { PUZZLE_3D_GUMBALL_CONFIG };
 
 export const PUZZLE_3D_GUMBALL_GROUPS: readonly { readonly key: Puzzle3dGumballGroupKey; readonly label: string; readonly iconId: string }[] = [
   { key: "moveAxes", label: "Move Axes", iconId: "move" },
@@ -4593,7 +4598,6 @@ export const puzzle3dPlayAppDefinition = createPlaygroundApp({
 		},
 	},
 	createRuntime: () => buildPuzzle3dPlayRuntime(),
-	loadRenderer: async () => (await import("@semio-tech/puzzle-3d-react/play")).puzzle3dAppRenderer,
 });
 //#endregion 🔖Play
 

@@ -43,7 +43,9 @@
         "env": "NOTE_PLAY_PORT"
       },
       "programExport": "noteProgramContribution",
-      "programId": "note"
+      "programId": "note",
+      "rendererPackage": "@semio-tech/note-react",
+      "rendererExport": "noteAppRenderer"
     }
   }
 }

@@ -750,3 +750,123 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖PlayHost
+import type { ReactElement } from "react";
+import type { AppRendererContribution, UiRasterHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { usePlayController, createFixtureFileBridge, createOsInstanceHost } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import { CANVAS_HOVER_SOURCE_CANVAS } from "@semio-tech/framework-core";
+import * as React from "react";
+import { RASTER_PLAY_SURFACE_ID_COMPOSITE, RASTER_PLAY_SURFACE_ID_NAVIGATOR, RasterPlayController, createRasterPlayHierarchyTreeDragController, defaultRasterDocument, rasterDocumentToJson, rasterPlayWindowBodies, rasterPlaySidePanelBodies } from "@semio-tech/raster-core";
+
+let resolveRasterPlayControllerForTreeDrag: (() => RasterPlayController | undefined) | undefined;
+
+const RasterPlayFileBridge = createFixtureFileBridge<RasterPlayController>({
+  filename: "semio.raster.json",
+  accept: ".json,.raster.json,application/json",
+  useController: usePlayController,
+  getJson: (ctrl) => ctrl.getDocumentJson(),
+  applyJson: (ctrl, json) => ctrl.run("setFixtureJson", { json, resetInteraction: true }),
+  hostCommands: { save: "saveDownload", load: "loadRequest" },
+});
+
+const RasterOsInstanceHost = createOsInstanceHost<RasterDocument>({
+  Canvas: ({ document, onCommit, className }) => (
+    <RasterCanvas
+      document={document}
+      selectedIds={[]}
+      hoveredId={null}
+      kindHover={null}
+      activeTool={document.activeTool}
+      camera={document.camera}
+      onSelect={() => {}}
+      onHover={() => {}}
+      onDocumentChange={onCommit}
+      onCameraChange={(camera) => onCommit({ ...document, camera })}
+      className={className}
+      viewMode="composite"
+    />
+  ),
+  materialize: (instance, projection) => {
+    if (projection && typeof projection === "object" && (projection as RasterDocument).schema === "raster.document") return projection as RasterDocument;
+    return defaultRasterDocument(instance.id);
+  },
+  dispatch: (bridge, instance, document) => {
+    bridge.dispatch({
+      kind: "applyAppOperation",
+      instanceId: instance.id,
+      forwards: [{ op: "replaceProjection", projection: document }],
+      backwards: [{ op: "replaceProjection", projection: defaultRasterDocument(instance.id) }],
+    });
+  },
+});
+
+function RasterPlayPaneSurfaceHost({ node }: { readonly node: UiRasterHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<RasterPlayController>();
+  reactHostPort.useEffect(() => {
+    resolveRasterPlayControllerForTreeDrag = () => ctrl;
+    return () => {
+      resolveRasterPlayControllerForTreeDrag = undefined;
+    };
+  }, [ctrl]);
+  const doc = ctrl?.getDocument();
+  if (!doc) return <div className="p-double text-sm text-muted-foreground">No raster document</div>;
+  const selectedIds = ctrl?.getSelectedIds() ?? [];
+  const hoveredId = ctrl?.getHoveredId() ?? null;
+  const kindHover = ctrl?.getHoveredKind() ?? null;
+  const onHover = reactHostPort.useCallback((payload: import("@semio-tech/raster-core").RasterHoverPayload) => {
+    ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_CANVAS });
+  }, [ctrl]);
+  const onViewportChange = reactHostPort.useCallback((viewport: import("@semio-tech/raster-core").RasterViewport) => {
+    ctrl?.run("setCompositeViewport", viewport);
+  }, [ctrl]);
+  const common = {
+    document: doc,
+    selectedIds,
+    hoveredId,
+    kindHover,
+    activeTool: doc.activeTool,
+    camera: doc.camera,
+    contentViewport: ctrl.getCompositeViewport(),
+    onViewportChange: node.view === "composite" ? onViewportChange : undefined,
+    onHover,
+    onSelect: (ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }),
+    onCommit: (document: typeof doc, selectLayerId?: string) => ctrl?.run("commitDocument", { document, selectLayerId }),
+    onCameraChange: (camera: typeof doc.camera) => ctrl?.run("setCamera", { camera }),
+    className: "h-full",
+  };
+  if (node.view === "layer") {
+    return <RasterLayerView {...common} isolatedLayerId={node.layerId ?? selectedIds[0] ?? null} />;
+  }
+  if (node.view === "mask") {
+    return <RasterMaskView {...common} isolatedLayerId={node.layerId ?? selectedIds[0] ?? null} />;
+  }
+  if (node.view === "navigator") {
+    return (
+      <>
+        <RasterPlayFileBridge />
+        <RasterCanvas {...common} viewMode="navigator" />
+      </>
+    );
+  }
+  return (
+    <>
+      <RasterPlayFileBridge />
+      <RasterCanvas {...common} viewMode="composite" />
+    </>
+  );
+}
+
+/** @emoji 🛝 raster app renderer for playground and OS shells. */
+export const rasterAppRenderer: AppRendererContribution = {
+  windowBodies: rasterPlayWindowBodies,
+  sidePanelBodies: rasterPlaySidePanelBodies,
+  surfaceHosts: {
+    [RASTER_PLAY_SURFACE_ID_COMPOSITE]: RasterPlayPaneSurfaceHost,
+    [RASTER_PLAY_SURFACE_ID_NAVIGATOR]: RasterPlayPaneSurfaceHost,
+  },
+  instanceHost: RasterOsInstanceHost,
+  treeDragController: () => createRasterPlayHierarchyTreeDragController(() => resolveRasterPlayControllerForTreeDrag?.()),
+};
+//#endregion 🔖PlayHost

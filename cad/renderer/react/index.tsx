@@ -15,7 +15,6 @@ import {
   type TreeDataSection,
   type UiTranslationKey,
 } from "@semio-tech/ui-react";
-import { createIconComponent } from "@semio-tech/ui-react";
 import { StrictMode, type ChangeEvent, type ReactNode } from "react";
 // #endregion 🔌Adapters
 
@@ -29,15 +28,10 @@ const _cadPlayToolbarI18nKeys = [
 //#endregion 🪁I18n Compile Gate
 import {
   PlaygroundView,
-  CallbackTreePanelDefinition,
-  PureSidePanelTabDefinition,
-  StaticTreePanelDefinition,
   engagementSpecControlMirror,
   mountPlaygroundApp,
-  uiTreeNodeToTreePanelConfig,
-  type SidePanelTabConfig,
 } from "@semio-tech/framework-playground-renderer-react";
-import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode, Platform, playgroundLockedExampleId, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL } from "@semio-tech/framework-playground-core";
+import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode, Platform, playgroundLockedExampleId } from "@semio-tech/framework-playground-core";
 import { AppPointerFocusStore } from "@semio-tech/framework-core";
 import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@semio-tech/framework-platform-renderer-react";
 import { defaultConstructRunner } from "@semio-tech/cad-js-query";
@@ -89,15 +83,10 @@ import {
 import {
   CAD_PLAY_APP_ID,
   CAD_PLAY_CONTROLLER_ID,
-  CAD_PLAY_HIERARCHY_TAB_ID,
   CAD_PLAY_PANE_SPECS,
   CAD_PLAY_CONCRETE_FOREST_FIXTURE_IDS,
   CadPlayShellController,
   buildCadPlayRuntime,
-  buildCadPlayHierarchyPendingSections,
-  buildCadPlayHierarchySections,
-  buildCadPlayDetailsTree,
-  buildCadPlayCatalogTree,
   cadPlaySceneSurfaceIdForPane,
   cadPlayPaneFromSurfaceId,
   cadPlayPaneFromWindowKindId,
@@ -113,16 +102,15 @@ import {
   flushModelsRecord,
   modelSpaceFromRecord,
   recordFromModelSpace,
+  cadPlayChromeSnapshotRef,
+  cadPlayWindowBodies,
+  cadPlaySidePanelBodies,
   type CadPlayChromeSnapshot,
   type CadPlayPaneId,
   type CadPlayReferencesByModelDefinitionId,
   type CadPlaySelectedReference,
 } from "@semio-tech/cad-js-renderer-core";
 import { CAD_PLAY_SHAPE_ASSETS, resolveCadPlayFixtureSlug } from "@semio-tech/cad-js-renderer-core";
-
-const CadPlayHierarchyIcon = createIconComponent(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID);
-const CadPlayCatalogueIcon = createIconComponent(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID);
-const CadPlayInspectionIcon = createIconComponent(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID);
 
 //#region 🔖GeometryCatalog
 function modelVertexCount(json: Record<string, unknown>): number {
@@ -397,49 +385,6 @@ function useCadPlayChrome(): CadPlayChromeContextValue {
 function useCadPlayChromePublish(): (snapshot: CadPlayChromeSnapshot | null) => void {
   return useCadPlayChrome().publishSnapshot;
 }
-
-const cadPlayChromeSnapshotRef: { current: CadPlayChromeSnapshot | null } = { current: null };
-
-export class CadPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
-  buildTab(): SidePanelTabConfig {
-    return {
-      id: CAD_PLAY_HIERARCHY_TAB_ID,
-      icon: CadPlayHierarchyIcon,
-      name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-      order: 0,
-      tree: new CallbackTreePanelDefinition(() => {
-        const snapshot = cadPlayChromeSnapshotRef.current;
-        if (!snapshot) return buildCadPlayHierarchyPendingSections();
-        const build = buildCadPlayHierarchySections(
-          snapshot.modelsByDefinitionId,
-          snapshot.activeModelDefinitionId,
-          snapshot.selection,
-          snapshot.selectTarget,
-          snapshot.hoverTarget,
-          snapshot.toggleHidden,
-          snapshot.toggleLocked,
-          snapshot.referencesByModelDefinitionId,
-          snapshot.selectedReference,
-          snapshot.selectReference,
-          snapshot.hoverReference,
-          snapshot.toggleReferenceHidden,
-          snapshot.toggleReferenceLocked,
-        );
-        const hoveredKey = snapshot.hoveredKey;
-        const highlightedIds: string[] = [];
-        if (hoveredKey) {
-          const ids = new Set<string>();
-          for (const alias of spatialHoverKeyAliases(hoveredKey)) {
-            for (const itemId of build.highlightKeyToItemIds[alias] ?? []) ids.add(itemId);
-          }
-          highlightedIds.push(...ids);
-        }
-        return { sections: build.sections, highlightedIds };
-      }),
-    };
-  }
-}
-//#endregion 🔖CadPlayChrome
 
 //#region 🔖PlaySession
 interface PlaySessionProps {
@@ -1618,11 +1563,9 @@ function CadPlayLoadInput(): ReactNode {
 function CadPlayExampleBridge({
   runtime,
   defaultAppId,
-  augmentPanelTabs,
 }: {
   readonly runtime: Platform;
   readonly defaultAppId: string;
-  readonly augmentPanelTabs: { readonly workbench: readonly SidePanelTabConfig[]; readonly details: readonly SidePanelTabConfig[] };
 }): ReactNode {
   const { shapeAssetId, handleShapeAssetChange } = useCadPlayModelSpace();
   const exampleContribution = reactHostPort.useMemo(
@@ -1636,7 +1579,7 @@ function CadPlayExampleBridge({
     }),
     [shapeAssetId, handleShapeAssetChange],
   );
-  return <PlaygroundView runtime={runtime} defaultAppId={defaultAppId} augmentPanelTabs={augmentPanelTabs} exampleContribution={exampleContribution} />;
+  return <PlaygroundView runtime={runtime} defaultAppId={defaultAppId} exampleContribution={exampleContribution} />;
 }
 
 /** @emoji 🎮 One quad pane: interaction editing for its model definition with window engagement. */
@@ -1826,34 +1769,6 @@ export function CadPlaySurfaceHost({ node }: { readonly node: UiCadHostSurfaceNo
 }
 
 
-export class CadPlayCatalogPanelDefinition extends PureSidePanelTabDefinition {
-  buildTab(): SidePanelTabConfig {
-    return {
-      id: "cad-play-catalog",
-      icon: CadPlayCatalogueIcon,
-      name: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-      order: 1,
-      tree: new CallbackTreePanelDefinition(() =>
-        uiTreeNodeToTreePanelConfig(buildCadPlayCatalogTree(cadPlayChromeSnapshotRef.current), new CommandBus()),
-      ),
-    };
-  }
-}
-
-export class CadPlayDetailsPanelDefinition extends PureSidePanelTabDefinition {
-  buildTab(): SidePanelTabConfig {
-    return {
-      id: "cad-play-details",
-      icon: CadPlayInspectionIcon,
-      name: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-      order: 0,
-      tree: new CallbackTreePanelDefinition(() =>
-        uiTreeNodeToTreePanelConfig(buildCadPlayDetailsTree(cadPlayChromeSnapshotRef.current), new CommandBus()),
-      ),
-    };
-  }
-}
-
 /** @emoji 🧊 CAD play chrome root for standalone boot and s nested host. */
 export function CadPlayRoot({ runtime: runtimeOverride }: { readonly runtime?: Platform } = {}): ReactNode {
   const runtimeRef = reactHostPort.useRef<Platform | null>(runtimeOverride ?? null);
@@ -1873,19 +1788,11 @@ export function CadPlayRoot({ runtime: runtimeOverride }: { readonly runtime?: P
     return null;
   }
   const chromeContextValue = reactHostPort.useMemo<CadPlayChromeContextValue>(() => ({ snapshot: chromeSnapshot, publishSnapshot: setChromeSnapshot }), [chromeSnapshot]);
-  const cadPlayHierarchyPanel = reactHostPort.useMemo(() => new CadPlayHierarchyPanelDefinition(), []);
-  const cadPlayCatalogPanel = reactHostPort.useMemo(() => new CadPlayCatalogPanelDefinition(), []);
-  const cadPlayDetailsPanel = reactHostPort.useMemo(() => new CadPlayDetailsPanelDefinition(), []);
-  const workbenchTabs = reactHostPort.useMemo(
-    () => [cadPlayHierarchyPanel.resolveTab(), cadPlayCatalogPanel.resolveTab()],
-    [cadPlayHierarchyPanel, cadPlayCatalogPanel],
-  );
-  const detailsTabs = reactHostPort.useMemo(() => [cadPlayDetailsPanel.resolveTab()], [cadPlayDetailsPanel]);
   return (
     <CadPlayChromeContext.Provider value={chromeContextValue}>
       <CadPlayModelSpaceProvider runtime={runtimeRef.current} shellController={shellController}>
         <CadPlayLoadInput />
-        <CadPlayExampleBridge runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} augmentPanelTabs={{ workbench: workbenchTabs, details: detailsTabs }} />
+        <CadPlayExampleBridge runtime={runtimeRef.current} defaultAppId={CAD_PLAY_APP_ID} />
       </CadPlayModelSpaceProvider>
     </CadPlayChromeContext.Provider>
   );
@@ -1895,3 +1802,18 @@ export function CadPlayRoot({ runtime: runtimeOverride }: { readonly runtime?: P
 export function registerCadPlaySurfaceHosts(): void {
   registerCadPlayChrome();
 }
+
+//#region 🔖PlayHost
+import type { AppRendererContribution, PlaygroundMountProps } from "@semio-tech/framework-platform-core";
+import type { Platform } from "@semio-tech/framework-playground-renderer-react";
+
+const CAD_PLAY_PANES = ["shape", "building", "energy", "structure-classic"] as const;
+
+/** @emoji 🛝 CAD app renderer for playground and OS shells. */
+export const cadAppRenderer: AppRendererContribution = {
+  windowBodies: cadPlayWindowBodies,
+  sidePanelBodies: cadPlaySidePanelBodies,
+  surfaceHosts: Object.fromEntries(CAD_PLAY_PANES.map((pane) => [cadPlaySceneSurfaceIdForPane(pane), CadPlaySurfaceHost])),
+  mountChrome: ({ runtime }) => <CadPlayRoot runtime={runtime as Platform} />,
+};
+//#endregion 🔖PlayHost

@@ -11,7 +11,6 @@ import {
 	buildImperativeWindowBody,
 	createPlayAppRuntime,
 	createPlaygroundApp,
-	createProductPlaygroundPlatform,
 	createStackLayout,
 	registerWindowBody,
 	type CommandDescriptor,
@@ -151,12 +150,9 @@ export const imperativePlayAppDefinition = createPlaygroundApp({
 		watchIgnored: ["../core/lib.rs", "../engine/**", "../module/**", "../core/target/**", "../core/pkg/**"],
 		optimizeDeps: { include: ["react", "react-dom"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(IMPERATIVE_PLAY_APP_ID);
-			const ctrl = new ImperativePlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildImperativePlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new ImperativePlayController(bus, notify),
+		buildAppRuntime: buildImperativePlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/imperative-react/play")).imperativeAppRenderer,
 });
 //#endregion 🔖Play

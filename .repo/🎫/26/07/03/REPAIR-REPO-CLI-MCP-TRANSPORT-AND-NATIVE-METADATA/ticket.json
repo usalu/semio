@@ -1,13 +1,15 @@
 {
   "title": "Repair Repo CLI MCP Transport and Native Metadata",
   "emoji": "🛠️",
-  "status": "open",
+  "status": "closed",
   "description": "Fix repo CLI and MCP server JSON transport corruption, native client inference, and current LLM validation so ticket tools work from Codex without invalid stdout or redundant metadata.",
+  "summary": "Repaired repo CLI and MCP command routing to the actual Go package directories, restored Nx-backed local dev/build/test scripts, reserved stdout for JSON-RPC by routing operational warnings to stderr, inferred native MCP clients, accepted current gpt-5-5 and opus-4-7 model IDs, and normalized Windows command paths. Verified the CLI build, focused tests, uncached repo-MCP suite, and a live Codex ticket_reopen call with gpt-5-5 and no client.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1820"
   },
   "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomcp",
   "sessions": [
-    "⚪b56b959fbe9d42bfa3fd180875ad1a84"
+    "⚪b56b959fbe9d42bfa3fd180875ad1a84",
+    "⚪538bed6317af4fa1a7269337c15e4ad4"
   ]
 }

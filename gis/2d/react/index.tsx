@@ -1672,3 +1672,192 @@ if (import.meta.vitest) {
 
 }
 // #endregion 🧪Tests
+
+//#region 🔖PlayHost
+import type { ReactElement } from "react";
+import type { AppRendererContribution, UiGisMapHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { usePlayController, useControllerStore, useShellWindowInstance } from "@semio-tech/framework-playground-renderer-react";
+import { shellWindowScopeId } from "@semio-tech/framework-platform-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import {
+  GIS_MAP_PLAY_CONTROLLER_ID,
+  GIS_MAP_PLAY_IDLE_SNAPSHOT,
+  GIS_MAP_PLAY_STORE_ID,
+  GIS_MAP_PLAY_SURFACE_ID,
+  GIS_MAP_PLAY_WINDOW_KIND_ID,
+  type MapPlayController,
+  mapPlayWindowBodies,
+  mapPlaySidePanelBodies,
+} from "@semio-tech/gis-2d-core";
+import {
+  MapCanvas,
+  Position,
+  Route,
+  ensureGisMapWasmLoaded,
+  type GisMapLodId,
+  type MapContextMenuContext,
+  type MapHoveredFeature,
+  type MapSelectPayload,
+} from "@semio-tech/gis-2d-react";
+
+function buildMapPlayContextMenuItems(ctrl: MapPlayController | null | undefined, context: MapContextMenuContext): ContextMenuItem[] {
+  if (!ctrl) {
+    return [];
+  }
+  const { feature } = context;
+  if (feature) {
+    const selected =
+      feature.kind === "position"
+        ? ctrl.getSelectedPositionIds().includes(feature.id)
+        : ctrl.getSelectedRouteIds().includes(feature.id);
+    const items: ContextMenuItem[] = [
+      {
+        id: "gis-map.ctx.select",
+        label: "Select",
+        onSelect: () => ctrl.run("setSelection", { positions: feature.kind === "position" ? [feature.id] : [], routes: feature.kind === "route" ? [feature.id] : [], mode: "default" }),
+      },
+    ];
+    if (selected) {
+      items.push({
+        id: "gis-map.ctx.deselect",
+        label: "Deselect",
+        onSelect: () => ctrl.run("deselect", { featureId: feature.id, featureKind: feature.kind }),
+      });
+    }
+    items.push({
+      id: "gis-map.ctx.focus",
+      label: "Focus / zoom to",
+      onSelect: () => ctrl.run("focusFeature", { featureId: feature.id, featureKind: feature.kind }),
+    });
+    if (feature.kind === "position") {
+      const position = ctrl.getActiveFixture()?.positions.find((row) => row.id === feature.id);
+      if (position?.sourceUrl) {
+        items.push({
+          id: "gis-map.ctx.source",
+          label: "Open source",
+          onSelect: () => ctrl.run("openSource", { featureId: feature.id }),
+        });
+      }
+    }
+    return items;
+  }
+  return [
+    {
+      id: "gis-map.ctx.select-all",
+      label: "Select all",
+      onSelect: () => ctrl.run("selectAll"),
+    },
+    {
+      id: "gis-map.ctx.clear",
+      label: "Clear selection",
+      disabled: ctrl.getSelectedPositionIds().length + ctrl.getSelectedRouteIds().length === 0,
+      onSelect: () => ctrl.run("clearSelection"),
+    },
+    {
+      id: "gis-map.ctx.fit-world",
+      label: "Fit world",
+      onSelect: () => ctrl.run("fitWorld"),
+    },
+  ];
+}
+
+function MapPlayPaneSurfaceHost({ node: _node }: { readonly node: UiGisMapHostSurfaceNode }): ReactElement {
+  const shellInstance = useShellWindowInstance();
+  const scopeId = shellWindowScopeId(shellInstance, GIS_MAP_PLAY_WINDOW_KIND_ID);
+  const ctrl = usePlayController<MapPlayController>();
+  const snapshot = useControllerStore(ctrl, GIS_MAP_PLAY_STORE_ID) ?? GIS_MAP_PLAY_IDLE_SNAPSHOT;
+  const activeFixture = snapshot.activeFixture ?? ctrl?.getActiveFixture() ?? null;
+  const selectedPositionIds = snapshot.selectedPositionIds ?? ctrl?.getSelectedPositionIds() ?? [];
+  const selectedRouteIds = snapshot.selectedRouteIds ?? ctrl?.getSelectedRouteIds() ?? [];
+  const hoveredFeature = snapshot.hoveredFeature ?? ctrl?.getHoveredFeature() ?? null;
+  const selectionMethod = snapshot.selectionMethod ?? ctrl?.getSelectionMethod() ?? "rectangle";
+  const fitWorldRevision = snapshot.fitWorldRevision ?? ctrl?.getFitWorldRevision() ?? 0;
+  const renderMode = ctrl?.getRenderModeForScope(scopeId) ?? snapshot.renderModeByInstance[scopeId] ?? snapshot.renderMode;
+  const vectorStyle = ctrl?.getVectorStyleForScope(scopeId) ?? snapshot.vectorStyleByInstance[scopeId] ?? snapshot.vectorStyle;
+  const lodMode = ctrl?.getLodModeForScope(scopeId) ?? snapshot.lodModeByInstance[scopeId] ?? snapshot.lodMode;
+  const layerVisibility = ctrl?.getLayerVisibilityForScope(scopeId) ?? snapshot.layerVisibilityByInstance[scopeId] ?? snapshot.layerVisibility;
+  const layerStrokeScale = ctrl?.getLayerStrokeScaleForScope(scopeId) ?? snapshot.layerStrokeScaleByInstance[scopeId] ?? snapshot.layerStrokeScale;
+  const reportEffectiveLod = reactHostPort.useCallback(
+    (lodId: GisMapLodId) => {
+      ctrl?.run("setEffectiveLod", { lod: lodId, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
+  const handleSelect = reactHostPort.useCallback(
+    (payload: MapSelectPayload) => {
+      ctrl?.run("setSelection", {
+        positions: [...payload.positions],
+        routes: [...payload.routes],
+        mode: payload.mode,
+      });
+    },
+    [ctrl],
+  );
+  const handleHoverChange = reactHostPort.useCallback(
+    (feature: MapHoveredFeature | null) => {
+      ctrl?.run("setHover", {
+        featureId: feature?.id ?? null,
+        featureKind: feature?.kind ?? null,
+      });
+    },
+    [ctrl],
+  );
+  const getContextMenuItems = reactHostPort.useCallback(
+    (context: MapContextMenuContext) => buildMapPlayContextMenuItems(ctrl, context),
+    [ctrl],
+  );
+  reactHostPort.useEffect(() => {
+    if (!activeFixture) {
+      return;
+    }
+    console.log(
+      `[DEBUG] gis map fixture loaded: ${activeFixture.positions.length} positions, ${activeFixture.routes.length} routes`,
+    );
+  }, [activeFixture]);
+  return (
+    <MapCanvas
+      renderMode={renderMode}
+      vectorStyle={vectorStyle}
+      lodMode={lodMode}
+      layerVisibility={layerVisibility}
+      layerStrokeScale={layerStrokeScale}
+      onEffectiveLodChange={reportEffectiveLod}
+      selectedPositionIds={selectedPositionIds}
+      selectedRouteIds={selectedRouteIds}
+      hoveredFeature={hoveredFeature}
+      selectionMethod={selectionMethod}
+      onSelect={handleSelect}
+      onHoverChange={handleHoverChange}
+      getContextMenuItems={getContextMenuItems}
+      fitWorldRevision={fitWorldRevision}
+    >
+      {activeFixture?.positions.map((position) => (
+        <Position
+          key={position.id}
+          id={position.id}
+          lon={position.lon}
+          lat={position.lat}
+          label={position.label}
+          name={position.name}
+          icon={position.icon}
+          sourceUrl={position.sourceUrl}
+          kind={position.kind}
+        />
+      ))}
+      {activeFixture?.routes.map((route) => (
+        <Route key={route.id} id={route.id} points={route.points} />
+      ))}
+    </MapCanvas>
+  );
+}
+
+/** @emoji 🛝 Map app renderer contribution for playground and OS shells. */
+export const mapAppRenderer: AppRendererContribution = {
+  windowBodies: mapPlayWindowBodies,
+  sidePanelBodies: mapPlaySidePanelBodies,
+  surfaceHosts: {
+    [GIS_MAP_PLAY_SURFACE_ID]: MapPlayPaneSurfaceHost,
+  },
+  preload: ensureGisMapWasmLoaded,
+};
+//#endregion 🔖PlayHost

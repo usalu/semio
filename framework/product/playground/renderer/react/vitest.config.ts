@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { createWorkspaceViteResolveConfig } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig, playgroundAppsVirtualModulePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -14,7 +14,7 @@ const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 /** @emoji 🧪 Vitest for `@semio-tech/framework-playground-renderer-react`. */
 export default defineConfig({
   root,
-  plugins: [react()],
+  plugins: [react(), playgroundAppsVirtualModulePlugin(repoRoot)],
   resolve: {
     alias: [
       { find: /^@framework\/playground\/core$/, replacement: resolve(root, "../../core/index.ts") },

@@ -955,3 +955,141 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖PlayHost
+import type { ReactElement } from "react";
+import type { AppRendererContribution, UiDrawHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceHostBridge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { usePlayController } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import { CANVAS_HOVER_SOURCE_CANVAS } from "@semio-tech/framework-core";
+import * as React from "react";
+import { DRAW_PLAY_SURFACE_ID_COMPOSITE, DrawPlayController, drawDocumentToJson, type DrawPlayHostBridge, createDrawPlayHierarchyTreeDragController, drawPlaySidePanelBodies, drawPlayWindowBodies } from "@semio-tech/draw-core";
+
+let resolveDrawPlayControllerForTreeDrag: (() => DrawPlayController | undefined) | undefined;
+
+function DrawPlayFileBridge(): ReactElement | null {
+  const ctrl = usePlayController<DrawPlayController>();
+  const loadInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+  const downloadFixture = reactHostPort.useCallback(async () => {
+    if (!ctrl) return;
+    const text = ctrl.getDocumentJson();
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "semio.draw.json";
+    anchor.click();
+    URL.revokeObjectURL(url);
+    console.log("[DEBUG] draw play exported document");
+  }, [ctrl]);
+  const handleLoadFile = reactHostPort.useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
+      if (!file || !ctrl) return;
+      void file.text().then((text) => {
+        ctrl.run("setFixtureJson", { json: text, resetInteraction: true });
+        console.log("[DEBUG] draw play imported document from file");
+      });
+    },
+    [ctrl],
+  );
+  reactHostPort.useEffect(() => {
+    if (!ctrl) return;
+    const bridge: DrawPlayHostBridge = {
+      runHostCommand: (command) => {
+        if (command === "saveDownload") {
+          void downloadFixture();
+          return;
+        }
+        if (command === "loadRequest") {
+          loadInputRef.current?.click();
+        }
+      },
+    };
+    ctrl.setHostBridge(bridge);
+    return () => ctrl.setHostBridge(null);
+  }, [ctrl, downloadFixture]);
+  return <input ref={loadInputRef} type="file" accept=".json,.draw.json,application/json" className="hidden" onChange={handleLoadFile} />;
+}
+
+function DrawPlayPaneSurfaceHost({ node: _node }: { readonly node: UiDrawHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<DrawPlayController>();
+  reactHostPort.useEffect(() => {
+    resolveDrawPlayControllerForTreeDrag = () => ctrl;
+    return () => {
+      resolveDrawPlayControllerForTreeDrag = undefined;
+    };
+  }, [ctrl]);
+  const doc = ctrl?.getDocument();
+  const onHover = reactHostPort.useCallback((payload: import("@semio-tech/draw-core").DrawHoverPayload) => {
+    ctrl?.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_CANVAS });
+  }, [ctrl]);
+  if (!doc) {
+    return (
+      <>
+        <DrawPlayFileBridge />
+        <div className="p-double text-sm text-muted-foreground">No draw document</div>
+      </>
+    );
+  }
+  const selectedIds = ctrl?.getSelectedIds() ?? [];
+  const hoveredId = ctrl?.getHoveredId() ?? null;
+  const kindHover = ctrl?.getHoveredKind() ?? null;
+  const common = {
+    document: doc,
+    selectedIds,
+    hoveredId,
+    kindHover,
+    activeTool: doc.activeTool,
+    camera: doc.camera,
+    onHover,
+    onSelect: (ids: readonly string[]) => ctrl?.run("setSelection", { ids: [...ids] }),
+    onCommit: (document: typeof doc, selectLayerId?: string) => ctrl?.run("commitDocument", { document, selectLayerId }),
+    onCameraChange: (camera: typeof doc.camera) => ctrl?.run("setCamera", { camera }),
+    className: "h-full",
+  };
+  return (
+    <>
+      <DrawPlayFileBridge />
+      <DrawCanvas {...common} />
+    </>
+  );
+}
+
+function DrawOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bridge = useOsInstanceHostBridge();
+  const bundle = useOsInstanceMaterialization(instance);
+  const materialized = bundle.projection;
+  const drawDoc = reactHostPort.useMemo(() => {
+    if (instance.sourceDocument.payloadRef === "fixture:semio.draw.json") return defaultDrawDocument("semio", "Semio Emblem");
+    if (materialized && typeof materialized === "object" && (materialized as DrawDocument).schema === "draw.document") return materialized as DrawDocument;
+    return defaultDrawDocument(instance.id);
+  }, [instance, materialized]);
+  const dispatchDraw = reactHostPort.useCallback(
+    (document: DrawDocument) => {
+      bridge.dispatch({ kind: "patchAppSource", instanceId: instance.id, inline: drawDocumentToJson(document) });
+    },
+    [bridge, instance.id],
+  );
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+      <DrawCanvas document={drawDoc} onCommit={(document) => dispatchDraw(document)} className="min-h-0 flex-1" />
+    </div>
+  );
+}
+
+/** @emoji 🛝 Draw app renderer contribution for playground and OS shells. */
+export const drawAppRenderer: AppRendererContribution = {
+  windowBodies: drawPlayWindowBodies,
+  sidePanelBodies: drawPlaySidePanelBodies,
+  surfaceHosts: {
+    [DRAW_PLAY_SURFACE_ID_COMPOSITE]: DrawPlayPaneSurfaceHost,
+  },
+  instanceHost: DrawOsInstanceHost,
+  treeDragController: () => createDrawPlayHierarchyTreeDragController(() => resolveDrawPlayControllerForTreeDrag?.()),
+};
+//#endregion 🔖PlayHost

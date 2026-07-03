@@ -13,9 +13,12 @@
   },
   "dependencies": {
     "@semio-tech/framework-playground-renderer-react": "workspace:*",
+    "@semio-tech/graph-dsl-core": "workspace:*",
     "@semio-tech/s-core": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
-    "@semio-tech/ui-styling": "workspace:*"
+    "@semio-tech/ui-styling": "workspace:*",
+    "@semio-tech/vcs-core": "workspace:*",
+    "@semio-tech/writer-core": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

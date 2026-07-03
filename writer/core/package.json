@@ -45,7 +45,9 @@
         "env": "WRITER_PLAY_PORT"
       },
       "programExport": "writerProgramContribution",
-      "programId": "writer"
+      "programId": "writer",
+      "rendererPackage": "@semio-tech/writer-react",
+      "rendererExport": "writerAppRenderer"
     }
   }
 }

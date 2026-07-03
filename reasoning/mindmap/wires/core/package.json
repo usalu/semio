@@ -46,7 +46,9 @@
         "env": "WIRES_PLAY_PORT"
       },
       "programExport": "wiresProgramContribution",
-      "programId": "reasoning.wires"
+      "programId": "reasoning.wires",
+      "rendererPackage": "@semio-tech/puzzle-2d-react",
+      "rendererExport": "wiresAppRenderer"
     }
   }
 }

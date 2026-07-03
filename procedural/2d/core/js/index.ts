@@ -56,7 +56,15 @@ import {
     PLAYGROUND_NO_EXAMPLE_ID,
     playgroundResolvedExampleId,
     registerWindowBody,
-    WindowKindRuntime,
+    registerSidePanelBody,
+    buildControllerTreeSidePanelBody,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    type SideTabSpec,
     eagerPlayExampleGlob,
     type AppTools,
     type CommandDescriptor,
@@ -65,11 +73,12 @@ import {
     type ToolLeaf,
     toolCollection,
     type UiNode,
+    type UiTreeNode,
     type UiTreeSectionNode,
+    WindowKindRuntime,
     type WindowBodyViewContext,
     type WindowEngagement,
     createPlaygroundApp,
-    createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import {
     extractChannelPreviewItems,
@@ -135,6 +144,9 @@ export const PROCEDURAL_2D_PLAY_EXTENSIONS_TAB_ID = "procedural2d-play-extension
 export const PROCEDURAL_2D_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const PROCEDURAL_2D_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const PROCEDURAL_2D_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const PROCEDURAL_2D_PLAY_HIERARCHY_BODY_KEY = "procedural2d.play.hierarchy";
+export const PROCEDURAL_2D_PLAY_CATALOGUE_BODY_KEY = "procedural2d.play.catalogue";
+export const PROCEDURAL_2D_PLAY_INSPECTION_BODY_KEY = "procedural2d.play.inspection";
 
 const PROCEDURAL_2D_PLAY_STORE_KEY = "procedural2d.fixture";
 
@@ -1365,11 +1377,44 @@ export const procedural2dPlayWindowBodies: Readonly<Record<string, (ctx: WindowB
 
 export function registerProcedural2dPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(procedural2dPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(procedural2dPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
+
+function buildProcedural2dPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const proceduralCtrl = ctrl as Procedural2dPlayController;
+		return buildProcedural2dPlayHierarchyTree(proceduralCtrl.getFixtureJson(), proceduralCtrl.getSelectedNodeIds()) as UiTreeNode;
+	});
+}
+
+function buildProcedural2dPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const proceduralCtrl = ctrl as Procedural2dPlayController;
+		return buildProcedural2dPlayCatalogueTree(proceduralCtrl.getCatalogueSections(), proceduralCtrl.getExtensionEntries()) as UiTreeNode;
+	});
+}
+
+function buildProcedural2dPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const proceduralCtrl = ctrl as Procedural2dPlayController;
+		return buildProcedural2dPlayInspectorTree(proceduralCtrl.getFixtureJson(), proceduralCtrl.getSelectedNodeIds()) as UiTreeNode;
+	});
+}
+
+export const procedural2dPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[PROCEDURAL_2D_PLAY_HIERARCHY_BODY_KEY]: buildProcedural2dPlayHierarchyPanelBody,
+	[PROCEDURAL_2D_PLAY_CATALOGUE_BODY_KEY]: buildProcedural2dPlayCataloguePanelBody,
+	[PROCEDURAL_2D_PLAY_INSPECTION_BODY_KEY]: buildProcedural2dPlayInspectionPanelBody,
+};
 
 export function buildProcedural2dPlayAppRuntime(controller: Procedural2dPlayController): AppRuntime {
 	const app = createPlayAppRuntime(PROCEDURAL_2D_PLAY_APP_ID, "Procedural 2D", controller, PROCEDURAL_2D_PLAY_LAYOUT, controller.mainMode);
 	app.addMode(controller.generateMode);
+	app.panelTabs = [
+		{ id: PROCEDURAL_2D_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: PROCEDURAL_2D_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: PROCEDURAL_2D_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: PROCEDURAL_2D_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: PROCEDURAL_2D_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: PROCEDURAL_2D_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
 	return app;
 }
 
@@ -1452,18 +1497,15 @@ export const procedural2dPlayAppDefinition = createPlaygroundApp({
 		"../../../flow/module/**/target/**",],
 		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@semio-tech/infinite-cavas-react-renderer"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(PROCEDURAL_2D_PLAY_APP_ID);
-			const ctrl = new Procedural2dPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildProcedural2dPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new Procedural2dPlayController(bus, notify),
+		buildAppRuntime: buildProcedural2dPlayAppRuntime,
 	},
 	keybindings: [
 		{ key: "ctrl+a,meta+a", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "selectAll" },
 		{ key: "Delete", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 		{ key: "Backspace", controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 	],
-	loadRenderer: async () => (await import("@semio-tech/procedural-2d-react/play")).procedural2dAppRenderer,
 });
 //#endregion 🔖Play
 

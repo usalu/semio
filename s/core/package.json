@@ -60,13 +60,30 @@
   "semio": {
     "app": {
       "kind": "s",
-      "aliases": ["s"],
+      "aliases": [
+        "s"
+      ],
       "packageRoot": "framework/product/os",
       "corePackage": "@semio-tech/s-core",
       "definitionExport": "sPlayAppDefinition",
       "hostKind": "s",
-      "port": { "dev": 6066, "test": 6067, "env": "S_OS_PORT" },
-      "assets": ["sketchpad-mdx", "playwright-dev-stub", "vitest-dev-stub", "react-all-extensions"]
+      "programContributionKinds": [
+        "draw",
+        "writer",
+        "raster",
+        "vcs"
+      ],
+      "port": {
+        "dev": 6066,
+        "test": 6067,
+        "env": "S_OS_PORT"
+      },
+      "assets": [
+        "playwright-dev-stub",
+        "vitest-dev-stub"
+      ],
+      "rendererPackage": "@semio-tech/s-react",
+      "rendererExport": "sAppRenderer"
     }
   }
 }

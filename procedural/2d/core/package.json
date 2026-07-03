@@ -51,7 +51,9 @@
         "env": "PROCEDURAL_2D_PLAY_PORT"
       },
       "programExport": "procedural2dProgramContribution",
-      "programId": "procedural.2d"
+      "programId": "procedural.2d",
+      "rendererPackage": "@semio-tech/procedural-2d-react",
+      "rendererExport": "procedural2dAppRenderer"
     }
   }
 }

@@ -1093,6 +1093,87 @@ export function DagSelectionBoundsBox({
 }
 // #endregion 🔖LabelOverlay
 
+
+//#region 🔖PlayHost
+import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
+import type { ReactElement } from "react";
+import type { AppRendererContribution, UiDagHostSurfaceNode, UiWriterHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { usePlayController } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import type { DagPlayController } from "@semio-tech/dag-host-core";
+
+let dagPlayDefaultFixtureJsonRef = "{}";
+
+function DagPlayPaneSurfaceHost({ node }: { readonly node: UiDagHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<DagPlayController>();
+  const scopeId = node.paneId ?? "dag-main";
+  const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
+  const onLodChange = reactHostPort.useCallback(
+    (lod: DagDrawLodKind) => {
+      ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
+  const onFixtureChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setFixtureJson", { json });
+    },
+    [ctrl],
+  );
+  console.log("[DEBUG] dag play surface mount");
+  return (
+    <DagCanvas
+      fixtureJson={ctrl?.getFixtureJson() ?? dagPlayDefaultFixtureJsonRef}
+      reorganize={ctrl?.getReorganize()}
+      onFixtureChange={onFixtureChange}
+      {...lodProps}
+      onLodChange={onLodChange}
+    />
+  );
+}
+
+function DagPlayJackSurfaceHost({ node: _node }: { readonly node: UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<DagPlayController>();
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
+  const document = ctrl?.getWriterDocumentJack() ?? createWriterDocument({ id: "dag-jack", languageId: "jack", text: "" });
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    ctrl?.run("setJackHover", { offset });
+  }, [ctrl]);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    ctrl?.run("setJackSelect", range);
+  }, [ctrl]);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={ctrl?.getJackHoverOccurrences()}
+      externalHoverOccurrencesSignal={ctrl?.getHoverEpoch()}
+      externalSelectionOccurrences={ctrl?.getJackSelectOccurrences()}
+      externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
+    />
+  );
+}
+
+/** @emoji 🛝 Dag app renderer contribution for playground and OS shells. */
+export async function dagAppRenderer(): Promise<AppRendererContribution> {
+  const core = await import("@semio-tech/dag-host-core");
+  dagPlayDefaultFixtureJsonRef = core.DAG_PLAY_DEFAULT_FIXTURE_JSON;
+  return {
+    windowBodies: core.dagPlayWindowBodies,
+    sidePanelBodies: core.dagPlaySidePanelBodies,
+    surfaceHosts: {
+      [core.DAG_PLAY_SURFACE_ID]: DagPlayPaneSurfaceHost,
+      [core.DAG_PLAY_SURFACE_ID_JACK]: DagPlayJackSurfaceHost,
+    },
+    preload: ensureDagWasmLoaded,
+  };
+}
+//#endregion 🔖PlayHost
+
 // #region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -1187,3 +1268,4 @@ if (import.meta.vitest) {
   });
 }
 // #endregion 🧪Tests
+

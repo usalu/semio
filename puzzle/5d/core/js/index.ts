@@ -40,8 +40,15 @@ import {
   enforcePlaygroundWindowEngagementInput,
   collectUiTreeItemDragData,
   uiDeclarativeSectionsToTree,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  buildControllerTreeSidePanelBody,
+  registerSidePanelBody,
+  type SideTabSpec,
   uiInspectorAllEqual,
   JackHoverBridge,
 	buildWriterWindowBody,
@@ -165,6 +172,10 @@ export const PUZZLE_5D_PLAY_JACK_SURFACE_ID = "puzzle.5d.play.jack";
 export const PUZZLE_5D_PLAY_DEFAULT_JACK_QUERY = "MATCH (n:part) RETURN n.name";
 export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
 export const PUZZLE_5D_PLAY_KINDS_TAB_ID = "puzzle-5d-play-kinds";
+export const PUZZLE_5D_PLAY_INSPECTOR_TAB_ID = "puzzle-5d-play-inspector";
+export const PUZZLE_5D_PLAY_HIERARCHY_BODY_KEY = "puzzle.5d.play.hierarchy";
+export const PUZZLE_5D_PLAY_KINDS_BODY_KEY = "puzzle.5d.play.kinds";
+export const PUZZLE_5D_PLAY_INSPECTOR_BODY_KEY = "puzzle.5d.play.inspector";
 export const PUZZLE_5D_PLAY_ICON_KINDS = "puzzle.5d-play.icon.kinds";
 
 const PUZZLE_5D_PLAY_LOD_TIERS_2D: readonly Puzzle2dDrawLodKind[] = ["minimap", "overview", "compact", "normal", "detail", "micro"];
@@ -1956,7 +1967,11 @@ export function buildPuzzle5dPlayAppRuntime(controller: Puzzle5dPlayShellControl
   );
   app.defaultModeId = controller.mainMode.id;
   app.addMode(controller.mainMode);
-  app.panelTabs = [];
+  app.panelTabs = [
+    { id: PUZZLE_5D_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: PUZZLE_5D_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+    { id: PUZZLE_5D_PLAY_KINDS_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: PUZZLE_5D_PLAY_KINDS_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+    { id: PUZZLE_5D_PLAY_INSPECTOR_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: PUZZLE_5D_PLAY_INSPECTOR_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+  ] satisfies SideTabSpec[];
   return app;
 }
 
@@ -1988,14 +2003,57 @@ export function buildPuzzle5dJackDeclarativeBody(_ctx: WindowBodyViewContext): U
   return buildWriterWindowBody(PUZZLE_5D_PLAY_JACK_SURFACE_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_JACK_WINDOW_ID);
 }
 
+function buildPuzzle5dPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const snap = (ctrl as Puzzle5dPlayShellController).getSnapshot();
+    if (!snap) {
+      return uiDeclarativeSectionsToTree([
+        { type: "section", id: "puzzle-5d-play-hierarchy.loading", label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, children: [{ type: "text", value: "…" }] },
+      ]);
+    }
+    return buildPuzzle5dPlayHierarchySections(snap);
+  });
+}
+
+function buildPuzzle5dPlayKindsPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const snap = (ctrl as Puzzle5dPlayShellController).getSnapshot();
+    if (!snap) {
+      return uiDeclarativeSectionsToTree([
+        { type: "section", id: "puzzle-5d-play-kinds.loading", label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, children: [{ type: "text", value: "…" }] },
+      ]);
+    }
+    return buildPuzzle5dPlayKindsTree(snap);
+  });
+}
+
+function buildPuzzle5dPlayInspectorPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const snap = (ctrl as Puzzle5dPlayShellController).getSnapshot();
+    if (!snap) {
+      return uiDeclarativeSectionsToTree([
+        { type: "section", id: "puzzle-5d-play-inspector.loading", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "…" }] },
+      ]);
+    }
+    return buildPuzzle5dPlayInspectorTree(snap);
+  });
+}
+
 export const puzzle5dPlayWindowBodies: Readonly<Record<string, (ctx: WindowBodyViewContext) => UiNode>> = {
   [PUZZLE_5D_PLAY_2D_BODY_KEY]: buildPuzzle5d2dDeclarativeBody,
   [PUZZLE_5D_PLAY_3D_BODY_KEY]: buildPuzzle5d3dDeclarativeBody,
   [PUZZLE_5D_PLAY_JACK_BODY_KEY]: buildPuzzle5dJackDeclarativeBody,
 };
 
+export const puzzle5dPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+  [PUZZLE_5D_PLAY_HIERARCHY_BODY_KEY]: buildPuzzle5dPlayHierarchyPanelBody,
+  [PUZZLE_5D_PLAY_KINDS_BODY_KEY]: buildPuzzle5dPlayKindsPanelBody,
+  [PUZZLE_5D_PLAY_INSPECTOR_BODY_KEY]: buildPuzzle5dPlayInspectorPanelBody,
+};
+
 export function registerPuzzle5dPlayDeclarativeBodies(): void {
   for (const [key, build] of Object.entries(puzzle5dPlayWindowBodies)) registerWindowBody(key, build);
+  for (const [key, build] of Object.entries(puzzle5dPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 //#endregion 🔖DeclarativeBodies
 
@@ -2262,15 +2320,8 @@ if (import.meta.vitest) {
 //#region 🔖SExtension
 import type { PlatformDefinition } from "@semio-tech/framework-platform-core";
 import { createTypedAppVcsHandler } from "@semio-tech/framework-os-core";
-import {
-	parseModel,
-	project2d,
-	project3d,
-	type KindCatalogBundle,
-	type Model,
-} from "@semio-tech/puzzle-5d-react";
 
-function meshUrlFromPuzzle5dModel(model: Model): string | null {
+function meshUrlFromPuzzle5dModel(model: Puzzle5dModel): string | null {
 	const fixture3d = project3d(model);
 	for (const object of fixture3d.objects) {
 		if (object.meshUrl) return object.meshUrl;
@@ -2280,7 +2331,7 @@ function meshUrlFromPuzzle5dModel(model: Model): string | null {
 
 /** @emoji 🧩 OS app VCS handler for puzzle 5d documents. */
 export function createPuzzle5dAppVcsHandler() {
-	return createTypedAppVcsHandler<Model, { readonly op: "setRevision"; readonly revision: number }>(
+	return createTypedAppVcsHandler<Puzzle5dModel, { readonly op: "setRevision"; readonly revision: number }>(
 		"puzzle.5d",
 		"puzzle.5d",
 		() => ({
@@ -2295,7 +2346,7 @@ export function createPuzzle5dAppVcsHandler() {
 		undefined,
 		{
 			applyInputBindings: (model, inputBindings) => {
-				const catalogue = inputBindings.catalogue as KindCatalogBundle | undefined;
+				const catalogue = inputBindings.catalogue as Puzzle5dKindCatalogBundle | undefined;
 				if (!catalogue) return model;
 				return { ...model, kindCatalogs: catalogue };
 			},
@@ -2418,7 +2469,6 @@ export const puzzle5dPlayAppDefinition = createPlaygroundApp({
 	createRuntime: () => {
 		return buildPuzzle5dPlayRuntime();
 	},
-	loadRenderer: async () => (await import("@semio-tech/puzzle-5d-react/play")).puzzle5dAppRenderer,
 });
 //#endregion 🔖Play
 

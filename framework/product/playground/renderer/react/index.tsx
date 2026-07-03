@@ -175,6 +175,9 @@ import {
     type WindowEngagement,
     type WindowEngagementControl
 } from "@semio-tech/framework-playground-core";
+import { loadPlaygroundRendererContribution } from "@semio-tech/framework-playground-core/app-registry";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceHostBridge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
 import { renderControlIcon } from "@semio-tech/ui-react";
 import type { ReactElement } from "react";
 import * as React from "react";
@@ -204,10 +207,16 @@ export {
     FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
     FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PLAYGROUND_NO_EXAMPLE_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    PLAYGROUND_NO_EXAMPLE_ID,
     PLAYGROUND_NO_EXAMPLE_OPTION, isPlaygroundNoExampleId, playgroundExampleCatalogWithNoOption,
+    playgroundResolvedExampleId,
     resolvePlaygroundExampleCatalog
 } from "@semio-tech/framework-playground-core";
+export {
+    FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
+    FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+} from "@semio-tech/framework-core";
 export type { AppExampleContribution, AppExampleOption } from "@semio-tech/framework-platform-core";
 
 export {
@@ -1602,6 +1611,138 @@ export const mountReactApp = mountPlaygroundApp;
 
 //#region 🔖Boot
 
+/** @emoji 🎮 Generic playground controller subscription (runtime generation + optional interaction revision). */
+export function usePlayController<T extends PlaygroundController<string>>(
+  runtimeOverride?: Platform,
+  revision?: (ctrl: T | undefined) => number,
+): T | undefined {
+  const appCtx = reactHostPort.useContext(PlaygroundContext);
+  const runtime = runtimeOverride ?? appCtx?.runtime;
+  reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const unsubscribeRuntime = runtime ? runtime.subscribe(listener) : () => {};
+      const ctrl = runtime?.getActiveApp()?.controller as T | undefined;
+      const unsubscribeCtrl =
+        ctrl && "subscribe" in ctrl && typeof ctrl.subscribe === "function"
+          ? (ctrl as T & { subscribe: (l: () => void) => () => void }).subscribe(listener)
+          : undefined;
+      return () => {
+        unsubscribeRuntime();
+        unsubscribeCtrl?.();
+      };
+    },
+    () => {
+      const generation = runtime?.generation ?? 0;
+      const ctrl = runtime?.getActiveApp()?.controller as T | undefined;
+      const rev =
+        revision?.(ctrl) ??
+        (ctrl && "getInteractionRevision" in ctrl && typeof ctrl.getInteractionRevision === "function"
+          ? (ctrl as T & { getInteractionRevision: () => number }).getInteractionRevision()
+          : 0);
+      return generation * 1_000_000 + rev;
+    },
+    () => 0,
+  );
+  return runtime?.getActiveApp()?.controller as T | undefined;
+}
+
+/** @emoji 📁 Generic fixture JSON file bridge wired through a controller host bridge. */
+export function createFixtureFileBridge<T extends PlaygroundController<string>>(options: {
+  readonly filename: string;
+  readonly accept: string;
+  readonly useController: (runtime?: Platform) => T | undefined;
+  readonly getJson: (ctrl: T) => string;
+  readonly applyJson: (ctrl: T, json: string) => void;
+  readonly hostCommands?: Readonly<Record<string, "saveDownload" | "loadRequest">>;
+}): React.FC {
+  const FixtureFileBridge: React.FC = () => {
+    const ctrl = options.useController();
+    const loadInputRef = reactHostPort.useRef<HTMLInputElement | null>(null);
+    const downloadFixture = reactHostPort.useCallback(async () => {
+      if (!ctrl) return;
+      const text = options.getJson(ctrl);
+      const blob = new Blob([text], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = options.filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      console.log(`[DEBUG] ${options.filename} exported`);
+    }, [ctrl]);
+    const handleLoadFile = reactHostPort.useCallback(
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (!file || !ctrl) return;
+        void file.text().then((text) => {
+          options.applyJson(ctrl, text);
+          console.log(`[DEBUG] ${options.filename} imported from file`);
+        });
+      },
+      [ctrl],
+    );
+    reactHostPort.useEffect(() => {
+      if (!ctrl || !options.hostCommands) return;
+      const bridge = {
+        runHostCommand: (command: string) => {
+          if (command === options.hostCommands?.saveDownload) void downloadFixture();
+          if (command === options.hostCommands?.loadRequest) loadInputRef.current?.click();
+        },
+      };
+      if ("setHostBridge" in ctrl && typeof ctrl.setHostBridge === "function") {
+        (ctrl as T & { setHostBridge: (b: typeof bridge | null) => void }).setHostBridge(bridge);
+        return () => (ctrl as T & { setHostBridge: (b: null) => void }).setHostBridge(null);
+      }
+      return undefined;
+    }, [ctrl, downloadFixture]);
+    return <input ref={loadInputRef} type="file" accept={options.accept} className="hidden" onChange={handleLoadFile} />;
+  };
+  return FixtureFileBridge;
+}
+
+/** @emoji 🖥️ Generic OS instance host wrapping materialization + upstream badge around a canvas component. */
+export function createOsInstanceHost<TDocument>(options: {
+  readonly Canvas: React.ComponentType<{ readonly document: TDocument; readonly onCommit: (document: TDocument) => void; readonly className?: string }>;
+  readonly materialize: (instance: OsAppInstance, projection: unknown) => TDocument;
+  readonly dispatch: (bridge: ReturnType<typeof useOsInstanceHostBridge>, instance: OsAppInstance, document: TDocument) => void;
+}): React.FC<{ readonly instance: OsAppInstance }> {
+  const InstanceHost: React.FC<{ readonly instance: OsAppInstance }> = ({ instance }) => {
+    const bridge = useOsInstanceHostBridge();
+    const bundle = useOsInstanceMaterialization(instance);
+    const document = reactHostPort.useMemo(
+      () => options.materialize(instance, bundle.projection),
+      [instance, bundle.projection],
+    );
+    const onCommit = reactHostPort.useCallback(
+      (next: TDocument) => options.dispatch(bridge, instance, next),
+      [bridge, instance],
+    );
+    return (
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+        <options.Canvas document={document} onCommit={onCommit} className="min-h-0 flex-1" />
+      </div>
+    );
+  };
+  return InstanceHost;
+}
+
+/** @emoji 🎛 Fills missing {@link AppRendererContribution.examples} from {@link PlaygroundExampleHost} on the active controller. */
+export function finalizeRendererContribution(
+  app: PlaygroundAppDefinition,
+  contribution: AppRendererContribution,
+  runtime: Platform,
+): AppRendererContribution {
+  if (contribution.examples) return contribution;
+  const catalog = resolvePlaygroundExampleCatalog(runtime.getActiveApp()?.controller);
+  if (!catalog?.options.length) return contribution;
+  return {
+    ...contribution,
+    examples: controllerBackedExampleContribution(app.controllerId, catalog.options),
+  };
+}
+
 /** @emoji 🧩 Registers surface hosts and tab icons from an app renderer contribution. */
 export function applyAppRendererContribution(contribution: AppRendererContribution): void {
   for (const [surfaceId, component] of Object.entries(contribution.surfaceHosts)) {
@@ -1627,7 +1768,9 @@ export function applyAppRendererContribution(contribution: AppRendererContributi
 
 /** @emoji 🛝 Boots a playground app from its definition — fully derived from {@link AppRendererContribution}. */
 export async function bootPlaygroundApp(app: PlaygroundAppDefinition, playground: Playground, rootId = "root"): Promise<void> {
-  const contribution = await app.loadRenderer();
+  const playEntryKind = app.devHost?.playEntryKind;
+  if (!playEntryKind) throw new Error(`Playground app "${app.id}" is missing devHost.playEntryKind`);
+  const contribution = finalizeRendererContribution(app, await loadPlaygroundRendererContribution(playEntryKind), playground.runtime);
   if (contribution.preload) {
     await contribution.preload();
   }
@@ -1657,7 +1800,7 @@ if (import.meta.vitest) {
       const { dirname, join } = await import("node:path");
       const { fileURLToPath } = await import("node:url");
       const rendererDir = dirname(fileURLToPath(import.meta.url));
-      const puzzle2dSource = readFileSync(join(rendererDir, "../../../../../puzzle/2d/react/play-host.tsx"), "utf8");
+      const puzzle2dSource = readFileSync(join(rendererDir, "../../../../../puzzle/2d/react/index.tsx"), "utf8");
       expect(puzzle2dSource).toMatch(
         /puzzle2dSetBrushPlaceCommitHandler/,
       );

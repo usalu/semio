@@ -45,7 +45,6 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "./index.tsx",
-    "./play": "./play-host.tsx"
+    ".": "./index.tsx"
   }
 }

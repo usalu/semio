@@ -145,10 +145,7 @@ import * as React from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import Fuse, { type FuseResult } from "fuse.js";
-import { Puzzle2dCanvas, parsePuzzle2dFixture, type Puzzle2dPreselectSnapshot, type Puzzle2dSelectionSnapshot } from "@semio-tech/puzzle-2d-react";
-import { parseFixture, puzzle3dFixturePaletteTreeDragController, type SelectionSnapshot as Puzzle3dSelectionSnapshot } from "@semio-tech/puzzle-3d-react";
-import { PUZZLE_2D_FIXTURE_DRAG_MIME, puzzle2dFixturePaletteTreeDragController, classifyIconSelectorMode } from "@semio-tech/puzzle-2d-react";
-import { FiveD, StoreProvider, compose5d, createStore, mergeLiveForceGraphTopologyModel, prepareTopologyModel } from "@semio-tech/puzzle-5d-react";
+import { classifyIconSelectorMode } from "@semio-tech/ui-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {
@@ -1170,15 +1167,24 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], commandBus: Com
 	});
 }
 
+const PUZZLE_2D_FIXTURE_DRAG_MIME = "application/x-puzzle-2d-fixture";
+
+let platformPuzzleBridge: typeof import("./platform-puzzle-bridge.tsx") | null = null;
+let platformPuzzleBridgeReady: Promise<typeof import("./platform-puzzle-bridge.tsx")> | null = null;
+
 function buildUiTreeDragAndDropController(sections: readonly UiTreeSectionNode[], commandBus: CommandBus): TreeDragAndDropController | undefined {
 	void commandBus;
 	const dragByItemId = collectUiTreeItemDragData(sections);
 	if (dragByItemId.size === 0) return undefined;
 	const sample = dragByItemId.values().next().value;
-	if (sample && PUZZLE_2D_FIXTURE_DRAG_MIME in sample) {
-		return puzzle2dFixturePaletteTreeDragController(dragByItemId);
+	if (!platformPuzzleBridge) {
+		void platformPuzzleBridgeReady;
+		return undefined;
 	}
-	return puzzle3dFixturePaletteTreeDragController(dragByItemId);
+	if (sample && PUZZLE_2D_FIXTURE_DRAG_MIME in sample) {
+		return platformPuzzleBridge.buildPuzzle2dTreeDragController(dragByItemId);
+	}
+	return platformPuzzleBridge.buildPuzzle3dTreeDragController(dragByItemId);
 }
 
 /** @emoji 🌲 Maps a declarative {@link UiTreeNode} to a {@link TreePanelConfig}. */
@@ -3014,198 +3020,6 @@ const BuiltinTableKindRenderer: ComponentKindRenderer = ({ component, platform }
 	);
 };
 
-const BuiltinPuzzle2dKindRenderer: ComponentKindRenderer = ({ component, node }) => {
-	const model = useStore(component as Puzzle2d);
-	if (model.nodes.length === 0 && model.edges.length === 0) {
-		return (
-			<div className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground" data-surface-id={node.surfaceId}>
-				{model.emptyMessage ?? "Empty puzzle 2d"}
-			</div>
-		);
-	}
-	return (
-		<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
-			<Puzzle2dCanvas className="h-full w-full" />
-		</div>
-	);
-};
-
-const BuiltinPuzzle3dKindRenderer: ComponentKindRenderer = ({ component, node }) => {
-	const model = useStore(component as Puzzle3d);
-	return (
-		<div className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground" data-surface-id={node.surfaceId}>
-			{model.emptyMessage ?? `3D scene${model.instanceId ? ` · ${model.instanceId}` : ""}`}
-		</div>
-	);
-};
-
-/** @emoji 🔑 Stable topology identity ignoring flat node positions (live force updates positions locally). */
-export function platformTopologyStructureKey(flat: Record<string, unknown>, volume: Record<string, unknown>): string {
-	const parsed = parsePuzzle2dFixture(flat);
-	if (!parsed) return "";
-	const nodes = [...parsed.nodes]
-		.map((node) => node.id)
-		.sort()
-		.join(",");
-	const edges = [...parsed.edges]
-		.map((edge) => `${edge.id}:${edge.source}:${edge.target}`)
-		.sort()
-		.join(";");
-	return `${nodes}|${edges}|${JSON.stringify(parsed.camera)}|${JSON.stringify(volume)}`;
-}
-
-function usePlatformTopologyStore(
-	controller: Controller | undefined,
-	instanceId: string,
-): ReturnType<typeof createStore> | null {
-	const payload = useControllerStore<PlatformTopologyPayload>(controller, platformTopologyStoreId(instanceId));
-	const topologyStoreRef = React.useRef<ReturnType<typeof createStore> | null>(null);
-	const lastStructureKeyRef = React.useRef<string | null>(null);
-	const flatPayloadRef = React.useRef(payload?.flat);
-	const volumePayloadRef = React.useRef(payload?.volume);
-	flatPayloadRef.current = payload?.flat;
-	volumePayloadRef.current = payload?.volume;
-	const structureKey =
-		flatPayloadRef.current && volumePayloadRef.current
-			? platformTopologyStructureKey(flatPayloadRef.current, volumePayloadRef.current)
-			: null;
-	const [, setTopologyEpoch] = React.useState(0);
-	React.useEffect(() => {
-		if (!structureKey) {
-			if (topologyStoreRef.current !== null) {
-				topologyStoreRef.current = null;
-				lastStructureKeyRef.current = null;
-				setTopologyEpoch((epoch) => epoch + 1);
-			}
-			return;
-		}
-		const flatPayload = flatPayloadRef.current;
-		const volumePayload = volumePayloadRef.current;
-		if (!flatPayload || !volumePayload) {
-			return;
-		}
-		const model = prepareTopologyModel(compose5d(parsePuzzle2dFixture(flatPayload)!, parseFixture(volumePayload)!));
-		const existing = topologyStoreRef.current;
-		if (existing) {
-			if (lastStructureKeyRef.current !== structureKey) {
-				const nextModel =
-					instanceId.endsWith(":kit:wires")
-						? mergeLiveForceGraphTopologyModel(model, existing.read().model)
-						: model;
-				existing.replaceModel(nextModel);
-				lastStructureKeyRef.current = structureKey;
-			}
-			return;
-		}
-		topologyStoreRef.current = createStore(model);
-		lastStructureKeyRef.current = structureKey;
-		setTopologyEpoch((epoch) => epoch + 1);
-	}, [structureKey]);
-	return topologyStoreRef.current;
-}
-
-/** @emoji 🎯 Maps FiveD flat/volume selection to `puzzle5dSelection` command payload. */
-export function puzzle5dSelectionPayload(
-	instanceId: string,
-	presentation: Puzzle5dModel["presentation"],
-	snapshot: Puzzle2dSelectionSnapshot | Puzzle3dSelectionSnapshot,
-): { readonly instanceId: string; readonly puzzle2dIds: readonly string[] } {
-	if (presentation === "flat") {
-		return { instanceId, puzzle2dIds: (snapshot as Puzzle2dSelectionSnapshot).ids };
-	}
-	const volume = snapshot as Puzzle3dSelectionSnapshot;
-	return { instanceId, puzzle2dIds: [...volume.objectIds, ...volume.vortexIds, ...volume.attractionIds] };
-}
-
-const BuiltinPuzzle5dKindRenderer: ComponentKindRenderer = ({ component, node, commandBus, platform }) => {
-	const model = useStore(component as Puzzle5d);
-	const instanceId = model.instanceId || node.surfaceId;
-	const controller = platform ? getPlatformControllerById(platform, component.controllerId) : undefined;
-	const topologyStore = usePlatformTopologyStore(controller, instanceId);
-	const puzzle2dSelect = React.useMemo(
-		() =>
-			model.presentation === "flat"
-				? {
-						...(model.puzzle2dSelection !== undefined ? { selection: { ids: [...model.puzzle2dSelection] } } : {}),
-						...(model.puzzle2dHoveredId !== undefined ? { hoveredId: model.puzzle2dHoveredId } : {}),
-						onSelect: (snapshot: Puzzle2dSelectionSnapshot) => {
-							commandBus.dispatch(component.controllerId, "puzzle5dSelection", puzzle5dSelectionPayload(instanceId, "flat", snapshot));
-						},
-						...(instanceId.endsWith(":kit:wires")
-							? {
-									onActivate: (snapshot: Puzzle2dSelectionSnapshot) => {
-										commandBus.dispatch(component.controllerId, "puzzle5dActivate", {
-											instanceId,
-											puzzle2dIds: snapshot.ids,
-										});
-									},
-								}
-							: {}),
-						onHover: (payload: { readonly id: string | null }) => {
-							commandBus.dispatch(component.controllerId, "puzzle5dHover", { instanceId, nodeId: payload.id });
-						},
-						onPreselect: (snapshot: Puzzle2dPreselectSnapshot) => {
-							commandBus.dispatch(component.controllerId, "puzzle5dPreselect", {
-								instanceId,
-								preselect: { ids: [...snapshot.ids], removedIds: [...snapshot.removedIds] },
-							});
-						},
-					}
-				: undefined,
-		[commandBus, component.controllerId, instanceId, model.presentation, model.puzzle2dHoveredId, model.puzzle2dSelection],
-	);
-	const puzzle3dSelect = React.useMemo(
-		() =>
-			model.presentation === "volume"
-				? {
-						onSelect: (snapshot: Puzzle3dSelectionSnapshot) => {
-							commandBus.dispatch(component.controllerId, "puzzle5dSelection", puzzle5dSelectionPayload(instanceId, "volume", snapshot));
-						},
-					}
-				: undefined,
-		[commandBus, component.controllerId, instanceId, model.presentation],
-	);
-	const fiveDMode = model.presentation === "volume" ? "3d" : "2d";
-	if (model.emptyMessage) {
-		return (
-			<div
-				className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground"
-				data-surface-id={node.surfaceId}
-			>
-				{model.emptyMessage}
-			</div>
-		);
-	}
-	if (!topologyStore) {
-		return (
-			<div
-				className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground"
-				data-surface-id={node.surfaceId}
-			>
-				Topology loading…
-			</div>
-		);
-	}
-	return (
-		<div
-			className="absolute inset-0 min-h-0 min-w-0"
-			data-surface-id={node.surfaceId}
-			data-testid={`platform-five-d-${instanceId}`}
-		>
-			<StoreProvider store={topologyStore}>
-				<FiveD
-					instanceId={instanceId}
-					graphPortMode={instanceId.endsWith(":kit:wires") || instanceId.endsWith(":diagram") ? "normal" : undefined}
-					liveForceGraph={instanceId.endsWith(":kit:wires")}
-					mode={fiveDMode}
-					puzzle2d={puzzle2dSelect}
-					puzzle3d={puzzle3dSelect}
-				/>
-			</StoreProvider>
-		</div>
-	);
-};
-
 const BuiltinCadKindRenderer: ComponentKindRenderer = ({ component, node }) => {
 	const model = useStore(component as Cad);
 	return (
@@ -3224,9 +3038,6 @@ function ensureBuiltinComponentKindRenderers(): void {
 	if (componentKindRenderers.size > 0) return;
 	registerComponentKindRenderer("table", BuiltinTableKindRenderer);
 	registerComponentKindRenderer("virtualFileSystem", BuiltinVirtualFileSystemKindRenderer);
-	registerComponentKindRenderer("puzzle2d", BuiltinPuzzle2dKindRenderer);
-	registerComponentKindRenderer("puzzle3d", BuiltinPuzzle3dKindRenderer);
-	registerComponentKindRenderer("puzzle5d", BuiltinPuzzle5dKindRenderer);
 	registerComponentKindRenderer("cad", BuiltinCadKindRenderer);
 	registerComponentKindRenderer("panel", BuiltinPanelKindRenderer);
 }
@@ -3565,49 +3376,17 @@ const PlatformComponentPlaceholder: React.FC<{ readonly kind: ComponentKind; rea
 	</div>
 );
 
-const BuiltinPuzzle2dCanvas: React.FC<{ readonly node: UiPuzzle2dHostSurfaceNode }> = ({ node }) => (
-	<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
-		<Puzzle2dCanvas className="h-full w-full" />
-	</div>
-);
+const defaultComponentHosts: Partial<Record<ComponentKind, SurfaceBindingHost>> = {};
 
-const BuiltinPuzzle5dCanvas: React.FC<{ readonly node: UiPuzzle5dHostSurfaceNode; readonly platform?: Platform }> = ({
-	node,
-	platform,
-}) => {
-	if (platform) {
-		const registered = platform.getComponent(node.surfaceId);
-		if (registered?.componentKind === "puzzle5d") {
-			const KindRenderer = componentKindRenderers.get("puzzle5d");
-			if (KindRenderer) {
-				return (
-					<div className="absolute inset-0 min-h-0 min-w-0" data-surface-id={node.surfaceId}>
-						<KindRenderer
-							component={registered as Component<unknown>}
-							node={node}
-							commandBus={platform.commandBus}
-							layout="canvas"
-							platform={platform}
-						/>
-					</div>
-				);
-			}
-		}
-	}
-	return (
-		<div
-			className="absolute inset-0 flex items-center justify-center p-2 text-xs text-muted-foreground"
-			data-surface-id={node.surfaceId}
-		>
-			Loading…
-		</div>
-	);
-};
-
-const defaultComponentHosts: Partial<Record<ComponentKind, SurfaceBindingHost>> = {
-	puzzle2d: BuiltinPuzzle2dCanvas as SurfaceBindingHost,
-	puzzle5d: BuiltinPuzzle5dCanvas as SurfaceBindingHost,
-};
+platformPuzzleBridgeReady = import("./platform-puzzle-bridge.tsx").then((bridge) => {
+	platformPuzzleBridge = bridge;
+	bridge.registerPlatformPuzzleIntegration({
+		registerComponentKindRenderer,
+		defaultComponentHosts,
+		getComponentKindRenderer: (kind) => componentKindRenderers.get(kind),
+	});
+	return bridge;
+});
 
 function renderBoundComponent(
 	node: UiComponentHostSurfaceNode,
@@ -3892,7 +3671,8 @@ if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
 	describe("platformTopologyStructureKey", () => {
-		it("ignores node position changes", () => {
+		it("ignores node position changes", async () => {
+			const { platformTopologyStructureKey } = await import("./platform-puzzle-bridge.tsx");
 			const flatA = {
 				schema: "puzzle.2d.fixture",
 				camera: { x: 0, y: 0, zoom: 1 },
@@ -3909,7 +3689,8 @@ if (import.meta.vitest) {
 			expect(platformTopologyStructureKey(flatA, volume)).toBe(platformTopologyStructureKey(flatB, volume));
 		});
 
-		it("changes when node ids change", () => {
+		it("changes when node ids change", async () => {
+			const { platformTopologyStructureKey } = await import("./platform-puzzle-bridge.tsx");
 			const volume = { schema: "puzzle.3d.fixture", objects: [], attractions: [], cables: [] };
 			const flatA = {
 				schema: "puzzle.2d.fixture",
@@ -4179,7 +3960,8 @@ if (import.meta.vitest) {
 			expect(markupB).not.toContain("Alpha");
 		});
 
-		it("maps puzzle5d flat and volume selections to puzzle5dSelection payload", () => {
+		it("maps puzzle5d flat and volume selections to puzzle5dSelection payload", async () => {
+			const { puzzle5dSelectionPayload } = await import("./platform-puzzle-bridge.tsx");
 			expect(puzzle5dSelectionPayload("inst-1", "flat", { ids: ["a", "b"] })).toEqual({
 				instanceId: "inst-1",
 				puzzle2dIds: ["a", "b"],

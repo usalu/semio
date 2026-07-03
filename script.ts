@@ -112,7 +112,7 @@ export class SetupScript extends Script {
     if (repoClientPath) {
       runCmd(repoClientPath, ["configure"], { cwd: this.root });
     } else {
-      runCmd("go", ["run", "./repo/client/mcp", "configure"], {
+      runCmd("go", ["run", "./repo/client/mcp/go", "configure"], {
         cwd: this.root,
         env: { ...process.env, GOWORK: join(this.root, "go.work") },
       });
@@ -147,7 +147,7 @@ export class SetupScript extends Script {
     tryRun("bun", [join(this.root, "script.ts"), "cpp", "setup"], { cwd: this.root });
     console.log("[setup] go build repo client…");
     const clientOut = join(this.root, "repo", "client", process.platform === "win32" ? "client.exe" : "client");
-    tryRun("go", ["build", "-o", clientOut, "./repo/client/mcp"], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
+    tryRun("go", ["build", "-o", clientOut, "./repo/client/mcp/go"], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
     console.log("[setup] dotnet restore…");
     tryRun("dotnet", ["restore", "Monorepo.sln"]);
     console.log("[setup] rustup wasm target…");
@@ -385,12 +385,12 @@ export class DevScript extends Script {
     const slug = (slugs[0] ?? "client").trim().toLowerCase();
     const extra = slugs.slice(1);
     const packages: Record<string, string> = {
-      client: "./repo/client/mcp",
-      codex: "./repo/client/mcp/codex",
-      copilot: "./repo/client/mcp/copilot",
-      cursor: "./repo/client/mcp/cursor",
-      kiro: "./repo/client/mcp/kiro",
-      claude: "./repo/client/mcp/claude",
+      client: "./repo/client/mcp/go",
+      codex: "./repo/client/mcp/codex/go",
+      copilot: "./repo/client/mcp/copilot/go",
+      cursor: "./repo/client/mcp/cursor/go",
+      kiro: "./repo/client/mcp/kiro/go",
+      claude: "./repo/client/mcp/claude/go",
     };
     const pkg = packages[slug];
     if (!pkg) {
@@ -504,15 +504,15 @@ export class TestScript extends Script {
       return;
     }
     if (segments[0] === "repo-client") {
-      this.runRepoGoTest("./repo/client/cli", segments.slice(1));
+      this.runRepoGoTest("./repo/client/cli/go", segments.slice(1));
       return;
     }
     if (segments[0] === "repo-mcp") {
-      runCmd("go", ["build", "-o", join(this.root, process.platform === "win32" ? "repo/client/client.exe" : "repo/client/client"), "./repo/client/mcp"], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
-      for (const pkg of ["./repo/client/mcp", "./repo/client/mcp/cursor", "./repo/client/mcp/copilot", "./repo/client/mcp/claude", "./repo/client/mcp/codex", "./repo/client/mcp/kiro"]) {
+      runCmd("go", ["build", "-o", join(this.root, process.platform === "win32" ? "repo/client/client.exe" : "repo/client/client"), "./repo/client/mcp/go"], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
+      for (const pkg of ["./repo/client/mcp/go", "./repo/client/mcp/cursor/go", "./repo/client/mcp/copilot/go", "./repo/client/mcp/claude/go", "./repo/client/mcp/codex/go", "./repo/client/mcp/kiro/go"]) {
         runCmd("go", ["build", pkg], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
       }
-      this.runRepoGoTest("./repo/client/cli", ["-run", "Mcp|MCP|mcp", ...segments.slice(1)]);
+      this.runRepoGoTest("./repo/client/cli/go", ["-run", "Mcp|MCP|mcp", ...segments.slice(1)]);
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root });

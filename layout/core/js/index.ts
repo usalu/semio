@@ -13,9 +13,15 @@ import {
 	createDefaultLayout,
 	enforcePlaygroundWindowEngagementInput,
 	registerWindowBody,
+	registerSidePanelBody,
+	buildControllerTreeSidePanelBody,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	type SideTabSpec,
 	uiDeclarativeSectionsToTree,
 	uiInspectorGroupsToTree,
 	type AppTools,
@@ -23,12 +29,13 @@ import {
 	type UiInspectorFieldGroup,
 	type UiNode,
 	type UiTreeItemNode,
+	type UiTreeNode,
 	type WindowBodyViewContext,
 	type WindowEngagement,
 	toolCollection,
 	createPlaygroundApp,
-	createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
+import { CANVAS_HOVER_SOURCE_CATALOG, CANVAS_HOVER_SOURCE_HIERARCHY } from "@semio-tech/framework-core";
 import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
 import initLayout, { LayoutSession } from "@semio-tech/layout-rs";
 import {
@@ -73,6 +80,10 @@ export const LAYOUT_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const LAYOUT_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const LAYOUT_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 export const LAYOUT_PLAY_PREFLIGHT_TAB_ID = "layout.panel.preflight";
+export const LAYOUT_PLAY_HIERARCHY_BODY_KEY = "layout.play.hierarchy";
+export const LAYOUT_PLAY_CATALOGUE_BODY_KEY = "layout.play.catalogue";
+export const LAYOUT_PLAY_PREFLIGHT_BODY_KEY = "layout.play.preflight";
+export const LAYOUT_PLAY_INSPECTION_BODY_KEY = "layout.play.inspection";
 export const LAYOUT_CATALOGUE_KIND_DRAG_MIME = "application/x-semio-layout-catalogue-kind";
 
 export type LayoutHoverPayload = { readonly id: string | null };
@@ -734,7 +745,7 @@ export class LayoutPlayController extends Controller {
 		if (command === "exportPng" || command === "exportSvg" || command === "exportPdf" || command === "exportPackage") {
 			if (typeof document === "undefined") return;
 			void (async () => {
-				const { LayoutEngineSession } = await import("@semio-tech/layout-react/play");
+				const { LayoutEngineSession } = await import("@semio-tech/layout-react");
 				const session = new LayoutEngineSession("preview");
 				await session.ensureReady();
 				session.setDocumentJson(this.getDocumentJson());
@@ -769,13 +780,65 @@ export const layoutPlayWindowBodies: Readonly<Record<string, (ctx: import("@semi
 	[LAYOUT_PLAY_BODY_KEY_PREVIEW]: buildLayoutPlayPreviewBody,
 };
 
+function buildLayoutPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const layoutCtrl = ctrl as LayoutPlayController;
+		const hoverSink = (payload: LayoutHoverPayload) =>
+			layoutCtrl.run("setHover", { id: payload.id, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY });
+		return buildLayoutPlayHierarchyTree(
+			layoutCtrl.getDocumentJson(),
+			layoutCtrl.getSelectedIds(),
+			layoutCtrl.getHoveredId(),
+			hoverSink,
+		) as UiTreeNode;
+	}, "No layout document");
+}
+
+function buildLayoutPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const layoutCtrl = ctrl as LayoutPlayController;
+		return buildLayoutPlayCatalogueTree((payload) =>
+			layoutCtrl.run("setHover", { id: payload.id, sourceId: CANVAS_HOVER_SOURCE_CATALOG }),
+		) as UiTreeNode;
+	});
+}
+
+function buildLayoutPlayPreflightPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const layoutCtrl = ctrl as LayoutPlayController;
+		return buildLayoutPlayPreflightTree(layoutCtrl.getDocumentJson()) as UiTreeNode;
+	}, "No layout document");
+}
+
+function buildLayoutPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const layoutCtrl = ctrl as LayoutPlayController;
+		return buildLayoutPlayInspectorTree(layoutCtrl.getDocumentJson(), layoutCtrl.getSelectedIds()) as UiTreeNode;
+	}, "No layout document");
+}
+
+export const layoutPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[LAYOUT_PLAY_HIERARCHY_BODY_KEY]: buildLayoutPlayHierarchyPanelBody,
+	[LAYOUT_PLAY_CATALOGUE_BODY_KEY]: buildLayoutPlayCataloguePanelBody,
+	[LAYOUT_PLAY_PREFLIGHT_BODY_KEY]: buildLayoutPlayPreflightPanelBody,
+	[LAYOUT_PLAY_INSPECTION_BODY_KEY]: buildLayoutPlayInspectionPanelBody,
+};
+
 export function registerLayoutPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(layoutPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(layoutPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
 /** @emoji 🛝 Builds layout play {@link AppRuntime}. */
 export function buildLayoutPlayAppRuntime(controller: LayoutPlayController): AppRuntime {
-	return createPlayAppRuntime(LAYOUT_PLAY_APP_ID, "Layout", controller, LAYOUT_PLAY_LAYOUT, controller.mainMode);
+	const app = createPlayAppRuntime(LAYOUT_PLAY_APP_ID, "Layout", controller, LAYOUT_PLAY_LAYOUT, controller.mainMode);
+	app.panelTabs = [
+		{ id: LAYOUT_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: LAYOUT_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: LAYOUT_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: LAYOUT_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: LAYOUT_PLAY_PREFLIGHT_TAB_ID, iconId: "alert-triangle", panel: "workbench", order: 2, bodyKey: LAYOUT_PLAY_PREFLIGHT_BODY_KEY, label: "Preflight" },
+		{ id: LAYOUT_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: LAYOUT_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
+	return app;
 }
 
 export { layoutPlayCmd, downloadBytes };
@@ -934,12 +997,9 @@ export const layoutPlayAppDefinition = createPlaygroundApp({
 		watchIgnored: ["../rs/lib.rs", "../rs/target/**", "../rs/pkg/**"],
 		optimizeDeps: { include: ["react", "react-dom"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(LAYOUT_PLAY_APP_ID);
-			const ctrl = new LayoutPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildLayoutPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new LayoutPlayController(bus, notify),
+		buildAppRuntime: buildLayoutPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/layout-react/play")).layoutAppRenderer,
 });
 //#endregion 🔖Play

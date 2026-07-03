@@ -5,30 +5,24 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "go run ./repo/client/mcp",
-        "env": {
-          "GOWORK": "go.work"
-        },
+        "cwd": "repo/client/cli",
+        "command": "bun ./script.ts dev",
         "forwardAllArgs": true
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun -e \"import { execFileSync } from 'node:child_process'; execFileSync('go', ['build', '-o', process.platform === 'win32' ? 'repo/client/client.exe' : 'repo/client/client', './repo/client/mcp'], { stdio: 'inherit' });\"",
-        "env": {
-          "GOWORK": "go.work"
-        },
+        "cwd": "repo/client/cli",
+        "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": ".",
-        "command": "bun ./script.ts test repo-client",
+        "cwd": "repo/client/cli",
+        "command": "bun ./script.ts test",
         "forwardAllArgs": true
       }
     }

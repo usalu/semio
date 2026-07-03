@@ -6,8 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.tsx",
-    "./play": "./play-host.tsx"
+    ".": "./index.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/writer-react:test"

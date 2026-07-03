@@ -4,7 +4,6 @@
 
 import {
 	createPlaygroundApp,
-	createProductPlaygroundPlatform,
   AppRuntime,
   CommandBus,
   Controller,
@@ -18,7 +17,17 @@ import {
   createPlayAppRuntime,
   createWindowLayout,
   registerWindowBody,
+  registerSidePanelBody,
+  buildControllerTreeSidePanelBody,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  type SideTabSpec,
   type UiNode,
+  type UiTreeNode,
   type WindowBodyViewContext,
   type WindowLayout,
   type WindowMeasure,
@@ -91,6 +100,12 @@ export const TRINITY_REWRITE_PLAY_BODY_KEY_JACK = "trinity.rewrite.play.jack";
 export const TRINITY_REWRITE_PLAY_BODY_KEY_PARAMETERS = "trinity.rewrite.play.parameters";
 export const TRINITY_REWRITE_PLAY_WINDOW_KIND_BEFORE = "trinity-rewrite-before";
 export const TRINITY_REWRITE_PLAY_WINDOW_KIND_AFTER = "trinity-rewrite-after";
+export const TRINITY_REWRITE_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
+export const TRINITY_REWRITE_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
+export const TRINITY_REWRITE_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const TRINITY_REWRITE_PLAY_HIERARCHY_BODY_KEY = "trinity.rewrite.play.hierarchy";
+export const TRINITY_REWRITE_PLAY_CATALOGUE_BODY_KEY = "trinity.rewrite.play.catalogue";
+export const TRINITY_REWRITE_PLAY_INSPECTION_BODY_KEY = "trinity.rewrite.play.inspection";
 
 function trinityRewritePlayCmd(command: string, args?: Record<string, unknown>) {
   return { controllerId: TRINITY_REWRITE_PLAY_CONTROLLER_ID, command, args };
@@ -248,7 +263,36 @@ export const trinityRewritePlayWindowBodies: Readonly<Record<string, (ctx: impor
 
 export function registerTrinityRewritePlayDeclarativeBodies(): void {
   for (const [key, build] of Object.entries(trinityRewritePlayWindowBodies)) registerWindowBody(key, build);
+  for (const [key, build] of Object.entries(trinityRewritePlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
+
+function buildTrinityRewritePlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const rewriteCtrl = ctrl as TrinityRewritePlayController;
+    return buildTrinityPlayHierarchyTree(rewriteCtrl.getBeforeFixtureJson(), rewriteCtrl.getSelectedNodeIds()) as UiTreeNode;
+  });
+}
+
+function buildTrinityRewritePlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, () => buildTrinityPlayCatalogueTree() as UiTreeNode);
+}
+
+function buildTrinityRewritePlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const rewriteCtrl = ctrl as TrinityRewritePlayController;
+    return buildTrinityPlayInspectorTree(
+      rewriteCtrl.getBeforeFixtureJson(),
+      rewriteCtrl.getSelectedNodeIds(),
+      TRINITY_REWRITE_PLAY_CONTROLLER_ID,
+    ) as UiTreeNode;
+  });
+}
+
+export const trinityRewritePlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+  [TRINITY_REWRITE_PLAY_HIERARCHY_BODY_KEY]: buildTrinityRewritePlayHierarchyPanelBody,
+  [TRINITY_REWRITE_PLAY_CATALOGUE_BODY_KEY]: buildTrinityRewritePlayCataloguePanelBody,
+  [TRINITY_REWRITE_PLAY_INSPECTION_BODY_KEY]: buildTrinityRewritePlayInspectionPanelBody,
+};
 
 export class TrinityRewritePlayController extends Controller {
   readonly mainMode = new ModeRuntime("explore", "Explore", undefined);
@@ -749,7 +793,13 @@ export class TrinityRewritePlayController extends Controller {
 }
 
 export function buildTrinityRewritePlayAppRuntime(ctrl: TrinityRewritePlayController): AppRuntime {
-  return createPlayAppRuntime(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite", ctrl, buildTrinityRewritePlayLayout(), ctrl.mainMode);
+  const app = createPlayAppRuntime(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite", ctrl, buildTrinityRewritePlayLayout(), ctrl.mainMode);
+  app.panelTabs = [
+    { id: TRINITY_REWRITE_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: TRINITY_REWRITE_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+    { id: TRINITY_REWRITE_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: TRINITY_REWRITE_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+    { id: TRINITY_REWRITE_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: TRINITY_REWRITE_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+  ] satisfies SideTabSpec[];
+  return app;
 }
 
 if (import.meta.vitest) {
@@ -940,13 +990,10 @@ export const trinityRewritePlayAppDefinition = createPlaygroundApp({
 		watchIgnored: ["../engine/lib.rs", "../engine/target/**", "../engine/Cargo.toml"],
 		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(TRINITY_REWRITE_PLAY_APP_ID);
-			const ctrl = new TrinityRewritePlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildTrinityRewritePlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new TrinityRewritePlayController(bus, notify),
+		buildAppRuntime: buildTrinityRewritePlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/trinity-react/play")).trinityRewriteAppRenderer,
 });
 //#endregion 🔖Play
 //#region 🔖DocumentVcs

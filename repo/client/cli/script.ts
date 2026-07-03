@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-/** 🧭 Repo CLI bundle policy: `bun ./script.ts policy` lints `main.go`. */
+/** 🧭 Repo CLI task router. */
+import { join } from "node:path";
 import type { FileLinter } from "../../lib/js/index.ts";
-import { runPolicyOnlyMain } from "../../lib/js/index.ts";
-import { defineLint } from "../../lib/js/index.ts";
+import { BundleScript, ScriptRouter, defineLint, runBundleScriptMain, runCmd } from "../../lib/js/index.ts";
 
 export const policyFile = "main.go";
 
@@ -23,4 +23,33 @@ export const policy = defineLint("repo-client-cli-main-go", (l: FileLinter) => {
   return [];
 });
 
-await runPolicyOnlyMain(import.meta.url);
+class DevScript extends BundleScript {
+  run(segments: string[]): void {
+    runCmd("go", ["run", "./repo/client/mcp/go", ...segments], {
+      cwd: this.repoRoot,
+      env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
+    });
+  }
+}
+
+class BuildScript extends BundleScript {
+  run(): void {
+    runCmd("go", ["build", "-o", join(this.repoRoot, "repo", "client", process.platform === "win32" ? "client.exe" : "client"), "./repo/client/mcp/go"], {
+      cwd: this.repoRoot,
+      env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
+    });
+  }
+}
+
+class TestScript extends BundleScript {
+  run(segments: string[]): void {
+    runCmd("go", ["test", "./repo/client/cli/go", ...segments], {
+      cwd: this.repoRoot,
+      env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
+    });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
+
+await runBundleScriptMain(router, import.meta.url);

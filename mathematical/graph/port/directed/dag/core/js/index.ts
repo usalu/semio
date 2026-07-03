@@ -4,7 +4,6 @@
 
 import {
 	createPlaygroundApp,
-	createProductPlaygroundPlatform,
   AppRuntime,
   CommandBus,
   Controller,
@@ -18,9 +17,15 @@ import {
   enforcePlaygroundWindowEngagementInput,
   JackHoverBridge,
   registerWindowBody,
+  registerSidePanelBody,
+  buildControllerTreeSidePanelBody,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
   FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+  type SideTabSpec,
   uiDeclarativeSectionsToTree,
   UI_INSPECTOR_MIXED_PLACEHOLDER,
   uiInspectorGroupsToTree,
@@ -32,6 +37,7 @@ import {
   type WindowBodyViewContext,
   type WindowEngagement,
   type UiNode,
+  type UiTreeNode,
   type UiTreeItemNode,
   type UiTreeSectionNode,
   type AppTools,
@@ -88,6 +94,9 @@ export const DAG_PLAY_LAYOUT = createStackLayout([DAG_PLAY_WINDOW_KIND_ID, DAG_P
 export const DAG_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const DAG_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const DAG_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const DAG_PLAY_HIERARCHY_BODY_KEY = "dag.play.hierarchy";
+export const DAG_PLAY_CATALOGUE_BODY_KEY = "dag.play.catalogue";
+export const DAG_PLAY_INSPECTION_BODY_KEY = "dag.play.inspection";
 
 const DAG_PLAY_CATALOGUE_NODE_KINDS = [
   { kind: "computation", label: "Computation" },
@@ -764,10 +773,41 @@ export const dagPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-t
 
 export function registerDagPlayDeclarativeBodies(): void {
   for (const [key, build] of Object.entries(dagPlayWindowBodies)) registerWindowBody(key, build);
+  for (const [key, build] of Object.entries(dagPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
+function buildDagPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const dagCtrl = ctrl as DagPlayController;
+    return buildDagPlayHierarchyTree(dagCtrl.getFixtureJson(), dagCtrl.getSelectedNodeIds()) as UiTreeNode;
+  });
+}
+
+function buildDagPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, () => buildDagPlayCatalogueTree() as UiTreeNode);
+}
+
+function buildDagPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+    const dagCtrl = ctrl as DagPlayController;
+    return buildDagPlayInspectorTree(dagCtrl.getFixtureJson(), dagCtrl.getSelectedNodeIds()) as UiTreeNode;
+  });
+}
+
+export const dagPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+  [DAG_PLAY_HIERARCHY_BODY_KEY]: buildDagPlayHierarchyPanelBody,
+  [DAG_PLAY_CATALOGUE_BODY_KEY]: buildDagPlayCataloguePanelBody,
+  [DAG_PLAY_INSPECTION_BODY_KEY]: buildDagPlayInspectionPanelBody,
+};
+
 export function buildDagPlayAppRuntime(controller: DagPlayController): AppRuntime {
-  return createPlayAppRuntime(DAG_PLAY_APP_ID, "DAG", controller, DAG_PLAY_LAYOUT, controller.mainMode);
+  const app = createPlayAppRuntime(DAG_PLAY_APP_ID, "DAG", controller, DAG_PLAY_LAYOUT, controller.mainMode);
+  app.panelTabs = [
+    { id: DAG_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: DAG_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+    { id: DAG_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: DAG_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+    { id: DAG_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: DAG_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+  ] satisfies SideTabSpec[];
+  return app;
 }
 
 //#region 🔖Play
@@ -787,13 +827,10 @@ export const dagPlayAppDefinition = createPlaygroundApp({
 		watchIgnored: ["../lib.rs", "../target/**", "../Cargo.toml", "../Cargo.lock", "../script.ts"],
 		optimizeDeps: { include: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(DAG_PLAY_APP_ID);
-			const ctrl = new DagPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildDagPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new DagPlayController(bus, notify),
+		buildAppRuntime: buildDagPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/dag-react/play")).dagAppRenderer,
 });
 //#endregion 🔖Play
 

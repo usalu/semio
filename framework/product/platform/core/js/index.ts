@@ -2430,7 +2430,6 @@ export interface AppDefinition {
 	readonly defaultModeId?: string;
 	readonly createController?: (commandBus: CommandBus, notify: () => void) => Controller;
 	readonly devHost?: AppDevHostConfig;
-	readonly loadRenderer?: () => Promise<AppRendererContribution>;
 	readonly program?: OsProgramContribution;
 }
 

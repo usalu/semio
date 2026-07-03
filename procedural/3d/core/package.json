@@ -51,7 +51,9 @@
         "env": "PROCEDURAL_3D_PLAY_PORT"
       },
       "programExport": "procedural3dProgramContribution",
-      "programId": "procedural.3d"
+      "programId": "procedural.3d",
+      "rendererPackage": "@semio-tech/procedural-3d-react",
+      "rendererExport": "proceduralAppRenderer"
     }
   }
 }

@@ -3,7 +3,8 @@
 // #endregion 🧲Header
 
 import type { Platform } from "@semio-tech/framework-core";
-import { reactHostPort, useUIHistory } from "@semio-tech/framework-platform-renderer-react";
+import { useUIHistory } from "@semio-tech/framework-platform-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
 
 function readBrowserUri(): string {
 	if (typeof window === "undefined") return "/";

@@ -43,7 +43,9 @@
         "env": "RASTER_PLAY_PORT"
       },
       "programExport": "rasterProgramContribution",
-      "programId": "raster"
+      "programId": "raster",
+      "rendererPackage": "@semio-tech/raster-react",
+      "rendererExport": "rasterAppRenderer"
     }
   }
 }

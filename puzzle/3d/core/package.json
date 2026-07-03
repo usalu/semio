@@ -44,6 +44,8 @@
       "packageRoot": "puzzle/3d",
       "corePackage": "@semio-tech/puzzle-3d-core",
       "definitionExport": "puzzle3dPlayAppDefinition",
+      "rendererPackage": "@semio-tech/puzzle-3d-react",
+      "rendererExport": "puzzle3dAppRenderer",
       "hostKind": "puzzle-3d",
       "port": {
         "dev": 6013,
@@ -52,11 +54,20 @@
       },
       "programExport": "puzzle3dProgramContribution",
       "programId": "puzzle.3d",
-      "site": { "embedKind": "3d", "host": "play.3d.semio-tech.com" },
-      "assets": ["puzzle3d-meshes"],
+      "site": {
+        "embedKind": "3d",
+        "host": "play.3d.semio-tech.com"
+      },
+      "assets": [
+        "puzzle3d-meshes"
+      ],
       "lockedExampleFixtures": {
-        "nakagin": ["puzzle/3d/example/nakagin-capsule-tower.3d.json"],
-        "concrete-forest": ["puzzle/3d/example/concrete-forest.3d.json"]
+        "nakagin": [
+          "puzzle/3d/example/nakagin-capsule-tower.3d.json"
+        ],
+        "concrete-forest": [
+          "puzzle/3d/example/concrete-forest.3d.json"
+        ]
       }
     }
   }

@@ -42,7 +42,9 @@
         "env": "SEQUENCE_PLAY_PORT"
       },
       "programExport": "sequenceProgramContribution",
-      "programId": "sequence"
+      "programId": "sequence",
+      "rendererPackage": "@semio-tech/sequence-react",
+      "rendererExport": "sequenceAppRenderer"
     }
   }
 }

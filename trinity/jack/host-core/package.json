@@ -50,7 +50,9 @@
         "env": "TRINITY_JACK_PLAY_PORT"
       },
       "programExport": "trinityProgramContribution",
-      "programId": "trinity"
+      "programId": "trinity",
+      "rendererPackage": "@semio-tech/trinity-react",
+      "rendererExport": "trinityJackAppRenderer"
     }
   }
 }

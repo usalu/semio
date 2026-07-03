@@ -43,7 +43,9 @@
         "env": "FORMS_PLAY_PORT"
       },
       "programExport": "formsProgramContribution",
-      "programId": "forms"
+      "programId": "forms",
+      "rendererPackage": "@semio-tech/forms-react",
+      "rendererExport": "formsAppRenderer"
     }
   }
 }

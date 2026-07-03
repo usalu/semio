@@ -1149,3 +1149,145 @@ export function createFormsAppVcsHandler() {
 	};
 }
 //#endregion 🔖DocumentVcs
+
+// #region 🖱️QuestionPaletteDrag
+/** @emoji 🏷️ MIME type for catalogue question palette drag payloads. */
+export const FORMS_QUESTION_DRAG_MIME = "application/x-semio-forms-question-kind";
+
+/** @emoji 📦 Parses persisted form spec JSON. */
+export function formSpecFromJson(json: string): FormSpec {
+	return parseFormSpec(JSON.parse(json));
+}
+
+export const formsQuestionPaletteDragRef = { active: false };
+export const formsQuestionPalettePointerDragRef = { active: false, encoded: null as string | null };
+export const formsQuestionPaletteDragEncodedRef = { current: null as string | null };
+export const formsQuestionPaletteDragClientRef = { clientX: 0, clientY: 0 };
+export const formsQuestionPaletteDropCommittedRef = { current: false };
+
+let formsQuestionPaletteDragPreviewRafId: number | null = null;
+
+function formsStopQuestionPaletteDragPreviewLoopInternal(): void {
+	if (formsQuestionPaletteDragPreviewRafId !== null) {
+		globalThis.cancelAnimationFrame?.(formsQuestionPaletteDragPreviewRafId);
+		formsQuestionPaletteDragPreviewRafId = null;
+	}
+}
+
+function formsTickQuestionPaletteDragPreview(): void {
+	if (!formsReadActiveQuestionPaletteDragEncoded()) {
+		formsStopQuestionPaletteDragPreviewLoopInternal();
+		return;
+	}
+	window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: { clientX: formsQuestionPaletteDragClientRef.clientX, clientY: formsQuestionPaletteDragClientRef.clientY } }));
+	const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis);
+	if (!requestFrame) {
+		formsQuestionPaletteDragPreviewRafId = null;
+		return;
+	}
+	formsQuestionPaletteDragPreviewRafId = requestFrame(formsTickQuestionPaletteDragPreview);
+}
+
+/** @emoji 🔄 Starts the floating palette drag preview refresh loop. */
+export function formsStartQuestionPaletteDragPreviewLoop(): void {
+	if (formsQuestionPaletteDragPreviewRafId !== null) return;
+	formsTickQuestionPaletteDragPreview();
+}
+
+/** @emoji 🛑 Stops the floating palette drag preview refresh loop. */
+export function formsStopQuestionPaletteDragPreviewLoop(): void {
+	formsStopQuestionPaletteDragPreviewLoopInternal();
+}
+
+/** @emoji 📦 Reads the encoded palette drag payload when a catalogue question drag is active. */
+export function formsReadActiveQuestionPaletteDragEncoded(): string | null {
+	const pointer = formsQuestionPalettePointerDragRef.encoded?.trim();
+	if (pointer) return pointer;
+	const shared = formsQuestionPaletteDragEncodedRef.current?.trim();
+	return shared ? shared : null;
+}
+
+/** @emoji 🔍 Parses a catalogue drag payload into a question kind. */
+export function parseFormsQuestionDragPayload(encoded: string): { kind?: string } | null {
+	try {
+		return JSON.parse(encoded) as { kind?: string };
+	} catch {
+		return null;
+	}
+}
+
+/** @emoji 🏷️ Preview label for the floating palette drag ghost. */
+export function formsQuestionPaletteDragPreviewLabel(encoded: string): string {
+	const payload = parseFormsQuestionDragPayload(encoded);
+	return payload?.kind ?? "Question";
+}
+
+/** @emoji 👻 Notes palette-drag client coordinates for preview refresh. */
+export function formsNoteQuestionPaletteDragClient(clientX: number, clientY: number): void {
+	formsQuestionPaletteDragClientRef.clientX = clientX;
+	formsQuestionPaletteDragClientRef.clientY = clientY;
+	if (!formsReadActiveQuestionPaletteDragEncoded()) return;
+	formsStartQuestionPaletteDragPreviewLoop();
+}
+
+/** @emoji ⎋ Aborts an in-flight catalogue question palette drag. */
+export function abortFormsQuestionPaletteDrag(): void {
+	const wasActive = formsQuestionPalettePointerDragRef.active || formsQuestionPaletteDragRef.active;
+	formsQuestionPalettePointerDragRef.active = false;
+	formsQuestionPalettePointerDragRef.encoded = null;
+	formsQuestionPaletteDragEncodedRef.current = null;
+	formsQuestionPaletteDragRef.active = false;
+	if (wasActive) {
+		window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: null }));
+	}
+	formsStopQuestionPaletteDragPreviewLoopInternal();
+	window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: null }));
+}
+
+/** @emoji 🖱️ Begins pointer palette drag with an encoded question kind payload. */
+export function beginFormsQuestionPalettePointerDrag(encoded: string): void {
+	formsQuestionPaletteDropCommittedRef.current = false;
+	formsQuestionPalettePointerDragRef.active = true;
+	formsQuestionPalettePointerDragRef.encoded = encoded;
+	formsQuestionPaletteDragEncodedRef.current = encoded;
+	formsQuestionPaletteDragRef.active = true;
+	window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: { encoded } }));
+	formsStartQuestionPaletteDragPreviewLoop();
+}
+
+/** @emoji 🖱️ Ends pointer palette drag without committing a drop. */
+export function cancelFormsQuestionPalettePointerDrag(): void {
+	if (!formsQuestionPalettePointerDragRef.active && !formsQuestionPaletteDragRef.active) return;
+	formsQuestionPalettePointerDragRef.active = false;
+	formsQuestionPalettePointerDragRef.encoded = null;
+	formsQuestionPaletteDragEncodedRef.current = null;
+	formsQuestionPaletteDragRef.active = false;
+	formsStopQuestionPaletteDragPreviewLoop();
+	window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: null }));
+	window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: null }));
+}
+
+/** @emoji 🔍 Whether a drag gesture carries a forms question palette payload. */
+export function formsQuestionDragAcceptsTransfer(types: readonly string[]): boolean {
+	if (formsQuestionPalettePointerDragRef.active) return true;
+	if (types.includes(FORMS_QUESTION_DRAG_MIME)) return true;
+	return Boolean(formsQuestionPaletteDragRef.active && formsReadActiveQuestionPaletteDragEncoded());
+}
+
+/** @emoji 📥 Commits a palette question drop at client coordinates. */
+export function endFormsQuestionPalettePointerDrag(
+	clientX: number,
+	clientY: number,
+	onDrop: (detail: { kind: string; clientX: number; clientY: number }) => boolean,
+): void {
+	if (!formsQuestionPalettePointerDragRef.active) return;
+	const encoded = formsQuestionPalettePointerDragRef.encoded;
+	cancelFormsQuestionPalettePointerDrag();
+	if (!encoded) return;
+	const payload = parseFormsQuestionDragPayload(encoded);
+	if (!payload?.kind) return;
+	if (onDrop({ kind: payload.kind, clientX, clientY })) {
+		formsQuestionPaletteDropCommittedRef.current = true;
+	}
+}
+//#endregion 🖱️QuestionPaletteDrag

@@ -9198,7 +9198,7 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "loc",
 		Short: "Tracked-file LOC (code, markup, data) plus git deltas; internal scan (no cloc)",
-		Long:  "Counts tracked files via git (not cloc). The runnable CLI is built from repo/client/mcp (package main), not repo/client (library): go build -o repo/client/client.exe ./repo/client/mcp. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳wip), including all contributors. With --history, each row scans the tree at that commit for physical LOC; Δ% is change vs the previous printed history step. Branch and checkpoint lines use the same emoji ids as the repo tree (⛳wip, 🔀abc1234, 🧑‍💻alias).",
+		Long:  "Counts tracked files via git (not cloc). The runnable CLI is built from repo/client/mcp/go (package main), not repo/client (library): go build -o repo/client/client.exe ./repo/client/mcp/go. Wip% is each row's edited churn vs the whole first-parent walk on the logged ref (default ⛳wip), including all contributors. With --history, each row scans the tree at that commit for physical LOC; Δ% is change vs the previous printed history step. Branch and checkpoint lines use the same emoji ids as the repo tree (⛳wip, 🔀abc1234, 🧑‍💻alias).",
 		Args:  cobra.NoArgs,
 		RunE: func(c *cobra.Command, args []string) error {
 			langs, _ := c.Flags().GetStringSlice("languages")
@@ -22765,7 +22765,7 @@ func ghSyncRepoLabelCatalog(validLabels map[string]bool) error {
 		}
 		fmt.Printf("Creating missing GitHub label %s...\n", label)
 		if err := ghCreateRepoLabel(label); err != nil {
-			fmt.Printf("Warning: Failed to create GitHub label %s: %v\n", label, err)
+			writeWarningf("Failed to create GitHub label %s: %v", label, err)
 		}
 	}
 
@@ -22778,7 +22778,7 @@ func ghSyncRepoLabelCatalog(validLabels map[string]bool) error {
 		}
 		fmt.Printf("Deleting invalid GitHub label %s...\n", label)
 		if err := ghDeleteRepoLabel(label); err != nil {
-			fmt.Printf("Warning: Failed to delete GitHub label %s: %v\n", label, err)
+			writeWarningf("Failed to delete GitHub label %s: %v", label, err)
 		}
 	}
 	return nil
@@ -27496,7 +27496,7 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 			parentGoal, parentErr := ReadGoal(parentID)
 			if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
 				if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, issueURL); err != nil {
-					fmt.Printf("Warning: Failed to link sub-issue to parent goal %s: %v\n", parentID, err)
+					writeWarningf("Failed to link sub-issue to parent goal %s: %v", parentID, err)
 				}
 			}
 		}
@@ -27784,7 +27784,7 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 
 		if ticket.Management != nil && ticket.Management.Issue != "" && !input.NoManagement {
 			if err := c.managementProvider.UpdateIssueTitle(ticket.Management.Issue, *input.Title); err != nil {
-				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
+				writeWarningf("Failed to update GitHub issue title: %v", err)
 			}
 		}
 	}
@@ -29275,7 +29275,7 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 				ticket := t
 				fmt.Printf("Closing ticket %s...\n", ticket.Slug)
 				if err := FinishTicket(&ticket, "Bulk close", []string{}, input.NoManagement, true); err != nil {
-					fmt.Printf("Warning: Failed to close ticket %s: %v\n", ticket.Slug, err)
+					writeWarningf("Failed to close ticket %s: %v", ticket.Slug, err)
 					continue
 				}
 				lastTicket = &ticket
@@ -29285,12 +29285,12 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 		if !input.NoManagement {
 			issueURLs, err := c.managementProvider.ListOpenIssuesWithLabel("ticket")
 			if err != nil {
-				fmt.Printf("Warning: Failed to list GitHub issues with 'ticket' label: %v\n", err)
+				writeWarningf("Failed to list GitHub issues with 'ticket' label: %v", err)
 			} else {
 				for _, issueURL := range issueURLs {
 					fmt.Printf("Closing GitHub issue %s...\n", issueURL)
 					if err := c.managementProvider.CloseIssue(issueURL); err != nil {
-						fmt.Printf("Warning: Failed to close GitHub issue %s: %v\n", issueURL, err)
+						writeWarningf("Failed to close GitHub issue %s: %v", issueURL, err)
 					}
 				}
 			}
@@ -29309,7 +29309,7 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 
 		if ticket.Management != nil && ticket.Management.Issue != "" && !input.NoManagement {
 			if err := c.managementProvider.UpdateIssueTitle(ticket.Management.Issue, *input.Title); err != nil {
-				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
+				writeWarningf("Failed to update GitHub issue title: %v", err)
 			}
 		}
 	}
@@ -29334,7 +29334,7 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 
 		if ticket.Management != nil && ticket.Management.Issue != "" && !input.NoManagement {
 			if err := c.managementProvider.UpdateIssueTitle(ticket.Management.Issue, *input.Title); err != nil {
-				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
+				writeWarningf("Failed to update GitHub issue title: %v", err)
 			}
 		}
 	}
@@ -29635,12 +29635,12 @@ func (c *repoContext) SyncManagement() (bool, error) {
 	}
 	validLabels["repo"] = true
 	if err := c.managementProvider.SyncRepoLabelCatalog(validLabels); err != nil {
-		fmt.Printf("Warning: Failed to sync GitHub label catalog: %v\n", err)
+		writeWarningf("Failed to sync GitHub label catalog: %v", err)
 	}
 
 	goals, err := ListGoals()
 	if err != nil {
-		fmt.Printf("Warning: Failed to list goals: %v\n", err)
+		writeWarningf("Failed to list goals: %v", err)
 	} else {
 
 		sort.Slice(goals, func(i, j int) bool {
@@ -29655,14 +29655,14 @@ func (c *repoContext) SyncManagement() (bool, error) {
 				}
 				milestone, err := ensureGoalMilestone(goal)
 				if err != nil {
-					fmt.Printf("Warning: Failed to ensure milestone for root goal %s: %v\n", goal.ID, err)
+					writeWarningf("Failed to ensure milestone for root goal %s: %v", goal.ID, err)
 				} else if milestone != nil {
 					status := "open"
 					if goal.Status == "closed" {
 						status = "closed"
 					}
 					if err := c.managementProvider.UpdateMilestone(milestone.Number, goal.Title, goal.Description, status, goal.Dates.Due); err != nil {
-						fmt.Printf("Warning: Failed to update milestone for root goal %s: %v\n", goal.ID, err)
+						writeWarningf("Failed to update milestone for root goal %s: %v", goal.ID, err)
 					}
 				}
 			} else {
@@ -29673,7 +29673,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 					number, err := parseMilestoneNumber(goal.Management.Milestone)
 					if err == nil {
 						if err := c.managementProvider.DeleteMilestone(number); err != nil {
-							fmt.Printf("Warning: Failed to delete milestone %d for child goal %s: %v\n", number, goal.ID, err)
+							writeWarningf("Failed to delete milestone %d for child goal %s: %v", number, goal.ID, err)
 						}
 					}
 					goal.Management.Milestone = ""
@@ -29688,7 +29688,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 					}
 					issueURL, err := c.managementProvider.CreateGoalIssue(goal.Title, goal.Description, milestone)
 					if err != nil {
-						fmt.Printf("Warning: Failed to create issue for child goal %s: %v\n", goal.ID, err)
+						writeWarningf("Failed to create issue for child goal %s: %v", goal.ID, err)
 						continue
 					}
 					if goal.Management == nil {
@@ -29707,7 +29707,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 						parentGoal, parentErr := ReadGoal(parentID)
 						if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
 							if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, issueURL); err != nil {
-								fmt.Printf("Warning: Failed to link sub-issue %s to parent %s: %v\n", goal.ID, parentID, err)
+								writeWarningf("Failed to link sub-issue %s to parent %s: %v", goal.ID, parentID, err)
 							} else {
 								fmt.Printf("Linked sub-issue %s to parent %s\n", goal.ID, parentID)
 							}
@@ -29717,7 +29717,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 
 					remoteIssue, err := c.managementProvider.GetIssueDetails(goal.Management.Issue)
 					if err != nil {
-						fmt.Printf("Warning: Failed to get issue for goal %s: %v\n", goal.ID, err)
+						writeWarningf("Failed to get issue for goal %s: %v", goal.ID, err)
 					} else {
 						if goal.Status == "closed" && strings.ToUpper(remoteIssue.State) == "OPEN" {
 							_ = c.managementProvider.CloseIssue(goal.Management.Issue)
@@ -29735,7 +29735,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 						} else if isDeeperGoal(goal) {
 							if remoteIssue.Milestone != nil {
 								if err := c.managementProvider.ClearIssueMilestone(goal.Management.Issue); err != nil {
-									fmt.Printf("Warning: Failed to clear milestone for goal %s: %v\n", goal.ID, err)
+									writeWarningf("Failed to clear milestone for goal %s: %v", goal.ID, err)
 								}
 							}
 							parentID := getParentGoalID(goal.ID)
@@ -29743,10 +29743,10 @@ func (c *repoContext) SyncManagement() (bool, error) {
 							if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
 								parentURL, parentErr := c.managementProvider.GetIssueParentURL(goal.Management.Issue)
 								if parentErr != nil {
-									fmt.Printf("Warning: Failed to resolve parent for goal %s: %v\n", goal.ID, parentErr)
+									writeWarningf("Failed to resolve parent for goal %s: %v", goal.ID, parentErr)
 								} else if parentURL == "" || parentURL != parentGoal.Management.Issue {
 									if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, goal.Management.Issue); err != nil {
-										fmt.Printf("Warning: Failed to link sub-issue %s to parent %s: %v\n", goal.ID, parentID, err)
+										writeWarningf("Failed to link sub-issue %s to parent %s: %v", goal.ID, parentID, err)
 									} else {
 										fmt.Printf("Linked sub-issue %s to parent %s\n", goal.ID, parentID)
 									}
@@ -29762,7 +29762,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 						}
 						if !hasGoalLabel {
 							if err := c.managementProvider.AddLabels(goal.Management.Issue, []string{"goal"}); err != nil {
-								fmt.Printf("Warning: Failed to add goal label for %s: %v\n", goal.ID, err)
+								writeWarningf("Failed to add goal label for %s: %v", goal.ID, err)
 							}
 						}
 					}
@@ -29770,7 +29770,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 
 				if needsSave {
 					if err := SaveGoal(*goal); err != nil {
-						fmt.Printf("Warning: Failed to save goal %s: %v\n", goal.ID, err)
+						writeWarningf("Failed to save goal %s: %v", goal.ID, err)
 					}
 				}
 			}
@@ -29792,14 +29792,14 @@ func (c *repoContext) SyncManagement() (bool, error) {
 
 		remoteIssue, err := c.managementProvider.GetIssueDetails(issueURL)
 		if err != nil {
-			fmt.Printf("Warning: Failed to get GitHub issue %s: %v\n", issueURL, err)
+			writeWarningf("Failed to get GitHub issue %s: %v", issueURL, err)
 			continue
 		}
 
 		if t.Status == TicketStatusClosed && strings.ToUpper(remoteIssue.State) == "OPEN" {
 			fmt.Printf("Closing GitHub issue %s (Ticket is closed locally)\n", issueURL)
 			if err := c.managementProvider.CloseIssue(issueURL); err != nil {
-				fmt.Printf("Warning: Failed to close GitHub issue %s: %v\n", issueURL, err)
+				writeWarningf("Failed to close GitHub issue %s: %v", issueURL, err)
 			}
 		}
 
@@ -29809,12 +29809,12 @@ func (c *repoContext) SyncManagement() (bool, error) {
 			if err == nil {
 				milestone, err := ensureGoalMilestone(rootGoal)
 				if err != nil {
-					fmt.Printf("Warning: Failed to resolve goal milestone for issue %s: %v\n", issueURL, err)
+					writeWarningf("Failed to resolve goal milestone for issue %s: %v", issueURL, err)
 				} else if milestone != nil && milestone.Title != "" {
 					if remoteIssue.Milestone == nil || remoteIssue.Milestone.Title != milestone.Title {
 						fmt.Printf("Updating milestone for issue %s to %s...\n", issueURL, milestone.Title)
 						if err := c.managementProvider.UpdateIssueMilestone(issueURL, milestone.Title); err != nil {
-							fmt.Printf("Warning: Failed to update milestone for GitHub issue %s: %v\n", issueURL, err)
+							writeWarningf("Failed to update milestone for GitHub issue %s: %v", issueURL, err)
 						}
 					}
 				}
@@ -29832,14 +29832,14 @@ func (c *repoContext) SyncManagement() (bool, error) {
 		if len(labelsToRemove) > 0 {
 			fmt.Printf("Removing invalid technology labels from issue %s: %v\n", issueURL, labelsToRemove)
 			if err := c.managementProvider.RemoveLabels(issueURL, labelsToRemove); err != nil {
-				fmt.Printf("Warning: Failed to remove labels from GitHub issue %s: %v\n", issueURL, err)
+				writeWarningf("Failed to remove labels from GitHub issue %s: %v", issueURL, err)
 			}
 		}
 	}
 
 	issues, err := c.managementProvider.ListIssuesForLabelSync()
 	if err != nil {
-		fmt.Printf("Warning: Failed to list GitHub issues for label sync: %v\n", err)
+		writeWarningf("Failed to list GitHub issues for label sync: %v", err)
 	} else {
 		for _, issue := range issues {
 			var labelsToRemove []string
@@ -29853,7 +29853,7 @@ func (c *repoContext) SyncManagement() (bool, error) {
 			}
 			fmt.Printf("Removing invalid technology labels from issue %s: %v\n", issue.URL, labelsToRemove)
 			if err := c.managementProvider.RemoveLabels(issue.URL, labelsToRemove); err != nil {
-				fmt.Printf("Warning: Failed to remove labels from GitHub issue %s: %v\n", issue.URL, err)
+				writeWarningf("Failed to remove labels from GitHub issue %s: %v", issue.URL, err)
 			}
 		}
 	}
@@ -44442,7 +44442,7 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 	}
 	cliIndex := -1
 	for i, field := range fields {
-		base := filepath.Base(field)
+		base := filepath.Base(strings.ReplaceAll(field, "\\", "/"))
 		if base == "cli" || base == "cli.exe" || base == "client" || base == "client.exe" {
 			cliIndex = i
 			break
@@ -44452,8 +44452,8 @@ func deriveRepoOpFromCLICommand(cmd string) string {
 		for i := 0; i < len(fields)-1; i++ {
 			if fields[i] == "go" && fields[i+1] == "run" {
 				for j := i + 2; j < len(fields); j++ {
-					base := filepath.Base(fields[j])
-					if base == "cli" || base == "cli.exe" || base == "client" || base == "client.exe" || fields[j] == "./repo/client/mcp" || fields[j] == "repo/client/mcp" {
+					base := filepath.Base(strings.ReplaceAll(fields[j], "\\", "/"))
+					if base == "cli" || base == "cli.exe" || base == "client" || base == "client.exe" || fields[j] == "./repo/client/mcp/go" || fields[j] == "repo/client/mcp/go" {
 						cliIndex = j
 						break
 					}

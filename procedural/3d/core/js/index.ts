@@ -13,7 +13,7 @@ import {
     parseFlowPlayFixtureJson,
     runGenerationCommand,
 } from "@semio-tech/flow-core";
-import { flowFixtureToFormSpec, type FlowGeneration } from "@semio-tech/forms-react";
+import type { FlowGeneration } from "@semio-tech/forms-react";
 import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
 import {
 	meshTransferFromPreviewPayload,
@@ -67,7 +67,15 @@ import {
     PLAYGROUND_NO_EXAMPLE_ID,
     playgroundResolvedExampleId,
     registerWindowBody,
-    WindowKindRuntime,
+    registerSidePanelBody,
+    buildControllerTreeSidePanelBody,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    type SideTabSpec,
     eagerPlayExampleGlob,
     type AppTools,
     type CommandDescriptor,
@@ -76,11 +84,12 @@ import {
     type ToolLeaf,
     toolCollection,
     type UiNode,
+    type UiTreeNode,
     type UiTreeSectionNode,
+    WindowKindRuntime,
     type WindowBodyViewContext,
     type WindowEngagement,
     createPlaygroundApp,
-    createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import { meshTransferFromPreviewPayload } from "@semio-tech/kernel-3d-js";
 import {
@@ -106,6 +115,19 @@ import {
     PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID,
     resolveProceduralPlayExampleSlug,
 } from "./example-slugs.ts";
+
+let flowFixtureToFormSpecRef: ((fixtureJson: string) => import("@semio-tech/forms-core").FormSpec) | undefined;
+
+function proceduralGenerateFormSpecJsonSync(fixtureJson: string): string {
+	if (!flowFixtureToFormSpecRef) {
+		throw new Error("forms-react is not loaded yet");
+	}
+	return JSON.stringify(flowFixtureToFormSpecRef(fixtureJson));
+}
+
+void import("@semio-tech/forms-react").then((mod) => {
+	flowFixtureToFormSpecRef = mod.flowFixtureToFormSpec;
+});
 
 export { PROCEDURAL_PLAY_EXAMPLE_DEFAULT_ID, PROCEDURAL_PLAY_EXAMPLE_HEXAGONAL_MUSHROOM_COLUMN_ID, resolveProceduralPlayExampleSlug };
 import type { ContextMenuItem } from "@semio-tech/ui-react";
@@ -156,6 +178,9 @@ export const PROCEDURAL_PLAY_EXTENSIONS_TAB_ID = "procedural-play-extensions";
 export const PROCEDURAL_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const PROCEDURAL_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const PROCEDURAL_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const PROCEDURAL_PLAY_HIERARCHY_BODY_KEY = "procedural.play.hierarchy";
+export const PROCEDURAL_PLAY_CATALOGUE_BODY_KEY = "procedural.play.catalogue";
+export const PROCEDURAL_PLAY_INSPECTION_BODY_KEY = "procedural.play.inspection";
 
 export type ProceduralLayoutOrientation = "leftRight" | "topBottom";
 export type ProceduralPlaySelectionMode = SelectionMergeMode;
@@ -877,7 +902,7 @@ export class ProceduralPlayController extends Controller implements PlaygroundEx
 	}
 
 	getGenerateFormSpecJson(): string {
-		return JSON.stringify(flowFixtureToFormSpec(this.getFixtureJson()));
+		return proceduralGenerateFormSpecJsonSync(this.getFixtureJson());
 	}
 
 	private getEvalClient(): FlowOrchestratorClient {
@@ -1855,11 +1880,44 @@ export const proceduralPlayWindowBodies: Readonly<Record<string, (ctx: WindowBod
 
 export function registerProceduralPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(proceduralPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(proceduralPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
+
+function buildProceduralPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const proceduralCtrl = ctrl as ProceduralPlayController;
+		return buildProceduralPlayHierarchyTree(proceduralCtrl.getFixtureJson(), proceduralCtrl.getSelectedNodeIds()) as UiTreeNode;
+	});
+}
+
+function buildProceduralPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const proceduralCtrl = ctrl as ProceduralPlayController;
+		return buildProceduralPlayCatalogueTree(proceduralCtrl.getCatalogueSections(), proceduralCtrl.getExtensionEntries()) as UiTreeNode;
+	});
+}
+
+function buildProceduralPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const proceduralCtrl = ctrl as ProceduralPlayController;
+		return buildProceduralPlayInspectorTree(proceduralCtrl.getFixtureJson(), proceduralCtrl.getSelectedNodeIds()) as UiTreeNode;
+	});
+}
+
+export const proceduralPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[PROCEDURAL_PLAY_HIERARCHY_BODY_KEY]: buildProceduralPlayHierarchyPanelBody,
+	[PROCEDURAL_PLAY_CATALOGUE_BODY_KEY]: buildProceduralPlayCataloguePanelBody,
+	[PROCEDURAL_PLAY_INSPECTION_BODY_KEY]: buildProceduralPlayInspectionPanelBody,
+};
 
 export function buildProceduralPlayAppRuntime(controller: ProceduralPlayController): AppRuntime {
 	const app = createPlayAppRuntime(PROCEDURAL_3D_PLAY_APP_ID, "Procedural 3D", controller, PROCEDURAL_PLAY_LAYOUT, controller.mainMode);
 	app.addMode(controller.generateMode);
+	app.panelTabs = [
+		{ id: PROCEDURAL_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: PROCEDURAL_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: PROCEDURAL_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: PROCEDURAL_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: PROCEDURAL_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: PROCEDURAL_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
 	return app;
 }
 
@@ -1951,18 +2009,15 @@ export const procedural3dPlayAppDefinition = createPlaygroundApp({
 			"@semio-tech/procedural-3d-react",
 		] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(PROCEDURAL_3D_PLAY_APP_ID);
-			const ctrl = new ProceduralPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildProceduralPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new ProceduralPlayController(bus, notify),
+		buildAppRuntime: buildProceduralPlayAppRuntime,
 	},
 	keybindings: [
 		{ key: "ctrl+a,meta+a", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "selectAll" },
 		{ key: "Delete", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 		{ key: "Backspace", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 	],
-	loadRenderer: async () => (await import("@semio-tech/procedural-3d-react/play")).proceduralAppRenderer,
 });
 //#endregion 🔖Play
 

@@ -15,6 +15,8 @@ import {
 	createPlayAppRuntime,
 	createTabStackLayout,
 	registerWindowBody,
+	buildControllerTreeSidePanelBody,
+	registerSidePanelBody,
 	type CommandDescriptor,
 	type AppTools,
 	type ToolLeaf,
@@ -26,8 +28,13 @@ import {
 	type UiTreeNode,
 	uiDeclarativeSectionsToTree,
 	uiInspectorAllEqual,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
 	FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+	type SideTabSpec,
 	buildWriterWindowBody,
   createPlaygroundApp,
   createProductPlaygroundPlatform,
@@ -103,6 +110,12 @@ export const S_PLAY_WINDOW_MEDIA_VFS = "s-media-vfs";
 export const S_PLAY_WINDOW_COMPILED_DAG = "s-compiled-dag";
 export const S_PLAY_BODY_COMPILED_DAG = "s.play.compiled-dag";
 export const S_PLAY_SURFACE_COMPILED_DAG = "s.play.compiled-dag";
+export const S_PLAY_CATALOGUE_TAB_ID = "s-play-catalogue";
+export const S_PLAY_PARAMETERS_TAB_ID = "s-play-parameters";
+export const S_PLAY_INSPECTOR_TAB_ID = "s-play-inspector";
+export const S_PLAY_CATALOGUE_BODY_KEY = "s.play.catalogue";
+export const S_PLAY_PARAMETERS_BODY_KEY = "s.play.parameters";
+export const S_PLAY_INSPECTOR_BODY_KEY = "s.play.inspector";
 
 export const S_PLAY_LAYOUT = createDefaultLayout(
 	[S_PLAY_WINDOW_MEDIA_GRAPH, S_PLAY_WINDOW_MEDIA_VFS, S_PLAY_WINDOW_COMPILED_DAG],
@@ -132,14 +145,31 @@ export function createStudioStore(document: SStudioDocument): StudioStore {
 }
 
 //#region 🔖SExtensionWiring
-/** @emoji 🧩 Registers all s technology extensions and VCS handlers. */
-export async function bootstrapSPlayExtensions(): Promise<void> {
-	seedSProgramRegistryFromResourceMap();
+let sPlayProgramContributionsReady = false;
+
+function isVitestRuntime(): boolean {
+	return Boolean(import.meta.env?.VITEST) || (typeof process !== "undefined" && Boolean(process.env?.VITEST));
+}
+
+/** @emoji 🧩 Registers manifest-declared OS program contributions once (browser defers until studio open). */
+export async function ensureSPlayProgramContributions(): Promise<void> {
+	if (sPlayProgramContributionsReady) return;
 	const { loadAllOsProgramContributions } = await import("@semio-tech/framework-playground-core/app-registry");
 	const contributions = await loadAllOsProgramContributions();
 	for (const contribution of contributions) {
 		await contribution.register();
 	}
+	sPlayProgramContributionsReady = true;
+}
+
+/** @emoji 🧩 Registers all s technology extensions and VCS handlers. */
+export async function bootstrapSPlayExtensions(): Promise<void> {
+	seedSProgramRegistryFromResourceMap();
+	if (!isVitestRuntime()) {
+		registerGenericMeshMediaExportHandlers();
+		return;
+	}
+	await ensureSPlayProgramContributions();
 	registerGenericMeshMediaExportHandlers();
 }
 //#endregion 🔖SExtensionWiring
@@ -191,6 +221,7 @@ export function applySOsUri(platform: Platform, uri: string, shell: SOsShellRefs
 	platform.uri = uri;
 	const studioMatch = /^\/studios\/([^/]+)$/.exec(pathOnly);
 	if (studioMatch) {
+		void ensureSPlayProgramContributions();
 		platform.activeAppId = S_PLAY_APP_ID;
 		shell.studio.openStudio(studioMatch[1]!);
 	} else {
@@ -757,7 +788,13 @@ export class SPlayController extends Controller {
 }
 
 export function buildSPlayAppRuntime(ctrl: SPlayController): AppRuntime {
-	return createPlayAppRuntime(S_PLAY_APP_ID, "Studio", ctrl, S_PLAY_LAYOUT, ctrl.mainMode);
+	const app = createPlayAppRuntime(S_PLAY_APP_ID, "Studio", ctrl, S_PLAY_LAYOUT, ctrl.mainMode);
+	app.panelTabs = [
+		{ id: S_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 0, bodyKey: S_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: S_PLAY_PARAMETERS_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID, panel: "workbench", order: 1, bodyKey: S_PLAY_PARAMETERS_BODY_KEY, label: FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL },
+		{ id: S_PLAY_INSPECTOR_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: S_PLAY_INSPECTOR_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
+	return app;
 }
 
 function sPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -1185,9 +1222,28 @@ export const sPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tec
 		buildWriterWindowBody(S_PLAY_SURFACE_COMPILED_DAG, S_PLAY_CONTROLLER_ID, S_PLAY_WINDOW_COMPILED_DAG),
 };
 
+function buildSPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, () => buildSPlayCatalogueTree());
+}
+
+function buildSPlayParametersPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => buildSPlayParametersTree(ctrl as SPlayController), "No studio controller");
+}
+
+function buildSPlayInspectorPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => buildSPlayInspectorTree(ctrl as SPlayController), "No studio controller");
+}
+
+export const sPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[S_PLAY_CATALOGUE_BODY_KEY]: buildSPlayCataloguePanelBody,
+	[S_PLAY_PARAMETERS_BODY_KEY]: buildSPlayParametersPanelBody,
+	[S_PLAY_INSPECTOR_BODY_KEY]: buildSPlayInspectorPanelBody,
+};
+
 export function registerSPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(sHomeWindowBodies)) registerWindowBody(key, build);
 	for (const [key, build] of Object.entries(sPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(sPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
 export function registerSOsShellDeclarativeBodies(): void {
@@ -1352,7 +1408,6 @@ export const sPlayAppDefinition = createPlaygroundApp({
 	registerBodies: () => {
 		registerSPlayDeclarativeBodies();
 	},
-	loadRenderer: async () => (await import("@semio-tech/s-react/play")).sAppRenderer,
 });
 //#endregion 🔖Play
 

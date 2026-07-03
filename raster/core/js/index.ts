@@ -4,7 +4,6 @@
 
 import {
 	createPlaygroundApp,
-	createProductPlaygroundPlatform,
 	AppRuntime,
 	CommandBus,
 	Controller,
@@ -19,9 +18,15 @@ import {
 	PLAYGROUND_NO_EXAMPLE_ID,
 	playgroundResolvedExampleId,
 	registerWindowBody,
+	registerSidePanelBody,
+	buildControllerTreeSidePanelBody,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	type SideTabSpec,
 	type AppTools,
 	type PlaygroundExampleCatalog,
 	type PlaygroundExampleHost,
@@ -44,8 +49,6 @@ import {
 	type WindowMeasure,
 	type WindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
-  createPlaygroundApp,
-  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
 import { rasterizeSvgMarkupToPngDataUrl } from "@semio-tech/kernel-2d-js";
@@ -110,6 +113,10 @@ export const RASTER_PLAY_LAYERS_TAB_ID = "framework.panel.hierarchy";
 export const RASTER_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const RASTER_PLAY_MASKS_TAB_ID = "raster.panel.masks";
 export const RASTER_PLAY_PROPERTIES_TAB_ID = "framework.panel.inspection";
+export const RASTER_PLAY_LAYERS_BODY_KEY = "raster.play.layers";
+export const RASTER_PLAY_CATALOGUE_BODY_KEY = "raster.play.catalogue";
+export const RASTER_PLAY_MASKS_BODY_KEY = "raster.play.masks";
+export const RASTER_PLAY_PROPERTIES_BODY_KEY = "raster.play.properties";
 
 export const RASTER_LAYER_KIND_DRAG_MIME = "application/x-semio-raster-layer-kind";
 
@@ -1227,8 +1234,81 @@ export const RASTER_PLAY_TOOLS: AppTools = [
 	]),
 ];
 
+function rasterPlayHierarchyOptions(ctrl: RasterPlayController): RasterPlayHierarchyBuildOptions {
+	return {
+		onToggleVisible: (layerId) => ctrl.run("toggleLayerVisible", { layerId }),
+		onDeleteLayer: (layerId) => ctrl.run("deleteLayer", { layerId }),
+		onDuplicateLayer: (layerId) => ctrl.run("duplicateLayer", { layerId }),
+		onAddMask: (layerId) => ctrl.run("addLayerMask", { layerId }),
+	};
+}
+
+function buildRasterPlayLayersPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const rasterCtrl = ctrl as RasterPlayController;
+		const doc = rasterCtrl.getDocument();
+		if (!doc) return { type: "tree", sections: [{ id: "raster-empty", items: [{ id: "empty", label: "No document" }] }] };
+		return buildRasterPlayLayersTree(
+			doc,
+			rasterCtrl.getSelectedIds(),
+			rasterCtrl.getHoveredId(),
+			rasterCtrl.getHoveredKind(),
+			(payload) => rasterCtrl.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
+			rasterPlayHierarchyOptions(rasterCtrl),
+		);
+	}, "No raster document");
+}
+
+function buildRasterPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const rasterCtrl = ctrl as RasterPlayController;
+		return buildRasterPlayCatalogueTree(
+			rasterCtrl.getSelectedIds(),
+			(payload) => rasterCtrl.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_CATALOG }),
+		);
+	});
+}
+
+function buildRasterPlayMasksPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const rasterCtrl = ctrl as RasterPlayController;
+		const doc = rasterCtrl.getDocument();
+		if (!doc) return { type: "tree", sections: [{ id: "raster-masks-empty", items: [{ id: "empty", label: "No masks" }] }] };
+		return buildRasterPlayMasksTree(
+			doc,
+			rasterCtrl.getSelectedIds(),
+			rasterCtrl.getHoveredId(),
+			rasterCtrl.getHoveredKind(),
+			(payload) => rasterCtrl.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
+		);
+	}, "No raster document");
+}
+
+function buildRasterPlayPropertiesPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const rasterCtrl = ctrl as RasterPlayController;
+		const doc = rasterCtrl.getDocument();
+		if (!doc) return { type: "tree", sections: [{ id: "raster-props-empty", items: [{ id: "empty", label: "No document" }] }] };
+		return buildRasterPlayPropertiesTree(doc, rasterCtrl.getSelectedIds());
+	}, "No raster document");
+}
+
+export const rasterPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[RASTER_PLAY_LAYERS_BODY_KEY]: buildRasterPlayLayersPanelBody,
+	[RASTER_PLAY_CATALOGUE_BODY_KEY]: buildRasterPlayCataloguePanelBody,
+	[RASTER_PLAY_MASKS_BODY_KEY]: buildRasterPlayMasksPanelBody,
+	[RASTER_PLAY_PROPERTIES_BODY_KEY]: buildRasterPlayPropertiesPanelBody,
+};
+
 export function buildRasterPlayAppRuntime(ctrl: RasterPlayController): AppRuntime {
-	return createPlayAppRuntime(RASTER_PLAY_APP_ID, "Raster", ctrl, RASTER_PLAY_LAYOUT, ctrl.mainMode);
+	const app = createPlayAppRuntime(RASTER_PLAY_APP_ID, "Raster", ctrl, RASTER_PLAY_LAYOUT, ctrl.mainMode);
+	app.panelTabs = [
+		{ id: RASTER_PLAY_LAYERS_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: RASTER_PLAY_LAYERS_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: RASTER_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: RASTER_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: RASTER_PLAY_MASKS_TAB_ID, iconId: "square-dashed", panel: "workbench", order: 2, bodyKey: RASTER_PLAY_MASKS_BODY_KEY, label: "Masks" },
+		{ id: RASTER_PLAY_PROPERTIES_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: RASTER_PLAY_PROPERTIES_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
+	return app;
 }
 
 export const rasterPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
@@ -1240,6 +1320,7 @@ export const rasterPlayWindowBodies: Readonly<Record<string, (ctx: import("@semi
 
 export function registerRasterPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(rasterPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(rasterPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
 
@@ -1261,19 +1342,15 @@ export const rasterPlayAppDefinition = createPlaygroundApp({
 		resolveDedupe: ["react", "react-dom", "@semio-tech/raster-react", "three"],
 		optimizeDeps: { include: ["react", "react-dom", "@semio-tech/raster-react"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(RASTER_PLAY_APP_ID);
-			const ctrl = new RasterPlayController(runtime.commandBus, () => runtime.notify());
-			const resolved = playgroundResolvedExampleId(RASTER_PLAY_EXAMPLE_DEFAULT_ID);
-			const fixtureJson = RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID[resolved];
-			if (fixtureJson) {
-				ctrl.run("setActiveExample", { exampleId: resolved });
-			}
-			runtime.addApp(buildRasterPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new RasterPlayController(bus, notify),
+		buildAppRuntime: buildRasterPlayAppRuntime,
+		example: {
+			defaultId: RASTER_PLAY_EXAMPLE_DEFAULT_ID,
+			hasExample: (id) => Boolean(RASTER_PLAY_FILE_EXAMPLE_JSON_BY_ID[id]),
+		},
 	},
 	keybindings: [{ key: "ctrl+a,meta+a", controllerId: RASTER_PLAY_CONTROLLER_ID, command: "selectAll" }],
-	loadRenderer: async () => (await import("@semio-tech/raster-react/play")).rasterAppRenderer,
 });
 //#endregion 🔖Play
 

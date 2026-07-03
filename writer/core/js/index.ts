@@ -14,13 +14,18 @@ import {
 	createDefaultLayout,
 	createPlayAppRuntime,
 	enforcePlaygroundWindowEngagementInput,
-	isPlaygroundExampleLocked,
 	isPlaygroundNoExampleId,
 	playgroundResolvedExampleId,
 	registerWindowBody,
+	registerSidePanelBody,
+	buildControllerTreeSidePanelBody,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	type SideTabSpec,
 	uiDeclarativeSectionsToTree,
 	type AppTools,
 	type PlaygroundExampleCatalog,
@@ -32,7 +37,6 @@ import {
 	type WindowEngagement,
 	type WindowMeasure,
   createPlaygroundApp,
-  createProductPlaygroundPlatform,
   eagerPlayExampleGlob,
 } from "@semio-tech/framework-playground-core";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
@@ -63,6 +67,9 @@ export const WRITER_PLAY_WINDOW_KIND = "writer-main";
 export const WRITER_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const WRITER_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const WRITER_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const WRITER_PLAY_HIERARCHY_BODY_KEY = "writer.play.hierarchy";
+export const WRITER_PLAY_CATALOGUE_BODY_KEY = "writer.play.catalogue";
+export const WRITER_PLAY_INSPECTION_BODY_KEY = "writer.play.inspection";
 
 export const WRITER_PLAY_LAYOUT = createDefaultLayout([WRITER_PLAY_WINDOW_KIND], "row", [100], ["Jack"]);
 
@@ -646,10 +653,49 @@ export const writerPlayWindowBodies: Readonly<Record<string, (ctx: import("@semi
 
 export function registerWriterPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(writerPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(writerPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
+function buildWriterPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const writerCtrl = ctrl as WriterPlayController;
+		return buildWriterPlayHierarchyTree(
+			writerCtrl.getDocument() ?? createWriterDocument({ id: "jack", languageId: "jack" }),
+			writerCtrl.getSelectedAstIds(),
+			writerCtrl.getHoveredAstId(),
+			(id) => writerCtrl.run("setAstHover", { id }),
+		);
+	});
+}
+
+function buildWriterPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, () => buildWriterPlayCatalogueTree());
+}
+
+function buildWriterPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const writerCtrl = ctrl as WriterPlayController;
+		return buildWriterPlayInspectorTree(
+			writerCtrl.getDocument() ?? createWriterDocument({ id: "jack", languageId: "jack" }),
+			writerCtrl.getLintMessages(),
+		);
+	});
+}
+
+export const writerPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[WRITER_PLAY_HIERARCHY_BODY_KEY]: buildWriterPlayHierarchyPanelBody,
+	[WRITER_PLAY_CATALOGUE_BODY_KEY]: buildWriterPlayCataloguePanelBody,
+	[WRITER_PLAY_INSPECTION_BODY_KEY]: buildWriterPlayInspectionPanelBody,
+};
+
 export function buildWriterPlayAppRuntime(ctrl: WriterPlayController): AppRuntime {
-	return createPlayAppRuntime(WRITER_PLAY_APP_ID, "Writer", ctrl, WRITER_PLAY_LAYOUT, ctrl.mainMode);
+	const app = createPlayAppRuntime(WRITER_PLAY_APP_ID, "Writer", ctrl, WRITER_PLAY_LAYOUT, ctrl.mainMode);
+	app.panelTabs = [
+		{ id: WRITER_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: WRITER_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: WRITER_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: WRITER_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: WRITER_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: WRITER_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
+	return app;
 }
 
 
@@ -736,25 +782,15 @@ export const writerPlayAppDefinition = createPlaygroundApp({
 		resolveDedupe: ["react", "react-dom", "three", "@semio-tech/writer-react"],
 		optimizeDeps: { include: ["react", "react-dom"] },
 	},
-	createRuntime: () => {
-		const fixtureAccess = createWriterPlayFixtureAccess();
-			const locked = isPlaygroundExampleLocked();
-			const noFixture = isPlaygroundNoExampleId();
+	runtimeBootstrap: {
+		createController: (bus, notify) => {
+			const fixtureAccess = createWriterPlayFixtureAccess();
 			const fixtureId = playgroundResolvedExampleId(WRITER_PLAY_EXAMPLE_DEFAULT_ID, resolveWriterPlayExampleSlug);
 			const json = fixtureAccess.jsonById(fixtureId) ?? fixtureAccess.jsonById("jack")!;
-			if (locked || noFixture) {
-				void json;
-			}
-			const runtime = createProductPlaygroundPlatform(WRITER_PLAY_APP_ID);
-			const ctrl = new WriterPlayController(runtime.commandBus, () => runtime.notify(), json, fixtureAccess);
-			const resolved = playgroundResolvedExampleId(WRITER_PLAY_EXAMPLE_DEFAULT_ID, resolveWriterPlayExampleSlug);
-			if (!locked && !noFixture) {
-				ctrl.run("setActiveExample", { exampleId: resolved });
-			}
-			runtime.addApp(buildWriterPlayAppRuntime(ctrl));
-			return runtime;
+			return new WriterPlayController(bus, notify, json, fixtureAccess);
+		},
+		buildAppRuntime: buildWriterPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/writer-react/play")).writerAppRenderer,
 });
 //#endregion 🔖Play
 

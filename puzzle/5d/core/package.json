@@ -50,6 +50,8 @@
       "packageRoot": "puzzle/5d",
       "corePackage": "@semio-tech/puzzle-5d-core",
       "definitionExport": "puzzle5dPlayAppDefinition",
+      "rendererPackage": "@semio-tech/puzzle-5d-react",
+      "rendererExport": "puzzle5dAppRenderer",
       "hostKind": "puzzle-5d",
       "port": {
         "dev": 6014,

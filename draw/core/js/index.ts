@@ -19,10 +19,16 @@ import {
 	PLAYGROUND_NO_EXAMPLE_ID,
 	playgroundResolvedExampleId,
 	registerWindowBody,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	buildControllerTreeSidePanelBody,
+	registerSidePanelBody,
 	type AppTools,
+	type SideTabSpec,
 	type PlaygroundExampleCatalog,
 	type PlaygroundExampleHost,
 	type ToolLeaf,
@@ -108,6 +114,9 @@ export const DRAW_PLAY_WINDOW_KIND_COMPOSITE = "draw-composite";
 export const DRAW_PLAY_LAYERS_TAB_ID = "framework.panel.hierarchy";
 export const DRAW_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const DRAW_PLAY_PROPERTIES_TAB_ID = "framework.panel.inspection";
+export const DRAW_PLAY_LAYERS_BODY_KEY = "draw.play.layers";
+export const DRAW_PLAY_CATALOGUE_BODY_KEY = "draw.play.catalogue";
+export const DRAW_PLAY_PROPERTIES_BODY_KEY = "draw.play.properties";
 
 export const DRAW_LAYER_KIND_DRAG_MIME = "application/x-semio-draw-layer-kind";
 
@@ -1348,8 +1357,54 @@ function drawPlayTool(id: string, label: string, iconId: string, command: string
 	return { id, kind: "button", label, iconId, controllerId: DRAW_PLAY_CONTROLLER_ID, command, args };
 }
 
+function drawPlayHierarchyOptions(ctrl: DrawPlayController): DrawPlayHierarchyBuildOptions {
+	return {
+		onToggleVisible: (layerId) => ctrl.run("toggleLayerVisible", { layerId }),
+		onDeleteLayer: (layerId) => ctrl.run("deleteLayer", { layerId }),
+		onDuplicateLayer: (layerId) => ctrl.run("duplicateLayer", { layerId }),
+	};
+}
+
+function buildDrawPlayLayersPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const drawCtrl = ctrl as DrawPlayController;
+		const doc = drawCtrl.getDocument();
+		return buildDrawPlayLayersTree(
+			doc,
+			drawCtrl.getSelectedIds(),
+			drawCtrl.getHoveredId(),
+			drawCtrl.getHoveredKind(),
+			(payload) => drawCtrl.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
+			drawPlayHierarchyOptions(drawCtrl),
+		);
+	}, "No draw document");
+}
+
+function buildDrawPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const drawCtrl = ctrl as DrawPlayController;
+		return buildDrawPlayCatalogueTree(
+			drawCtrl.getSelectedIds(),
+			(payload) => drawCtrl.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
+		);
+	});
+}
+
+function buildDrawPlayPropertiesPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const drawCtrl = ctrl as DrawPlayController;
+		return buildDrawPlayInspectorTree(drawCtrl.getDocument(), drawCtrl.getSelectedIds());
+	}, "No draw document");
+}
+
 export function buildDrawPlayAppRuntime(ctrl: DrawPlayController): AppRuntime {
-	return createPlayAppRuntime(DRAW_PLAY_APP_ID, "Draw", ctrl, DRAW_PLAY_LAYOUT, ctrl.mainMode);
+	const app = createPlayAppRuntime(DRAW_PLAY_APP_ID, "Draw", ctrl, DRAW_PLAY_LAYOUT, ctrl.mainMode);
+	app.panelTabs = [
+		{ id: DRAW_PLAY_LAYERS_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: DRAW_PLAY_LAYERS_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: DRAW_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: DRAW_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: DRAW_PLAY_PROPERTIES_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: DRAW_PLAY_PROPERTIES_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
+	return app;
 }
 
 export const drawPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
@@ -1357,8 +1412,15 @@ export const drawPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-
 		buildDrawWindowBody(DRAW_PLAY_SURFACE_ID_COMPOSITE, DRAW_PLAY_CONTROLLER_ID, "composite", "composite"),
 };
 
+export const drawPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[DRAW_PLAY_LAYERS_BODY_KEY]: buildDrawPlayLayersPanelBody,
+	[DRAW_PLAY_CATALOGUE_BODY_KEY]: buildDrawPlayCataloguePanelBody,
+	[DRAW_PLAY_PROPERTIES_BODY_KEY]: buildDrawPlayPropertiesPanelBody,
+};
+
 export function registerDrawPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(drawPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(drawPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
 //#region 🔖SExtension
@@ -1398,11 +1460,7 @@ export const drawProgramContribution: OsProgramContribution = {
 
 
 //#region 🔖Play
-import {
-	createPlaygroundApp,
-	createProductPlaygroundPlatform,
-	playgroundResolvedExampleId,
-} from "@semio-tech/framework-playground-core";
+import { createPlaygroundApp } from "@semio-tech/framework-playground-core";
 import { DRAW_PLAY_EXAMPLE_DEFAULT_ID } from "./example-slugs.ts";
 import semioDrawExample from "../../example/semio.draw.json";
 import { drawDocumentFromJson, flattenDrawLayers } from "./internal.ts";
@@ -1426,16 +1484,14 @@ export const drawPlayAppDefinition = createPlaygroundApp({
 		optimizeDeps: { include: ["react", "react-dom", "@semio-tech/draw-react"] },
 	},
 	keybindings: [{ key: "ctrl+a,meta+a", controllerId: DRAW_PLAY_CONTROLLER_ID, command: "selectAll" }],
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(DRAW_PLAY_APP_ID);
-		const ctrl = new DrawPlayController(runtime.commandBus, () => runtime.notify(), drawExampleCatalog);
-		const resolved = playgroundResolvedExampleId(DRAW_PLAY_EXAMPLE_DEFAULT_ID);
-		const exampleId = drawExampleCatalog.fileJsonById[resolved] ? resolved : DRAW_PLAY_EXAMPLE_DEFAULT_ID;
-		ctrl.run("setActiveExample", { exampleId });
-		runtime.addApp(buildDrawPlayAppRuntime(ctrl));
-		return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new DrawPlayController(bus, notify, drawExampleCatalog),
+		buildAppRuntime: buildDrawPlayAppRuntime,
+		example: {
+			defaultId: DRAW_PLAY_EXAMPLE_DEFAULT_ID,
+			hasExample: (id) => Boolean(drawExampleCatalog.fileJsonById[id]),
+		},
 	},
-	loadRenderer: async () => (await import("@semio-tech/draw-react/play")).drawAppRenderer,
 });
 //#endregion 🔖Play
 

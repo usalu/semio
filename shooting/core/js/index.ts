@@ -18,9 +18,15 @@ import {
 	PLAYGROUND_NO_EXAMPLE_ID,
 	playgroundResolvedExampleId,
 	registerWindowBody,
+	registerSidePanelBody,
+	buildControllerTreeSidePanelBody,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	type SideTabSpec,
 	UI_INSPECTOR_MIXED_PLACEHOLDER,
 	uiDeclarativeSectionsToTree,
 	uiInspectorGroupsToTree,
@@ -36,11 +42,11 @@ import {
 	type UiInspectorFieldGroup,
 	toolCollection,
 	type UiNode,
+	type UiTreeNode,
 	type UiTreeItemNode,
 	type WindowEngagement,
 	type WindowMeasure,
   createPlaygroundApp,
-  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
@@ -76,6 +82,9 @@ export const SHOOTING_PLAY_WINDOW_KIND_ICON = "shooting-icon";
 export const SHOOTING_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const SHOOTING_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const SHOOTING_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const SHOOTING_PLAY_HIERARCHY_BODY_KEY = "shooting.play.hierarchy";
+export const SHOOTING_PLAY_CATALOGUE_BODY_KEY = "shooting.play.catalogue";
+export const SHOOTING_PLAY_INSPECTION_BODY_KEY = "shooting.play.inspection";
 
 export type ShootingPlaySelectionKind = "shot" | "asset";
 
@@ -1175,10 +1184,47 @@ export const shootingPlayWindowBodies: Readonly<Record<string, (ctx: import("@se
 
 export function registerShootingPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(shootingPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(shootingPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
+function shootingPlayFixtureFromController(ctrl: ShootingPlayController): ShootingFixture {
+	return parseShootingFixture(ctrl.getFixtureJson()) ?? { schema: "shooting.fixture", shots: [], assets: [] };
+}
+
+function buildShootingPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const shootingCtrl = ctrl as ShootingPlayController;
+		const fixture = shootingPlayFixtureFromController(shootingCtrl);
+		return buildShootingPlayHierarchyTree(fixture, shootingCtrl.getSelectedShotIds(), shootingCtrl.getSelectedAssetIds()) as UiTreeNode;
+	});
+}
+
+function buildShootingPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, () => buildShootingPlayCatalogueTree() as UiTreeNode);
+}
+
+function buildShootingPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const shootingCtrl = ctrl as ShootingPlayController;
+		const fixture = shootingPlayFixtureFromController(shootingCtrl);
+		return buildShootingPlayInspectorTree(fixture, shootingCtrl.getSelectedShotIds(), shootingCtrl.getSelectedAssetIds()) as UiTreeNode;
+	});
+}
+
+export const shootingPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[SHOOTING_PLAY_HIERARCHY_BODY_KEY]: buildShootingPlayHierarchyPanelBody,
+	[SHOOTING_PLAY_CATALOGUE_BODY_KEY]: buildShootingPlayCataloguePanelBody,
+	[SHOOTING_PLAY_INSPECTION_BODY_KEY]: buildShootingPlayInspectionPanelBody,
+};
+
 export function buildShootingPlayAppRuntime(controller: ShootingPlayController): AppRuntime {
-	return createPlayAppRuntime(SHOOTING_PLAY_APP_ID, "Shooting", controller, SHOOTING_PLAY_LAYOUT, controller.mainMode);
+	const app = createPlayAppRuntime(SHOOTING_PLAY_APP_ID, "Shooting", controller, SHOOTING_PLAY_LAYOUT, controller.mainMode);
+	app.panelTabs = [
+		{ id: SHOOTING_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: SHOOTING_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: SHOOTING_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: SHOOTING_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: SHOOTING_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SHOOTING_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
+	return app;
 }
 
 
@@ -1199,13 +1245,10 @@ export const shootingPlayAppDefinition = createPlaygroundApp({
 		resolveDedupe: ["react", "react-dom", "three", "@semio-tech/shooting-react"],
 		optimizeDeps: { include: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei", "@semio-tech/infinite-world-r3f", "@semio-tech/shooting-react"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(SHOOTING_PLAY_APP_ID);
-			const ctrl = new ShootingPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildShootingPlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new ShootingPlayController(bus, notify),
+		buildAppRuntime: buildShootingPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/shooting-react/play")).shootingAppRenderer,
 });
 //#endregion 🔖Play
 

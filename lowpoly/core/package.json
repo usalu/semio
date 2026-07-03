@@ -43,7 +43,9 @@
         "env": "LOWPOLY_PLAY_PORT"
       },
       "programExport": "lowpolyProgramContribution",
-      "programId": "lowpoly"
+      "programId": "lowpoly",
+      "rendererPackage": "@semio-tech/lowpoly-react",
+      "rendererExport": "lowpolyAppRenderer"
     }
   }
 }

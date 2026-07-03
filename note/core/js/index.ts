@@ -19,9 +19,15 @@ import {
 	PLAYGROUND_NO_EXAMPLE_ID,
 	playgroundResolvedExampleId,
 	registerWindowBody,
+	registerSidePanelBody,
+	buildControllerTreeSidePanelBody,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	type SideTabSpec,
 	type AppTools,
 	type PlaygroundExampleCatalog,
 	type PlaygroundExampleHost,
@@ -43,7 +49,6 @@ import {
 	type WindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
   createPlaygroundApp,
-  createProductPlaygroundPlatform,
   eagerPlayExampleGlob,
 } from "@semio-tech/framework-playground-core";
 import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
@@ -93,6 +98,9 @@ import {
 	NOTE_PLAY_HIERARCHY_TAB_ID,
 	NOTE_PLAY_CATALOGUE_TAB_ID,
 	NOTE_PLAY_PROPERTIES_TAB_ID,
+	NOTE_PLAY_HIERARCHY_BODY_KEY,
+	NOTE_PLAY_CATALOGUE_BODY_KEY,
+	NOTE_PLAY_PROPERTIES_BODY_KEY,
 	NOTE_BLOCK_KIND_DRAG_MIME,
 } from "./play-ids.ts";
 export {
@@ -107,6 +115,9 @@ export {
 	NOTE_PLAY_HIERARCHY_TAB_ID,
 	NOTE_PLAY_CATALOGUE_TAB_ID,
 	NOTE_PLAY_PROPERTIES_TAB_ID,
+	NOTE_PLAY_HIERARCHY_BODY_KEY,
+	NOTE_PLAY_CATALOGUE_BODY_KEY,
+	NOTE_PLAY_PROPERTIES_BODY_KEY,
 	NOTE_BLOCK_KIND_DRAG_MIME,
 } from "./play-ids.ts";
 
@@ -873,8 +884,47 @@ export class NotePlayController extends Controller implements PlaygroundExampleH
 	}
 }
 
+function buildNotePlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const noteCtrl = ctrl as NotePlayController;
+		const doc = noteCtrl.getDocument();
+		if (!doc) return { type: "tree", sections: [{ id: "note-empty", items: [{ id: "empty", label: "No document" }] }] };
+		return buildNotePlayHierarchyTree(
+			doc,
+			noteCtrl.getSelectedIds(),
+			noteCtrl.getHoveredId(),
+			noteCtrl.getHoveredKind(),
+			(payload) => noteCtrl.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_HIERARCHY }),
+		);
+	}, "No document");
+}
+
+function buildNotePlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const noteCtrl = ctrl as NotePlayController;
+		return buildNotePlayCatalogueTree((payload) =>
+			noteCtrl.run("setHover", { id: payload.id, kind: payload.kind, sourceId: CANVAS_HOVER_SOURCE_CATALOG }),
+		);
+	});
+}
+
+function buildNotePlayPropertiesPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const noteCtrl = ctrl as NotePlayController;
+		const doc = noteCtrl.getDocument();
+		if (!doc) return { type: "tree", sections: [{ id: "note-props-empty", items: [{ id: "empty", label: "No document" }] }] };
+		return buildNotePlayInspectorTree(doc, noteCtrl.getSelectedIds()) as UiTreeNode;
+	}, "No document");
+}
+
 export function buildNotePlayAppRuntime(ctrl: NotePlayController): AppRuntime {
-	return createPlayAppRuntime(NOTE_PLAY_APP_ID, "Note", ctrl, NOTE_PLAY_LAYOUT, ctrl.mainMode);
+	const app = createPlayAppRuntime(NOTE_PLAY_APP_ID, "Note", ctrl, NOTE_PLAY_LAYOUT, ctrl.mainMode);
+	app.panelTabs = [
+		{ id: NOTE_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: NOTE_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: NOTE_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: NOTE_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: NOTE_PLAY_PROPERTIES_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: NOTE_PLAY_PROPERTIES_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
+	return app;
 }
 
 export const notePlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").WindowBodyViewContext) => UiNode>> = {
@@ -882,8 +932,15 @@ export const notePlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-
 	[NOTE_PLAY_BODY_KEY_NAVIGATOR]: () => buildNoteWindowBody(NOTE_PLAY_SURFACE_ID_NAVIGATOR, NOTE_PLAY_CONTROLLER_ID, "navigator", "navigator"),
 };
 
+export const notePlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[NOTE_PLAY_HIERARCHY_BODY_KEY]: buildNotePlayHierarchyPanelBody,
+	[NOTE_PLAY_CATALOGUE_BODY_KEY]: buildNotePlayCataloguePanelBody,
+	[NOTE_PLAY_PROPERTIES_BODY_KEY]: buildNotePlayPropertiesPanelBody,
+};
+
 export function registerNotePlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(notePlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(notePlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
 //#region 🔖SExtension
@@ -977,14 +1034,13 @@ export const notePlayAppDefinition = createPlaygroundApp({
 		resolveDedupe: ["react", "react-dom", "@semio-tech/note-react"],
 		optimizeDeps: { include: ["react", "react-dom", "@semio-tech/note-react"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(NOTE_PLAY_APP_ID);
-			const exampleHost = createNotePlayExampleHost();
-			const ctrl = new NotePlayController(runtime.commandBus, () => runtime.notify(), exampleHost);
-			const resolved = playgroundResolvedExampleId(NOTE_PLAY_EXAMPLE_DEFAULT_ID);
-			if (exampleHost.fileJsonById[resolved]) ctrl.run("setActiveExample", { exampleId: resolved });
-			runtime.addApp(buildNotePlayAppRuntime(ctrl));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new NotePlayController(bus, notify, createNotePlayExampleHost()),
+		buildAppRuntime: buildNotePlayAppRuntime,
+		example: {
+			defaultId: NOTE_PLAY_EXAMPLE_DEFAULT_ID,
+			hasExample: (id) => Boolean(createNotePlayExampleHost().fileJsonById[id]),
+		},
 	},
 	keybindings: [
 		{ key: "ctrl+a,meta+a", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "selectAll" },
@@ -1002,7 +1058,6 @@ export const notePlayAppDefinition = createPlaygroundApp({
 		{ key: "shift+left", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: -10, dy: 0 } },
 		{ key: "shift+right", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: 10, dy: 0 } },
 	],
-	loadRenderer: async () => (await import("@semio-tech/note-react/play")).noteAppRenderer,
 });
 //#endregion 🔖Play
 

@@ -9,4 +9,7 @@ export const NOTE_PLAY_WINDOW_KIND_NAVIGATOR = "note-navigator";
 export const NOTE_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const NOTE_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const NOTE_PLAY_PROPERTIES_TAB_ID = "framework.panel.inspection";
+export const NOTE_PLAY_HIERARCHY_BODY_KEY = "note.play.hierarchy";
+export const NOTE_PLAY_CATALOGUE_BODY_KEY = "note.play.catalogue";
+export const NOTE_PLAY_PROPERTIES_BODY_KEY = "note.play.properties";
 export const NOTE_BLOCK_KIND_DRAG_MIME = "application/x-semio-note-block-kind";

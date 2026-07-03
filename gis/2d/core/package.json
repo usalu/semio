@@ -47,7 +47,11 @@
       },
       "programExport": "gisMapProgramContribution",
       "programId": "gis.map",
-      "assets": ["gis-tiles"]
+      "assets": [
+        "gis-tiles"
+      ],
+      "rendererPackage": "@semio-tech/gis-2d-react",
+      "rendererExport": "mapAppRenderer"
     }
   }
 }

@@ -52,7 +52,12 @@
       },
       "programExport": "cadProgramContribution",
       "programId": "cad",
-      "site": { "embedKind": "cad", "host": "play.cad.semio-tech.com" }
+      "site": {
+        "embedKind": "cad",
+        "host": "play.cad.semio-tech.com"
+      },
+      "rendererPackage": "@semio-tech/cad-js-renderer-react",
+      "rendererExport": "cadAppRenderer"
     }
   }
 }

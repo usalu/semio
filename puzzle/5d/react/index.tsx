@@ -62,8 +62,16 @@ import {
   puzzle2dFinalizeBrushSuggestionsPlacement,
   puzzle2dGuardBrushPlacementStructuralDeletes,
   usePuzzle2dRenderer,
+  puzzle2dActiveRenderer,
+  puzzle2dSetBrushPlaceCommitHandler,
   type Puzzle2dBrushSessionSnapshot,
   type Puzzle2dRenderer,
+  puzzle2dBrushCandidateDisplayLabels,
+  type Puzzle2dBrushCandidatesPayload,
+  type Puzzle2dDrawLodKind,
+  type Puzzle2dSelectionMethod,
+  type Puzzle2dSelectionMode,
+  type Puzzle2dSelectionTargets,
 } from "@semio-tech/puzzle-2d-react";
 import {
   DEFAULT_MESH_STYLE as PUZZLE_3D_DEFAULT_MESH_STYLE,
@@ -108,7 +116,13 @@ import {
   puzzle3dBrushUiStore,
   subscribePuzzle3dBrushEngagementSource,
   getPuzzle3dBrushEngagementEpoch,
+  brushMeshUrlsForFillSession,
+  isLoadableMeshUrl,
+  puzzle3dBrushMeshRootForFill,
+  resolvePuzzle3dFixtureDrop,
+  puzzle3dBrushEngagementSourceRef,
   type BrushPreviewState,
+  type Puzzle3dFixtureDropDetail,
   type VortexBindingMeta,
 } from "../../3d/react/index.tsx";
 import type { Object3D } from "three";
@@ -5160,3 +5174,500 @@ if (import.meta.vitest) {
     });
   });
 }
+
+//#region 🔖PlayHost
+import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
+import type { AppRendererContribution, PlaygroundMountProps } from "@semio-tech/framework-platform-core";
+import {
+  PlaygroundView,
+  usePlayController,
+  controllerBackedExampleContribution,
+} from "@semio-tech/framework-playground-renderer-react";
+import {
+  Platform,
+  collectUiTreeItemDragData,
+  type UiPuzzle2dHostSurfaceNode,
+  type UiPuzzle3dHostSurfaceNode,
+} from "@semio-tech/framework-playground-core";
+import { PUZZLE_5D_PLAY_2D_BODY_KEY, PUZZLE_5D_PLAY_2D_SURFACE_ID, PUZZLE_5D_PLAY_2D_WINDOW_ID, PUZZLE_5D_PLAY_3D_BODY_KEY, PUZZLE_5D_PLAY_3D_SURFACE_ID, PUZZLE_5D_PLAY_JACK_BODY_KEY, PUZZLE_5D_PLAY_JACK_SURFACE_ID, PUZZLE_5D_PLAY_JACK_WINDOW_ID, PUZZLE_5D_PLAY_APP_ID, PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_EXAMPLE_OPTIONS, PUZZLE_5D_PLAY_HIERARCHY_TAB_ID, PUZZLE_5D_PLAY_ICON_KINDS, PUZZLE_5D_PLAY_KINDS_TAB_ID, PUZZLE_5D_PLAY_STORE_ID, Puzzle5dPlayShellController, Puzzle5dStoreBridge, buildPuzzle5d2dDeclarativeBody, buildPuzzle5d3dDeclarativeBody, buildPuzzle5dJackDeclarativeBody, buildPuzzle5dPlayHierarchySections, buildPuzzle5dPlayInspectorTree, buildPuzzle5dPlayKindsTree, puzzle5dFixturePaletteTreeDragController, type Puzzle5dPlayHostBridge, type Puzzle5dPlaySnapshot, puzzle5dPlaySidePanelBodies, puzzle5dPlayWindowBodies } from "@semio-tech/puzzle-5d-core";
+import { installPuzzle3dPlayBrushHost } from "@semio-tech/puzzle-3d-core";
+
+//#region 🔖Snapshot
+function usePuzzle5dPlaySnapshot(): { readonly controller: Puzzle5dPlayShellController | undefined; readonly snapshot: Puzzle5dPlaySnapshot | null } {
+  const controller = usePlayController<Puzzle5dPlayShellController>();
+  puzzle5dPlayControllerRef.current = controller ?? null;
+  return { controller, snapshot: controller?.getSnapshot() ?? null };
+}
+//#endregion 🔖Snapshot
+
+//#region 🔖HostBridge
+function Puzzle5dPlayHostBridgeInstaller(props: { readonly controller: Puzzle5dPlayShellController; readonly store: Store }): null {
+  const { controller, store } = props;
+  const selectionMethodRef = reactHostPort.useRef<Puzzle2dSelectionMethod>("rectangle");
+  const selectionModeRef = reactHostPort.useRef<Puzzle2dSelectionMode>("default");
+  const selectionTargetsRef = reactHostPort.useRef<Puzzle2dSelectionTargets>({ nodes: true, edges: true, handles: true });
+  const gridSnapRef = reactHostPort.useRef(true);
+  const redrawPlayingRef = reactHostPort.useRef(false);
+  const fillSeedRef = reactHostPort.useRef(1);
+
+  reactHostPort.useEffect(() => {
+    installPuzzle3dPlayBrushHost(store.read().meta);
+  }, [store]);
+
+  reactHostPort.useLayoutEffect(() => {
+    const commitBrushPlacement = (payload: Parameters<typeof puzzle5dCommitBrushPlacementToPlay>[1]) => {
+      if (puzzle5dCommitBrushPlacementToPlay(store, payload)) {
+        controller.setBrushEngagementPossibles([]);
+      }
+    };
+    puzzle2dSetBrushPlaceCommitHandler(commitBrushPlacement);
+    return () => {
+      puzzle2dSetBrushPlaceCommitHandler(null);
+    };
+  }, [controller, store]);
+
+  reactHostPort.useEffect(() => {
+    const bridge: Puzzle5dPlayHostBridge = {
+      getToolbarState: () => ({
+        puzzle2dActiveTool: controller.getActiveTool(),
+        puzzle2dSuggestionOffset: controller.getSuggestionOffset(),
+        puzzle2dSelectionMethod: selectionMethodRef.current,
+        puzzle2dSelectionMode: selectionModeRef.current,
+        puzzle2dSelectionTargets: selectionTargetsRef.current,
+        puzzle2dGridSnapEnabled: gridSnapRef.current,
+        puzzle2dRedrawPlaying: redrawPlayingRef.current,
+      }),
+      runHostCommand: (command, args) => {
+        switch (command) {
+          case "setActiveTool": {
+            const tool = (args as { tool?: string }).tool;
+            const prev = (args as { prevTool?: string }).prevTool;
+            if (prev === "fill" && tool !== "fill") {
+              store.clearFill();
+            }
+            if (tool === "fill" && prev !== "fill") {
+              fillSeedRef.current = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
+            }
+            break;
+          }
+          case "setSuggestionOffset": {
+            const distance = Number((args as { distance?: number }).distance);
+            if (Number.isFinite(distance)) {
+              puzzle2dActiveRenderer()?.setSuggestionOffset(distance);
+            }
+            break;
+          }
+          case "setBrushOverlapBudget": {
+            break;
+          }
+          case "pickBrushCandidate": {
+            const index = Number((args as { index?: number }).index);
+            if (Number.isFinite(index)) {
+              puzzle5dPickBrushCandidateAtIndex(index);
+            }
+            break;
+          }
+          case "engagementPossibleSelect": {
+            const possibleId = (args as { possibleId?: string }).possibleId ?? "";
+            const brushMatch = possibleId.match(/^puzzle(?:2d|3d|5d)\.brush\.(\d+)$/);
+            if (brushMatch) {
+              const index = Number(brushMatch[1]);
+              if (Number.isFinite(index)) {
+                puzzle5dPickBrushCandidateAtIndex(index);
+              }
+              break;
+            }
+            break;
+          }
+          case "setSelectionMethod": {
+            const method = (args as { method?: Puzzle2dSelectionMethod }).method;
+            if (method) {
+              selectionMethodRef.current = method;
+              puzzle2dActiveRenderer()?.setSelectionOptions({ method });
+            }
+            break;
+          }
+          case "setSelectionMode": {
+            const mode = (args as { mode?: Puzzle2dSelectionMode }).mode;
+            if (mode) {
+              selectionModeRef.current = mode;
+              puzzle2dActiveRenderer()?.setSelectionOptions({ mode });
+            }
+            break;
+          }
+          case "toggleSelectionTarget": {
+            const kind = (args as { kind?: keyof Puzzle2dSelectionTargets }).kind;
+            if (kind) {
+              selectionTargetsRef.current = { ...selectionTargetsRef.current, [kind]: !selectionTargetsRef.current[kind] };
+            }
+            break;
+          }
+          case "toggleGridSnap": {
+            gridSnapRef.current = !gridSnapRef.current;
+            break;
+          }
+          case "toggleRedrawPlaying": {
+            redrawPlayingRef.current = !redrawPlayingRef.current;
+            break;
+          }
+          case "clearSelection": {
+            controller.run("set2dSelection", { ids: [] });
+            controller.run("set3dSelection", { objectIds: [] });
+            store.setSelection({ partIds: [], gripIds: [] });
+            break;
+          }
+          default:
+            break;
+        }
+      },
+    };
+    controller.setHostBridge(bridge);
+    return () => controller.setHostBridge(null);
+  }, [controller, store]);
+
+  return null;
+}
+
+function puzzle5dPickBrushCandidateAtIndex(index: number): void {
+  const flatSession = puzzle2dGetBrushSessionSnapshot();
+  const flatCandidate = flatSession?.candidates[index];
+  puzzle5dFlatRendererRef.current?.setBrushCandidateIndex(index);
+  if (!flatCandidate) {
+    puzzle3dBrushEngagementSourceRef.current.pickCandidate(index);
+    return;
+  }
+  const volumeIndex = puzzle3dBrushEngagementSourceRef.current.candidates.findIndex(
+    (row) => row.objectKindId === flatCandidate.nodeKind && row.sourceVortexIndex === flatCandidate.targetHandleIndex,
+  );
+  if (volumeIndex >= 0) {
+    puzzle3dBrushEngagementSourceRef.current.pickCandidate(volumeIndex);
+  }
+}
+
+function puzzle5dBrushCandidateRows(payload: Puzzle2dBrushCandidatesPayload, kindCatalogs: ReturnType<typeof project2dKindCatalogs>): { readonly id: string; readonly label: string }[] {
+  return payload.candidates.map((candidate, index) => {
+    const labels = puzzle2dBrushCandidateDisplayLabels(candidate, kindCatalogs ?? undefined);
+    return {
+      id: `puzzle5d.brush.${index}`,
+      label: `${labels.object} · ${labels.handle}`,
+    };
+  });
+}
+
+function usePuzzle5dPlayStore(): Store {
+  return useStore();
+}
+//#endregion 🔖HostBridge
+
+const puzzle5dPlayControllerRef: { current: Puzzle5dPlayShellController | null } = { current: null };
+
+//#region 🔖Surfaces
+function Puzzle5d2dSurfaceHost({ node }: { readonly node: UiPuzzle2dHostSurfaceNode }): React.ReactElement {
+  const { controller, snapshot } = usePuzzle5dPlaySnapshot();
+  const store = usePuzzle5dPlayStore();
+  const bindingValid =
+    node.controllerId === PUZZLE_5D_PLAY_CONTROLLER_ID &&
+    node.surfaceId === PUZZLE_5D_PLAY_2D_SURFACE_ID &&
+    node.paneId === PUZZLE_5D_PLAY_2D_WINDOW_ID &&
+    Boolean(controller && snapshot?.fixture2d);
+  const flatCatalogs = reactHostPort.useMemo(() => project2dKindCatalogs(store.read().kindCatalogs), [store, snapshot?.manifestLabel]);
+  const controllerRef = reactHostPort.useRef(controller);
+  const storeRef = reactHostPort.useRef(store);
+  const activeToolRef = reactHostPort.useRef(snapshot?.activeTool ?? "select");
+  controllerRef.current = controller;
+  storeRef.current = store;
+  activeToolRef.current = snapshot?.activeTool ?? "select";
+  const onLodChange = reactHostPort.useCallback((lod: Puzzle2dDrawLodKind) => {
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dLodTag", { lod });
+  }, []);
+  const onSelect = reactHostPort.useCallback((snap: { readonly ids: readonly string[] }) => {
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: snap.ids });
+  }, []);
+  const onConnect = reactHostPort.useCallback(() => {
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note2dConnect");
+  }, []);
+  const onProximityConnect = reactHostPort.useCallback(() => {
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note2dProximity");
+  }, []);
+  const onBrushPlace = reactHostPort.useCallback((payload: Parameters<typeof puzzle5dBrushPlacementFromFlat>[0]) => {
+    if (puzzle5dCommitBrushPlacementToPlay(storeRef.current, payload)) {
+      controllerRef.current?.setBrushEngagementPossibles([]);
+    }
+  }, []);
+  const onBrushCandidates = reactHostPort.useCallback((payload: Puzzle2dBrushCandidatesPayload) => {
+    if (activeToolRef.current !== "brush") {
+      controllerRef.current?.setBrushEngagementPossibles([]);
+      return;
+    }
+    controllerRef.current?.setBrushEngagementPossibles(puzzle5dBrushCandidateRows(payload, flatCatalogs));
+  }, [flatCatalogs]);
+  const onDelete = reactHostPort.useCallback(() => {
+    const selection = storeRef.current.getSnapshot().selection;
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [...selection.partIds] });
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", {
+      objectIds: selection.partIds.length > 0 ? [selection.partIds[0]!] : [],
+    });
+  }, []);
+  const onFixtureDrop = reactHostPort.useCallback((detail: Puzzle2dFixtureDropDetail) => {
+    const partId = storeRef.current.applyPaletteNodeDrop(detail);
+    if (!partId) {
+      return;
+    }
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [partId] });
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [partId] });
+  }, []);
+  if (!bindingValid || !controller || !snapshot) {
+    return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 2d binding</div>;
+  }
+  return (
+    <FiveD
+      mode="2d"
+      instanceId="play-2d"
+      activeTool={snapshot.activeTool}
+      suggestionOffset={snapshot.suggestionOffset}
+      puzzle2d={{
+        onLodChange,
+        onSelect,
+        onConnect,
+        onProximityConnect,
+        onBrushPlace,
+        onBrushCandidates,
+        onDelete,
+        fixtureDragDrop: true,
+        onFixtureDrop,
+        selectionMethod: snapshot.selectionMethod,
+        selectionMode: snapshot.selectionMode,
+        ...snapshot.lod2dProps,
+      }}
+    />
+  );
+}
+
+function Puzzle5d3dSurfaceHost({ node }: { readonly node: UiPuzzle3dHostSurfaceNode }): React.ReactElement {
+  const { controller, snapshot } = usePuzzle5dPlaySnapshot();
+  const store = usePuzzle5dPlayStore();
+  const modelPartCount = reactHostPort.useSyncExternalStore(store.subscribe, () => store.read().parts.length, () => store.read().parts.length);
+  const fillSeedRef = reactHostPort.useRef(1);
+  const fillBaseCaptureRef = reactHostPort.useRef<ReturnType<Store["read"]> | null>(null);
+  const fillPrepareTimerRef = reactHostPort.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fillSessionPreparedRef = reactHostPort.useRef(false);
+  const prevActiveToolRef = reactHostPort.useRef(snapshot?.activeTool);
+  const bindingValid =
+    node.controllerId === PUZZLE_5D_PLAY_CONTROLLER_ID &&
+    node.surfaceId === PUZZLE_5D_PLAY_3D_SURFACE_ID &&
+    Boolean(controller && snapshot?.fixture3d && snapshot.fixture2d);
+  const controllerRef = reactHostPort.useRef(controller);
+  const storeRef = reactHostPort.useRef(store);
+  const brushOverlapBudgetRef = reactHostPort.useRef(snapshot?.brushOverlapBudget ?? 0);
+  controllerRef.current = controller;
+  storeRef.current = store;
+  brushOverlapBudgetRef.current = snapshot?.brushOverlapBudget ?? 0;
+  reactHostPort.useEffect(() => {
+    if (!bindingValid) return;
+    const urls = [...new Set(store.read().parts.flatMap((part) => (part["3d"] ? [part["3d"].meshUrl] : [])))];
+    for (const url of urls) sceneHostPort.drei.useGLTF.preload(url);
+  }, [bindingValid, modelPartCount, store]);
+  reactHostPort.useLayoutEffect(() => {
+    const prev = prevActiveToolRef.current;
+    prevActiveToolRef.current = snapshot?.activeTool;
+    if (snapshot?.activeTool === "fill" && prev !== "fill") {
+      fillBaseCaptureRef.current = structuredClone(store.read());
+      fillSessionPreparedRef.current = false;
+      fillSeedRef.current = (Date.now() ^ Math.floor(Math.random() * 0x7fffffff)) >>> 0;
+    }
+    if (snapshot?.activeTool !== "fill") {
+      fillBaseCaptureRef.current = null;
+      fillSessionPreparedRef.current = false;
+    }
+  }, [snapshot?.activeTool, store]);
+  const volumeKindCatalogs = reactHostPort.useMemo(
+    () => project3dKindCatalogs(snapshot?.kindCatalogs ?? snapshot?.sharedKinds.kindCatalogs),
+    [snapshot?.kindCatalogs, snapshot?.sharedKinds.kindCatalogs],
+  );
+  reactHostPort.useEffect(() => {
+    if (!bindingValid || snapshot?.activeTool !== "fill" || !snapshot.fixture3d) {
+      return;
+    }
+    const urls = brushMeshUrlsForFillSession(snapshot.fixture3d, volumeKindCatalogs, snapshot.model.kindCompatibility);
+    for (const url of urls) {
+      if (isLoadableMeshUrl(url)) {
+        sceneHostPort.drei.useGLTF.preload(url);
+      }
+    }
+  }, [bindingValid, snapshot?.activeTool, snapshot?.fixture3d, snapshot?.model.kindCompatibility, volumeKindCatalogs]);
+  const onSelect = reactHostPort.useCallback((selection: { readonly objectIds: readonly string[] }) => {
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: selection.objectIds });
+  }, []);
+  const onConnect = reactHostPort.useCallback(() => {
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note3dConnect");
+  }, []);
+  const onProximityConnect = reactHostPort.useCallback(() => {
+    controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "note3dProximity");
+  }, []);
+  const onBrushPlace = reactHostPort.useCallback((payload: Parameters<typeof puzzle5dBrushPlacementFromVolume>[0]) => {
+    if (puzzle5dCommitVolumeBrushPlacementToPlay(storeRef.current, payload)) {
+      controllerRef.current?.setBrushEngagementPossibles([]);
+    }
+  }, []);
+  const onFillMeshesReady = reactHostPort.useCallback(() => {
+    if (fillPrepareTimerRef.current !== null) {
+      clearTimeout(fillPrepareTimerRef.current);
+    }
+    fillPrepareTimerRef.current = setTimeout(() => {
+      fillPrepareTimerRef.current = null;
+      const base = fillBaseCaptureRef.current;
+      if (!base || fillSessionPreparedRef.current) {
+        return;
+      }
+      const activeStore = storeRef.current;
+      const activeController = controllerRef.current;
+      activeStore.setFillBuildDone(false);
+      const sequence = buildPuzzle5dFillSequence({
+        model: base,
+        seed: fillSeedRef.current,
+        overlapBudget: brushOverlapBudgetRef.current,
+        meshRootForUrl: puzzle3dBrushMeshRootForFill,
+      });
+      activeStore.prepareFillSession(sequence, base, fillSeedRef.current);
+      activeStore.setFillBuildDone(true);
+      fillSessionPreparedRef.current = true;
+      if (sequence.length > 0) {
+        activeController?.run("setFillCount", { count: 1 });
+      }
+    }, 0);
+  }, []);
+  reactHostPort.useEffect(
+    () => () => {
+      if (fillPrepareTimerRef.current !== null) {
+        clearTimeout(fillPrepareTimerRef.current);
+      }
+    },
+    [],
+  );
+  const onFixtureDrop = reactHostPort.useCallback(
+    (detail: Puzzle3dFixtureDropDetail) => {
+      const sceneFixture = project3d(storeRef.current.read());
+      const result = resolvePuzzle3dFixtureDrop(detail, volumeKindCatalogs, sceneFixture);
+      if (result.kind !== "palette-object") {
+        return;
+      }
+      const partId = storeRef.current.applyPaletteObjectDrop(result.object);
+      if (!partId) {
+        return;
+      }
+      controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set2dSelection", { ids: [partId] });
+      controllerRef.current?.commandBus.dispatch(PUZZLE_5D_PLAY_CONTROLLER_ID, "set3dSelection", { objectIds: [partId] });
+    },
+    [volumeKindCatalogs],
+  );
+  if (!bindingValid || !controller || !snapshot?.fixture3d) {
+    return <div className="p-2 text-xs text-muted-foreground">Invalid puzzle 5d 3d binding</div>;
+  }
+  return (
+    <FiveD
+      mode="3d"
+      instanceId="play-3d"
+      activeTool={snapshot.activeTool}
+      brushOverlapBudget={snapshot.brushOverlapBudget}
+      gumballConfig={snapshot.gumballConfig}
+      puzzle3d={{
+        ...snapshot.lod3dProps,
+        onSelect,
+        onConnect,
+        onProximityConnect,
+        onBrushPlace,
+        onFillMeshesReady,
+        fixtureDragDrop: true,
+        onFixtureDrop,
+        selectionMethod: snapshot.selectionMethod,
+        selectionMode: snapshot.selectionMode,
+      }}
+    />
+  );
+}
+//#endregion 🔖Surfaces
+
+function Puzzle5dPlayJackSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): React.ReactElement {
+  const { controller } = usePuzzle5dPlaySnapshot();
+  void controller?.getHoverEpoch();
+  void controller?.getSelectEpoch();
+  const document = controller?.getWriterDocumentJack() ?? createWriterDocument({ id: "puzzle-5d-jack", languageId: "jack", text: "" });
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    puzzle5dPlayControllerRef.current?.run("setJackHover", { offset });
+  }, []);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    puzzle5dPlayControllerRef.current?.run("setJackSelect", range);
+  }, []);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={controller?.getJackHoverOccurrences()}
+      externalHoverOccurrencesSignal={controller?.getHoverEpoch()}
+      externalSelectionOccurrences={controller?.getJackSelectOccurrences()}
+      externalSelectionOccurrencesSignal={controller?.getSelectEpoch()}
+    />
+  );
+}
+
+function Puzzle5dPlayChrome({
+  runtime,
+  playgroundKeybindings,
+}: {
+  readonly runtime: Platform;
+  readonly playgroundKeybindings?: readonly { readonly key: string; readonly controllerId: string; readonly command: string }[];
+}): ReactElement {
+  const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController | undefined;
+  puzzle5dPlayControllerRef.current = controller ?? null;
+  const exampleContribution = reactHostPort.useMemo(
+    () => controllerBackedExampleContribution(PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_EXAMPLE_OPTIONS),
+    [],
+  );
+  const shell = (
+    <PlaygroundView
+      runtime={runtime}
+      defaultAppId={PUZZLE_5D_PLAY_APP_ID}
+      playgroundKeybindings={playgroundKeybindings}
+      exampleContribution={exampleContribution}
+    />
+  );
+  if (!controller) {
+    return shell;
+  }
+  const puzzle5dBridge = controller.getStore(PUZZLE_5D_PLAY_STORE_ID) as Puzzle5dStoreBridge | undefined;
+  const storeForProvider = puzzle5dBridge?.inner ?? controller.puzzle5dStore;
+  return (
+    <StoreProvider store={storeForProvider}>
+      <Puzzle5dBrushPairedSync />
+      <Puzzle5dPlayHostBridgeInstaller controller={controller} store={storeForProvider} />
+      {shell}
+    </StoreProvider>
+  );
+}
+
+function puzzle5dMountChrome({ runtime }: PlaygroundMountProps): ReactElement {
+  return <Puzzle5dPlayChrome runtime={runtime as Platform} />;
+}
+
+/** @emoji 🛝 Puzzle 5D app renderer for playground and OS shells. */
+export const puzzle5dAppRenderer: AppRendererContribution = {
+  windowBodies: puzzle5dPlayWindowBodies,
+  sidePanelBodies: puzzle5dPlaySidePanelBodies,
+  surfaceHosts: {
+    [PUZZLE_5D_PLAY_2D_SURFACE_ID]: Puzzle5d2dSurfaceHost,
+    [PUZZLE_5D_PLAY_3D_SURFACE_ID]: Puzzle5d3dSurfaceHost,
+    [PUZZLE_5D_PLAY_JACK_SURFACE_ID]: Puzzle5dPlayJackSurfaceHost,
+  },
+  tabIcons: {
+    [PUZZLE_5D_PLAY_ICON_KINDS]: "tags",
+  },
+  mountChrome: puzzle5dMountChrome,
+  examples: controllerBackedExampleContribution(PUZZLE_5D_PLAY_CONTROLLER_ID, PUZZLE_5D_PLAY_EXAMPLE_OPTIONS),
+  treeDragController: (dragByItemId) => puzzle5dFixturePaletteTreeDragController(dragByItemId),
+};
+
+// #endregion 🛝PlayHost
+//#endregion 🔖PlayHost

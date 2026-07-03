@@ -599,27 +599,63 @@ export {
 //#endregion 🔖SidePanelBodyViewContext
 
 //#region 🔖PlaygroundAppDefinition
-import type { AppDefinition, AppRendererContribution } from "@semio-tech/framework-platform-core";
+import type { AppDefinition } from "@semio-tech/framework-platform-core";
+import { CommandBus } from "@semio-tech/framework-core";
+import type { Controller } from "@semio-tech/framework-core";
 
-/** @emoji 🛝 Playground app contract: runtime factory plus renderer contribution loader. */
+/** @emoji 🛝 Playground app contract — runtime factory; renderer loads from manifest. */
 export interface PlaygroundAppDefinition extends AppDefinition {
 	readonly createPlayground: () => Playground;
-	readonly loadRenderer: () => Promise<AppRendererContribution>;
+}
+
+/** @emoji 🎯 Example boot spec for derived playground runtime. */
+export interface PlaygroundExampleBootSpec {
+	readonly defaultId: string;
+	readonly hasExample: (id: string) => boolean;
+}
+
+/** @emoji 🚀 Declarative runtime bootstrap — framework derives {@link Platform} creation. */
+export interface PlaygroundRuntimeBootstrap {
+	readonly createController: (bus: CommandBus, notify: () => void) => Controller;
+	readonly buildAppRuntime: (controller: Controller) => AppRuntime;
+	readonly example?: PlaygroundExampleBootSpec;
+	readonly afterBoot?: (runtime: Platform, controller: Controller) => void;
 }
 
 /** @emoji 🛝 Config for {@link createPlaygroundApp} — one object per technology, no hand-written subclass. */
 export interface PlaygroundAppConfig extends AppDefinition {
 	readonly keybindings?: readonly PlaygroundKeybinding[];
-	readonly createRuntime: () => Platform;
-	readonly loadRenderer: () => Promise<AppRendererContribution>;
+	readonly createRuntime?: () => Platform;
+	readonly runtimeBootstrap?: PlaygroundRuntimeBootstrap;
+}
+
+/** @emoji 🛝 Derives canonical playground {@link Platform} from a runtime bootstrap spec. */
+export function derivePlaygroundCreateRuntime(appId: string, bootstrap: PlaygroundRuntimeBootstrap): () => Platform {
+	return () => {
+		const runtime = createProductPlaygroundPlatform(appId);
+		const ctrl = bootstrap.createController(runtime.commandBus, () => runtime.notify());
+		if (bootstrap.example) {
+			const resolved = playgroundResolvedExampleId(bootstrap.example.defaultId);
+			const exampleId = bootstrap.example.hasExample(resolved) ? resolved : bootstrap.example.defaultId;
+			ctrl.run("setActiveExample", { exampleId });
+		}
+		runtime.addApp(bootstrap.buildAppRuntime(ctrl));
+		bootstrap.afterBoot?.(runtime, ctrl);
+		return runtime;
+	};
 }
 
 /** @emoji 🛝 Derives a {@link PlaygroundAppDefinition} from a plain config (no per-app {@link Playground} subclass). */
 export function createPlaygroundApp(config: PlaygroundAppConfig): PlaygroundAppDefinition {
+	const createRuntime =
+		config.createRuntime ?? (config.runtimeBootstrap ? derivePlaygroundCreateRuntime(config.id, config.runtimeBootstrap) : undefined);
+	if (!createRuntime) {
+		throw new Error(`Playground app "${config.id}" requires createRuntime or runtimeBootstrap`);
+	}
 	class ConfiguredPlayground extends Playground {
 		readonly id = config.id;
 		readonly keybindings = config.keybindings;
-		createRuntime = config.createRuntime;
+		createRuntime = createRuntime;
 	}
 	return {
 		id: config.id,
@@ -630,7 +666,6 @@ export function createPlaygroundApp(config: PlaygroundAppConfig): PlaygroundAppD
 		defaultModeId: config.defaultModeId,
 		createController: config.createController,
 		devHost: config.devHost,
-		loadRenderer: config.loadRenderer,
 		program: config.program,
 		createPlayground: () => new ConfiguredPlayground(),
 	};
@@ -1073,6 +1108,20 @@ export function platformFromViewContext(ctx: SidePanelBodyViewContext | WindowBo
 
 export function playgroundControllerFromContext(ctx: WindowBodyViewContext | SidePanelBodyViewContext): PlaygroundController<string> | undefined {
   return platformFromViewContext(ctx)?.getActiveApp()?.controller as PlaygroundController<string> | undefined;
+}
+
+/** @emoji 🌲 Builds a declarative side-panel tree body from the active playground controller. */
+export function buildControllerTreeSidePanelBody(
+  ctx: SidePanelBodyViewContext,
+  build: (ctrl: PlaygroundController<string>, bus: CommandBus) => UiTreeNode,
+  emptyLabel = "Missing controller",
+): UiTreeNode {
+  const ctrl = playgroundControllerFromContext(ctx);
+  const bus = platformFromViewContext(ctx)?.commandBus ?? new CommandBus();
+  if (!ctrl) {
+    return { type: "tree", sections: [{ id: "play.missing", items: [{ id: "missing", label: emptyLabel }] }] };
+  }
+  return build(ctrl, bus);
 }
 
 /** @emoji 🪟 Declarative main window: lone puzzle3d viewport surface. */

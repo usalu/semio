@@ -44,7 +44,9 @@
         "env": "DRAW_PLAY_PORT"
       },
       "programExport": "drawProgramContribution",
-      "programId": "draw"
+      "programId": "draw",
+      "rendererPackage": "@semio-tech/draw-react",
+      "rendererExport": "drawAppRenderer"
     }
   }
 }

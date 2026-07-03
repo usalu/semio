@@ -37,7 +37,9 @@
         "env": "LAYOUT_PLAY_PORT"
       },
       "programExport": "layoutProgramContribution",
-      "programId": "layout"
+      "programId": "layout",
+      "rendererPackage": "@semio-tech/layout-react",
+      "rendererExport": "layoutAppRenderer"
     }
   },
   "dependencies": {

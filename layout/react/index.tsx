@@ -380,3 +380,94 @@ if (import.meta.vitest) {
 		});
 	});
 }
+
+//#region 🔖PlayHost
+import type { ReactElement } from "react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { usePlayController, createOsInstanceHost } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import { CANVAS_HOVER_SOURCE_CANVAS } from "@semio-tech/framework-core";
+import { LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_SURFACE_PREVIEW, LAYOUT_PLAY_WINDOW_PREVIEW, LayoutPlayController, DEFAULT_LAYOUT_DOCUMENT_JSON, findPage, layoutDocumentToJson, type LayoutDocument, layoutPlayWindowBodies, layoutPlaySidePanelBodies } from "@semio-tech/layout-core";
+
+const LayoutOsInstanceHost = createOsInstanceHost<LayoutDocument>({
+  Canvas: ({ document, className }) => (
+    <LayoutCanvas
+      documentJson={layoutDocumentToJson(document)}
+      pageId={document.pages[0]?.id ?? "page-1"}
+      className={className}
+      chromeMode="blueprint"
+    />
+  ),
+  materialize: (instance, projection) => {
+    if (projection && typeof projection === "object") {
+      const parsed = parseLayoutDocumentJson(JSON.stringify(projection));
+      if (parsed) return parsed;
+    }
+    if (instance.sourceDocument.inline) {
+      const parsed = parseLayoutDocumentJson(instance.sourceDocument.inline);
+      if (parsed) return parsed;
+    }
+    return parseLayoutDocumentJson(DEFAULT_LAYOUT_DOCUMENT_JSON)!;
+  },
+  dispatch: (bridge, instance, document) => {
+    bridge.dispatch({ kind: "patchAppSource", instanceId: instance.id, inline: layoutDocumentToJson(document) });
+  },
+});
+
+function LayoutPlayPaneSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiLayoutHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<LayoutPlayController>();
+  const chromeMode = node.chromeMode ?? (node.paneId === LAYOUT_PLAY_WINDOW_PREVIEW ? "preview" : "blueprint");
+  const onSelectionChange = reactHostPort.useCallback(
+    (objectId: string | null) => {
+      if (objectId) ctrl?.run("setSelection", { ids: [objectId] });
+    },
+    [ctrl],
+  );
+  const onHover = reactHostPort.useCallback(
+    (objectId: string | null) => {
+      ctrl?.run("setHover", { id: objectId, sourceId: CANVAS_HOVER_SOURCE_CANVAS });
+    },
+    [ctrl],
+  );
+  const onCatalogueDrop = reactHostPort.useCallback(
+    (kind: import("@semio-tech/layout-core").LayoutCatalogueKind, worldX: number, worldY: number) => {
+      if (!ctrl) return;
+      if (kind === "page") {
+        const spreadId = findPage(ctrl.getDocument(), ctrl.getActivePageId())?.spreadId ?? ctrl.getDocument().spreads[0]?.id;
+        ctrl.run("addPage", { spreadId });
+        return;
+      }
+      const pageId = ctrl.getActivePageId();
+      const layerId = ctrl.getDocument().pages.find((page) => page.id === pageId)?.layerIds[0];
+      ctrl.run("addFrame", { kind, pageId, layerId, x: worldX, y: worldY });
+    },
+    [ctrl],
+  );
+  return (
+    <LayoutCanvas
+      chromeMode={chromeMode}
+      documentJson={ctrl?.getDocumentJson() ?? DEFAULT_LAYOUT_DOCUMENT_JSON}
+      pageId={ctrl?.getActivePageId() ?? "page-1"}
+      selectedIds={ctrl?.getSelectedIds() ?? []}
+      hoveredId={ctrl?.getHoveredId() ?? null}
+      onHit={chromeMode === "blueprint" ? onSelectionChange : undefined}
+      onHover={chromeMode === "blueprint" ? onHover : undefined}
+      onCatalogueDrop={chromeMode === "blueprint" ? onCatalogueDrop : undefined}
+      className="h-full min-h-0"
+    />
+  );
+}
+
+/** @emoji 🛝 Layout app renderer contribution for playground and OS shells. */
+export const layoutAppRenderer: AppRendererContribution = {
+  windowBodies: layoutPlayWindowBodies,
+  sidePanelBodies: layoutPlaySidePanelBodies,
+  surfaceHosts: {
+    [LAYOUT_PLAY_SURFACE_BLUEPRINT]: LayoutPlayPaneSurfaceHost,
+    [LAYOUT_PLAY_SURFACE_PREVIEW]: LayoutPlayPaneSurfaceHost,
+  },
+  preload: ensureLayoutWasm,
+  instanceHost: LayoutOsInstanceHost,
+  treeDragController: () => createLayoutPlayCatalogueTreeDragController(),
+};
+//#endregion 🔖PlayHost

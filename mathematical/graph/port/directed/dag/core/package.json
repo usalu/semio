@@ -47,7 +47,9 @@
         "env": "DAG_PLAY_PORT"
       },
       "programExport": "dagProgramContribution",
-      "programId": "dag"
+      "programId": "dag",
+      "rendererPackage": "@semio-tech/dag-react",
+      "rendererExport": "dagAppRenderer"
     }
   }
 }

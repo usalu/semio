@@ -1377,3 +1377,146 @@ if (import.meta.vitest) {
 		});
 	});
 }
+
+//#region 🔖PlayHost
+import { createWriterDocument } from "@semio-tech/writer-core";
+import { WriterCanvas } from "@semio-tech/writer-react";
+import type { ReactElement } from "react";
+import type { AppRendererContribution } from "@semio-tech/framework-platform-core";
+import { usePlayController } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import { SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON, SEQUENCE_PLAY_SCRIPT_SURFACE_ID, SEQUENCE_PLAY_SURFACE_ID, SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG, SEQUENCE_PLAY_WINDOW_KIND_ID, SequencePlayController, sequencePlayWindowBodies, sequencePlaySidePanelBodies } from "@semio-tech/sequence-core";
+
+function useSequencePlayInteractionRevision(ctrl: SequencePlayController | undefined): number {
+  return reactHostPort.useSyncExternalStore(
+    (listener) => {
+      const unsubscribeCtrl = ctrl?.subscribeSnapshot(listener);
+      return () => unsubscribeCtrl?.();
+    },
+    () => ctrl?.getInteractionRevision() ?? 0,
+    () => 0,
+  );
+}
+
+function SequencePlayPaneSurfaceHost({ node }: { readonly node: import("@semio-tech/framework-platform-core").UiSequenceHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<SequencePlayController>();
+  const interactionRevision = useSequencePlayInteractionRevision(ctrl);
+  void interactionRevision;
+  const scopeId = node.paneId ?? SEQUENCE_PLAY_WINDOW_KIND_ID;
+  const lodProps = dagLodCanvasProps(ctrl?.lodModeForScope(scopeId) ?? DAG_LOD_MODE_AUTOMATIC);
+  const onLodChange = reactHostPort.useCallback(
+    (lod: import("@semio-tech/dag-react").DagDrawLodKind) => {
+      ctrl?.run("setEffectiveLod", { lod, instanceId: scopeId });
+    },
+    [ctrl, scopeId],
+  );
+  const onFixtureChange = reactHostPort.useCallback(
+    (json: string) => {
+      ctrl?.run("setFixtureJson", { json });
+    },
+    [ctrl],
+  );
+  const onSelectionChange = reactHostPort.useCallback(
+    (ids: readonly string[]) => {
+      ctrl?.run("setSelection", { ids: [...ids] });
+    },
+    [ctrl],
+  );
+  const onCompiledTextChange = reactHostPort.useCallback(
+    (text: string) => {
+      ctrl?.run("setCompiledText", { text });
+    },
+    [ctrl],
+  );
+  const onCompiledWireLiteralChange = reactHostPort.useCallback(
+    (text: string) => {
+      ctrl?.run("setCompiledWireLiteral", { text });
+    },
+    [ctrl],
+  );
+  const onRunResult = reactHostPort.useCallback(
+    (result: import("@semio-tech/imperative-core").RunResult) => {
+      ctrl?.run("setRunResult", { result });
+    },
+    [ctrl],
+  );
+  return (
+    <SequenceCanvas
+      fixtureJson={ctrl?.getFixtureJson() ?? SEQUENCE_PLAY_DEFAULT_FIXTURE_JSON}
+      reorganize={ctrl?.getReorganize()}
+      runRequest={ctrl?.getRunRequest()}
+      runStopRequest={ctrl?.getRunStopRequest()}
+      selectedStepIds={ctrl?.getSelectedStepIds() ?? []}
+      fixtureDragDrop
+      onFixtureChange={onFixtureChange}
+      onSelectionChange={onSelectionChange}
+      onCompiledTextChange={onCompiledTextChange}
+      onCompiledWireLiteralChange={onCompiledWireLiteralChange}
+      onRunResult={onRunResult}
+      {...lodProps}
+      onLodChange={onLodChange}
+    />
+  );
+}
+
+function SequencePlayScriptSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<SequencePlayController>();
+  const interactionRevision = useSequencePlayInteractionRevision(ctrl);
+  const document = reactHostPort.useMemo(
+    () =>
+      createWriterDocument({
+        id: "sequence-compiled-script",
+        languageId: "plaintext",
+        text: ctrl?.getCompiledText() ?? "",
+      }),
+    [ctrl?.getCompiledText(), interactionRevision],
+  );
+  return <WriterCanvas document={document} className="h-full min-h-0" />;
+}
+
+function SequencePlayCompiledDagSurfaceHost({ node: _node }: { readonly node: import("@semio-tech/framework-platform-core").UiWriterHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<SequencePlayController>();
+  const interactionRevision = useSequencePlayInteractionRevision(ctrl);
+  void ctrl?.getHoverEpoch();
+  void ctrl?.getSelectEpoch();
+  const document = reactHostPort.useMemo(
+    () => ctrl?.getWriterDocumentCompiledDag() ?? createWriterDocument({ id: "sequence-compiled-dag", languageId: "wire", text: "" }),
+    [ctrl, interactionRevision],
+  );
+  const onHoverChange = reactHostPort.useCallback((offset: number | null) => {
+    ctrl?.run("setWireHover", { offset });
+  }, [ctrl]);
+  const onSelectionChange = reactHostPort.useCallback((range: { start: number; end: number }) => {
+    ctrl?.run("setWireSelect", range);
+  }, [ctrl]);
+  return (
+    <WriterCanvas
+      document={document}
+      className="h-full min-h-0"
+      onHoverChange={onHoverChange}
+      onSelectionChange={onSelectionChange}
+      externalHoverOccurrences={ctrl?.getWireHoverOccurrences()}
+      externalHoverOccurrencesSignal={ctrl?.getHoverEpoch()}
+      externalSelectionOccurrences={ctrl?.getWireSelectOccurrences()}
+      externalSelectionOccurrencesSignal={ctrl?.getSelectEpoch()}
+    />
+  );
+}
+
+/** @emoji 🛝 Sequence app renderer contribution for playground and OS shells. */
+export const sequenceAppRenderer: AppRendererContribution = {
+  windowBodies: sequencePlayWindowBodies,
+  sidePanelBodies: sequencePlaySidePanelBodies,
+  surfaceHosts: {
+    [SEQUENCE_PLAY_SURFACE_ID]: SequencePlayPaneSurfaceHost,
+    [SEQUENCE_PLAY_SCRIPT_SURFACE_ID]: SequencePlayScriptSurfaceHost,
+    [SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG]: SequencePlayCompiledDagSurfaceHost,
+  },
+  preload: ensureSequenceWasmLoaded,
+  treeDragController: (dragByItemId) => {
+    const sample = dragByItemId.values().next().value;
+    if (sample && SEQUENCE_STEP_DRAG_MIME in sample) return sequenceStepPaletteTreeDragController(dragByItemId);
+    return undefined;
+  },
+};
+//#endregion 🔖PlayHost

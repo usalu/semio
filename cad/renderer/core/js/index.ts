@@ -4,7 +4,6 @@
 
 import {
 	createPlaygroundApp,
-	createProductPlaygroundPlatform,
   CommandBus,
   Controller,
   Platform,
@@ -18,14 +17,21 @@ import {
   PRODUCT_SHELL_DEFAULT_PANEL_VISIBILITY,
   namedLayoutsFromOrbitViewDescriptors,
   registerWindowBody,
-  type AppTools,
+  registerSidePanelBody,
+  buildControllerTreeSidePanelBody,
+  playgroundControllerFromContext,
+  FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+  FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+  type SideTabSpec,
   type ToolLeaf,
   toolCollection,
   type WindowBodyViewContext,
   type WindowEngagement,
   type WindowMeasure,
   type UiNode,
-  type WindowLayout,
+  type UiTreeItemAction,
+  type UiTreeItemNode,
   type WindowTemplate,
   enforcePlaygroundWindowEngagementInput,
   windowEngagementsEqual,
@@ -168,6 +174,11 @@ function engagementSpecControlMirror(
 export const CAD_PLAY_APP_ID = "cad-play";
 export const CAD_PLAY_CONTROLLER_ID = "cad-play";
 export const CAD_PLAY_HIERARCHY_TAB_ID = "cad-play-hierarchy";
+export const CAD_PLAY_CATALOGUE_TAB_ID = "cad-play-catalog";
+export const CAD_PLAY_DETAILS_TAB_ID = "cad-play-details";
+export const CAD_PLAY_HIERARCHY_BODY_KEY = "cad.play.hierarchy";
+export const CAD_PLAY_CATALOGUE_BODY_KEY = "cad.play.catalog";
+export const CAD_PLAY_DETAILS_BODY_KEY = "cad.play.details";
 
 /** @emoji 🖱️ Hover owner id when the workbench hierarchy drives shared pointer focus. */
 export const CAD_PLAY_HOVER_SOURCE_HIERARCHY = "cad-play-hierarchy";
@@ -918,6 +929,7 @@ export function cadPlayResolvePaneEngagement(pane: CadPlayPaneId, stored?: Windo
 export class CadPlayShellController extends Controller {
   readonly mainMode = new ModeRuntime("main", "Edit", undefined);
   private hostBridge: CadPlayHostBridge | null = null;
+  private hierarchyClickHandlers = new Map<string, () => void>();
   private computeModeByPane: Record<CadPlayPaneId, SpatialComputeMode>;
   private gumballConfigByPane: Record<CadPlayPaneId, CadGumballConfig>;
   private engagementByPane: Record<CadPlayPaneId, WindowEngagement | undefined>;
@@ -1069,6 +1081,11 @@ export class CadPlayShellController extends Controller {
     this.rebuildToolbarTools();
   }
 
+  /** @emoji 🌳 Registers row click handlers for the declarative hierarchy panel body. */
+  setHierarchyClickHandlers(handlers: ReadonlyMap<string, () => void>): void {
+    this.hierarchyClickHandlers = new Map(handlers);
+  }
+
   /** @emoji 🔄 Rebuilds {@link ModeRuntime.tools} from the latest host toolbar snapshot. */
   rebuildToolbarTools(): void {
     if (!this.hostBridge) {
@@ -1132,6 +1149,11 @@ export class CadPlayShellController extends Controller {
       case "engagementControlSelect":
         this.hostBridge?.runHostCommand(command, args);
         break;
+      case "hierarchyItemClick": {
+        const itemId = (args as { itemId?: string }).itemId;
+        if (itemId) this.hierarchyClickHandlers.get(itemId)?.();
+        break;
+      }
       default:
         break;
     }
@@ -1162,7 +1184,11 @@ export const buildCadPlayStructureClassicDeclarativeBody = buildCadPlayDeclarati
 
 export function buildCadPlayAppRuntime(controller: CadPlayShellController): AppRuntime {
   const app = createPlayAppRuntime(CAD_PLAY_APP_ID, "CAD", controller, CAD_PLAY_LAYOUT as never, controller.mainMode);
-  app.panelTabs = [];
+  app.panelTabs = [
+    { id: CAD_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: CAD_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+    { id: CAD_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: CAD_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+    { id: CAD_PLAY_DETAILS_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: CAD_PLAY_DETAILS_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+  ] satisfies SideTabSpec[];
   app.onActiveWindowChange = (shellWindowId) => {
     const pane = cadPlayPaneFromShellWindowId(shellWindowId);
     if (!pane) return;
@@ -1181,7 +1207,103 @@ export const cadPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio-t
 /** @emoji 📝 Registers CAD play window bodies on the playground host. */
 export function registerCadPlayDeclarativeBodies(): void {
   for (const [key, build] of Object.entries(cadPlayWindowBodies)) registerWindowBody(key, build);
+  for (const [key, build] of Object.entries(cadPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
+
+function cadPlayTreeLabel(value: TreeDataItem["label"]): string {
+  return typeof value === "string" ? value : String(value ?? "");
+}
+
+function cadPlayTreeDataItemToUiTreeItem(item: TreeDataItem, clickHandlers: Map<string, () => void>): UiTreeItemNode {
+  if (item.onClick) clickHandlers.set(item.id, item.onClick as () => void);
+  return {
+    id: item.id,
+    label: cadPlayTreeLabel(item.label),
+    description: typeof item.description === "string" ? item.description : undefined,
+    selected: item.isSelected,
+    defaultOpen: item.defaultOpen,
+    isHidden: item.isHidden,
+    command: item.onClick ? cadPlayCmd("hierarchyItemClick", { itemId: item.id }) : undefined,
+    onPointerEnter: item.onPointerEnter,
+    onPointerLeave: item.onPointerLeave,
+    actions: item.actions?.map(
+      (action): UiTreeItemAction => ({
+        id: action.id,
+        icon: typeof action.icon === "string" ? action.icon : "circle",
+        title: action.title,
+        onClick: action.onClick,
+        revealOnHover: action.revealOnHover,
+      }),
+    ),
+    contextMenu: item.contextMenu?.map((entry) => ({
+      id: entry.id,
+      label: entry.label,
+      icon: typeof entry.icon === "string" ? entry.icon : undefined,
+      onSelect: entry.onSelect,
+    })),
+    items: item.items?.map((child) => cadPlayTreeDataItemToUiTreeItem(child, clickHandlers)),
+  };
+}
+
+function buildCadPlayHierarchyUiTree(snapshot: CadPlayChromeSnapshot | null, ctrl?: CadPlayShellController): UiTreeNode {
+  if (!snapshot) {
+    return {
+      type: "tree",
+      sections: [{ id: "cad-play-hierarchy.pending", label: "Hierarchy", items: [{ id: "cad-play-hierarchy.pending.item", label: "(empty)" }] }],
+    };
+  }
+  const build = buildCadPlayHierarchySections(
+    snapshot.modelsByDefinitionId,
+    snapshot.activeModelDefinitionId,
+    snapshot.selection,
+    snapshot.selectTarget,
+    snapshot.hoverTarget,
+    snapshot.toggleHidden,
+    snapshot.toggleLocked,
+    snapshot.referencesByModelDefinitionId,
+    snapshot.selectedReference,
+    snapshot.selectReference,
+    snapshot.hoverReference,
+    snapshot.toggleReferenceHidden,
+    snapshot.toggleReferenceLocked,
+  );
+  const clickHandlers = new Map<string, () => void>();
+  const highlightedIds: string[] = [];
+  if (snapshot.hoveredKey) {
+    const ids = new Set<string>();
+    for (const alias of spatialHoverKeyAliases(snapshot.hoveredKey)) {
+      for (const itemId of build.highlightKeyToItemIds[alias] ?? []) ids.add(itemId);
+    }
+    highlightedIds.push(...ids);
+  }
+  const sections = build.sections.map((section) => ({
+    id: section.id,
+    label: cadPlayTreeLabel(section.label),
+    defaultOpen: section.defaultOpen,
+    items: (section.items ?? []).map((item) => cadPlayTreeDataItemToUiTreeItem(item, clickHandlers)),
+  }));
+  ctrl?.setHierarchyClickHandlers(clickHandlers);
+  return { type: "tree", sections, highlightedIds };
+}
+
+function buildCadPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  const ctrl = playgroundControllerFromContext(ctx) as CadPlayShellController | undefined;
+  return buildCadPlayHierarchyUiTree(cadPlayChromeSnapshotRef.current, ctrl);
+}
+
+function buildCadPlayCatalogPanelBody(_ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildCadPlayCatalogTree(cadPlayChromeSnapshotRef.current);
+}
+
+function buildCadPlayDetailsPanelBody(_ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+  return buildCadPlayDetailsTree(cadPlayChromeSnapshotRef.current);
+}
+
+export const cadPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+  [CAD_PLAY_HIERARCHY_BODY_KEY]: buildCadPlayHierarchyPanelBody,
+  [CAD_PLAY_CATALOGUE_BODY_KEY]: buildCadPlayCatalogPanelBody,
+  [CAD_PLAY_DETAILS_BODY_KEY]: buildCadPlayDetailsPanelBody,
+};
 
 /** @emoji 🚀 Creates CAD play {@link Platform} with declarative viewport body registered. */
 export function buildCadPlayRuntime(): Platform {
@@ -1335,6 +1457,9 @@ export interface CadPlayChromeSnapshot {
   readonly toggleReferenceHidden: (modelDefinitionId: string, referenceId: string) => void;
   readonly toggleReferenceLocked: (modelDefinitionId: string, referenceId: string) => void;
 }
+
+/** @emoji 🪞 Live CAD play chrome snapshot published by the React model-space host. */
+export const cadPlayChromeSnapshotRef: { current: CadPlayChromeSnapshot | null } = { current: null };
 
 //#region 🔖CadPlayDetails
 function cadPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
@@ -2179,9 +2304,13 @@ if (import.meta.vitest) {
       expect(app?.windowKinds.map((row) => row.id)).toEqual([CAD_PLAY_SHAPE_WINDOW_ID, CAD_PLAY_BUILDING_WINDOW_ID, CAD_PLAY_ENERGY_WINDOW_ID, CAD_PLAY_STRUCTURE_CLASSIC_WINDOW_ID]);
     });
 
-    it("uses empty declarative side tab slots", () => {
+    it("registers declarative side panel tabs", () => {
       const app = buildCadPlayRuntime().getActiveApp();
-      expect(app?.panelTabs).toEqual([]);
+      expect(app?.panelTabs?.map((tab) => tab.id)).toEqual([
+        CAD_PLAY_HIERARCHY_TAB_ID,
+        CAD_PLAY_CATALOGUE_TAB_ID,
+        CAD_PLAY_DETAILS_TAB_ID,
+      ]);
     });
 
     it("cadPlayModelsDigest changes when object rows are added", () => {
@@ -2658,13 +2787,10 @@ export const cadPlayAppDefinition = createPlaygroundApp({
 			],
 		},
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(CAD_PLAY_APP_ID);
-			const controller = new CadPlayShellController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildCadPlayAppRuntime(controller));
-			return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new CadPlayShellController(bus, notify),
+		buildAppRuntime: buildCadPlayAppRuntime,
 	},
-	loadRenderer: async () => (await import("@semio-tech/cad-js-renderer-react/play")).cadAppRenderer,
 });
 //#endregion 🔖Play
 //#region 🔖DocumentVcs

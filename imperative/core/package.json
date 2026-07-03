@@ -43,7 +43,9 @@
         "env": "IMPERATIVE_PLAY_PORT"
       },
       "programExport": "imperativeProgramContribution",
-      "programId": "imperative"
+      "programId": "imperative",
+      "rendererPackage": "@semio-tech/imperative-react",
+      "rendererExport": "imperativeAppRenderer"
     }
   }
 }

@@ -44,6 +44,8 @@
       "packageRoot": "puzzle/2d",
       "corePackage": "@semio-tech/puzzle-2d-core",
       "definitionExport": "puzzle2dPlayAppDefinition",
+      "rendererPackage": "@semio-tech/puzzle-2d-react",
+      "rendererExport": "puzzle2dAppRenderer",
       "hostKind": "puzzle-2d",
       "port": {
         "dev": 6012,

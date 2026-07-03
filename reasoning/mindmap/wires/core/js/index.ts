@@ -366,6 +366,5 @@ export const wiresPlayAppDefinition = createPlaygroundApp({
 		},
 	},
 	createRuntime: () => buildPuzzle2dPlayRuntime(),
-	loadRenderer: async () => (await import("@semio-tech/puzzle-2d-react/play")).wiresAppRenderer,
 });
 //#endregion 🔖Play

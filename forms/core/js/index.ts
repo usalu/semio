@@ -19,9 +19,15 @@ import {
 	PLAYGROUND_NO_EXAMPLE_ID,
 	playgroundResolvedExampleId,
 	registerWindowBody,
+	registerSidePanelBody,
+	buildControllerTreeSidePanelBody,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	type SideTabSpec,
 	uiDeclarativeSectionsToTree,
 	UI_INSPECTOR_MIXED_PLACEHOLDER,
 	uiInspectorGroupsToTree,
@@ -43,7 +49,6 @@ import {
 	type WindowEngagement,
 	enforcePlaygroundWindowEngagementInput,
   createPlaygroundApp,
-  createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } from "@semio-tech/vcs-core/internal";
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
@@ -71,7 +76,11 @@ import {
 	type FormValues,
 	type FormVectorField,
 } from "./internal.ts";
-import { FORMS_QUESTION_DRAG_MIME, abortFormsQuestionPaletteDrag, formSpecFromJson, formsQuestionPaletteTreeDragController } from "@semio-tech/forms-react";
+import {
+	FORMS_QUESTION_DRAG_MIME,
+	abortFormsQuestionPaletteDrag,
+	formSpecFromJson,
+} from "./internal.ts";
 import { FORMS_PLAY_EXAMPLE_DEFAULT_ID, resolveFormsPlayExampleSlug } from "./example-slugs.ts";
 import buildingComponentExample from "../../example/building-component.forms.json";
 
@@ -86,6 +95,9 @@ export const FORMS_PLAY_WINDOW_KIND_TRY = "forms-try";
 export const FORMS_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
 export const FORMS_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const FORMS_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
+export const FORMS_PLAY_HIERARCHY_BODY_KEY = "forms.play.hierarchy";
+export const FORMS_PLAY_CATALOGUE_BODY_KEY = "forms.play.catalogue";
+export const FORMS_PLAY_INSPECTION_BODY_KEY = "forms.play.inspection";
 
 export const FORMS_PLAY_LAYOUT = createDefaultLayout(
 	[FORMS_PLAY_WINDOW_KIND_EDIT, FORMS_PLAY_WINDOW_KIND_TRY],
@@ -1040,10 +1052,41 @@ export const formsPlayWindowBodies: Readonly<Record<string, (ctx: import("@semio
 
 export function registerFormsPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(formsPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(formsPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
+function buildFormsPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const formsCtrl = ctrl as FormsPlayController;
+		return buildFormsPlayHierarchyTree(formsCtrl.getSpec() ?? defaultFormSpec("empty"), formsCtrl.getSelectedIds());
+	});
+}
+
+function buildFormsPlayCataloguePanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, () => buildFormsPlayCatalogueTree());
+}
+
+function buildFormsPlayInspectionPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => {
+		const formsCtrl = ctrl as FormsPlayController;
+		return buildFormsPlayInspectorTree(formsCtrl.getSpec() ?? defaultFormSpec("empty"), formsCtrl.getSelectedIds()) as UiTreeNode;
+	});
+}
+
+export const formsPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[FORMS_PLAY_HIERARCHY_BODY_KEY]: buildFormsPlayHierarchyPanelBody,
+	[FORMS_PLAY_CATALOGUE_BODY_KEY]: buildFormsPlayCataloguePanelBody,
+	[FORMS_PLAY_INSPECTION_BODY_KEY]: buildFormsPlayInspectionPanelBody,
+};
+
 export function buildFormsPlayAppRuntime(controller: FormsPlayController): AppRuntime {
-	return createPlayAppRuntime(FORMS_PLAY_APP_ID, "Forms", controller, FORMS_PLAY_LAYOUT, controller.mainMode);
+	const app = createPlayAppRuntime(FORMS_PLAY_APP_ID, "Forms", controller, FORMS_PLAY_LAYOUT, controller.mainMode);
+	app.panelTabs = [
+		{ id: FORMS_PLAY_HIERARCHY_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: FORMS_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: FORMS_PLAY_CATALOGUE_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: FORMS_PLAY_CATALOGUE_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: FORMS_PLAY_INSPECTION_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: FORMS_PLAY_INSPECTION_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
+	return app;
 }
 
 
@@ -1064,17 +1107,14 @@ export const formsPlayAppDefinition = createPlaygroundApp({
 		resolveDedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei", "@semio-tech/forms-react"],
 		optimizeDeps: { include: ["react", "react-dom"] },
 	},
-	createRuntime: () => {
-		const runtime = createProductPlaygroundPlatform(FORMS_PLAY_APP_ID);
-		const ctrl = new FormsPlayController(runtime.commandBus, () => runtime.notify());
-		if (!isPlaygroundExampleLocked()) {
-			const exampleId = formsPlayExampleJson(FORMS_PLAY_EXAMPLE_DEFAULT_ID) ? FORMS_PLAY_EXAMPLE_DEFAULT_ID : "building-component";
-			ctrl.run("setActiveExample", { exampleId });
-		}
-		runtime.addApp(buildFormsPlayAppRuntime(ctrl));
-		return runtime;
+	runtimeBootstrap: {
+		createController: (bus, notify) => new FormsPlayController(bus, notify),
+		buildAppRuntime: buildFormsPlayAppRuntime,
+		example: {
+			defaultId: FORMS_PLAY_EXAMPLE_DEFAULT_ID,
+			hasExample: (id) => Boolean(formsPlayExampleJson(id)),
+		},
 	},
-	loadRenderer: async () => (await import("@semio-tech/forms-react/play")).formsAppRenderer,
 });
 //#endregion 🔖Play
 

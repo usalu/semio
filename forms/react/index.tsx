@@ -18,6 +18,25 @@ import {
 	registerFormsFlowFixtureResolver,
 	resolveFormsFlowFixtureJson,
 	resolveQuestionFixtureSlug,
+	FORMS_QUESTION_DRAG_MIME,
+	abortFormsQuestionPaletteDrag,
+	beginFormsQuestionPalettePointerDrag,
+	cancelFormsQuestionPalettePointerDrag,
+	endFormsQuestionPalettePointerDrag,
+	formSpecFromJson,
+	formsNoteQuestionPaletteDragClient,
+	formsQuestionDragAcceptsTransfer,
+	formsQuestionPaletteDragClientRef,
+	formsQuestionPaletteDragEncodedRef,
+	formsQuestionPaletteDragPreviewLabel,
+	formsQuestionPaletteDragRef,
+	formsQuestionPaletteDropCommittedRef,
+	formsQuestionPalettePointerDragRef,
+	formsReadActiveQuestionPaletteDragEncoded,
+	formsStartQuestionPaletteDragPreviewLoop,
+	formsStopQuestionPaletteDragPreviewLoop,
+	parseFormsQuestionDragPayload,
+	defaultFormSpec,
 	type FormQuestion,
 	type FormQuestionExtension,
 	type FormSelectOption,
@@ -31,18 +50,16 @@ export {
 	applyGenerationValuesToFixture,
 	flowFixtureToFormSpec,
 	formsExtensionHost,
+	FORMS_QUESTION_DRAG_MIME,
+	abortFormsQuestionPaletteDrag,
+	formSpecFromJson,
+	defaultFormSpec,
 	type FormsExtensionEntry,
 	type FormsQuestionKindContribution,
 } from "@semio-tech/forms-core";
 import { FlowOrchestratorClient } from "@semio-tech/flow-react";
-import {
-	ensureProceduralBrepBridge,
-	extractChannelPreviewItems,
-	preferGeometryPreviewItems,
-	attachPreviewMeshesToItems,
-	ProceduralPreview,
-	type ProceduralPreviewItem,
-} from "@semio-tech/procedural-3d-react";
+import type { BrepWasmBridge } from "@semio-tech/kernel-3d-js";
+import type { ProceduralPreviewItem } from "@semio-tech/procedural-3d-react";
 import {
 	Button,
 	Field,
@@ -80,8 +97,6 @@ function getFormsFlowEvalClient(): FlowOrchestratorClient {
 }
 
 // #region 📐Contracts
-export const FORMS_QUESTION_DRAG_MIME = "application/x-semio-forms-question-kind";
-
 export interface FormRendererProps {
 	readonly spec: FormSpec;
 	readonly values?: FormValues;
@@ -128,20 +143,6 @@ export interface FlowGenerateSurfaceProps {
 // #endregion 📐Contracts
 
 // #region 🔧Helpers
-export function formSpecFromJson(json: string): FormSpec {
-	return parseFormSpec(JSON.parse(json));
-}
-
-export function defaultFormSpec(id = "default"): FormSpec {
-	return {
-		schema: "forms.form",
-		id,
-		version: "1",
-		title: "New Form",
-		steps: [{ id: "step-1", title: "Step 1", questions: [{ id: "q-text", kind: "text", label: "Name" }] }],
-	};
-}
-
 function FormBooleanToggle({
 	id,
 	pressed,
@@ -549,11 +550,22 @@ function Flow3dQuestionControl({
 	const paramValuesKey = React.useMemo(() => JSON.stringify(paramValues), [paramValues]);
 	const [previewItems, setPreviewItems] = React.useState<readonly ProceduralPreviewItem[]>([]);
 	const previewItemsRef = React.useRef<readonly ProceduralPreviewItem[]>([]);
-	const [kernel, setKernel] = React.useState<Awaited<ReturnType<typeof ensureProceduralBrepBridge>>>();
+	const [kernel, setKernel] = React.useState<BrepWasmBridge | undefined>();
+	const [ProceduralPreview, setProceduralPreview] = React.useState<typeof import("@semio-tech/procedural-3d-react").ProceduralPreview | null>(null);
 	const evalGenRef = React.useRef(0);
 
 	React.useEffect(() => {
-		void ensureProceduralBrepBridge().then(setKernel);
+		let cancelled = false;
+		void import("@semio-tech/procedural-3d-react").then((mod) => {
+			if (cancelled) return;
+			setProceduralPreview(() => mod.ProceduralPreview);
+			void mod.ensureProceduralBrepBridge().then((bridge) => {
+				if (!cancelled) setKernel(bridge);
+			});
+		});
+		return () => {
+			cancelled = true;
+		};
 	}, []);
 
 	React.useEffect(() => {
@@ -562,6 +574,7 @@ function Flow3dQuestionControl({
 		const timer = globalThis.setTimeout(() => {
 			void (async () => {
 				try {
+					const procedural3d = await import("@semio-tech/procedural-3d-react");
 					const client = getFormsFlowEvalClient();
 					const patched = applyGenerationValuesToFixture(fixtureJson, paramValues);
 					await client.loadFixtureJson(patched);
@@ -569,8 +582,8 @@ function Flow3dQuestionControl({
 					if (gen !== evalGenRef.current) return;
 					const previewMeshes = await client.tessellatePreviews(result.outputsJson);
 					if (gen !== evalGenRef.current) return;
-					const nextItems = attachPreviewMeshesToItems(
-						preferGeometryPreviewItems(extractChannelPreviewItems(result.outputsJson)),
+					const nextItems = procedural3d.attachPreviewMeshesToItems(
+						procedural3d.preferGeometryPreviewItems(procedural3d.extractChannelPreviewItems(result.outputsJson)),
 						previewMeshes,
 						previewItemsRef.current,
 					);
@@ -592,7 +605,9 @@ function Flow3dQuestionControl({
 		<div className="grid min-h-0 gap-double lg:grid-cols-[minmax(0,1fr)_minmax(12rem,18rem)]" data-slot="forms-flow3d-question">
 			<FormRenderer spec={paramSpec} values={paramValues} interactive={interactive} onChange={(next) => onValue(next)} />
 			<div className="relative min-h-[12rem] rounded-md border border-border">
-				<ProceduralPreview items={previewItems} kernel={kernel ?? undefined} className="h-full min-h-[12rem]" />
+				{ProceduralPreview ? (
+					<ProceduralPreview items={previewItems} kernel={kernel ?? undefined} className="h-full min-h-[12rem]" />
+				) : null}
 			</div>
 		</div>
 	);
@@ -699,132 +714,6 @@ function questionControl(
 	}
 }
 
-/** @emoji 🖱️ Forms question palette drag session (workbench catalogue → hierarchy / builder). */
-export const formsQuestionPaletteDragRef = { active: false };
-export const formsQuestionPalettePointerDragRef = { active: false, encoded: null as string | null };
-export const formsQuestionPaletteDragEncodedRef = { current: null as string | null };
-export const formsQuestionPaletteDragClientRef = { clientX: 0, clientY: 0 };
-export const formsQuestionPaletteDropCommittedRef = { current: false };
-
-let formsQuestionPaletteDragPreviewRafId: number | null = null;
-
-function formsStopQuestionPaletteDragPreviewLoop(): void {
-	if (formsQuestionPaletteDragPreviewRafId !== null) {
-		globalThis.cancelAnimationFrame?.(formsQuestionPaletteDragPreviewRafId);
-		formsQuestionPaletteDragPreviewRafId = null;
-	}
-}
-
-function formsTickQuestionPaletteDragPreview(): void {
-	if (!formsReadActiveQuestionPaletteDragEncoded()) {
-		formsStopQuestionPaletteDragPreviewLoop();
-		return;
-	}
-	window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: { clientX: formsQuestionPaletteDragClientRef.clientX, clientY: formsQuestionPaletteDragClientRef.clientY } }));
-	const requestFrame = globalThis.requestAnimationFrame?.bind(globalThis);
-	if (!requestFrame) {
-		formsQuestionPaletteDragPreviewRafId = null;
-		return;
-	}
-	formsQuestionPaletteDragPreviewRafId = requestFrame(formsTickQuestionPaletteDragPreview);
-}
-
-function formsStartQuestionPaletteDragPreviewLoop(): void {
-	if (formsQuestionPaletteDragPreviewRafId !== null) return;
-	formsTickQuestionPaletteDragPreview();
-}
-
-/** @emoji 📦 Reads the encoded palette drag payload when a catalogue question drag is active. */
-export function formsReadActiveQuestionPaletteDragEncoded(): string | null {
-	const pointer = formsQuestionPalettePointerDragRef.encoded?.trim();
-	if (pointer) return pointer;
-	const shared = formsQuestionPaletteDragEncodedRef.current?.trim();
-	return shared ? shared : null;
-}
-
-/** @emoji 🔍 Parses a catalogue drag payload into a question kind. */
-export function parseFormsQuestionDragPayload(encoded: string): { kind?: string } | null {
-	try {
-		return JSON.parse(encoded) as { kind?: string };
-	} catch {
-		return null;
-	}
-}
-
-/** @emoji 🏷️ Preview label for the floating palette drag ghost. */
-export function formsQuestionPaletteDragPreviewLabel(encoded: string): string {
-	const payload = parseFormsQuestionDragPayload(encoded);
-	return payload?.kind ?? "Question";
-}
-
-/** @emoji 👻 Notes palette-drag client coordinates for preview refresh. */
-export function formsNoteQuestionPaletteDragClient(clientX: number, clientY: number): void {
-	formsQuestionPaletteDragClientRef.clientX = clientX;
-	formsQuestionPaletteDragClientRef.clientY = clientY;
-	if (!formsReadActiveQuestionPaletteDragEncoded()) return;
-	formsStartQuestionPaletteDragPreviewLoop();
-}
-
-/** @emoji ⎋ Aborts an in-flight catalogue question palette drag. */
-export function abortFormsQuestionPaletteDrag(): void {
-	const wasActive = formsQuestionPalettePointerDragRef.active || formsQuestionPaletteDragRef.active;
-	formsQuestionPalettePointerDragRef.active = false;
-	formsQuestionPalettePointerDragRef.encoded = null;
-	formsQuestionPaletteDragEncodedRef.current = null;
-	formsQuestionPaletteDragRef.active = false;
-	if (wasActive) {
-		window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: null }));
-	}
-	formsStopQuestionPaletteDragPreviewLoop();
-	window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: null }));
-}
-
-/** @emoji 🖱️ Begins pointer palette drag with an encoded question kind payload. */
-export function beginFormsQuestionPalettePointerDrag(encoded: string): void {
-	formsQuestionPaletteDropCommittedRef.current = false;
-	formsQuestionPalettePointerDragRef.active = true;
-	formsQuestionPalettePointerDragRef.encoded = encoded;
-	formsQuestionPaletteDragEncodedRef.current = encoded;
-	formsQuestionPaletteDragRef.active = true;
-	window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: { encoded } }));
-	formsStartQuestionPaletteDragPreviewLoop();
-}
-
-/** @emoji 🖱️ Ends pointer palette drag without committing a drop. */
-export function cancelFormsQuestionPalettePointerDrag(): void {
-	if (!formsQuestionPalettePointerDragRef.active && !formsQuestionPaletteDragRef.active) return;
-	formsQuestionPalettePointerDragRef.active = false;
-	formsQuestionPalettePointerDragRef.encoded = null;
-	formsQuestionPaletteDragEncodedRef.current = null;
-	formsQuestionPaletteDragRef.active = false;
-	formsStopQuestionPaletteDragPreviewLoop();
-	window.dispatchEvent(new CustomEvent("forms-question-drag-session", { detail: null }));
-	window.dispatchEvent(new CustomEvent("forms-question-drag-preview", { detail: null }));
-}
-
-/** @emoji 🔍 Whether a drag gesture carries a forms question palette payload. */
-export function formsQuestionDragAcceptsTransfer(types: readonly string[]): boolean {
-	if (formsQuestionPalettePointerDragRef.active) return true;
-	if (types.includes(FORMS_QUESTION_DRAG_MIME)) return true;
-	return Boolean(formsQuestionPaletteDragRef.active && formsReadActiveQuestionPaletteDragEncoded());
-}
-
-/** @emoji 📥 Commits a palette question drop at client coordinates. */
-export function endFormsQuestionPalettePointerDrag(
-	clientX: number,
-	clientY: number,
-	onDrop: (detail: { kind: string; clientX: number; clientY: number }) => boolean,
-): void {
-	if (!formsQuestionPalettePointerDragRef.active) return;
-	const encoded = formsQuestionPalettePointerDragRef.encoded;
-	cancelFormsQuestionPalettePointerDrag();
-	if (!encoded) return;
-	const payload = parseFormsQuestionDragPayload(encoded);
-	if (!payload?.kind) return;
-	if (onDrop({ kind: payload.kind, clientX, clientY })) {
-		formsQuestionPaletteDropCommittedRef.current = true;
-	}
-}
 
 /** @emoji 👻 Floating label following the cursor during catalogue question drags. */
 export const FormsQuestionPaletteDragGhost: React.FC = () => {
@@ -1152,3 +1041,111 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖PlayHost
+import type { ReactElement } from "react";
+import type { AppRendererContribution, UiFormsHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import type { OsAppInstance } from "@semio-tech/framework-os-core";
+import { OsUpstreamBadge, useOsInstanceHostBridge, useOsInstanceMaterialization } from "@semio-tech/framework-os-renderer-react";
+import { usePlayController } from "@semio-tech/framework-playground-renderer-react";
+import { reactHostPort } from "@semio-tech/ui-react";
+import { FORMS_PLAY_SURFACE_ID_EDIT, FORMS_PLAY_SURFACE_ID_TRY, FormsPlayController, commitFormsPlayQuestionDropAtClient, createFormsPlayHierarchyTreeDragController, formsPlayWindowBodies, formsPlaySidePanelBodies } from "@semio-tech/forms-core";
+
+let resolveFormsPlayControllerForTreeDrag: (() => FormsPlayController | undefined) | undefined;
+
+function FormsEditSurfaceHost({ node: _node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<FormsPlayController>();
+  reactHostPort.useEffect(() => {
+    resolveFormsPlayControllerForTreeDrag = () => ctrl;
+    return () => {
+      resolveFormsPlayControllerForTreeDrag = undefined;
+    };
+  }, [ctrl]);
+  const spec = ctrl?.getSpec() ?? defaultFormSpec("empty");
+  const selectedIds = ctrl?.getSelectedIds() ?? [];
+  const onPaletteDrop = reactHostPort.useCallback(
+    (detail: { kind: string; clientX: number; clientY: number }) =>
+      commitFormsPlayQuestionDropAtClient(ctrl ?? undefined, detail.clientX, detail.clientY, detail.kind),
+    [ctrl],
+  );
+  return (
+    <>
+      <FormsQuestionPaletteDragBridge enabled onCommitDrop={onPaletteDrop} />
+      <FormsQuestionPaletteDragGhost />
+      <FormEditSurface
+        spec={spec}
+        className="h-full"
+        selectedIds={selectedIds}
+        onSelectionChange={(ids) => ctrl?.run("setSelection", { ids: [...ids] })}
+        onChange={(next) => ctrl?.run("setSpecJson", { json: JSON.stringify(next) })}
+      />
+    </>
+  );
+}
+
+function FormsTrySurfaceHost({ node }: { readonly node: UiFormsHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<FormsPlayController>();
+  const spec = ctrl?.getSpec();
+  const tryValues = ctrl?.getTryValues() ?? {};
+  if (!spec) return <div className="p-double text-sm text-muted-foreground">No form loaded</div>;
+  return (
+    <FormRenderer
+      spec={spec}
+      values={tryValues}
+      className="h-full"
+      onChange={(values) => ctrl?.run("setTryValues", { values })}
+      onSubmit={(values) => console.log("[DEBUG] forms try submit", values)}
+    />
+  );
+}
+
+function FormsOsInstanceHost({ instance }: { readonly instance: OsAppInstance }): ReactElement {
+  const bridge = useOsInstanceHostBridge();
+  const bundle = useOsInstanceMaterialization(instance);
+  const materialized = bundle.projection;
+  const formsSpec = reactHostPort.useMemo(() => {
+    if (materialized && typeof materialized === "object" && (materialized as FormSpec).schema === "forms.form") return materialized as FormSpec;
+    if (instance.sourceDocument.inline) {
+      try {
+        return parseFormSpec(JSON.parse(instance.sourceDocument.inline));
+      } catch {
+        return defaultFormSpec(instance.id);
+      }
+    }
+    return defaultFormSpec(instance.id);
+  }, [instance, materialized]);
+  const dispatchForms = reactHostPort.useCallback(
+    (spec: FormSpec) => {
+      bridge.dispatch({
+        kind: "applyAppOperation",
+        instanceId: instance.id,
+        forwards: [{ op: "replaceProjection", projection: spec }],
+        backwards: [{ op: "replaceProjection", projection: formsSpec }],
+      });
+    },
+    [bridge, instance.id, formsSpec],
+  );
+  return (
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <OsUpstreamBadge upstreamInstanceId={bundle.upstreamInstanceId} />
+      <FormEditSurface spec={formsSpec} onChange={(spec) => dispatchForms(spec)} className="min-h-0 flex-1 overflow-auto p-4" />
+    </div>
+  );
+}
+
+/** @emoji 🛝 forms app renderer for playground and OS shells. */
+export const formsAppRenderer: AppRendererContribution = {
+  windowBodies: formsPlayWindowBodies,
+  sidePanelBodies: formsPlaySidePanelBodies,
+  surfaceHosts: {
+    [FORMS_PLAY_SURFACE_ID_EDIT]: FormsEditSurfaceHost,
+    [FORMS_PLAY_SURFACE_ID_TRY]: FormsTrySurfaceHost,
+  },
+  instanceHost: FormsOsInstanceHost,
+  treeDragController: (dragByItemId) => {
+    const sample = dragByItemId.values().next().value;
+    if (sample && FORMS_QUESTION_DRAG_MIME in sample) return formsQuestionPaletteTreeDragController(dragByItemId);
+    return createFormsPlayHierarchyTreeDragController(() => resolveFormsPlayControllerForTreeDrag?.());
+  },
+};
+//#endregion 🔖PlayHost

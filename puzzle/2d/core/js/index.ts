@@ -8,6 +8,15 @@ import {
 	CommandBus,
 	Controller,
 	registerWindowBody,
+	buildControllerTreeSidePanelBody,
+	registerSidePanelBody,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
+	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
+	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
+	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+	type SideTabSpec,
 	Platform,
 	AppRuntime,
 	ModeRuntime,
@@ -47,7 +56,6 @@ import { wireLiteralFromDagFixtureJson } from "@semio-tech/graph-dsl-core";
 
 import {
 	DEFAULT_KIND_CATALOG_BUNDLE,
-	PUZZLE_2D_LOD_MODE_AUTOMATIC,
 	puzzle2dFixtureMergedKindCatalogs,
 	puzzle2dMergeKindCatalogBundle,
 	puzzle2dFixtureEdgeDisplayLabel,
@@ -88,7 +96,6 @@ import {
 	applyBrushFillPlacementsToFixture,
 	clonePuzzle2dFixture,
 	PUZZLE_2D_FILL_BUILD_CHUNK_BUDGET,
-	PUZZLE_2D_FILL_COUNT_MAX,
 	type Puzzle2dBrushPlacePayload,
 	type Puzzle2dFillBuildProgress,
 	type Puzzle2dRenderer,
@@ -96,7 +103,8 @@ import {
 
 import { bootstrapElementsSurfaceChromeDocument } from "@semio-tech/ui-react";
 
-export { PUZZLE_2D_FILL_COUNT_MAX };
+export const PUZZLE_2D_FILL_COUNT_MAX = 1000;
+export const PUZZLE_2D_LOD_MODE_AUTOMATIC = "automatic" as const;
 
 //#region 🔖Ids
 export type Puzzle2dPlayPaneId = "2d-overview" | "2d-detail" | "2d-selection";
@@ -112,6 +120,9 @@ export const PUZZLE_2D_PLAY_BODY_KEY_OVERVIEW = "puzzle.2d.play.overview";
 export const PUZZLE_2D_PLAY_BODY_KEY_DETAIL = "puzzle.2d.play.detail";
 export const PUZZLE_2D_PLAY_BODY_KEY_SELECTION = "puzzle.2d.play.selection";
 export const PUZZLE_2D_PLAY_SETTINGS_BODY_KEY = "puzzle.2d.play.settings";
+export const PUZZLE_2D_PLAY_HIERARCHY_BODY_KEY = "puzzle.2d.play.hierarchy";
+export const PUZZLE_2D_PLAY_KINDS_BODY_KEY = "puzzle.2d.play.kinds";
+export const PUZZLE_2D_PLAY_INSPECTOR_BODY_KEY = "puzzle.2d.play.inspector";
 
 let puzzle2dPlayLodTiersCache: readonly Puzzle2dDrawLodKind[] | null = null;
 
@@ -130,6 +141,7 @@ export function puzzle2dPlayLodTierMenuLabel(tier: Puzzle2dDrawLodKind): string 
 
 export const PUZZLE_2D_PLAY_HIERARCHY_TAB_ID = "puzzle-2d-play-hierarchy";
 export const PUZZLE_2D_PLAY_KINDS_TAB_ID = "puzzle-2d-play-kinds";
+export const PUZZLE_2D_PLAY_INSPECTOR_TAB_ID = "puzzle-2d-play-inspector";
 export const PUZZLE_2D_PLAY_ICON_KINDS = "puzzle.2d-play.icon.kinds";
 
 /** @emoji 🖌️ Window engagement possible id for the brush tool. */
@@ -1177,6 +1189,10 @@ export interface Puzzle2dPlayHostBridge {
 	getToolbarState(): Puzzle2dPlayToolbarState;
 	getFixtureJson(): string;
 	runHostCommand(command: string, args?: unknown): void;
+	buildHierarchyPanelTree(bus: CommandBus): UiTreeNode;
+	buildKindsPanelTree(bus: CommandBus): UiTreeNode;
+	buildInspectorPanelTree(bus: CommandBus): UiTreeNode;
+	buildSettingsPanelTree(): UiTreeNode;
 }
 
 /** @emoji 🧰 Playground {@link AppTools} for puzzle 2d play (selection, filter, view, create, actions). */
@@ -1667,6 +1683,42 @@ export class Puzzle2dPlayShellController extends Controller {
 		this.rebuildToolbarTools();
 	}
 
+	buildHierarchyPanelTree(bus: CommandBus): UiTreeNode {
+		return (
+			this.hostBridge?.buildHierarchyPanelTree(bus) ?? {
+				type: "tree",
+				sections: [{ id: "puzzle-2d-play-hierarchy.loading", label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, items: [{ id: "loading", label: "…" }] }],
+			}
+		);
+	}
+
+	buildKindsPanelTree(bus: CommandBus): UiTreeNode {
+		return (
+			this.hostBridge?.buildKindsPanelTree(bus) ?? {
+				type: "tree",
+				sections: [{ id: "puzzle-2d-play-kinds.loading", label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, items: [{ id: "loading", label: "…" }] }],
+			}
+		);
+	}
+
+	buildInspectorPanelTree(bus: CommandBus): UiTreeNode {
+		return (
+			this.hostBridge?.buildInspectorPanelTree(bus) ?? {
+				type: "tree",
+				sections: [{ id: "puzzle-2d-play-inspector.loading", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, items: [{ id: "loading", label: "…" }] }],
+			}
+		);
+	}
+
+	buildSettingsPanelTree(): UiTreeNode {
+		return (
+			this.hostBridge?.buildSettingsPanelTree() ?? {
+				type: "tree",
+				sections: [{ id: "puzzle-2d-play-settings.loading", label: "Settings", items: [{ id: "loading", label: "…" }] }],
+			}
+		);
+	}
+
 	private syncWireText(): void {
 		this.wireBridge.setWireText(this.getCompiledWireLiteral());
 	}
@@ -2062,6 +2114,22 @@ export const buildPuzzle2dPlaySelectionDeclarativeBody = buildPuzzle2dPlayDeclar
 function buildPuzzle2dPlayCompiledDagDeclarativeBody(_ctx: WindowBodyViewContext): UiNode {
 	return buildWriterWindowBody(PUZZLE_2D_PLAY_SURFACE_ID_COMPILED_DAG, PUZZLE_2D_PLAY_CONTROLLER_ID, PUZZLE_2D_PLAY_WINDOW_KIND_COMPILED_DAG);
 }
+
+function buildPuzzle2dPlayHierarchyPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl, bus) => (ctrl as Puzzle2dPlayShellController).buildHierarchyPanelTree(bus));
+}
+
+function buildPuzzle2dPlayKindsPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl, bus) => (ctrl as Puzzle2dPlayShellController).buildKindsPanelTree(bus));
+}
+
+function buildPuzzle2dPlayInspectorPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl, bus) => (ctrl as Puzzle2dPlayShellController).buildInspectorPanelTree(bus));
+}
+
+function buildPuzzle2dPlaySettingsPanelBody(ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext): UiTreeNode {
+	return buildControllerTreeSidePanelBody(ctx, (ctrl) => (ctrl as Puzzle2dPlayShellController).buildSettingsPanelTree());
+}
 //#endregion 🔖DeclarativeBodies
 
 /** @emoji 🧩 Registers puzzle 2d play window kinds on the supplied controller (layout supplied by host). */
@@ -2080,11 +2148,18 @@ export function attachPuzzle2dPlayWindowKinds(controller: Puzzle2dPlayShellContr
 	return app;
 }
 
-/** @emoji 🧩 Builds the puzzle 2d play {@link AppRuntime}; side panels are tree tabs via {@link PlaygroundView} `augmentPanelTabs` only. */
+/** @emoji 🧩 Builds the puzzle 2d play {@link AppRuntime} with declarative workbench and details panel tabs. */
 export function buildPuzzle2dPlayAppRuntime(controller: Puzzle2dPlayShellController): AppRuntime {
+	const isWires = import.meta.env?.PLAYGROUND_APP_KIND === "wires";
 	const app = attachPuzzle2dPlayWindowKinds(controller, PUZZLE_2D_PLAY_LAYOUT);
 	controller.mainMode.namedLayouts = [createNamedLayout("puzzle-2d-default", "Default trio", PUZZLE_2D_PLAY_LAYOUT)];
-	app.panelTabs = [];
+	const hierarchyTabId = isWires ? "wires-play-hierarchy" : PUZZLE_2D_PLAY_HIERARCHY_TAB_ID;
+	const kindsTabId = isWires ? "wires-play-kinds" : PUZZLE_2D_PLAY_KINDS_TAB_ID;
+	app.panelTabs = [
+		{ id: hierarchyTabId, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: PUZZLE_2D_PLAY_HIERARCHY_BODY_KEY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: kindsTabId, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: PUZZLE_2D_PLAY_KINDS_BODY_KEY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
+		{ id: PUZZLE_2D_PLAY_INSPECTOR_TAB_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: PUZZLE_2D_PLAY_INSPECTOR_BODY_KEY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
+	] satisfies SideTabSpec[];
 	app.appSettingsBodyKey = PUZZLE_2D_PLAY_SETTINGS_BODY_KEY;
 	return app;
 }
@@ -2096,9 +2171,17 @@ export const puzzle2dPlayWindowBodies: Readonly<Record<string, (ctx: import("@se
 	[PUZZLE_2D_PLAY_BODY_KEY_COMPILED_DAG]: buildPuzzle2dPlayCompiledDagDeclarativeBody,
 };
 
-/** @emoji 📝 Registers puzzle 2d play declarative window bodies on the playground host (side tabs are host tree panels only). */
+export const puzzle2dPlaySidePanelBodies: Readonly<Record<string, (ctx: import("@semio-tech/framework-platform-core").SidePanelBodyViewContext) => UiTreeNode>> = {
+	[PUZZLE_2D_PLAY_HIERARCHY_BODY_KEY]: buildPuzzle2dPlayHierarchyPanelBody,
+	[PUZZLE_2D_PLAY_KINDS_BODY_KEY]: buildPuzzle2dPlayKindsPanelBody,
+	[PUZZLE_2D_PLAY_INSPECTOR_BODY_KEY]: buildPuzzle2dPlayInspectorPanelBody,
+	[PUZZLE_2D_PLAY_SETTINGS_BODY_KEY]: buildPuzzle2dPlaySettingsPanelBody,
+};
+
+/** @emoji 📝 Registers puzzle 2d play declarative window and side panel bodies on the playground host. */
 export function registerPuzzle2dPlayDeclarativeBodies(): void {
 	for (const [key, build] of Object.entries(puzzle2dPlayWindowBodies)) registerWindowBody(key, build);
+	for (const [key, build] of Object.entries(puzzle2dPlaySidePanelBodies)) registerSidePanelBody(key, build);
 }
 
 //#region 🔖Extension
@@ -2276,6 +2359,20 @@ export function puzzle2dPlayInspectorKindSectionLabel(kind: "edge" | "handle" | 
 if (import.meta.vitest) {
 	const { describe, expect, it } = import.meta.vitest;
 
+	function puzzle2dPlayStubHostBridge(
+		partial: Pick<Puzzle2dPlayHostBridge, "getToolbarState" | "runHostCommand"> & Partial<Puzzle2dPlayHostBridge>,
+	): Puzzle2dPlayHostBridge {
+		const emptyTree: UiTreeNode = { type: "tree", sections: [] };
+		return {
+			getFixtureJson: () => puzzle2dFixtureToJson(PUZZLE_2D_PLAY_EMPTY_FIXTURE),
+			buildHierarchyPanelTree: () => emptyTree,
+			buildKindsPanelTree: () => emptyTree,
+			buildInspectorPanelTree: () => emptyTree,
+			buildSettingsPanelTree: () => emptyTree,
+			...partial,
+		};
+	}
+
 	describe("puzzle 2d play declarative shell", () => {
 		it("resolves pane from shell instance ids", () => {
 			expect(puzzle2dPlayPaneFromShellWindowId("2d-overview")).toBe("2d-overview");
@@ -2316,7 +2413,7 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
 			let hostCommand: string | undefined;
-			ctrl.setHostBridge({
+			ctrl.setHostBridge(puzzle2dPlayStubHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
 					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
@@ -2329,7 +2426,7 @@ if (import.meta.vitest) {
 				runHostCommand: (command) => {
 					hostCommand = command;
 				},
-			});
+			}));
 			ctrl.run("selectAllSelection");
 			expect(hostCommand).toBe("selectAllSelection");
 		});
@@ -2610,10 +2707,10 @@ if (import.meta.vitest) {
 			expect(nodesSection?.items?.[0]?.items?.[1]?.label).toBe("Child");
 		});
 
-		it("buildPuzzle2dPlayRuntime wires main mode and empty side tab slots", () => {
+		it("buildPuzzle2dPlayRuntime wires main mode and declarative panel tabs", () => {
 			const runtime = buildPuzzle2dPlayRuntime();
 			const app = runtime.getActiveApp();
-			expect(app?.panelTabs).toEqual([]);
+			expect(app?.panelTabs).toHaveLength(3);
 			expect(app?.controller.mainMode.tools ?? []).toEqual([]);
 		});
 
@@ -2626,7 +2723,7 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			let hostTool: Puzzle2dActiveTool | undefined;
 			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
-			ctrl.setHostBridge({
+			ctrl.setHostBridge(puzzle2dPlayStubHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
 					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
@@ -2641,7 +2738,7 @@ if (import.meta.vitest) {
 						hostTool = (args as { tool: Puzzle2dActiveTool }).tool;
 					}
 				},
-			});
+			}));
 			bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "engagementSubmit", { pane: "2d-overview", value: "Brush" });
 			expect(ctrl.getActiveTool()).toBe("brush");
 			bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "engagementAbort", { pane: "2d-overview" });
@@ -2656,7 +2753,7 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			let hostTool: Puzzle2dActiveTool | undefined;
 			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
-			ctrl.setHostBridge({
+			ctrl.setHostBridge(puzzle2dPlayStubHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
 					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
@@ -2671,7 +2768,7 @@ if (import.meta.vitest) {
 						hostTool = (args as { tool: Puzzle2dActiveTool }).tool;
 					}
 				},
-			});
+			}));
 			bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "engagementSubmit", { pane: "2d-overview", value: "Fill" });
 			expect(ctrl.getActiveTool()).toBe("fill");
 			expect(hostTool).toBe("fill");
@@ -2708,7 +2805,7 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			let hostTool: Puzzle2dActiveTool | undefined;
 			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
-			ctrl.setHostBridge({
+			ctrl.setHostBridge(puzzle2dPlayStubHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
 					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
@@ -2723,7 +2820,7 @@ if (import.meta.vitest) {
 						hostTool = (args as { tool: Puzzle2dActiveTool }).tool;
 					}
 				},
-			});
+			}));
 			bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, "engagementSubmit", { pane: "2d-overview", value: "Brush" });
 			expect(ctrl.getActiveTool()).toBe("brush");
 			expect(hostTool).toBe("brush");
@@ -2745,7 +2842,7 @@ if (import.meta.vitest) {
 			const bus = new CommandBus();
 			let pushed: { nodeWeights: Record<string, number>; handleWeights: Record<string, number> } | undefined;
 			const ctrl = new Puzzle2dPlayShellController(bus, () => {}, () => {});
-			ctrl.setHostBridge({
+			ctrl.setHostBridge(puzzle2dPlayStubHostBridge({
 				getToolbarState: () => ({
 					puzzle2dActiveTool: "select",
 					puzzle2dSuggestionOffset: DEFAULT_PUZZLE_2D_SUGGESTION_OFFSET_PX,
@@ -2760,7 +2857,7 @@ if (import.meta.vitest) {
 						pushed = args as typeof pushed;
 					}
 				},
-			});
+			}));
 			ctrl.setKindCatalogs({
 				nodes: [
 					{ id: "Base", name: "Base" },
@@ -3419,7 +3516,6 @@ export const puzzle2dPlayAppDefinition = createPlaygroundApp({
 	keybindings: [
 		{ key: "ctrl+a,meta+a", controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command: "selectAllSelection" },
 	],
-	loadRenderer: async () => (await import("@semio-tech/puzzle-2d-react/play")).puzzle2dAppRenderer,
 });
 //#endregion 🔖Play
 //#region 🔖DocumentVcs

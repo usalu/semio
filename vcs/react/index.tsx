@@ -291,3 +291,64 @@ if (import.meta.vitest) {
 	});
 }
 // #endregion 🧪Tests
+
+//#region 🔖PlayHost
+import type { ReactElement } from "react";
+import type { AppRendererContribution, UiVcsHostSurfaceNode } from "@semio-tech/framework-platform-core";
+import { usePlayController } from "@semio-tech/framework-playground-renderer-react";
+import { VCS_PLAY_SURFACE_ID_EDITOR, VCS_PLAY_SURFACE_ID_HISTORY, VcsPlayController, vcsPlayWindowBodies } from "@semio-tech/vcs-core";
+
+function VcsPlayEditorSurfaceHost({ node: _node }: { readonly node: UiVcsHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<VcsPlayController>();
+  const projection = ctrl?.projection();
+  if (!ctrl || !projection) {
+    return <div className="p-double text-sm text-muted-foreground">No VCS document</div>;
+  }
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-double p-double">
+      <div className="flex flex-wrap items-center gap-single">
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("incrementCounter")}>
+          + Counter ({projection.counter})
+        </button>
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("commitCheckpoint")}>
+          Commit checkpoint
+        </button>
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("undo")}>
+          Undo
+        </button>
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("redo")}>
+          Redo
+        </button>
+        <button type="button" className="rounded border px-2 py-1 text-xs" onClick={() => ctrl.run("createAlternative")}>
+          New alternative
+        </button>
+      </div>
+      <section className="rounded border p-double text-sm">
+        <div>
+          <strong>{projection.title}</strong> · counter {projection.counter}
+        </div>
+        <div className="text-muted-foreground">{projection.notes || "—"}</div>
+      </section>
+    </div>
+  );
+}
+
+function VcsPlayHistorySurfaceHost({ node: _node }: { readonly node: UiVcsHostSurfaceNode }): ReactElement {
+  const ctrl = usePlayController<VcsPlayController>();
+  const columns = ctrl?.historyColumns() ?? [];
+  return (
+    <div className="h-full min-h-0 overflow-auto p-single">
+      <HistoryTable columns={columns} />
+    </div>
+  );
+}
+
+/** @emoji 🛝 Vcs app renderer contribution for playground and OS shells. */
+export const vcsAppRenderer: AppRendererContribution = {
+  windowBodies: vcsPlayWindowBodies,
+  surfaceHosts: {
+    [VCS_PLAY_SURFACE_ID_EDITOR]: VcsPlayEditorSurfaceHost,
+    [VCS_PLAY_SURFACE_ID_HISTORY]: VcsPlayHistorySurfaceHost,
+  },
+};
+//#endregion 🔖PlayHost
