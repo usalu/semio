@@ -31,5 +31,22 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "puzzle/2d/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "2d",
+      "aliases": [
+        "2d"
+      ],
+      "packageRoot": "puzzle/2d",
+      "corePackage": "@semio-tech/puzzle-2d-core",
+      "definitionExport": "puzzle2dPlayAppDefinition",
+      "hostKind": "puzzle-2d",
+      "port": {
+        "dev": 6012,
+        "test": 6027,
+        "env": "PUZZLE_2D_PLAY_PORT"
+      }
+    }
+  }
 }

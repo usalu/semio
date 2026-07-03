@@ -25,5 +25,21 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "imperative/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "imperative",
+      "aliases": [
+        "imperative"
+      ],
+      "packageRoot": "imperative",
+      "corePackage": "@semio-tech/imperative-core",
+      "definitionExport": "imperativePlayAppDefinition",
+      "hostKind": "imperative",
+      "port": {
+        "dev": 6076,
+        "env": "IMPERATIVE_PLAY_PORT"
+      }
+    }
+  }
 }

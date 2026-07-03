@@ -20,29 +20,22 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
 import type { UserConfig } from "vite";
-import { semioFaviconVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const repoRoot = path.resolve(__dirname, "../../../..");
+const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [
+  { find: "@semio-tech/coda-desktop", replacement: path.resolve(__dirname, ".") },
+]);
 const configuration: UserConfig = {
   server: {
-    // Pre-transform the renderer entry so all modules are cached before
-    // Electron requests them. Without this, cold starts produce a white screen
-    // because Electron's Chromium has a 6-connection-per-origin HTTP/1.1 limit
-    // and the 80+ ESM module waterfall from elements.tsx stalls.
+    ...workspaceResolve.server,
     warmup: {
       clientFiles: ["./renderer.tsx", "../../../../ui/react/index.tsx"],
     },
-    // Allow serving files from the entire monorepo since elements.tsx and
-    // other dependencies live outside the desktop project root.
-    fs: {
-      allow: [path.resolve(__dirname, "../../../..")],
-    },
   },
   optimizeDeps: {
-    // Force Vite to skip runtime dep discovery. The dep scanner races with
-    // electron-forge's server lifecycle causing "server is being restarted"
-    // errors that skip pre-bundling. All deps are listed in include[].
+    ...workspaceResolve.optimizeDeps,
     noDiscovery: true,
     // Pre-bundle all third-party dependencies imported by elements.tsx into
     // single chunks. This reduces the number of HTTP requests from 80+ to ~35
@@ -103,24 +96,7 @@ const configuration: UserConfig = {
       "xstate"
     ],
   },
-  resolve: {
-    alias: {
-      "@semio-tech/compose-js": path.resolve(__dirname, "../../../../compose/client/lib/js"),
-      "@semio-tech/semio-asset": path.resolve(__dirname, "../../../../asset"),
-      "@semio-tech/ui-react": path.resolve(__dirname, "../../../../ui/react"),
-      "@semio-tech/ui-styling": path.resolve(__dirname, "../../../../ui/styling/js/index.ts"),
-      "@semio-tech/framework-core": path.resolve(__dirname, "../../../../framework/core/index.ts"),
-      "@semio-tech/framework-platform-core": path.resolve(__dirname, "../../../../framework/product/platform/core/index.ts"),
-      "@semio-tech/framework-platform-renderer-react": path.resolve(__dirname, "../../../../framework/product/platform/renderer/react/index.tsx"),
-      "@semio-tech/framework-playground-core": path.resolve(__dirname, "../../../../framework/product/playground/core/index.ts"),
-      "@semio-tech/framework-playground-renderer-react": path.resolve(__dirname, "../../../../framework/product/playground/renderer/react/index.tsx"),
-      "@semio-tech/puzzle-2d-react": path.resolve(__dirname, "../../../../puzzle/2d/react/index.tsx"),
-      "@semio-tech/puzzle-3d-react": path.resolve(__dirname, "../../../../puzzle/3d/react/index.tsx"),
-      "@semio-tech/puzzle-5d-react": path.resolve(__dirname, "../../../../puzzle/5d/react/index.tsx"),
-      "@semio-tech/infinite-world-r3f": path.resolve(__dirname, "../../../../infinite/world/r3f/index.tsx"),
-      "@semio-tech/coda-desktop": path.resolve(__dirname, "."),
-    },
-  },
+  resolve: workspaceResolve.resolve,
   plugins: [
     ...semioFaviconVitePlugin(repoRoot),
     ...(tailwindcss() as unknown as NonNullable<UserConfig["plugins"]>),

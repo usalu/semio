@@ -113,7 +113,15 @@ export const PUZZLE_2D_PLAY_BODY_KEY_DETAIL = "puzzle.2d.play.detail";
 export const PUZZLE_2D_PLAY_BODY_KEY_SELECTION = "puzzle.2d.play.selection";
 export const PUZZLE_2D_PLAY_SETTINGS_BODY_KEY = "puzzle.2d.play.settings";
 
-export const PUZZLE_2D_PLAY_LOD_TIERS: Puzzle2dDrawLodKind[] = getPuzzle2dLodScale().map((lod) => lod.id);
+let puzzle2dPlayLodTiersCache: readonly Puzzle2dDrawLodKind[] | null = null;
+
+/** @emoji 📶 LOD tier ids from WASM scale; lazy so core can load before react finishes init. */
+export function puzzle2dPlayLodTiers(): readonly Puzzle2dDrawLodKind[] {
+	if (!puzzle2dPlayLodTiersCache) {
+		puzzle2dPlayLodTiersCache = getPuzzle2dLodScale().map((lod) => lod.id);
+	}
+	return puzzle2dPlayLodTiersCache;
+}
 
 export function puzzle2dPlayLodTierMenuLabel(tier: Puzzle2dDrawLodKind): string {
 	const row = getPuzzle2dLodScale().find((lod) => lod.id === tier);
@@ -1744,7 +1752,7 @@ export class Puzzle2dPlayShellController extends Controller {
 			value: this.lodModeByPane[paneId],
 			items: [
 				{ id: "automatic", value: PUZZLE_2D_LOD_MODE_AUTOMATIC, label: puzzle2dLodAutomaticSelectLabel(this.effectiveLodByPane[paneId]) },
-				...PUZZLE_2D_PLAY_LOD_TIERS.map((tier) => ({ id: tier, value: tier, label: puzzle2dPlayLodTierMenuLabel(tier) })),
+				...puzzle2dPlayLodTiers().map((tier) => ({ id: tier, value: tier, label: puzzle2dPlayLodTierMenuLabel(tier) })),
 			],
 			onChange: { controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command: "setLodModeForPane", args: { pane: paneId } },
 		};
@@ -3392,7 +3400,7 @@ export const puzzle2dPlayAppDefinition = createPlaygroundApp({
 		{ key: "ctrl+a,meta+a", controllerId: PUZZLE_2D_PLAY_CONTROLLER_ID, command: "selectAllSelection" },
 	],
 	bootRenderer: async (pg) => {
-		const { boot2dPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/2d");
+		const { boot2dPlay } = await import("@semio-tech/puzzle-2d-react/play");
 		boot2dPlay(pg);
 	},
 });

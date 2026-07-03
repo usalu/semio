@@ -734,7 +734,7 @@ export class LayoutPlayController extends Controller {
 		if (command === "exportPng" || command === "exportSvg" || command === "exportPdf" || command === "exportPackage") {
 			if (typeof document === "undefined") return;
 			void (async () => {
-				const { LayoutEngineSession } = await import("@semio-tech/layout-react");
+				const { LayoutEngineSession } = await import("@semio-tech/layout-react/play");
 				const session = new LayoutEngineSession("preview");
 				await session.ensureReady();
 				session.setDocumentJson(this.getDocumentJson());
@@ -920,7 +920,7 @@ export const layoutPlayAppDefinition = createPlaygroundApp({
 		registerLayoutPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootLayoutPlay } = await import("@semio-tech/framework-playground-renderer-react/layout");
+		const { bootLayoutPlay } = await import("@semio-tech/layout-react/play");
 		await bootLayoutPlay(pg);
 	},
 });

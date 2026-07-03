@@ -418,7 +418,7 @@ export const vcsPlayAppDefinition = createPlaygroundApp({
 		registerVcsPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootVcsPlay } = await import("@semio-tech/framework-playground-renderer-react/vcs");
+		const { bootVcsPlay } = await import("@semio-tech/vcs-react/play");
 		bootVcsPlay(pg);
 	},
 });

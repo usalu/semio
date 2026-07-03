@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.tsx"
+    ".": "./index.tsx",
+    "./play": "./play-host.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/s-react:test"
@@ -16,7 +17,16 @@
     "@semio-tech/framework-os-core": "workspace:*",
     "@semio-tech/s-core": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
-    "@semio-tech/vcs-react": "workspace:*"
+    "@semio-tech/vcs-react": "workspace:*",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
+    "@semio-tech/writer-core": "workspace:*",
+    "@semio-tech/writer-react": "workspace:*",
+    "@semio-tech/framework-playground-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/draw-core": "workspace:*",
+    "@semio-tech/raster-core": "workspace:*",
+    "@semio-tech/framework-presentation-renderer-react": "workspace:*",
+    "@semio-tech/framework-presentation-core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",

@@ -2,12 +2,12 @@
 
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
-// Specs: MCP App entry point. Exclusively uses @compose/ui components.
-// Summary: MCP App entry mounts the appropriate viewer (kit, design, scene, diagram) from @compose/ui per #root data-mcp-viewer.
+// Specs: MCP App entry point. Exclusively uses @semio-tech/ui-react components.
+// Summary: MCP App entry mounts the appropriate viewer (kit, design, scene, diagram) from @semio-tech/ui-react per #root data-mcp-viewer.
 
 // #endregion 🧲Header
 
-import "@compose/ui/globals.css";
+import "@semio-tech/ui-react/globals.css";
 import { createRoot } from "react-dom/client";
 import { mountMcpDesignViewer, mountMcpDiagramViewer, mountMcpKitViewer, mountMcpSceneViewer } from "../../lib/react/ui";
 

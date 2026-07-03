@@ -982,7 +982,7 @@ export const notePlayAppDefinition = createPlaygroundApp({
 		{ key: "shift+right", controllerId: NOTE_PLAY_CONTROLLER_ID, command: "nudgeSelection", args: { dx: 10, dy: 0 } },
 	],
 	bootRenderer: async (pg) => {
-		const { bootNotePlay } = await import("@semio-tech/framework-playground-renderer-react/note");
+		const { bootNotePlay } = await import("@semio-tech/note-react/play");
 		bootNotePlay(pg);
 	},
 });

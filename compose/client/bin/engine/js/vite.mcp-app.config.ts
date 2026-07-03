@@ -3,7 +3,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 
 // Specs: Vite config for building the standalone MCP App as a single HTML file.
-// Bundles React, @compose/ui, and @representationcontextprotocol/ext-apps into one inlined HTML file.
+// Bundles React, @semio-tech/ui-react, and @representationcontextprotocol/ext-apps into one inlined HTML file.
 // Summary: Vite build config bundling the MCP App into a single inlined HTML file.
 
 // #endregion 🧲Header
@@ -14,7 +14,11 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import { createWorkspaceViteResolveConfig } from "../../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
+
+const repoRoot = path.resolve(__dirname, "../../../../../");
+const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
 
 // #region 🪵ZodJitlessPlugin
 // Specs: Zod v4 (dependency of @representationcontextprotocol/ext-apps) uses `new Function()`
@@ -123,11 +127,9 @@ export default defineConfig({
     __SEMIO_JS_RUN_BENCHMARKS__: "false",
     __SEMIO_JS_RUN_EMBEDDED_TESTS__: "false",
   },
-  resolve: {
-    alias: [
-      { find: "@semio-tech/compose-rs-wasm", replacement: path.resolve(__dirname, "../rs/pkg") },
-    ],
-  },
+  resolve: workspaceResolve.resolve,
+  server: workspaceResolve.server,
+  optimizeDeps: workspaceResolve.optimizeDeps,
   build: {
     outDir: path.resolve(__dirname, "dist"),
     emptyOutDir: true,

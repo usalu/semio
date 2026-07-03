@@ -24,7 +24,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import wasm from "vite-plugin-wasm";
 import topLevelAwait from "vite-plugin-top-level-await";
-import { semioFaviconVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
@@ -200,8 +200,18 @@ export default defineConfig(async ({ mode }) => {
   const reactI18nextEntry = path.resolve(__dirname, "../../node_modules/react-i18next/dist/commonjs/index.js");
   const reactRouterEntry = path.resolve(__dirname, "../../node_modules/react-router/dist/development/index.js");
   const repoRoot = path.resolve(__dirname, "../../../..");
+  const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [
+        { find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/, replacement: shimWithSelector },
+        { find: /^use-sync-external-store\/shim(\/index\.js)?$/, replacement: shimMain },
+        { find: /^scheduler$/, replacement: schedulerEntry },
+        { find: /^html-parse-stringify$/, replacement: htmlParseStringifyEntry },
+        { find: /^react-i18next$/, replacement: reactI18nextEntry },
+        { find: /^react-router$/, replacement: reactRouterEntry },
+        { find: /^stats\.js$/, replacement: statsEntry },
+  ]);
   return {
     server: {
+      ...workspaceResolve.server,
       watch: {
         usePolling: true,
         interval: 1000,
@@ -213,25 +223,11 @@ export default defineConfig(async ({ mode }) => {
       __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
     },
     resolve: {
-      dedupe: ["three", "cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements", "@react-three/fiber", "@react-three/drei"],
-      // `shim/index.js` is CJS (`module.exports`); Vite would serve it as ESM and break `import { useSyncExternalStore }`.
-      // Point bare specifiers at the CJS builds under `cjs/` so Rollup/commonjs rewrites exports (VS Code / zustand compatible).
-      alias: [
-        { find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/, replacement: shimWithSelector },
-        { find: /^use-sync-external-store\/shim(\/index\.js)?$/, replacement: shimMain },
-        { find: /^scheduler$/, replacement: schedulerEntry },
-        { find: /^html-parse-stringify$/, replacement: htmlParseStringifyEntry },
-        { find: /^react-i18next$/, replacement: reactI18nextEntry },
-        { find: /^react-router$/, replacement: reactRouterEntry },
-        { find: /^stats\.js$/, replacement: statsEntry },
-        { find: "@semio-tech/compose-js", replacement: path.resolve(__dirname, "../js") },
-        { find: "@compose/ui", replacement: path.resolve(__dirname, "../ui") },
-        { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
-        { find: "@semio-tech/semio-asset", replacement: path.resolve(__dirname, "../../../../asset") },
-        { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../ui/react/index.tsx") },
-        { find: "@semio-tech/puzzle-2d-react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
-      ],
+      ...workspaceResolve.resolve,
+      dedupe: ["three", "cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements", "@react-three/fiber", "@react-three/drei", ...(workspaceResolve.resolve?.dedupe ?? [])],
+      alias: workspaceResolve.resolve?.alias,
     },
+    optimizeDeps: workspaceResolve.optimizeDeps,
     plugins: [
       ...semioFaviconVitePlugin(repoRoot),
       reactCjsFacadeResolvePlugin({ htmlParseStringifyEntry, reactI18nextEntry, reactRouterEntry, shimMain, shimWithSelector, schedulerEntry, statsEntry }),

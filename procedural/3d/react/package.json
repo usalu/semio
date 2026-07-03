@@ -19,7 +19,12 @@
     "@react-three/fiber": "^9.4.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "three": "^0.182.0"
+    "three": "^0.182.0",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
+    "@semio-tech/framework-platform-renderer-react": "workspace:*",
+    "@semio-tech/framework-playground-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/procedural-3d-core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",
@@ -37,6 +42,7 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "./index.tsx"
+    ".": "./index.tsx",
+    "./play": "./play-host.tsx"
   }
 }

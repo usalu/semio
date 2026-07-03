@@ -1169,6 +1169,86 @@ export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): st
 }
 //#endregion 🔌PlaygroundDevPorts
 
+//#region 🔖PlaygroundAppManifest
+
+export type PlaygroundAppManifest = {
+	readonly kind: string;
+	readonly aliases?: readonly string[];
+	readonly packageRoot: string;
+	readonly corePackage: string;
+	readonly definitionExport: string;
+	readonly hostKind?: PlaygroundHostKind;
+	readonly port?: { readonly dev: number; readonly test?: number; readonly env?: string };
+};
+
+export type PlaygroundAppManifestEntry = PlaygroundAppManifest & { readonly corePackageJsonPath: string };
+
+const PLAYGROUND_MANIFEST_SKIP_DIRS = new Set(["node_modules", ".git", ".nx", "dist", "target", "storybook-static", ".repo-cache"]);
+
+/** @emoji 📋 Scans workspace package.json files for semio.playgroundApp manifests. */
+export function scanPlaygroundAppManifests(repoRoot: string): readonly PlaygroundAppManifestEntry[] {
+	const entries: PlaygroundAppManifestEntry[] = [];
+	const rootPkg = resolve(repoRoot, "package.json");
+	const walk = (dir: string): void => {
+		const pkgPath = join(dir, "package.json");
+		if (existsSync(pkgPath) && pkgPath !== rootPkg) {
+			try {
+				const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as {
+					semio?: { playgroundApp?: PlaygroundAppManifest };
+				};
+				const manifest = pkg.semio?.playgroundApp;
+				if (manifest?.kind && manifest.packageRoot && manifest.corePackage && manifest.definitionExport) {
+					entries.push({ ...manifest, corePackageJsonPath: pkgPath });
+				}
+			} catch {
+				/* ignore malformed package.json */
+			}
+		}
+		for (const entry of readdirSync(dir)) {
+			if (PLAYGROUND_MANIFEST_SKIP_DIRS.has(entry)) continue;
+			const full = join(dir, entry);
+			if (statSync(full).isDirectory()) walk(full);
+		}
+	};
+	walk(repoRoot);
+	return entries.sort((a, b) => a.kind.localeCompare(b.kind));
+}
+
+/** @emoji 🗺 kind -> manifest entry */
+export function playgroundAppManifestByKind(
+	manifests: readonly PlaygroundAppManifestEntry[],
+): ReadonlyMap<string, PlaygroundAppManifestEntry> {
+	const map = new Map<string, PlaygroundAppManifestEntry>();
+	for (const entry of manifests) {
+		map.set(entry.kind, entry);
+		for (const alias of entry.aliases ?? []) map.set(alias, entry);
+	}
+	return map;
+}
+
+/** @emoji 🧭 CLI segment -> app kind (replaces resolvePlaygroundDevApp hardcoded logic) */
+export function resolvePlaygroundDevAppFromManifests(
+	segments: string[],
+	manifests: readonly PlaygroundAppManifestEntry[],
+): { readonly app: string; readonly rest: string[] } | null {
+	const byAlias = playgroundAppManifestByKind(manifests);
+	const [head, second, third, ...tail] = segments;
+	if (!head) return null;
+	const resolve = (key: string, rest: string[]): { readonly app: string; readonly rest: string[] } | null => {
+		const entry = byAlias.get(key);
+		return entry ? { app: entry.kind, rest } : null;
+	};
+	if (head === "puzzle" && second) return resolve(second, third ? [third, ...tail] : tail);
+	if (head === "procedural" && second) return resolve(`procedural-${second}`, third ? [third, ...tail] : tail);
+	if (head === "trinity" && second === "jack") return resolve("trinity-jack", third ? [third, ...tail] : tail);
+	if (head === "trinity" && second === "rewrite") return resolve("trinity-rewrite", third ? [third, ...tail] : tail);
+	if (head === "gis" && second === "2d") return resolve("gis-2d", third ? [third, ...tail] : tail);
+	if (head === "presentation" || head === "vcs" || head === "layout") return resolve(head, segments.slice(1));
+	return resolve(head, segments.slice(1));
+}
+
+//#endregion 🔖PlaygroundAppManifest
+
 /** 🧰Play/vite dev env with optional file-watcher polling defaults. */
 export function playPollingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
   return devToolingEnv({

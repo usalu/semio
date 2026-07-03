@@ -1134,7 +1134,7 @@ class OsDevPlayground extends Playground {
 export async function bootOsDev(rootId = "root"): Promise<void> {
 	await bootstrapSPlayExtensions();
 	const document = resolveOsBootStudioDocument();
-	const { bootSPlay } = await import("@semio-tech/framework-playground-renderer-react/s");
+	const { bootSPlay } = await import("@semio-tech/s-react/play");
 	bootSPlay(new OsDevPlayground(document), rootId);
 }
 
@@ -1160,7 +1160,7 @@ export const sPlayAppDefinition = createPlaygroundApp({
 		registerSPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootSPlay } = await import("@semio-tech/framework-playground-renderer-react/s");
+		const { bootSPlay } = await import("@semio-tech/s-react/play");
 		bootSPlay(pg);
 	},
 });

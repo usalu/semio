@@ -5,6 +5,11 @@
   "description": "flow · module · draw",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./rs/pkg/flow_module_draw.js",
+    "./pkg/flow_module_draw.js": "./rs/pkg/flow_module_draw.js",
+    "./pkg/flow_module_draw_bg.wasm": "./rs/pkg/flow_module_draw_bg.wasm"
+  },
   "scripts": {
     "wasm": "bun nx run @semio-tech/flow-module-draw:wasm"
   },

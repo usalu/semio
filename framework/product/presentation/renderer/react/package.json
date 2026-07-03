@@ -7,7 +7,8 @@
   "private": true,
   "exports": {
     ".": "./index.tsx",
-    "./globals.css": "./globals.css"
+    "./globals.css": "./globals.css",
+    "./play": "./play-host.tsx"
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
@@ -21,7 +22,9 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.1",
     "reveal.js": "^5.2.1",
-    "unified": "^11.0.5"
+    "unified": "^11.0.5",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
+    "@semio-tech/framework-playground-core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",

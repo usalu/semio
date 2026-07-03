@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.tsx"
+    ".": "./index.tsx",
+    "./play": "./play-host.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/cad-js-renderer-react:test"

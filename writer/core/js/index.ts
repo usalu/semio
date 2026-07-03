@@ -736,7 +736,7 @@ export const writerPlayAppDefinition = createPlaygroundApp({
 		registerWriterPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootWriterPlay } = await import("@semio-tech/framework-playground-renderer-react/writer");
+		const { bootWriterPlay } = await import("@semio-tech/writer-react/play");
 		bootWriterPlay(pg);
 	},
 });

@@ -1804,7 +1804,7 @@ export const gis2dPlayAppDefinition = createPlaygroundApp({
 		registerMapPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootMapPlay } = await import("@semio-tech/framework-playground-renderer-react/gis/2d");
+		const { bootMapPlay } = await import("@semio-tech/gis-2d-react/play");
 		bootMapPlay(pg);
 	},
 });

@@ -11,32 +11,7 @@
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*",
-    "@semio-tech/draw-core": "workspace:*",
-    "@semio-tech/note-core": "workspace:*",
-    "@semio-tech/writer-core": "workspace:*",
-    "@semio-tech/raster-core": "workspace:*",
-    "@semio-tech/forms-core": "workspace:*",
-    "@semio-tech/flow-core": "workspace:*",
-    "@semio-tech/dag-host-core": "workspace:*",
-    "@semio-tech/imperative-core": "workspace:*",
-    "@semio-tech/sequence-core": "workspace:*",
-    "@semio-tech/layout-core": "workspace:*",
-    "@semio-tech/lowpoly-core": "workspace:*",
-    "@semio-tech/procedural-2d-core": "workspace:*",
-    "@semio-tech/procedural-3d-core": "workspace:*",
-    "@semio-tech/shooting-core": "workspace:*",
-    "@semio-tech/s-core": "workspace:*",
-    "@semio-tech/vcs-core": "workspace:*",
-    "@semio-tech/gis-2d-core": "workspace:*",
-    "@semio-tech/reasoning-mindmap-wires-core": "workspace:*",
-    "@semio-tech/trinity-jack-host-core": "workspace:*",
-    "@semio-tech/trinity-rewrite-core": "workspace:*",
-    "@semio-tech/framework-presentation-core": "workspace:*",
-    "@semio-tech/puzzle-2d-core": "workspace:*",
-    "@semio-tech/puzzle-3d-core": "workspace:*",
-    "@semio-tech/puzzle-5d-core": "workspace:*",
-    "@semio-tech/cad-js-renderer-core": "workspace:*"
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

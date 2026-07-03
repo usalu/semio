@@ -31,5 +31,22 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "puzzle/3d/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "3d",
+      "aliases": [
+        "3d"
+      ],
+      "packageRoot": "puzzle/3d",
+      "corePackage": "@semio-tech/puzzle-3d-core",
+      "definitionExport": "puzzle3dPlayAppDefinition",
+      "hostKind": "puzzle-3d",
+      "port": {
+        "dev": 6013,
+        "test": 6028,
+        "env": "PUZZLE_3D_PLAY_PORT"
+      }
+    }
+  }
 }

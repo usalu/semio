@@ -1027,7 +1027,7 @@ export const sequencePlayAppDefinition = createPlaygroundApp({
 		registerSequencePlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootSequencePlay } = await import("@semio-tech/framework-playground-renderer-react/sequence");
+		const { bootSequencePlay } = await import("@semio-tech/sequence-react/play");
 		bootSequencePlay(pg);
 	},
 });

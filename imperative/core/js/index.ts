@@ -138,7 +138,7 @@ export const imperativePlayAppDefinition = createPlaygroundApp({
 		registerImperativePlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootImperativePlay } = await import("@semio-tech/framework-playground-renderer-react/imperative");
+		const { bootImperativePlay } = await import("@semio-tech/imperative-react/play");
 		bootImperativePlay(pg);
 	},
 });

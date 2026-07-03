@@ -24,7 +24,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
-import { playgroundIframeEmbedHeadersPlugin, puzzle3dMeshesVitePlugin, semioFaviconVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig, playgroundIframeEmbedHeadersPlugin, puzzle3dMeshesVitePlugin, semioFaviconVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
@@ -103,6 +103,9 @@ export default defineConfig(async () => {
   const fs = await import("fs");
   const viteInternalFallback = path.resolve(__dirname, "../../../node_modules/vite/dist/node/index.js");
   const workspaceRoot = path.resolve(__dirname, "../../../../../");
+  const workspaceResolve = createWorkspaceViteResolveConfig(workspaceRoot, [
+        { find: "vite/internal", replacement: viteInternalFallback },
+  ]);
   return {
     base: "./",
     define: {
@@ -111,19 +114,9 @@ export default defineConfig(async () => {
       __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
       "import.meta.env.COMPOSE_SKETCHPAD_PRELOAD_KITS": JSON.stringify(process.env.COMPOSE_SKETCHPAD_PRELOAD_KITS ?? ""),
     },
-    resolve: {
-      alias: [
-        { find: "@semio-tech/compose-js", replacement: path.resolve(__dirname, "../../js") },
-        { find: "@semio-tech/compose-rs-wasm", replacement: path.resolve(__dirname, "../../rs/pkg") },
-        { find: "@compose/ui", replacement: path.resolve(__dirname, "../../../../../ui/react") },
-        { find: /^@semio-tech\/compose-sketchpad\/boot$/, replacement: path.resolve(__dirname, "../js/boot.tsx") },
-        { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname, "../react") },
-        { find: "@compose/studio", replacement: path.resolve(__dirname, "../../studio") },
-        { find: "@semio-tech/semio-asset", replacement: path.resolve(__dirname, "../../../../../asset") },
-        { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../../ui/react/index.tsx") },
-        { find: "vite/internal", replacement: viteInternalFallback },
-      ],
-    },
+    resolve: workspaceResolve.resolve,
+    server: workspaceResolve.server,
+    optimizeDeps: workspaceResolve.optimizeDeps,
     plugins: [
       ...semioFaviconVitePlugin(workspaceRoot),
       ...puzzle3dMeshesVitePlugin(workspaceRoot),

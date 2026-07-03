@@ -33,6 +33,7 @@ import {
   playgroundTestPortString,
   type PlaygroundHostKind,
   type PlaygroundSiteKind,
+  scanPlaygroundAppManifests,
 } from "../../repo/lib/js/index.ts";
 // #endregion 🔌Adapters
 
@@ -690,62 +691,11 @@ export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
 }
 
 /** @emoji 🛝 Shared Vite preset for puzzle play harnesses (assets, renderer subpaths, workspace aliases). */
-const PLAYGROUND_RENDERER_SHELL_SUBPATHS = ["@semio-tech/framework-playground-renderer-react/shell", "@semio-tech/framework-playground-renderer-react/boot"] as const;
-
 const PLAYGROUND_RENDERER_PUZZLE_HOSTS_START = "//#region 🔖Puzzle3dPlayHost";
 const PLAYGROUND_RENDERER_BOOT_START = "//#region 🔖Boot";
 const PLAYGROUND_RENDERER_VITEST_START = "//#region 🧪Tests";
 
 export type PlaygroundRendererPuzzleKind = "2d" | "3d" | "5d" | "map" | "flow" | "dag" | "imperative" | "sequence" | "layout" | "lowpoly" | "trinity-jack" | "trinity-rewrite" | "procedural-3d" | "procedural-2d" | "presentation" | "wires" | "shooting" | "forms" | "raster" | "writer" | "s" | "vcs" | "cad";
-
-const PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS: Readonly<Record<string, PlaygroundRendererPuzzleKind>> = {
-  "@semio-tech/framework-playground-renderer-react/puzzle/2d": "2d",
-  "@semio-tech/framework-playground-renderer-react/puzzle/3d": "3d",
-  "@semio-tech/framework-playground-renderer-react/puzzle/5d": "5d",
-  "@semio-tech/framework-playground-renderer-react/puzzle/map": "map",
-  "@semio-tech/framework-playground-renderer-react/flow": "flow",
-  "@semio-tech/framework-playground-renderer-react/dag": "dag",
-  "@semio-tech/framework-playground-renderer-react/imperative": "imperative",
-  "@semio-tech/framework-playground-renderer-react/sequence": "sequence",
-  "@semio-tech/framework-playground-renderer-react/layout": "layout",
-  "@semio-tech/framework-playground-renderer-react/lowpoly": "lowpoly",
-  "@semio-tech/framework-playground-renderer-react/trinity-jack": "trinity-jack",
-  "@semio-tech/framework-playground-renderer-react/trinity-rewrite": "trinity-rewrite",
-  "@semio-tech/framework-playground-renderer-react/procedural-3d": "procedural-3d",
-  "@semio-tech/framework-playground-renderer-react/procedural-2d": "procedural-2d",
-  "@semio-tech/framework-playground-renderer-react/shooting": "shooting",
-  "@semio-tech/framework-playground-renderer-react/presentation": "presentation",
-  "@semio-tech/framework-playground-renderer-react/forms": "forms",
-  "@semio-tech/framework-playground-renderer-react/raster": "raster",
-  "@semio-tech/framework-playground-renderer-react/writer": "writer",
-  "@semio-tech/framework-playground-renderer-react/s": "s",
-  "@semio-tech/framework-playground-renderer-react/vcs": "vcs",
-  "@semio-tech/framework-playground-renderer-react/reasoning/wires": "wires",
-};
-
-const PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS: Readonly<Record<PlaygroundRendererPuzzleKind, { readonly start: string; readonly end: string }>> = {
-  "3d": { start: "//#region 🔖Puzzle3dPlayHost", end: "//#endregion 🔖Puzzle3dPlayHost" },
-  "5d": { start: "//#region 🔖Puzzle5dPlayHost", end: "//#endregion 🔖Puzzle5dPlayHost" },
-  "2d": { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
-  map: { start: "//#region 🔖MapPlayHost", end: "//#endregion 🔖MapPlayHost" },
-  flow: { start: "//#region 🔖FlowPlayHost", end: "//#endregion 🔖FlowPlayHost" },
-  dag: { start: "//#region 🔖DagPlayHost", end: "//#endregion 🔖DagPlayHost" },
-  imperative: { start: "//#region 🔖ImperativePlayHost", end: "//#endregion 🔖ImperativePlayHost" },
-  sequence: { start: "//#region 🔖SequencePlayHost", end: "//#endregion 🔖SequencePlayHost" },
-  layout: { start: "//#region 🔖LayoutPlayHost", end: "//#endregion 🔖LayoutPlayHost" },
-  lowpoly: { start: "//#region 🔖LowpolyPlayHost", end: "//#endregion 🔖LowpolyPlayHost" },
-  "trinity-jack": { start: "//#region 🔖TrinityPlayHost", end: "//#endregion 🔖TrinityPlayHost" },
-  "trinity-rewrite": { start: "//#region 🔖TrinityPlayHost", end: "//#endregion 🔖TrinityPlayHost" },
-  "procedural-3d": { start: "//#region 🔖ProceduralPlayHost", end: "//#endregion 🔖ProceduralPlayHost" },
-  "procedural-2d": { start: "//#region 🔖Procedural2dPlayHost", end: "//#endregion 🔖Procedural2dPlayHost" },
-  shooting: { start: "//#region 🔖ShootingPlayHost", end: "//#endregion 🔖ShootingPlayHost" },
-  presentation: { start: "//#region 🔖PresentationPlayHost", end: "//#endregion 🔖PresentationPlayHost" },
-  forms: { start: "//#region 🔖FormsPlayHost", end: "//#endregion 🔖FormsPlayHost" },
-  raster: { start: "//#region 🔖RasterPlayHost", end: "//#endregion 🔖RasterPlayHost" },
-  writer: { start: "//#region 🔖WriterPlayHost", end: "//#endregion 🔖WriterPlayHost" },
-  vcs: { start: "//#region 🔖VcsPlayHost", end: "//#endregion 🔖VcsPlayHost" },
-  wires: { start: "//#region 🔖Puzzle2dPlayHost", end: "//#endregion 🔖Puzzle2dPlayHost" },
-};
 
 const S_PLAYGROUND_HOST_MARKERS: readonly { readonly start: string; readonly end: string }[] = [
   { start: "//#region 🔖Puzzle3dPlayHost", end: "//#endregion 🔖Puzzle3dPlayHost" },
@@ -836,24 +786,6 @@ function ensurePlaygroundRendererWriterJackImports(host: string): string {
 	return `${host.slice(0, insertAt)}${PLAYGROUND_RENDERER_WRITER_JACK_IMPORTS}${host.slice(insertAt)}`;
 }
 
-/** @emoji ✂️ Keeps shell + one puzzle play host + boot (per-dimension playground entries). */
-export function stripPlaygroundRendererForPuzzleKind(
-	source: string,
-	kind: PlaygroundRendererPuzzleKind,
-	options: { readonly includeVitest?: boolean } = {},
-): string {
-	const puzzleStart = source.indexOf(PLAYGROUND_RENDERER_PUZZLE_HOSTS_START);
-	const bootStart = source.indexOf(PLAYGROUND_RENDERER_BOOT_START);
-	const testsStart = source.indexOf(PLAYGROUND_RENDERER_VITEST_START);
-	const markers = PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS[kind];
-	if (puzzleStart < 0 || bootStart < 0) return source;
-	const bootEnd = testsStart >= 0 ? testsStart : source.length;
-	const host = ensurePlaygroundRendererWriterJackImports(slicePlaygroundRendererRegion(source, markers.start, markers.end));
-	let out = `${source.slice(0, puzzleStart)}${host}${source.slice(bootStart, bootEnd)}`;
-	if (options.includeVitest && testsStart >= 0) out += source.slice(testsStart);
-	return out;
-}
-
 function namedImportSpecifiersForModule(source: string, moduleId: string): string[] {
   const escaped = moduleId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const re = new RegExp(`import\\s*\\{([^}]+)\\}\\s*from\\s*["']${escaped}["']`, "gs");
@@ -880,35 +812,6 @@ export function duplicateNamedImportsForModule(source: string, moduleId: string)
     else seen.add(name);
   }
   return dupes;
-}
-
-/** @emoji 🛝 Vite virtual entry for shell/boot and per-puzzle boot subpaths without cross-dimension hosts. */
-export function playgroundRendererShellEntryPlugin(rendererIndexPath: string): Plugin {
-  return {
-    name: "playground-renderer-shell-entry",
-    enforce: "pre",
-    resolveId(source) {
-      if ((PLAYGROUND_RENDERER_SHELL_SUBPATHS as readonly string[]).includes(source)) {
-        return `${rendererIndexPath}?playgroundEntry=shell`;
-      }
-      const kind = PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS[source];
-      if (kind) return `${rendererIndexPath}?playgroundEntry=puzzle-${kind}`;
-    },
-    load(id) {
-      if (!id.startsWith(rendererIndexPath) || !id.includes("playgroundEntry=")) return;
-      const source = readFileSync(rendererIndexPath, "utf8");
-      if (id.includes("playgroundEntry=shell")) {
-        return stripPlaygroundRendererPuzzleHosts(source, { includeVitest: false });
-      }
-      const puzzleMatch = id.match(/playgroundEntry=puzzle-([^&?]+)/);
-      if (puzzleMatch && puzzleMatch[1] === "s") {
-        return stripPlaygroundRendererForS(source);
-      }
-      if (puzzleMatch && puzzleMatch[1] in PLAYGROUND_RENDERER_PUZZLE_HOST_MARKERS) {
-        return stripPlaygroundRendererForPuzzleKind(source, puzzleMatch[1] as PlaygroundRendererPuzzleKind, { includeVitest: false });
-      }
-    },
-  };
 }
 
 /** @emoji 🧪 Vitest load: shell-only slice of renderer `index.tsx` when `PLAYGROUND_RENDERER_SHELL_ONLY=1`. */
@@ -1389,161 +1292,52 @@ export const FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE = [
   "@semio-tech/flow-module-draw",
 ] as const;
 
-/** @emoji 📁 Vite alias target directory so package subpath exports (./internal, ./playground) resolve. */
-function packageDir(repoRoot: string, ...segments: string[]): string {
-  return `${resolve(repoRoot, ...segments)}/`;
+const PLAYGROUND_APPS_VIRTUAL_MODULE_ID = "virtual:semio-playground-apps";
+
+/** @emoji 🧭 Workspace Vite resolve preset: dedupe, fs.allow, optimizeDeps.exclude, scene-host aliases. */
+export function createWorkspaceViteResolveConfig(
+  repoRoot: string,
+  extraAliases: ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> = [],
+): Pick<UserConfig, "resolve" | "server" | "optimizeDeps"> {
+  return {
+    resolve: {
+      alias: [...extraAliases],
+      dedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],
+    },
+    server: {
+      fs: { allow: [repoRoot] },
+    },
+    optimizeDeps: {
+      exclude: [...findWorkspacePackages(repoRoot), ...FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE],
+    },
+  };
 }
 
-/** @emoji 📄 Vite alias for workspace packages whose entry moved under `js/index.ts`. */
-function packageEntry(repoRoot: string, ...segments: string[]): string {
-  return resolve(repoRoot, ...segments, "js/index.ts");
-}
-
-/** @emoji ⚛️ Vite alias for workspace React packages at `react/index.tsx`. */
-function reactEntry(repoRoot: string, ...segments: string[]): string {
-  return resolve(repoRoot, ...segments, "react/index.tsx");
+/** @emoji 📋 Vite virtual module with dynamic playground app definition imports from manifests. */
+export function playgroundAppsVirtualModulePlugin(repoRoot: string): Plugin {
+  const resolvedId = `\0${PLAYGROUND_APPS_VIRTUAL_MODULE_ID}`;
+  return {
+    name: "semio-playground-apps-virtual",
+    enforce: "pre",
+    resolveId(id) {
+      if (id === PLAYGROUND_APPS_VIRTUAL_MODULE_ID) return resolvedId;
+    },
+    load(id) {
+      if (id !== resolvedId) return;
+      const manifests = scanPlaygroundAppManifests(repoRoot);
+      const entries = manifests
+        .map(
+          (manifest) =>
+            `  ${JSON.stringify(manifest.kind)}: async () => (await import(${JSON.stringify(manifest.corePackage)}))[${JSON.stringify(manifest.definitionExport)}]`,
+        )
+        .join(",\n");
+      return `export const playgroundAppImports = {\n${entries}\n};\n`;
+    },
+  };
 }
 
 function playgroundRendererIndexPath(repoRoot: string): string {
   return resolve(repoRoot, "framework/product/playground/renderer/react/index.tsx");
-}
-
-/** @emoji 🔀 Explicit boot subpath aliases (must precede the package-root alias). */
-function playgroundRendererBootSubpathAliases(rendererIndex: string): ReadonlyArray<{ readonly find: string; readonly replacement: string }> {
-  const aliases: { find: string; replacement: string }[] = [];
-  for (const subpath of PLAYGROUND_RENDERER_SHELL_SUBPATHS) {
-    aliases.push({ find: subpath, replacement: `${rendererIndex}?playgroundEntry=shell` });
-  }
-  for (const [subpath, kind] of Object.entries(PLAYGROUND_RENDERER_PUZZLE_BOOT_SUBPATHS)) {
-    aliases.push({ find: subpath, replacement: `${rendererIndex}?playgroundEntry=puzzle-${kind}` });
-  }
-  return aliases;
-}
-
-/** @emoji 🔀 Vite resolve aliases shared by playground play hosts and renderer vitest graphs. */
-/** @emoji 🧭 Vite resolve aliases for the shared playground renderer graph. */
-export function playgroundRendererResolveAliases(
-  repoRoot: string,
-  playEntryKind?: string,
-): ReadonlyArray<{ readonly find: string | RegExp; readonly replacement: string }> {
-  const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
-  const rendererIndex = playgroundRendererIndexPath(repoRoot);
-  const aliases = [
-    { find: /^@semio-tech\/framework-playground-renderer-react$/, replacement: rendererIndex },
-    { find: /^@semio-tech\/framework-playground-core$/, replacement: resolve(repoRoot, "framework/product/playground/core/js/index.ts") },
-    { find: /^@semio-tech\/framework-platform-core$/, replacement: resolve(repoRoot, "framework/product/platform/core/js/index.ts") },
-    { find: /^@semio-tech\/framework-platform-renderer-react$/, replacement: resolve(repoRoot, "framework/product/platform/renderer/react/index.tsx") },
-    { find: /^@semio-tech\/framework-core$/, replacement: resolve(repoRoot, "framework/core/js/index.ts") },
-    { find: "@semio-tech/ui-react/globals.css", replacement: resolve(repoRoot, "ui/react/globals.css") },
-    { find: "@semio-tech/ui-react/globals-ui.css", replacement: resolve(repoRoot, "ui/react/globals-ui.css") },
-    { find: /^@semio-tech\/ui-react$/, replacement: resolve(repoRoot, "ui/react/index.tsx") },
-    { find: "@compose/ui", replacement: resolve(repoRoot, "ui/react") },
-    { find: "@semio-tech/ui-styling/ui.css", replacement: resolve(repoRoot, "ui/styling/js/ui.css") },
-    { find: "@semio-tech/ui-styling/palette.css", replacement: resolve(repoRoot, "ui/styling/js/palette.css") },
-    { find: /^@semio-tech\/ui-asset$/, replacement: resolve(repoRoot, "ui/asset/js/index.ts") },
-    { find: "@semio-tech/infinite-cavas-react-renderer", replacement: resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx") },
-    { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "infinite/world/r3f/index.tsx") },
-    { find: "@semio-tech/puzzle-2d-core", replacement: packageEntry(repoRoot, "puzzle/2d/core") },
-    { find: "@semio-tech/puzzle-3d-core", replacement: packageEntry(repoRoot, "puzzle/3d/core") },
-    { find: "@semio-tech/puzzle-5d-core", replacement: packageEntry(repoRoot, "puzzle/5d/core") },
-    { find: "@semio-tech/puzzle-2d-react", replacement: resolve(repoRoot, "puzzle/2d/react/index.tsx") },
-    { find: "@semio-tech/puzzle-3d-react", replacement: resolve(repoRoot, "puzzle/3d/react/index.tsx") },
-    { find: "@semio-tech/puzzle-5d-react", replacement: resolve(repoRoot, "puzzle/5d/react/index.tsx") },
-    { find: "@semio-tech/gis-2d-core", replacement: packageEntry(repoRoot, "gis/2d/core") },
-    { find: "@semio-tech/gis-2d-react", replacement: resolve(repoRoot, "gis/2d/react/index.tsx") },
-    { find: "@semio-tech/reasoning-mindmap-wires-core", replacement: packageEntry(repoRoot, "reasoning/mindmap/wires/core") },
-    { find: "@semio-tech/reasoning-mindmap-wires-react", replacement: resolve(repoRoot, "reasoning/mindmap/wires/react/index.ts") },
-    { find: "@semio-tech/reasoning-mindmap-react", replacement: resolve(repoRoot, "reasoning/mindmap/react/index.tsx") },
-    { find: "@semio-tech/framework-presentation-core", replacement: packageEntry(repoRoot, "framework/product/presentation/core") },
-    { find: "@semio-tech/framework-presentation-renderer-react", replacement: resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx") },
-    { find: "@semio-tech/framework-os-core", replacement: packageEntry(repoRoot, "framework/product/os/core") },
-    { find: "@semio-tech/framework-playground-core/app-registry", replacement: resolve(repoRoot, "framework/product/playground/core/js/app-registry.ts") },
-    { find: "@semio-tech/framework-playground-core", replacement: resolve(repoRoot, "framework/product/playground/core/js/index.ts") },
-    { find: "@semio-tech/flow-core/pkg/flow_core.js", replacement: resolve(repoRoot, "flow/core/rs/pkg/flow_core.js") },
-    { find: "@semio-tech/flow-core", replacement: packageEntry(repoRoot, "flow/core") },
-    { find: "@semio-tech/flow-react", replacement: resolve(repoRoot, "flow/react/index.tsx") },
-    { find: "@semio-tech/flow-module-core", replacement: resolve(repoRoot, "flow/module/core/rs/pkg/flow_module_core.js") },
-    { find: "@semio-tech/flow-module-brep", replacement: resolve(repoRoot, "flow/module/brep/rs/pkg/flow_module_brep.js") },
-    { find: "@semio-tech/flow-module-draw", replacement: resolve(repoRoot, "flow/module/draw/rs/pkg/flow_module_draw.js") },
-    { find: "@semio-tech/flow-module-math", replacement: resolve(repoRoot, "flow/module/math/rs/pkg/flow_module_math.js") },
-    { find: "@semio-tech/flow-module-text", replacement: resolve(repoRoot, "flow/module/text/rs/pkg/flow_module_text.js") },
-    { find: "@semio-tech/flow-module-logic", replacement: resolve(repoRoot, "flow/module/logic/rs/pkg/flow_module_logic.js") },
-    { find: "@semio-tech/flow-module-dictionary", replacement: resolve(repoRoot, "flow/module/dictionary/rs/pkg/flow_module_dictionary.js") },
-    { find: "@semio-tech/flow-module-list", replacement: resolve(repoRoot, "flow/module/list/rs/pkg/flow_module_list.js") },
-    { find: "@semio-tech/flow-module-bim", replacement: resolve(repoRoot, "flow/module/bim/rs/pkg/flow_module_bim.js") },
-    { find: "@semio-tech/dag-core", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/rs/pkg/mathematical_graph_port_directed_dag.js") },
-    { find: "@semio-tech/dag-host-core", replacement: packageEntry(repoRoot, "mathematical/graph/port/directed/dag/core") },
-    { find: "@semio-tech/dag-react", replacement: resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx") },
-    { find: "@semio-tech/imperative-react", replacement: resolve(repoRoot, "imperative/react/index.tsx") },
-    { find: "@semio-tech/imperative-core", replacement: packageEntry(repoRoot, "imperative/core") },
-    { find: "@semio-tech/imperative-core/pkg/imperative_core.js", replacement: resolve(repoRoot, "imperative/core/rs/pkg/imperative_core.js") },
-    { find: "@semio-tech/sequence-react", replacement: resolve(repoRoot, "sequence/react/index.tsx") },
-    { find: "@semio-tech/sequence-core", replacement: packageEntry(repoRoot, "sequence/core") },
-    { find: "@semio-tech/sequence-core/pkg/sequence_core.js", replacement: resolve(repoRoot, "sequence/core/rs/pkg/sequence_core.js") },
-    { find: "@semio-tech/layout-react", replacement: resolve(repoRoot, "layout/react/index.tsx") },
-    { find: "@semio-tech/layout-core", replacement: packageEntry(repoRoot, "layout/core") },
-    { find: "@semio-tech/layout-rs", replacement: resolve(repoRoot, "layout/rs/pkg/layout_rs.js") },
-    { find: "@semio-tech/lowpoly-react", replacement: resolve(repoRoot, "lowpoly/react/index.tsx") },
-    { find: "@semio-tech/lowpoly-core", replacement: packageEntry(repoRoot, "lowpoly/core") },
-    { find: "@semio-tech/lowpoly-core/pkg/lowpoly_core.js", replacement: resolve(repoRoot, "lowpoly/core/rs/pkg/lowpoly_core.js") },
-    { find: "@semio-tech/trinity-jack-host-core", replacement: packageEntry(repoRoot, "trinity/jack/host-core") },
-    { find: "@semio-tech/trinity-rewrite-core", replacement: packageEntry(repoRoot, "trinity/rewrite/core") },
-    { find: "@semio-tech/trinity-react", replacement: resolve(repoRoot, "trinity/react/index.tsx") },
-    { find: "@semio-tech/procedural-3d-core", replacement: packageEntry(repoRoot, "procedural/3d/core") },
-    { find: "@semio-tech/procedural-3d-react", replacement: resolve(repoRoot, "procedural/3d/react/index.tsx") },
-    { find: "@semio-tech/procedural-2d-core", replacement: packageEntry(repoRoot, "procedural/2d/core") },
-    { find: "@semio-tech/procedural-2d-react", replacement: resolve(repoRoot, "procedural/2d/react/index.tsx") },
-    { find: "@semio-tech/shooting-core", replacement: packageEntry(repoRoot, "shooting/core") },
-    { find: "@semio-tech/shooting-react", replacement: resolve(repoRoot, "shooting/react/index.tsx") },
-    { find: "@semio-tech/draw-core", replacement: packageEntry(repoRoot, "draw/core") },
-    { find: "@semio-tech/draw-react", replacement: resolve(repoRoot, "draw/react/index.tsx") },
-    { find: "@semio-tech/note-core", replacement: packageEntry(repoRoot, "note/core") },
-    { find: "@semio-tech/note-react", replacement: resolve(repoRoot, "note/react/index.tsx") },
-    { find: "@semio-tech/writer-core/internal", replacement: resolve(repoRoot, "writer/core/js/internal.ts") },
-    { find: "@semio-tech/writer-core", replacement: packageEntry(repoRoot, "writer/core") },
-    { find: "@semio-tech/draw-core/internal", replacement: resolve(repoRoot, "draw/core/js/internal.ts") },
-    { find: "@semio-tech/note-core/internal", replacement: resolve(repoRoot, "note/core/js/internal.ts") },
-    { find: "@semio-tech/s-core/internal", replacement: resolve(repoRoot, "s/core/js/internal.ts") },
-    { find: "@semio-tech/writer-react", replacement: resolve(repoRoot, "writer/react/index.tsx") },
-    { find: "@semio-tech/forms-core", replacement: packageEntry(repoRoot, "forms/core") },
-    { find: "@semio-tech/forms-react", replacement: resolve(repoRoot, "forms/react/index.tsx") },
-    { find: "@semio-tech/raster-core", replacement: packageEntry(repoRoot, "raster/core") },
-    { find: "@semio-tech/raster-react", replacement: resolve(repoRoot, "raster/react/index.tsx") },
-    { find: "@semio-tech/s-core", replacement: packageEntry(repoRoot, "s/core") },
-    { find: "@semio-tech/s-react", replacement: resolve(repoRoot, "s/react/index.tsx") },
-    { find: "@semio-tech/graph-manifest", replacement: resolve(repoRoot, "mathematical/graph/manifest/core/index.ts") },
-    { find: "@semio-tech/kernel-2d-js", replacement: resolve(repoRoot, "kernel/2d/js/index.ts") },
-    { find: "@semio-tech/vcs-core/internal", replacement: resolve(repoRoot, "vcs/core/js/internal.ts") },
-    { find: "@semio-tech/vcs-core", replacement: packageEntry(repoRoot, "vcs/core") },
-    { find: "@semio-tech/vcs-react", replacement: resolve(repoRoot, "vcs/react/index.tsx") },
-    { find: "@semio-tech/cad-js-renderer-core", replacement: packageEntry(repoRoot, "cad/renderer/core") },
-    { find: "@semio-tech/cad-js-renderer-react", replacement: reactEntry(repoRoot, "cad/renderer") },
-    { find: "@semio-tech/cad-js-core", replacement: packageEntry(repoRoot, "cad/core") },
-    { find: "@semio-tech/cad-js-runtime", replacement: packageEntry(repoRoot, "cad/runtime") },
-    { find: "@semio-tech/cad-js-query", replacement: packageEntry(repoRoot, "cad/query") },
-    { find: "@semio-tech/cad-js-kernel-brepjs", replacement: packageEntry(repoRoot, "cad/kernel/brepjs") },
-    { find: "@semio-tech/cad-js-module-spatial-shape", replacement: packageEntry(repoRoot, "cad/module/spatial-shape") },
-    { find: "@semio-tech/cad-js-module-aec-building", replacement: packageEntry(repoRoot, "cad/module/aec-building") },
-    { find: "@semio-tech/cad-js-module-aec-building-energy", replacement: packageEntry(repoRoot, "cad/module/aec-building-energy") },
-    { find: "@semio-tech/cad-js-module-aec-building-structure", replacement: packageEntry(repoRoot, "cad/module/aec-building-structure") },
-    { find: "@semio-tech/cad-js-machine-stately", replacement: packageEntry(repoRoot, "cad/machine/stately") },
-    { find: "@semio-tech/compose-rs-wasm", replacement: resolve(repoRoot, "compose/client/lib/rs/pkg/compose.js") },
-    { find: "@semio-tech/compose-js", replacement: resolve(repoRoot, "compose/client/lib/js") },
-    {
-      find: "@semio-tech/compose-sketchpad",
-      replacement:
-        playEntryKind === "s"
-          ? resolve(repoRoot, "compose/client/lib/sketchpad/js/index.ts")
-          : resolve(repoRoot, "framework/product/playground/core/js/compose-sketchpad-stub.ts"),
-    },
-    { find: "@semio-tech/compose-react", replacement: resolve(repoRoot, "compose/client/lib/react") },
-    {
-      find: "@semio-tech/mit-bestand-praesentation-projektetage-spec",
-      replacement: resolve(repoRoot, "mit-bestand/präsentation/33.projektetage/js/index.ts"),
-    },
-  ];
-
-  return [...playgroundRendererBootSubpathAliases(rendererIndex), ...aliases];
 }
 
 /** @emoji 🖼️ Vite: serve and copy `cad/fixture` at `/cad-fixture/*` for CAD world reference planes. */
@@ -1706,10 +1500,8 @@ function playgroundSketchpadMdxGlobalStubPlugin(): Plugin {
 export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOptions) {
   const { playDir, repoRoot, playEntryKind, extraAliases = [], extraPlugins = [], watchIgnored, build, server, optimizeDeps, resolveDedupe } = options;
   const uiAssetsRoot = resolve(repoRoot, "ui/asset");
-  const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
-  const rendererIndex = playgroundRendererIndexPath(repoRoot);
   const presentationIndex = resolve(repoRoot, "framework/product/presentation/renderer/react/index.tsx");
-  const rendererAliases = playgroundRendererResolveAliases(repoRoot, playEntryKind);
+  const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, extraAliases);
   return defineConfig({
     root: playDir,
     base: "./",
@@ -1727,6 +1519,7 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       ),
     },
     plugins: [
+      playgroundAppsVirtualModulePlugin(repoRoot),
       ...(playEntryKind === "s" ? [playgroundSketchpadMdxGlobalStubPlugin()] : []),
       playgroundPlayBootHtmlPlugin(),
       playgroundFlowWasmDevStubPlugin(repoRoot),
@@ -1745,29 +1538,25 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
       playgroundVitestDevStubPlugin(),
       playgroundIframeEmbedHeadersPlugin(),
       playgroundStaleOptimizeDepPlugin(),
-      playgroundRendererShellEntryPlugin(rendererIndex),
       presentationRendererVitestStripPlugin(presentationIndex),
       ...extraPlugins,
     ],
     build: playgroundStaticSiteBuildOptions(build),
     server: {
-      fs: { allow: [repoRoot] },
+      ...workspaceResolve.server,
       ...(watchIgnored ? { watch: { ignored: watchIgnored } } : {}),
       ...server,
     },
     resolve: {
-      alias: [...playgroundSceneHostResolveAliases(repoRoot), ...rendererAliases, ...extraAliases],
-      dedupe: [...PLAYGROUND_SCENE_HOST_DEDUPE, ...(resolveDedupe ?? [])],
+      ...workspaceResolve.resolve,
+      dedupe: [...(workspaceResolve.resolve?.dedupe ?? []), ...(resolveDedupe ?? [])],
     },
     optimizeDeps: {
+      ...workspaceResolve.optimizeDeps,
       ...optimizeDeps,
-      exclude: [
-        ...(optimizeDeps?.exclude ?? []),
-        ...findWorkspacePackages(repoRoot),
-      ],
+      exclude: [...(workspaceResolve.optimizeDeps?.exclude ?? []), ...(optimizeDeps?.exclude ?? [])],
     },
   });
-  return config;
 }
 
 if (import.meta.vitest) {
@@ -1898,58 +1687,17 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("stripPlaygroundRendererForPuzzleKind", () => {
-    const sample = [
-      "shell-before",
-      "//#region 🔖Puzzle3dPlayHost",
-      "host-3d",
-      "//#endregion 🔖Puzzle3dPlayHost",
-      "//#region 🔖Puzzle5dPlayHost",
-      "host-5d",
-      "//#endregion 🔖Puzzle5dPlayHost",
-      "//#region 🔖Puzzle2dPlayHost",
-      "host-2d",
-      "//#endregion 🔖Puzzle2dPlayHost",
-      "//#region 🔖Boot",
-      "boot-shared",
-      "//#region 🧪Tests",
-      "tests",
-    ].join("\n");
-
-    it("keeps only the requested puzzle host between shell and boot", () => {
-      expect(stripPlaygroundRendererForPuzzleKind(sample, "2d")).toBe(
-        ["shell-before", "//#region 🔖Puzzle2dPlayHost", "host-2d", "//#endregion 🔖Puzzle2dPlayHost", "//#region 🔖Boot", "boot-shared"].join("\n"),
-      );
-      expect(stripPlaygroundRendererForPuzzleKind(sample, "3d")).toContain("host-3d");
-      expect(stripPlaygroundRendererForPuzzleKind(sample, "3d")).not.toContain("host-5d");
-      expect(stripPlaygroundRendererForPuzzleKind(sample, "5d")).toContain("host-5d");
-      expect(stripPlaygroundRendererForPuzzleKind(sample, "5d")).not.toContain("host-2d");
+  describe("createWorkspaceViteResolveConfig", () => {
+    it("pins scene hosts and excludes workspace packages from optimizeDeps", () => {
+      const config = createWorkspaceViteResolveConfig(repoRoot);
+      expect(config.resolve?.dedupe).toContain("react");
+      expect(config.resolve?.dedupe).toContain("three");
+      expect(config.server?.fs?.allow).toContain(repoRoot);
+      expect(config.optimizeDeps?.exclude).toContain("@semio-tech/flow-module-core");
     });
+  });
 
-    it("puzzle-2d virtual entry has no duplicate @semio-tech/puzzle-2d-react named imports", () => {
-      const rendererIndex = playgroundRendererIndexPath(repoRoot);
-      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "2d");
-      expect(duplicateNamedImportsForModule(stripped, "@semio-tech/puzzle-2d-react")).toEqual([]);
-    });
-
-    it("wires virtual entry imports registerTabIcon when host registration calls it", () => {
-      const rendererIndex = playgroundRendererIndexPath(repoRoot);
-      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "wires");
-      expect(stripped.includes("registerTabIcon(")).toBe(true);
-      expect(stripped).toMatch(
-        /import\s*\{[^}]*registerTabIcon[^}]*\}\s*from\s*["']@semio-tech\/framework-platform-renderer-react["']/,
-      );
-    });
-
-    it("forms virtual entry keeps only the forms host slice", () => {
-      const rendererIndex = playgroundRendererIndexPath(repoRoot);
-      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "forms");
-      expect(stripped).toContain("//#region 🔖FormsPlayHost");
-      expect(stripped).toContain("bootFormsPlay");
-      expect(stripped).not.toContain("//#region 🔖ShootingPlayHost");
-      expect(stripped).not.toContain("//#region 🔖Puzzle3dPlayHost");
-    });
-
+  describe("stripPlaygroundRendererForS", () => {
     it("s virtual entry imports WriterCanvas once for concatenated hosts", () => {
       const rendererIndex = playgroundRendererIndexPath(repoRoot);
       const stripped = stripPlaygroundRendererForS(readFileSync(rendererIndex, "utf8"));
@@ -1960,39 +1708,6 @@ if (import.meta.vitest) {
       expect(stripped).not.toContain("//#region 🔖LowpolyPlayHost");
       expect(duplicateNamedImportsForModule(stripped, "@semio-tech/puzzle-2d-react")).toEqual([]);
       expect(duplicateNamedImportsForModule(stripped, "@semio-tech/forms-react")).toEqual([]);
-    });
-
-    it("flow virtual entry imports WriterCanvas in the host slice", () => {
-      const rendererIndex = playgroundRendererIndexPath(repoRoot);
-      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "flow");
-      expect(stripped).toContain("//#region 🔖FlowPlayHost");
-      expect(stripped).toContain("bootFlowPlay");
-      expect(stripped).toMatch(/import\s*\{[^}]*WriterCanvas[^}]*\}\s*from\s*["']@semio-tech\/writer-react["']/);
-      expect(stripped).toMatch(/import\s*\{[^}]*createWriterDocument[^}]*\}\s*from\s*["']@semio-tech\/writer-core["']/);
-      expect(stripped).not.toContain("//#region 🔖Puzzle3dPlayHost");
-    });
-
-    it("writer virtual entry imports WriterCanvas in the host slice", () => {
-      const rendererIndex = playgroundRendererIndexPath(repoRoot);
-      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "writer");
-      expect(stripped).toContain("//#region 🔖WriterPlayHost");
-      expect(stripped).toContain("bootWriterPlay");
-      expect(stripped).toMatch(/import\s*\{[^}]*WriterCanvas[^}]*\}\s*from\s*["']@semio-tech\/writer-react["']/);
-      expect(stripped).toMatch(/import\s*\{[^}]*createWriterDocument[^}]*\}\s*from\s*["']@semio-tech\/writer-core["']/);
-      expect(stripped).toMatch(/import\s*\{[^}]*createJackLspWorker[^}]*\}\s*from\s*["']@semio-tech\/trinity-react["']/);
-      expect(stripped).not.toContain("//#region 🔖RasterPlayHost");
-    });
-
-    it("trinity-rewrite virtual entry imports puzzle2d and forms helpers in the host slice", () => {
-      const rendererIndex = playgroundRendererIndexPath(repoRoot);
-      const stripped = stripPlaygroundRendererForPuzzleKind(readFileSync(rendererIndex, "utf8"), "trinity-rewrite");
-      expect(stripped).toContain("//#region 🔖TrinityPlayHost");
-      expect(stripped).toContain("bootTrinityRewritePlay");
-      expect(stripped).toMatch(/import\s*\{[^}]*Puzzle2dCanvas[^}]*\}\s*from\s*["']@semio-tech\/puzzle-2d-react["']/);
-      expect(stripped).toMatch(/import\s*\{[^}]*buildPuzzle2dSceneDescriptorFromFixture[^}]*\}\s*from\s*["']@semio-tech\/puzzle-2d-react["']/);
-      expect(stripped).toMatch(/import\s*\{[^}]*FormRenderer[^}]*\}\s*from\s*["']@semio-tech\/forms-react["']/);
-      expect(stripped).not.toContain("//#region 🔖Puzzle2dPlayHost");
-      expect(duplicateNamedImportsForModule(stripped, "@semio-tech/puzzle-2d-react")).toEqual([]);
     });
   });
 }

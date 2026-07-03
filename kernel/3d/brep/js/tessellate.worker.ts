@@ -1,7 +1,7 @@
 /** @emoji 👷 Brep tessellation worker — offloads heavy meshing from the UI thread. */
 
-import initBrep, { initSync, tessellate } from "../../../flow/module/brep/pkg/flow_module_brep.js";
-import brepWasmUrl from "../../../flow/module/brep/pkg/flow_module_brep_bg.wasm?url";
+import initBrep, { initSync, tessellate } from "@semio-tech/flow-module-brep/pkg/flow_module_brep.js";
+import brepWasmUrl from "@semio-tech/flow-module-brep/pkg/flow_module_brep_bg.wasm?url";
 
 type TessellateWorkerRequest = { readonly op: "tessellate"; readonly reqId: number; readonly handle: string; readonly tolerance: number };
 

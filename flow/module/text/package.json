@@ -5,6 +5,11 @@
   "description": "flow · module · text",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./rs/pkg/flow_module_text.js",
+    "./pkg/flow_module_text.js": "./rs/pkg/flow_module_text.js",
+    "./pkg/flow_module_text_bg.wasm": "./rs/pkg/flow_module_text_bg.wasm"
+  },
   "scripts": {
     "wasm": "bun nx run @semio-tech/flow-module-text:wasm"
   },

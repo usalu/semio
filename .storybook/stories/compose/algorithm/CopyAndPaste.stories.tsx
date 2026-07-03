@@ -10,7 +10,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { within } from "storybook/test";
 import * as React from "react";
 
-import { ComposeDiagram } from "@compose/ui";
+import { ComposeDiagram } from "@semio-tech/ui-react";
 import {
   AlgorithmApp,
   Kit,

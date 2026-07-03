@@ -18,7 +18,8 @@
     "@react-three/fiber": "^9.4.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "three": "^0.182.0"
+    "three": "^0.182.0",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
@@ -44,6 +45,7 @@
   },
   "bundleKind": "library",
   "exports": {
-    ".": "./index.tsx"
+    ".": "./index.tsx",
+    "./play": "./play-host.tsx"
   }
 }

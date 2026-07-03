@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.tsx"
+    ".": "./index.tsx",
+    "./play": "./play-host.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/note-react:test"
@@ -14,7 +15,12 @@
   "dependencies": {
     "@semio-tech/note-core": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
-    "@semio-tech/ui-styling": "workspace:*"
+    "@semio-tech/ui-styling": "workspace:*",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
+    "@semio-tech/framework-platform-renderer-react": "workspace:*",
+    "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework-playground-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19.2.8",

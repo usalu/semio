@@ -2646,7 +2646,7 @@ export const cadPlayAppDefinition = createPlaygroundApp({
 		registerCadPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootCadPlay } = await import("@semio-tech/framework-playground-renderer-react/cad");
+		const { bootCadPlay } = await import("@semio-tech/cad-js-renderer-react/play");
 		bootCadPlay(pg);
 	},
 });

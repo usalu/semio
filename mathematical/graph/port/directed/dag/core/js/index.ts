@@ -793,7 +793,7 @@ export const dagPlayAppDefinition = createPlaygroundApp({
 		registerDagPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootDagPlay } = await import("@semio-tech/framework-playground-renderer-react/dag");
+		const { bootDagPlay } = await import("@semio-tech/dag-react/play");
 		bootDagPlay(pg);
 	},
 });

@@ -4568,7 +4568,7 @@ export const puzzle3dPlayAppDefinition = createPlaygroundApp({
 	createRuntime: () => buildPuzzle3dPlayRuntime(),
 	registerBodies: () => registerPuzzle3dPlayDeclarativeBodies(),
 	bootRenderer: async (pg) => {
-		const { bootPuzzle3dPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/3d");
+		const { bootPuzzle3dPlay } = await import("@semio-tech/puzzle-3d-react/play");
 		bootPuzzle3dPlay(pg);
 	},
 });

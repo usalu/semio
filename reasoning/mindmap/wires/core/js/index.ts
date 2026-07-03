@@ -349,7 +349,7 @@ export const wiresPlayAppDefinition = createPlaygroundApp({
 	createRuntime: () => buildPuzzle2dPlayRuntime(),
 	registerBodies: () => registerPuzzle2dPlayDeclarativeBodies(),
 	bootRenderer: async (pg) => {
-		const { bootWiresPlay } = await import("@semio-tech/framework-playground-renderer-react/reasoning/wires");
+		const { bootWiresPlay } = await import("@semio-tech/puzzle-2d-react/play");
 		bootWiresPlay(pg);
 	},
 });

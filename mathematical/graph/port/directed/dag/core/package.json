@@ -29,5 +29,22 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "mathematical/graph/port/directed/dag/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "dag",
+      "aliases": [
+        "dag"
+      ],
+      "packageRoot": "mathematical/graph/port/directed/dag",
+      "corePackage": "@semio-tech/dag-host-core",
+      "definitionExport": "dagPlayAppDefinition",
+      "hostKind": "dag",
+      "port": {
+        "dev": 6017,
+        "test": 6030,
+        "env": "DAG_PLAY_PORT"
+      }
+    }
+  }
 }

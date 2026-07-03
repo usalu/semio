@@ -5,6 +5,11 @@
   "description": "flow · module · list",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./rs/pkg/flow_module_list.js",
+    "./pkg/flow_module_list.js": "./rs/pkg/flow_module_list.js",
+    "./pkg/flow_module_list_bg.wasm": "./rs/pkg/flow_module_list_bg.wasm"
+  },
   "scripts": {
     "wasm": "bun nx run @semio-tech/flow-module-list:wasm"
   },

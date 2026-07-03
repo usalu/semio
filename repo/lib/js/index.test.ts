@@ -26,6 +26,9 @@ import {
   playgroundDevPort,
   playgroundEmbedUrl,
   playgroundPlayViteDefine,
+  scanPlaygroundAppManifests,
+  resolvePlaygroundDevAppFromManifests,
+  playgroundAppManifestByKind,
 } from "./index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
@@ -559,6 +562,78 @@ describe("playground static sites", () => {
     expect(playgroundStaticSiteBuildOptions({ sourcemap: true }).sourcemap).toBe(true);
   });
 });
+
+describe("playground app manifests", () => {
+  const repoRoot = findRepoRoot();
+
+  test("scanPlaygroundAppManifests discovers all playground core packages", () => {
+    const manifests = scanPlaygroundAppManifests(repoRoot);
+    expect(manifests.length).toBeGreaterThanOrEqual(24);
+    expect(manifests.some((entry) => entry.kind === "flow" && entry.corePackage === "@semio-tech/flow-core")).toBe(true);
+    expect(manifests.some((entry) => entry.kind === "cad" && entry.packageRoot === "cad/renderer")).toBe(true);
+  });
+
+  test("resolvePlaygroundDevAppFromManifests maps CLI segments to app kinds", () => {
+    const manifests = scanPlaygroundAppManifests(repoRoot);
+    expect(resolvePlaygroundDevAppFromManifests(["flow"], manifests)).toEqual({ app: "flow", rest: [] });
+    expect(resolvePlaygroundDevAppFromManifests(["puzzle", "3d"], manifests)).toEqual({ app: "3d", rest: [] });
+    expect(resolvePlaygroundDevAppFromManifests(["trinity", "jack"], manifests)).toEqual({ app: "trinity-jack", rest: [] });
+    expect(playgroundAppManifestByKind(manifests).get("2d")?.hostKind).toBe("puzzle-2d");
+  });
+});
+
+describe("package boundary guards", () => {
+  const repoRoot = findRepoRoot();
+
+  test("vite and vitest configs avoid cross-package @semio-tech aliases", () => {
+    const offenders: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of require("node:fs").readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".repo" || entry.name === "dist") continue;
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (!/vite.*\.config\.ts$/.test(entry.name) && entry.name !== "vitest.config.ts") continue;
+        const pkgDir = findNearestPackageDir(full, repoRoot);
+        const text = readFileSync(full, "utf8");
+        for (const match of text.matchAll(/find:\s*(?:\/\^)?["']@semio-tech\/[^"']+["']/g)) {
+          const line = text.slice(0, match.index).split("\n").length;
+          const snippet = text.split("\n")[line - 1] ?? "";
+          if (/path\.resolve\(__dirname,\s*["']\.\./.test(snippet) && pkgDir && !snippet.includes("node_modules")) {
+            offenders.push(`${full.replace(repoRoot + "/", "")}:${line}`);
+          }
+        }
+      }
+    };
+    walk(repoRoot);
+    expect(offenders).toEqual([]);
+  });
+
+  test("legacy package aliases are absent from source imports", () => {
+    const result = spawnSync("rg", ["-l", "@compose/ui|@ui/react|@elements/", "--glob", "*.{ts,tsx}", "--glob", "!**/.repo/**", "--glob", "!**/index.test.ts"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    });
+    const files = (result.stdout ?? "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    expect(files).toEqual([]);
+  });
+});
+
+function findNearestPackageDir(filePath: string, repoRoot: string): string | undefined {
+  let dir = join(filePath, "..");
+  while (dir.startsWith(repoRoot)) {
+    if (existsSync(join(dir, "package.json"))) return dir;
+    const parent = join(dir, "..");
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return undefined;
+}
 
 describe("commit", () => {
   test("parseCommitBundleBody reads emoji scopes dates and bullets", async () => {

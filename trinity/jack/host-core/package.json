@@ -30,5 +30,22 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "trinity/jack/host-core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "trinity-jack",
+      "aliases": [
+        "trinity-jack"
+      ],
+      "packageRoot": "trinity/jack/host-core",
+      "corePackage": "@semio-tech/trinity-jack-host-core",
+      "definitionExport": "trinityJackPlayAppDefinition",
+      "hostKind": "trinity-jack",
+      "port": {
+        "dev": 6054,
+        "test": 6055,
+        "env": "TRINITY_JACK_PLAY_PORT"
+      }
+    }
+  }
 }

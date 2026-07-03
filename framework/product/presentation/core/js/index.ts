@@ -1056,7 +1056,7 @@ export const presentationPlayAppDefinition = createPlaygroundApp({
 	},
 	registerBodies: () => registerPresentationPlayDeclarativeBodies(),
 	bootRenderer: async (pg) => {
-		const { bootPresentationPlay } = await import("@semio-tech/framework-playground-renderer-react/presentation");
+		const { bootPresentationPlay } = await import("@semio-tech/framework-presentation-renderer-react/play");
 		bootPresentationPlay(pg);
 	},
 });

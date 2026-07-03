@@ -5,6 +5,11 @@
   "description": "flow · module · logic",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./rs/pkg/flow_module_logic.js",
+    "./pkg/flow_module_logic.js": "./rs/pkg/flow_module_logic.js",
+    "./pkg/flow_module_logic_bg.wasm": "./rs/pkg/flow_module_logic_bg.wasm"
+  },
   "scripts": {
     "wasm": "bun nx run @semio-tech/flow-module-logic:wasm"
   },

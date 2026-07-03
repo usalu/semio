@@ -1273,7 +1273,7 @@ export const rasterPlayAppDefinition = createPlaygroundApp({
 	},
 	keybindings: [{ key: "ctrl+a,meta+a", controllerId: RASTER_PLAY_CONTROLLER_ID, command: "selectAll" }],
 	bootRenderer: async (pg) => {
-		const { bootRasterPlay } = await import("@semio-tech/framework-playground-renderer-react/raster");
+		const { bootRasterPlay } = await import("@semio-tech/raster-react/play");
 		bootRasterPlay(pg);
 	},
 });

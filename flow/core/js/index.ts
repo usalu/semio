@@ -1410,7 +1410,7 @@ export const flowPlayAppDefinition = createPlaygroundApp({
 		registerFlowPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootFlowPlay } = await import("@semio-tech/framework-playground-renderer-react/flow");
+		const { bootFlowPlay } = await import("@semio-tech/flow-react/play");
 		bootFlowPlay(pg);
 	},
 });

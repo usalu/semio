@@ -14,6 +14,8 @@ import {
   runMicroCommit,
   runWorkspaceScriptMain,
   tryRun,
+  scanPlaygroundAppManifests,
+  resolvePlaygroundDevAppFromManifests,
 } from "./repo/lib/js/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -29,36 +31,7 @@ const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap")
 export { Script };
 
 function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; readonly rest: string[] } | null {
-  const [head, second, third, ...tail] = segments;
-  if (!head) return null;
-  if (head === "puzzle" && second) return { app: second, rest: third ? [third, ...tail] : tail };
-  if (head === "procedural" && second) return { app: `procedural-${second}`, rest: third ? [third, ...tail] : tail };
-  if (head === "trinity" && second === "jack") return { app: "trinity-jack", rest: third ? [third, ...tail] : tail };
-  if (head === "trinity" && second === "rewrite") return { app: "trinity-rewrite", rest: third ? [third, ...tail] : tail };
-  if (head === "gis" && second === "2d") return { app: "gis-2d", rest: third ? [third, ...tail] : tail };
-  if (head === "presentation") return { app: "presentation", rest: segments.slice(1) };
-  if (head === "vcs") return { app: "vcs", rest: segments.slice(1) };
-  if (head === "layout") return { app: "layout", rest: segments.slice(1) };
-  const direct = new Set([
-    "2d",
-    "3d",
-    "5d",
-    "wires",
-    "flow",
-    "dag",
-    "imperative",
-    "sequence",
-    "lowpoly",
-    "shooting",
-    "forms",
-    "raster",
-    "draw",
-    "note",
-    "cad",
-    "writer",
-  ]);
-  if (direct.has(head)) return { app: head, rest: segments.slice(1) };
-  return null;
+  return resolvePlaygroundDevAppFromManifests(segments, scanPlaygroundAppManifests(WORKSPACE_ROOT));
 }
 
 //#region 🔖NativeOsScript
@@ -490,7 +463,27 @@ export class LintScript extends Script {
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root });
-    runCmd("bunx", ["dependency-cruiser@16", "compose/client/lib/js", "compose/client/lib/react", "compose/client/lib/sketchpad", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd(
+      "bunx",
+      [
+        "dependency-cruiser@16",
+        "compose",
+        "framework",
+        "flow",
+        "layout",
+        "puzzle",
+        "ui",
+        "draw",
+        "note",
+        "sequence",
+        "s",
+        "--config",
+        ".dependency-cruiser.cjs",
+        "--output-type",
+        "err",
+      ],
+      { cwd: this.root, shell: true },
+    );
   }
 }
 //#endregion 🔖LintScript

@@ -25,5 +25,22 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "draw/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "draw",
+      "aliases": [
+        "draw"
+      ],
+      "packageRoot": "draw",
+      "corePackage": "@semio-tech/draw-core",
+      "definitionExport": "drawPlayAppDefinition",
+      "hostKind": "draw",
+      "port": {
+        "dev": 6064,
+        "test": 6065,
+        "env": "DRAW_PLAY_PORT"
+      }
+    }
+  }
 }

@@ -32,5 +32,22 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "procedural/3d/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "procedural-3d",
+      "aliases": [
+        "procedural-3d"
+      ],
+      "packageRoot": "procedural/3d",
+      "corePackage": "@semio-tech/procedural-3d-core",
+      "definitionExport": "procedural3dPlayAppDefinition",
+      "hostKind": "procedural-3d",
+      "port": {
+        "dev": 6018,
+        "test": 6031,
+        "env": "PROCEDURAL_3D_PLAY_PORT"
+      }
+    }
+  }
 }

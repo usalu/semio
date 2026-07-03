@@ -1412,7 +1412,7 @@ export const drawPlayAppDefinition = createPlaygroundApp({
 	},
 	registerBodies: () => registerDrawPlayDeclarativeBodies(),
 	bootRenderer: async (pg) => {
-		const { bootDrawPlay } = await import("@semio-tech/framework-playground-renderer-react/draw");
+		const { bootDrawPlay } = await import("@semio-tech/draw-react/play");
 		bootDrawPlay(pg);
 	},
 });

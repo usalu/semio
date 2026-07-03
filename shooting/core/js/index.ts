@@ -1205,7 +1205,7 @@ export const shootingPlayAppDefinition = createPlaygroundApp({
 		registerShootingPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootShootingPlay } = await import("@semio-tech/framework-playground-renderer-react/shooting");
+		const { bootShootingPlay } = await import("@semio-tech/shooting-react/play");
 		bootShootingPlay(pg);
 	},
 });

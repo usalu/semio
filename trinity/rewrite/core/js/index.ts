@@ -928,7 +928,7 @@ export const trinityRewritePlayAppDefinition = createPlaygroundApp({
 		registerTrinityRewritePlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootTrinityRewritePlay } = await import("@semio-tech/framework-playground-renderer-react/trinity-rewrite");
+		const { bootTrinityRewritePlay } = await import("@semio-tech/trinity-react/play");
 		bootTrinityRewritePlay(pg);
 	},
 });

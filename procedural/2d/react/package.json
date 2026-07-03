@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.tsx"
+    ".": "./index.tsx",
+    "./play": "./play-host.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/procedural-2d-react:test"
@@ -16,7 +17,11 @@
     "@semio-tech/kernel-2d-js": "workspace:*",
     "@semio-tech/infinite-cavas-react-renderer": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
-    "@semio-tech/ui-styling": "workspace:*"
+    "@semio-tech/ui-styling": "workspace:*",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
+    "@semio-tech/framework-platform-renderer-react": "workspace:*",
+    "@semio-tech/framework-playground-core": "workspace:*",
+    "@semio-tech/procedural-2d-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

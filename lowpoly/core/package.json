@@ -25,5 +25,21 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "lowpoly/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "lowpoly",
+      "aliases": [
+        "lowpoly"
+      ],
+      "packageRoot": "lowpoly",
+      "corePackage": "@semio-tech/lowpoly-core",
+      "definitionExport": "lowpolyPlayAppDefinition",
+      "hostKind": "lowpoly",
+      "port": {
+        "dev": 6078,
+        "env": "LOWPOLY_PLAY_PORT"
+      }
+    }
+  }
 }

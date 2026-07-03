@@ -11,43 +11,26 @@ import {
 	runBundleScriptMain,
 	runVitest,
 	runViteBunxDev,
+	scanPlaygroundAppManifests,
 	type PlaygroundHostKind,
 } from "../../../../repo/lib/js/index.ts";
 
-const ENTRY_TO_HOST: Readonly<Record<string, PlaygroundHostKind>> = {
-	"2d": "puzzle-2d",
-	"3d": "puzzle-3d",
-	"5d": "puzzle-5d",
-	"gis-2d": "gis-2d",
-	wires: "wires",
-};
+const REPO_ROOT = join(import.meta.dir, "../../../..");
+const PLAYGROUND_MANIFESTS = scanPlaygroundAppManifests(REPO_ROOT);
 
-const PACKAGE_ROOT_BY_ENTRY: Readonly<Record<string, string>> = {
-	draw: "draw",
-	note: "note",
-	writer: "writer",
-	raster: "raster",
-	forms: "forms",
-	flow: "flow",
-	dag: "mathematical/graph/port/directed/dag",
-	imperative: "imperative",
-	sequence: "sequence",
-	layout: "layout",
-	lowpoly: "lowpoly",
-	"procedural-2d": "procedural/2d",
-	"procedural-3d": "procedural/3d",
-	shooting: "shooting",
-	vcs: "vcs",
-	"gis-2d": "gis/2d",
-	wires: "reasoning/mindmap/wires",
-	"trinity-jack": "trinity/jack/host-core",
-	"trinity-rewrite": "trinity/rewrite",
-	presentation: "framework/product/presentation",
-	cad: "cad/renderer",
-	"2d": "puzzle/2d",
-	"3d": "puzzle/3d",
-	"5d": "puzzle/5d",
-};
+const ENTRY_TO_HOST: Readonly<Record<string, PlaygroundHostKind>> = Object.fromEntries(
+	PLAYGROUND_MANIFESTS.flatMap((entry) => {
+		const host = (entry.hostKind ?? entry.kind) as PlaygroundHostKind;
+		return [[entry.kind, host], ...(entry.aliases ?? []).map((alias) => [alias, host] as const)];
+	}),
+) as Readonly<Record<string, PlaygroundHostKind>>;
+
+const PACKAGE_ROOT_BY_ENTRY: Readonly<Record<string, string>> = Object.fromEntries(
+	PLAYGROUND_MANIFESTS.flatMap((entry) => [
+		[entry.kind, entry.packageRoot],
+		...(entry.aliases ?? []).map((alias) => [alias, entry.packageRoot] as const),
+	]),
+) as Readonly<Record<string, string>>;
 
 function resolveAppArg(segments: string[]): { readonly app: string; readonly viteArgs: string[] } {
 	const flag = segments.findIndex((segment) => segment === "--app");

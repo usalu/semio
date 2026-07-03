@@ -5,7 +5,7 @@
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
-import { Vec, type VecValue } from "@compose/ui";
+import { Vec, type VecValue } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 // #region 🏪Vec
 

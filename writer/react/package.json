@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.tsx"
+    ".": "./index.tsx",
+    "./play": "./play-host.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/writer-react:test"
@@ -14,7 +15,12 @@
   "dependencies": {
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/writer-core": "workspace:*",
-    "@semio-tech/writer-rs": "workspace:*"
+    "@semio-tech/writer-rs": "workspace:*",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
+    "@semio-tech/framework-platform-renderer-react": "workspace:*",
+    "@semio-tech/framework-playground-core": "workspace:*",
+    "@semio-tech/framework-platform-core": "workspace:*",
+    "@semio-tech/trinity-react": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

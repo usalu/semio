@@ -2,6 +2,9 @@
 /** @emoji 🗂️ `@semio-tech/framework-playground-core` — lazy registry of playground app definitions keyed by dev host entry kind. */
 // #endregion 🧲Header
 
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { scanPlaygroundAppManifests } from "../../../../repo/lib/js/index.ts";
 import type { PlaygroundAppDefinition } from "./index.ts";
 
 //#region 🔖Registry
@@ -10,32 +13,9 @@ const PLAY_ENTRY_KIND =
 		? import.meta.env.PUZZLE_PLAY_ENTRY
 		: "";
 
-const ALL_PLAY_ENTRY_KINDS = [
-	"2d",
-	"3d",
-	"5d",
-	"flow",
-	"dag",
-	"imperative",
-	"sequence",
-	"layout",
-	"lowpoly",
-	"procedural-2d",
-	"procedural-3d",
-	"shooting",
-	"forms",
-	"raster",
-	"draw",
-	"note",
-	"writer",
-	"vcs",
-	"gis-2d",
-	"wires",
-	"trinity-jack",
-	"trinity-rewrite",
-	"presentation",
-	"cad",
-] as const;
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
+
+const ALL_PLAY_ENTRY_KINDS = scanPlaygroundAppManifests(REPO_ROOT).map((entry) => entry.kind);
 
 /** @emoji 🗂️ Loaded playground apps keyed by {@link AppDevHostConfig.playEntryKind}. */
 export const PLAYGROUND_APP_REGISTRY = new Map<string, PlaygroundAppDefinition>();
@@ -46,33 +26,27 @@ function registerPlaygroundApp(app: PlaygroundAppDefinition): void {
 	PLAYGROUND_APP_REGISTRY.set(kind, app);
 }
 
+type PlaygroundAppImports = Readonly<Record<string, () => Promise<PlaygroundAppDefinition>>>;
+
 /** @emoji 📦 Imports one playground app; unreachable branches are dropped per {@link PLAY_ENTRY_KIND}. */
 async function importPlaygroundAppDefinition(kind: string): Promise<PlaygroundAppDefinition> {
-	if (kind === "2d") return (await import("@semio-tech/puzzle-2d-core")).puzzle2dPlayAppDefinition;
-	if (kind === "3d") return (await import("@semio-tech/puzzle-3d-core")).puzzle3dPlayAppDefinition;
-	if (kind === "5d") return (await import("@semio-tech/puzzle-5d-core")).puzzle5dPlayAppDefinition;
-	if (kind === "flow") return (await import("@semio-tech/flow-core")).flowPlayAppDefinition;
-	if (kind === "dag") return (await import("@semio-tech/dag-host-core")).dagPlayAppDefinition;
-	if (kind === "imperative") return (await import("@semio-tech/imperative-core")).imperativePlayAppDefinition;
-	if (kind === "sequence") return (await import("@semio-tech/sequence-core")).sequencePlayAppDefinition;
-	if (kind === "layout") return (await import("@semio-tech/layout-core")).layoutPlayAppDefinition;
-	if (kind === "lowpoly") return (await import("@semio-tech/lowpoly-core")).lowpolyPlayAppDefinition;
-	if (kind === "procedural-2d") return (await import("@semio-tech/procedural-2d-core")).procedural2dPlayAppDefinition;
-	if (kind === "procedural-3d") return (await import("@semio-tech/procedural-3d-core")).procedural3dPlayAppDefinition;
-	if (kind === "shooting") return (await import("@semio-tech/shooting-core")).shootingPlayAppDefinition;
-	if (kind === "forms") return (await import("@semio-tech/forms-core")).formsPlayAppDefinition;
-	if (kind === "raster") return (await import("@semio-tech/raster-core")).rasterPlayAppDefinition;
-	if (kind === "draw") return (await import("@semio-tech/draw-core")).drawPlayAppDefinition;
-	if (kind === "note") return (await import("@semio-tech/note-core")).notePlayAppDefinition;
-	if (kind === "writer") return (await import("@semio-tech/writer-core")).writerPlayAppDefinition;
-	if (kind === "vcs") return (await import("@semio-tech/vcs-core")).vcsPlayAppDefinition;
-	if (kind === "gis-2d") return (await import("@semio-tech/gis-2d-core")).gis2dPlayAppDefinition;
-	if (kind === "wires") return (await import("@semio-tech/reasoning-mindmap-wires-core")).wiresPlayAppDefinition;
-	if (kind === "trinity-jack") return (await import("@semio-tech/trinity-jack-host-core")).trinityJackPlayAppDefinition;
-	if (kind === "trinity-rewrite") return (await import("@semio-tech/trinity-rewrite-core")).trinityRewritePlayAppDefinition;
-	if (kind === "presentation") return (await import("@semio-tech/framework-presentation-core")).presentationPlayAppDefinition;
-	if (kind === "cad") return (await import("@semio-tech/cad-js-renderer-core")).cadPlayAppDefinition;
-	throw new Error(`unknown playground app: ${kind}`);
+	try {
+		const { playgroundAppImports } = (await import("virtual:semio-playground-apps")) as {
+			playgroundAppImports: PlaygroundAppImports;
+		};
+		const loader = playgroundAppImports[kind];
+		if (!loader) throw new Error(`unknown playground app: ${kind}`);
+		return loader();
+	} catch (error) {
+		if (!(import.meta.env.VITEST || process.env.VITEST)) throw error;
+		const { scanPlaygroundAppManifests } = await import("../../../../repo/lib/js/index.ts");
+		const manifest = scanPlaygroundAppManifests(REPO_ROOT).find((entry) => entry.kind === kind);
+		if (!manifest) throw new Error(`unknown playground app: ${kind}`);
+		const mod = (await import(manifest.corePackage)) as Record<string, PlaygroundAppDefinition>;
+		const app = mod[manifest.definitionExport];
+		if (!app) throw new Error(`missing ${manifest.definitionExport} on ${manifest.corePackage}`);
+		return app;
+	}
 }
 
 /** @emoji 🔎 Lazily loads a playground app by dev-host entry kind. */

@@ -809,7 +809,7 @@ export const trinityJackPlayAppDefinition = createPlaygroundApp({
 		registerTrinityJackPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootTrinityJackPlay } = await import("@semio-tech/framework-playground-renderer-react/trinity-jack");
+		const { bootTrinityJackPlay } = await import("@semio-tech/trinity-react/play");
 		bootTrinityJackPlay(pg);
 	},
 });

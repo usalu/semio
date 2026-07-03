@@ -5,6 +5,11 @@
   "description": "flow · module · dictionary",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./rs/pkg/flow_module_dictionary.js",
+    "./pkg/flow_module_dictionary.js": "./rs/pkg/flow_module_dictionary.js",
+    "./pkg/flow_module_dictionary_bg.wasm": "./rs/pkg/flow_module_dictionary_bg.wasm"
+  },
   "scripts": {
     "wasm": "bun nx run @semio-tech/flow-module-dictionary:wasm"
   },

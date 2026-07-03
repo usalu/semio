@@ -17,7 +17,7 @@ export default defineConfig({
 			"@semio-tech/ui-react": resolve(root, "../../../ui/react/index.tsx"),
 			"@semio-tech/puzzle-3d-core": resolve(root, "../core/index.ts"),
 			"@semio-tech/framework-playground-core": resolve(root, "../../../framework/product/playground/core/index.ts"),
-			"@semio-tech/framework-playground-renderer-react/puzzle/3d": resolve(playgroundRendererRoot, "index.tsx"),
+			"@semio-tech/framework-playground-renderer-react": resolve(playgroundRendererRoot, "index.tsx"),
 			"@semio-tech/framework-platform-core": resolve(root, "../../../framework/product/platform/core/index.ts"),
 			"@semio-tech/framework-platform-renderer-react": resolve(root, "../../../framework/product/platform/renderer/react/index.tsx"),
 		},

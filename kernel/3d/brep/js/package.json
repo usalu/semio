@@ -5,6 +5,13 @@
   "description": "3d kernel WASM bridge and mesh contracts.",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./index.ts",
+    "./tessellate.worker": "./tessellate.worker.ts"
+  },
+  "dependencies": {
+    "@semio-tech/flow-module-brep": "workspace:*"
+  },
   "scripts": {
     "test": "bun nx run @semio-tech/kernel-3d-js:test"
   },

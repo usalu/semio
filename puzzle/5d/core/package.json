@@ -37,5 +37,22 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "puzzle/5d/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "5d",
+      "aliases": [
+        "5d"
+      ],
+      "packageRoot": "puzzle/5d",
+      "corePackage": "@semio-tech/puzzle-5d-core",
+      "definitionExport": "puzzle5dPlayAppDefinition",
+      "hostKind": "puzzle-5d",
+      "port": {
+        "dev": 6014,
+        "test": 6035,
+        "env": "PUZZLE_5D_PLAY_PORT"
+      }
+    }
+  }
 }

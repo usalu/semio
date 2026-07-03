@@ -1962,7 +1962,7 @@ export const procedural3dPlayAppDefinition = createPlaygroundApp({
 		{ key: "Backspace", controllerId: PROCEDURAL_3D_PLAY_CONTROLLER_ID, command: "deleteSelection" },
 	],
 	bootRenderer: async (pg) => {
-		const { bootProceduralPlay } = await import("@semio-tech/framework-playground-renderer-react/procedural-3d");
+		const { bootProceduralPlay } = await import("@semio-tech/procedural-3d-react/play");
 		bootProceduralPlay(pg);
 	},
 });

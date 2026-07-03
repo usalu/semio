@@ -29,5 +29,21 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "reasoning/mindmap/wires/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "wires",
+      "aliases": [
+        "wires"
+      ],
+      "packageRoot": "reasoning/mindmap/wires",
+      "corePackage": "@semio-tech/reasoning-mindmap-wires-core",
+      "definitionExport": "wiresPlayAppDefinition",
+      "hostKind": "wires",
+      "port": {
+        "dev": 6015,
+        "env": "WIRES_PLAY_PORT"
+      }
+    }
+  }
 }

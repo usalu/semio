@@ -13,7 +13,7 @@ import { dirname, join, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { uiAssetsVitePlugin, playgroundRendererResolveAliases, findWorkspacePackages } from "../ui/styling/vite-elements-assets.ts";
+import { uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages } from "../ui/styling/vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -101,8 +101,7 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@semio-tech/coda-desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/js/renderer.tsx"));
 	}
 	if (loadComposeStack) {
-		alias["@compose/ui"] = toVitePath(uiReactDir);
-		alias["@compose/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
+		alias["@semio-tech/ui-react/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
 		alias["@semio-tech/compose-react"] = toVitePath(composeJsDir);
 		alias["@semio-tech/compose-js"] = toVitePath(composeJsDir);
 		alias["@semio-tech/compose-rs-wasm"] = toVitePath(composeRsWasmEntryPath);
@@ -153,12 +152,12 @@ const config: StorybookConfig = {
 			...previousConditions.filter((c) => !["import", "module", "browser", "default"].includes(c)),
 		];
 		// #endregion 🔖ResolvePackageExports
-		const workspaceAliases = playgroundRendererResolveAliases(repoRootPath);
+		const workspaceResolve = createWorkspaceViteResolveConfig(repoRootPath);
 		const aliasRecord: Record<string, string> = {
 			...buildStorybookAliases(),
 		};
-		for (const item of workspaceAliases) {
-			if (typeof item.find === "string") {
+		for (const item of workspaceResolve.resolve?.alias ?? []) {
+			if (typeof item === "object" && item && "find" in item && "replacement" in item && typeof item.find === "string") {
 				aliasRecord[item.find] = item.replacement;
 			}
 		}
@@ -245,7 +244,6 @@ const config: StorybookConfig = {
 			...findWorkspacePackages(repoRootPath),
 		]);
 		if (loadComposeStack) {
-			optimizeExclude.add("@compose/ui");
 			optimizeExclude.add("@semio-tech/compose-react");
 			optimizeExclude.add("@semio-tech/compose-js");
 			optimizeExclude.add("@semio-tech/semio-asset");

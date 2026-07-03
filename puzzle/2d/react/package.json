@@ -6,7 +6,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./index.tsx"
+    ".": "./index.tsx",
+    "./play": "./play-host.tsx"
   },
   "scripts": {
     "test": "bun nx run @semio-tech/puzzle-2d-react:test"
@@ -20,7 +21,13 @@
     "its-fine": "^2.0.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "react-reconciler": "^0.33.0"
+    "react-reconciler": "^0.33.0",
+    "@semio-tech/framework-playground-renderer-react": "workspace:*",
+    "@semio-tech/writer-core": "workspace:*",
+    "@semio-tech/writer-react": "workspace:*",
+    "@semio-tech/framework-playground-core": "workspace:*",
+    "@semio-tech/puzzle-2d-core": "workspace:*",
+    "@semio-tech/reasoning-mindmap-wires-core": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { borderNormalBottomClass, canvasViewportClass, cn, CanvasPickMenu, ContextMenuController, floatingMenuItemClass, floatingMenuSurfaceClass, floatingToolbarSurfaceClass, Icon, isUiTypingTarget, menuListItemClassName, SelectionMarquee, shouldRouteKeysToWindowEngagement, useCanvasPickInteraction, useVelloThemeSync, type CanvasPickTarget, type ContextMenuItem, type ScreenRect, type SelectionMarqueeCoverage } from "@semio-tech/ui-react";
 import { parseCanvasPickTargetKey } from "@semio-tech/framework-core";
 import { resolveColorHex, resolveSemanticColorHex, syncSessionVelloTheme, tokenVar } from "@semio-tech/ui-styling";
-import { isDagDrawLodKind, DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, parseDagLodScaleJson, type DagDrawLodKind, type DagLodEntry, type DagLodModeKind, DagSelectionBoundsBox, computeDagMarqueeOverlay, dagElementInteractionChrome, dagSelectionUnionBoundsEqual, dagWorldToScreen, parseDagNodeIdArray, parseDagPreselectJson, parseDagSelectionPreviewPoints, parseDagSelectionUnionBoundsScreen, paintDagLabelOverlays, type DagPreselectSnapshot, type DagSelectionUnionBoundsScreen } from "@semio-tech/dag-react";
+import { isDagDrawLodKind, DAG_LOD_MODE_AUTOMATIC, dagLodCanvasProps, parseDagLodScaleJson, type DagDrawLodKind, type DagLodEntry, type DagLodModeKind, DagSelectionBoundsBox, computeDagMarqueeOverlay, dagElementInteractionChrome, dagOverlayLabelFill, dagSelectionUnionBoundsEqual, dagWorldToScreen, parseDagNodeIdArray, parseDagPreselectJson, parseDagSelectionPreviewPoints, parseDagSelectionUnionBoundsScreen, paintDagLabelOverlays, type DagPreselectSnapshot, type DagSelectionUnionBoundsScreen } from "@semio-tech/dag-react";
 import initFlowWasm, { FlowSession, initSync } from "../core/rs/pkg/flow_core.js";
 import flowCoreWasmUrl from "../core/rs/pkg/flow_core_bg.wasm?url";
 import { FlowOrchestratorClient } from "../worker-client.ts";
@@ -2461,6 +2461,17 @@ export function flowElementInteractionChrome(
   preselection: FlowPreselectSnapshot,
 ): { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> } {
   return dagElementInteractionChrome(selectionIds, preselection);
+}
+
+/** @emoji 🎨 Resolves flow widget label fill from interaction chrome. */
+export function flowOverlayLabelFill(
+  nodeId: string,
+  ghost: boolean,
+  hoveredId: string | null,
+  chrome: { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> },
+  dimmedIds: readonly string[] = [],
+): string {
+  return dagOverlayLabelFill(nodeId, ghost, hoveredId, chrome, dimmedIds);
 }
 
 const FLOW_SELECTION_ALIGN_BUTTON_PX = 24;

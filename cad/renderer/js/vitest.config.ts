@@ -2,7 +2,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { playgroundRendererResolveAliases, playgroundRendererShellEntryPlugin } from "../../../ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig } from "../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -14,19 +14,17 @@ const threePackageRoot = resolve(repoRoot, "node_modules/three");
 const rendererRoot = resolve(repoRoot, "framework/product/playground/renderer/react");
 const rendererIndex = resolve(rendererRoot, "index.tsx");
 
+const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot);
+
 export default defineConfig({
   root,
-  plugins: [playgroundRendererShellEntryPlugin(rendererIndex)],
+  plugins: [],
   assetsInclude: ["**/*.wasm"],
-  server: {
-    fs: {
-      allow: [repoRoot],
-    },
-  },
+  server: workspaceResolve.server,
   resolve: {
     alias: [
       { find: /^@framework\/playground\/renderer\/react($|\/.*$)/, replacement: rendererIndex },
-      ...playgroundRendererResolveAliases(repoRoot),
+      ...(workspaceResolve.resolve?.alias ?? []),
       { find: "@semio-tech/cad-js-core", replacement: resolve(root, "../core/index.ts") },
       { find: "@semio-tech/cad-js-kernel-brepjs", replacement: resolve(root, "../kernel/brepjs/index.ts") },
       { find: "@semio-tech/cad-js-machine-stately", replacement: resolve(root, "../machine/stately/index.ts") },

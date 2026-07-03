@@ -26,5 +26,22 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "writer/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "writer",
+      "aliases": [
+        "writer"
+      ],
+      "packageRoot": "writer",
+      "corePackage": "@semio-tech/writer-core",
+      "definitionExport": "writerPlayAppDefinition",
+      "hostKind": "writer",
+      "port": {
+        "dev": 6062,
+        "test": 6063,
+        "env": "WRITER_PLAY_PORT"
+      }
+    }
+  }
 }

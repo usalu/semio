@@ -1074,7 +1074,7 @@ export const formsPlayAppDefinition = createPlaygroundApp({
 		registerFormsPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootFormsPlay } = await import("@semio-tech/framework-playground-renderer-react/forms");
+		const { bootFormsPlay } = await import("@semio-tech/forms-react/play");
 		bootFormsPlay(pg);
 	},
 });

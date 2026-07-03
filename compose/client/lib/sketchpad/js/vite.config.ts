@@ -26,7 +26,7 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { puzzle3dMeshesVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin, playgroundRendererResolveAliases, findWorkspacePackages } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { puzzle3dMeshesVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 // #endregion 🔌Adapters
 
@@ -274,16 +274,12 @@ export default defineConfig(async ({ mode }) => {
   const schedulerRoot = path.resolve(workspaceRoot, "node_modules/scheduler/cjs");
   const schedulerEntry = path.join(schedulerRoot, prod ? "scheduler.production.js" : "scheduler.development.js");
   const viteInternalFallback = path.resolve(workspaceRoot, "node_modules/vite/dist/node/index.js");
+  const workspaceResolve = createWorkspaceViteResolveConfig(workspaceRoot);
   const workspaceAliases: Array<{ find: string | RegExp; replacement: string }> = [
     { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname) },
     { find: "@compose/studio", replacement: path.resolve(__dirname, "../../studio") },
     { find: "@semio-tech/semio-asset/icon", replacement: path.resolve(workspaceRoot, "asset/index.ts") },
-    ...playgroundRendererResolveAliases(workspaceRoot),
-    { find: /^@elements\/board$/, replacement: path.resolve(workspaceRoot, "puzzle/2d/react/index.tsx") },
-    { find: /^@elements\/scene$/, replacement: path.resolve(workspaceRoot, "elements/client/lib/scene/index.tsx") },
-    { find: /^@elements\/topology$/, replacement: path.resolve(workspaceRoot, "elements/client/lib/topology/react/index.tsx") },
-    { find: /^@elements\/ui-shell$/, replacement: path.resolve(workspaceRoot, "elements/core/index.ts") },
-    { find: /^@elements\/ui$/, replacement: path.resolve(workspaceRoot, "elements/renderer/react/index.tsx") },
+    ...(workspaceResolve.resolve?.alias ?? []),
     { find: /^use-sync-external-store\/shim\/with-selector(?:\.js)?$/, replacement: shimWithSelector },
     { find: /^use-sync-external-store\/shim(?:\.js)?$/, replacement: shimMain },
     { find: "scheduler", replacement: schedulerEntry },
@@ -303,6 +299,7 @@ export default defineConfig(async ({ mode }) => {
       dedupe: ["react", "react-dom", "scheduler", "use-sync-external-store", "three", "@react-three/fiber", "@react-three/drei", "@radix-ui/react-compose-refs", "@radix-ui/react-slot"],
       alias: workspaceAliases,
     },
+    server: workspaceResolve.server,
     plugins: [
       ...uiAssetsVitePlugin(path.resolve(workspaceRoot, "ui/asset")),
       ...semioFaviconVitePlugin(workspaceRoot),

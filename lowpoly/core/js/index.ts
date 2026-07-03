@@ -1050,7 +1050,7 @@ export function registerLowpolyMediaExportHandlers(): void {
 	registerOsMediaExportHandler("3d.lowpoly", "glb", async (doc) => {
 		const fixture = doc as LowpolyFixture;
 		const session = await lowpolyFixtureToSession(fixture);
-		const { parseLowpolyTessellationJson } = await import("@semio-tech/lowpoly-react");
+		const { parseLowpolyTessellationJson } = await import("@semio-tech/lowpoly-react/play");
 		const tess = parseLowpolyTessellationJson(session.tessellateActive());
 		if (!tess) return { data: new Uint8Array([0x67, 0x6c, 0x54, 0x46, 0x02, 0x00, 0x00, 0x00]), mimeType: "model/gltf-binary", fileName: "lowpoly.glb" };
 		return { data: meshTransferToGlb(lowpolyTessellationToMeshTransfer(tess)), mimeType: "model/gltf-binary", fileName: "lowpoly.glb" };
@@ -1100,7 +1100,7 @@ export const lowpolyPlayAppDefinition = createPlaygroundApp({
 		registerLowpolyPlayDeclarativeBodies();
 	},
 	bootRenderer: async (pg) => {
-		const { bootLowpolyPlay } = await import("@semio-tech/framework-playground-renderer-react/lowpoly");
+		const { bootLowpolyPlay } = await import("@semio-tech/lowpoly-react/play");
 		await bootLowpolyPlay(pg);
 	},
 });

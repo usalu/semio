@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 💻 compose/algorithm/index.ts
-// Specs: Story helpers over `@semio-tech/compose-js` `openSessionInMemory` + `installProjection` plus plain JSON {@link Design} types from `@compose/ui`.
+// Specs: Story helpers over `@semio-tech/compose-js` `openSessionInMemory` + `installProjection` plus plain JSON {@link Design} types from `@semio-tech/ui-react`.
 // Summary: WASM-backed flatten/drag/move reads and local diff helpers for Storybook; no snapshot store or schema bridge.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
@@ -22,7 +22,7 @@ import {
   type DesignPlain,
   type MoveVector,
   type VecValue,
-} from "@compose/ui";
+} from "@semio-tech/ui-react";
 import { fixtureItemsOf } from "../../../repo/lib/js/index.ts";
 import * as React from "react";
 

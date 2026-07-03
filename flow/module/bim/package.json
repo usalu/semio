@@ -5,6 +5,11 @@
   "description": "flow · module · bim",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./rs/pkg/flow_module_bim.js",
+    "./pkg/flow_module_bim.js": "./rs/pkg/flow_module_bim.js",
+    "./pkg/flow_module_bim_bg.wasm": "./rs/pkg/flow_module_bim_bg.wasm"
+  },
   "scripts": {
     "wasm": "bun nx run @semio-tech/flow-module-bim:wasm"
   },

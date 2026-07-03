@@ -2341,7 +2341,7 @@ export const puzzle5dPlayAppDefinition = createPlaygroundApp({
 		/* window bodies registered with surface hosts in {@link registerPuzzle5dPlaySurfaceHosts} */
 	},
 	bootRenderer: async (pg) => {
-		const { boot5dPlay } = await import("@semio-tech/framework-playground-renderer-react/puzzle/5d");
+		const { boot5dPlay } = await import("@semio-tech/puzzle-5d-react/play");
 		boot5dPlay(pg);
 	},
 });

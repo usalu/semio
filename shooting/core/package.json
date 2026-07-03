@@ -29,5 +29,22 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "shooting/core"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "semio": {
+    "playgroundApp": {
+      "kind": "shooting",
+      "aliases": [
+        "shooting"
+      ],
+      "packageRoot": "shooting",
+      "corePackage": "@semio-tech/shooting-core",
+      "definitionExport": "shootingPlayAppDefinition",
+      "hostKind": "shooting",
+      "port": {
+        "dev": 6019,
+        "test": 6032,
+        "env": "SHOOTING_PLAY_PORT"
+      }
+    }
+  }
 }

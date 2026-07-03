@@ -37,7 +37,7 @@ import {
   mountPlaygroundApp,
   uiTreeNodeToTreePanelConfig,
   type SidePanelTabConfig,
-} from "@semio-tech/framework-playground-renderer-react/shell";
+} from "@semio-tech/framework-playground-renderer-react";
 import { uiDeclarativeSectionsToTree, type UiNode, type UiTreeNode, Platform, isPlaygroundExampleLocked, playgroundLockedExampleId, FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL } from "@semio-tech/framework-playground-core";
 import { AppPointerFocusStore } from "@semio-tech/framework-core";
 import { registerSurfaceBinding, useShellWindowInstance, type UiCadHostSurfaceNode } from "@semio-tech/framework-platform-renderer-react";
