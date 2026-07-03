@@ -1,0 +1,14 @@
+{
+  "title": "Finish Lowpoly Play Surface",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix lowpoly adhoc implementation: gumball shows without 3D by default, rock flashes on select then crashes with infinite loop in useLowpolyPlayHoverTarget. Fix getSnapshot caching and multiple Three.js instances.",
+  "summary": "Fixed lowpoly play surface crash and adhoc loading behavior.\n\nRoot causes:\n1. useLowpolyPlayHoverTarget returned a new object from getSnapshot on every read, triggering React infinite update loop on hover/select.\n2. LowpolyPlaySessionBridge effect depended on ctrl.getSelectedIds() (new array every render), causing constant WASM reload/scene flash.\n3. Gumball rendered in object mode before session/sceneObjects were ready.\n4. useLowpolySharedPlaySnapshot returned mutable object reference as snapshot, breaking useSyncExternalStore semantics.\n5. LowpolyPlaySurfaceHost referenced runtime before useApp() initialization.\n\nFixes:\n- Cached stable hoveredTargetSnapshot in LowpolyPlayController keyed by pointer-focus hover string.\n- useLowpolyPlayHoverTarget subscribes via hoverRevision (number snapshot).\n- useLowpolySharedPlaySnapshot subscribes via generation counter.\n- Session bridge sync effect uses interactionRevision + fixtureJson string deps; runtime passed into SessionBridge.\n- Gumball only active when session loaded, sceneObjects present, and selection/active object exists.\n\nVerified with Playwright on http://127.0.0.1:6078: canvas loads, rock mesh + gumball render together, selection/hover produce no console errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1810"
+  },
+  "goal": "🎯lowpoly",
+  "sessions": [
+    "⚪af2d484fd7e248e39c905689f759a17d"
+  ]
+}

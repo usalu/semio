@@ -22,6 +22,7 @@ import {
   type WindowBodyViewContext,
   type CommandDescriptor,
   type WindowEngagement,
+  type WindowEngagementControl,
   type WindowMeasure,
   type UiNode,
   PLAYGROUND_NO_EXAMPLE_ID,
@@ -1263,6 +1264,11 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
   }
 
   private windowEngagementFor(windowId: string): WindowEngagement {
+    const staticToolPossibles = [
+      { id: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID }) },
+      { id: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID, label: "Fill", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID }) },
+      { id: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID }) },
+    ];
     const toolPossibles =
       this.activeTool === "brush" && this.brushEngagementPossibles.length > 0
         ? this.brushEngagementPossibles.map((row) => ({
@@ -1270,11 +1276,7 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
             label: row.label,
             command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: row.id }),
           }))
-        : [
-            { id: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID }) },
-            { id: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID, label: "Fill", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID }) },
-            { id: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID }) },
-          ];
+        : staticToolPossibles;
     const storeSnap = this.puzzle5dStore.getSnapshot();
     const fillSliderMax = storeSnap.fillBuildDone ? PUZZLE_5D_FILL_COUNT_MAX : Math.max(storeSnap.fillCount, 1);
     const control =
@@ -1289,21 +1291,16 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
             step: 1,
             onChange: puzzle5dPlayCmd("engagementControlChange", { windowId }),
           }
-        : {
-            kind: "ring" as const,
-            id: "puzzle5d-command-ring",
-            label: "Command",
-            value:
-              this.activeTool === "brush"
-                ? PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID
-                : this.activeTool === "fill"
-                  ? PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID
-                  : PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID,
-            options: toolPossibles.map((row) => ({ id: row.id, label: row.label })),
-            onSelect: puzzle5dPlayCmd("engagementControlSelect", { windowId }),
-          };
+        : this.activeTool === "brush" && this.brushEngagementPossibles.length > 0
+          ? this.brushPlacementEngagementControl(windowId)
+          : undefined;
     return {
       sessionActive: this.activeTool === "brush" || this.activeTool === "fill",
+      options: [
+        { id: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", pressed: this.activeTool === "select", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_SELECT_ID }) },
+        { id: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", pressed: this.activeTool === "brush", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_BRUSH_ID }) },
+        { id: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID, label: "Fill", pressed: this.activeTool === "fill", command: puzzle5dPlayCmd("engagementPossibleSelect", { windowId, possibleId: PUZZLE_5D_ENGAGEMENT_TOOL_FILL_ID }) },
+      ],
       input: {
         id: "engagement-input",
         value: this.engagementInputByWindow[windowId] ?? "",
@@ -1314,6 +1311,31 @@ export class Puzzle5dPlayShellController extends Controller implements Playgroun
       },
       control,
       possibleEngagements: toolPossibles,
+    };
+  }
+
+  private brushPlacementEngagementControl(windowId: string): WindowEngagementControl {
+    const candidates = this.brushEngagementPossibles;
+    const selectedValue = candidates[0]!.id;
+    const selectCmd = puzzle5dPlayCmd("engagementControlSelect", { windowId });
+    if (candidates.length <= 6) {
+      return {
+        kind: "toggleGroup",
+        id: "puzzle5d-brush-placement",
+        label: "Placement",
+        value: selectedValue,
+        options: candidates.map((row) => ({ id: row.id, label: row.label })),
+        onSelect: selectCmd,
+      };
+    }
+    return {
+      kind: "select",
+      id: "puzzle5d-brush-placement",
+      label: "Placement",
+      value: selectedValue,
+      placeholder: "Placement",
+      items: candidates.map((row) => ({ id: row.id, value: row.id, label: row.label })),
+      onChange: selectCmd,
     };
   }
 

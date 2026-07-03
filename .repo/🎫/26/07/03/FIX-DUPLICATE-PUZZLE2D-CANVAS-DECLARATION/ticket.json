@@ -1,0 +1,16 @@
+{
+  "title": "Fix Duplicate Puzzle2dCanvas Declaration",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix duplicate Puzzle2dCanvas declaration in framework/product/playground/renderer/react/index.tsx",
+  "summary": "Removed reintroduced duplicate import block for Puzzle2dCanvas, buildPuzzle2dSceneDescriptorFromFixture, Puzzle2dHoverPayload, and FormRenderer in the Trinity play region. Symbols remain available from the earlier @semio-tech/puzzle-2d-react and @semio-tech/forms-react imports. Verified framework-os-dev (PUZZLE_PLAY_ENTRY=s) vite build succeeds.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1815"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪ff2d8e4a5c2240238d4db0f315371916",
+    "⚪9411fa27ef604db594b8bf1dc24ba5f2",
+    "⚪f643c53c249c40da8d55a3f49ecc99a2"
+  ]
+}

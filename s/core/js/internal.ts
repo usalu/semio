@@ -6,6 +6,8 @@
 import type { ComponentKind, PlatformDefinition, PluginContext } from "@semio-tech/framework-platform-core";
 import {
 	applyDagFixtureJsonToOsMediaGraph,
+	applyFlowFixtureJsonToOsMediaGraph,
+	buildOsMediaFlowOperatorInfos,
 	appInstanceResourceProjection,
 	appVcsHandlerForFormat,
 	createCatalogueKindsAppVcsHandler,
@@ -40,6 +42,8 @@ import {
 	osExtensionRegistrySize,
 	osInPort,
 	osMediaGraphToDagFixtureJson,
+	osMediaGraphToFlowFixtureJson,
+	OS_MEDIA_FLOW_MODULE_ID,
 	osOutPort,
 	osParameterTypesCompatible,
 	osParameterValue,
@@ -136,7 +140,11 @@ export const sExtensionRegistrySize = osExtensionRegistrySize;
 export const registerSProgramDefinition = registerOsProgramDefinition;
 export const registerSFixtureJsonResolver = registerOsFixtureJsonResolver;
 export const sMediaGraphToDagFixtureJson = osMediaGraphToDagFixtureJson;
+export const sMediaGraphToFlowFixtureJson = osMediaGraphToFlowFixtureJson;
 export const applyDagFixtureJsonToSMediaGraph = applyDagFixtureJsonToOsMediaGraph;
+export const applyFlowFixtureJsonToSMediaGraph = applyFlowFixtureJsonToOsMediaGraph;
+export const buildSMediaFlowOperatorInfos = buildOsMediaFlowOperatorInfos;
+export { OS_MEDIA_FLOW_MODULE_ID };
 export const listSPrograms = listOsPrograms;
 export {
 	appInstanceResourceProjection,

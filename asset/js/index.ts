@@ -11,7 +11,7 @@
 //#region 🗃️Exports
 // Builtin Metabolism kit and UI icons only — test JSON lives in `@semio-tech/compose-fixture`.
 
-import metabolismShallowKit from "../compose/fixture/metabolism.shallow.kit.compose.json";
+import metabolismShallowKit from "../../compose/fixture/metabolism.shallow.kit.compose.json";
 import { createIconComponent } from "@semio-tech/ui-react";
 import { fixtureItemsOf } from "../../repo/lib/js/index.ts";
 

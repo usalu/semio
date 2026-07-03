@@ -15,12 +15,69 @@ export type LowpolyTransform = {
 	readonly scale: [number, number, number];
 };
 
-export type LowpolySelectionMode = "object" | "vertex" | "edge" | "face";
+export type LowpolySelectionMode = "mesh" | "vertex" | "edge" | "face";
+
+export const ALL_LOWPOLY_SELECTION_MODES: readonly LowpolySelectionMode[] = ["mesh", "vertex", "edge", "face"];
+
+export type LowpolySelectionTargets = Record<LowpolySelectionMode, boolean>;
+
+export const LOWPOLY_SELECTION_TARGETS_DEFAULT: LowpolySelectionTargets = {
+	mesh: true,
+	vertex: false,
+	edge: false,
+	face: false,
+};
+
+/** @emoji 🧭 Normalizes legacy fixture selection mode strings. */
+export function normalizeLowpolySelectionMode(mode: string): LowpolySelectionMode {
+	if (mode === "object") return "mesh";
+	if (mode === "vertex" || mode === "edge" || mode === "face" || mode === "mesh") return mode;
+	return "mesh";
+}
+
+export function normalizeLowpolySelectionTargets(raw: Partial<LowpolySelectionTargets> | undefined): LowpolySelectionTargets {
+	return {
+		mesh: raw?.mesh ?? false,
+		vertex: raw?.vertex ?? false,
+		edge: raw?.edge ?? false,
+		face: raw?.face ?? false,
+	};
+}
 
 export type LowpolySelection = {
+	readonly targets: LowpolySelectionTargets;
+	readonly keys: readonly string[];
 	readonly mode: LowpolySelectionMode;
 	readonly ids: readonly number[];
 };
+
+export function normalizeLowpolySelection(raw: unknown): LowpolySelection {
+	if (raw && typeof raw === "object") {
+		const value = raw as {
+			targets?: Partial<LowpolySelectionTargets>;
+			keys?: readonly string[];
+			mode?: string;
+			ids?: readonly number[];
+		};
+		if (value.targets || value.keys) {
+			const targets = normalizeLowpolySelectionTargets(value.targets);
+			const enabled = ALL_LOWPOLY_SELECTION_MODES.some((mode) => targets[mode]);
+			const keys = [...(value.keys ?? [])];
+			return lowpolySelectionFromState(enabled ? targets : { ...LOWPOLY_SELECTION_TARGETS_DEFAULT }, keys);
+		}
+		if (value.mode != null) {
+			const mode = normalizeLowpolySelectionMode(value.mode);
+			const targets = { mesh: false, vertex: false, edge: false, face: false, [mode]: true } as LowpolySelectionTargets;
+			return {
+				targets,
+				keys: [],
+				mode,
+				ids: [...(value.ids ?? [])],
+			};
+		}
+	}
+	return DEFAULT_LOWPOLY_SELECTION;
+}
 
 export type LowpolyTarget = {
 	readonly objectId: string;
@@ -44,8 +101,30 @@ export function decodeLowpolyPointerFocusKey(key: string): LowpolyTarget | null 
 	const mode = parts[2] as LowpolySelectionMode;
 	const id = Number(parts[3]);
 	if (!objectId || !Number.isFinite(objectIndex) || !Number.isFinite(id)) return null;
-	if (mode !== "object" && mode !== "vertex" && mode !== "edge" && mode !== "face") return null;
+	if (mode !== "mesh" && mode !== "vertex" && mode !== "edge" && mode !== "face") return null;
 	return { objectId, objectIndex, mode, id };
+}
+
+export function decodeLowpolySelectionTargets(keys: readonly string[]): LowpolyTarget[] {
+	return keys.flatMap((key) => {
+		const target = decodeLowpolyPointerFocusKey(key);
+		return target ? [target] : [];
+	});
+}
+
+export function lowpolyEnabledSelectionModes(targets: LowpolySelectionTargets): readonly LowpolySelectionMode[] {
+	return ALL_LOWPOLY_SELECTION_MODES.filter((mode) => targets[mode]);
+}
+
+export function formatLowpolySelectionTargetsLabel(targets: LowpolySelectionTargets): string {
+	const enabled = lowpolyEnabledSelectionModes(targets);
+	if (!enabled.length) return "none";
+	if (enabled.length === ALL_LOWPOLY_SELECTION_MODES.length) return "all";
+	return enabled.join("+");
+}
+
+export function selectedIdsForMode(targets: readonly LowpolyTarget[], mode: LowpolySelectionMode): readonly number[] {
+	return targets.filter((target) => target.mode === mode).map((target) => target.id);
 }
 
 export type LowpolyTopology = {
@@ -108,9 +187,45 @@ export const DEFAULT_LOWPOLY_TRANSFORM: LowpolyTransform = {
 };
 
 export const DEFAULT_LOWPOLY_SELECTION: LowpolySelection = {
-	mode: "object",
+	targets: LOWPOLY_SELECTION_TARGETS_DEFAULT,
+	keys: [],
+	mode: "mesh",
 	ids: [],
 };
+
+export function lowpolyPrimaryPickMode(targets: LowpolySelectionTargets): LowpolySelectionMode {
+	for (const mode of ["vertex", "edge", "face", "mesh"] as const) {
+		if (targets[mode]) return mode;
+	}
+	return "mesh";
+}
+
+export function lowpolyPrimarySelectionMode(
+	targets: LowpolySelectionTargets,
+	selected: readonly LowpolyTarget[] = [],
+): LowpolySelectionMode {
+	for (const mode of ["vertex", "edge", "face", "mesh"] as const) {
+		if (selected.some((target) => target.mode === mode)) return mode;
+	}
+	for (const mode of ["vertex", "edge", "face", "mesh"] as const) {
+		if (targets[mode]) return mode;
+	}
+	return "mesh";
+}
+
+export function lowpolySelectionFromState(
+	targets: LowpolySelectionTargets,
+	keys: readonly string[],
+): LowpolySelection {
+	const selected = decodeLowpolySelectionTargets(keys);
+	const mode = lowpolyPrimarySelectionMode(targets, selected);
+	return {
+		targets,
+		keys: [...keys],
+		mode,
+		ids: [...selectedIdsForMode(selected, mode)],
+	};
+}
 
 export const DEFAULT_LOWPOLY_FIXTURE: LowpolyFixture = {
 	schema: LOWPOLY_FIXTURE_SCHEMA,
@@ -127,7 +242,7 @@ export function parseLowpolyFixtureJson(json: string): LowpolyFixture | null {
 	try {
 		const parsed = JSON.parse(json) as LowpolyFixture;
 		if (parsed.schema !== LOWPOLY_FIXTURE_SCHEMA || !Array.isArray(parsed.objects)) return null;
-		return parsed;
+		return { ...parsed, selection: normalizeLowpolySelection(parsed.selection) };
 	} catch {
 		return null;
 	}

@@ -14382,8 +14382,50 @@ export interface EngagementRingControl {
   onSelect?: (id: string) => void;
 }
 
-/** @emoji 🎛 Optional engagement UI control ({@link EngagementSliderControl} | {@link EngagementStepperControl} | {@link EngagementRingControl}). */
-export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl;
+/** @emoji 🔘 One discrete option on an engagement {@link EngagementToggleGroupControl}. */
+export interface EngagementToggleGroupOption {
+  id: string;
+  label: string;
+  disabled?: boolean;
+}
+
+/** @emoji 🔘 Engagement toggle button group for small unordered enums. */
+export interface EngagementToggleGroupControl {
+  kind: "toggleGroup";
+  id?: string;
+  label?: string;
+  value?: string;
+  options: readonly EngagementToggleGroupOption[];
+  disabled?: boolean;
+  onSelect?: (id: string) => void;
+}
+
+/** @emoji 🔽 One item on an engagement {@link EngagementSelectControl}. */
+export interface EngagementSelectItem {
+  id: string;
+  value: string;
+  label: string;
+}
+
+/** @emoji 🔽 Engagement select dropdown for large enums. */
+export interface EngagementSelectControl {
+  kind: "select";
+  id?: string;
+  label?: string;
+  value?: string;
+  placeholder?: string;
+  items: readonly EngagementSelectItem[];
+  disabled?: boolean;
+  onChange?: (value: string) => void;
+}
+
+/** @emoji 🎛 Optional engagement UI control for the active command step. */
+export type EngagementControl =
+  | EngagementSliderControl
+  | EngagementStepperControl
+  | EngagementRingControl
+  | EngagementToggleGroupControl
+  | EngagementSelectControl;
 
 /** @emoji 🏷 i18n keys for window command chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
 export const UI_ENGAGEMENT = {
@@ -14795,16 +14837,20 @@ export interface EngagementProps extends EngagementSpec {
 
 function engagementControlLabel(control: EngagementControl): string | undefined {
   if (!control.label) return undefined;
-  if (control.kind === "ring" || !control.unit) return control.label;
+  if (control.kind === "ring" || control.kind === "toggleGroup" || control.kind === "select" || !control.unit) return control.label;
   return `${control.label} (${control.unit})`;
 }
 
-/** @emoji 🎛 Renders one engagement {@link EngagementControl} using Slider, Stepper, or Ring. */
+function engagementControlIsNumeric(control: EngagementControl): control is EngagementSliderControl | EngagementStepperControl {
+  return control.kind === "slider" || control.kind === "stepper";
+}
+
+/** @emoji 🎛 Renders one engagement {@link EngagementControl} using Slider, Stepper, Ring, toggle group, or Select. */
 function EngagementControlView({ control }: { readonly control: EngagementControl }): React.ReactElement | null {
   const label = engagementControlLabel(control);
-  const lastNumericRef = reactHostPort.useRef(control.kind !== "ring" ? control.value : 0);
+  const lastNumericRef = reactHostPort.useRef(engagementControlIsNumeric(control) ? control.value : 0);
   reactHostPort.useEffect(() => {
-    if (control.kind !== "ring") lastNumericRef.current = control.value;
+    if (engagementControlIsNumeric(control)) lastNumericRef.current = control.value;
   }, [control]);
   if (control.kind === "slider") {
     return (
@@ -14844,6 +14890,47 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
           }}
           onPointerUp={() => control.onCommit?.(lastNumericRef.current)}
         />
+      </div>
+    );
+  }
+  if (control.kind === "toggleGroup") {
+    if (!control.options.length) return null;
+    return (
+      <div data-slot="engagement-control" data-control-kind="toggleGroup" className="flex min-w-0 flex-col gap-half px-half">
+        {label ? <span className="text-element text-xs">{label}</span> : null}
+        <ButtonGroup id={control.id} detailPanelWidthMode="fill">
+          {control.options.map((option) => (
+            <ButtonGroupItem
+              key={option.id}
+              id={option.id}
+              text={option.label}
+              icon={<span className="hidden" aria-hidden />}
+              className={cn(control.value === option.id && interactiveActiveFillClass)}
+              disabled={option.disabled || control.disabled}
+              onClick={() => control.onSelect?.(option.id)}
+            />
+          ))}
+        </ButtonGroup>
+      </div>
+    );
+  }
+  if (control.kind === "select") {
+    if (!control.items.length) return null;
+    return (
+      <div data-slot="engagement-control" data-control-kind="select" className="flex min-w-0 flex-col gap-half px-half">
+        {label ? <span className="text-element text-xs">{label}</span> : null}
+        <Select value={control.value} onValueChange={(value) => control.onChange?.(value)} disabled={control.disabled}>
+          <SelectTrigger id={control.id} className="h-medium w-full min-w-0" size="sm">
+            <SelectValue placeholder={control.placeholder ?? "Select"} />
+          </SelectTrigger>
+          <SelectContent>
+            {control.items.map((item) => (
+              <SelectItem key={item.id} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     );
   }
@@ -22742,6 +22829,40 @@ if (import.meta.vitest) {
       expect(windowEngagementChromeVisible(engagement, { activated: true })).toBe(true);
       expect(windowEngagementChromeVisible({ input: { value: "box" } }, { activated: false })).toBe(true);
       expect(windowEngagementChromeVisible({ sessionActive: true, input: { value: "" } }, { activated: false })).toBe(true);
+    });
+
+    it("Engagement renders toggleGroup and select controls", () => {
+      const { container } = render(
+        <Engagement
+          active
+          sessionActive
+          input={{ placeholder: ENGAGEMENT_USER.commandPlaceholder }}
+          control={{
+            kind: "toggleGroup",
+            id: "engagement-tool-group",
+            label: "Tool",
+            value: "brush",
+            options: [
+              { id: "select", label: "Select" },
+              { id: "brush", label: "Brush" },
+            ],
+          }}
+          controls={[
+            {
+              kind: "select",
+              id: "engagement-placement",
+              label: "Placement",
+              value: "a",
+              items: [
+                { id: "a", value: "a", label: "A" },
+                { id: "b", value: "b", label: "B" },
+              ],
+            },
+          ]}
+        />,
+      );
+      expect(container.querySelector('[data-control-kind="toggleGroup"]')).toBeTruthy();
+      expect(container.querySelector('[data-control-kind="select"]')).toBeTruthy();
     });
 
     it("applyEngagementSpaceAction submits empty draft during sessionActive", () => {

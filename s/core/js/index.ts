@@ -189,6 +189,7 @@ function sPlayPointerKeysToAppInstanceIds(keys: readonly string[]): string[] {
 export class SPlayController extends Controller {
 	private store: StudioStore;
 	private activeInstanceId: string | null = null;
+	private focusedInstanceId: string | null = null;
 	private fixtureId: string;
 	private mediaGraphEngagementInput = "";
 	private readonly mediaGraphVfsController: OsMediaGraphVirtualFileSystemController;
@@ -218,6 +219,9 @@ export class SPlayController extends Controller {
 				},
 				onSpawnApp: (programId, appId) => {
 					this.run("spawnApp", { programId, appId });
+				},
+				onOpenInstance: (instanceId) => {
+					this.run("openInstance", { instanceId });
 				},
 			},
 		);
@@ -334,6 +338,10 @@ export class SPlayController extends Controller {
 
 	getActiveInstanceId(): string | null {
 		return this.activeInstanceId;
+	}
+
+	getFocusedInstanceId(): string | null {
+		return this.focusedInstanceId;
 	}
 
 	getSelectedMediaNodeIds(): readonly string[] {
@@ -462,6 +470,27 @@ export class SPlayController extends Controller {
 				this.emit();
 				return;
 			}
+			case "openInstance": {
+				const instanceId = typeof args?.instanceId === "string" ? args.instanceId : null;
+				if (!instanceId) return;
+				if (!this.store.projection().appInstances.some((entry) => entry.id === instanceId)) return;
+				this.focusedInstanceId = instanceId;
+				this.activeInstanceId = instanceId;
+				const node = this.store.projection().mediaGraph.nodes.find((row) => row.instanceId === instanceId);
+				this.pointerFocus.setSelection(
+					node
+						? [sPlayAppInstancePointerKey(instanceId), sPlayMediaNodePointerKey(node.id)]
+						: [sPlayAppInstancePointerKey(instanceId)],
+				);
+				this.rebuildShellMode();
+				this.emit();
+				return;
+			}
+			case "closeFocusedInstance": {
+				this.focusedInstanceId = null;
+				this.emit();
+				return;
+			}
 			case "undo":
 				this.store.dispatch({ kind: "undo" });
 				this.rebuildShellMode();
@@ -483,6 +512,7 @@ export class SPlayController extends Controller {
 				this.store = createStudioStore(this.loadFixture(fixtureId));
 				const projection = this.store.projection();
 				this.activeInstanceId = projection.appInstances[0]?.id ?? null;
+				this.focusedInstanceId = null;
 				this.rebuildShellMode();
 				this.emit();
 				return;
@@ -1229,6 +1259,17 @@ if (import.meta.vitest) {
 			ctrl.run("patchAppInstances", { instanceIds: ids, field: "label", value: "Batch Label" });
 			const labels = ctrl.getStudioStore().projection().appInstances.filter((row) => ids.includes(row.id)).map((row) => row.label);
 			expect(labels.every((label) => label === "Batch Label")).toBe(true);
+		});
+
+		it("openInstance and closeFocusedInstance toggle drill-in focus", async () => {
+			const ctrl = createSPlayTestController("demo");
+			const instance = ctrl.getStudioStore().projection().appInstances[0];
+			expect(instance).toBeTruthy();
+			expect(ctrl.getFocusedInstanceId()).toBeNull();
+			ctrl.run("openInstance", { instanceId: instance!.id });
+			expect(ctrl.getFocusedInstanceId()).toBe(instance!.id);
+			ctrl.run("closeFocusedInstance");
+			expect(ctrl.getFocusedInstanceId()).toBeNull();
 		});
 
 		it("registry completeness: every registered app resolves handler, componentKind, and ports", () => {

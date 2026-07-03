@@ -11,6 +11,7 @@ import {
   gumballPointerConsumesCanvasEventRef,
   UnifiedGumball,
   type EngagementSpec,
+  type EngagementControl,
   type EngagementSliderControl,
   type GumballConfig,
   type GumballHandleKind,
@@ -8562,14 +8563,17 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     };
   });
 
+  const toolModeOptions = [
+    { id: "puzzle3d.tool.select", label: "Select", icon: "crosshair" as const, pressed: inputs.activeTool === "select", onPress: inputs.onSelectTool },
+    { id: "puzzle3d.tool.brush", label: "Brush", icon: "sparkles" as const, pressed: inputs.activeTool === "brush", onPress: inputs.onBrushTool },
+    { id: PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID, label: "Fill", icon: "layers" as const, pressed: inputs.activeTool === "fill", onPress: inputs.onFillTool },
+  ];
+
   const zoomOptions =
-    inputs.selectionCount > 0 ? [{ id: PUZZLE_3D_ENGAGEMENT_ZOOM_ID, label: "Zoom", onPress: inputs.onZoomToSelection }] : [];
+    inputs.selectionCount > 0 ? [{ id: PUZZLE_3D_ENGAGEMENT_ZOOM_ID, label: "Zoom", icon: "copy" as const, onPress: inputs.onZoomToSelection }] : [];
   const brushOptions =
     inputs.activeTool === "brush" && inputs.brushTargetActive
-      ? [
-          { id: "puzzle3d.tool.select", label: "Select", onPress: inputs.onSelectTool },
-          { id: PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID, label: "Next", onPress: inputs.onCycleBrushCandidate },
-        ]
+      ? [{ id: PUZZLE_3D_ENGAGEMENT_BRUSH_NEXT_ID, label: "Next", icon: "chevron-right" as const, onPress: inputs.onCycleBrushCandidate }]
       : [];
   const fillOptions =
     inputs.activeTool === "fill"
@@ -8577,14 +8581,15 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
           {
             id: PUZZLE_3D_ENGAGEMENT_FILL_EDIT_VOLUMES_ID,
             label: inputs.fillEditTargetVolumes ? "Done editing volumes" : "Edit target volumes",
+            icon: "box" as const,
             onPress: () => inputs.onToggleFillEditTargetVolumes?.(),
           },
           ...(inputs.fillEditTargetVolumes && (inputs.selectedTargetVolumeCount ?? 0) > 0
-            ? [{ id: PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID, label: "Delete volume", onPress: () => inputs.onDeleteSelectedTargetVolume?.() }]
+            ? [{ id: PUZZLE_3D_ENGAGEMENT_DELETE_TARGET_VOLUME_ID, label: "Delete volume", icon: "trash-2" as const, onPress: () => inputs.onDeleteSelectedTargetVolume?.() }]
             : []),
         ]
       : [];
-  const options = zoomOptions.length || brushOptions.length || fillOptions.length ? [...zoomOptions, ...brushOptions, ...fillOptions] : undefined;
+  const options = [...toolModeOptions, ...zoomOptions, ...brushOptions, ...fillOptions];
 
   const possibleEngagements = inputs.activeTool === "brush" && brushPossibles.length > 0 ? brushPossibles : toolPossibles;
 
@@ -8605,49 +8610,49 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
     step: VOXEL_BRUSH_SIZE_STEP,
     onChange: (value) => inputs.onVoxelBrushDimension?.(axis, value),
   });
+  const brushPlacementControl = (): EngagementControl | undefined => {
+    if (inputs.activeTool !== "brush" || brushPossibles.length === 0) return undefined;
+    const selectedValue = brushPossibles[0]!.id;
+    const onPick = (id: string) => {
+      const index = brushPossibles.findIndex((row) => row.id === id);
+      if (index >= 0) inputs.onPickBrushCandidate(index);
+    };
+    if (brushPossibles.length <= 6) {
+      return {
+        kind: "toggleGroup",
+        id: "puzzle3d-brush-placement",
+        label: "Placement",
+        value: selectedValue,
+        options: brushPossibles.map((row) => ({ id: row.id, label: row.label })),
+        onSelect: onPick,
+      };
+    }
+    return {
+      kind: "select",
+      id: "puzzle3d-brush-placement",
+      label: "Placement",
+      value: selectedValue,
+      placeholder: "Placement",
+      items: brushPossibles.map((row) => ({ id: row.id, value: row.id, label: row.label })),
+      onChange: onPick,
+    };
+  };
+
   const control =
     inputs.activeTool === "fill" && inputs.fillEditTargetVolumes
       ? undefined
       : inputs.activeTool === "fill"
-      ? {
-          kind: "slider" as const,
-          id: "puzzle3d-fill-count",
-          label: fillSliderLabel,
-          value: Math.min(inputs.fillCount, fillSliderMax),
-          min: 0,
-          max: fillSliderMax,
-          step: 1,
-          onChange: inputs.onFillCount,
-        }
-      : inputs.activeTool === "brush" && brushPossibles.length > 0
         ? {
-            kind: "ring" as const,
-            id: "puzzle3d-brush-ring",
-            label: "Placement",
-            value: brushPossibles[0]!.id,
-            options: brushPossibles.map((row) => ({ id: row.id, label: row.label })),
-            onSelect: (id: string) => {
-              const index = brushPossibles.findIndex((row) => row.id === id);
-              if (index >= 0) inputs.onPickBrushCandidate(index);
-            },
+            kind: "slider" as const,
+            id: "puzzle3d-fill-count",
+            label: fillSliderLabel,
+            value: Math.min(inputs.fillCount, fillSliderMax),
+            min: 0,
+            max: fillSliderMax,
+            step: 1,
+            onChange: inputs.onFillCount,
           }
-        : {
-            kind: "ring" as const,
-            id: "puzzle3d-tool-ring",
-            label: "Tool",
-            value:
-              inputs.activeTool === "brush"
-                ? "puzzle3d.tool.brush"
-                : inputs.activeTool === "fill"
-                  ? PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID
-                  : "puzzle3d.tool.select",
-            options: toolPossibles.map((row) => ({ id: row.id, label: row.label })),
-            onSelect: (id: string) => {
-              if (id === "puzzle3d.tool.brush") inputs.onBrushTool();
-              else if (id === PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID) inputs.onFillTool();
-              else if (id === "puzzle3d.tool.select") inputs.onSelectTool();
-            },
-          };
+        : brushPlacementControl();
 
   return {
     sessionActive: inputs.activeTool === "brush" || inputs.activeTool === "fill",
@@ -8670,7 +8675,7 @@ export function buildPuzzle3dPlayEngagement(inputs: Puzzle3dPlayEngagementInputs
           ],
         }
       : {}),
-    ...(options?.length ? { options } : {}),
+    ...(options.length ? { options } : {}),
     ...(status.length ? { status } : {}),
     possibleEngagements,
   };
@@ -14090,9 +14095,10 @@ if (import.meta.vitest) {
       });
       expect(spec.input?.id).toBe("engagement-input");
       expect(spec.possibleEngagements?.map((row) => row.id)).toEqual(["puzzle3d.tool.brush", PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID, "puzzle3d.tool.select"]);
-      expect(spec.options).toBeUndefined();
+      expect(spec.control).toBeUndefined();
+      expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.tool.select", "puzzle3d.tool.brush", PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID]);
     });
-    it("buildPuzzle3dPlayEngagement exposes ring control for brush placement candidates", () => {
+    it("buildPuzzle3dPlayEngagement exposes toggleGroup control for brush placement candidates", () => {
       const picked: number[] = [];
       const spec = buildPuzzle3dPlayEngagement({
         activeTool: "brush",
@@ -14114,9 +14120,9 @@ if (import.meta.vitest) {
         ],
         brushTargetActive: true,
       });
-      expect(spec.control?.kind).toBe("ring");
-      expect(spec.control?.kind === "ring" && spec.control.options).toHaveLength(2);
-      spec.control?.kind === "ring" && spec.control.onSelect?.("puzzle3d.brush.K.1");
+      expect(spec.control?.kind).toBe("toggleGroup");
+      expect(spec.control?.kind === "toggleGroup" && spec.control.options).toHaveLength(2);
+      spec.control?.kind === "toggleGroup" && spec.control.onSelect?.("puzzle3d.brush.K.1");
       expect(picked).toEqual([1]);
     });
 
@@ -14161,7 +14167,13 @@ if (import.meta.vitest) {
         brushTargetActive: true,
       });
       expect(spec.possibleEngagements?.[0]?.id).toBe("puzzle3d.brush.J.0");
-      expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.zoom", "puzzle3d.tool.select", "puzzle3d.brush.next"]);
+      expect(spec.options?.map((row) => row.id)).toEqual([
+        "puzzle3d.tool.select",
+        "puzzle3d.tool.brush",
+        PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID,
+        "puzzle3d.zoom",
+        "puzzle3d.brush.next",
+      ]);
     });
     it("engagementCommandTokenEquals matches Brush after engagement input normalization", () => {
       expect(engagementCommandTokenEquals(normalizeEngagementCommandText("brush"), "Brush")).toBe(true);
@@ -14805,7 +14817,12 @@ if (import.meta.vitest) {
         brushCandidates: [],
         brushTargetActive: false,
       });
-      expect(spec.options?.map((row) => row.id)).toEqual(["puzzle3d.zoom"]);
+      expect(spec.options?.map((row) => row.id)).toEqual([
+        "puzzle3d.tool.select",
+        "puzzle3d.tool.brush",
+        PUZZLE_3D_ENGAGEMENT_TOOL_FILL_ID,
+        "puzzle3d.zoom",
+      ]);
     });
     it("requestPuzzle3dZoomToSelection bumps epoch only for non-empty selection", () => {
       const before = getPuzzle3dZoomToSelectionEpoch();

@@ -1,8 +1,23 @@
 # Verify Log — Note Infinite Canvas App (E2E)
 
-## Tests
+## Grid & window options (2026-07-03)
 
-- `bun run test:note` — PASSED (note-core 9 tests, note-react 2 tests)
+### Grid
+- Replaced finite 8000×8000 world-space SVG with viewport-aligned `NoteViewportGrid` (screen space, camera-offset pattern)
+- Grid fills entire canvas at any pan/zoom (`hasViewportGrid: true`, canvas SVG rect matches viewport)
+- Document fields: `gridSpacing`, `gridSubdivisions`, `gridOpacity`, `snapGridSpacing`
+- Snap on block place/paste and on move release when `snapEnabled`
+
+### Window options (measures rail)
+- Grouped sections: **Camera** (zoom), **Grid** (show, major spacing, subdivisions, opacity), **Snap** (enable, spacing), **Drawing** (pencil, eraser)
+- Toggles use `iconId` + descriptive `text` labels
+- Engagement status shows grid/snap summary
+
+### Tests
+- `bun run test:note` — PASSED (note-core 11 tests, note-react 2 tests)
+
+### Runtime verify
+- http://127.0.0.1:6080/ — Window Options rail shows CAMERA / GRID / SNAP / DRAWING groups with labeled sliders
 
 ## Dev host E2E
 

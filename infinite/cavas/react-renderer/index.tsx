@@ -46,9 +46,10 @@ export interface GraphWasmSession {
   attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
   setSize(width: number, height: number, dpr: number): void;
   renderFrame(): void;
-  pointerDown?(x: number, y: number, extend: boolean): void;
+  pointerDown?(x: number, y: number, button: number, extend: boolean): void;
   pointerMove?(x: number, y: number): void;
-  pointerUp?(): void;
+  pointerUp?(x: number, y: number): void;
+  wheel?(x: number, y: number, deltaY: number): void;
 }
 
 export interface GraphWasmCanvasProps {
@@ -109,15 +110,24 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
       };
       rafRef.current = requestAnimationFrame(tick);
       const onPointerDown = (ev: PointerEvent) => {
-        session.pointerDown?.(ev.clientX - canvas.getBoundingClientRect().left, ev.clientY - canvas.getBoundingClientRect().top, ev.shiftKey);
+        const rect = canvas.getBoundingClientRect();
+        session.pointerDown?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.button, ev.shiftKey);
         renderFrame();
       };
       const onPointerMove = (ev: PointerEvent) => {
-        session.pointerMove?.(ev.clientX - canvas.getBoundingClientRect().left, ev.clientY - canvas.getBoundingClientRect().top);
+        const rect = canvas.getBoundingClientRect();
+        session.pointerMove?.(ev.clientX - rect.left, ev.clientY - rect.top);
         renderFrame();
       };
-      const onPointerUp = () => {
-        session.pointerUp?.();
+      const onPointerUp = (ev: PointerEvent) => {
+        const rect = canvas.getBoundingClientRect();
+        session.pointerUp?.(ev.clientX - rect.left, ev.clientY - rect.top);
+        renderFrame();
+      };
+      const onWheel = (ev: WheelEvent) => {
+        ev.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        session.wheel?.(ev.clientX - rect.left, ev.clientY - rect.top, ev.deltaY);
         renderFrame();
       };
       if (enablePointer) {
@@ -125,6 +135,7 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
         canvas.addEventListener("pointermove", onPointerMove);
         canvas.addEventListener("pointerup", onPointerUp);
         canvas.addEventListener("pointerleave", onPointerUp);
+        canvas.addEventListener("wheel", onWheel, { passive: false });
       }
       return () => {
         ro.disconnect();
@@ -133,6 +144,7 @@ export function GraphWasmCanvas({ className, sessionFactory, onSessionReady, ena
           canvas.removeEventListener("pointermove", onPointerMove);
           canvas.removeEventListener("pointerup", onPointerUp);
           canvas.removeEventListener("pointerleave", onPointerUp);
+          canvas.removeEventListener("wheel", onWheel);
         }
         if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
       };

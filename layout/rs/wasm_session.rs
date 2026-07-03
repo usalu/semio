@@ -1,14 +1,22 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use infinite_cavas::camera::{self, Camera, Viewport};
 use js_sys::Promise;
+use vello::kurbo::Point;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
 use web_sys::HtmlCanvasElement;
 
 use crate::document::parse_layout_document;
-use crate::engine::{build_scene_from_document_json, hit_test_document_json};
+use crate::engine::{build_scene_from_document_json, hit_test_document_json, screen_to_world_json, LayoutDropPreview};
 use crate::export::{export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip};
+
+#[derive(Clone, Debug)]
+enum LayoutInteraction {
+    None,
+    Pan { origin: Camera, start_screen: Point },
+}
 
 struct LayoutSessionInner {
     document_json: String,
@@ -16,6 +24,10 @@ struct LayoutSessionInner {
     selected_ids: Vec<String>,
     hovered_id: Option<String>,
     chrome_blueprint: bool,
+    camera: Camera,
+    viewport: Viewport,
+    interaction: LayoutInteraction,
+    drop_preview: Option<LayoutDropPreview>,
     gpu: infinite_cavas::gpu_session::CanvasGpuSession,
 }
 
@@ -35,6 +47,10 @@ impl LayoutSession {
                 selected_ids: Vec::new(),
                 hovered_id: None,
                 chrome_blueprint: true,
+                camera: Camera::default(),
+                viewport: Viewport::default(),
+                interaction: LayoutInteraction::None,
+                drop_preview: None,
                 gpu: infinite_cavas::gpu_session::CanvasGpuSession::default(),
             })),
         }
@@ -66,6 +82,7 @@ impl LayoutSession {
                 return Err(JsValue::from_str("canvas surface already attached"));
             }
             g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
+            g.viewport.set_size(lw, lh, dpr);
             Ok(JsValue::UNDEFINED)
         })
     }
@@ -78,7 +95,16 @@ impl LayoutSession {
         let pw = ((lw as f64 * dpr).round() as u32).max(1);
         let ph = ((lh as f64 * dpr).round() as u32).max(1);
         let mut inner = self.state.borrow_mut();
+        inner.viewport.set_size(lw, lh, dpr);
         inner.gpu.resize_surface(pw, ph);
+    }
+
+    #[wasm_bindgen(js_name = setCamera)]
+    pub fn set_camera(&mut self, x: f64, y: f64, zoom: f64) {
+        let mut inner = self.state.borrow_mut();
+        inner.camera.x = x;
+        inner.camera.y = y;
+        inner.camera.zoom = camera::clamp_zoom(zoom);
     }
 
     #[wasm_bindgen(js_name = setDocumentJson)]
@@ -110,21 +136,97 @@ impl LayoutSession {
         self.state.borrow_mut().chrome_blueprint = blueprint;
     }
 
+    #[wasm_bindgen(js_name = setDropPreview)]
+    pub fn set_drop_preview(&mut self, kind: &str, x: f64, y: f64) {
+        self.state.borrow_mut().drop_preview = Some(LayoutDropPreview {
+            kind: kind.to_string(),
+            x,
+            y,
+        });
+    }
+
+    #[wasm_bindgen(js_name = clearDropPreview)]
+    pub fn clear_drop_preview(&mut self) {
+        self.state.borrow_mut().drop_preview = None;
+    }
+
+    #[wasm_bindgen(js_name = pointerDownScreen)]
+    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8) {
+        if button != 1 {
+            return;
+        }
+        let mut inner = self.state.borrow_mut();
+        inner.interaction = LayoutInteraction::Pan {
+            origin: inner.camera.clone(),
+            start_screen: Point::new(sx, sy),
+        };
+    }
+
+    #[wasm_bindgen(js_name = pointerMoveScreen)]
+    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64) {
+        let mut inner = self.state.borrow_mut();
+        let LayoutInteraction::Pan { origin, start_screen } = inner.interaction.clone() else {
+            return;
+        };
+        let delta = Point::new(sx, sy) - start_screen;
+        inner.camera.x = origin.x - delta.x / origin.zoom;
+        inner.camera.y = origin.y - delta.y / origin.zoom;
+        inner.interaction = LayoutInteraction::Pan { origin, start_screen };
+    }
+
+    #[wasm_bindgen(js_name = pointerUpScreen)]
+    pub fn pointer_up_screen(&mut self, _sx: f64, _sy: f64) {
+        self.state.borrow_mut().interaction = LayoutInteraction::None;
+    }
+
+    #[wasm_bindgen(js_name = wheelScreen)]
+    pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
+        let mut inner = self.state.borrow_mut();
+        let viewport = inner.viewport.clone();
+        camera::wheel_screen(&mut inner.camera, &viewport, sx, sy, delta_y);
+    }
+
+    #[wasm_bindgen(js_name = screenToWorld)]
+    pub fn screen_to_world(&self, sx: f64, sy: f64) -> String {
+        let inner = self.state.borrow();
+        screen_to_world_json(&inner.camera, &inner.viewport, sx, sy)
+    }
+
     #[wasm_bindgen(js_name = renderFrame)]
     pub fn render_frame(&self) -> Result<(), JsValue> {
         let mut inner = self.state.borrow_mut();
         let hovered = inner.hovered_id.as_deref();
-        let scene = build_scene_from_document_json(&inner.document_json, &inner.page_id, &inner.selected_ids, hovered, inner.chrome_blueprint)
-            .map_err(|e| JsValue::from_str(&e))?;
-        let clear = vello::peniko::Color::new([0.12, 0.13, 0.15, 1.0]);
+        let drop_preview = inner.drop_preview.clone();
+        let scene = build_scene_from_document_json(
+            &inner.document_json,
+            &inner.page_id,
+            &inner.selected_ids,
+            hovered,
+            inner.chrome_blueprint,
+            &inner.camera,
+            &inner.viewport,
+            drop_preview.as_ref(),
+        )
+        .map_err(|e| JsValue::from_str(&e))?;
+        let clear = infinite_cavas::theme::default_raster_clear();
         inner.gpu.render_frame(&scene, clear).map_err(|e| e)
     }
 
     #[wasm_bindgen(js_name = hitTest)]
-    pub fn hit_test(&self, x: f32, y: f32) -> Result<JsValue, JsValue> {
+    pub fn hit_test(&self, sx: f32, sy: f32) -> Result<JsValue, JsValue> {
         let inner = self.state.borrow();
         let hovered = inner.hovered_id.as_deref();
-        let hit = hit_test_document_json(&inner.document_json, &inner.page_id, x, y, &inner.selected_ids, hovered).map_err(|e| JsValue::from_str(&e))?;
+        let hit = hit_test_document_json(
+            &inner.document_json,
+            &inner.page_id,
+            sx as f64,
+            sy as f64,
+            &inner.selected_ids,
+            hovered,
+            &inner.camera,
+            &inner.viewport,
+        )
+        .map_err(|e| JsValue::from_str(&e))?;
         Ok(hit.map(|id| JsValue::from_str(&id)).unwrap_or(JsValue::NULL))
     }
 

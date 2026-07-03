@@ -1295,6 +1295,172 @@ export function applyDagFixtureJsonToOsMediaGraph(
 		if (!afterKeys.has(key)) dispatch({ kind: "disconnectMediaEdge", edgeId: edge.id });
 	}
 }
+
+export const OS_MEDIA_FLOW_MODULE_ID = "os-media";
+
+/** @emoji 🧠 Flow neuron kind for one media graph node widget. */
+export function osMediaNeuronKindForNode(nodeId: string): string {
+	return `os.media.node.${nodeId}`;
+}
+
+export interface OsMediaFlowChannelSpec {
+	readonly name: string;
+	readonly code: string;
+	readonly abbreviation: string;
+	readonly fullName: string;
+	readonly operators: readonly string[];
+}
+
+export interface OsMediaFlowOperatorInfo {
+	readonly id: string;
+	readonly module: string;
+	readonly name: string;
+	readonly abbreviation: string;
+	readonly icon: string;
+	readonly summary: string;
+	readonly inputs: readonly OsMediaFlowChannelSpec[];
+	readonly outputs: readonly OsMediaFlowChannelSpec[];
+}
+
+function osMediaFlowChannelSpec(portId: string, resourceKind: string, label: string): OsMediaFlowChannelSpec {
+	const code = portId.slice(0, 1).toUpperCase() || "P";
+	const abbreviation = label.length <= 3 ? label : label.slice(0, 3);
+	return { name: portId, code, abbreviation, fullName: label, operators: [resourceKind] };
+}
+
+/** @emoji 🧩 Registers per-node neuron metadata for the OS media graph flow extension. */
+export function buildOsMediaFlowOperatorInfos(
+	graph: OsMediaGraph,
+	instances: readonly OsAppInstance[],
+	parameters: readonly OsParameter[] = [],
+): readonly OsMediaFlowOperatorInfo[] {
+	const instanceById = new Map(instances.map((instance) => [instance.id, instance]));
+	const parameterById = new Map(parameters.map((parameter) => [parameter.id, parameter]));
+	return graph.nodes.map((node) => {
+		const instance = instanceById.get(node.instanceId);
+		const registration = instance ? osAppRegistration(instance.programId, instance.appId) : undefined;
+		const neuronKind = osMediaNeuronKindForNode(node.id);
+		return {
+			id: neuronKind,
+			module: OS_MEDIA_FLOW_MODULE_ID,
+			name: instance?.label ?? node.instanceId,
+			abbreviation: instance?.appId.slice(0, 3) ?? "app",
+			icon: `emoji:${registration?.componentKind ?? "s"}`,
+			summary: instance ? `${instance.programId}/${instance.appId}` : "App instance",
+			inputs: node.inputs.map((port) => {
+				const parameterId = parameterIdFromPortId(port.id);
+				const parameter = parameterId ? parameterById.get(parameterId) : undefined;
+				const label = parameter?.name ?? mediaPortSpecId(port.id) ?? port.id;
+				return osMediaFlowChannelSpec(port.id, port.resourceKind, label);
+			}),
+			outputs: node.outputs.map((port) => {
+				const label = mediaPortSpecId(port.id) ?? port.id;
+				return osMediaFlowChannelSpec(port.id, port.resourceKind, label);
+			}),
+		};
+	});
+}
+
+/** @emoji 🌊 Converts an OS media graph into a flow fixture for {@link FlowCanvas}. */
+export function osMediaGraphToFlowFixture(
+	graph: OsMediaGraph,
+	instances: readonly OsAppInstance[],
+	camera: { readonly x: number; readonly y: number; readonly zoom: number } = { x: 0, y: 0, zoom: 1 },
+	_parameters: readonly OsParameter[] = [],
+): {
+	readonly schema: "flow.fixture";
+	readonly camera: { readonly x: number; readonly y: number; readonly zoom: number };
+	readonly widgets: readonly Record<string, unknown>[];
+	readonly synapses: readonly { readonly id: string; readonly from: string; readonly to: string; readonly fromPort: string; readonly toPort: string }[];
+	readonly layout: Record<string, { readonly x: number; readonly y: number }>;
+} {
+	const instanceById = new Map(instances.map((instance) => [instance.id, instance]));
+	const widgets = graph.nodes.map((node) => {
+		const instance = instanceById.get(node.instanceId);
+		return {
+			kind: "neuron",
+			id: node.id,
+			neuronKind: osMediaNeuronKindForNode(node.id),
+			inputPorts: node.inputs.map((port) => port.id),
+			outputPorts: node.outputs.map((port) => port.id),
+			params: {
+				instanceId: node.instanceId,
+				programId: instance?.programId ?? "",
+				appId: instance?.appId ?? "",
+			},
+			preview: true,
+		};
+	});
+	const layout = Object.fromEntries(
+		graph.nodes.map((node) => [node.id, { x: node.x + node.width / 2, y: node.y + node.height / 2 }]),
+	);
+	const synapses = graph.edges.map((edge) => ({
+		id: edge.id,
+		from: edge.sourceNodeId,
+		to: edge.targetNodeId,
+		fromPort: edge.sourcePortId,
+		toPort: edge.targetPortId,
+	}));
+	return { schema: "flow.fixture", camera, widgets, synapses, layout };
+}
+
+export function osMediaGraphToFlowFixtureJson(
+	graph: OsMediaGraph,
+	instances: readonly OsAppInstance[],
+	camera?: { readonly x: number; readonly y: number; readonly zoom: number },
+	parameters?: readonly OsParameter[],
+): string {
+	return JSON.stringify(osMediaGraphToFlowFixture(graph, instances, camera, parameters));
+}
+
+/** @emoji 🔁 Applies structural flow fixture edits back onto the studio media graph. */
+export function applyFlowFixtureJsonToOsMediaGraph(
+	graph: OsMediaGraph,
+	fixtureJson: string,
+	dispatch: (command: OsCommand) => void,
+): void {
+	const fixture = JSON.parse(fixtureJson) as {
+		readonly widgets?: readonly { readonly id?: string; readonly kind?: string }[];
+		readonly layout?: Record<string, { readonly x?: number; readonly y?: number }>;
+		readonly synapses?: readonly { readonly id: string; readonly from: string; readonly to: string; readonly fromPort?: string; readonly toPort?: string }[];
+	};
+	const neuronWidgetIds = new Set(
+		(fixture.widgets ?? [])
+			.filter((widget) => widget.kind === "neuron")
+			.map((widget) => String(widget.id ?? ""))
+			.filter(Boolean),
+	);
+	for (const node of graph.nodes) {
+		if (!neuronWidgetIds.has(node.id)) {
+			dispatch({ kind: "removeAppInstance", instanceId: node.instanceId });
+		}
+	}
+	const layout = fixture.layout ?? {};
+	for (const node of graph.nodes) {
+		const position = layout[node.id];
+		if (!position || position.x == null || position.y == null) continue;
+		const x = position.x - node.width / 2;
+		const y = position.y - node.height / 2;
+		if (Math.abs(node.x - x) > 0.5 || Math.abs(node.y - y) > 0.5) {
+			dispatch({ kind: "moveMediaNode", nodeId: node.id, x, y });
+		}
+	}
+	const edgeKey = (source: string, target: string) => `${source}→${target}`;
+	const beforeKeys = new Set(graph.edges.map((edge) => edgeKey(`${edge.sourceNodeId}:${edge.sourcePortId}`, `${edge.targetNodeId}:${edge.targetPortId}`)));
+	const afterKeys = new Set(
+		(fixture.synapses ?? []).map((synapse) => edgeKey(`${synapse.from}:${synapse.fromPort ?? ""}`, `${synapse.to}:${synapse.toPort ?? ""}`)),
+	);
+	for (const synapse of fixture.synapses ?? []) {
+		const key = edgeKey(`${synapse.from}:${synapse.fromPort ?? ""}`, `${synapse.to}:${synapse.toPort ?? ""}`);
+		if (beforeKeys.has(key)) continue;
+		if (!synapse.fromPort || !synapse.toPort) continue;
+		dispatch({ kind: "connectMediaPorts", sourceNodeId: synapse.from, sourcePortId: synapse.fromPort, targetNodeId: synapse.to, targetPortId: synapse.toPort });
+	}
+	for (const edge of graph.edges) {
+		const key = edgeKey(`${edge.sourceNodeId}:${edge.sourcePortId}`, `${edge.targetNodeId}:${edge.targetPortId}`);
+		if (!afterKeys.has(key)) dispatch({ kind: "disconnectMediaEdge", edgeId: edge.id });
+	}
+}
 //#endregion 🔖MediaGraphEngine
 
 //#region 🔖Projection
@@ -2737,6 +2903,74 @@ if (import.meta.vitest) {
 		it("validates media graph cycles", () => {
 			const graph = emptyMediaGraph();
 			expect(validateMediaGraph(graph).ok).toBe(true);
+		});
+
+		it("round-trips media graph through flow fixture layout and synapses", () => {
+			mergeOsProgramDefinition("draw", {
+				id: "draw",
+				name: "Draw",
+				apiVersion: "1",
+				apps: [{ id: "draw", label: "Draw", controllerId: "draw-play", modes: [{ id: "edit", label: "Edit" }] }],
+				createPlatformApi: () => ({}),
+			}, {
+				draw: { inputs: [], outputs: [osOutPort("2d.drawing")], sourceFormat: "draw.document", componentKind: "draw", modes: [{ id: "edit", label: "Edit" }] },
+			});
+			const store = new OsStore(createEmptyOsDocument());
+			store.dispatch({ kind: "spawnAppInstance", programId: "draw", appId: "draw" });
+			const projection = store.projection();
+			const node = projection.mediaGraph.nodes[0]!;
+			const fixture = osMediaGraphToFlowFixture(projection.mediaGraph, projection.appInstances, { x: 0, y: 0, zoom: 1 }, projection.parameters);
+			expect(fixture.schema).toBe("flow.fixture");
+			expect(fixture.widgets).toHaveLength(1);
+			expect(fixture.widgets[0]?.kind).toBe("neuron");
+			expect(fixture.layout[node.id]?.x).toBe(node.x + node.width / 2);
+			const operators = buildOsMediaFlowOperatorInfos(projection.mediaGraph, projection.appInstances, projection.parameters);
+			expect(operators[0]?.name).toBe("Draw");
+			const commands: OsCommand[] = [];
+			applyFlowFixtureJsonToOsMediaGraph(projection.mediaGraph, JSON.stringify({
+				...fixture,
+				layout: { [node.id]: { x: fixture.layout[node.id]!.x + 40, y: fixture.layout[node.id]!.y } },
+			}), (command) => commands.push(command));
+			expect(commands.some((command) => command.kind === "moveMediaNode")).toBe(true);
+		});
+
+		it("removes app instances when flow fixture neurons disappear", () => {
+			mergeOsProgramDefinition("draw", {
+				id: "draw",
+				name: "Draw",
+				apiVersion: "1",
+				apps: [{ id: "draw", label: "Draw", controllerId: "draw-play", modes: [{ id: "edit", label: "Edit" }] }],
+				createPlatformApi: () => ({}),
+			}, {
+				draw: { inputs: [], outputs: [osOutPort("2d.drawing")], sourceFormat: "draw.document", componentKind: "draw", modes: [{ id: "edit", label: "Edit" }] },
+			});
+			const store = new OsStore(createEmptyOsDocument());
+			store.dispatch({ kind: "spawnAppInstance", programId: "draw", appId: "draw" });
+			const projection = store.projection();
+			const node = projection.mediaGraph.nodes[0]!;
+			const fixture = osMediaGraphToFlowFixture(projection.mediaGraph, projection.appInstances);
+			const commands: OsCommand[] = [];
+			applyFlowFixtureJsonToOsMediaGraph(projection.mediaGraph, JSON.stringify({ ...fixture, widgets: [] }), (command) => commands.push(command));
+			expect(commands.some((command) => command.kind === "removeAppInstance")).toBe(true);
+			for (const command of commands) store.dispatch(command);
+			expect(store.projection().appInstances).toHaveLength(0);
+			expect(store.projection().mediaGraph.nodes).toHaveLength(0);
+		});
+
+		it("projects app neurons with preview enabled", () => {
+			mergeOsProgramDefinition("draw", {
+				id: "draw",
+				name: "Draw",
+				apiVersion: "1",
+				apps: [{ id: "draw", label: "Draw", controllerId: "draw-play", modes: [{ id: "edit", label: "Edit" }] }],
+				createPlatformApi: () => ({}),
+			}, {
+				draw: { inputs: [], outputs: [osOutPort("2d.drawing")], sourceFormat: "draw.document", componentKind: "draw", modes: [{ id: "edit", label: "Edit" }] },
+			});
+			const store = new OsStore(createEmptyOsDocument());
+			store.dispatch({ kind: "spawnAppInstance", programId: "draw", appId: "draw" });
+			const fixture = osMediaGraphToFlowFixture(store.projection().mediaGraph, store.projection().appInstances);
+			expect(fixture.widgets[0]?.preview).toBe(true);
 		});
 
 		it("assertOsMediaExportCoverage lists missing handlers", () => {

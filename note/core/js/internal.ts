@@ -118,7 +118,11 @@ export interface NoteDocument {
 	readonly assets?: Readonly<Record<string, NoteImageAsset>>;
 	readonly activeTool?: NoteToolId;
 	readonly gridVisible?: boolean;
+	readonly gridSpacing?: number;
+	readonly gridSubdivisions?: number;
+	readonly gridOpacity?: number;
 	readonly snapEnabled?: boolean;
+	readonly snapGridSpacing?: number;
 	readonly pencilWidth?: number;
 	readonly eraserRadius?: number;
 }
@@ -140,7 +144,11 @@ export type NoteEditOp =
 	| { readonly op: "setCamera"; readonly camera: NoteCamera }
 	| { readonly op: "setActiveTool"; readonly tool: NoteToolId }
 	| { readonly op: "setGridVisible"; readonly visible: boolean }
+	| { readonly op: "setGridSpacing"; readonly spacing: number }
+	| { readonly op: "setGridSubdivisions"; readonly subdivisions: number }
+	| { readonly op: "setGridOpacity"; readonly opacity: number }
 	| { readonly op: "setSnapEnabled"; readonly enabled: boolean }
+	| { readonly op: "setSnapGridSpacing"; readonly spacing: number }
 	| { readonly op: "setPencilWidth"; readonly width: number }
 	| { readonly op: "setEraserRadius"; readonly radius: number }
 	| { readonly op: "addBlock"; readonly parentId?: string; readonly index?: number; readonly block: NoteBlockNode }
@@ -170,7 +178,11 @@ export function defaultNoteDocument(id = "empty", title?: string): NoteDocument 
 		blocks: [],
 		activeTool: "selectDirect",
 		gridVisible: true,
+		gridSpacing: 32,
+		gridSubdivisions: 4,
+		gridOpacity: 0.35,
 		snapEnabled: false,
+		snapGridSpacing: 8,
 		pencilWidth: 3,
 		eraserRadius: 12,
 	};
@@ -203,6 +215,20 @@ export function noteKindHoverForBlock(block: NoteBlockNode | null): NoteKindHove
 export interface NoteBlockLocation {
 	readonly parentId?: string;
 	readonly index: number;
+}
+
+export function notePositiveMod(value: number, modulus: number): number {
+	if (modulus <= 0) return 0;
+	return ((value % modulus) + modulus) % modulus;
+}
+
+export function noteSnapWorldCoordinate(value: number, spacing: number): number {
+	if (spacing <= 0) return value;
+	return Math.round(value / spacing) * spacing;
+}
+
+export function noteSnapWorldPoint(x: number, y: number, spacing: number): Vec2 {
+	return [noteSnapWorldCoordinate(x, spacing), noteSnapWorldCoordinate(y, spacing)];
 }
 
 export function noteTextParagraphsFromPlainText(text: string): readonly NoteTextParagraph[] {
@@ -707,8 +733,16 @@ export function applyNoteEditOp(doc: NoteDocument, edit: NoteEditOp): NoteDocume
 			return { ...doc, activeTool: edit.tool };
 		case "setGridVisible":
 			return { ...doc, gridVisible: edit.visible };
+		case "setGridSpacing":
+			return { ...doc, gridSpacing: Math.max(4, edit.spacing) };
+		case "setGridSubdivisions":
+			return { ...doc, gridSubdivisions: Math.max(1, Math.min(16, Math.round(edit.subdivisions))) };
+		case "setGridOpacity":
+			return { ...doc, gridOpacity: Math.min(1, Math.max(0.05, edit.opacity)) };
 		case "setSnapEnabled":
 			return { ...doc, snapEnabled: edit.enabled };
+		case "setSnapGridSpacing":
+			return { ...doc, snapGridSpacing: Math.max(1, edit.spacing) };
 		case "setPencilWidth":
 			return { ...doc, pencilWidth: edit.width };
 		case "setEraserRadius":
@@ -754,8 +788,16 @@ export function backwardsNoteEditOp(projection: NoteDocument, operation: NoteEdi
 			return [{ op: "setActiveTool", tool: projection.activeTool ?? "selectDirect" }];
 		case "setGridVisible":
 			return [{ op: "setGridVisible", visible: projection.gridVisible ?? true }];
+		case "setGridSpacing":
+			return [{ op: "setGridSpacing", spacing: projection.gridSpacing ?? 32 }];
+		case "setGridSubdivisions":
+			return [{ op: "setGridSubdivisions", subdivisions: projection.gridSubdivisions ?? 4 }];
+		case "setGridOpacity":
+			return [{ op: "setGridOpacity", opacity: projection.gridOpacity ?? 0.35 }];
 		case "setSnapEnabled":
 			return [{ op: "setSnapEnabled", enabled: projection.snapEnabled ?? false }];
+		case "setSnapGridSpacing":
+			return [{ op: "setSnapGridSpacing", spacing: projection.snapGridSpacing ?? 8 }];
 		case "setPencilWidth":
 			return [{ op: "setPencilWidth", width: projection.pencilWidth ?? 3 }];
 		case "setEraserRadius":
@@ -845,6 +887,22 @@ if (import.meta.vitest) {
 			doc = applyNoteEditOp(doc, { op: "addBlock", block: withPoints });
 			doc = noteEraseInkPointsNearPoint(doc, 10, 0, 6);
 			expect(flattenNoteBlocks(doc.blocks).length).toBe(1);
+		});
+
+		it("snaps world coordinates to grid spacing", () => {
+			expect(noteSnapWorldCoordinate(17, 8)).toBe(16);
+			expect(noteSnapWorldPoint(17, 25, 8)).toEqual([16, 24]);
+			expect(notePositiveMod(-3, 32)).toBe(29);
+		});
+
+		it("applies grid document settings", () => {
+			let doc = defaultNoteDocument("grid");
+			doc = applyNoteEditOp(doc, { op: "setGridSpacing", spacing: 64 });
+			doc = applyNoteEditOp(doc, { op: "setGridSubdivisions", subdivisions: 8 });
+			doc = applyNoteEditOp(doc, { op: "setGridOpacity", opacity: 0.5 });
+			expect(doc.gridSpacing).toBe(64);
+			expect(doc.gridSubdivisions).toBe(8);
+			expect(doc.gridOpacity).toBe(0.5);
 		});
 
 		it("round-trips clipboard payload", () => {

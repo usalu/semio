@@ -1,0 +1,15 @@
+{
+  "title": "Fix Trinity Rewrite Lhs Surface ReferenceError",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Fix ReferenceError buildPuzzle2dSceneDescriptorFromFixture is not defined in TrinityRewriteLhsSurfaceHost",
+  "summary": "Added puzzle-2d-react and forms-react imports to TrinityPlayHost so the trinity-rewrite virtual slice is self-contained when embedded from S/OS dev. Stripped those imports from the Trinity host when concatenating S play hosts to avoid duplicates. Removed duplicate buildPuzzle2dSceneDescriptorFromFixture entry in Puzzle2dPlayHost imports.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1819"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪bd1f33c14a7649f58a5dd4a789887bdc",
+    "⚪5608365347b44454b71e8da4cbb94998"
+  ]
+}

@@ -102,11 +102,8 @@ export * from "./internal.ts";
 export const DRAW_PLAY_APP_ID = "draw-play";
 export const DRAW_PLAY_CONTROLLER_ID = "draw-play";
 export const DRAW_PLAY_SURFACE_ID_COMPOSITE = "draw.play.composite";
-export const DRAW_PLAY_SURFACE_ID_NAVIGATOR = "draw.play.navigator";
 export const DRAW_PLAY_BODY_KEY_COMPOSITE = "draw.play.composite";
-export const DRAW_PLAY_BODY_KEY_NAVIGATOR = "draw.play.navigator";
 export const DRAW_PLAY_WINDOW_KIND_COMPOSITE = "draw-composite";
-export const DRAW_PLAY_WINDOW_KIND_NAVIGATOR = "draw-navigator";
 export const DRAW_PLAY_LAYERS_TAB_ID = "framework.panel.hierarchy";
 export const DRAW_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const DRAW_PLAY_PROPERTIES_TAB_ID = "framework.panel.inspection";
@@ -115,12 +112,7 @@ export const DRAW_LAYER_KIND_DRAG_MIME = "application/x-semio-draw-layer-kind";
 
 type DrawCatalogueLayerKind = DrawLayerKindId | `shape:${DrawShapeKind}`;
 
-export const DRAW_PLAY_LAYOUT = createDefaultLayout(
-	[DRAW_PLAY_WINDOW_KIND_COMPOSITE, DRAW_PLAY_WINDOW_KIND_NAVIGATOR],
-	"row",
-	[72, 28],
-	["Canvas", "Navigator"],
-);
+export const DRAW_PLAY_LAYOUT = createDefaultLayout([DRAW_PLAY_WINDOW_KIND_COMPOSITE], "row", [100], ["Canvas"]);
 
 export const DRAW_PLAY_EMPTY_DOCUMENT: DrawDocument = defaultDrawDocument("empty");
 
@@ -996,7 +988,7 @@ export class DrawPlayController extends Controller implements PlaygroundExampleH
 	private listeners = new Set<() => void>();
 	private hostBridge: DrawPlayHostBridge | null = null;
 
-	constructor(bus: CommandBus, notifyPlatform: () => void, private readonlyexampleHost?: DrawPlayExampleHostConfig) {
+	constructor(bus: CommandBus, notifyPlatform: () => void, private readonly exampleHost?: DrawPlayExampleHostConfig) {
 		super(DRAW_PLAY_CONTROLLER_ID, bus, notifyPlatform);
 		this.rebuildShellMode();
 	}
@@ -1031,21 +1023,6 @@ export class DrawPlayController extends Controller implements PlaygroundExampleH
 		];
 	}
 
-	private navigatorMeasures(): readonly WindowMeasure[] {
-		return [
-			{
-				kind: "slider",
-				id: "draw-navigator-zoom",
-				label: "Navigator zoom",
-				value: this.projection().camera.zoom,
-				min: 0.05,
-				max: 2,
-				step: 0.05,
-				onChange: drawPlayCmd("setCameraZoom"),
-			},
-		];
-	}
-
 	private canvasEngagement(): WindowEngagement {
 		const doc = this.projection();
 		return {
@@ -1061,25 +1038,10 @@ export class DrawPlayController extends Controller implements PlaygroundExampleH
 		};
 	}
 
-	private navigatorEngagement(): WindowEngagement {
-		return {
-			sessionActive: false,
-			input: {
-				id: "draw-navigator-engagement",
-				value: "",
-				placeholder: "Select all",
-				onChange: drawPlayCmd("navigatorEngagementInput"),
-				onSubmit: drawPlayCmd("selectAll"),
-			},
-			status: [{ id: "draw-active-tool", text: this.projection().activeTool ?? "selectDirect" }],
-		};
-	}
-
 	private rebuildShellMode(): void {
 		this.mainMode.tools = this.buildTools();
 		this.mainMode.windowKinds = [
 			new WindowKindRuntime(DRAW_PLAY_WINDOW_KIND_COMPOSITE, "Canvas", DRAW_PLAY_BODY_KEY_COMPOSITE, undefined, this.canvasMeasures(), this.canvasEngagement()),
-			new WindowKindRuntime(DRAW_PLAY_WINDOW_KIND_NAVIGATOR, "Navigator", DRAW_PLAY_BODY_KEY_NAVIGATOR, undefined, this.navigatorMeasures(), this.navigatorEngagement()),
 		];
 		for (const windowKind of this.mainMode.windowKinds) {
 			enforcePlaygroundWindowEngagementInput(windowKind.engagement, `Draw play window "${windowKind.id}"`);
@@ -1218,8 +1180,6 @@ export class DrawPlayController extends Controller implements PlaygroundExampleH
 				}
 				return;
 			}
-			case "navigatorEngagementInput":
-				return;
 			case "setCameraZoom": {
 				const zoom = typeof args.value === "number" ? args.value : Number(args.value);
 				if (!Number.isFinite(zoom)) return;
@@ -1394,8 +1354,6 @@ export function buildDrawPlayAppRuntime(ctrl: DrawPlayController): AppRuntime {
 export function registerDrawPlayDeclarativeBodies(): void {
 	registerWindowBody(DRAW_PLAY_BODY_KEY_COMPOSITE, () =>
 		buildDrawWindowBody(DRAW_PLAY_SURFACE_ID_COMPOSITE, DRAW_PLAY_CONTROLLER_ID, "composite", "composite"));
-	registerWindowBody(DRAW_PLAY_BODY_KEY_NAVIGATOR, () =>
-		buildDrawWindowBody(DRAW_PLAY_SURFACE_ID_NAVIGATOR, DRAW_PLAY_CONTROLLER_ID, "navigator", "navigator"));
 }
 
 //#region 🔖SExtension
@@ -1418,14 +1376,18 @@ export function buildDrawProgramDefinition(): PlatformDefinition {
 import {
 	createPlaygroundApp,
 	createProductPlaygroundPlatform,
-	loadPlaygroundExampleCatalog,
 	playgroundResolvedExampleId,
 } from "@semio-tech/framework-playground-core";
 import { DRAW_PLAY_EXAMPLE_DEFAULT_ID } from "./example-slugs.ts";
+import semioDrawExample from "../../example/semio.draw.json";
 import { drawDocumentFromJson, flattenDrawLayers } from "./internal.ts";
 
 
-const drawExampleCatalog = loadPlaygroundExampleCatalog("../../example/*.draw.json", ".draw.json", DRAW_PLAY_EXAMPLE_DEFAULT_ID);
+const drawExampleCatalog: DrawPlayExampleHostConfig = {
+	defaultId: DRAW_PLAY_EXAMPLE_DEFAULT_ID,
+	options: [{ id: DRAW_PLAY_EXAMPLE_DEFAULT_ID, label: "Semio" }],
+	fileJsonById: { [DRAW_PLAY_EXAMPLE_DEFAULT_ID]: JSON.stringify(semioDrawExample) },
+};
 
 export const drawPlayAppDefinition = createPlaygroundApp({
 	id: DRAW_PLAY_APP_ID,
@@ -1441,14 +1403,10 @@ export const drawPlayAppDefinition = createPlaygroundApp({
 	keybindings: [{ key: "ctrl+a,meta+a", controllerId: DRAW_PLAY_CONTROLLER_ID, command: "selectAll" }],
 	createRuntime: () => {
 		const runtime = createProductPlaygroundPlatform(DRAW_PLAY_APP_ID);
-		const exampleHost: DrawPlayExampleHostConfig = {
-			defaultId: drawExampleCatalog.defaultId,
-			options: drawExampleCatalog.options,
-			fileJsonById: drawExampleCatalog.jsonById,
-		};
-		const ctrl = new DrawPlayController(runtime.commandBus, () => runtime.notify(), exampleHost);
+		const ctrl = new DrawPlayController(runtime.commandBus, () => runtime.notify(), drawExampleCatalog);
 		const resolved = playgroundResolvedExampleId(DRAW_PLAY_EXAMPLE_DEFAULT_ID);
-		if (exampleHost.fileJsonById[resolved]) ctrl.run("setActiveExample", { exampleId: resolved });
+		const exampleId = drawExampleCatalog.fileJsonById[resolved] ? resolved : DRAW_PLAY_EXAMPLE_DEFAULT_ID;
+		ctrl.run("setActiveExample", { exampleId });
 		runtime.addApp(buildDrawPlayAppRuntime(ctrl));
 		return runtime;
 	},
@@ -1469,6 +1427,24 @@ if (import.meta.vitest) {
 			const doc = defaultDrawDocument("test");
 			const tree = buildDrawPlayLayersTree(doc, [], null, null);
 			expect(tree.sections[0]?.items.length).toBeGreaterThan(0);
+			const layer = doc.layers[0]!;
+			const layerItem = tree.sections[0]?.items.find((item) => item.id === drawPlayLayersTreeRowId(layer));
+			expect(layerItem?.command).toEqual(drawPlayCmd("setSelection", { ids: [layer.id] }));
+		});
+	});
+
+	describe("DrawPlayController", () => {
+		it("exposes only the canvas window", () => {
+			const ctrl = new DrawPlayController(new CommandBus(), () => {});
+			expect(ctrl.mainMode.windowKinds.map((windowKind) => windowKind.id)).toEqual([DRAW_PLAY_WINDOW_KIND_COMPOSITE]);
+		});
+
+		it("loads the Semio logo as the default example", () => {
+			const runtime = drawPlayAppDefinition.createPlayground().createRuntime();
+			const ctrl = runtime.getActiveApp()?.controller as DrawPlayController;
+			expect(ctrl.getDocument().id).toBe(DRAW_PLAY_EXAMPLE_DEFAULT_ID);
+			expect(ctrl.getDocument().title).toBe("Semio Emblem");
+			expect(ctrl.getDocument().layers[0]?.id).toBe("emblem-group");
 		});
 	});
 

@@ -1813,13 +1813,13 @@ export function WorldOrbitCameraViewRig(props: {
   return (
     <>
       {projection === "orthographic" ? (
-        <OrthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up as [number, number, number]} near={0.2} far={500_000} zoom={props.state.zoom} />
+        <orthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={500_000} zoom={props.state.zoom} />
       ) : (
-        <PerspectiveCamera
+        <perspectiveCamera
           key={cameraKey}
           ref={props.onCamera}
           makeDefault
-          up={up as [number, number, number]}
+          up={up}
           near={0.2}
           far={500_000}
           fov={props.perspectiveFov ?? 50}

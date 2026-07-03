@@ -1271,7 +1271,30 @@ export class ProceduralPlayController extends Controller implements PlaygroundEx
 	}
 
 	private flowWindowMeasures(): readonly WindowMeasure[] {
-		return [this.lodMeasure(PROCEDURAL_PLAY_WINDOW_KIND_ID), this.proximityMeasure()];
+		return [
+			this.lodMeasure(PROCEDURAL_PLAY_WINDOW_KIND_ID),
+			this.proximityMeasure(),
+			{
+				kind: "slider",
+				id: "procedural-layer-spacing",
+				label: "Layer spacing",
+				value: this.layerSpacing,
+				min: 40,
+				max: 320,
+				step: 10,
+				onChange: proceduralPlayCmd("setSpacing", { field: "layerSpacing" }),
+			},
+			{
+				kind: "slider",
+				id: "procedural-sibling-gap",
+				label: "Sibling gap",
+				value: this.siblingGap,
+				min: 10,
+				max: 160,
+				step: 5,
+				onChange: proceduralPlayCmd("setSpacing", { field: "siblingGap" }),
+			},
+		];
 	}
 
 	private previewWindowMeasures(): readonly WindowMeasure[] {
@@ -1346,28 +1369,6 @@ export class ProceduralPlayController extends Controller implements PlaygroundEx
 				{ id: "procedural.tool.reorganize", label: "Reorganize", command: proceduralPlayCmd("reorganize") },
 				{ id: "procedural.layout.leftRight", label: "Left to Right", command: proceduralPlayCmd("setOrientation", { orientation: "leftRight" }) },
 				{ id: "procedural.layout.topBottom", label: "Top to Bottom", command: proceduralPlayCmd("setOrientation", { orientation: "topBottom" }) },
-			],
-			controls: [
-				{
-					kind: "slider",
-					id: "procedural-layer-spacing",
-					label: "Layer spacing",
-					value: this.layerSpacing,
-					min: 40,
-					max: 320,
-					step: 10,
-					onChange: proceduralPlayCmd("setSpacing", { field: "layerSpacing" }),
-				},
-				{
-					kind: "slider",
-					id: "procedural-sibling-gap",
-					label: "Sibling gap",
-					value: this.siblingGap,
-					min: 10,
-					max: 160,
-					step: 5,
-					onChange: proceduralPlayCmd("setSpacing", { field: "siblingGap" }),
-				},
 			],
 			status: [{ id: "procedural-layout-orientation", text: this.orientation === "leftRight" ? "Left to right" : "Top to bottom" }],
 		};

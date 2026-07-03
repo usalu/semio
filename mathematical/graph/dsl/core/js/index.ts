@@ -302,6 +302,96 @@ export function wireNodeIdAtOffset(text: string, offset: number | null): string 
   return id;
 }
 
+export type WireEndpointRef = {
+  readonly widgetId: string;
+  readonly port: string;
+  readonly direction: "in" | "out";
+};
+
+export type WireHoverTarget =
+  | { readonly kind: "node"; readonly nodeId: string }
+  | { readonly kind: "endpoint"; readonly widgetId: string; readonly port: string; readonly direction: "in" | "out" };
+
+function wireLineBounds(text: string, offset: number): { readonly start: number; readonly end: number; readonly line: string; readonly lineOffset: number } {
+  const start = text.lastIndexOf("\n", offset - 1) + 1;
+  const nextBreak = text.indexOf("\n", offset);
+  const end = nextBreak === -1 ? text.length : nextBreak;
+  return { start, end, line: text.slice(start, end), lineOffset: offset - start };
+}
+
+function parseWireEndpointSegment(segment: string): { readonly widgetId: string; readonly port: string } | null {
+  const match = segment.trim().match(/^([A-Za-z0-9_-]+):[^@]+@([A-Za-z0-9_-]+)/);
+  if (!match) return null;
+  return { widgetId: match[1]!, port: match[2]! };
+}
+
+/** @emoji 📍 Highlight spans for a port token on wire edge endpoints. */
+export function wireEndpointOccurrences(
+  text: string,
+  widgetId: string,
+  port: string,
+  direction: "in" | "out",
+): readonly { readonly start: number; readonly end: number }[] {
+  if (!widgetId || !port) return [];
+  const escapedId = escapeWireRegex(widgetId);
+  const escapedPort = escapeWireRegex(port);
+  const pattern =
+    direction === "out"
+      ? `(?:^|[\\n\\r])${escapedId}:[^@\\n\\r]+@(${escapedPort})(?=->)`
+      : `->${escapedId}:[^@\\n\\r]+@(${escapedPort})(?=[{\\s]|$)`;
+  const re = new RegExp(pattern, "gm");
+  const out: { start: number; end: number }[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text))) {
+    const portStart = match.index + match[0].length - match[1]!.length;
+    const atStart = portStart - 1;
+    if (atStart < 0 || text[atStart] !== "@") continue;
+    out.push({ start: atStart, end: portStart + match[1]!.length });
+  }
+  return out;
+}
+
+/** @emoji 📍 Highlight spans for a wire hover target (node id or channel port). */
+export function wireTargetOccurrences(text: string, target: WireHoverTarget | null): readonly { readonly start: number; readonly end: number }[] {
+  if (!target) return [];
+  if (target.kind === "node") return wireNodeOccurrences(text, target.nodeId);
+  return wireEndpointOccurrences(text, target.widgetId, target.port, target.direction);
+}
+
+/** @emoji 🎯 Resolve node or port endpoint at a wire text offset. */
+export function wireTargetAtOffset(text: string, offset: number | null): WireHoverTarget | null {
+  if (offset == null || offset < 0 || offset > text.length) return null;
+  const { line, lineOffset } = wireLineBounds(text, offset);
+  const arrowIdx = line.indexOf("->");
+  const atIdx = line.lastIndexOf("@", lineOffset);
+  if (atIdx >= 0 && arrowIdx >= 0) {
+    const portStart = atIdx + 1;
+    let portEnd = portStart;
+    while (portEnd < line.length && /[A-Za-z0-9_-]/.test(line[portEnd]!)) portEnd += 1;
+    if (lineOffset >= portStart && lineOffset < portEnd) {
+      const segment = lineOffset < arrowIdx ? line.slice(0, arrowIdx) : line.slice(arrowIdx + 2);
+      const parsed = parseWireEndpointSegment(segment);
+      if (parsed) {
+        return {
+          kind: "endpoint",
+          widgetId: parsed.widgetId,
+          port: parsed.port,
+          direction: lineOffset < arrowIdx ? "out" : "in",
+        };
+      }
+    }
+  }
+  const nodeId = wireNodeIdAtOffset(text, offset);
+  if (nodeId) return { kind: "node", nodeId };
+  return null;
+}
+
+export function wireEndpointRefsEqual(left: WireEndpointRef | null | undefined, right: WireEndpointRef | null | undefined): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  return left.widgetId === right.widgetId && left.port === right.port && left.direction === right.direction;
+}
+
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
@@ -323,6 +413,16 @@ if (import.meta.vitest) {
       expect(wireNodeIdAtOffset(sample, 2)).toBe("slider");
       expect(wireNodeIdAtOffset(sample, 45)).toBe("slider");
       expect(wireNodeIdAtOffset(sample, 20)).toBeNull();
+    });
+
+    it("highlights channel port tokens on edge lines", () => {
+      expect(wireEndpointOccurrences(sample, "slider", "number", "out")).toEqual([{ start: 60, end: 67 }]);
+      expect(wireEndpointOccurrences(sample, "add", "a", "in")).toEqual([{ start: 81, end: 83 }]);
+    });
+
+    it("resolves endpoint targets at port offsets", () => {
+      expect(wireTargetAtOffset(sample, 62)).toEqual({ kind: "endpoint", widgetId: "slider", port: "number", direction: "out" });
+      expect(wireTargetAtOffset(sample, 82)).toEqual({ kind: "endpoint", widgetId: "add", port: "a", direction: "in" });
     });
   });
 }

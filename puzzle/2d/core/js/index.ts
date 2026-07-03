@@ -24,6 +24,7 @@ import {
 	type WindowBodyViewContext,
 	type CommandDescriptor,
 	type WindowEngagement,
+	type WindowEngagementControl,
 	type WindowMeasure,
 	type UiNode,
 	type UiTreeContextMenuItem,
@@ -1347,6 +1348,15 @@ export class Puzzle2dPlayShellController extends Controller {
 	}
 
 	private windowEngagementForPane(pane: Puzzle2dPlayPaneId): WindowEngagement {
+		const staticToolPossibles = [
+			{ id: PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID }) },
+			{ id: PUZZLE_2D_ENGAGEMENT_TOOL_FILL_ID, label: "Fill", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_FILL_ID }) },
+			{ id: PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID }) },
+			{ id: "puzzle2d.select.rectangle", label: "Rectangle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.rectangle" }) },
+			{ id: "puzzle2d.select.lasso", label: "Lasso", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.lasso" }) },
+			{ id: "puzzle2d.create.circle", label: "Circle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.circle" }) },
+			{ id: "puzzle2d.selection.clear", label: "Clear", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.selection.clear" }) },
+		];
 		const toolPossibles =
 			this.activeTool === "brush" && this.brushEngagementPossibles.length > 0
 				? this.brushEngagementPossibles.map((row) => ({
@@ -1354,15 +1364,7 @@ export class Puzzle2dPlayShellController extends Controller {
 						label: row.label,
 						command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: row.id }),
 					}))
-				: [
-						{ id: PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID }) },
-						{ id: PUZZLE_2D_ENGAGEMENT_TOOL_FILL_ID, label: "Fill", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_FILL_ID }) },
-						{ id: PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID }) },
-						{ id: "puzzle2d.select.rectangle", label: "Rectangle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.rectangle" }) },
-						{ id: "puzzle2d.select.lasso", label: "Lasso", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.select.lasso" }) },
-						{ id: "puzzle2d.create.circle", label: "Circle", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.create.circle" }) },
-						{ id: "puzzle2d.selection.clear", label: "Clear", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: "puzzle2d.selection.clear" }) },
-					];
+				: staticToolPossibles;
 		const sessionActive = this.activeTool === "brush" || this.activeTool === "fill";
 		const fillProgress = puzzle2dFillBuildProgressRef.current;
 		const fillSliderMax = fillProgress.done
@@ -1384,21 +1386,16 @@ export class Puzzle2dPlayShellController extends Controller {
 						step: PUZZLE_2D_FILL_COUNT_SLIDER_STEP,
 						onChange: puzzle2dPlayCmd("engagementControlChange", { pane }),
 					}
-				: {
-						kind: "ring" as const,
-						id: "puzzle2d-command-ring",
-						label: "Command",
-						value:
-							this.activeTool === "brush"
-								? PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID
-								: this.activeTool === "fill"
-									? PUZZLE_2D_ENGAGEMENT_TOOL_FILL_ID
-									: PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID,
-						options: toolPossibles.map((row) => ({ id: row.id, label: row.label })),
-						onSelect: puzzle2dPlayCmd("engagementControlSelect", { pane }),
-					};
+				: this.activeTool === "brush" && this.brushEngagementPossibles.length > 0
+					? this.brushPlacementEngagementControl(pane)
+					: undefined;
 		return {
 			sessionActive,
+			options: [
+				{ id: PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID, label: "Select", pressed: this.activeTool === "select", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_SELECT_ID }) },
+				{ id: PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID, label: "Brush", pressed: this.activeTool === "brush", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_BRUSH_ID }) },
+				{ id: PUZZLE_2D_ENGAGEMENT_TOOL_FILL_ID, label: "Fill", pressed: this.activeTool === "fill", command: puzzle2dPlayCmd("engagementPossibleSelect", { pane, possibleId: PUZZLE_2D_ENGAGEMENT_TOOL_FILL_ID }) },
+			],
 			input: {
 				id: "engagement-input",
 				value: this.engagementInputByPane[pane],
@@ -1410,6 +1407,31 @@ export class Puzzle2dPlayShellController extends Controller {
 			},
 			control,
 			possibleEngagements: toolPossibles,
+		};
+	}
+
+	private brushPlacementEngagementControl(pane: Puzzle2dPlayPaneId): WindowEngagementControl {
+		const candidates = this.brushEngagementPossibles;
+		const selectedValue = candidates[0]!.id;
+		const selectCmd = puzzle2dPlayCmd("engagementControlSelect", { pane });
+		if (candidates.length <= 6) {
+			return {
+				kind: "toggleGroup",
+				id: "puzzle2d-brush-placement",
+				label: "Placement",
+				value: selectedValue,
+				options: candidates.map((row) => ({ id: row.id, label: row.label })),
+				onSelect: selectCmd,
+			};
+		}
+		return {
+			kind: "select",
+			id: "puzzle2d-brush-placement",
+			label: "Placement",
+			value: selectedValue,
+			placeholder: "Placement",
+			items: candidates.map((row) => ({ id: row.id, value: row.id, label: row.label })),
+			onChange: selectCmd,
 		};
 	}
 
@@ -1923,15 +1945,16 @@ export class Puzzle2dPlayShellController extends Controller {
 				break;
 			}
 			case "engagementControlSelect": {
-				const { pane, id } = args as { pane?: Puzzle2dPlayPaneId; id?: string };
+				const { pane, id, value } = args as { pane?: Puzzle2dPlayPaneId; id?: string; value?: string };
+				const selectedId = id ?? value;
 				if (pane !== "2d-overview" && pane !== "2d-detail" && pane !== "2d-selection") {
 					break;
 				}
-				if (this.applyEngagementCommand(pane, id ?? "")) {
+				if (this.applyEngagementCommand(pane, selectedId ?? "")) {
 					this.engagementInputByPane = { ...this.engagementInputByPane, [pane]: "" };
 					this.syncWindowEngagementForPane(pane);
 				} else {
-					this.hostBridge?.runHostCommand("engagementPossibleSelect", { pane, possibleId: id });
+					this.hostBridge?.runHostCommand("engagementPossibleSelect", { pane, possibleId: selectedId });
 				}
 				break;
 			}

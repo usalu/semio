@@ -298,8 +298,50 @@ export interface WindowEngagementRingControl {
   readonly onSelect?: CommandDescriptor;
 }
 
+/** @emoji 🔘 One discrete option on an engagement toggle-group control. */
+export interface WindowEngagementToggleGroupOption {
+  readonly id: string;
+  readonly label: string;
+  readonly disabled?: boolean;
+}
+
+/** @emoji 🔘 Engagement toggle button group for small unordered enums (neutral). */
+export interface WindowEngagementToggleGroupControl {
+  readonly kind: "toggleGroup";
+  readonly id?: string;
+  readonly label?: string;
+  readonly value?: string;
+  readonly options: readonly WindowEngagementToggleGroupOption[];
+  readonly disabled?: boolean;
+  readonly onSelect?: CommandDescriptor;
+}
+
+/** @emoji 🔽 One item on an engagement select control. */
+export interface WindowEngagementSelectItem {
+  readonly id: string;
+  readonly value: string;
+  readonly label: string;
+}
+
+/** @emoji 🔽 Engagement select dropdown for large enums (neutral). */
+export interface WindowEngagementSelectControl {
+  readonly kind: "select";
+  readonly id?: string;
+  readonly label?: string;
+  readonly value?: string;
+  readonly placeholder?: string;
+  readonly items: readonly WindowEngagementSelectItem[];
+  readonly disabled?: boolean;
+  readonly onChange?: CommandDescriptor;
+}
+
 /** @emoji 🎛 Optional engagement UI control for playground windows. */
-export type WindowEngagementControl = WindowEngagementSliderControl | WindowEngagementStepperControl | WindowEngagementRingControl;
+export type WindowEngagementControl =
+  | WindowEngagementSliderControl
+  | WindowEngagementStepperControl
+  | WindowEngagementRingControl
+  | WindowEngagementToggleGroupControl
+  | WindowEngagementSelectControl;
 
 /** @emoji 💬 React-neutral floating window engagement (options/input/status) resolved to a UI panel by the renderer. */
 export interface WindowEngagement {
@@ -315,9 +357,14 @@ export interface WindowEngagement {
 
 function windowEngagementControlDigest(control: WindowEngagementControl | undefined): string {
   if (!control) return "";
-  if (control.kind === "ring") {
+  if (control.kind === "ring" || control.kind === "toggleGroup") {
     const options = control.options.map((row) => `${row.id}\u0001${row.label}\u0001${row.disabled ? 1 : 0}`).join("\u0002");
-    return `ring\u0001${control.id ?? ""}\u0001${control.label ?? ""}\u0001${control.value ?? ""}\u0001${control.disabled ? 1 : 0}\u0001${options}\u0001${engagementCommandDigest(control.onSelect)}`;
+    const cmd = control.kind === "ring" ? engagementCommandDigest(control.onSelect) : engagementCommandDigest(control.onSelect);
+    return `${control.kind}\u0001${control.id ?? ""}\u0001${control.label ?? ""}\u0001${control.value ?? ""}\u0001${control.disabled ? 1 : 0}\u0001${options}\u0001${cmd}`;
+  }
+  if (control.kind === "select") {
+    const items = control.items.map((row) => `${row.id}\u0001${row.value}\u0001${row.label}`).join("\u0002");
+    return `select\u0001${control.id ?? ""}\u0001${control.label ?? ""}\u0001${control.value ?? ""}\u0001${control.placeholder ?? ""}\u0001${control.disabled ? 1 : 0}\u0001${items}\u0001${engagementCommandDigest(control.onChange)}`;
   }
   const bounds =
     control.kind === "slider"
@@ -355,11 +402,15 @@ export function windowEngagementsEqual(left: WindowEngagement | undefined, right
   return windowEngagementDigest(left) === windowEngagementDigest(right);
 }
 
-/** @emoji 💬 Enforces CAD-style window engagement: a command {@link WindowEngagementInput} must be present. */
+/** @emoji 💬 Enforces window engagement: command input required; controls only when {@link WindowEngagement.sessionActive}. */
 export function enforcePlaygroundWindowEngagementInput(engagement: WindowEngagement | undefined, contextLabel: string): void {
   if (!engagement) return;
   if (!engagement.input) {
     throw new Error(`${contextLabel} must declare engagement.input (command line).`);
+  }
+  const hasControls = Boolean(engagement.control) || Boolean(engagement.controls?.length);
+  if (hasControls && !engagement.sessionActive) {
+    throw new Error(`${contextLabel} must set sessionActive when engagement.control or engagement.controls is declared.`);
   }
 }
 
@@ -532,32 +583,9 @@ export function resolveAppState(app: AppRuntime, requestedModeId?: string | null
 //#endregion 🔖ResolvedState
 
 //#region 🔖WindowBodyViewContext
-export interface WindowBodyViewContext {
-  readonly runtime: Platform;
-  readonly windowKindId: string;
-  readonly bodyKey: string;
-  readonly activeModeId: string | null;
-  readonly generation: number;
-}
+export type { WindowBodyViewContext } from "@semio-tech/framework-platform-core";
 
-const windowBodyByKey = new Map<string, (ctx: WindowBodyViewContext) => UiNode>();
-
-export function registerWindowBody(bodyKey: string, build: (ctx: WindowBodyViewContext) => UiNode): void {
-  windowBodyByKey.set(bodyKey, (ctx) => {
-    const node = build(ctx);
-    assertCanvasOnlyWindowBody(bodyKey, node);
-    return node;
-  });
-}
-
-export function getWindowBodyFactory(bodyKey: string): ((ctx: WindowBodyViewContext) => UiNode) | undefined {
-  return windowBodyByKey.get(bodyKey);
-}
-
-export function unregisterWindowBody(bodyKey: string): void {
-  windowBodyByKey.delete(bodyKey);
-}
-
+export { getWindowBodyFactory, registerWindowBody, unregisterWindowBody } from "@semio-tech/framework-platform-core";
 //#endregion 🔖WindowBodyViewContext
 
 //#region 🔖SidePanelBodyViewContext
@@ -669,9 +697,7 @@ export function loadPlaygroundExampleCatalog(
 	);
 	return {
 		defaultId,
-		options: Object.keys(jsonById)
-			.sort()
-			.map((id) => ({ id, label: playgroundExampleLabelFromId(id) })),
+		options: [{ id: "", label: "No example" }, ...Object.keys(jsonById).sort().map((id) => ({ id, label: playgroundExampleLabelFromId(id) }))],
 		jsonById,
 	};
 }
@@ -1253,15 +1279,39 @@ if (import.meta.vitest) {
 
     it("windowEngagementDigest includes control value and command routing", () => {
       const left: WindowEngagement = {
+        sessionActive: true,
         input: { id: "engagement-input", onChange: { controllerId: "ctrl", command: "engagementInput" } },
         control: { kind: "stepper", value: 1, min: 0, onChange: { controllerId: "ctrl", command: "engagementControlChange" } },
       };
       const right: WindowEngagement = {
+        sessionActive: true,
         input: { id: "engagement-input", onChange: { controllerId: "ctrl", command: "engagementInput" } },
         control: { kind: "stepper", value: 2, min: 0, onChange: { controllerId: "ctrl", command: "engagementControlChange" } },
       };
       expect(windowEngagementsEqual(left, left)).toBe(true);
       expect(windowEngagementsEqual(left, right)).toBe(false);
+    });
+
+    it("enforcePlaygroundWindowEngagementInput rejects controls without sessionActive", () => {
+      expect(() =>
+        enforcePlaygroundWindowEngagementInput(
+          {
+            input: { id: "engagement-input" },
+            control: { kind: "slider", value: 1, min: 0, max: 10, onChange: { controllerId: "ctrl", command: "set" } },
+          },
+          "Test",
+        ),
+      ).toThrow(/sessionActive/);
+      expect(() =>
+        enforcePlaygroundWindowEngagementInput(
+          {
+            sessionActive: true,
+            input: { id: "engagement-input" },
+            control: { kind: "toggleGroup", value: "a", options: [{ id: "a", label: "A" }], onSelect: { controllerId: "ctrl", command: "pick" } },
+          },
+          "Test",
+        ),
+      ).not.toThrow();
     });
   });
 
@@ -1361,9 +1411,11 @@ if (import.meta.vitest) {
         expect(resolvePlaygroundExampleCatalog(ctrl)).toBeNull();
       } finally {
         if (prev === undefined || prev === "") {
-          delete (import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID;
+          const env = import.meta.env as Record<string, any>;
+          delete env.PLAYGROUND_LOCKED_EXAMPLE_ID;
         } else {
-          (import.meta.env as { PLAYGROUND_LOCKED_EXAMPLE_ID?: string }).PLAYGROUND_LOCKED_EXAMPLE_ID = prev;
+          const env = import.meta.env as Record<string, any>;
+          env.PLAYGROUND_LOCKED_EXAMPLE_ID = prev;
         }
       }
     });

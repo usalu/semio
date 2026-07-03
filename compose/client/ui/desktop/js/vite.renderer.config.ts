@@ -213,7 +213,7 @@ export default defineConfig(async ({ mode }) => {
       __COMPOSE_SKETCHPAD_RUN_EMBEDDED_TESTS__: "false",
     },
     resolve: {
-      dedupe: ["cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements", "@react-three/fiber", "@react-three/drei"],
+      dedupe: ["three", "cookie", "dagre", "graphlib", "html-parse-stringify", "lodash", "react", "react-dom", "react-i18next", "react-router", "scheduler", "stats.js", "use-sync-external-store", "void-elements", "@react-three/fiber", "@react-three/drei"],
       // `shim/index.js` is CJS (`module.exports`); Vite would serve it as ESM and break `import { useSyncExternalStore }`.
       // Point bare specifiers at the CJS builds under `cjs/` so Rollup/commonjs rewrites exports (VS Code / zustand compatible).
       alias: [
@@ -229,6 +229,7 @@ export default defineConfig(async ({ mode }) => {
         { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname, "../sketchpad") },
         { find: "@semio-tech/semio-asset", replacement: path.resolve(__dirname, "../../../../asset") },
         { find: /^@ui\/react$/, replacement: path.resolve(__dirname, "../../../../ui/react/index.tsx") },
+        { find: "@semio-tech/puzzle-2d-react", replacement: path.resolve(__dirname, "../../../../../puzzle/2d/react/index.tsx") },
       ],
     },
     plugins: [

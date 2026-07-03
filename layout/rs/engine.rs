@@ -6,7 +6,8 @@ use parley::{
     Alignment, AlignmentOptions, FontContext, FontStack, FontWeight, Layout, LayoutContext, LineHeight, PositionedLayoutItem,
     StyleProperty,
 };
-use vello::kurbo::{Affine, Rect, RoundedRect, RoundedRectRadii, Stroke};
+use infinite_cavas::camera::{self, Camera, Viewport};
+use vello::kurbo::{Affine, Point, Rect, RoundedRect, RoundedRectRadii, Stroke};
 use vello::peniko::{Brush, Color, Fill};
 use vello::Scene;
 
@@ -256,9 +257,47 @@ fn color_from(c: &DisplayColor) -> Color {
     Color::new(c.0)
 }
 
-pub fn display_list_to_scene(list: &DisplayList, chrome_blueprint: bool, camera: (f64, f64, f64)) -> Scene {
+/// @emoji 👻 Catalogue drop ghost rect shown while dragging onto the canvas.
+#[derive(Clone, Debug)]
+pub struct LayoutDropPreview {
+    pub kind: String,
+    pub x: f64,
+    pub y: f64,
+}
+
+const DROP_PREVIEW_WIDTH: f64 = 200.0;
+const DROP_PREVIEW_HEIGHT: f64 = 120.0;
+
+fn append_drop_preview(scene: &mut Scene, transform: Affine, preview: &LayoutDropPreview) {
+    if preview.kind == "page" {
+        return;
+    }
+    let shape = Rect::new(preview.x, preview.y, preview.x + DROP_PREVIEW_WIDTH, preview.y + DROP_PREVIEW_HEIGHT);
+    let fill = match preview.kind.as_str() {
+        "rect" => Color::new([0.85, 0.88, 0.92, 0.45]),
+        "text" => Color::new([0.2, 0.55, 0.9, 0.25]),
+        "image" => Color::new([0.85, 0.45, 0.2, 0.25]),
+        _ => Color::new([0.5, 0.5, 0.5, 0.3]),
+    };
+    scene.fill(Fill::NonZero, transform, Brush::Solid(fill), None, &shape);
+    scene.stroke(
+        &Stroke::new(2.0),
+        transform,
+        Brush::Solid(Color::new([0.1, 0.45, 0.95, 0.85])),
+        None,
+        &shape,
+    );
+}
+
+pub fn display_list_to_scene(
+    list: &DisplayList,
+    chrome_blueprint: bool,
+    camera: &Camera,
+    viewport: &Viewport,
+    drop_preview: Option<&LayoutDropPreview>,
+) -> Scene {
     let mut scene = Scene::new();
-    let transform = Affine::translate((-camera.0, -camera.1)) * Affine::scale(camera.2);
+    let transform = camera::camera_content_affine(camera, viewport);
     let page_bg = if chrome_blueprint {
         Color::new([0.97, 0.97, 0.98, 1.0])
     } else {
@@ -376,26 +415,49 @@ pub fn display_list_to_scene(list: &DisplayList, chrome_blueprint: bool, camera:
         }
     }
 
+    if let Some(preview) = drop_preview {
+        append_drop_preview(&mut scene, transform, preview);
+    }
+
     scene
 }
 
-pub fn build_scene_from_document_json(json: &str, page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool) -> Result<Scene, String> {
+pub fn build_scene_from_document_json(
+    json: &str,
+    page_id: &str,
+    selected_ids: &[String],
+    hovered_id: Option<&str>,
+    chrome_blueprint: bool,
+    camera: &Camera,
+    viewport: &Viewport,
+    drop_preview: Option<&LayoutDropPreview>,
+) -> Result<Scene, String> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
-    let camera = if chrome_blueprint {
-        (doc.camera.x, doc.camera.y, doc.camera.zoom)
-    } else {
-        (doc.preview_camera.x, doc.preview_camera.y, doc.preview_camera.zoom)
-    };
     let list = build_display_list_for_page(&doc, page, page_id, selected_ids, hovered_id, chrome_blueprint);
-    Ok(display_list_to_scene(&list, chrome_blueprint, camera))
+    Ok(display_list_to_scene(&list, chrome_blueprint, camera, viewport, drop_preview))
 }
 
-pub fn hit_test_document_json(json: &str, page_id: &str, x: f32, y: f32, selected_ids: &[String], hovered_id: Option<&str>) -> Result<Option<String>, String> {
+pub fn hit_test_document_json(
+    json: &str,
+    page_id: &str,
+    sx: f64,
+    sy: f64,
+    selected_ids: &[String],
+    hovered_id: Option<&str>,
+    camera: &Camera,
+    viewport: &Viewport,
+) -> Result<Option<String>, String> {
     let doc = parse_layout_document(json)?;
     let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
     let list = build_display_list_for_page(&doc, page, page_id, selected_ids, hovered_id, true);
-    Ok(list.hit_test(x, y))
+    let world = camera::screen_to_world(camera, viewport, Point::new(sx, sy));
+    Ok(list.hit_test(world.x as f32, world.y as f32))
+}
+
+pub fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f64) -> String {
+    let world = camera::screen_to_world(camera, viewport, Point::new(sx, sy));
+    serde_json::json!({ "x": world.x, "y": world.y }).to_string()
 }
 
 #[cfg(test)]
@@ -405,8 +467,19 @@ mod tests {
     #[test]
     fn builds_scene_from_empty_document() {
         let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
-        let scene = build_scene_from_document_json(json, "page-1", &[], None, true).expect("scene");
+        let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
+        let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
+        let scene = build_scene_from_document_json(json, "page-1", &[], None, true, &camera, &viewport, None).expect("scene");
         let _ = scene;
+    }
+
+    #[test]
+    fn hit_test_respects_camera_zoom() {
+        let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
+        let camera = Camera { x: 0.0, y: 0.0, zoom: 0.5 };
+        let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
+        let hit = hit_test_document_json(json, "page-1", 210.0, 160.0, &[], None, &camera, &viewport).expect("hit");
+        assert_eq!(hit.as_deref(), Some("frame-1"));
     }
 
     #[test]

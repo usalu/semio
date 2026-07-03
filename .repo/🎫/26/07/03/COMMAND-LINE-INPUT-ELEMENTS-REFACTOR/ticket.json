@@ -1,0 +1,19 @@
+{
+  "title": "Command Line Input Elements Refactor",
+  "emoji": "🎛",
+  "status": "closed",
+  "description": "Establish one enforced contract for the window command line engagement controls (no command active -\u003e nothing shown below the input), add toggleGroup and select control kinds, and fix every playground that leaks persistent sliders/pickers outside that contract.",
+  "summary": "Established command-line engagement control contract: controls only when sessionActive is true (enforced in enforcePlaygroundWindowEngagementInput).\n\nAdded toggleGroup and select engagement control kinds end-to-end (WindowEngagement types, EngagementSpec UI, windowEngagementControlToGolden bridging, EngagementControlView rendering).\n\nMoved persistent layout sliders from engagement.controls to windowMeasures() in flow, sequence, dag, procedural-2d, procedural-3d.\n\nRemoved writer duplicate engagement controls; added tab size to measures rail.\n\nRefactored puzzle-2d/3d/5d: tool picker moved to options; brush placement uses session-gated toggleGroup (\u003c=6) or select (\u003e6).\n\nTests: ui/react engagement control test; playground core enforce test; puzzle-3d buildPuzzle3dPlayEngagement tests updated and passing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1814"
+  },
+  "goal": "🎯framework",
+  "plan": {
+    "client": "cursor",
+    "id": "857b734e",
+    "local": "command_line_input_elements_refactor_857b734e.plan.md"
+  },
+  "sessions": [
+    "⚪d4b4597dc469428a918676d979be0826"
+  ]
+}

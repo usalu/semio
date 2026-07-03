@@ -13,7 +13,7 @@ import { dirname, join, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { uiAssetsVitePlugin } from "../ui/styling/vite-elements-assets.ts";
+import { uiAssetsVitePlugin, playgroundRendererResolveAliases, findWorkspacePackages } from "../ui/styling/vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -98,7 +98,7 @@ function buildStorybookAliases(): Record<string, string> {
 		alias["@semio-tech/puzzle-5d-react"] = toVitePath(puzzle5dReactDir);
 		alias["@semio-tech/infinite-cavas-react-renderer"] = toVitePath(resolve(repoRootPath, "infinite/cavas/react-renderer/index.tsx"));
 		alias["@elements/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
-		alias["@semio-tech/coda-desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/renderer.tsx"));
+		alias["@semio-tech/coda-desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/js/renderer.tsx"));
 	}
 	if (loadComposeStack) {
 		alias["@compose/ui"] = toVitePath(uiReactDir);
@@ -153,9 +153,18 @@ const config: StorybookConfig = {
 			...previousConditions.filter((c) => !["import", "module", "browser", "default"].includes(c)),
 		];
 		// #endregion 🔖ResolvePackageExports
-		config.resolve.alias = {
-			...(config.resolve.alias || {}),
+		const workspaceAliases = playgroundRendererResolveAliases(repoRootPath);
+		const aliasRecord: Record<string, string> = {
 			...buildStorybookAliases(),
+		};
+		for (const item of workspaceAliases) {
+			if (typeof item.find === "string") {
+				aliasRecord[item.find] = item.replacement;
+			}
+		}
+		config.resolve.alias = {
+			...(config.resolve.alias as any || {}),
+			...aliasRecord,
 		};
 		config.assetsInclude = [...(config.assetsInclude ?? []), "**/*.wasm"];
 		config.server = config.server || {};
@@ -233,6 +242,7 @@ const config: StorybookConfig = {
 			"@semio-tech/framework-playground-renderer-react",
 			"@semio-tech/puzzle-2d-react",
 			"@semio-tech/infinite-cavas-react-renderer",
+			...findWorkspacePackages(repoRootPath),
 		]);
 		if (loadComposeStack) {
 			optimizeExclude.add("@compose/ui");

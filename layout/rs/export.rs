@@ -190,7 +190,13 @@ pub fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<Vec<u8
 }
 
 pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, String> {
-    let _scene = display_list_to_scene(list, false, (0.0, 0.0, 1.0));
+    let camera = infinite_cavas::camera::Camera { x: 0.0, y: 0.0, zoom: 1.0 };
+    let viewport = infinite_cavas::camera::Viewport {
+        width: list.page_width.max(1.0) as u32,
+        height: list.page_height.max(1.0) as u32,
+        dpr: 1.0,
+    };
+    let _scene = display_list_to_scene(list, false, &camera, &viewport, None);
     let width = list.page_width.max(1.0) as u32;
     let height = list.page_height.max(1.0) as u32;
     let img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_pixel(width, height, Rgba([255, 255, 255, 255]));

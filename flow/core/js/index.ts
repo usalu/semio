@@ -151,6 +151,12 @@ export const FLOW_ENGAGEMENT_ORIENTATION_TB_ID = "flow.layout.topBottom";
 
 export type FlowLayoutOrientation = "leftRight" | "topBottom";
 
+export type FlowPlayChannelRef = {
+  readonly widgetId: string;
+  readonly port: string;
+  readonly direction: "in" | "out";
+};
+
 const DEFAULT_LAYER_SPACING = 120;
 const DEFAULT_SIBLING_GAP = 40;
 
@@ -737,6 +743,7 @@ export class FlowPlayController extends Controller {
   private setSelectedNodeIds(ids: readonly string[]): void {
     const next = [...new Set(ids.filter((id) => typeof id === "string"))];
     if (JSON.stringify(next) === JSON.stringify(this.getSelectedNodeIds())) return;
+    this.wireBridge.setGraphChannelSelect([]);
     this.pointerFocus.setSelection(next);
     this.interactionRevision += 1;
     this.commandRequestPayload = { command: "setSelection", argsJson: JSON.stringify({ ids: next }) };
@@ -812,6 +819,14 @@ export class FlowPlayController extends Controller {
     return this.wireBridge.getGraphHoveredNodeIds();
   }
 
+  getHoveredChannel(): FlowPlayChannelRef | null {
+    return this.wireBridge.getHoveredEndpoint();
+  }
+
+  getSelectedChannels(): readonly FlowPlayChannelRef[] {
+    return this.wireBridge.getActiveSelectEndpoints();
+  }
+
   private notifySnapshot(): void {
     for (const listener of this.snapshotListeners) {
       listener();
@@ -861,8 +876,33 @@ export class FlowPlayController extends Controller {
     };
   }
 
+  private layoutSpacingMeasures(): readonly WindowMeasure[] {
+    return [
+      {
+        kind: "slider",
+        id: "flow-layer-spacing",
+        label: "Layer spacing",
+        value: this.layerSpacing,
+        min: 40,
+        max: 320,
+        step: 10,
+        onChange: flowPlayCmd("setSpacing", { field: "layerSpacing" }),
+      },
+      {
+        kind: "slider",
+        id: "flow-sibling-gap",
+        label: "Sibling gap",
+        value: this.siblingGap,
+        min: 10,
+        max: 160,
+        step: 5,
+        onChange: flowPlayCmd("setSpacing", { field: "siblingGap" }),
+      },
+    ];
+  }
+
   private windowMeasures(): readonly WindowMeasure[] {
-    return [this.lodMeasure(FLOW_PLAY_WINDOW_KIND_ID), this.proximityMeasure()];
+    return [this.lodMeasure(FLOW_PLAY_WINDOW_KIND_ID), this.proximityMeasure(), ...this.layoutSpacingMeasures()];
   }
 
   private syncReorganizeOptionsJson(): void {
@@ -890,28 +930,6 @@ export class FlowPlayController extends Controller {
         { id: FLOW_ENGAGEMENT_REORGANIZE_ID, label: "Reorganize", command: flowPlayCmd("reorganize") },
         { id: FLOW_ENGAGEMENT_ORIENTATION_LR_ID, label: "Left to Right", command: flowPlayCmd("setOrientation", { orientation: "leftRight" }) },
         { id: FLOW_ENGAGEMENT_ORIENTATION_TB_ID, label: "Top to Bottom", command: flowPlayCmd("setOrientation", { orientation: "topBottom" }) },
-      ],
-      controls: [
-        {
-          kind: "slider",
-          id: "flow-layer-spacing",
-          label: "Layer spacing",
-          value: this.layerSpacing,
-          min: 40,
-          max: 320,
-          step: 10,
-          onChange: flowPlayCmd("setSpacing", { field: "layerSpacing" }),
-        },
-        {
-          kind: "slider",
-          id: "flow-sibling-gap",
-          label: "Sibling gap",
-          value: this.siblingGap,
-          min: 10,
-          max: 160,
-          step: 5,
-          onChange: flowPlayCmd("setSpacing", { field: "siblingGap" }),
-        },
       ],
       status: [{ id: "flow-layout-orientation", text: this.orientation === "leftRight" ? "Left to right" : "Top to bottom" }],
     };
@@ -964,10 +982,11 @@ export class FlowPlayController extends Controller {
   override run(command: string, args?: unknown): void {
     if (command === "setCompiledWireLiteral") {
       const text = (args as { text?: string }).text;
-      if (typeof text === "string" && text !== this.compiledWireLiteral) {
+      if (typeof text === "string") {
+        const changed = text !== this.compiledWireLiteral;
         this.compiledWireLiteral = text;
         this.wireBridge.setWireText(text);
-        this.interactionRevision += 1;
+        if (changed) this.interactionRevision += 1;
         this.notifySnapshot();
         this.emit();
       }
@@ -986,7 +1005,17 @@ export class FlowPlayController extends Controller {
       return;
     }
     if (command === "setGraphHover") {
+      this.wireBridge.setGraphChannelHover(null);
       this.wireBridge.setGraphHover((args as { id?: string | null }).id ?? null);
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
+    if (command === "setGraphChannelHover") {
+      const channel = (args as { channel?: FlowPlayChannelRef | null }).channel ?? null;
+      if (this.compiledWireLiteral) this.wireBridge.setWireText(this.compiledWireLiteral);
+      if (channel) this.wireBridge.setGraphHover(null);
+      this.wireBridge.setGraphChannelHover(channel);
       this.notifySnapshot();
       this.emit();
       return;
@@ -994,6 +1023,13 @@ export class FlowPlayController extends Controller {
     if (command === "setGraphSelect") {
       const ids = (args as { ids?: readonly string[] }).ids ?? [];
       this.wireBridge.setGraphSelect(ids);
+      this.notifySnapshot();
+      this.emit();
+      return;
+    }
+    if (command === "setGraphChannelSelect") {
+      const channels = (args as { channels?: readonly FlowPlayChannelRef[] }).channels ?? [];
+      this.wireBridge.setGraphChannelSelect([...channels]);
       this.notifySnapshot();
       this.emit();
       return;
@@ -1569,15 +1605,15 @@ if (import.meta.vitest) {
       expect(ctrl.getInteractionRevision()).toBeGreaterThan(0);
     });
 
-    it("wire hover highlights node occurrences in compiled dsl", () => {
+    it("wire hover highlights channel port tokens in compiled dsl", () => {
       const bus = new CommandBus();
       const ctrl = new FlowPlayController(bus, () => {});
       const sample = "slider:core.number\nadd:math.add\nslider:core.number@number->add:math.add@a";
       ctrl.run("setCompiledWireLiteral", { text: sample });
-      ctrl.run("setWireHover", { offset: 2 });
-      expect(ctrl.getWireHoverOccurrences().length).toBeGreaterThan(0);
-      ctrl.run("setGraphHover", { id: "add" });
-      expect(ctrl.getGraphHighlightedNodeIds()).toContain("add");
+      ctrl.run("setGraphChannelHover", { channel: { widgetId: "add", port: "a", direction: "in" } });
+      expect(ctrl.getWireHoverOccurrences().some((span) => sample.slice(span.start, span.end) === "@a")).toBe(true);
+      ctrl.run("setWireHover", { offset: 54 });
+      expect(ctrl.getHoveredChannel()).toEqual({ widgetId: "slider", port: "number", direction: "out" });
     });
 
     it("inspector tree exposes slider value field for single selection", () => {

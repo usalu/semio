@@ -1,0 +1,14 @@
+{
+  "title": "Composable Selection Mode Toggles",
+  "emoji": "✨",
+  "status": "closed",
+  "description": "Make lowpoly selection mode toggles (mesh, face, edge, vertex) composable instead of exclusive.",
+  "summary": "Refactored lowpoly selection from exclusive `selectionMode` to composable `selectionTargets` (mesh/vertex/edge/face booleans) with multi-target selection stored as encoded pointer-focus keys. Toolbar uses `toggleSelectionKind` (puzzle2d pattern); at least one kind stays enabled. Canvas, marquee, gumball, and playground host now pass `selectionTargets` + `selectedTargets`; picking respects all enabled kinds with vertex \u003e edge \u003e face \u003e mesh priority. Mesh commands (`flipFaces`, `markUvSeam`) filter by mode-specific ids. WASM/fixture schema extended with `targets` + `keys`; Rust tests and default fixture updated. All 12 Rust tests pass; WASM rebuilt.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1818"
+  },
+  "goal": "🎯lowpoly🎯play",
+  "sessions": [
+    "⚪ed3afcc4afb34ea2a4ec352a6a1e8976"
+  ]
+}

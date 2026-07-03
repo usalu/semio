@@ -49,15 +49,20 @@ import { DocumentVcsStore, createDocumentVcsEnvelope, recordProjectionChange } f
 import { bootstrapElementsSurfaceChromeDocument, type TreeDataItem, type TreeDragAndDropController, type TreeDropPosition } from "@semio-tech/ui-react";
 import {
 	applyFormEditOp,
+	applyGenerationValuesToFixture,
 	backwardsFormEditOp,
 	createFormId,
+	createFormsAppVcsHandler,
 	defaultFormSpec,
 	defaultQuestionForKind,
 	diffFormEditOp,
 	findQuestionLocation,
+	flowFixtureToFormSpec,
 	formSpecToJson,
+	FormRuntime,
 	formsExtensionHost,
 	isExtensionFormQuestion,
+	parseFormSpec,
 	questionKindContribution,
 	type FormEditOp,
 	type FormQuestion,
@@ -68,6 +73,7 @@ import {
 } from "./internal.ts";
 import { FORMS_QUESTION_DRAG_MIME, abortFormsQuestionPaletteDrag, formSpecFromJson, formsQuestionPaletteTreeDragController } from "@semio-tech/forms-react";
 import { FORMS_PLAY_EXAMPLE_DEFAULT_ID, resolveFormsPlayExampleSlug } from "./example-slugs.ts";
+import buildingComponentExample from "../../example/building-component.forms.json";
 
 export const FORMS_PLAY_APP_ID = "forms-play";
 export const FORMS_PLAY_CONTROLLER_ID = "forms-play";
@@ -105,19 +111,35 @@ function formsFixtureLabelFromId(id: string): string {
 		.join(" ");
 }
 
-const FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID: Record<string, string> = Object.fromEntries(
-	Object.entries(formsFixtureModules).map(([path, mod]) => {
-		const id = formsFixtureIdFromGlobPath(path);
-		const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
-		return [id, json];
-	}),
-);
+const FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID: Record<string, string> = Object.keys(formsFixtureModules).length
+	? Object.fromEntries(
+			Object.entries(formsFixtureModules).map(([path, mod]) => {
+				const id = formsFixtureIdFromGlobPath(path);
+				const json = typeof mod.default === "string" ? mod.default : JSON.stringify(mod.default);
+				return [id, json];
+			}),
+		)
+	: {
+			"building-component": JSON.stringify(buildingComponentExample),
+		};
 
 export const FORMS_PLAY_EXAMPLE_OPTIONS: ReadonlyArray<{ readonly id: string; readonly label: string }> = [
 	...Object.keys(FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID)
 		.sort()
 		.map((id) => ({ id: id === "building-component" ? FORMS_PLAY_EXAMPLE_DEFAULT_ID : id, label: formsFixtureLabelFromId(id) })),
 ];
+
+function formsPlayCatalogExampleIdForSpec(specId: string): string {
+	if (specId === "default" || specId === "empty") return PLAYGROUND_NO_EXAMPLE_ID;
+	if (specId === "building-component") return FORMS_PLAY_EXAMPLE_DEFAULT_ID;
+	return specId;
+}
+
+function formsPlayExampleJson(exampleId: string): string | undefined {
+	if (isPlaygroundNoExampleId(exampleId)) return undefined;
+	const resolvedId = resolveFormsPlayExampleSlug(exampleId) ?? exampleId;
+	return FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID[resolvedId];
+}
 
 function formsPlayCmd(command: string, args?: Record<string, unknown>): CommandDescriptor {
 	return { controllerId: FORMS_PLAY_CONTROLLER_ID, command, args };
@@ -623,8 +645,6 @@ export class FormsPlayController extends Controller implements PlaygroundExample
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
 		super(FORMS_PLAY_CONTROLLER_ID, commandBus, hostNotify);
-		const json = FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID["building-component"];
-		if (json) this.replaceDocument(formSpecFromJson(json));
 		formsExtensionHost.subscribe(() => {
 			this.extensionRevision += 1;
 			this.notifySnapshot();
@@ -825,7 +845,7 @@ export class FormsPlayController extends Controller implements PlaygroundExample
 	}
 
 	getExampleCatalog(): PlaygroundExampleCatalog {
-		const activeExampleId = playgroundResolvedExampleId(this.projection().id, FORMS_PLAY_EXAMPLE_DEFAULT_ID);
+		const activeExampleId = playgroundResolvedExampleId(formsPlayCatalogExampleIdForSpec(this.projection().id));
 		return {
 			activeExampleId,
 			options: FORMS_PLAY_EXAMPLE_OPTIONS,
@@ -835,14 +855,13 @@ export class FormsPlayController extends Controller implements PlaygroundExample
 
 	override run(command: string, args?: unknown): void {
 		if (command === "setActiveExample") {
-			const fixtureId = (args as { fixtureId?: string }).fixtureId;
-			if (typeof fixtureId !== "string") return;
-			if (isPlaygroundNoExampleId(fixtureId)) {
+			const payload = args as { exampleId?: string; fixtureId?: string };
+			const exampleId = String(payload.exampleId ?? payload.fixtureId ?? "");
+			if (isPlaygroundNoExampleId(exampleId)) {
 				this.setSpec(defaultFormSpec());
 				return;
 			}
-			const resolvedId = resolveFormsPlayExampleSlug(fixtureId) ?? fixtureId;
-			const json = FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID[resolvedId];
+			const json = formsPlayExampleJson(exampleId);
 			if (json) this.setSpec(formSpecFromJson(json));
 			return;
 		}
@@ -1043,9 +1062,13 @@ export const formsPlayAppDefinition = createPlaygroundApp({
 	},
 	createRuntime: () => {
 		const runtime = createProductPlaygroundPlatform(FORMS_PLAY_APP_ID);
-			const ctrl = new FormsPlayController(runtime.commandBus, () => runtime.notify());
-			runtime.addApp(buildFormsPlayAppRuntime(ctrl));
-			return runtime;
+		const ctrl = new FormsPlayController(runtime.commandBus, () => runtime.notify());
+		if (!isPlaygroundExampleLocked()) {
+			const exampleId = formsPlayExampleJson(FORMS_PLAY_EXAMPLE_DEFAULT_ID) ? FORMS_PLAY_EXAMPLE_DEFAULT_ID : "building-component";
+			ctrl.run("setActiveExample", { exampleId });
+		}
+		runtime.addApp(buildFormsPlayAppRuntime(ctrl));
+		return runtime;
 	},
 	registerBodies: () => {
 		registerFormsPlayDeclarativeBodies();
@@ -1072,6 +1095,13 @@ if (import.meta.vitest) {
 			ctrl.run("setActiveExample", { exampleId: "building-component" });
 			expect(ctrl.getSpec().id).toBe("building-component");
 			expect(ctrl.getSpec().steps.flatMap((step) => step.questions).some((question) => question.kind === "buildingComponent")).toBe(true);
+		});
+
+		it("createRuntime loads the building component example by default", () => {
+			const runtime = formsPlayAppDefinition.createPlayground().createRuntime();
+			const ctrl = runtime.getActiveApp()?.controller as FormsPlayController;
+			expect(ctrl.getSpec().id).toBe("building-component");
+			expect(ctrl.getExampleCatalog()?.activeExampleId).toBe(FORMS_PLAY_EXAMPLE_DEFAULT_ID);
 		});
 
 		it("catalogue includes extension question kinds", () => {

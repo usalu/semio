@@ -15,6 +15,7 @@ import {
 	createDefaultLayout,
 	enforcePlaygroundWindowEngagementInput,
 	registerWindowBody,
+	windowEngagementsEqual,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -43,12 +44,19 @@ import {
 	LOWPOLY_FIXTURE_SCHEMA,
 	type LowpolyFixture,
 	type LowpolySelectionMode,
+	type LowpolySelectionTargets,
 	type LowpolyTarget,
 	lowpolyTopologyFromMeshJson,
 	lowpolyFixtureToJson,
 	parseLowpolyFixtureJson,
 	encodeLowpolyPointerFocusKey,
 	decodeLowpolyPointerFocusKey,
+	decodeLowpolySelectionTargets,
+	formatLowpolySelectionTargetsLabel,
+	lowpolySelectionFromState,
+	LOWPOLY_SELECTION_TARGETS_DEFAULT,
+	normalizeLowpolySelectionMode,
+	selectedIdsForMode,
 } from "./internal.ts";
 import type { LowpolyPaintTool, LowpolyTransformTool } from "@semio-tech/lowpoly-react";
 import {
@@ -113,18 +121,18 @@ function lowpolyPlayCmd(command: string, args?: Record<string, unknown>): Comman
 /** @emoji 🧰 Lowpoly play footer toolbar. */
 export function buildLowpolyPlayToolbarTools(
 	controllerId: string,
-	selectionMode: LowpolySelectionMode,
+	selectionTargets: LowpolySelectionTargets,
 	transformTool: LowpolyTransformTool,
 ): AppTools {
-	const modeToggle = (id: string, label: string, mode: LowpolySelectionMode): ToolLeaf => ({
+	const kindToggle = (id: string, label: string, kind: LowpolySelectionMode): ToolLeaf => ({
 		id,
 		kind: "toggle",
 		label,
-		iconId: mode === "vertex" ? "circle" : mode === "edge" ? "minus" : mode === "face" ? "square" : "box",
-		pressed: selectionMode === mode,
+		iconId: kind === "vertex" ? "circle" : kind === "edge" ? "minus" : kind === "face" ? "square" : "box",
+		pressed: selectionTargets[kind],
 		controllerId,
-		command: "setSelectionMode",
-		args: { mode },
+		command: "toggleSelectionKind",
+		args: { kind },
 	});
 	const transformToggle = (id: string, label: string, tool: LowpolyTransformTool): ToolLeaf => ({
 		id,
@@ -138,10 +146,10 @@ export function buildLowpolyPlayToolbarTools(
 	});
 	return [
 		toolCollection("selection", "mouse-pointer", [
-			modeToggle("lowpoly.mode.object", "Object", "object"),
-			modeToggle("lowpoly.mode.vertex", "Vertex", "vertex"),
-			modeToggle("lowpoly.mode.edge", "Edge", "edge"),
-			modeToggle("lowpoly.mode.face", "Face", "face"),
+			kindToggle("lowpoly.mode.mesh", "Mesh", "mesh"),
+			kindToggle("lowpoly.mode.vertex", "Vertex", "vertex"),
+			kindToggle("lowpoly.mode.edge", "Edge", "edge"),
+			kindToggle("lowpoly.mode.face", "Face", "face"),
 		]),
 		toolCollection("transform", "move", [
 			transformToggle("lowpoly.transform.move", "Move", "move"),
@@ -160,10 +168,6 @@ export function buildLowpolyPlayToolbarTools(
 			{ kind: "button", id: "lowpoly.triangulate", label: "Triangulate", iconId: "triangle", controllerId, command: "triangulate" },
 			{ kind: "button", id: "lowpoly.mirror", label: "Mirror", iconId: "flip-horizontal", controllerId, command: "mirror" },
 			{ kind: "button", id: "lowpoly.decimate", label: "Decimate", iconId: "minimize-2", controllerId, command: "decimate" },
-		]),
-		toolCollection("options", "settings", [
-			{ kind: "button", id: "lowpoly.snap", label: "Snap", iconId: "magnet", controllerId, command: "snap" },
-			{ kind: "button", id: "lowpoly.smooth", label: "Smooth", iconId: "sun", controllerId, command: "toggleSmooth" },
 		]),
 	];
 }
@@ -213,8 +217,7 @@ export type LowpolyHierarchyTreeOptions = {
 
 export function buildLowpolyPlayHierarchyTree(
 	fixtureJson: string,
-	selectionMode: LowpolySelectionMode,
-	selectedIds: readonly number[],
+	selectedTargets: readonly LowpolyTarget[],
 	options?: LowpolyHierarchyTreeOptions,
 ): UiNode {
 	const fixture = parseLowpolyFixtureJson(fixtureJson);
@@ -234,9 +237,9 @@ export function buildLowpolyPlayHierarchyTree(
 		actions,
 	});
 	const items: UiTreeItemNode[] = fixture.objects.map((object, objectIndex) => {
-		const objectTarget: LowpolyTarget = { objectId: object.id, objectIndex, mode: "object", id: objectIndex };
+		const meshTarget: LowpolyTarget = { objectId: object.id, objectIndex, mode: "mesh", id: objectIndex };
 		const topology = lowpolyTopologyFromMeshJson(object.meshJson);
-		const componentGroup = (mode: Exclude<LowpolySelectionMode, "object">, ids: readonly number[], icon: string): UiTreeItemNode => ({
+		const componentGroup = (mode: Exclude<LowpolySelectionMode, "mesh">, ids: readonly number[], icon: string): UiTreeItemNode => ({
 			id: `lowpoly-hierarchy.${object.id}.${mode}`,
 			label: mode === "vertex" ? "Vertices" : mode === "edge" ? "Edges" : "Faces",
 			description: String(ids.length),
@@ -260,7 +263,7 @@ export function buildLowpolyPlayHierarchyTree(
 			}),
 		});
 		return {
-			...targetItem(objectTarget, object.name, "box"),
+			...targetItem(meshTarget, object.name, "box"),
 			description: object.id,
 			defaultOpen: object.id === fixture.activeObjectId,
 			items: [
@@ -270,26 +273,13 @@ export function buildLowpolyPlayHierarchyTree(
 			],
 		};
 	});
-	const selectedRowIds =
-		selectionMode === "object"
-			? selectedIds.flatMap((id) => {
-					const object = fixture.objects[id];
-					return object ? [lowpolyHierarchyTargetRowId({ objectId: object.id, objectIndex: id, mode: "object", id })] : [];
-				})
-			: selectedIds.map((id) =>
-					lowpolyHierarchyTargetRowId({
-						objectId: fixture.activeObjectId,
-						objectIndex: Math.max(0, fixture.objects.findIndex((object) => object.id === fixture.activeObjectId)),
-						mode: selectionMode,
-						id,
-					}),
-				);
+	const selectedRowIds = selectedTargets.map((target) => lowpolyHierarchyTargetRowId(target));
 	return {
 		type: "tree",
 		sections: [
 			{
-				id: "lowpoly-hierarchy.objects",
-				label: "Objects",
+				id: "lowpoly-hierarchy.meshes",
+				label: "Meshes",
 				defaultOpen: true,
 				items: items.length ? items : [{ id: "lowpoly-hierarchy.empty", label: "(none)" }],
 			},
@@ -329,17 +319,17 @@ export function buildLowpolyPlayInspectorTree(fixtureJson: string, toolParams: R
 	const fixture = parseLowpolyFixtureJson(fixtureJson);
 	if (!fixture?.objects.length) {
 		return uiDeclarativeSectionsToTree([
-			{ type: "section", id: "lowpoly-inspector.empty", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Add or select an object." }] },
+			{ type: "section", id: "lowpoly-inspector.empty", label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, children: [{ type: "text", value: "Add or select a mesh." }] },
 		]);
 	}
 	const active = fixture.objects.find((o) => o.id === fixture.activeObjectId) ?? fixture.objects[0];
 	const groups: UiInspectorFieldGroup[] = [
 		{
-			id: "lowpoly-inspector.object",
-			label: "Object",
+			id: "lowpoly-inspector.mesh",
+			label: "Mesh",
 			fields: [
 				uiInspectorReadonlyField("lowpoly-inspector.name", "Name", active?.name ?? ""),
-				uiInspectorReadonlyField("lowpoly-inspector.mode", "Selection", fixture.selection.mode),
+				uiInspectorReadonlyField("lowpoly-inspector.mode", "Selection", `${formatLowpolySelectionTargetsLabel(fixture.selection.targets)} · ${fixture.selection.keys.length} selected`),
 			],
 		},
 		{
@@ -504,7 +494,7 @@ export class LowpolyPlayController extends Controller {
 	readonly mainMode = new ModeRuntime("main", "Model", undefined);
 	readonly paintMode = new ModeRuntime("paint", "Paint", undefined);
 	private fixtureJson = LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON;
-	private selectionMode: LowpolySelectionMode = "object";
+	private selectionTargets: LowpolySelectionTargets = { ...LOWPOLY_SELECTION_TARGETS_DEFAULT };
 	private transformTool: LowpolyTransformTool = "move";
 	private paintTool: LowpolyPaintTool = "brush";
 	private activePaintLayerIndex = 0;
@@ -529,27 +519,31 @@ export class LowpolyPlayController extends Controller {
 	private pendingPaintCommand: { command: string; args?: Record<string, unknown> } | null = null;
 	private interactionRevision = 0;
 	private hoverRevision = 0;
+	private hoveredTargetSnapshotKey: string | null = null;
+	private hoveredTargetSnapshot: LowpolyTarget | null = null;
 	private readonly snapshotListeners = new Set<() => void>();
 
-	private encodeSelectionKeys(ids: readonly number[]): string[] {
-		const fixture = parseLowpolyFixtureJson(this.fixtureJson);
-		if (!fixture) return [];
-		if (this.selectionMode === "object") {
-			return ids.flatMap((id) => {
-				const object = fixture.objects[id];
-				return object ? [encodeLowpolyPointerFocusKey({ objectId: object.id, objectIndex: id, mode: "object", id })] : [];
-			});
-		}
-		const objectIndex = Math.max(0, fixture.objects.findIndex((object) => object.id === fixture.activeObjectId));
-		const objectId = fixture.activeObjectId;
-		return ids.map((id) => encodeLowpolyPointerFocusKey({ objectId, objectIndex, mode: this.selectionMode, id }));
+	private encodeSelectionKeys(targets: readonly LowpolyTarget[]): string[] {
+		return targets.map((target) => encodeLowpolyPointerFocusKey(target));
 	}
 
-	private decodeSelectionIds(): number[] {
-		return this.pointerFocus
-			.getSnapshot()
-			.selection.map((key) => decodeLowpolyPointerFocusKey(key)?.id)
-			.filter((id): id is number => typeof id === "number");
+	private decodeSelectionTargets(): LowpolyTarget[] {
+		return decodeLowpolySelectionTargets(this.pointerFocus.getSnapshot().selection);
+	}
+
+	private currentSelection(): ReturnType<typeof lowpolySelectionFromState> {
+		return lowpolySelectionFromState(this.selectionTargets, this.pointerFocus.getSnapshot().selection);
+	}
+
+	private persistSelection(fixture: LowpolyFixture, activeObjectId?: string): void {
+		const selection = this.currentSelection();
+		this.commitFixture(
+			lowpolyFixtureToJson({
+				...fixture,
+				activeObjectId: activeObjectId ?? fixture.activeObjectId,
+				selection,
+			}),
+		);
 	}
 
 	constructor(commandBus: CommandBus, hostNotify: () => void) {
@@ -568,12 +562,22 @@ export class LowpolyPlayController extends Controller {
 		return this.fixtureJson;
 	}
 
-	getSelectionMode(): LowpolySelectionMode {
-		return this.selectionMode;
+	getSelectionTargets(): LowpolySelectionTargets {
+		return this.selectionTargets;
 	}
 
-	getSelectedIds(): readonly number[] {
-		return this.decodeSelectionIds();
+	getSelectionMode(): LowpolySelectionMode {
+		return this.currentSelection().mode;
+	}
+
+	getSelectedTargets(): readonly LowpolyTarget[] {
+		return this.decodeSelectionTargets();
+	}
+
+	getSelectedIds(mode?: LowpolySelectionMode): readonly number[] {
+		const targets = this.decodeSelectionTargets();
+		if (mode) return selectedIdsForMode(targets, mode);
+		return targets.map((target) => target.id);
 	}
 
 	getHoveredTarget(): LowpolyTarget | null {
@@ -653,7 +657,13 @@ export class LowpolyPlayController extends Controller {
 	}
 
 	getHoveredTargetSnapshot(): LowpolyTarget | null {
-		return this.getHoveredTarget();
+		const hoverKey = this.pointerFocus.getSnapshot().hover;
+		if (hoverKey === this.hoveredTargetSnapshotKey) {
+			return this.hoveredTargetSnapshot;
+		}
+		this.hoveredTargetSnapshotKey = hoverKey;
+		this.hoveredTargetSnapshot = hoverKey ? decodeLowpolyPointerFocusKey(hoverKey) : null;
+		return this.hoveredTargetSnapshot;
 	}
 
 	subscribeHover(listener: () => void): () => void {
@@ -674,21 +684,31 @@ export class LowpolyPlayController extends Controller {
 	private commitFixture(json: string): void {
 		if (json === this.fixtureJson) return;
 		this.fixtureJson = json;
-		this.interactionRevision += 1;
-		this.notifySnapshot();
-		this.emit();
+		this.bumpInteraction();
 	}
 
 	private bumpMeshCommand(): void {
 		this.meshCommandEpoch += 1;
-		this.interactionRevision += 1;
-		this.notifySnapshot();
-		this.emit();
+		this.bumpInteraction();
 	}
 
 	private windowEngagement(): WindowEngagement {
+		const transformOption = (tool: LowpolyTransformTool, label: string, iconId: string) => ({
+			id: `lowpoly.opt.${tool}`,
+			label,
+			iconId,
+			pressed: this.transformTool === tool,
+			command: lowpolyPlayCmd("setTransformTool", { tool }),
+		});
 		return {
-			sessionActive: false,
+			sessionActive: true,
+			options: [
+				transformOption("move", "Move", "move"),
+				transformOption("rotate", "Rotate", "rotate-cw"),
+				transformOption("scale", "Scale", "maximize-2"),
+				{ id: "lowpoly.opt.snap", label: "Snap", iconId: "magnet", command: lowpolyPlayCmd("snap") },
+				{ id: "lowpoly.opt.smooth", label: "Smooth", iconId: "sun", command: lowpolyPlayCmd("toggleSmooth") },
+			],
 			input: {
 				id: "lowpoly-engagement",
 				value: "",
@@ -701,12 +721,25 @@ export class LowpolyPlayController extends Controller {
 				{ id: "lowpoly.eng.triangulate", label: "Triangulate", command: lowpolyPlayCmd("triangulate") },
 			],
 			controls: [],
-			status: [{ id: "lowpoly-status", text: `${this.selectionMode} · ${this.transformTool}` }],
+			status: [{ id: "lowpoly-status", text: `${formatLowpolySelectionTargetsLabel(this.selectionTargets)} · ${this.transformTool} · ${this.decodeSelectionTargets().length} selected` }],
 		};
 	}
 
+	private syncWindowEngagement(): void {
+		const next = this.windowEngagement();
+		for (const mode of [this.mainMode, this.paintMode]) {
+			let changed = false;
+			for (const windowKind of mode.windowKinds) {
+				if (windowEngagementsEqual(windowKind.engagement, next)) continue;
+				windowKind.engagement = next;
+				changed = true;
+			}
+			if (changed) mode.windowKinds = [...mode.windowKinds];
+		}
+	}
+
 	private rebuildShellMode(): void {
-		this.mainMode.tools = buildLowpolyPlayToolbarTools(LOWPOLY_PLAY_CONTROLLER_ID, this.selectionMode, this.transformTool);
+		this.mainMode.tools = buildLowpolyPlayToolbarTools(LOWPOLY_PLAY_CONTROLLER_ID, this.selectionTargets, this.transformTool);
 		this.mainMode.windowKinds = [
 			new WindowKindRuntime(LOWPOLY_PLAY_WINDOW_KIND_ID, "Model", LOWPOLY_PLAY_BODY_KEY_MAIN, undefined, [], this.windowEngagement()),
 		];
@@ -727,44 +760,54 @@ export class LowpolyPlayController extends Controller {
 		}
 	}
 
+	private bumpInteraction(): void {
+		this.interactionRevision += 1;
+		this.notifySnapshot();
+		this.syncWindowEngagement();
+		this.emit();
+	}
+
 	override run(command: string, args?: unknown): void {
 		if (command === "setFixtureJson") {
 			const json = (args as { json?: string }).json;
-			if (typeof json === "string") this.commitFixture(json);
+			if (typeof json === "string") {
+				const fixture = parseLowpolyFixtureJson(json);
+				if (fixture) {
+					this.selectionTargets = { ...fixture.selection.targets };
+					this.pointerFocus.setSelection([...fixture.selection.keys]);
+				}
+				this.commitFixture(json);
+			}
 			return;
 		}
-		if (command === "setSelectionMode") {
-			const mode = (args as { mode?: LowpolySelectionMode }).mode;
-			if (mode) {
-				this.selectionMode = mode;
-				this.pointerFocus.setSelection([]);
-				this.rebuildShellMode();
-				const fixture = parseLowpolyFixtureJson(this.fixtureJson);
-				if (fixture) this.commitFixture(lowpolyFixtureToJson({ ...fixture, selection: { mode, ids: [] } }));
+		if (command === "toggleSelectionKind") {
+			const kind = normalizeLowpolySelectionMode(String((args as { kind?: string }).kind ?? ""));
+			const next = { ...this.selectionTargets, [kind]: !this.selectionTargets[kind] };
+			if (!Object.values(next).some(Boolean)) return;
+			this.selectionTargets = next;
+			this.rebuildShellMode();
+			const fixture = parseLowpolyFixtureJson(this.fixtureJson);
+			if (fixture) this.persistSelection(fixture);
+			else {
+				this.interactionRevision += 1;
+				this.notifySnapshot();
+				this.syncWindowEngagement();
+				this.emit();
 			}
 			return;
 		}
 		if (command === "setSelection") {
-			const mode = (args as { mode?: LowpolySelectionMode }).mode;
-			const ids = (args as { ids?: number[] }).ids;
+			const keys = (args as { keys?: string[] }).keys;
 			const activeObjectId = (args as { activeObjectId?: string }).activeObjectId;
-			if (mode) this.selectionMode = mode;
-			if (Array.isArray(ids)) this.pointerFocus.setSelection(this.encodeSelectionKeys(ids));
-			if (typeof activeObjectId === "string") {
-				const fixture = parseLowpolyFixtureJson(this.fixtureJson);
-				if (fixture) {
-					this.commitFixture(
-						lowpolyFixtureToJson({
-							...fixture,
-							activeObjectId,
-							selection: { mode: this.selectionMode, ids: this.decodeSelectionIds() },
-						}),
-					);
-					return;
-				}
+			if (Array.isArray(keys)) this.pointerFocus.setSelection([...keys]);
+			const fixture = parseLowpolyFixtureJson(this.fixtureJson);
+			if (fixture) {
+				this.persistSelection(fixture, activeObjectId);
+				return;
 			}
 			this.interactionRevision += 1;
 			this.notifySnapshot();
+			this.syncWindowEngagement();
 			this.emit();
 			return;
 		}
@@ -837,19 +880,13 @@ export class LowpolyPlayController extends Controller {
 			const target = (args as { target?: LowpolyTarget }).target;
 			const fixture = parseLowpolyFixtureJson(this.fixtureJson);
 			if (!target || !fixture) return;
-			const sameSelection = this.selectionMode === target.mode && (target.mode === "object" || fixture.activeObjectId === target.objectId);
-			const current = sameSelection ? this.decodeSelectionIds() : [];
-			this.selectionMode = target.mode;
-			const nextIds = selectionMergeIds("invertive", current.map(String), [String(target.id)]).map(Number);
-			this.pointerFocus.setSelection(this.encodeSelectionKeys(nextIds));
+			const currentKeys = this.pointerFocus.getSnapshot().selection;
+			const targetKey = encodeLowpolyPointerFocusKey(target);
+			const nextKeys = selectionMergeIds("invertive", currentKeys, [targetKey]);
+			this.pointerFocus.setSelection(nextKeys);
+			this.selectionTargets = { ...this.selectionTargets, [target.mode]: true };
 			this.rebuildShellMode();
-			this.commitFixture(
-				lowpolyFixtureToJson({
-					...fixture,
-					activeObjectId: target.objectId,
-					selection: { mode: target.mode, ids: nextIds },
-				}),
-			);
+			this.persistSelection({ ...fixture, activeObjectId: target.objectId }, target.objectId);
 			return;
 		}
 		if (command === "addPrimitive") {
@@ -922,6 +959,17 @@ if (import.meta.vitest) {
 			expect(ctrl.getInteractionRevision()).toBe(before);
 			expect(ctrl.getHoverRevision()).toBeGreaterThan(0);
 		});
+		it("hover snapshot keeps a stable reference until hover changes", () => {
+			const bus = new CommandBus();
+			const ctrl = new LowpolyPlayController(bus, () => {});
+			const target = { objectId: "obj-1", objectIndex: 0, mode: "face" as const, id: 0 };
+			ctrl.run("setHover", { target });
+			const first = ctrl.getHoveredTargetSnapshot();
+			const second = ctrl.getHoveredTargetSnapshot();
+			expect(first).toBe(second);
+			ctrl.run("setHover", { target: { ...target, id: 1 } });
+			expect(ctrl.getHoveredTargetSnapshot()).not.toBe(first);
+		});
 		it("registers model and paint modes", () => {
 			const bus = new CommandBus();
 			const ctrl = new LowpolyPlayController(bus, () => {});
@@ -947,7 +995,8 @@ if (import.meta.vitest) {
 			});
 			let hovered: LowpolyTarget | null = null;
 			let flipped: number | null = null;
-			const tree = buildLowpolyPlayHierarchyTree(fixtureJson, "face", [0], {
+			const selectedTargets: readonly LowpolyTarget[] = [{ objectId: "obj-1", objectIndex: 0, mode: "face", id: 0 }];
+			const tree = buildLowpolyPlayHierarchyTree(fixtureJson, selectedTargets, {
 				onHover: (target) => {
 					hovered = target;
 				},
@@ -956,6 +1005,7 @@ if (import.meta.vitest) {
 				},
 			});
 			expect(tree.sections[0]?.items[0]?.items?.map((item) => item.label)).toEqual(["Vertices", "Edges", "Faces"]);
+			expect(tree.selectedIds).toEqual(["lowpoly-hierarchy.obj-1.face.0"]);
 			const faceItem = tree.sections[0]?.items[0]?.items?.[2]?.items?.[0];
 			faceItem?.onPointerEnter?.();
 			faceItem?.actions?.[0]?.onClick();

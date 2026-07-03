@@ -3,7 +3,7 @@
   "emoji": "📋",
   "status": "closed",
   "description": "Introduce forms technology (declarative form data, question kinds, multi-step builder playground) and flow Generate mode where input widgets become forms and generations are saved submissions evaluated through the worker pipeline. Extend ui with Catalogue, cross-container tree reorder, and Field primitives.",
-  "summary": "Fixed empty hexagonal column 3D preview in forms. Flow eval runs in a dedicated worker WASM context, so geometry handles from evaluate() are invalid on the main-thread BRep bridge. Flow3dQuestionControl now calls client.tessellatePreviews() after evaluate and attaches meshes via new attachPreviewMeshesToItems() (same pattern as procedural play + FlowCanvas). Added relative positioning on the preview container. forms-react tests pass.",
+  "summary": "Fixed forms dev playground not loading the Building Component example. Root causes: setActiveExample read fixtureId while navbar sends exampleId; Vite glob can be empty so FORMS_PLAY_FILE_EXAMPLE_JSON_BY_ID had no entries; createRuntime never bootstrapped the default example; getExampleCatalog active id did not match catalog option ids (building-component vs forms-building-component). Added static fallback import for building-component.forms.json, fixed setActiveExample to use exampleId, map catalog active id correctly, and load default example in createRuntime (matching draw play). All 27 forms-core tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1763"
   },
@@ -23,6 +23,7 @@
     "⚪4cb322a701284386beb0e2145dbbf938",
     "⚪7d94b0aa220f4a11ba35c51c1d66bf96",
     "⚪bfd7213eb67c4aea8a7cb5732e330d53",
-    "⚪4bab988c81e349d48548d80a975ee833"
+    "⚪4bab988c81e349d48548d80a975ee833",
+    "⚪e0deb4676e764b11bec49e133921215b"
   ]
 }

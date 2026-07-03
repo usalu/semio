@@ -615,6 +615,40 @@ impl HalfedgeMesh {
         self.recompute_normals()
     }
 
+    pub fn rotate_vertices(&mut self, verts: &[VertexId], axis: Vec3, angle_rad: f32, pivot: Vec3) -> MeshResult<()> {
+        if verts.is_empty() {
+            return Err(MeshKernelError::EmptySelection);
+        }
+        let ax = axis.normalize();
+        let (x, y, z) = (ax.x(), ax.y(), ax.z());
+        let c = angle_rad.cos();
+        let s = angle_rad.sin();
+        let t = 1.0 - c;
+        for &vid in verts {
+            let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
+            let p = Vec3(v.position).sub(pivot);
+            let rx = (t * x * x + c) * p.x() + (t * x * y - s * z) * p.y() + (t * x * z + s * y) * p.z();
+            let ry = (t * x * y + s * z) * p.x() + (t * y * y + c) * p.y() + (t * y * z - s * x) * p.z();
+            let rz = (t * x * z - s * y) * p.x() + (t * y * z + s * x) * p.y() + (t * z * z + c) * p.z();
+            v.position = pivot.add(Vec3::new(rx, ry, rz)).0;
+        }
+        self.recompute_normals()
+    }
+
+    pub fn scale_vertices(&mut self, verts: &[VertexId], factor: Vec3, pivot: Vec3) -> MeshResult<()> {
+        if verts.is_empty() {
+            return Err(MeshKernelError::EmptySelection);
+        }
+        for &vid in verts {
+            let v = self.vertices.get_mut(vid.0 as usize).ok_or(MeshKernelError::InvalidHandle)?;
+            let p = Vec3(v.position).sub(pivot);
+            v.position = pivot
+                .add(Vec3::new(p.x() * factor.x(), p.y() * factor.y(), p.z() * factor.z()))
+                .0;
+        }
+        self.recompute_normals()
+    }
+
     pub fn move_vertices_proportional(
         &mut self,
         verts: &[VertexId],

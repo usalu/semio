@@ -326,6 +326,7 @@ interface ActiveFlowModule {
 export class FlowExtensionHost {
   private readonly kindToModule = new Map<string, string>();
   private readonly active = new Map<string, ActiveFlowModule>();
+  private readonly inlineContributions = new Map<string, readonly FlowModuleOperatorInfo[]>();
   private revision = 0;
   private readonly listeners = new Set<() => void>();
 
@@ -426,6 +427,9 @@ export class FlowExtensionHost {
     if (!moduleId) {
       return JSON.stringify({ error: `no module for kind: ${kindId}` });
     }
+    if (this.inlineContributions.has(moduleId)) {
+      return inputJson;
+    }
     const entry = this.active.get(moduleId);
     if (!entry) {
       return JSON.stringify({ error: `module not active: ${moduleId}` });
@@ -458,11 +462,34 @@ export class FlowExtensionHost {
   }
 
   kindInfosJson(): string {
-    const kinds: FlowModuleNeuronKind[] = [];
+    const kinds: FlowModuleOperatorInfo[] = [];
     for (const entry of this.active.values()) {
       kinds.push(...entry.manifest.contributes.operators);
     }
+    for (const operators of this.inlineContributions.values()) {
+      kinds.push(...operators);
+    }
     return JSON.stringify(kinds);
+  }
+
+  /** @emoji 📎 Registers display-only neuron kinds from an external module without a WASM loader. */
+  registerContributions(moduleId: string, operators: readonly FlowModuleOperatorInfo[]): void {
+    this.inlineContributions.set(moduleId, [...operators]);
+    for (const operator of operators) {
+      this.kindToModule.set(operator.id, moduleId);
+    }
+    this.notify();
+  }
+
+  /** @emoji 📎 Clears inline neuron kinds previously registered for a module id. */
+  unregisterContributions(moduleId: string): void {
+    const operators = this.inlineContributions.get(moduleId);
+    if (!operators) return;
+    for (const operator of operators) {
+      this.kindToModule.delete(operator.id);
+    }
+    this.inlineContributions.delete(moduleId);
+    this.notify();
   }
 
   private placeholderManifest(id: string): FlowModuleManifest {
@@ -2812,6 +2839,10 @@ export interface FlowCanvasProps {
   readonly lod?: DagDrawLodKind;
   readonly onLodChange?: (lod: DagDrawLodKind) => void;
   readonly proximityDistance?: number;
+  readonly onSessionReady?: (session: FlowSession) => void;
+  readonly onAfterPointerUp?: () => void;
+  readonly enableSpotlight?: boolean;
+  readonly onWidgetDoubleClick?: (widgetId: string) => void;
 }
 
 export const FLOW_DEFAULT_PROXIMITY_DISTANCE = 48;
@@ -2907,6 +2938,10 @@ export function FlowCanvas({
   lod,
   onLodChange,
   proximityDistance = FLOW_DEFAULT_PROXIMITY_DISTANCE,
+  onSessionReady,
+  onAfterPointerUp,
+  enableSpotlight = true,
+  onWidgetDoubleClick,
 }: FlowCanvasProps): React.JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -2919,6 +2954,9 @@ export function FlowCanvas({
   const onEvalOutputsRef = useRef(onEvalOutputs);
   const onOutputExportRef = useRef(onOutputExport);
   const onFixtureChangeRef = useRef(onFixtureChange);
+  const onSessionReadyRef = useRef(onSessionReady);
+  const onAfterPointerUpRef = useRef(onAfterPointerUp);
+  const onWidgetDoubleClickRef = useRef(onWidgetDoubleClick);
   const onCompiledWireLiteralChangeRef = useRef(onCompiledWireLiteralChange);
   const onCatalogueReadyRef = useRef(onCatalogueReady);
   const onWidgetDropRef = useRef(onWidgetDrop);
@@ -2989,6 +3027,17 @@ export function FlowCanvas({
   useEffect(() => {
     onFixtureChangeRef.current = onFixtureChange;
   }, [onFixtureChange]);
+
+  useEffect(() => {
+    onSessionReadyRef.current = onSessionReady;
+  }, [onSessionReady]);
+
+  useEffect(() => {
+    onAfterPointerUpRef.current = onAfterPointerUp;
+  }, [onAfterPointerUp]);
+  useEffect(() => {
+    onWidgetDoubleClickRef.current = onWidgetDoubleClick;
+  }, [onWidgetDoubleClick]);
 
   useEffect(() => {
     onCompiledWireLiteralChangeRef.current = onCompiledWireLiteralChange;
@@ -3125,6 +3174,11 @@ export function FlowCanvas({
     onChannelHoverChangeRef.current?.(channels.hovered);
     onSelectedChannelsChangeRef.current?.(channels.selected);
     onPreviewOffChangeRef.current?.(previewOff);
+    try {
+      onCompiledWireLiteralChangeRef.current?.(session.compiledWireLiteral());
+    } catch {
+      /* compiled dag not ready */
+    }
     syncMarqueeOverlay(session);
     syncSelectionBoundsOverlay(session);
     console.log(
@@ -3546,13 +3600,16 @@ export function FlowCanvas({
         session.setSelection(JSON.stringify([...selectedNodeIds]));
       }
     }
-    if (hoveredNodeId !== undefined || hoveredChannel !== undefined) {
+    if (hoveredChannel !== undefined || hoveredNodeId !== undefined) {
       const api = session as FlowSessionChannelApi;
       const currentChannels = readFlowSessionChannels(session);
-      const nextChannel = hoveredChannel ?? null;
-      if (!flowChannelRefEqual(currentChannels.hovered, nextChannel)) {
-        api.setHoverChannel?.(nextChannel?.widgetId ?? null, nextChannel?.port ?? null);
-      } else if (hoveredNodeId !== undefined) {
+      if (hoveredChannel !== undefined) {
+        const nextChannel = hoveredChannel ?? null;
+        if (!flowChannelRefEqual(currentChannels.hovered, nextChannel)) {
+          api.setHoverChannel?.(nextChannel?.widgetId ?? null, nextChannel?.port ?? null);
+        }
+      }
+      if (hoveredNodeId !== undefined && !hoveredChannel) {
         const current = session.hoveredWidgetId() ?? null;
         if (current !== hoveredNodeId) {
           session.setHover(hoveredNodeId);
@@ -3690,6 +3747,7 @@ export function FlowCanvas({
       if (cancelled) return;
       const session = new FlowSession();
       sessionRef.current = session;
+      onSessionReadyRef.current?.(session);
       const saved = storeRef.current.load();
       const json = saved ?? bootstrapFixtureJsonRef.current ?? flowFixtureToJson(FLOW_DEFAULT_FIXTURE);
       session.loadFixtureJson(json);
@@ -3792,16 +3850,26 @@ export function FlowCanvas({
       if (!session) return;
       if (!key) {
         session.setHover(null);
+        (session as FlowSessionChannelApi).setHoverChannel?.(null, null);
         emitInteractionState(session);
         renderFrame();
         return;
       }
       const parsed = parseCanvasPickTargetKey(key);
       if (parsed?.domain === "handle") {
-        const [widgetId, port] = key.split(":");
-        (session as FlowSessionChannelApi).setHoverChannel?.(widgetId ?? null, port ?? null);
+        const sep = parsed.id.indexOf(":");
+        const widgetId = sep >= 0 ? parsed.id.slice(0, sep) : parsed.id;
+        const port = sep >= 0 ? parsed.id.slice(sep + 1) : null;
+        (session as FlowSessionChannelApi).setHoverChannel?.(widgetId || null, port || null);
+      } else if (parsed?.domain === "node") {
+        session.setHover(parsed.id);
+        (session as FlowSessionChannelApi).setHoverChannel?.(null, null);
+      } else if (parsed) {
+        session.setHover(parsed.id);
+        (session as FlowSessionChannelApi).setHoverChannel?.(null, null);
       } else {
         session.setHover(key);
+        (session as FlowSessionChannelApi).setHoverChannel?.(null, null);
       }
       emitInteractionState(session);
       renderFrame();
@@ -3929,6 +3997,7 @@ export function FlowCanvas({
         return;
       }
       session.pointerUpScreen(x, y, e.shiftKey, e.metaKey || e.ctrlKey, e.altKey);
+      onAfterPointerUpRef.current?.();
       const clusterApi = session as FlowSessionClusterApi;
       const exportApi = session as FlowSessionExportApi;
       const explodeId = clusterApi.takePendingClusterExplode?.();
@@ -4158,15 +4227,20 @@ export function FlowCanvas({
             startNoteEdit(hoveredId, world.x, world.y);
             return;
           }
+          if (onWidgetDoubleClickRef.current && widget?.kind === "neuron") {
+            onWidgetDoubleClickRef.current(hoveredId);
+            return;
+          }
         } catch {
           /* fixture not ready */
         }
       }
+      if (!enableSpotlight) return;
       const screen = clientToCanvas(e.clientX, e.clientY);
       const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
       setSpotlight({ screen, world });
     },
-    [clientToCanvas, openImagePicker, startNoteEdit],
+    [clientToCanvas, enableSpotlight, openImagePicker, startNoteEdit],
   );
 
   const syncWheelZoomActive = useCallback((active: boolean) => {

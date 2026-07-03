@@ -179,11 +179,8 @@ async function resolveSceneNodeSegments(
 	return [];
 }
 
-export type DrawViewMode = "composite" | "navigator";
-
 export interface DrawCanvasProps {
 	readonly document: DrawDocument;
-	readonly viewMode?: DrawViewMode;
 	readonly camera?: DrawCamera;
 	readonly selectedIds?: readonly string[];
 	readonly hoveredId?: string | null;
@@ -438,7 +435,6 @@ type DrawDragState =
 
 export function DrawCanvas({
 	document: doc,
-	viewMode = "composite",
 	camera: cameraProp,
 	selectedIds = [],
 	hoveredId = null,
@@ -885,46 +881,40 @@ export function DrawCanvas({
 		>
 			<svg className="h-full w-full" viewBox={`0 0 ${containerRef.current?.clientWidth ?? 1024} ${containerRef.current?.clientHeight ?? 768}`}>
 				<g transform={transform}>
-					{viewMode === "composite" ? (
-						<>
-							{resolved.map(({ node, segments }) => {
-								const matrix = `matrix(${node.transform.join(" ")})`;
-								return (
-									<g key={node.id} transform={matrix} style={{ mixBlendMode: drawBlendModeCss(node.blendMode) }} opacity={node.opacity}>
-										{node.text ? (
-											<DrawTextShape content={node.text.content} size={node.text.size} fill={node.fill} opacity={1} />
-										) : node.image ? (
-											<DrawImageShape src={node.image.src} width={node.image.width} height={node.image.height} opacity={1} />
-										) : (
-											<DrawPathShape segments={segments} fill={node.fill} stroke={node.stroke} opacity={1} kernelKind={node.kernelKind} />
-										)}
-									</g>
-								);
-							})}
-							{resolved.map(({ node, segments }) => {
-								const selected = selectedLeafIds.has(node.id);
-								const hovered = hoveredLeafIds.has(node.id);
-								if (!selected && !hovered) return null;
-								const matrix = `matrix(${node.transform.join(" ")})`;
-								return (
-									<g key={`hl-${node.id}`} transform={matrix} opacity={node.opacity} pointerEvents="none">
-										<DrawLayerInteractionHighlight
-											node={node}
-											segments={segments}
-											selected={selected}
-											hovered={hovered}
-											stroke={node.stroke}
-											activeColor={activeColor}
-											hoverColor={hoverColor}
-											haloColor={haloColor}
-										/>
-									</g>
-								);
-							})}
-						</>
-					) : (
-						<rect x={-512} y={-512} width={1024} height={1024} fill="none" stroke="#334155" strokeWidth={1} vectorEffect="non-scaling-stroke" />
-					)}
+					{resolved.map(({ node, segments }) => {
+						const matrix = `matrix(${node.transform.join(" ")})`;
+						return (
+							<g key={node.id} transform={matrix} style={{ mixBlendMode: drawBlendModeCss(node.blendMode) }} opacity={node.opacity}>
+								{node.text ? (
+									<DrawTextShape content={node.text.content} size={node.text.size} fill={node.fill} opacity={1} />
+								) : node.image ? (
+									<DrawImageShape src={node.image.src} width={node.image.width} height={node.image.height} opacity={1} />
+								) : (
+									<DrawPathShape segments={segments} fill={node.fill} stroke={node.stroke} opacity={1} kernelKind={node.kernelKind} />
+								)}
+							</g>
+						);
+					})}
+					{resolved.map(({ node, segments }) => {
+						const selected = selectedLeafIds.has(node.id);
+						const hovered = hoveredLeafIds.has(node.id);
+						if (!selected && !hovered) return null;
+						const matrix = `matrix(${node.transform.join(" ")})`;
+						return (
+							<g key={`hl-${node.id}`} transform={matrix} opacity={node.opacity} pointerEvents="none">
+								<DrawLayerInteractionHighlight
+									node={node}
+									segments={segments}
+									selected={selected}
+									hovered={hovered}
+									stroke={node.stroke}
+									activeColor={activeColor}
+									hoverColor={hoverColor}
+									haloColor={haloColor}
+								/>
+							</g>
+						);
+					})}
 					{previewSegments.length > 0 ? <DrawPreviewPath segments={previewSegments} stroke={hoverColor} /> : null}
 				</g>
 			</svg>

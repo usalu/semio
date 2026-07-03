@@ -25,9 +25,11 @@ import {
 	noteEraseInkStrokeAtPoint,
 	noteImageAssetDataUrl,
 	noteKindHoverForBlock,
+	notePositiveMod,
 	noteResizeBounds,
 	noteScaleBlockWithinGroup,
 	noteSelectionBounds,
+	noteSnapWorldPoint,
 	noteTableCellAtPoint,
 	noteTextParagraphsFromPlainText,
 	noteTextPlainText,
@@ -128,6 +130,50 @@ function screenToWorld(camera: NoteCamera, screenX: number, screenY: number): Ve
 
 function worldToScreen(camera: NoteCamera, worldX: number, worldY: number): { readonly x: number; readonly y: number } {
 	return { x: worldX * camera.zoom + camera.x, y: worldY * camera.zoom + camera.y };
+}
+
+function noteMaybeSnapWorldPoint(doc: NoteDocument, x: number, y: number): Vec2 {
+	if (!doc.snapEnabled) return [x, y];
+	return noteSnapWorldPoint(x, y, doc.snapGridSpacing ?? 8);
+}
+
+function NoteViewportGrid({
+	camera,
+	spacing,
+	subdivisions,
+	opacity,
+	color,
+}: {
+	readonly camera: NoteCamera;
+	readonly spacing: number;
+	readonly subdivisions: number;
+	readonly opacity: number;
+	readonly color: string;
+}) {
+	const majorPx = spacing * camera.zoom;
+	const minorPx = majorPx / Math.max(1, subdivisions);
+	const offsetX = notePositiveMod(camera.x, majorPx);
+	const offsetY = notePositiveMod(camera.y, majorPx);
+	const patternId = `note-viewport-grid-${spacing}-${subdivisions}`;
+	const minorLines: React.ReactNode[] = [];
+	for (let index = 1; index < subdivisions; index += 1) {
+		const position = index * minorPx;
+		minorLines.push(
+			<line key={`v-${index}`} x1={position} y1={0} x2={position} y2={majorPx} stroke={color} strokeWidth={0.5} opacity={opacity * 0.55} />,
+			<line key={`h-${index}`} x1={0} y1={position} x2={majorPx} y2={position} stroke={color} strokeWidth={0.5} opacity={opacity * 0.55} />,
+		);
+	}
+	return (
+		<svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+			<defs>
+				<pattern id={patternId} width={majorPx} height={majorPx} patternUnits="userSpaceOnUse" x={offsetX} y={offsetY}>
+					{minorLines}
+					<path d={`M ${majorPx} 0 L 0 0 0 ${majorPx}`} fill="none" stroke={color} strokeWidth={1} opacity={opacity} />
+				</pattern>
+			</defs>
+			<rect width="100%" height="100%" fill={`url(#${patternId})`} />
+		</svg>
+	);
 }
 
 function noteTextRunStyle(run: NoteTextRun): React.CSSProperties {
@@ -538,7 +584,8 @@ export function NoteCanvas({
 				return;
 			}
 			if (tool === "text" || tool === "image" || tool === "table" || tool === "math") {
-				const block = createNoteBlockByKind(tool === "math" ? "math" : tool, worldX, worldY);
+				const [placeX, placeY] = noteMaybeSnapWorldPoint(doc, worldX, worldY);
+				const block = createNoteBlockByKind(tool === "math" ? "math" : tool, placeX, placeY);
 				const next = applyNoteEditOp(doc, { op: "addBlock", block });
 				commit(next, block.id);
 				onSelect?.([block.id]);
@@ -653,6 +700,18 @@ export function NoteCanvas({
 	);
 
 	const handlePointerUp = useCallback(() => {
+		if (dragState?.kind === "move" && doc.snapEnabled) {
+			const spacing = doc.snapGridSpacing ?? 8;
+			let next = doc;
+			for (const blockId of Object.keys(dragState.origins)) {
+				const block = findNoteBlock(next, blockId);
+				if (!block) continue;
+				const [x, y] = noteSnapWorldPoint(block.x, block.y, spacing);
+				if (x === block.x && y === block.y) continue;
+				next = applyNoteEditOp(next, { op: "updateBlock", blockId, block: { ...block, x, y } });
+			}
+			if (next !== doc) commit(next);
+		}
 		if (dragState?.kind === "marquee" && marqueePoints.length >= 2 && rootRef.current) {
 			const screenRect = screenRectFromPoints(marqueePoints);
 			const worldRect = { x: (screenRect.x - camera.x) / camera.zoom, y: (screenRect.y - camera.y) / camera.zoom, width: screenRect.width / camera.zoom, height: screenRect.height / camera.zoom };
@@ -660,7 +719,7 @@ export function NoteCanvas({
 		}
 		setDragState(null);
 		setMarqueePoints([]);
-	}, [camera.x, camera.y, camera.zoom, doc.blocks, dragState, marqueePoints, onSelect]);
+	}, [camera.x, camera.y, camera.zoom, commit, doc, dragState, marqueePoints, onSelect]);
 
 	const handleWheel = useCallback(
 		(event: React.WheelEvent<HTMLDivElement>) => {
@@ -702,7 +761,8 @@ export function NoteCanvas({
 				return;
 			}
 			if (top) return;
-			const block = createNoteTextBlock("Text", worldX, worldY);
+			const [placeX, placeY] = noteMaybeSnapWorldPoint(doc, worldX, worldY);
+			const block = createNoteTextBlock("Text", placeX, placeY);
 			const next = applyNoteEditOp(doc, { op: "addBlock", block });
 			commit(next, block.id);
 			onSelect?.([block.id]);
@@ -785,7 +845,7 @@ export function NoteCanvas({
 			event.preventDefault();
 			if (!rootRef.current) return;
 			const rect = rootRef.current.getBoundingClientRect();
-			const [worldX, worldY] = screenToWorld(camera, rect.width / 2, rect.height / 2);
+			const [worldX, worldY] = noteMaybeSnapWorldPoint(doc, ...screenToWorld(camera, rect.width / 2, rect.height / 2));
 			for (const item of event.clipboardData.items) {
 				if (item.type.startsWith("image/")) {
 					const file = item.getAsFile();
@@ -830,6 +890,9 @@ export function NoteCanvas({
 
 	const visibleBlocks = useMemo(() => flattenNoteBlocks(doc.blocks), [doc.blocks]);
 	const gridColor = resolveSemanticColorHex("border");
+	const gridSpacing = doc.gridSpacing ?? 32;
+	const gridSubdivisions = doc.gridSubdivisions ?? 4;
+	const gridOpacity = doc.gridOpacity ?? 0.35;
 	const isNavigator = viewMode === "navigator";
 	const scale = isNavigator ? Math.min(0.2, 1 / Math.max(camera.zoom, 1)) : camera.zoom;
 	const editingTextBlock = textEdit ? (findNoteBlock(doc, textEdit.blockId) as NoteTextBlock | null) : null;
@@ -849,17 +912,10 @@ export function NoteCanvas({
 			onCopy={handleCopy}
 			onPaste={handlePaste}
 		>
+			{doc.gridVisible !== false && !isNavigator ? (
+				<NoteViewportGrid camera={camera} spacing={gridSpacing} subdivisions={gridSubdivisions} opacity={gridOpacity} color={gridColor} />
+			) : null}
 			<div className="absolute origin-top-left" style={{ transform: `translate(${camera.x}px, ${camera.y}px) scale(${scale})`, width: isNavigator ? 4000 : undefined, height: isNavigator ? 3000 : undefined }}>
-				{doc.gridVisible !== false && !isNavigator ? (
-					<svg className="pointer-events-none absolute inset-0 h-[8000px] w-[8000px] -translate-x-1/2 -translate-y-1/2" aria-hidden>
-						<defs>
-							<pattern id="note-grid" width="32" height="32" patternUnits="userSpaceOnUse">
-								<path d="M 32 0 L 0 0 0 32" fill="none" stroke={gridColor} strokeWidth="0.5" opacity="0.35" />
-							</pattern>
-						</defs>
-						<rect width="100%" height="100%" fill="url(#note-grid)" />
-					</svg>
-				) : null}
 				{visibleBlocks.map((block) => (
 					<NoteBlockView
 						key={block.id}

@@ -2,8 +2,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
-		include: ["index.ts"],
-		includeSource: ["index.ts"],
+		include: ["js/index.ts"],
+		includeSource: ["js/index.ts"],
 		passWithNoTests: false,
 	},
 });

@@ -2,16 +2,27 @@
 /** @emoji 🖥️ `@semio-tech/s-react` — studio provider and media graph canvas. */
 // #endregion 🧲Header
 
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from "react";
-import { DagCanvas, type DagSession } from "@semio-tech/dag-react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import {
+	FlowCanvas,
+	FlowExtensionHost,
+	buildFlowContextMenuItems,
+	createEphemeralFlowStore,
+	type FlowCanvasCommandRequest,
+	type FlowCanvasContextMenuContext,
+	type FlowContextMenuDispatch,
+	type FlowSession,
+} from "@semio-tech/flow-react";
+import {
+	OS_MEDIA_FLOW_MODULE_ID,
 	type SAppInstance,
 	type SMediaGraph,
 	type SParameter,
 	type StudioCommand,
 	type StudioStore,
-	applyDagFixtureJsonToSMediaGraph,
-	sMediaGraphToDagFixtureJson,
+	applyFlowFixtureJsonToSMediaGraph,
+	buildSMediaFlowOperatorInfos,
+	sMediaGraphToFlowFixtureJson,
 } from "@semio-tech/s-core";
 import type { PresencePeer } from "@semio-tech/framework-os-core";
 import { CATALOGUE_DRAG_MIME } from "@semio-tech/ui-react";
@@ -52,11 +63,62 @@ export function useDispatchStudioCommand(): (command: StudioCommand) => void {
 }
 //#endregion 🔖StudioContext
 
+//#region 🔖MediaGraphFlowExtension
+const OS_MEDIA_FLOW_CTX_SKIP = new Set([
+	"flow.ctx.add",
+	"flow.ctx.preview",
+	"flow.ctx.collapse",
+	"flow.ctx.explode",
+	"flow.ctx.replaceImage",
+]);
+
+/** @emoji 🖱️ Flow play context menu without spotlight-only entries for OS media graph neurons. */
+export function buildSMediaFlowContextMenu(
+	ctx: FlowCanvasContextMenuContext,
+	dispatch: FlowContextMenuDispatch,
+): ReturnType<typeof buildFlowContextMenuItems> {
+	return buildFlowContextMenuItems(ctx, dispatch).filter((item) => !item.id || !OS_MEDIA_FLOW_CTX_SKIP.has(item.id));
+}
+
+function useOsMediaFlowExtension(
+	extensionHost: FlowExtensionHost,
+	graph: SMediaGraph,
+	instances: readonly SAppInstance[],
+	parameters: readonly SParameter[],
+): number {
+	const [revision, setRevision] = useState(() => extensionHost.getRevision());
+	useEffect(() => {
+		const operators = buildSMediaFlowOperatorInfos(graph, instances, parameters);
+		extensionHost.registerContributions(OS_MEDIA_FLOW_MODULE_ID, operators);
+		setRevision(extensionHost.getRevision());
+		return () => extensionHost.unregisterContributions(OS_MEDIA_FLOW_MODULE_ID);
+	}, [extensionHost, graph, instances, parameters]);
+	useEffect(() => extensionHost.subscribe(() => setRevision(extensionHost.getRevision())), [extensionHost]);
+	return revision;
+}
+
+function flowScreenToWorld(
+	camera: { readonly x: number; readonly y: number; readonly zoom: number },
+	sx: number,
+	sy: number,
+	viewportW: number,
+	viewportH: number,
+): { readonly x: number; readonly y: number } {
+	const cx = viewportW / 2;
+	const cy = viewportH / 2;
+	return {
+		x: (sx - cx) / camera.zoom + camera.x,
+		y: (sy - cy) / camera.zoom + camera.y,
+	};
+}
+//#endregion 🔖MediaGraphFlowExtension
+
 //#region 🔖MediaGraphCanvas
 export interface SMediaGraphCanvasProps {
 	readonly graph: SMediaGraph;
 	readonly instances: readonly SAppInstance[];
 	readonly parameters?: readonly SParameter[];
+	readonly projectionGeneration?: number;
 	readonly activeInstanceId?: string | null;
 	readonly onSelectInstance?: (instanceId: string) => void;
 	readonly onOpenInstance?: (instanceId: string) => void;
@@ -73,7 +135,8 @@ export function SMediaGraphCanvas({
 	graph,
 	instances,
 	parameters = [],
-	activeInstanceId,
+	projectionGeneration = 0,
+	activeInstanceId: _activeInstanceId,
 	onSelectInstance,
 	onOpenInstance,
 	onMoveNode,
@@ -84,9 +147,21 @@ export function SMediaGraphCanvas({
 	editable = false,
 	peers = [],
 }: SMediaGraphCanvasProps): React.ReactElement {
-	const sessionRef = useRef<DagSession | null>(null);
-	const lastFixtureRef = useRef<string>("");
+	const sessionRef = useRef<FlowSession | null>(null);
+	const containerRef = useRef<HTMLDivElement>(null);
 	const cameraRef = useRef({ x: 0, y: 0, zoom: 1 });
+	const graphRef = useRef(graph);
+	const instancesRef = useRef(instances);
+	const commandEpochRef = useRef(0);
+	const flowStoreRef = useRef(createEphemeralFlowStore());
+	const extensionHostRef = useRef<FlowExtensionHost | null>(null);
+	if (!extensionHostRef.current) extensionHostRef.current = new FlowExtensionHost();
+	const extensionHost = extensionHostRef.current;
+	const extensionRevision = useOsMediaFlowExtension(extensionHost, graph, instances, parameters);
+	const [commandRequest, setCommandRequest] = useState<FlowCanvasCommandRequest | undefined>();
+	graphRef.current = graph;
+	instancesRef.current = instances;
+
 	const dispatchProxy = useCallback(
 		(command: StudioCommand) => {
 			if (command.kind === "moveMediaNode") onMoveNode?.(command.nodeId, command.x, command.y);
@@ -94,40 +169,52 @@ export function SMediaGraphCanvas({
 				onConnectPorts?.(command.sourceNodeId, command.sourcePortId, command.targetNodeId, command.targetPortId);
 			}
 			if (command.kind === "disconnectMediaEdge") onDisconnectEdge?.(command.edgeId);
+			if (command.kind === "removeAppInstance") onRemoveInstance?.(command.instanceId);
 		},
-		[onConnectPorts, onDisconnectEdge, onMoveNode],
+		[onConnectPorts, onDisconnectEdge, onMoveNode, onRemoveInstance],
 	);
 
 	const fixtureJson = useMemo(
-		() => sMediaGraphToDagFixtureJson(graph, instances, cameraRef.current, parameters),
-		[graph, instances, parameters],
+		() => sMediaGraphToFlowFixtureJson(graph, instances, cameraRef.current, parameters),
+		[graph, instances, parameters, projectionGeneration],
 	);
-
-	useEffect(() => {
-		lastFixtureRef.current = fixtureJson;
-	}, [fixtureJson]);
 
 	const handleFixtureChange = useCallback(
 		(nextJson: string) => {
 			const next = JSON.parse(nextJson) as { readonly camera?: { readonly x: number; readonly y: number; readonly zoom: number } };
 			if (next.camera) cameraRef.current = next.camera;
 			if (!editable) return;
-			applyDagFixtureJsonToSMediaGraph(graph, nextJson, dispatchProxy);
-			lastFixtureRef.current = nextJson;
+			applyFlowFixtureJsonToSMediaGraph(graphRef.current, nextJson, dispatchProxy);
 		},
-		[dispatchProxy, editable, graph],
+		[dispatchProxy, editable],
 	);
 
-	const handlePointerUp = useCallback(() => {
-		const session = sessionRef.current;
-		if (!session || !onOpenInstance) return;
-		try {
-			const instanceId = session.takePendingOpenInstanceId?.();
-			if (instanceId) onOpenInstance(instanceId);
-		} catch {
-			/* wasm export unavailable */
-		}
-	}, [onOpenInstance]);
+	const handleSelectionChange = useCallback(
+		(nodeIds: readonly string[]) => {
+			const nodeId = nodeIds[0];
+			if (!nodeId) return;
+			const node = graphRef.current.nodes.find((entry) => entry.id === nodeId);
+			if (node) onSelectInstance?.(node.instanceId);
+		},
+		[onSelectInstance],
+	);
+
+	const handleWidgetDoubleClick = useCallback(
+		(widgetId: string) => {
+			const node = graphRef.current.nodes.find((entry) => entry.id === widgetId);
+			if (node) onOpenInstance?.(node.instanceId);
+		},
+		[onOpenInstance],
+	);
+
+	const onCanvasCommand = useCallback((command: string, args?: Record<string, unknown>) => {
+		commandEpochRef.current += 1;
+		setCommandRequest({
+			command,
+			argsJson: JSON.stringify(args ?? {}),
+			epoch: commandEpochRef.current,
+		});
+	}, []);
 
 	const handleDrop = useCallback(
 		(event: React.DragEvent<HTMLDivElement>) => {
@@ -142,17 +229,11 @@ export function SMediaGraphCanvas({
 				return;
 			}
 			if (!payload.programId || !payload.appId) return;
-			const rect = event.currentTarget.getBoundingClientRect();
+			const rect = containerRef.current?.getBoundingClientRect();
+			if (!rect) return;
 			const sx = event.clientX - rect.left;
 			const sy = event.clientY - rect.top;
-			const session = sessionRef.current;
-			let position = { x: sx, y: sy };
-			try {
-				const world = session?.screenToWorld?.(sx, sy);
-				if (world && world.length >= 2) position = { x: world[0]!, y: world[1]! };
-			} catch {
-				/* fallback screen coords */
-			}
+			const position = flowScreenToWorld(cameraRef.current, sx, sy, rect.width, rect.height);
 			onSpawnApp(payload.programId, payload.appId, position);
 		},
 		[editable, onSpawnApp],
@@ -160,6 +241,7 @@ export function SMediaGraphCanvas({
 
 	return (
 		<div
+			ref={containerRef}
 			className="relative h-full w-full"
 			onDragOver={(event) => {
 				if (editable && onSpawnApp) event.preventDefault();
@@ -176,32 +258,23 @@ export function SMediaGraphCanvas({
 					))}
 				</div>
 			) : null}
-			<DagCanvas
+			<FlowCanvas
 				className="h-full w-full"
 				fixtureJson={fixtureJson}
+				store={flowStoreRef.current}
+				extensionHost={extensionHost}
+				extensionRevision={extensionRevision}
 				onFixtureChange={editable ? handleFixtureChange : undefined}
 				onSessionReady={(session) => {
 					sessionRef.current = session;
 				}}
-				onAfterPointerUp={handlePointerUp}
+				onSelectionChange={handleSelectionChange}
+				onWidgetDoubleClick={onOpenInstance ? handleWidgetDoubleClick : undefined}
+				enableSpotlight={false}
+				contextMenu={editable ? (ctx) => buildSMediaFlowContextMenu(ctx, onCanvasCommand) : undefined}
+				commandRequest={commandRequest}
 				automaticLod
 			/>
-			<div className="pointer-events-none absolute inset-x-0 top-0 flex flex-wrap gap-2 p-2">
-				{graph.nodes.map((node) => {
-					const instance = instances.find((entry) => entry.id === node.instanceId);
-					const active = activeInstanceId === node.instanceId;
-					return (
-						<button
-							key={node.id}
-							type="button"
-							className={`pointer-events-auto rounded border px-2 py-1 text-xs ${active ? "border-[var(--semio-accent)] bg-[var(--semio-accent-subtle)]" : "border-[var(--semio-border-default)] bg-[var(--semio-surface-raised)]"}`}
-							onClick={() => onSelectInstance?.(node.instanceId)}
-						>
-							{instance?.label ?? node.instanceId}
-						</button>
-					);
-				})}
-			</div>
 		</div>
 	);
 }

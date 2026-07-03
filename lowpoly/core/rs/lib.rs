@@ -29,7 +29,31 @@ impl Default for LowpolyTransform {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct LowpolySelectionTargets {
+    pub mesh: bool,
+    pub vertex: bool,
+    pub edge: bool,
+    pub face: bool,
+}
+
+impl Default for LowpolySelectionTargets {
+    fn default() -> Self {
+        Self {
+            mesh: true,
+            vertex: false,
+            edge: false,
+            face: false,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct LowpolySelection {
+    #[serde(default)]
+    pub targets: LowpolySelectionTargets,
+    #[serde(default)]
+    pub keys: Vec<String>,
     pub mode: String,
     pub ids: Vec<u32>,
 }
@@ -37,7 +61,9 @@ pub struct LowpolySelection {
 impl Default for LowpolySelection {
     fn default() -> Self {
         Self {
-            mode: "object".into(),
+            targets: LowpolySelectionTargets::default(),
+            keys: Vec::new(),
+            mode: "mesh".into(),
             ids: Vec::new(),
         }
     }
@@ -124,7 +150,9 @@ pub fn default_fixture() -> LowpolyFixture {
         }],
         active_object_id: "obj-1".into(),
         selection: LowpolySelection {
-            mode: "object".into(),
+            targets: LowpolySelectionTargets::default(),
+            keys: vec!["lowpoly:obj-1:0:mesh:0".into()],
+            mode: "mesh".into(),
             ids: vec![0],
         },
     }
@@ -261,6 +289,73 @@ impl LowpolyDocument {
         self.fixture.selection.ids.iter().map(|&id| kernel_3d_mesh::EdgeId(id)).collect()
     }
 
+    fn normalize_selection_mode(mode: &str) -> String {
+        if mode == "object" { "mesh".into() } else { mode.into() }
+    }
+
+    fn apply_selection(&mut self, mode: &str, ids: Vec<u32>) {
+        self.fixture.selection.mode = Self::normalize_selection_mode(mode);
+        self.fixture.selection.ids = ids;
+    }
+
+    fn selection_vertex_ids(&self) -> Result<Vec<VertexId>, String> {
+        let mesh = self.active_mesh()?;
+        match self.fixture.selection.mode.as_str() {
+            "vertex" => Ok(self.selected_vertex_ids()),
+            "face" => {
+                let mut verts = Vec::new();
+                let mut seen = std::collections::HashSet::new();
+                for fid in self.selected_face_ids() {
+                    for vid in mesh.face_vertex_ids(fid).map_err(|e| format!("{e:?}"))? {
+                        if seen.insert(vid.0) {
+                            verts.push(vid);
+                        }
+                    }
+                }
+                Ok(verts)
+            }
+            "edge" => {
+                let mut verts = Vec::new();
+                let mut seen = std::collections::HashSet::new();
+                for eid in self.selected_edge_ids() {
+                    let (v0, v1) = mesh.edge_endpoints(eid).map_err(|e| format!("{e:?}"))?;
+                    for vid in [v0, v1] {
+                        if seen.insert(vid.0) {
+                            verts.push(vid);
+                        }
+                    }
+                }
+                Ok(verts)
+            }
+            "mesh" => Ok(Vec::new()),
+            _ => Ok(Vec::new()),
+        }
+    }
+
+    fn selection_transform_pivot(&self) -> Result<Vec3, String> {
+        let mesh = self.active_mesh()?;
+        if self.fixture.selection.mode == "mesh" {
+            let count = mesh.vertex_count();
+            if count == 0 {
+                return Ok(Vec3::new(0.0, 0.0, 0.0));
+            }
+            let mut sum = Vec3::new(0.0, 0.0, 0.0);
+            for index in 0..count {
+                sum = sum.add(mesh.vertex_position(VertexId(index as u32)).map_err(|e| format!("{e:?}"))?);
+            }
+            return Ok(sum.scale(1.0 / count as f32));
+        }
+        let verts = self.selection_vertex_ids()?;
+        if verts.is_empty() {
+            return Ok(Vec3::new(0.0, 0.0, 0.0));
+        }
+        let mut sum = Vec3::new(0.0, 0.0, 0.0);
+        for vid in &verts {
+            sum = sum.add(mesh.vertex_position(*vid).map_err(|e| format!("{e:?}"))?);
+        }
+        Ok(sum.scale(1.0 / verts.len() as f32))
+    }
+
     fn add_primitive(&mut self, kind: &str) -> Result<String, String> {
         let mut mesh = match kind {
             "box" => HalfedgeMesh::box_prim(1.0, 1.0, 1.0),
@@ -286,9 +381,12 @@ impl LowpolyDocument {
         self.meshes.push(mesh);
         self.ensure_object_paint_buffers(&id, 1);
         self.fixture.active_object_id = id.clone();
+        let object_index = (self.fixture.objects.len() - 1) as u32;
         self.fixture.selection = LowpolySelection {
-            mode: "object".into(),
-            ids: vec![(self.fixture.objects.len() - 1) as u32],
+            targets: LowpolySelectionTargets::default(),
+            keys: vec![format!("lowpoly:{id}:{object_index}:mesh:{object_index}")],
+            mode: "mesh".into(),
+            ids: vec![object_index],
         };
         Ok(id)
     }
@@ -554,10 +652,7 @@ impl LowpolySession {
 
     #[wasm_bindgen(js_name = setSelection)]
     pub fn set_selection(&mut self, mode: &str, ids: Vec<u32>) -> Result<(), JsValue> {
-        self.doc.fixture.selection = LowpolySelection {
-            mode: mode.into(),
-            ids,
-        };
+        self.doc.apply_selection(mode, ids);
         Ok(())
     }
 
@@ -806,33 +901,94 @@ impl LowpolySession {
     }
 
     #[wasm_bindgen(js_name = translateSelection)]
-    pub fn translate_selection(&mut self, dx: f32, dy: f32, dz: f32) -> Result<(), JsValue> {
+    pub fn translate_selection(&mut self, mode: &str, ids: Vec<u32>, dx: f32, dy: f32, dz: f32) -> Result<(), JsValue> {
+        self.doc.apply_selection(mode, ids);
         let delta = Vec3::new(dx, dy, dz);
-        let mode = self.doc.fixture.selection.mode.clone();
-        let verts = self.doc.selected_vertex_ids();
-        let mesh = self.doc.active_mesh_mut().map_err(|e| JsValue::from_str(&e))?;
-        match mode.as_str() {
-            "vertex" => {
-                mesh.move_vertices(&verts, delta).map_err(|e| JsValue::from_str(&map_err(e)))?;
+        let selection_mode = self.doc.fixture.selection.mode.clone();
+        let component_verts = match selection_mode.as_str() {
+            "vertex" | "face" | "edge" => {
+                let verts = self.doc.selection_vertex_ids().map_err(|e| JsValue::from_str(&e))?;
+                if verts.is_empty() {
+                    return Err(JsValue::from_str("no component vertices in selection"));
+                }
+                Some(verts)
             }
-            "object" | _ => {
+            _ => None,
+        };
+        let mesh = self.doc.active_mesh_mut().map_err(|e| JsValue::from_str(&e))?;
+        match selection_mode.as_str() {
+            "vertex" | "face" | "edge" => {
+                mesh.move_vertices(component_verts.as_ref().unwrap(), delta).map_err(|e| JsValue::from_str(&map_err(e)))?;
+            }
+            "mesh" | "object" => {
                 mesh.translate(delta).map_err(|e| JsValue::from_str(&map_err(e)))?;
+            }
+            _ => {
+                return Err(JsValue::from_str("unsupported selection mode for translate"));
             }
         }
         self.doc.sync_meshes_to_fixture().map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = rotateSelection)]
-    pub fn rotate_selection(&mut self, ax: f32, ay: f32, az: f32, angle: f32) -> Result<(), JsValue> {
+    pub fn rotate_selection(&mut self, mode: &str, ids: Vec<u32>, ax: f32, ay: f32, az: f32, angle: f32) -> Result<(), JsValue> {
+        self.doc.apply_selection(mode, ids);
+        let selection_mode = self.doc.fixture.selection.mode.clone();
+        let pivot = self.doc.selection_transform_pivot().map_err(|e| JsValue::from_str(&e))?;
+        let component_verts = match selection_mode.as_str() {
+            "vertex" | "face" | "edge" => {
+                let verts = self.doc.selection_vertex_ids().map_err(|e| JsValue::from_str(&e))?;
+                if verts.is_empty() {
+                    return Err(JsValue::from_str("no component vertices in selection"));
+                }
+                Some(verts)
+            }
+            _ => None,
+        };
         let mesh = self.doc.active_mesh_mut().map_err(|e| JsValue::from_str(&e))?;
-        mesh.rotate(Vec3::new(ax, ay, az), angle).map_err(|e| JsValue::from_str(&map_err(e)))?;
+        match selection_mode.as_str() {
+            "vertex" | "face" | "edge" => {
+                mesh.rotate_vertices(component_verts.as_ref().unwrap(), Vec3::new(ax, ay, az), angle, pivot)
+                    .map_err(|e| JsValue::from_str(&map_err(e)))?;
+            }
+            "mesh" | "object" => {
+                mesh.rotate(Vec3::new(ax, ay, az), angle).map_err(|e| JsValue::from_str(&map_err(e)))?;
+            }
+            _ => {
+                return Err(JsValue::from_str("unsupported selection mode for rotate"));
+            }
+        }
         self.doc.sync_meshes_to_fixture().map_err(|e| JsValue::from_str(&e))
     }
 
     #[wasm_bindgen(js_name = scaleSelection)]
-    pub fn scale_selection(&mut self, sx: f32, sy: f32, sz: f32) -> Result<(), JsValue> {
+    pub fn scale_selection(&mut self, mode: &str, ids: Vec<u32>, sx: f32, sy: f32, sz: f32) -> Result<(), JsValue> {
+        self.doc.apply_selection(mode, ids);
+        let selection_mode = self.doc.fixture.selection.mode.clone();
+        let pivot = self.doc.selection_transform_pivot().map_err(|e| JsValue::from_str(&e))?;
+        let component_verts = match selection_mode.as_str() {
+            "vertex" | "face" | "edge" => {
+                let verts = self.doc.selection_vertex_ids().map_err(|e| JsValue::from_str(&e))?;
+                if verts.is_empty() {
+                    return Err(JsValue::from_str("no component vertices in selection"));
+                }
+                Some(verts)
+            }
+            _ => None,
+        };
         let mesh = self.doc.active_mesh_mut().map_err(|e| JsValue::from_str(&e))?;
-        mesh.scale(Vec3::new(sx, sy, sz)).map_err(|e| JsValue::from_str(&map_err(e)))?;
+        match selection_mode.as_str() {
+            "vertex" | "face" | "edge" => {
+                mesh.scale_vertices(component_verts.as_ref().unwrap(), Vec3::new(sx, sy, sz), pivot)
+                    .map_err(|e| JsValue::from_str(&map_err(e)))?;
+            }
+            "mesh" | "object" => {
+                mesh.scale(Vec3::new(sx, sy, sz)).map_err(|e| JsValue::from_str(&map_err(e)))?;
+            }
+            _ => {
+                return Err(JsValue::from_str("unsupported selection mode for scale"));
+            }
+        }
         self.doc.sync_meshes_to_fixture().map_err(|e| JsValue::from_str(&e))
     }
 
@@ -954,6 +1110,64 @@ mod tests {
         let size = LOWPOLY_PAINT_TEXTURE_SIZE;
         let center = (size / 2 * size + size / 2) * 4;
         assert!(composite[center] > 200);
+    }
+
+    #[test]
+    fn face_selection_vertex_ids_are_localized() {
+        let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
+        doc.fixture.selection = LowpolySelection {
+            targets: LowpolySelectionTargets {
+                mesh: false,
+                vertex: false,
+                edge: false,
+                face: true,
+            },
+            keys: vec!["lowpoly:obj-1:0:face:0".into()],
+            mode: "face".into(),
+            ids: vec![0],
+            ..Default::default()
+        };
+        let verts = doc.selection_vertex_ids().unwrap();
+        let total = doc.active_mesh().unwrap().vertex_count();
+        assert!(!verts.is_empty());
+        assert!(verts.len() < total);
+    }
+
+    #[test]
+    fn face_translate_moves_only_selected_vertices() {
+        let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
+        doc.fixture.selection = LowpolySelection {
+            targets: LowpolySelectionTargets {
+                mesh: false,
+                vertex: false,
+                edge: false,
+                face: true,
+            },
+            keys: vec!["lowpoly:obj-1:0:face:0".into()],
+            mode: "face".into(),
+            ids: vec![0],
+            ..Default::default()
+        };
+        let mesh = doc.active_mesh().unwrap();
+        let face_verts = doc.selection_vertex_ids().unwrap();
+        let other = (0..mesh.vertex_count())
+            .map(|i| VertexId(i as u32))
+            .find(|vid| !face_verts.contains(vid))
+            .unwrap();
+        let before_face = mesh.vertex_position(face_verts[0]).unwrap();
+        let before_other = mesh.vertex_position(other).unwrap();
+        drop(mesh);
+        doc.active_mesh_mut()
+            .unwrap()
+            .move_vertices(&face_verts, Vec3::new(0.5, 0.0, 0.0))
+            .unwrap();
+        let mesh = doc.active_mesh().unwrap();
+        let after_face = mesh.vertex_position(face_verts[0]).unwrap();
+        let after_other = mesh.vertex_position(other).unwrap();
+        assert!((after_face.x() - before_face.x() - 0.5).abs() < 1e-4);
+        assert!((after_other.x() - before_other.x()).abs() < 1e-4);
+        assert!((after_other.y() - before_other.y()).abs() < 1e-4);
+        assert!((after_other.z() - before_other.z()).abs() < 1e-4);
     }
 }
 

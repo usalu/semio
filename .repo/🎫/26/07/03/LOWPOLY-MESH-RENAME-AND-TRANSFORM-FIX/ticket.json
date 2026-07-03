@@ -1,0 +1,14 @@
+{
+  "title": "Lowpoly Mesh Rename And Transform Fix",
+  "emoji": "🔷",
+  "status": "closed",
+  "description": "Rename object to mesh in lowpoly UI/selection. Fix face move moving whole mesh. Fix missing window options.",
+  "summary": "Renamed lowpoly selection mode object→mesh in UI, fixture schema, and Rust session. Face/edge/vertex gumball transforms now move only selected components via selection_vertex_ids + rotate_vertices/scale_vertices in mesh kernel. Window engagement shows persistent options (Move, Rotate, Scale, Snap, Smooth) with sessionActive and syncWindowEngagement on selection changes. Gumball centroid uses selectionCentroid for component modes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1811"
+  },
+  "goal": "🎯lowpoly",
+  "sessions": [
+    "⚪6d6cd6538e8d40e08756ee82977d3231"
+  ]
+}

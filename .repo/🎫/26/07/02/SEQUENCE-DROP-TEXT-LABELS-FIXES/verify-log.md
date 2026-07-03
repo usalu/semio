@@ -17,7 +17,11 @@
 - `@semio-tech/sequence-play:test`: 8 passed
 - `@semio-tech/imperative-core:test`: 4 passed
 
-## Root causes fixed
+## Spotlight parity
+
+- Double-click empty canvas opens Flow-style spotlight search with catalogue suggestions and ghost step preview via `setGhostStep`.
+- Double-click control step still toggles collapse/expand.
+- Keyboard: arrow keys, Enter to commit, Escape to cancel.
 
 1. `loadFixtureJson` no longer replaces the entire `SequenceHost` (uses `replace_fixture` + monotonic `next_serial`).
 2. React fixture sync compares canonicalized JSON to avoid spurious reloads on float formatting.

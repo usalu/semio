@@ -30,7 +30,6 @@ import {
 	createProductPlaygroundPlatform,
 } from "@semio-tech/framework-playground-core";
 import { registerOsMediaExportHandler } from "@semio-tech/framework-os-core";
-import { type TreeDataItem, type TreeDragAndDropController } from "@semio-tech/ui-react";
 import initLayout, { LayoutSession } from "@semio-tech/layout-rs";
 import {
 	DEFAULT_LAYOUT_DOCUMENT_JSON,
@@ -116,20 +115,6 @@ function layoutPlayPageIdFromTreeRowId(rowId: string | undefined): string | null
 function layoutPlayFrameIdFromTreeRowId(rowId: string | undefined): string | null {
 	if (!rowId?.startsWith("layout-hierarchy.frame.")) return null;
 	return rowId.slice("layout-hierarchy.frame.".length);
-}
-
-function layoutPlayLayerTargetFromTreeRowId(rowId: string | undefined): { readonly pageId: string; readonly layerId: string } | null {
-	const prefix = "layout-hierarchy.layer.";
-	if (!rowId?.startsWith(prefix)) return null;
-	const rest = rowId.slice(prefix.length);
-	const dot = rest.indexOf(".");
-	if (dot < 0) return null;
-	return { pageId: rest.slice(0, dot), layerId: rest.slice(dot + 1) };
-}
-
-function layoutPlaySpreadIdFromTreeRowId(rowId: string | undefined): string | null {
-	if (!rowId?.startsWith("layout-hierarchy.spread.")) return null;
-	return rowId.slice("layout-hierarchy.spread.".length);
 }
 
 function layoutPlayHierarchyTreeHighlightedIds(hoveredId: string | null): string[] {
@@ -361,28 +346,6 @@ export function buildLayoutPlayCatalogueTree(hoverSink?: (payload: LayoutHoverPa
 	};
 }
 
-/** @emoji 🖱️ Hierarchy tree drag controller for layout catalogue drops. */
-export function createLayoutPlayHierarchyTreeDragController(getController: () => LayoutPlayController | undefined): TreeDragAndDropController {
-	return {
-		handleDrop: ({ target, targetKind, data }) => {
-			const catalogueRaw = data[LAYOUT_CATALOGUE_KIND_DRAG_MIME];
-			if (!catalogueRaw) return;
-			const parsed = JSON.parse(catalogueRaw) as { kind?: LayoutCatalogueKind };
-			if (!parsed.kind) return;
-			const ctrl = getController();
-			if (!ctrl) return;
-			const targetRowId = targetKind === "item" ? (target as TreeDataItem).id : undefined;
-			if (parsed.kind === "page") {
-				ctrl.run("addPage", { spreadId: layoutPlaySpreadIdFromTreeRowId(targetRowId) ?? undefined });
-				return;
-			}
-			const layerTarget = layoutPlayLayerTargetFromTreeRowId(targetRowId);
-			const pageId = layoutTarget?.pageId ?? layoutPlayPageIdFromTreeRowId(targetRowId) ?? ctrl.getActivePageId();
-			const layerId = layerTarget?.layerId ?? ctrl.getDocument().pages.find((page) => page.id === pageId)?.layerIds[0];
-			ctrl.run("addFrame", { kind: parsed.kind, pageId, layerId });
-		},
-	};
-}
 
 /** @emoji 🔍 Layout play preflight panel tree. */
 export function buildLayoutPlayPreflightTree(documentJson: string): UiNode {
@@ -639,8 +602,11 @@ export class LayoutPlayController extends Controller {
 			const pageId = (args as { pageId?: string }).pageId ?? this.activePageId;
 			const page = findPage(this.history.getDocument(), pageId);
 			const layerId = (args as { layerId?: string }).layerId ?? page?.layerIds[0];
+			const x = (args as { x?: number }).x;
+			const y = (args as { y?: number }).y;
 			if (!kind || !page || !layerId) return;
-			const created = createDefaultFrame(kind, layerId);
+			const position = typeof x === "number" && typeof y === "number" ? { x, y } : undefined;
+			const created = createDefaultFrame(kind, layerId, position);
 			this.history.apply({ type: "add_frame", pageId, frame: created.frame, story: created.story, link: created.link });
 			this.pointerFocus.setSelection([created.frame.id]);
 			this.bumpInteraction();

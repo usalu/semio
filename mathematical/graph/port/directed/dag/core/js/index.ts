@@ -496,7 +496,29 @@ export class DagPlayController extends Controller {
   }
 
   private windowMeasures(): readonly WindowMeasure[] {
-    return [this.lodMeasure(DAG_PLAY_WINDOW_KIND_ID)];
+    return [
+      this.lodMeasure(DAG_PLAY_WINDOW_KIND_ID),
+      {
+        kind: "slider",
+        id: "dag-layer-spacing",
+        label: "Layer spacing",
+        value: this.layerSpacing,
+        min: 40,
+        max: 320,
+        step: 10,
+        onChange: dagPlayCmd("setSpacing", { field: "layerSpacing" }),
+      },
+      {
+        kind: "slider",
+        id: "dag-sibling-gap",
+        label: "Sibling gap",
+        value: this.siblingGap,
+        min: 10,
+        max: 160,
+        step: 5,
+        onChange: dagPlayCmd("setSpacing", { field: "siblingGap" }),
+      },
+    ];
   }
 
   private syncReorganizeOptionsJson(): void {
@@ -524,28 +546,6 @@ export class DagPlayController extends Controller {
         { id: DAG_ENGAGEMENT_REORGANIZE_ID, label: "Reorganize", command: dagPlayCmd("reorganize") },
         { id: DAG_ENGAGEMENT_ORIENTATION_LR_ID, label: "Left to Right", command: dagPlayCmd("setOrientation", { orientation: "leftRight" }) },
         { id: DAG_ENGAGEMENT_ORIENTATION_TB_ID, label: "Top to Bottom", command: dagPlayCmd("setOrientation", { orientation: "topBottom" }) },
-      ],
-      controls: [
-        {
-          kind: "slider",
-          id: "dag-layer-spacing",
-          label: "Layer spacing",
-          value: this.layerSpacing,
-          min: 40,
-          max: 320,
-          step: 10,
-          onChange: dagPlayCmd("setSpacing", { field: "layerSpacing" }),
-        },
-        {
-          kind: "slider",
-          id: "dag-sibling-gap",
-          label: "Sibling gap",
-          value: this.siblingGap,
-          min: 10,
-          max: 160,
-          step: 5,
-          onChange: dagPlayCmd("setSpacing", { field: "siblingGap" }),
-        },
       ],
       status: [{ id: "dag-layout-orientation", text: this.orientation === "leftRight" ? "Left to right" : "Top to bottom" }],
     };

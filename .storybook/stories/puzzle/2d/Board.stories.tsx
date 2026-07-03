@@ -20,7 +20,7 @@ import {
 	puzzle2dFixtureMetaKindCompatibility,
 	mergeKindCatalogBundleByRowId,
 } from "@semio-tech/puzzle-2d-react";
-import nakaginCapsuleTowerPuzzle2dFixture from "../../../../puzzle/2d/fixture/nakagin-capsule-tower.2d.json";
+import nakaginCapsuleTowerPuzzle2dFixture from "../../../../puzzle/2d/example/nakagin-capsule-tower.2d.json";
 
 const meta = {
 	title: "🧩puzzle🩻2d",

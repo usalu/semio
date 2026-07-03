@@ -1,8 +1,15 @@
 /** @emoji 📜 `@semio-tech/sequence-react` — execution-flow canvas. */
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { syncSessionVelloTheme } from "@semio-tech/ui-styling";
-import { useVelloThemeSync } from "@semio-tech/ui-react";
-import { SelectionMarquee } from "@semio-tech/ui-react";
+import {
+	useVelloThemeSync,
+	SelectionMarquee,
+	Icon,
+	cn,
+	borderNormalBottomClass,
+	floatingMenuSurfaceClass,
+	floatingMenuItemClass,
+} from "@semio-tech/ui-react";
 import {
 	isDagDrawLodKind,
 	DAG_LOD_MODE_AUTOMATIC,
@@ -30,7 +37,9 @@ import {
 	performImperativeEffects,
 	type EffectLogEntry,
 	type ImperativeCatalogueItem,
+	type ImperativeCatalogueSection,
 	type RunResult,
+	imperativeExtensionHost,
 } from "@semio-tech/imperative-core";
 import { ImperativeRunClient } from "@semio-tech/imperative-core";
 import initSequenceWasm, { SequenceSession, initSync } from "../core/rs/pkg/sequence_core.js";
@@ -367,6 +376,12 @@ function arrayToIds(array: { readonly length: number; get(index: number): unknow
 	return ids;
 }
 
+/** @emoji 🎯 Compares step id arrays for controlled selection sync. */
+export function sequenceStepIdArraysEqual(left: readonly string[], right: readonly string[]): boolean {
+	if (left.length !== right.length) return false;
+	return left.every((value, index) => value === right[index]);
+}
+
 function waitForLayoutSize(container: HTMLElement, min = 8): Promise<void> {
 	return new Promise((resolve) => {
 		let attempts = 0;
@@ -386,6 +401,280 @@ function waitForLayoutSize(container: HTMLElement, min = 8): Promise<void> {
 		probe();
 	});
 }
+
+// #region 🔖Spotlight
+interface SequenceSpotlightAnchor {
+	readonly screen: { readonly x: number; readonly y: number };
+	readonly world: { readonly x: number; readonly y: number };
+}
+
+function sequenceCatalogueItemRankScore(item: ImperativeCatalogueItem, query: string): number {
+	if (!query) return 0;
+	const q = query.toLowerCase();
+	const name = item.name.toLowerCase();
+	const kind = item.kind.toLowerCase();
+	if (name === q || kind === q) return 0;
+	if (name.startsWith(q) || kind.startsWith(q)) return 1;
+	if (name.includes(q) || kind.includes(q)) return 2;
+	const haystack = [item.name, item.summary, item.kind, item.module ?? "", item.abbreviation].join(" ").toLowerCase();
+	if (haystack.includes(q)) return 3;
+	return -1;
+}
+
+/** @emoji 🔍 Ranks imperative catalogue items for sequence canvas spotlight search. */
+export function sequenceRankCatalogueSuggestions(
+	sections: readonly ImperativeCatalogueSection[],
+	query: string,
+): ImperativeCatalogueItem[] {
+	const items = sections.flatMap((section) => section.items);
+	const trimmed = query.trim();
+	if (!trimmed) {
+		return [...items].sort((a, b) => a.name.localeCompare(b.name));
+	}
+	return items
+		.map((item) => ({ item, score: sequenceCatalogueItemRankScore(item, trimmed) }))
+		.filter((entry) => entry.score >= 0)
+		.sort((a, b) => (a.score !== b.score ? a.score - b.score : a.item.name.localeCompare(b.item.name)))
+		.map((entry) => entry.item);
+}
+
+function sequenceCatalogueItemLodDisplay(
+	item: ImperativeCatalogueItem,
+	lod: DagDrawLodKind,
+): { readonly primary: string; readonly detail: string | null; readonly showIcon: boolean } {
+	const abbrev = item.abbreviation || item.name;
+	const summary = item.summary?.trim() || null;
+	switch (lod) {
+		case "minimap":
+		case "overview":
+			return { primary: abbrev, detail: null, showIcon: true };
+		case "compact":
+		case "detail":
+			return { primary: abbrev, detail: lod === "detail" ? summary : null, showIcon: false };
+		case "normal":
+			return { primary: item.name, detail: null, showIcon: false };
+		case "micro":
+			return { primary: item.name, detail: summary, showIcon: false };
+	}
+}
+
+function sequenceSpotlightLodChrome(lod: DagDrawLodKind): {
+	readonly textClass: string;
+	readonly itemPy: string;
+	readonly maxListH: string;
+	readonly panelClass: string;
+} {
+	switch (lod) {
+		case "minimap":
+		case "overview":
+			return {
+				textClass: "text-xs",
+				itemPy: "py-0.5",
+				maxListH: "max-h-[min(12rem,50vh)]",
+				panelClass: "min-w-[8rem] max-w-[11rem]",
+			};
+		case "compact":
+		case "detail":
+			return {
+				textClass: "text-xs",
+				itemPy: "py-0.5",
+				maxListH: "max-h-[min(16rem,60vh)]",
+				panelClass: "min-w-[9rem] max-w-[13rem]",
+			};
+		default:
+			return {
+				textClass: "text-sm",
+				itemPy: "py-1",
+				maxListH: "max-h-[min(24rem,70vh)]",
+				panelClass: "min-w-[11rem] max-w-[16rem]",
+			};
+	}
+}
+
+function sequenceSpotlightSuggestionListScrollClass(expanded: boolean, lod: DagDrawLodKind): string {
+	const chrome = sequenceSpotlightLodChrome(lod);
+	return cn("min-h-0 overscroll-contain", expanded ? cn("overflow-y-auto", chrome.maxListH) : "overflow-hidden");
+}
+
+interface SequenceSpotlightProps {
+	readonly anchor: SequenceSpotlightAnchor;
+	readonly sections: readonly ImperativeCatalogueSection[];
+	readonly session: SequenceOverlaySession;
+	readonly drawLod: DagDrawLodKind;
+	readonly onCommit: (kind: string) => void;
+	readonly onClose: () => void;
+	readonly renderFrame: () => void;
+}
+
+function SequenceSpotlight({ anchor, sections, session, drawLod, onCommit, onClose, renderFrame }: SequenceSpotlightProps): React.JSX.Element {
+	const rootRef = useRef<HTMLDivElement>(null);
+	const inputRef = useRef<HTMLInputElement>(null);
+	const listRef = useRef<HTMLDivElement>(null);
+	const activeItemRef = useRef<HTMLButtonElement | null>(null);
+	const [query, setQuery] = useState("");
+	const [expanded, setExpanded] = useState(false);
+	const [activeIndex, setActiveIndex] = useState(0);
+	const lodChrome = sequenceSpotlightLodChrome(drawLod);
+	const suggestions = sequenceRankCatalogueSuggestions(sections, query);
+	const visible = expanded ? suggestions : suggestions.slice(0, 1);
+	const hasMore = suggestions.length > 1;
+
+	const syncGhost = useCallback(
+		(item: ImperativeCatalogueItem | undefined) => {
+			if (!item) {
+				session.clearGhostStep();
+				renderFrame();
+				return;
+			}
+			try {
+				session.setGhostStep(item.kind, anchor.world.x, anchor.world.y);
+				renderFrame();
+			} catch {
+				session.clearGhostStep();
+			}
+		},
+		[anchor.world.x, anchor.world.y, renderFrame, session],
+	);
+
+	const commitItem = useCallback(
+		(item: ImperativeCatalogueItem) => {
+			session.clearGhostStep();
+			onCommit(item.kind);
+			onClose();
+		},
+		[onClose, onCommit, session],
+	);
+
+	useEffect(() => {
+		inputRef.current?.focus();
+	}, []);
+
+	useEffect(() => {
+		setActiveIndex(0);
+	}, [query]);
+
+	useEffect(() => {
+		syncGhost(suggestions[activeIndex]);
+	}, [activeIndex, suggestions, syncGhost]);
+
+	useEffect(() => {
+		if (!expanded) return;
+		activeItemRef.current?.scrollIntoView({ block: "nearest" });
+	}, [activeIndex, expanded]);
+
+	useEffect(() => {
+		return () => {
+			session.clearGhostStep();
+		};
+	}, [session]);
+
+	useEffect(() => {
+		const onPointerDown = (event: PointerEvent) => {
+			const root = rootRef.current;
+			if (!root || root.contains(event.target as Node)) return;
+			session.clearGhostStep();
+			renderFrame();
+			onClose();
+		};
+		window.addEventListener("pointerdown", onPointerDown);
+		return () => window.removeEventListener("pointerdown", onPointerDown);
+	}, [onClose, renderFrame, session]);
+
+	const onInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+		if (event.key === "Escape") {
+			event.preventDefault();
+			session.clearGhostStep();
+			renderFrame();
+			onClose();
+			return;
+		}
+		if (event.key === "ArrowDown") {
+			event.preventDefault();
+			if (!suggestions.length) return;
+			setActiveIndex((index) => Math.min(index + 1, suggestions.length - 1));
+			if (!expanded && hasMore) setExpanded(true);
+			return;
+		}
+		if (event.key === "ArrowUp") {
+			event.preventDefault();
+			setActiveIndex((index) => Math.max(index - 1, 0));
+			return;
+		}
+		if (event.key === "Enter") {
+			event.preventDefault();
+			const item = suggestions[activeIndex];
+			if (item) commitItem(item);
+		}
+	};
+
+	return (
+		<div
+			ref={rootRef}
+			className={cn("absolute z-20 flex min-h-0 flex-col", lodChrome.panelClass, floatingMenuSurfaceClass)}
+			style={{ left: anchor.screen.x, top: anchor.screen.y }}
+			onPointerDown={(event) => event.stopPropagation()}
+			onDoubleClick={(event) => event.stopPropagation()}
+			onWheel={(event) => event.stopPropagation()}
+		>
+			<div className={cn("flex shrink-0 items-center gap-1 px-2 py-1", borderNormalBottomClass)}>
+				<input
+					ref={inputRef}
+					type="text"
+					value={query}
+					placeholder="Add step…"
+					className={cn("min-w-0 flex-1 bg-transparent text-foreground outline-none placeholder:text-muted", lodChrome.textClass)}
+					onChange={(event) => setQuery(event.target.value)}
+					onKeyDown={onInputKeyDown}
+				/>
+				{hasMore ? (
+					<button
+						type="button"
+						aria-label={expanded ? "Collapse suggestions" : "Show all suggestions"}
+						className="shrink-0 rounded px-1 text-muted hover:bg-accent/10 hover:text-accent"
+						onClick={() => setExpanded((value) => !value)}
+					>
+						{expanded ? "▴" : "▾"}
+					</button>
+				) : null}
+			</div>
+			<div ref={listRef} className={sequenceSpotlightSuggestionListScrollClass(expanded && hasMore, drawLod)} onWheel={(event) => event.stopPropagation()}>
+				<ul className="py-0.5" role="listbox">
+					{visible.length === 0 ? (
+						<li className={cn("px-2 py-1 text-muted", lodChrome.textClass)}>No matches</li>
+					) : (
+						visible.map((item, index) => {
+							const globalIndex = expanded ? index : 0;
+							const active = globalIndex === activeIndex;
+							const display = sequenceCatalogueItemLodDisplay(item, drawLod);
+							return (
+								<li key={item.kind} role="option" aria-selected={active}>
+									<button
+										ref={active ? activeItemRef : undefined}
+										type="button"
+										className={cn(
+											floatingMenuItemClass,
+											"flex w-full min-w-0 items-center gap-1.5 px-2",
+											lodChrome.itemPy,
+											lodChrome.textClass,
+											active && "bg-active-base text-emphasized",
+										)}
+										onMouseEnter={() => setActiveIndex(globalIndex)}
+										onClick={() => commitItem(item)}
+									>
+										{display.showIcon ? <Icon icon={item.icon} size="tiny" className="shrink-0" /> : null}
+										<span className="min-w-0 truncate font-medium">{display.primary}</span>
+										{display.detail ? <span className="min-w-0 truncate text-muted">· {display.detail}</span> : null}
+									</button>
+								</li>
+							);
+						})
+					)}
+				</ul>
+			</div>
+		</div>
+	);
+}
+// #endregion 🔖Spotlight
 
 /** @emoji 🖼️ Sequence execution-flow canvas surface. */
 export function SequenceCanvas({
@@ -420,7 +709,6 @@ export function SequenceCanvas({
 	const lastAutomaticLodRef = useRef<boolean | null>(null);
 	const lastForcedLodRef = useRef<string | null>(null);
 	const lastReportedLodRef = useRef<DagDrawLodKind | null>(null);
-	const lastSelectionRef = useRef<string>("");
 	const lastRunEpochRef = useRef(0);
 	const lastRunStopEpochRef = useRef(0);
 	const runClientRef = useRef<ImperativeRunClient | null>(null);
@@ -428,12 +716,33 @@ export function SequenceCanvas({
 	const [fixtureDragActive, setFixtureDragActive] = useState(false);
 	const [selectionBounds, setSelectionBounds] = useState<DagSelectionUnionBoundsScreen | null>(null);
 	const [marqueeOverlay, setMarqueeOverlay] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
+	const [spotlight, setSpotlight] = useState<SequenceSpotlightAnchor | null>(null);
+	const [drawLod, setDrawLod] = useState<DagDrawLodKind>("normal");
+	const [catalogueSections, setCatalogueSections] = useState<readonly ImperativeCatalogueSection[]>(() => imperativeExtensionHost.getCatalogue().sections);
 
 	const syncVelloTheme = useCallback(() => {
 		syncSessionVelloTheme(sessionRef.current);
 	}, []);
 
 	useVelloThemeSync(syncVelloTheme);
+
+	useEffect(() => {
+		return imperativeExtensionHost.subscribe(() => {
+			setCatalogueSections(imperativeExtensionHost.getCatalogue().sections);
+		});
+	}, []);
+
+	const closeSpotlight = useCallback(() => {
+		(sessionRef.current as SequenceOverlaySession | null)?.clearGhostStep();
+		setSpotlight(null);
+	}, []);
+
+	const clientToCanvas = useCallback((clientX: number, clientY: number) => {
+		const host = containerRef.current ?? canvasRef.current;
+		const rect = host?.getBoundingClientRect();
+		if (!rect) return { x: 0, y: 0 };
+		return { x: clientX - rect.left, y: clientY - rect.top };
+	}, []);
 
 	const syncLodMode = useCallback(() => {
 		const session = sessionRef.current;
@@ -452,13 +761,15 @@ export function SequenceCanvas({
 
 	const reportDrawLod = useCallback(() => {
 		const session = sessionRef.current;
-		if (!session || !onLodChangeRef.current) return;
+		if (!session) return;
 		try {
 			const label = session.drawLodLabel();
 			if (!isDagDrawLodKind(label)) return;
-			if (lastReportedLodRef.current === label) return;
-			lastReportedLodRef.current = label;
-			onLodChangeRef.current(label);
+			if (lastReportedLodRef.current !== label) {
+				lastReportedLodRef.current = label;
+				setDrawLod(label);
+				onLodChangeRef.current?.(label);
+			}
 		} catch {
 			/* session not ready */
 		}
@@ -534,6 +845,11 @@ export function SequenceCanvas({
 		}
 	}, [reportDrawLod, syncLodMode, syncMarqueeOverlay, syncSelectionBoundsOverlay, syncVelloTheme]);
 
+	const renderFrameRef = useRef(renderFrame);
+	useEffect(() => {
+		renderFrameRef.current = renderFrame;
+	}, [renderFrame]);
+
 	const resetFixtureDragDepth = useCallback(() => {
 		fixtureDragDepthRef.current = 0;
 		setFixtureDragActive(false);
@@ -557,7 +873,6 @@ export function SequenceCanvas({
 				}
 				const id = session.addStepDropped(kind, world.x, world.y, pickedId);
 				sequencePaletteDropCommittedRef.current = true;
-				lastSelectionRef.current = id;
 				onSelectionChangeRef.current?.([id]);
 				emitFixtureChange();
 				renderFrame();
@@ -567,6 +882,45 @@ export function SequenceCanvas({
 			}
 		},
 		[emitFixtureChange, renderFrame],
+	);
+
+	const commitSpotlightKind = useCallback(
+		(kind: string) => {
+			if (!spotlight) return;
+			const host = containerRef.current ?? canvasRef.current;
+			if (!host) return;
+			const rect = host.getBoundingClientRect();
+			commitStepDropAtClient(rect.left + spotlight.screen.x, rect.top + spotlight.screen.y, kind);
+		},
+		[commitStepDropAtClient, spotlight],
+	);
+
+	const onCanvasDoubleClick = useCallback(
+		(event: React.MouseEvent<HTMLCanvasElement>) => {
+			const session = sessionRef.current as SequenceOverlaySession | null;
+			if (!session) return;
+			event.preventDefault();
+			const screen = clientToCanvas(event.clientX, event.clientY);
+			let pickedId: string | null = null;
+			try {
+				pickedId = session.pickStepIdAtScreen(screen.x, screen.y) ?? null;
+			} catch {
+				pickedId = null;
+			}
+			if (pickedId) {
+				const fixture = parseSequenceFixtureJson(session.fixtureJson());
+				const step = fixture?.steps.find((entry) => entry.id === pickedId);
+				if (step && isControlKind(step.kind)) {
+					session.setStepCollapsed(pickedId, !step.collapsed);
+					emitFixtureChange();
+					renderFrame();
+					return;
+				}
+			}
+			const world = JSON.parse(session.worldFromScreen(screen.x, screen.y)) as { x: number; y: number };
+			setSpotlight({ screen, world });
+		},
+		[clientToCanvas, emitFixtureChange, renderFrame],
 	);
 
 	const onDragEnter = useCallback(
@@ -783,29 +1137,29 @@ export function SequenceCanvas({
 	}, [runRequest?.epoch]);
 
 	useEffect(() => {
-		const fingerprint = selectedStepIds.join("\0");
-		if (fingerprint === lastSelectionRef.current) return;
-		lastSelectionRef.current = fingerprint;
 		const session = sessionRef.current;
 		if (!session) return;
+		const current = arrayToIds(session.selectedNodeIds());
+		if (sequenceStepIdArraysEqual(current, selectedStepIds)) return;
 		try {
 			session.setSelection(selectedStepIds);
-			renderFrame();
+			renderFrameRef.current();
 		} catch {
 			/* selection not ready */
 		}
-	}, [renderFrame, selectedStepIds]);
+	}, [selectedStepIds]);
 
 	useEffect(() => {
 		const session = sessionRef.current;
 		if (!session) return;
 		const nextFixture = fixtureJson ?? sequenceFixtureToJson(DEFAULT_SEQUENCE_FIXTURE);
-		const canonicalNext = (() => {
-			const parsed = parseSequenceFixtureJson(nextFixture);
-			return parsed ? sequenceFixtureToJson(parsed) : nextFixture;
-		})();
 		try {
 			const currentJson = session.fixtureJson();
+			if (currentJson === nextFixture) return;
+			const canonicalNext = (() => {
+				const parsed = parseSequenceFixtureJson(nextFixture);
+				return parsed ? sequenceFixtureToJson(parsed) : nextFixture;
+			})();
 			const canonicalCurrent = (() => {
 				const parsed = parseSequenceFixtureJson(currentJson);
 				return parsed ? sequenceFixtureToJson(parsed) : currentJson;
@@ -814,14 +1168,14 @@ export function SequenceCanvas({
 			session.loadFixtureJson(nextFixture);
 			lastFixtureJsonRef.current = canonicalNext;
 			syncCompiledText();
-			renderFrame();
+			renderFrameRef.current();
 		} catch {
 			session.loadFixtureJson(nextFixture);
-			lastFixtureJsonRef.current = canonicalNext;
+			lastFixtureJsonRef.current = nextFixture;
 			syncCompiledText();
-			renderFrame();
+			renderFrameRef.current();
 		}
-	}, [fixtureJson, renderFrame, syncCompiledText]);
+	}, [fixtureJson, syncCompiledText]);
 
 	useEffect(() => {
 		const canvas = canvasRef.current;
@@ -902,11 +1256,7 @@ export function SequenceCanvas({
 				const r = canvas.getBoundingClientRect();
 				session.pointerUpScreen(event.clientX - r.left, event.clientY - r.top, event.shiftKey, event.ctrlKey || event.metaKey, event.altKey);
 				try {
-					const ids = arrayToIds(session.selectedNodeIds());
-					if (ids.join("\0") !== lastSelectionRef.current) {
-						lastSelectionRef.current = ids.join("\0");
-						onSelectionChangeRef.current?.(ids);
-					}
+					onSelectionChangeRef.current?.(arrayToIds(session.selectedNodeIds()));
 					emitFixtureChange();
 				} catch {
 					/* fixture not ready */
@@ -920,26 +1270,12 @@ export function SequenceCanvas({
 				emitFixtureChange();
 				renderFrame();
 			};
-			const onDoubleClick = (event: MouseEvent) => {
-				const r = canvas.getBoundingClientRect();
-				const sx = event.clientX - r.left;
-				const sy = event.clientY - r.top;
-				const pickedId = session.pickStepIdAtScreen(sx, sy);
-				if (!pickedId) return;
-				const fixture = parseSequenceFixtureJson(session.fixtureJson());
-				const step = fixture?.steps.find((entry) => entry.id === pickedId);
-				if (!step || !isControlKind(step.kind)) return;
-				session.setStepCollapsed(pickedId, !step.collapsed);
-				emitFixtureChange();
-				renderFrame();
-			};
 			canvas.addEventListener("pointerdown", onPointerDown);
 			canvas.addEventListener("pointermove", onPointerMove);
 			canvas.addEventListener("pointerup", finishPointer);
 			canvas.addEventListener("pointercancel", finishPointer);
 			canvas.addEventListener("pointerleave", finishPointer);
 			canvas.addEventListener("wheel", onWheel, { passive: false });
-			canvas.addEventListener("dblclick", onDoubleClick);
 			cleanupInner = () => {
 				ro.disconnect();
 				visualViewport?.removeEventListener("resize", resize);
@@ -949,7 +1285,6 @@ export function SequenceCanvas({
 				canvas.removeEventListener("pointercancel", finishPointer);
 				canvas.removeEventListener("pointerleave", finishPointer);
 				canvas.removeEventListener("wheel", onWheel);
-				canvas.removeEventListener("dblclick", onDoubleClick);
 				if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
 			};
 		})();
@@ -971,7 +1306,7 @@ export function SequenceCanvas({
 			onDragOver={onDragOver}
 			onDrop={onDrop}
 		>
-			<canvas ref={canvasRef} className="absolute inset-0 z-0 block h-full w-full touch-none" />
+			<canvas ref={canvasRef} className="absolute inset-0 z-0 block h-full w-full touch-none" onDoubleClick={onCanvasDoubleClick} />
 			<canvas
 				ref={textOverlayRef}
 				aria-hidden
@@ -1000,6 +1335,17 @@ export function SequenceCanvas({
 					<SequenceStepPaletteDragEscapeBridge enabled={fixtureDragDrop} />
 				</>
 			) : null}
+			{spotlight && sessionRef.current ? (
+				<SequenceSpotlight
+					anchor={spotlight}
+					sections={catalogueSections}
+					session={sessionRef.current as SequenceOverlaySession}
+					drawLod={drawLod}
+					onCommit={commitSpotlightKind}
+					onClose={closeSpotlight}
+					renderFrame={renderFrame}
+				/>
+			) : null}
 		</div>
 	);
 }
@@ -1015,6 +1361,19 @@ if (import.meta.vitest) {
 		it("encodes step kind", () => {
 			const payload = sequenceStepCatalogueItemDragData({ kind: "log.print" });
 			expect(decodeSequenceStepDragPayload(payload[SEQUENCE_STEP_DRAG_MIME] ?? "")).toBe("log.print");
+		});
+	});
+	describe("sequenceStepIdArraysEqual", () => {
+		it("compares step id arrays", () => {
+			expect(sequenceStepIdArraysEqual(["a"], ["a"])).toBe(true);
+			expect(sequenceStepIdArraysEqual(["a"], ["b"])).toBe(false);
+		});
+	});
+	describe("sequenceRankCatalogueSuggestions", () => {
+		it("ranks math.add ahead of unrelated items", () => {
+			const sections = imperativeExtensionHost.getCatalogue().sections;
+			const matches = sequenceRankCatalogueSuggestions(sections, "math.add");
+			expect(matches[0]?.kind).toBe("math.add");
 		});
 	});
 }

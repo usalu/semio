@@ -3049,14 +3049,41 @@ export class JackHoverBridge {
 //#endregion 🔖JackHoverBridge
 
 //#region 🔖WireHoverBridge
-import { wireNodeIdAtOffset, wireNodeOccurrences } from "@semio-tech/graph-dsl-core";
+import {
+	type WireEndpointRef,
+	type WireHoverTarget,
+	wireEndpointRefsEqual,
+	wireTargetAtOffset,
+	wireTargetOccurrences,
+} from "@semio-tech/graph-dsl-core";
 
 const WIRE_POINTER_HOVER_PREFIX = "wire:" as const;
 
-/** 🔌 Shared node-centric hover/selection bridge between graph canvases and wire DSL editors. */
+function endpointTarget(endpoint: WireEndpointRef): WireHoverTarget {
+	return { kind: "endpoint", widgetId: endpoint.widgetId, port: endpoint.port, direction: endpoint.direction };
+}
+
+function mergeOccurrences(
+	...groups: readonly (readonly { readonly start: number; readonly end: number }[])[]
+): readonly { readonly start: number; readonly end: number }[] {
+	const seen = new Set<string>();
+	const out: { start: number; end: number }[] = [];
+	for (const group of groups) {
+		for (const span of group) {
+			const key = `${span.start}:${span.end}`;
+			if (seen.has(key)) continue;
+			seen.add(key);
+			out.push({ start: span.start, end: span.end });
+		}
+	}
+	return out;
+}
+
+/** 🔌 Shared node/port hover+selection bridge between graph canvases and wire DSL editors. */
 export class WireHoverBridge {
-	private activeHoverNodeId: string | null = null;
-	private activeSelectNodeId: string | null = null;
+	private activeHoverTarget: WireHoverTarget | null = null;
+	private activeSelectTarget: WireHoverTarget | null = null;
+	private activeSelectEndpoints: WireEndpointRef[] = [];
 	private hoverEpoch = 0;
 	private selectEpoch = 0;
 	private wireText = "";
@@ -3097,22 +3124,44 @@ export class WireHoverBridge {
 		return key.startsWith(mediaPrefix) ? key.slice(mediaPrefix.length) : key;
 	}
 
+	private wireHoverKey(target: WireHoverTarget): string {
+		if (target.kind === "node") return `${WIRE_POINTER_HOVER_PREFIX}node:${target.nodeId}`;
+		return `${WIRE_POINTER_HOVER_PREFIX}endpoint:${target.widgetId}:${target.port}:${target.direction}`;
+	}
+
+	private parseWireHoverKey(key: string): WireHoverTarget | null {
+		if (!key.startsWith(WIRE_POINTER_HOVER_PREFIX)) return null;
+		const payload = key.slice(WIRE_POINTER_HOVER_PREFIX.length);
+		if (payload.startsWith("node:")) {
+			const nodeId = payload.slice("node:".length);
+			return nodeId ? { kind: "node", nodeId } : null;
+		}
+		if (payload.startsWith("endpoint:")) {
+			const [widgetId, port, direction] = payload.slice("endpoint:".length).split(":");
+			if (!widgetId || !port || (direction !== "in" && direction !== "out")) return null;
+			return { kind: "endpoint", widgetId, port, direction };
+		}
+		return { kind: "node", nodeId: payload };
+	}
+
 	private applyPointerSnapshot(selection: readonly string[], hover: string | null, hoverSourceId: string | null): void {
 		const graphSelection = selection.filter((key) => !key.startsWith("app-instance:"));
 		const selectNodeId = graphSelection[0] ? this.resolveGraphNodeKey(graphSelection[0]) : null;
-		if (selectNodeId !== this.activeSelectNodeId) {
-			this.activeSelectNodeId = selectNodeId;
+		const nextSelect: WireHoverTarget | null = selectNodeId ? { kind: "node", nodeId: selectNodeId } : null;
+		if (JSON.stringify(nextSelect) !== JSON.stringify(this.activeSelectTarget)) {
+			this.activeSelectTarget = nextSelect;
+			if (nextSelect?.kind === "node") this.activeSelectEndpoints = [];
 			this.selectEpoch += 1;
 			this.notify();
 		}
-		let hoverNodeId: string | null = null;
+		let hoverTarget: WireHoverTarget | null = null;
 		if (hover) {
-			if (hover.startsWith(WIRE_POINTER_HOVER_PREFIX)) hoverNodeId = hover.slice(WIRE_POINTER_HOVER_PREFIX.length) || null;
-			else if (hoverSourceId === this.wireSourceId) hoverNodeId = hover;
-			else hoverNodeId = this.resolveGraphNodeKey(hover);
+			if (hover.startsWith(WIRE_POINTER_HOVER_PREFIX)) hoverTarget = this.parseWireHoverKey(hover);
+			else if (hoverSourceId === this.wireSourceId) hoverTarget = this.parseWireHoverKey(`${WIRE_POINTER_HOVER_PREFIX}${hover}`) ?? { kind: "node", nodeId: hover };
+			else hoverTarget = { kind: "node", nodeId: this.resolveGraphNodeKey(hover) };
 		}
-		if (hoverNodeId !== this.activeHoverNodeId) {
-			this.activeHoverNodeId = hoverNodeId;
+		if (JSON.stringify(hoverTarget) !== JSON.stringify(this.activeHoverTarget)) {
+			this.activeHoverTarget = hoverTarget;
 			this.hoverEpoch += 1;
 			this.notify();
 		}
@@ -3145,63 +3194,79 @@ export class WireHoverBridge {
 		return this.selectEpoch;
 	}
 
-	getActiveHoverNodeId(): string | null {
-		return this.activeHoverNodeId;
+	getActiveHoverTarget(): WireHoverTarget | null {
+		return this.activeHoverTarget;
 	}
 
-	getActiveSelectNodeId(): string | null {
-		return this.activeSelectNodeId;
+	getActiveSelectTarget(): WireHoverTarget | null {
+		return this.activeSelectTarget;
+	}
+
+	getActiveSelectEndpoints(): readonly WireEndpointRef[] {
+		return this.activeSelectEndpoints;
+	}
+
+	getHoveredEndpoint(): WireEndpointRef | null {
+		const target = this.activeHoverTarget;
+		return target?.kind === "endpoint" ? { widgetId: target.widgetId, port: target.port, direction: target.direction } : null;
 	}
 
 	getWireHoverOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-		if (!this.activeHoverNodeId) return [];
-		return wireNodeOccurrences(this.wireText, this.activeHoverNodeId);
+		return wireTargetOccurrences(this.wireText, this.activeHoverTarget);
 	}
 
 	getWireSelectOccurrences(): readonly { readonly start: number; readonly end: number }[] {
-		if (!this.activeSelectNodeId) return [];
-		return wireNodeOccurrences(this.wireText, this.activeSelectNodeId);
+		return mergeOccurrences(
+			wireTargetOccurrences(this.wireText, this.activeSelectTarget),
+			...this.activeSelectEndpoints.map((endpoint) => wireTargetOccurrences(this.wireText, endpointTarget(endpoint))),
+		);
 	}
 
 	getGraphHoveredNodeIds(): readonly string[] {
-		const active = this.activeHoverNodeId ?? this.activeSelectNodeId;
-		return active ? [active] : [];
+		if (this.activeHoverTarget?.kind === "node") return [this.activeHoverTarget.nodeId];
+		if (this.activeSelectTarget?.kind === "node") return [this.activeSelectTarget.nodeId];
+		return [];
+	}
+
+	private setActiveHoverTarget(target: WireHoverTarget | null, source: "graph" | "wire" | null): void {
+		this.activeHoverTarget = target;
+		this.hoverEpoch += 1;
+		if (this.pointerFocus && source) {
+			this.syncingPointer = true;
+			try {
+				if (target && source === "graph" && target.kind === "node") {
+					this.pointerFocus.setHoverFromSource(this.graphSourceId, target.nodeId);
+				} else if (target && source === "wire") {
+					this.pointerFocus.setHoverFromSource(this.wireSourceId, this.wireHoverKey(target));
+				} else if (source === "graph") {
+					this.pointerFocus.clearHoverFromSource(this.graphSourceId);
+				} else if (source === "wire") {
+					this.pointerFocus.clearHoverFromSource(this.wireSourceId);
+				}
+			} finally {
+				this.syncingPointer = false;
+			}
+		}
+		this.notify();
 	}
 
 	setGraphHover(nodeId: string | null): void {
-		this.activeHoverNodeId = nodeId;
-		this.hoverEpoch += 1;
-		if (this.pointerFocus) {
-			this.syncingPointer = true;
-			try {
-				if (nodeId) this.pointerFocus.setHoverFromSource(this.graphSourceId, nodeId);
-				else this.pointerFocus.clearHoverFromSource(this.graphSourceId);
-			} finally {
-				this.syncingPointer = false;
-			}
-		}
-		this.notify();
+		this.setActiveHoverTarget(nodeId ? { kind: "node", nodeId } : null, "graph");
+	}
+
+	setGraphChannelHover(channel: WireEndpointRef | null): void {
+		this.setActiveHoverTarget(channel ? endpointTarget(channel) : null, null);
 	}
 
 	setWireHover(offset: number | null): void {
-		this.activeHoverNodeId = wireNodeIdAtOffset(this.wireText, offset);
-		this.hoverEpoch += 1;
-		if (this.pointerFocus) {
-			this.syncingPointer = true;
-			try {
-				const key = this.activeHoverNodeId ? `${WIRE_POINTER_HOVER_PREFIX}${this.activeHoverNodeId}` : null;
-				if (key) this.pointerFocus.setHoverFromSource(this.wireSourceId, key);
-				else this.pointerFocus.clearHoverFromSource(this.wireSourceId);
-			} finally {
-				this.syncingPointer = false;
-			}
-		}
-		this.notify();
+		const target = offset == null ? null : wireTargetAtOffset(this.wireText, offset);
+		this.setActiveHoverTarget(target, "wire");
 	}
 
 	setGraphSelect(nodeIds: readonly string[]): void {
 		const first = nodeIds[0] ?? null;
-		this.activeSelectNodeId = first;
+		this.activeSelectTarget = first ? { kind: "node", nodeId: first } : null;
+		this.activeSelectEndpoints = [];
 		this.selectEpoch += 1;
 		if (this.pointerFocus) {
 			this.syncingPointer = true;
@@ -3214,26 +3279,49 @@ export class WireHoverBridge {
 		this.notify();
 	}
 
+	setGraphChannelSelect(channels: readonly WireEndpointRef[]): void {
+		this.activeSelectEndpoints = [...channels];
+		this.activeSelectTarget = channels[0] ? endpointTarget(channels[0]) : null;
+		this.selectEpoch += 1;
+		this.notify();
+	}
+
 	/** @emoji 🪞 Updates wire graph selection without writing {@link AppPointerFocusStore} (caller owns keys). */
 	mirrorGraphSelect(nodeIds: readonly string[]): void {
-		this.activeSelectNodeId = nodeIds[0] ?? null;
+		const first = nodeIds[0] ?? null;
+		this.activeSelectTarget = first ? { kind: "node", nodeId: first } : null;
+		this.activeSelectEndpoints = [];
 		this.selectEpoch += 1;
 		this.notify();
 	}
 
 	setWireSelect(range: { start: number; end: number } | null): void {
-		this.activeSelectNodeId = range ? wireNodeIdAtOffset(this.wireText, range.start) : null;
+		const target = range ? wireTargetAtOffset(this.wireText, range.start) : null;
+		if (target?.kind === "endpoint") {
+			this.activeSelectEndpoints = [{ widgetId: target.widgetId, port: target.port, direction: target.direction }];
+			this.activeSelectTarget = endpointTarget(this.activeSelectEndpoints[0]!);
+			this.selectEpoch += 1;
+			this.notify();
+			return;
+		}
+		this.activeSelectEndpoints = [];
+		this.activeSelectTarget = target;
 		this.selectEpoch += 1;
 		if (this.pointerFocus) {
 			this.syncingPointer = true;
 			try {
-				const ids = this.activeSelectNodeId ? [this.activeSelectNodeId] : [];
+				const ids = target?.kind === "node" ? [target.nodeId] : [];
 				this.pointerFocus.setSelection(ids);
 			} finally {
 				this.syncingPointer = false;
 			}
 		}
 		this.notify();
+	}
+
+	endpointSelectionEquals(channels: readonly WireEndpointRef[]): boolean {
+		if (channels.length !== this.activeSelectEndpoints.length) return false;
+		return channels.every((channel, index) => wireEndpointRefsEqual(channel, this.activeSelectEndpoints[index]));
 	}
 }
 //#endregion 🔖WireHoverBridge

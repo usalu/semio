@@ -51,7 +51,7 @@ import { PlatformView, registerUiPanelSurfaceHost } from "@semio-tech/framework-
 import { reactHostPort, setUiLocale, Tree, TreeItem, useCommandHotkey } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
-import "./globals.css";
+import "../globals.css";
 
 console.log("[DEBUG] renderer.tsx imports resolved, module body executing");
 

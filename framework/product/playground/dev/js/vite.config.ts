@@ -8,6 +8,9 @@ const repoRoot = path.resolve(playDir, "../../../..");
 const playEntryKind = process.env.PUZZLE_PLAY_ENTRY ?? process.env.PLAYGROUND_APP ?? "draw";
 const packageRoot = process.env.PLAYGROUND_PACKAGE_ROOT;
 const extraAliases = [
+	{ find: /^three$/, replacement: path.resolve(repoRoot, "node_modules/three/build/three.module.js") },
+	{ find: /^three\/addons\/(.*)$/, replacement: `${path.resolve(repoRoot, "node_modules/three/examples/jsm")}/$1` },
+	{ find: /^three\/examples\/jsm\/(.*)$/, replacement: `${path.resolve(repoRoot, "node_modules/three/examples/jsm")}/$1` },
 	...(packageRoot
 		? [
 				{ find: `@semio-tech/${packageRoot}-react`, replacement: path.resolve(repoRoot, packageRoot, "react/index.tsx") },

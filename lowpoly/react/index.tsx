@@ -8,11 +8,19 @@ import type {
 	LowpolyPaintTool,
 	LowpolySceneObject,
 	LowpolySelectionMode,
+	LowpolySelectionTargets,
 	LowpolyTarget,
 	LowpolyTessellation,
 	LowpolyTransform,
 } from "@semio-tech/lowpoly-core";
-import { isLowpolyFixtureReady } from "@semio-tech/lowpoly-core";
+import {
+	decodeLowpolySelectionTargets,
+	encodeLowpolyPointerFocusKey,
+	isLowpolyFixtureReady,
+	lowpolyEnabledSelectionModes,
+	lowpolyPrimaryPickMode,
+	selectedIdsForMode,
+} from "@semio-tech/lowpoly-core";
 import {
 	DEFAULT_LOD_GRID_FACTOR,
 	DEFAULT_MANUAL_LOD,
@@ -72,9 +80,9 @@ export type LowpolySessionWasm = {
 	triangulate(): void;
 	mirror(axis: string, weldThreshold: number): void;
 	decimate(targetRatio: number): void;
-	translateSelection(dx: number, dy: number, dz: number): void;
-	rotateSelection(ax: number, ay: number, az: number, angle: number): void;
-	scaleSelection(sx: number, sy: number, sz: number): void;
+	translateSelection(mode: string, ids: number[], dx: number, dy: number, dz: number): void;
+	rotateSelection(mode: string, ids: number[], ax: number, ay: number, az: number, angle: number): void;
+	scaleSelection(mode: string, ids: number[], sx: number, sy: number, sz: number): void;
 	snapToGrid(grid: number): void;
 	setSmoothShading(smooth: boolean): void;
 	markUvSeam(seam: boolean, edgeIds: number[]): void;
@@ -214,6 +222,96 @@ export function tessellateAllLowpolySession(session: LowpolySessionWasm): Lowpol
 	}
 }
 
+const LOWPOLY_PICK_PRIORITY: readonly LowpolySelectionMode[] = ["vertex", "edge", "face", "mesh"];
+
+function lowpolySelectedSetForObject(targets: readonly LowpolyTarget[], objectId: string, mode: LowpolySelectionMode): Set<number> {
+	return new Set(selectedIdsForMode(targets.filter((target) => target.objectId === objectId), mode));
+}
+
+function lowpolyResolveTransformVertexIds(tessellation: LowpolyTessellation, targets: readonly LowpolyTarget[]): number[] {
+	const ids = new Set<number>();
+	for (const target of targets) {
+		if (target.mode === "vertex") {
+			ids.add(target.id);
+			continue;
+		}
+		if (target.mode === "edge") {
+			for (let edge = 0; edge < tessellation.edgeIds.length; edge += 1) {
+				if (tessellation.edgeIds[edge] !== target.id) continue;
+				const i0 = edge * 6;
+				const i1 = i0 + 3;
+				for (const index of [i0, i1]) {
+					const x = tessellation.edgePositions[index]!;
+					const y = tessellation.edgePositions[index + 1]!;
+					const z = tessellation.edgePositions[index + 2]!;
+					for (let vertex = 0; vertex < tessellation.positions.length; vertex += 3) {
+						if (
+							Math.abs(tessellation.positions[vertex]! - x) < 1e-5 &&
+							Math.abs(tessellation.positions[vertex + 1]! - y) < 1e-5 &&
+							Math.abs(tessellation.positions[vertex + 2]! - z) < 1e-5
+						) {
+							const vid = tessellation.vertexIds[vertex / 3];
+							if (vid != null) ids.add(vid);
+						}
+					}
+				}
+			}
+			continue;
+		}
+		if (target.mode === "face") {
+			for (let tri = 0; tri < tessellation.faceIds.length; tri += 1) {
+				if (tessellation.faceIds[tri] !== target.id) continue;
+				for (let corner = 0; corner < 3; corner += 1) {
+					const vid = tessellation.vertexIds[tessellation.indices[tri * 3 + corner]!]!;
+					if (vid != null) ids.add(vid);
+				}
+			}
+		}
+	}
+	return [...ids];
+}
+
+function selectionCentroidForTargets(
+	sceneObjects: readonly LowpolySceneObject[],
+	selectedTargets: readonly LowpolyTarget[],
+): [number, number, number] {
+	if (!selectedTargets.length) {
+		const active = sceneObjects.find((object) => object.active) ?? sceneObjects[0];
+		return active ? meshCentroid(active.tessellation.positions) : [0, 0, 0];
+	}
+	const points: [number, number, number][] = [];
+	for (const target of selectedTargets) {
+		const object = sceneObjects.find((entry) => entry.id === target.objectId);
+		if (!object) continue;
+		const [x, y, z] = selectionCentroid(object.tessellation, target.mode, [target.id]);
+		const [px, py, pz] = object.transform.position;
+		points.push([x + px, y + py, z + pz]);
+	}
+	if (!points.length) return [0, 0, 0];
+	let x = 0;
+	let y = 0;
+	let z = 0;
+	for (const [px, py, pz] of points) {
+		x += px;
+		y += py;
+		z += pz;
+	}
+	return [x / points.length, y / points.length, z / points.length];
+}
+
+/** @emoji 🎯 Mirrors React selection state into the WASM session before mesh commands run. */
+export function syncLowpolySessionSelection(
+	session: LowpolySessionWasm,
+	selectionTargets: LowpolySelectionTargets,
+	selectedTargets: readonly LowpolyTarget[],
+	activeObjectId?: string,
+): void {
+	if (activeObjectId) session.setActiveObject(activeObjectId);
+	const primaryMode = lowpolyPrimaryPickMode(selectionTargets);
+	const primaryIds = [...selectedIdsForMode(selectedTargets, primaryMode)];
+	session.setSelection(primaryMode, primaryIds);
+}
+
 //#endregion WasmBridge
 
 //#region MeshBuffers
@@ -335,6 +433,60 @@ function meshCentroid(positions: Float32Array): [number, number, number] {
 	return [x / count, y / count, z / count];
 }
 
+function selectionCentroid(
+	tessellation: LowpolyTessellation,
+	mode: LowpolySelectionMode,
+	selectedIds: readonly number[],
+): [number, number, number] {
+	if (!selectedIds.length) return meshCentroid(tessellation.positions);
+	const selected = new Set(selectedIds);
+	const points: [number, number, number][] = [];
+	if (mode === "face") {
+		for (let tri = 0; tri < tessellation.faceIds.length; tri += 1) {
+			if (!selected.has(tessellation.faceIds[tri]!)) continue;
+			for (let corner = 0; corner < 3; corner += 1) {
+				const vertex = tessellation.indices[tri * 3 + corner] ?? 0;
+				points.push([
+					tessellation.positions[vertex * 3]!,
+					tessellation.positions[vertex * 3 + 1]!,
+					tessellation.positions[vertex * 3 + 2]!,
+				]);
+			}
+		}
+	} else if (mode === "edge") {
+		for (let edge = 0; edge < tessellation.edgeIds.length; edge += 1) {
+			if (!selected.has(tessellation.edgeIds[edge]!)) continue;
+			points.push([
+				(tessellation.edgePositions[edge * 6]! + tessellation.edgePositions[edge * 6 + 3]!) / 2,
+				(tessellation.edgePositions[edge * 6 + 1]! + tessellation.edgePositions[edge * 6 + 4]!) / 2,
+				(tessellation.edgePositions[edge * 6 + 2]! + tessellation.edgePositions[edge * 6 + 5]!) / 2,
+			]);
+		}
+	} else if (mode === "vertex") {
+		const emitted = new Set<number>();
+		for (let index = 0; index < tessellation.vertexIds.length; index += 1) {
+			const id = tessellation.vertexIds[index]!;
+			if (!selected.has(id) || emitted.has(id)) continue;
+			emitted.add(id);
+			points.push([
+				tessellation.positions[index * 3]!,
+				tessellation.positions[index * 3 + 1]!,
+				tessellation.positions[index * 3 + 2]!,
+			]);
+		}
+	}
+	if (!points.length) return meshCentroid(tessellation.positions);
+	let x = 0;
+	let y = 0;
+	let z = 0;
+	for (const [px, py, pz] of points) {
+		x += px;
+		y += py;
+		z += pz;
+	}
+	return [x / points.length, y / points.length, z / points.length];
+}
+
 function boundsFromPositions(positions: Float32Array): { min: THREE.Vector3; max: THREE.Vector3 } | null {
 	if (positions.length < 3) return null;
 	const min = new THREE.Vector3(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
@@ -379,8 +531,8 @@ export type LowpolyTransformTool = "move" | "rotate" | "scale";
 export interface LowpolyCanvasProps {
 	readonly fixtureJson: string;
 	readonly sceneObjects: readonly LowpolySceneObject[];
-	readonly selectionMode: LowpolySelectionMode;
-	readonly selectedIds: readonly number[];
+	readonly selectionTargets: LowpolySelectionTargets;
+	readonly selectedTargets: readonly LowpolyTarget[];
 	readonly hoveredTarget?: LowpolyTarget | null;
 	readonly transformTool: LowpolyTransformTool;
 	readonly session: LowpolySessionWasm | null;
@@ -393,7 +545,7 @@ export interface LowpolyCanvasProps {
 	readonly paintBrushHardness?: number;
 	readonly className?: string;
 	readonly onFixtureChange?: (json: string) => void;
-	readonly onSelectionChange?: (mode: LowpolySelectionMode, ids: readonly number[], activeObjectId?: string) => void;
+	readonly onSelectionChange?: (keys: readonly string[], activeObjectId?: string) => void;
 	readonly onHoverChange?: (target: LowpolyTarget | null) => void;
 	readonly onSceneChange?: (objects: readonly LowpolySceneObject[]) => void;
 	readonly onPaintStrokeBegin?: () => void;
@@ -433,11 +585,11 @@ function LowpolyCameraBridge({
 
 function LowpolyMeshLayer({
 	object,
-	selectedIds,
+	selectionTargets,
+	selectedTargets,
 	previewAddIds,
 	previewRemoveIds,
 	hoveredTarget,
-	selectionMode,
 	meshColor,
 	edgeColor,
 	selectColor,
@@ -449,74 +601,94 @@ function LowpolyMeshLayer({
 	onPaintAt,
 }: {
 	readonly object: LowpolySceneObject;
-	readonly selectedIds: readonly number[];
+	readonly selectionTargets: LowpolySelectionTargets;
+	readonly selectedTargets: readonly LowpolyTarget[];
 	readonly previewAddIds: readonly number[];
 	readonly previewRemoveIds: readonly number[];
 	readonly hoveredTarget: LowpolyTarget | null;
-	readonly selectionMode: LowpolySelectionMode;
 	readonly meshColor: string;
 	readonly edgeColor: string;
 	readonly selectColor: string;
 	readonly hoverColor: string;
 	readonly paintTexture: THREE.Texture | null;
 	readonly pickEnabled: boolean;
-	readonly onPick: (objectIndex: number, id: number, mode: SelectionMergeMode) => void;
+	readonly onPick: (target: LowpolyTarget, mode: SelectionMergeMode) => void;
 	readonly onHover: (target: LowpolyTarget | null) => void;
 	readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
 }): React.ReactElement | null {
 	const tessellation = object.tessellation;
 	const { surface, edges } = reactHostPort.useMemo(() => buildMeshGeometry(tessellation), [tessellation]);
-	const isObjectSelected = selectionMode === "object" && (selectedIds.includes(object.index) || previewAddIds.includes(object.index)) && !previewRemoveIds.includes(object.index);
-	const hoveredId = hoveredTarget?.objectId === object.id && hoveredTarget.mode === selectionMode ? hoveredTarget.id : null;
-	const isObjectHovered = selectionMode === "object" && (hoveredId === object.index || previewRemoveIds.includes(object.index));
-	const selectedSet = reactHostPort.useMemo(() => {
-		const next = new Set(selectedIds);
+	const meshSelectedSet = reactHostPort.useMemo(() => {
+		const next = lowpolySelectedSetForObject(selectedTargets, object.id, "mesh");
 		for (const id of previewAddIds) next.add(id);
 		for (const id of previewRemoveIds) next.delete(id);
 		return next;
-	}, [previewAddIds, previewRemoveIds, selectedIds]);
+	}, [object.id, previewAddIds, previewRemoveIds, selectedTargets]);
+	const faceSelectedSet = reactHostPort.useMemo(() => {
+		const next = lowpolySelectedSetForObject(selectedTargets, object.id, "face");
+		for (const id of previewAddIds) next.add(id);
+		for (const id of previewRemoveIds) next.delete(id);
+		return next;
+	}, [object.id, previewAddIds, previewRemoveIds, selectedTargets]);
+	const edgeSelectedSet = reactHostPort.useMemo(() => {
+		const next = lowpolySelectedSetForObject(selectedTargets, object.id, "edge");
+		for (const id of previewAddIds) next.add(id);
+		for (const id of previewRemoveIds) next.delete(id);
+		return next;
+	}, [object.id, previewAddIds, previewRemoveIds, selectedTargets]);
+	const vertexSelectedSet = reactHostPort.useMemo(() => {
+		const next = lowpolySelectedSetForObject(selectedTargets, object.id, "vertex");
+		for (const id of previewAddIds) next.add(id);
+		for (const id of previewRemoveIds) next.delete(id);
+		return next;
+	}, [object.id, previewAddIds, previewRemoveIds, selectedTargets]);
+	const isObjectSelected = selectionTargets.mesh && meshSelectedSet.has(object.index);
+	const isObjectHovered = selectionTargets.mesh && hoveredTarget?.objectId === object.id && hoveredTarget.mode === "mesh" && hoveredTarget.id === object.index;
+	const hoveredFaceId = hoveredTarget?.objectId === object.id && hoveredTarget.mode === "face" ? hoveredTarget.id : null;
+	const hoveredEdgeId = hoveredTarget?.objectId === object.id && hoveredTarget.mode === "edge" ? hoveredTarget.id : null;
+	const hoveredVertexId = hoveredTarget?.objectId === object.id && hoveredTarget.mode === "vertex" ? hoveredTarget.id : null;
 	const selectedFaceGeometry = reactHostPort.useMemo(
-		() => selectionMode === "face" ? buildFaceOverlayGeometry(tessellation, selectedSet) : null,
-		[selectedSet, selectionMode, tessellation],
+		() => (selectionTargets.face ? buildFaceOverlayGeometry(tessellation, faceSelectedSet) : null),
+		[faceSelectedSet, selectionTargets.face, tessellation],
 	);
 	const hoveredFaceGeometry = reactHostPort.useMemo(
-		() => selectionMode === "face"
+		() => selectionTargets.face
 			? buildFaceOverlayGeometry(
 				tessellation,
 				new Set([
-					...(hoveredId != null && !selectedSet.has(hoveredId) ? [hoveredId] : []),
-					...previewRemoveIds.filter((id) => !selectedSet.has(id)),
+					...(hoveredFaceId != null && !faceSelectedSet.has(hoveredFaceId) ? [hoveredFaceId] : []),
+					...previewRemoveIds.filter((id) => !faceSelectedSet.has(id)),
 				]),
 			)
 			: null,
-		[hoveredId, previewRemoveIds, selectedSet, selectionMode, tessellation],
+		[faceSelectedSet, hoveredFaceId, previewRemoveIds, selectionTargets.face, tessellation],
 	);
 	const selectedEdgeGeometry = reactHostPort.useMemo(
-		() => selectionMode === "edge" ? buildEdgeOverlayGeometry(tessellation, selectedSet) : null,
-		[selectedSet, selectionMode, tessellation],
+		() => (selectionTargets.edge ? buildEdgeOverlayGeometry(tessellation, edgeSelectedSet) : null),
+		[edgeSelectedSet, selectionTargets.edge, tessellation],
 	);
 	const hoveredEdgeGeometry = reactHostPort.useMemo(
-		() => selectionMode === "edge"
+		() => selectionTargets.edge
 			? buildEdgeOverlayGeometry(
 				tessellation,
 				new Set([
-					...(hoveredId != null && !selectedSet.has(hoveredId) ? [hoveredId] : []),
-					...previewRemoveIds.filter((id) => !selectedSet.has(id)),
+					...(hoveredEdgeId != null && !edgeSelectedSet.has(hoveredEdgeId) ? [hoveredEdgeId] : []),
+					...previewRemoveIds.filter((id) => !edgeSelectedSet.has(id)),
 				]),
 			)
 			: null,
-		[hoveredId, previewRemoveIds, selectedSet, selectionMode, tessellation],
+		[edgeSelectedSet, hoveredEdgeId, previewRemoveIds, selectionTargets.edge, tessellation],
 	);
 	const selectedVertexGeometry = reactHostPort.useMemo(
-		() => selectionMode === "vertex" ? buildVertexOverlayGeometry(tessellation, selectedSet) : null,
-		[selectedSet, selectionMode, tessellation],
+		() => (selectionTargets.vertex ? buildVertexOverlayGeometry(tessellation, vertexSelectedSet) : null),
+		[selectionTargets.vertex, tessellation, vertexSelectedSet],
 	);
 	const vertexPickGeometry = reactHostPort.useMemo(
-		() => selectionMode === "vertex" ? buildVertexPickGeometry(tessellation) : null,
-		[selectionMode, tessellation],
+		() => (selectionTargets.vertex ? buildVertexPickGeometry(tessellation) : null),
+		[selectionTargets.vertex, tessellation],
 	);
 	const vertexPickIds = reactHostPort.useMemo(() => {
-		if (selectionMode !== "vertex") return [] as number[];
+		if (!selectionTargets.vertex) return [] as number[];
 		const ids: number[] = [];
 		const emitted = new Set<number>();
 		for (let index = 0; index < tessellation.vertexIds.length; index += 1) {
@@ -526,32 +698,39 @@ function LowpolyMeshLayer({
 			ids.push(id);
 		}
 		return ids;
-	}, [selectionMode, tessellation]);
+	}, [selectionTargets.vertex, tessellation]);
 	const hoveredVertexGeometry = reactHostPort.useMemo(
-		() => selectionMode === "vertex"
+		() => selectionTargets.vertex
 			? buildVertexOverlayGeometry(
 				tessellation,
 				new Set([
-					...(hoveredId != null && !selectedSet.has(hoveredId) ? [hoveredId] : []),
-					...previewRemoveIds.filter((id) => !selectedSet.has(id)),
+					...(hoveredVertexId != null && !vertexSelectedSet.has(hoveredVertexId) ? [hoveredVertexId] : []),
+					...previewRemoveIds.filter((id) => !vertexSelectedSet.has(id)),
 				]),
 			)
 			: null,
-		[hoveredId, previewRemoveIds, selectedSet, selectionMode, tessellation],
+		[hoveredVertexId, previewRemoveIds, selectionTargets.vertex, tessellation, vertexSelectedSet],
 	);
 	if (!surface) return null;
 
-	const handlePick = (id: number, event: { stopPropagation: () => void; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+	const targetFor = (mode: LowpolySelectionMode, id: number): LowpolyTarget => ({
+		objectId: object.id,
+		objectIndex: object.index,
+		mode,
+		id,
+	});
+
+	const handlePick = (target: LowpolyTarget, event: { stopPropagation: () => void; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
 		if (!pickEnabled) return;
 		event.stopPropagation();
 		const mode = marqueeModeFromModifiers(event);
-		onPick(object.index, id, mode === "default" ? "invertive" : mode);
+		onPick(target, mode === "default" ? "invertive" : mode);
 	};
 
-	const handleHover = (id: number, event: { stopPropagation?: () => void }) => {
+	const handleHover = (target: LowpolyTarget, event: { stopPropagation?: () => void }) => {
 		if (!pickEnabled || onPaintAt) return;
 		event.stopPropagation?.();
-		onHover({ objectId: object.id, objectIndex: object.index, mode: selectionMode, id });
+		onHover(target);
 	};
 
 	const paintFromHit = (event: THREE.Event & { faceIndex?: number | null; point?: THREE.Vector3; uv?: THREE.Vector2 }) => {
@@ -580,10 +759,10 @@ function LowpolyMeshLayer({
 						paintFromHit(event);
 						return;
 					}
-					if (selectionMode === "face" && event.faceIndex != null && tessellation.faceIds.length > event.faceIndex) {
-						handlePick(tessellation.faceIds[event.faceIndex]!, event);
-					} else if (selectionMode === "object") {
-						handlePick(object.index, event);
+					if (selectionTargets.face && event.faceIndex != null && tessellation.faceIds.length > event.faceIndex) {
+						handlePick(targetFor("face", tessellation.faceIds[event.faceIndex]!), event);
+					} else if (selectionTargets.mesh) {
+						handlePick(targetFor("mesh", object.index), event);
 					}
 				}}
 				onPointerMove={(event) => {
@@ -591,11 +770,11 @@ function LowpolyMeshLayer({
 						if ((event.buttons & 1) !== 0) paintFromHit(event);
 						return;
 					}
-					if (selectionMode === "face" && event.faceIndex != null) {
+					if (selectionTargets.face && event.faceIndex != null) {
 						const faceId = tessellation.faceIds[event.faceIndex];
-						if (faceId != null) handleHover(faceId, event);
-					} else if (selectionMode === "object") {
-						handleHover(object.index, event);
+						if (faceId != null) handleHover(targetFor("face", faceId), event);
+					} else if (selectionTargets.mesh) {
+						handleHover(targetFor("mesh", object.index), event);
 					}
 				}}
 				onPointerOut={() => onHover(null)}
@@ -627,19 +806,19 @@ function LowpolyMeshLayer({
 				<lineSegments
 					geometry={edges}
 					onClick={(event) => {
-						if (!pickEnabled || selectionMode !== "edge") return;
+						if (!pickEnabled || !selectionTargets.edge) return;
 						const idx = (event as unknown as { index?: number }).index;
 						if (typeof idx !== "number") return;
 						const edgeIndex = Math.floor(idx / 2);
 						const edgeId = tessellation.edgeIds[edgeIndex];
 						if (edgeId == null) return;
-						handlePick(edgeId, event);
+						handlePick(targetFor("edge", edgeId), event);
 					}}
 					onPointerMove={(event) => {
-						if (!pickEnabled || selectionMode !== "edge") return;
+						if (!pickEnabled || !selectionTargets.edge) return;
 						const index = (event as unknown as { index?: number }).index;
 						const edgeId = typeof index === "number" ? tessellation.edgeIds[Math.floor(index / 2)] : undefined;
-						if (edgeId != null) handleHover(edgeId, event);
+						if (edgeId != null) handleHover(targetFor("edge", edgeId), event);
 					}}
 					onPointerOut={() => onHover(null)}
 				>
@@ -656,7 +835,7 @@ function LowpolyMeshLayer({
 					<lineBasicMaterial color={hoverColor} linewidth={3} />
 				</lineSegments>
 			) : null}
-			{selectionMode === "vertex" && vertexPickGeometry ? (
+			{selectionTargets.vertex && vertexPickGeometry ? (
 				<points
 					geometry={vertexPickGeometry}
 					onClick={(event) => {
@@ -665,13 +844,13 @@ function LowpolyMeshLayer({
 						if (typeof idx !== "number") return;
 						const vertexId = vertexPickIds[idx];
 						if (vertexId == null) return;
-						handlePick(vertexId, event);
+						handlePick(targetFor("vertex", vertexId), event);
 					}}
 					onPointerMove={(event) => {
 						if (!pickEnabled) return;
 						const index = (event as unknown as { index?: number }).index;
 						const vertexId = typeof index === "number" ? vertexPickIds[index] : undefined;
-						if (vertexId != null) handleHover(vertexId, event);
+						if (vertexId != null) handleHover(targetFor("vertex", vertexId), event);
 					}}
 					onPointerOut={() => onHover(null)}
 				>
@@ -695,11 +874,13 @@ function LowpolyMeshLayer({
 function LowpolyGumballLayer({
 	active,
 	target,
+	onDragStart,
 	onDragEnd,
 	onDraggingChanged,
 }: {
 	readonly active: boolean;
 	readonly target: THREE.Object3D | null;
+	readonly onDragStart?: (kind: GumballHandleKind, pose: GumballPose) => void;
 	readonly onDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
 	readonly onDraggingChanged: (active: boolean) => void;
 }): React.ReactElement | null {
@@ -707,6 +888,7 @@ function LowpolyGumballLayer({
 	return (
 		<UnifiedGumball
 			target={target}
+			onDragStart={onDragStart}
 			onDragEnd={onDragEnd}
 			onDraggingChanged={(dragging) => {
 				gumballPointerConsumesCanvasEventRef.current = dragging;
@@ -719,8 +901,8 @@ function LowpolyGumballLayer({
 function LowpolyMarqueeBridge({
 	containerRef,
 	sceneObjects,
-	selectionMode,
-	selectedIds,
+	selectionTargets,
+	selectedTargets,
 	cameraRef,
 	sizeRef,
 	onCommit,
@@ -729,8 +911,8 @@ function LowpolyMarqueeBridge({
 }: {
 	readonly containerRef: React.RefObject<HTMLDivElement | null>;
 	readonly sceneObjects: readonly LowpolySceneObject[];
-	readonly selectionMode: LowpolySelectionMode;
-	readonly selectedIds: readonly number[];
+	readonly selectionTargets: LowpolySelectionTargets;
+	readonly selectedTargets: readonly LowpolyTarget[];
 	readonly cameraRef: React.RefObject<THREE.Camera | null>;
 	readonly sizeRef: React.RefObject<{ width: number; height: number }>;
 	readonly onCommit: (ids: readonly number[], mode: SelectionMergeMode) => void;
@@ -746,9 +928,9 @@ function LowpolyMarqueeBridge({
 		initial: [],
 	});
 	const sceneObjectsRef = reactHostPort.useRef(sceneObjects);
-	const selectedIdsRef = reactHostPort.useRef(selectedIds);
+	const selectedIdsRef = reactHostPort.useRef<number[]>([]);
 	sceneObjectsRef.current = sceneObjects;
-	selectedIdsRef.current = selectedIds;
+	selectedIdsRef.current = [...selectedIdsForMode(selectedTargets, lowpolyPrimaryPickMode(selectionTargets))];
 
 	const clientToLocal = reactHostPort.useCallback((clientX: number, clientY: number) => {
 		const host = containerRef.current;
@@ -761,6 +943,7 @@ function LowpolyMarqueeBridge({
 		const camera = cameraRef.current;
 		const size = sizeRef.current;
 		if (!camera) return [] as number[];
+		const selectionMode = lowpolyPrimaryPickMode(selectionTargets);
 		const rect = {
 			left: Math.min(start.x, end.x),
 			top: Math.min(start.y, end.y),
@@ -774,7 +957,7 @@ function LowpolyMarqueeBridge({
 			const quat = eulerToQuaternion(object.transform.rotation);
 			const scale = new THREE.Vector3(...object.transform.scale);
 			groupMatrix.compose(pos, quat, scale);
-			if (selectionMode === "object") {
+			if (selectionMode === "mesh") {
 				const bounds = boundsFromPositions(object.tessellation.positions);
 				if (!bounds) continue;
 				const corners = [
@@ -832,7 +1015,7 @@ function LowpolyMarqueeBridge({
 			}
 		}
 		return [...new Set(hits)];
-	}, [cameraRef, selectionMode, sizeRef]);
+	}, [cameraRef, selectionTargets, sizeRef]);
 
 	reactHostPort.useEffect(() => {
 		const canvas = gl.domElement;
@@ -974,6 +1157,19 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 		props.onFixtureChange?.(json);
 	}, [props.onFixtureChange, props.session]);
 
+	const activeObject = props.sceneObjects.find((object) => object.active) ?? props.sceneObjects[0] ?? null;
+	const selectionTargetsRef = reactHostPort.useRef(props.selectionTargets);
+	const selectedTargetsRef = reactHostPort.useRef(props.selectedTargets);
+	const activeObjectIdRef = reactHostPort.useRef(activeObject?.id);
+	selectionTargetsRef.current = props.selectionTargets;
+	selectedTargetsRef.current = props.selectedTargets;
+	activeObjectIdRef.current = activeObject?.id;
+
+	reactHostPort.useEffect(() => {
+		if (!props.session) return;
+		syncLowpolySessionSelection(props.session, props.selectionTargets, props.selectedTargets, activeObject?.id);
+	}, [activeObject?.id, props.selectedTargets, props.selectionTargets, props.session]);
+
 	reactHostPort.useEffect(() => {
 		if (!props.session || !isLowpolyFixtureReady(props.fixtureJson)) return;
 		if (props.fixtureJson === sessionEmittedFixtureRef.current) {
@@ -981,10 +1177,64 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 			return;
 		}
 		if (!safeLoadLowpolyFixture(props.session, props.fixtureJson)) return;
+		syncLowpolySessionSelection(
+			props.session,
+			selectionTargetsRef.current,
+			selectedTargetsRef.current,
+			activeObjectIdRef.current,
+		);
 		refreshScene();
 	}, [props.fixtureJson, props.session, refreshScene]);
 
-	const activeObject = props.sceneObjects.find((object) => object.active) ?? props.sceneObjects[0] ?? null;
+	const transformVertexIds = reactHostPort.useMemo(() => {
+		if (!activeObject) return [] as number[];
+		return lowpolyResolveTransformVertexIds(activeObject.tessellation, props.selectedTargets);
+	}, [activeObject, props.selectedTargets]);
+
+	const applySessionTransform = reactHostPort.useCallback(
+		(apply: () => void) => {
+			if (!props.session) return;
+			if (activeObject?.id) props.session.setActiveObject(activeObject.id);
+			apply();
+			emitFixtureChange();
+			refreshScene();
+			const [x, y, z] = selectionCentroidForTargets(props.sceneObjects, props.selectedTargets);
+			gumballTargetRef.current.position.set(x, y, z);
+			gumballTargetRef.current.updateMatrixWorld();
+		},
+		[activeObject?.id, emitFixtureChange, props.sceneObjects, props.selectedTargets, props.session, refreshScene],
+	);
+
+	const onGumballDragStart = reactHostPort.useCallback(() => {
+		if (!props.session) return;
+		syncLowpolySessionSelection(props.session, props.selectionTargets, props.selectedTargets, activeObject?.id);
+	}, [activeObject?.id, props.selectedTargets, props.selectionTargets, props.session]);
+
+	const onGumballDragEnd = reactHostPort.useCallback(
+		(kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
+			if (!props.session || interactionMode !== "model" || !transformVertexIds.length) return;
+			try {
+				const dx = after.position[0] - before.position[0];
+				const dy = after.position[1] - before.position[1];
+				const dz = after.position[2] - before.position[2];
+				applySessionTransform(() => {
+					if (props.transformTool === "move") {
+						props.session!.translateSelection("vertex", transformVertexIds, dx, dy, dz);
+					} else if (props.transformTool === "rotate") {
+						props.session!.rotateSelection("vertex", transformVertexIds, 0, 1, 0, after.rotation[1] - before.rotation[1]);
+					} else {
+						const sx = after.scale[0] / Math.max(before.scale[0], 1e-6);
+						const sy = after.scale[1] / Math.max(before.scale[1], 1e-6);
+						const sz = after.scale[2] / Math.max(before.scale[2], 1e-6);
+						props.session!.scaleSelection("vertex", transformVertexIds, sx, sy, sz);
+					}
+				});
+			} catch {
+				/* transform may fail without mesh selection */
+			}
+		},
+		[applySessionTransform, interactionMode, props, transformVertexIds],
+	);
 
 	reactHostPort.useEffect(() => {
 		if (interactionMode !== "paint" || !props.session) return;
@@ -993,29 +1243,10 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 		}
 	}, [interactionMode, props.paintTextureRevision, props.sceneObjects, props.session, refreshPaintTexture]);
 
-	const gumballCentroid = reactHostPort.useMemo(() => {
-		if (props.selectionMode === "object") {
-			const selected = props.sceneObjects.filter((object) => props.selectedIds.includes(object.index));
-			const targets = selected.length ? selected : activeObject ? [activeObject] : [];
-			if (!targets.length) return [0, 0, 0] as [number, number, number];
-			let x = 0;
-			let y = 0;
-			let z = 0;
-			for (const object of targets) {
-				const [cx, cy, cz] = meshCentroid(object.tessellation.positions);
-				const [px, py, pz] = object.transform.position;
-				x += cx + px;
-				y += cy + py;
-				z += cz + pz;
-			}
-			const count = targets.length;
-			return [x / count, y / count, z / count] as [number, number, number];
-		}
-		if (!activeObject) return [0, 0, 0] as [number, number, number];
-		const [x, y, z] = meshCentroid(activeObject.tessellation.positions);
-		const [px, py, pz] = activeObject.transform.position;
-		return [x + px, y + py, z + pz] as [number, number, number];
-	}, [activeObject, props.sceneObjects, props.selectedIds, props.selectionMode]);
+	const gumballCentroid = reactHostPort.useMemo(
+		() => selectionCentroidForTargets(props.sceneObjects, props.selectedTargets),
+		[props.sceneObjects, props.selectedTargets],
+	);
 
 	reactHostPort.useEffect(() => {
 		const [x, y, z] = gumballCentroid;
@@ -1025,24 +1256,34 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 
 	const commitSelection = reactHostPort.useCallback(
 		(ids: readonly number[], mode: SelectionMergeMode, objectIndex?: number, objectId?: string) => {
-			const merged = selectionMergeIds(mode, [...props.selectedIds], [...ids]);
-			const activeId =
-				objectId ??
-				(props.selectionMode === "object" && objectIndex != null
-					? props.sceneObjects.find((object) => object.index === objectIndex)?.id
-					: activeObject?.id);
-			props.onSelectionChange?.(props.selectionMode, merged, activeId);
+			const object =
+				(objectId ? props.sceneObjects.find((entry) => entry.id === objectId) : undefined) ??
+				(objectIndex != null ? props.sceneObjects.find((entry) => entry.index === objectIndex) : undefined) ??
+				activeObject;
+			if (!object) return;
+			const pickMode = lowpolyPrimaryPickMode(props.selectionTargets);
+			const currentKeys = props.selectedTargets.map((target) => encodeLowpolyPointerFocusKey(target));
+			const nextKeys = ids.map((id) =>
+				encodeLowpolyPointerFocusKey({
+					objectId: object.id,
+					objectIndex: object.index,
+					mode: pickMode,
+					id,
+				}),
+			);
+			const mergedKeys = selectionMergeIds(mode, currentKeys, nextKeys);
+			props.onSelectionChange?.(mergedKeys, object.id);
 		},
-		[activeObject?.id, props],
+		[activeObject, props],
 	);
 
 	const onPick = reactHostPort.useCallback(
-		(objectIndex: number, id: number, mode: SelectionMergeMode) => {
-			const object = props.sceneObjects.find((entry) => entry.index === objectIndex);
-			if (!object) return;
-			commitSelection([id], mode, objectIndex, object.id);
+		(target: LowpolyTarget, mode: SelectionMergeMode) => {
+			const currentKeys = props.selectedTargets.map((entry) => encodeLowpolyPointerFocusKey(entry));
+			const nextKeys = selectionMergeIds(mode, currentKeys, [encodeLowpolyPointerFocusKey(target)]);
+			props.onSelectionChange?.(nextKeys, target.objectId);
 		},
-		[commitSelection, props],
+		[props],
 	);
 
 	const applyPaintAt = reactHostPort.useCallback(
@@ -1083,32 +1324,6 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 		return () => window.removeEventListener("pointerup", endStroke);
 	}, [props.onPaintStrokeEnd]);
 
-	const onGumballDragEnd = reactHostPort.useCallback(
-		(kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-			if (!props.session || interactionMode !== "model") return;
-			try {
-				const dx = after.position[0] - before.position[0];
-				const dy = after.position[1] - before.position[1];
-				const dz = after.position[2] - before.position[2];
-				if (props.transformTool === "move") {
-					props.session.translateSelection(dx, dy, dz);
-				} else if (props.transformTool === "rotate") {
-					props.session.rotateSelection(0, 1, 0, after.rotation[1] - before.rotation[1]);
-				} else {
-					const sx = after.scale[0] / Math.max(before.scale[0], 1e-6);
-					const sy = after.scale[1] / Math.max(before.scale[1], 1e-6);
-					const sz = after.scale[2] / Math.max(before.scale[2], 1e-6);
-					props.session.scaleSelection(sx, sy, sz);
-				}
-				emitFixtureChange();
-				refreshScene();
-			} catch {
-				/* transform may fail without mesh selection */
-			}
-		},
-		[interactionMode, emitFixtureChange, props, refreshScene],
-	);
-
 	const onProjectionChange = reactHostPort.useCallback((next: OrbitCameraProjection) => {
 		setProjection(next);
 		setCameraState((current) => applyOrbitProjectionToCameraState(current, next));
@@ -1127,7 +1342,7 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 					? `${props.hoveredTarget.objectId}:${props.hoveredTarget.mode}:${props.hoveredTarget.id}`
 					: undefined
 			}
-			data-lowpoly-selection={`${props.selectionMode}:${props.selectedIds.join(",")}`}
+			data-lowpoly-selection={props.selectedTargets.map((target) => encodeLowpolyPointerFocusKey(target)).join(",")}
 		>
 			<WorldCanvas
 				className="h-full w-full"
@@ -1159,8 +1374,8 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 						<LowpolyMarqueeBridge
 							containerRef={containerRef}
 							sceneObjects={props.sceneObjects}
-							selectionMode={props.selectionMode}
-							selectedIds={props.selectedIds}
+							selectionTargets={props.selectionTargets}
+							selectedTargets={props.selectedTargets}
 							cameraRef={cameraRef}
 							sizeRef={sizeRef}
 							onCommit={(ids, mode) => commitSelection(ids, mode)}
@@ -1175,11 +1390,11 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 							<group key={object.id} position={object.transform.position} rotation={object.transform.rotation} scale={object.transform.scale}>
 								<LowpolyMeshLayer
 									object={object}
-									selectedIds={props.selectedIds}
+									selectionTargets={props.selectionTargets}
+									selectedTargets={props.selectedTargets}
 									previewAddIds={previewSelection.addIds}
 									previewRemoveIds={previewSelection.removeIds}
 									hoveredTarget={props.hoveredTarget ?? null}
-									selectionMode={props.selectionMode}
 									meshColor={meshColor}
 									edgeColor={edgeColor}
 									selectColor={selectColor}
@@ -1193,8 +1408,14 @@ export function LowpolyCanvas(props: LowpolyCanvasProps): React.ReactElement {
 							</group>
 						))}
 						<LowpolyGumballLayer
-							active={interactionMode === "model" && (props.selectedIds.length > 0 || props.selectionMode === "object")}
+							active={
+								interactionMode === "model" &&
+								props.session != null &&
+								props.sceneObjects.length > 0 &&
+								(props.selectedTargets.length > 0 || (props.selectionTargets.mesh && activeObject != null))
+							}
 							target={gumballTargetRef.current}
+							onDragStart={onGumballDragStart}
 							onDragEnd={onGumballDragEnd}
 							onDraggingChanged={setGumballDragActive}
 						/>
@@ -1432,7 +1653,7 @@ if (import.meta.vitest) {
 					throw new Error("should not load");
 				},
 			} as LowpolySessionWasm;
-			expect(safeLoadLowpolyFixture(session, '{"schema":"lowpoly.fixture","objects":[],"activeObjectId":"","selection":{"mode":"object","ids":[]}}')).toBe(false);
+			expect(safeLoadLowpolyFixture(session, '{"schema":"lowpoly.fixture","objects":[],"activeObjectId":"","selection":{"mode":"mesh","ids":[]}}')).toBe(false);
 		});
 	});
 }

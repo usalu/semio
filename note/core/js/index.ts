@@ -427,17 +427,69 @@ export class NotePlayController extends Controller implements PlaygroundExampleH
 
 	private canvasMeasures(): readonly WindowMeasure[] {
 		const doc = this.projection();
+		const gridSpacing = doc.gridSpacing ?? 32;
+		const gridSubdivisions = doc.gridSubdivisions ?? 4;
+		const gridOpacity = doc.gridOpacity ?? 0.35;
+		const snapSpacing = doc.snapGridSpacing ?? 8;
 		return [
-			{ kind: "slider", id: "note-canvas-zoom", label: "Zoom", value: doc.camera.zoom, min: 0.1, max: 8, step: 0.05, onChange: notePlayCmd("setCameraZoom") },
-			{ kind: "slider", id: "note-canvas-pencil", label: "Pencil", value: doc.pencilWidth ?? 3, min: 1, max: 24, step: 1, onChange: notePlayCmd("setPencilWidth") },
-			{ kind: "slider", id: "note-canvas-eraser", label: "Eraser", value: doc.eraserRadius ?? 12, min: 4, max: 48, step: 1, onChange: notePlayCmd("setEraserRadius") },
-			{ kind: "toggle", id: "note-canvas-grid", label: "Grid", pressed: doc.gridVisible ?? true, onChange: notePlayCmd("toggleGrid") },
-			{ kind: "toggle", id: "note-canvas-snap", label: "Snap", pressed: doc.snapEnabled ?? false, onChange: notePlayCmd("toggleSnap") },
+			{
+				kind: "group",
+				id: "note-canvas-camera",
+				label: "Camera",
+				defaultOpen: true,
+				children: [
+					{ kind: "slider", id: "note-canvas-zoom", label: "Zoom", value: doc.camera.zoom, min: 0.1, max: 8, step: 0.05, onChange: notePlayCmd("setCameraZoom") },
+				],
+			},
+			{
+				kind: "group",
+				id: "note-canvas-grid",
+				label: "Grid",
+				defaultOpen: true,
+				children: [
+					{ kind: "toggle", id: "note-canvas-grid-visible", iconId: "layout-grid", text: "Show grid", pressed: doc.gridVisible ?? true, onChange: notePlayCmd("setGridVisible") },
+					{ kind: "slider", id: "note-canvas-grid-spacing", label: "Major spacing", value: gridSpacing, min: 8, max: 256, step: 4, onChange: notePlayCmd("setGridSpacing") },
+					{ kind: "slider", id: "note-canvas-grid-subdivisions", label: "Subdivisions", value: gridSubdivisions, min: 1, max: 16, step: 1, onChange: notePlayCmd("setGridSubdivisions") },
+					{ kind: "slider", id: "note-canvas-grid-opacity", label: "Opacity", value: gridOpacity, min: 0.05, max: 1, step: 0.05, onChange: notePlayCmd("setGridOpacity") },
+				],
+			},
+			{
+				kind: "group",
+				id: "note-canvas-snap",
+				label: "Snap",
+				defaultOpen: false,
+				children: [
+					{ kind: "toggle", id: "note-canvas-snap-enabled", iconId: "magnet", text: "Snap to grid", pressed: doc.snapEnabled ?? false, onChange: notePlayCmd("setSnapEnabled") },
+					{ kind: "slider", id: "note-canvas-snap-spacing", label: "Snap spacing", value: snapSpacing, min: 1, max: 128, step: 1, onChange: notePlayCmd("setSnapGridSpacing") },
+				],
+			},
+			{
+				kind: "group",
+				id: "note-canvas-draw",
+				label: "Drawing",
+				defaultOpen: true,
+				children: [
+					{ kind: "slider", id: "note-canvas-pencil", label: "Pencil width", value: doc.pencilWidth ?? 3, min: 1, max: 24, step: 1, onChange: notePlayCmd("setPencilWidth") },
+					{ kind: "slider", id: "note-canvas-eraser", label: "Eraser radius", value: doc.eraserRadius ?? 12, min: 4, max: 48, step: 1, onChange: notePlayCmd("setEraserRadius") },
+				],
+			},
 		];
 	}
 
 	private navigatorMeasures(): readonly WindowMeasure[] {
-		return [{ kind: "slider", id: "note-navigator-zoom", label: "Navigator zoom", value: this.projection().camera.zoom, min: 0.05, max: 2, step: 0.05, onChange: notePlayCmd("setCameraZoom") }];
+		const doc = this.projection();
+		return [
+			{
+				kind: "group",
+				id: "note-navigator-camera",
+				label: "Navigator",
+				defaultOpen: true,
+				children: [
+					{ kind: "slider", id: "note-navigator-zoom", label: "Zoom", value: doc.camera.zoom, min: 0.05, max: 2, step: 0.05, onChange: notePlayCmd("setCameraZoom") },
+					{ kind: "toggle", id: "note-navigator-grid", iconId: "layout-grid", text: "Show grid", pressed: doc.gridVisible ?? true, onChange: notePlayCmd("setGridVisible") },
+				],
+			},
+		];
 	}
 
 	private canvasEngagement(): WindowEngagement {
@@ -451,7 +503,10 @@ export class NotePlayController extends Controller implements PlaygroundExampleH
 				onChange: notePlayCmd("engagementInput"),
 				onSubmit: notePlayCmd("engagementSubmit"),
 			},
-			status: [{ id: "note-block-count", text: `${flattenNoteBlocks(doc.blocks).length} blocks · ${this.getSelectedIds().length} selected · zoom ${doc.camera.zoom.toFixed(2)}` }],
+			status: [
+				{ id: "note-block-count", text: `${flattenNoteBlocks(doc.blocks).length} blocks · ${this.getSelectedIds().length} selected · zoom ${doc.camera.zoom.toFixed(2)}` },
+				{ id: "note-grid-status", text: `${doc.gridVisible !== false ? "grid on" : "grid off"} · ${doc.gridSpacing ?? 32}px major · snap ${doc.snapEnabled ? `${doc.snapGridSpacing ?? 8}px` : "off"}` },
+			],
 		};
 	}
 
@@ -607,6 +662,40 @@ export class NotePlayController extends Controller implements PlaygroundExampleH
 				const radius = typeof args.value === "number" ? args.value : Number(args.value);
 				if (!Number.isFinite(radius)) return;
 				this.dispatchEditOp({ op: "setEraserRadius", radius });
+				return;
+			}
+			case "setGridVisible": {
+				const pressed = (args as { pressed?: boolean }).pressed;
+				if (typeof pressed === "boolean") this.dispatchEditOp({ op: "setGridVisible", visible: pressed });
+				return;
+			}
+			case "setGridSpacing": {
+				const spacing = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(spacing)) return;
+				this.dispatchEditOp({ op: "setGridSpacing", spacing });
+				return;
+			}
+			case "setGridSubdivisions": {
+				const subdivisions = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(subdivisions)) return;
+				this.dispatchEditOp({ op: "setGridSubdivisions", subdivisions });
+				return;
+			}
+			case "setGridOpacity": {
+				const opacity = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(opacity)) return;
+				this.dispatchEditOp({ op: "setGridOpacity", opacity });
+				return;
+			}
+			case "setSnapEnabled": {
+				const pressed = (args as { pressed?: boolean }).pressed;
+				if (typeof pressed === "boolean") this.dispatchEditOp({ op: "setSnapEnabled", enabled: pressed });
+				return;
+			}
+			case "setSnapGridSpacing": {
+				const spacing = typeof args.value === "number" ? args.value : Number(args.value);
+				if (!Number.isFinite(spacing)) return;
+				this.dispatchEditOp({ op: "setSnapGridSpacing", spacing });
 				return;
 			}
 			case "toggleGrid": {

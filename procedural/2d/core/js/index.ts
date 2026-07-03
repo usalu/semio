@@ -855,6 +855,26 @@ export class Procedural2dPlayController extends Controller implements Playground
 				],
 				onChange: { controllerId: PROCEDURAL_2D_PLAY_CONTROLLER_ID, command: "setShowMode" },
 			},
+			{
+				kind: "slider",
+				id: "procedural-layer-spacing",
+				label: "Layer spacing",
+				value: this.layerSpacing,
+				min: 40,
+				max: 320,
+				step: 10,
+				onChange: procedural2dPlayCmd("setSpacing", { field: "layerSpacing" }),
+			},
+			{
+				kind: "slider",
+				id: "procedural-sibling-gap",
+				label: "Sibling gap",
+				value: this.siblingGap,
+				min: 10,
+				max: 160,
+				step: 5,
+				onChange: procedural2dPlayCmd("setSpacing", { field: "siblingGap" }),
+			},
 		];
 	}
 
@@ -919,28 +939,6 @@ export class Procedural2dPlayController extends Controller implements Playground
 				{ id: "procedural2d.tool.reorganize", label: "Reorganize", command: procedural2dPlayCmd("reorganize") },
 				{ id: "procedural2d.layout.leftRight", label: "Left to Right", command: procedural2dPlayCmd("setOrientation", { orientation: "leftRight" }) },
 				{ id: "procedural2d.layout.topBottom", label: "Top to Bottom", command: procedural2dPlayCmd("setOrientation", { orientation: "topBottom" }) },
-			],
-			controls: [
-				{
-					kind: "slider",
-					id: "procedural-layer-spacing",
-					label: "Layer spacing",
-					value: this.layerSpacing,
-					min: 40,
-					max: 320,
-					step: 10,
-					onChange: procedural2dPlayCmd("setSpacing", { field: "layerSpacing" }),
-				},
-				{
-					kind: "slider",
-					id: "procedural-sibling-gap",
-					label: "Sibling gap",
-					value: this.siblingGap,
-					min: 10,
-					max: 160,
-					step: 5,
-					onChange: procedural2dPlayCmd("setSpacing", { field: "siblingGap" }),
-				},
 			],
 			status: [{ id: "procedural-layout-orientation", text: this.orientation === "leftRight" ? "Left to right" : "Top to bottom" }],
 		};

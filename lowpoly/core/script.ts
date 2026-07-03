@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/lowpoly-core` router: `bun ./script.ts wasm|test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runVitest, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {
@@ -24,7 +24,7 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
 	run(segments: string[]): void {
-		Bun.spawnSync(["cargo", "test", "-p", "lowpoly_core"], { cwd: this.repoRoot, stdout: "inherit", stderr: "inherit", stdin: "inherit" });
+		runCargo(["test", "-p", "lowpoly_core"], this.repoRoot);
 		runVitest(this.root, segments, "js/vitest.config.ts");
 	}
 }

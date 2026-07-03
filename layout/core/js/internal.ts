@@ -546,9 +546,13 @@ export function createDefaultPage(spreadId: string, index: number): Page {
 }
 
 /** @emoji 🧩 Creates a default frame for catalogue drops. */
-export function createDefaultFrame(kind: FrameKind, layerId: string): { readonly frame: Frame; readonly story?: TextStory; readonly link?: ImageLink } {
+export function createDefaultFrame(
+	kind: FrameKind,
+	layerId: string,
+	position?: { readonly x: number; readonly y: number },
+): { readonly frame: Frame; readonly story?: TextStory; readonly link?: ImageLink } {
 	const id = nextLayoutEntityId(`frame-${kind}`);
-	const bounds: LayoutBounds = { x: 72, y: 120, w: 200, h: 120, rotation: 0 };
+	const bounds: LayoutBounds = { x: position?.x ?? 72, y: position?.y ?? 120, w: 200, h: 120, rotation: 0 };
 	if (kind === "rect") {
 		return {
 			frame: {
@@ -982,6 +986,11 @@ if (import.meta.vitest) {
 			history.undo();
 			history.undo();
 			expect(findFrame(history.getDocument(), created.frame.id)).toBeUndefined();
+		});
+		it("createDefaultFrame accepts drop position", () => {
+			const created = createDefaultFrame("rect", "layer-1", { x: 40, y: 55 });
+			expect(created.frame.bounds.x).toBe(40);
+			expect(created.frame.bounds.y).toBe(55);
 		});
 		it("patch_page_props updates page name", () => {
 			const history = new LayoutHistory(DEFAULT_LAYOUT_DOCUMENT);
