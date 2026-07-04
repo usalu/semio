@@ -16,7 +16,7 @@ export type PluginRegistryEntry = {
 };
 
 export const DEFAULT_PLUGIN_REGISTRY: readonly PluginRegistryEntry[] = [
-	{ pluginId: "draw", moduleUrl: "/plugins/draw/draw_plugin.js" },
+	{ pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" },
 ];
 
 export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {

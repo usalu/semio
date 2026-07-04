@@ -8,6 +8,8 @@
     "ui/react",
     "ui/styling/js",
     "framework/core",
+    "framework/renderer/react",
+    "framework/product/os/dev",
     "vcs/core",
     "vcs/rs",
     "vcs/react",

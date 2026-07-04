@@ -32,4 +32,5 @@ export const PLUGIN_BUILD_TARGETS: readonly PluginBuildTarget[] = [
 	{ pluginId: "presentation", cratePath: "framework/product/presentation/plugin/rs", wasmOut: "presentation_plugin.wasm" },
 ];
 
-export const pluginModuleUrl = (pluginId: string, fileName: string) => `/plugins/${pluginId}/${fileName.replace(/\.wasm$/, ".js")}`;
+export const pluginModuleUrl = (pluginId: string, fileName: string) =>
+	`/plugin-modules/${pluginId}/${fileName.replace(/\.wasm$/, ".js")}`;

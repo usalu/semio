@@ -77,6 +77,9 @@ test-results
 /playwright/.auth/
 #--------------------------------------VITE--------------------------------------
 .vite
+/framework/product/os/dev/plugin-modules/
+/framework/product/os/dev/public/plugin-modules/
+/framework/product/os/dev/public/plugins/
 #--------------------------------------NEXTJS--------------------------------------
 .next
 #--------------------------------------TURBO--------------------------------------

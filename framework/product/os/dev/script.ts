@@ -16,7 +16,7 @@ import { PLUGIN_BUILD_TARGETS } from "./js/plugin-registry.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
-const pluginOutRoot = join(repoRoot, "framework/product/os/dev/public/plugins");
+const pluginOutRoot = join(repoRoot, "framework/product/os/dev/public/plugin-modules");
 
 function ensureWasmTarget(): void {
 	const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
@@ -84,7 +84,7 @@ class PluginWatchScript extends BundleScript {
 class DevScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		await new PluginBuildScript(this.root).run([]);
-		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "draw";
+		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 		runViteBunxDev(this.root, segments, {
 			portEnv: "S_OS_PORT",
 			defaultPort: "6066",

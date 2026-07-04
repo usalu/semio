@@ -756,9 +756,11 @@ dependencies = [
 name = "cad-plugin"
 version = "0.1.0"
 dependencies = [
+ "cad_document",
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -1225,6 +1227,7 @@ dependencies = [
 name = "dag-plugin"
 version = "0.1.0"
 dependencies = [
+ "mathematical_graph_port_directed_dag",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -1696,6 +1699,7 @@ checksum = "8bf7cc16383c4b8d58b9905a8509f02926ce3058053c056376248d958c9df1e8"
 name = "flow-plugin"
 version = "0.1.0"
 dependencies = [
+ "flow_core",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -2039,9 +2043,11 @@ dependencies = [
 name = "forms-plugin"
 version = "0.1.0"
 dependencies = [
+ "forms",
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -2261,9 +2267,11 @@ dependencies = [
 name = "gis2d-plugin"
 version = "0.1.0"
 dependencies = [
+ "gis_2d",
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -3299,6 +3307,8 @@ checksum = "09e54e57b4c48b40f7aec75635392b12b3421fa26fe8b4332e63138ed278459c"
 name = "imperative-plugin"
 version = "0.1.0"
 dependencies = [
+ "imperative_core",
+ "imperative_engine",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -3614,6 +3624,7 @@ dependencies = [
 name = "layout-plugin"
 version = "0.1.0"
 dependencies = [
+ "layout_rs",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -4851,6 +4862,7 @@ dependencies = [
 name = "presentation-plugin"
 version = "0.1.0"
 dependencies = [
+ "presentation_deck",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -4921,9 +4933,11 @@ dependencies = [
 name = "procedural2d-plugin"
 version = "0.1.0"
 dependencies = [
+ "procedural_2d",
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -4931,6 +4945,7 @@ dependencies = [
 name = "procedural3d-plugin"
 version = "0.1.0"
 dependencies = [
+ "flow_core",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -5000,6 +5015,7 @@ dependencies = [
 name = "puzzle2d-plugin"
 version = "0.1.0"
 dependencies = [
+ "puzzle_2d",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -5356,6 +5372,8 @@ dependencies = [
 name = "reasoning-wires-plugin"
 version = "0.1.0"
 dependencies = [
+ "puzzle_2d",
+ "reasoning_mindmap_wires",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -5714,9 +5732,11 @@ checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 name = "s-plugin"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-os",
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 
@@ -5857,7 +5877,9 @@ checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
 name = "sequence-plugin"
 version = "0.1.0"
 dependencies = [
+ "mathematical_graph_port_directed_dag",
  "semio-framework-plugin",
+ "sequence_core",
  "serde",
  "serde_json",
  "wasm-bindgen",
@@ -7038,6 +7060,8 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "trinity_jack",
+ "trinity_ram",
  "wasm-bindgen",
 ]
 
@@ -7048,6 +7072,8 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "trinity_ram",
+ "trinity_rewrite",
  "wasm-bindgen",
 ]
 
@@ -7755,6 +7781,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "vcs",
  "wasm-bindgen",
 ]
 

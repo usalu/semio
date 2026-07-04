@@ -161,10 +161,16 @@ macro_rules! wasm_plugin_exports {
     () => {
         #[cfg(target_arch = "wasm32")]
         mod semio_wasm_exports {
+            use super::_PLUGIN_INIT;
             use semio_framework_plugin::plugin_runtime::{
                 plugin_create_app, plugin_destroy_app, plugin_handle_command, plugin_manifest, plugin_render,
             };
             use wasm_bindgen::prelude::*;
+
+            #[wasm_bindgen(start)]
+            pub fn semio_plugin_start() {
+                let _ = &*_PLUGIN_INIT;
+            }
 
             #[wasm_bindgen]
             pub fn semio_plugin_manifest() -> String {

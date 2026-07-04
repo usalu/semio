@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "framework/core/rs",
+    "framework/renderer/wgpu/rs",
     "framework/plugin/rs",
     "framework/product/os/core/rs",
     "draw/plugin/rs",

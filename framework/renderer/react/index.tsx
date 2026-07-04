@@ -5,4 +5,4 @@
 export type { CommandDescriptor, PluginManifest, UiNode, ViewState } from "./types.ts";
 export { bootFrameworkOs, FrameworkOsShell } from "./os-shell.tsx";
 export { loadPluginWasm, type PluginWasmHandle } from "./plugin-runtime.ts";
-export { interpretUiNode } from "./ui-interpreter.tsx";
+export { interpretUiNode, renderUiControl, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";

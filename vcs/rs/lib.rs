@@ -121,6 +121,10 @@ pub enum DocumentVcsCommand<Op> {
     SwitchAlternative {
         alternative_id: String,
     },
+    CheckoutCheckpoint {
+        #[serde(rename = "checkpointId")]
+        checkpoint_id: String,
+    },
 }
 //#endregion 🔖Schemas
 
@@ -468,6 +472,19 @@ where
                 self.applied_edit_ids = edit_ids_for_changes(&self.envelope, &checkpoint.change_ids);
                 self.redo_edit_ids.clear();
                 self.envelope.active_alternative_id = Some(alternative_id);
+                self.bump();
+                Ok(())
+            }
+            DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id } => {
+                let checkpoint = self
+                    .envelope
+                    .vcs
+                    .checkpoints
+                    .iter()
+                    .find(|cp| cp.id == checkpoint_id)
+                    .ok_or_else(|| VcsError::UnknownChange(checkpoint_id.clone()))?;
+                self.applied_edit_ids = edit_ids_for_changes(&self.envelope, &checkpoint.change_ids);
+                self.redo_edit_ids.clear();
                 self.bump();
                 Ok(())
             }
@@ -901,6 +918,38 @@ mod tests {
         assert_eq!(store.envelope().vcs.changes.len(), 1);
         assert_eq!(store.envelope().vcs.checkpoints.len(), 1);
         assert_eq!(store.envelope().vcs.checkpoints[0].message, Some("init".into()));
+    }
+
+    #[test]
+    fn checkout_checkpoint_restores_applied_edits() {
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("c1".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit");
+        let checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 9 }],
+                description: None,
+            })
+            .expect("apply2");
+        assert_eq!(store.projection().expect("projection").n, 9);
+        store
+            .dispatch(DocumentVcsCommand::CheckoutCheckpoint {
+                checkpoint_id,
+            })
+            .expect("checkout");
+        assert_eq!(store.projection().expect("projection").n, 1);
     }
 
     #[test]

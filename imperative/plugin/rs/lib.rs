@@ -1,26 +1,428 @@
-//! ⚡ Imperative plugin — standard scaffold app bundled as a hot-swappable WASM component.
+//! ⚡ Imperative plugin — declarative imperative play app bundled as a hot-swappable WASM component.
 
+use imperative_core::{default_document, ImperativeDocument, ImperativeHost};
+use imperative_engine::Step;
 use semio_framework_plugin::{
-    install_plugin_bundle, register_standard_app, PluginBundle, SceneKind, StandardApp,
+    build_table_scene, build_text_editor_scene, create_stack_layout, ui_declarative_sections_to_tree,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, CommandDescriptor, PluginApp, PluginBundle,
+    TableScene, TextEditorScene, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use std::sync::LazyLock;
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| install_plugin_bundle(bundle()));
+//#region 🔖Constants
+const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
+const IMPERATIVE_PLAY_SURFACE_MAIN: &str = "imperative.play.main";
+const IMPERATIVE_PLAY_SURFACE_SCRIPT: &str = "imperative.play.script";
+const IMPERATIVE_PLAY_BODY_MAIN: &str = "imperative.play.main";
+const IMPERATIVE_PLAY_BODY_SCRIPT: &str = "imperative.play.script";
+const IMPERATIVE_PLAY_BODY_HIERARCHY: &str = "imperative.play.hierarchy";
+const IMPERATIVE_PLAY_BODY_CATALOGUE: &str = "imperative.play.catalogue";
+const IMPERATIVE_PLAY_BODY_INSPECTOR: &str = "imperative.play.inspection";
+const IMPERATIVE_PLAY_WINDOW_MAIN: &str = "imperative-main";
+const IMPERATIVE_PLAY_WINDOW_SCRIPT: &str = "imperative-script";
+//#endregion 🔖Constants
 
-fn bundle() -> PluginBundle {
-    register_standard_app(
-        PluginBundle::new("imperative", "Imperative", "0.1.0"),
-        StandardApp {
-            app_id: "imperative-play",
-            label: "Imperative",
-            program_id: Some("imperative"),
-            yields: Some("graph"),
-            surface_id: "imperative.play.composite",
-            body_key: "imperative.play.composite",
-            scene_kind: SceneKind::NodeGraph,
-            initial_document_json: r#"{"nodes":[],"edges":[]}"#,
+//#region 🔖Types
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ImperativePlayRuntime {
+    #[serde(default)]
+    selected_step_ids: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct ImperativePlayEnvelope {
+    document: ImperativeDocument,
+    #[serde(default)]
+    runtime: ImperativePlayRuntime,
+}
+
+#[derive(Serialize)]
+struct TableRow {
+    index: usize,
+    id: String,
+    kind: String,
+}
+//#endregion 🔖Types
+
+//#region 🔖DocumentHelpers
+fn default_envelope() -> ImperativePlayEnvelope {
+    ImperativePlayEnvelope {
+        document: default_document(),
+        runtime: ImperativePlayRuntime::default(),
+    }
+}
+
+fn parse_envelope(document_json: &str) -> ImperativePlayEnvelope {
+    serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
+}
+
+fn set_document_op(envelope: &ImperativePlayEnvelope) -> String {
+    json!({ "op": "setDocument", "document": envelope }).to_string()
+}
+
+fn imperative_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
+    CommandDescriptor {
+        controller_id: IMPERATIVE_PLAY_APP_ID.into(),
+        command: command.into(),
+        args,
+    }
+}
+
+fn host_from_envelope(envelope: &ImperativePlayEnvelope) -> ImperativeHost {
+    ImperativeHost::from_document(envelope.document.clone())
+}
+
+fn table_rows(steps: &[Step]) -> String {
+    let rows: Vec<TableRow> = steps
+        .iter()
+        .enumerate()
+        .map(|(index, step)| TableRow {
+            index: index + 1,
+            id: step.id.clone(),
+            kind: step.kind.clone(),
+        })
+        .collect();
+    serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into())
+}
+
+fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
+    UiTreeItemNode {
+        id: id.into(),
+        label: label.into(),
+        description: None,
+        icon_id: None,
+        selected: None,
+        default_open: None,
+        command: None,
+        draggable: None,
+        drag_data: None,
+        items: None,
+        control: None,
+        is_hidden: None,
+    }
+}
+
+fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
+    UiTreeItemNode {
+        id: id.into(),
+        label: label.into(),
+        description,
+        icon_id: None,
+        selected: None,
+        default_open: None,
+        command: Some(command),
+        draggable: None,
+        drag_data: None,
+        items: None,
+        control: None,
+        is_hidden: None,
+    }
+}
+//#endregion 🔖DocumentHelpers
+
+//#region 🔖Panels
+fn build_hierarchy_tree(document: &ImperativeDocument, selected: &[String]) -> UiNode {
+    let step_items: Vec<UiTreeItemNode> = document
+        .path
+        .steps
+        .iter()
+        .enumerate()
+        .map(|(index, step)| {
+            tree_item_with_command(
+                format!("imperative-play-hierarchy.step.{}", step.id),
+                format!("{}. {}", index + 1, step.kind),
+                Some(step.id.clone()),
+                imperative_cmd("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
+            )
+        })
+        .collect();
+    UiNode::Tree(UiTreeNode {
+        sections: vec![UiTreeSectionNode {
+            id: "imperative-play-hierarchy.steps".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            default_open: Some(true),
+            items: if step_items.is_empty() {
+                vec![tree_item("imperative-play-hierarchy.steps.empty", "(none)")]
+            } else {
+                step_items
+            },
+        }],
+        selected_ids: Some(selected.iter().map(|id| format!("imperative-play-hierarchy.step.{id}")).collect()),
+        highlighted_ids: None,
+        selection_change: None,
+    })
+}
+
+fn build_catalogue_tree() -> UiNode {
+    let actions = [
+        ("state.set", "Set state"),
+        ("log.print", "Print log"),
+        ("control.if", "If"),
+        ("control.while", "While"),
+        ("math.add", "Add"),
+    ];
+    UiNode::Tree(UiTreeNode {
+        sections: vec![UiTreeSectionNode {
+            id: "imperative-play-catalogue.actions".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
+            default_open: Some(true),
+            items: actions
+                .iter()
+                .map(|(kind, label)| {
+                    tree_item_with_command(
+                        format!("imperative-play-catalogue.action.{kind}"),
+                        *label,
+                        Some((*kind).into()),
+                        imperative_cmd("addStep", Some(json!({ "kind": kind }))),
+                    )
+                })
+                .collect(),
+        }],
+        selected_ids: Some(vec![]),
+        highlighted_ids: None,
+        selection_change: None,
+    })
+}
+
+fn build_inspector_tree(document: &ImperativeDocument, selected: &[String]) -> UiNode {
+    if selected.is_empty() {
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            id: "imperative-play-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![ui_text("Select a step in the hierarchy.")],
+        }]);
+    }
+    let steps: Vec<&Step> = selected
+        .iter()
+        .filter_map(|id| document.path.steps.iter().find(|step| &step.id == id))
+        .collect();
+    if steps.is_empty() {
+        return ui_stack_vertical(vec![ui_text("Step not found")]);
+    }
+    ui_stack_vertical(vec![
+        ui_inspector_readonly_field("imperative-play-inspector.id", "Id", steps[0].id.clone()),
+        ui_inspector_readonly_field("imperative-play-inspector.kind", "Kind", steps[0].kind.clone()),
+        ui_inspector_readonly_field(
+            "imperative-play-inspector.params",
+            "Params",
+            serde_json::to_string(&steps[0].params).unwrap_or_else(|_| "{}".into()),
+        ),
+    ])
+}
+//#endregion 🔖Panels
+
+//#region 🔖Render
+fn render_main_table(document: &ImperativeDocument) -> UiNode {
+    build_table_scene(
+        IMPERATIVE_PLAY_SURFACE_MAIN,
+        IMPERATIVE_PLAY_APP_ID,
+        TableScene {
+            columns_json: json!([{"id":"index","label":"#"},{"id":"id","label":"Id"},{"id":"kind","label":"Kind"}]).to_string(),
+            rows_json: table_rows(&document.path.steps),
         },
     )
 }
 
+fn render_script(envelope: &ImperativePlayEnvelope) -> UiNode {
+    let host = host_from_envelope(envelope);
+    build_text_editor_scene(
+        IMPERATIVE_PLAY_SURFACE_SCRIPT,
+        IMPERATIVE_PLAY_APP_ID,
+        TextEditorScene {
+            buffer: host.compile_text(),
+            language: Some("imperative".into()),
+            selection_json: None,
+        },
+    )
+}
+//#endregion 🔖Render
+
+//#region 🔖ImperativePlayApp
+struct ImperativePlayApp;
+
+impl PluginApp for ImperativePlayApp {
+    fn app_id(&self) -> &str {
+        IMPERATIVE_PLAY_APP_ID
+    }
+
+    fn initial_document_json(&self) -> String {
+        serde_json::to_string(&default_envelope()).expect("imperative envelope json")
+    }
+
+    fn handle_command(
+        &mut self,
+        command: &str,
+        args: Option<&Value>,
+        document_json: &str,
+        _view_state: &ViewState,
+    ) -> Vec<String> {
+        let mut envelope = parse_envelope(document_json);
+        let mut host = host_from_envelope(&envelope);
+        match command {
+            "setDocument" => {
+                if let Some(next) = args.and_then(|value| value.get("document")) {
+                    if let Ok(parsed) = serde_json::from_value(next.clone()) {
+                        return vec![set_document_op(&parsed)];
+                    }
+                }
+            }
+            "setSelection" => {
+                envelope.runtime.selected_step_ids = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                return vec![set_document_op(&envelope)];
+            }
+            "addStep" => {
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
+                let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
+                let id = host.add_step(kind, index);
+                envelope.document = host.document;
+                envelope.runtime.selected_step_ids = vec![id];
+                return vec![set_document_op(&envelope)];
+            }
+            "removeStep" => {
+                if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
+                    if host.remove_step(id) {
+                        envelope.document = host.document;
+                        envelope.runtime.selected_step_ids.retain(|step_id| step_id != id);
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "moveStep" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let new_index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
+                if let (Some(id), Some(new_index)) = (id, new_index) {
+                    if host.move_step(id, new_index) {
+                        envelope.document = host.document;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "setStepParams" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let params = args.and_then(|value| value.get("params"));
+                if let (Some(id), Some(params)) = (id, params) {
+                    if host.set_step_params_json(id, &params.to_string()).is_ok() {
+                        envelope.document = host.document;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "run" => {
+                let _result = host.run();
+                return vec![set_document_op(&envelope)];
+            }
+            _ => {}
+        }
+        Vec::new()
+    }
+
+    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+        let envelope = parse_envelope(document_json);
+        match body_key {
+            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(&envelope.document),
+            IMPERATIVE_PLAY_BODY_SCRIPT => render_script(&envelope),
+            IMPERATIVE_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.document, &envelope.runtime.selected_step_ids),
+            IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
+            IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.document, &envelope.runtime.selected_step_ids),
+            _ => ui_text(format!("Unknown body: {body_key}")),
+        }
+    }
+}
+//#endregion 🔖ImperativePlayApp
+
+//#region 🔖Manifest
+fn create_imperative_app() -> App {
+    App::from_builder(
+        App::builder(IMPERATIVE_PLAY_APP_ID, "Imperative")
+            .icon_id("imperative")
+            .mode("edit", "Edit")
+            .default_mode_id("edit")
+            .window_kind(IMPERATIVE_PLAY_WINDOW_MAIN, "Imperative", IMPERATIVE_PLAY_BODY_MAIN)
+            .window_kind(IMPERATIVE_PLAY_WINDOW_SCRIPT, "Script", IMPERATIVE_PLAY_BODY_SCRIPT)
+            .default_layout(create_stack_layout(
+                &[IMPERATIVE_PLAY_WINDOW_MAIN.into(), IMPERATIVE_PLAY_WINDOW_SCRIPT.into()],
+                Some(&["Imperative".into(), "Script".into()]),
+            ))
+            .panel_tab(
+                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
+                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                "workbench",
+                IMPERATIVE_PLAY_BODY_HIERARCHY,
+            )
+            .panel_tab(
+                FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+                "workbench",
+                IMPERATIVE_PLAY_BODY_CATALOGUE,
+            )
+            .panel_tab(
+                FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+                "details",
+                IMPERATIVE_PLAY_BODY_INSPECTOR,
+            )
+            .keybinding("mod+z", "undo")
+            .keybinding("mod+shift+z", "redo"),
+    )
+    .example("demo", "Demo", serde_json::to_string(&default_envelope()).unwrap())
+    .program("imperative", "Imperative", "graph")
+}
+
+fn bundle() -> PluginBundle {
+    PluginBundle::new("imperative", "Imperative", "0.1.0").register_app(create_imperative_app(), || Box::new(ImperativePlayApp))
+}
+
+static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
+
 semio_framework_plugin::wasm_plugin_exports!();
+//#endregion 🔖Manifest
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn renders_table_scene() {
+        let app = ImperativePlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("table"));
+    }
+
+    #[test]
+    fn renders_script_editor() {
+        let app = ImperativePlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(IMPERATIVE_PLAY_BODY_SCRIPT, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("text-editor"));
+    }
+
+    #[test]
+    fn default_document_has_steps() {
+        let envelope = default_envelope();
+        assert_eq!(envelope.document.path.steps.len(), 2);
+    }
+
+    #[test]
+    fn add_step_command_appends_step() {
+        let mut app = ImperativePlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("addStep", Some(&json!({ "kind": "log.print" })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
+        let updated: ImperativePlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
+        assert!(updated.document.path.steps.len() > 2);
+    }
+}

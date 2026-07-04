@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "/Users/ueli/Documents/semio/framework/core/rs",
+    "/Users/ueli/Documents/semio/framework/plugin/rs",
+    "/Users/ueli/Documents/semio/vcs/rs",
+    "/Users/ueli/Documents/semio/procedural/2d/rs",
+    "/Users/ueli/Documents/semio/procedural/2d/plugin/rs",
+    "/Users/ueli/Documents/semio/gis/2d/rs",
+    "/Users/ueli/Documents/semio/gis/2d/plugin/rs",
+    "/Users/ueli/Documents/semio/layout/rs",
+    "/Users/ueli/Documents/semio/layout/plugin/rs",
+    "/Users/ueli/Documents/semio/ui/styling/rs",
+    "/Users/ueli/Documents/semio/infinite/cavas/rs",
+]
+resolver = "2"

@@ -9,7 +9,7 @@ import { PLUGIN_BUILD_TARGETS, pluginModuleUrl } from "./plugin-registry.ts";
 
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest) {
 	bootstrapElementsSurfaceChromeDocument("system");
-	const pluginFilter = import.meta.env.VITE_SEMIO_PLUGIN ?? import.meta.env.SEMIO_PLUGIN ?? "draw";
+	const pluginFilter = import.meta.env.VITE_SEMIO_PLUGIN ?? import.meta.env.SEMIO_PLUGIN ?? "s";
 	void bootFrameworkOs({
 		plugin: pluginFilter,
 		plugins: PLUGIN_BUILD_TARGETS.map((target) => ({

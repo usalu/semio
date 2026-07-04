@@ -11,6 +11,11 @@ const repoRoot = path.resolve(playDir, "../../../..");
 export default defineConfig({
 	root: playDir,
 	publicDir: path.join(playDir, "public"),
+	resolve: {
+		alias: {
+			"@semio-tech/framework-renderer-react": path.resolve(repoRoot, "framework/renderer/react/index.tsx"),
+		},
+	},
 	server: {
 		port: Number(process.env.S_OS_PORT ?? 6066),
 		strictPort: true,
@@ -18,6 +23,6 @@ export default defineConfig({
 	},
 	plugins: [react(), tailwindcss()],
 	define: {
-		"import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "draw"),
+		"import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "s"),
 	},
 });

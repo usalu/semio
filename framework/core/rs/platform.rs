@@ -113,9 +113,14 @@ mod tests {
                 id: "composite".into(),
                 label: "Canvas".into(),
                 body_key: "composite".into(),
+                icon_id: None,
+                measures: Vec::new(),
+                engagement: None,
             }],
             panel_tabs: vec![],
             keybindings: vec![],
+            named_layouts: Vec::new(),
+            default_layout: None,
         });
         assert_eq!(platform.active_app_id, "draw-play");
     }

@@ -5,6 +5,9 @@
   "description": "framework · render-independent shared core (Rust: Platform, CommandBus, UiTree, layouts)",
   "type": "module",
   "private": true,
+  "exports": {
+    ".": "./js/index.ts"
+  },
   "scripts": {
     "test": "bun nx run @semio-tech/framework-core:test"
   },

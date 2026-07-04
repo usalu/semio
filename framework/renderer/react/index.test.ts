@@ -1,5 +1,17 @@
+import { createElement, type ReactElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { Canvas2dHost } from "./components/canvas-2d-host.tsx";
+import { FlowCanvasHost } from "./components/flow-canvas-host.tsx";
+import { NodeGraphHost } from "./components/node-graph-host.tsx";
+import { RasterHost } from "./components/raster-host.tsx";
+import { TableHost } from "./components/table-host.tsx";
+import { TextEditorHost } from "./components/text-editor-host.tsx";
+import { World3dHost } from "./components/world-3d-host.tsx";
+import { interpretUiNode } from "./ui-interpreter.tsx";
 import type { UiNode } from "./types.ts";
+
+const noopCommand = () => {};
 
 describe("framework renderer types", () => {
 	it("accepts component scene nodes", () => {
@@ -16,5 +28,189 @@ describe("framework renderer types", () => {
 			},
 		};
 		expect(node.componentKind).toBe("canvas-2d");
+	});
+});
+
+describe("framework renderer hosts", () => {
+	it("renders node graph host from media graph scene json", () => {
+		const markup = renderToStaticMarkup(
+			createElement(NodeGraphHost, {
+				node: {
+					type: "componentScene",
+					surfaceId: "s.play.media-graph",
+					controllerId: "s-play",
+					componentKind: "node-graph",
+					nodeGraph: {
+						nodesJson: JSON.stringify([
+							{
+								id: "node-a",
+								instanceId: "app-a",
+								label: "Draw",
+								x: 10,
+								y: 20,
+								inputs: [{ id: "in", resourceKind: "2d.drawing" }],
+								outputs: [{ id: "out", resourceKind: "2d.drawing" }],
+							},
+						]),
+						edgesJson: "[]",
+						viewportJson: '{"x":0,"y":0,"zoom":1}',
+					},
+				},
+				onCommand: noopCommand,
+			}),
+		);
+		expect(markup).toContain("semio-node-graph-host");
+	});
+
+	it("renders flow canvas host from media graph fixture json", () => {
+		const markup = renderToStaticMarkup(
+			createElement(FlowCanvasHost, {
+				node: {
+					type: "componentScene",
+					surfaceId: "s.play.media-graph",
+					controllerId: "s-play",
+					componentKind: "flow-canvas",
+					flowCanvas: {
+						fixtureJson: JSON.stringify({
+							schema: "flow.fixture",
+							camera: { x: 0, y: 0, zoom: 1 },
+							widgets: [{ kind: "neuron", id: "node-a", params: { instanceId: "app-a" } }],
+							synapses: [],
+							layout: { "node-a": { x: 100, y: 100 } },
+						}),
+						editable: true,
+					},
+				},
+				onCommand: noopCommand,
+			}),
+		);
+		expect(markup).toContain("semio-flow-canvas-host");
+	});
+
+	it("renders canvas 2d host with infinite canvas session", () => {
+		const markup = renderToStaticMarkup(
+			createElement(Canvas2dHost, {
+				node: {
+					type: "componentScene",
+					surfaceId: "draw.play.canvas",
+					controllerId: "draw-play",
+					componentKind: "canvas-2d",
+					canvas2d: {
+						cameraX: 0,
+						cameraY: 0,
+						zoom: 1,
+						layersJson: JSON.stringify([{ id: "layer-1", name: "Layer 1", x: 0, y: 0, width: 120, height: 80 }]),
+					},
+				},
+				onCommand: noopCommand,
+			}),
+		);
+		expect(markup).toContain("semio-canvas-2d-host");
+	});
+
+	it("renders world 3d empty state without mounting r3f canvas", () => {
+		const markup = renderToStaticMarkup(
+			createElement(World3dHost, {
+				node: {
+					type: "componentScene",
+					surfaceId: "puzzle.play.world",
+					controllerId: "puzzle-play",
+					componentKind: "world-3d",
+				},
+				onCommand: noopCommand,
+			}),
+		);
+		expect(markup).toContain("semio-world-3d-empty");
+	});
+
+	it("renders text editor host", () => {
+		const markup = renderToStaticMarkup(
+			createElement(TextEditorHost, {
+				node: {
+					type: "componentScene",
+					surfaceId: "writer.play.editor",
+					controllerId: "writer-play",
+					componentKind: "text-editor",
+					textEditor: { buffer: "hello", language: "plain" },
+				},
+				onCommand: noopCommand,
+			}),
+		);
+		expect(markup).toContain("semio-text-editor-host");
+		expect(markup).toContain("hello");
+	});
+
+	it("renders table host with ui-react table", () => {
+		const markup = renderToStaticMarkup(
+			createElement(TableHost, {
+				node: {
+					type: "componentScene",
+					surfaceId: "s.play.catalogue",
+					controllerId: "s-play",
+					componentKind: "table",
+					table: {
+						columnsJson: JSON.stringify([{ id: "label", label: "Label" }]),
+						rowsJson: JSON.stringify([{ label: "Draw" }]),
+					},
+				},
+				onCommand: noopCommand,
+			}),
+		);
+		expect(markup).toContain("semio-table-host");
+		expect(markup).toContain("Draw");
+	});
+
+	it("renders raster host from base64 pixels", () => {
+		const markup = renderToStaticMarkup(
+			createElement(RasterHost, {
+				node: {
+					type: "componentScene",
+					surfaceId: "raster.play.viewport",
+					controllerId: "raster-play",
+					componentKind: "raster",
+					raster: {
+						width: 2,
+						height: 2,
+						pixelsBase64: "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+					},
+				},
+				onCommand: noopCommand,
+			}),
+		);
+		expect(markup).toContain("semio-raster-host");
+		expect(markup).toContain("data:image/png;base64,");
+	});
+
+	it("interprets virtual file system component scenes", () => {
+		const markup = renderToStaticMarkup(
+			interpretUiNode(
+				{
+					type: "componentScene",
+					surfaceId: "s.play.media-vfs",
+					controllerId: "s-play",
+					componentKind: "virtualFileSystem",
+					virtualFileSystem: {
+						schemaJson: JSON.stringify({
+							fileNodeKinds: {
+								instance: { id: "instance", name: "Instance", descriptors: [] },
+							},
+							descriptorKinds: {},
+							descriptorColumnIds: [],
+						}),
+						rowsJson: JSON.stringify([
+							{
+								id: "row-1",
+								fileNodeKindId: "instance",
+								name: "Draw",
+								path: "/draw",
+								level: 0,
+							},
+						]),
+					},
+				},
+				{ onCommand: noopCommand },
+			) as ReactElement,
+		);
+		expect(markup).toContain("Draw");
 	});
 });

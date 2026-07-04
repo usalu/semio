@@ -1,0 +1,50 @@
+[package]
+name = "semio-framework-renderer-wgpu"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Raw wgpu WASM renderer for declarative framework UiNode trees"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../core/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+wgpu = { version = "27.0.1", default-features = false, features = ["webgpu"] }
+fontdue = "0.9.3"
+ttf-parser = { version = "0.25.1", default-features = false }
+woff2 = "0.3.0"
+base64 = "0.22.1"
+bytemuck = { version = "1.24.0", features = ["derive"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"
+wasm-bindgen-futures = "0.4.71"
+web-sys = { version = "0.3.98", features = [
+    "Window",
+    "Document",
+    "HtmlCanvasElement",
+    "CanvasRenderingContext2d",
+    "Element",
+    "Event",
+    "MouseEvent",
+    "WheelEvent",
+    "KeyboardEvent",
+    "InputEvent",
+    "ResizeObserver",
+    "ResizeObserverEntry",
+    "DomRect",
+    "Performance",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+    "Headers",
+] }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.56"

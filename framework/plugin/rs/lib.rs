@@ -9,7 +9,10 @@ pub use app::{
     WindowKindSpec,
 };
 pub use plugin_runtime::install_plugin_bundle;
-pub use scaffold::{register_standard_app, standard_app, standard_factory, SceneKind, StandardApp, StandardPluginApp};
+pub use scaffold::{
+    assert_standard_app_renders, register_standard_app, scene_kind_component_tag, standard_app,
+    standard_factory, SceneKind, StandardApp, StandardPluginApp,
+};
 pub use semio_framework_core::*;
 
 #[macro_export]

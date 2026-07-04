@@ -2,7 +2,8 @@
 
 use semio_framework_core::{
     AppDefinition, CommandDescriptor, ExampleDefinition, Keybinding, ModeDefinition,
-    PanelTabDefinition, PluginManifest, ProgramDefinition, UiNode, ViewState, WindowKindDefinition,
+    NamedLayout, PanelTabDefinition, PluginManifest, ProgramDefinition, UiNode, ViewState,
+    WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
 };
 use serde_json::Value;
 use std::collections::HashMap;
@@ -16,6 +17,9 @@ pub struct WindowKindSpec {
     pub id: String,
     pub label: String,
     pub body_key: String,
+    pub icon_id: Option<String>,
+    pub measures: Vec<WindowMeasure>,
+    pub engagement: Option<WindowEngagement>,
 }
 
 pub struct PanelTabSpec {
@@ -41,6 +45,8 @@ pub struct AppBuilder {
     window_kinds: Vec<WindowKindSpec>,
     panel_tabs: Vec<PanelTabSpec>,
     keybindings: Vec<KeybindingSpec>,
+    named_layouts: Vec<NamedLayout>,
+    default_layout: Option<WindowLayout>,
 }
 
 impl AppBuilder {
@@ -56,6 +62,8 @@ impl AppBuilder {
             window_kinds: Vec::new(),
             panel_tabs: Vec::new(),
             keybindings: Vec::new(),
+            named_layouts: Vec::new(),
+            default_layout: None,
         }
     }
 
@@ -82,7 +90,38 @@ impl AppBuilder {
             id: id.into(),
             label: label.into(),
             body_key: body_key.into(),
+            icon_id: None,
+            measures: Vec::new(),
+            engagement: None,
         });
+        self
+    }
+
+    pub fn window_kind_with_engagement(
+        mut self,
+        id: impl Into<String>,
+        label: impl Into<String>,
+        body_key: impl Into<String>,
+        engagement: WindowEngagement,
+    ) -> Self {
+        self.window_kinds.push(WindowKindSpec {
+            id: id.into(),
+            label: label.into(),
+            body_key: body_key.into(),
+            icon_id: None,
+            measures: Vec::new(),
+            engagement: Some(engagement),
+        });
+        self
+    }
+
+    pub fn named_layout(mut self, layout: NamedLayout) -> Self {
+        self.named_layouts.push(layout);
+        self
+    }
+
+    pub fn default_layout(mut self, layout: WindowLayout) -> Self {
+        self.default_layout = Some(layout);
         self
     }
 
@@ -136,6 +175,9 @@ impl AppBuilder {
                     id: window.id,
                     label: window.label,
                     body_key: window.body_key,
+                    icon_id: window.icon_id,
+                    measures: window.measures,
+                    engagement: window.engagement,
                 })
                 .collect(),
             panel_tabs: self
@@ -160,6 +202,8 @@ impl AppBuilder {
                     },
                 })
                 .collect(),
+            named_layouts: self.named_layouts,
+            default_layout: self.default_layout,
         }
     }
 }

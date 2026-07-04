@@ -13,6 +13,7 @@ interface ui {
   record text-node {
     value: string,
     emphasize: option<bool>,
+    data-attributes: option<list<tuple<string, string>>>,
   }
 
   record button-node {
@@ -34,56 +35,129 @@ interface ui {
     on-change: command-descriptor,
   }
 
+  record select-item {
+    value: string,
+    label: string,
+  }
+
   record select-node {
     id: string,
     value: string,
     items: list<select-item>,
+    placeholder: option<string>,
     on-change: command-descriptor,
-  }
-
-  record select-item {
-    id: string,
-    value: string,
-    label: string,
   }
 
   record toggle-node {
     id: string,
     icon-id: string,
-    label: option<string>,
     pressed: bool,
     text: option<string>,
     on-change: command-descriptor,
   }
 
+  record vec3-node {
+    id: string,
+    value: option<tuple<f64, f64, f64>>,
+    on-change: command-descriptor,
+  }
+
+  record key-value-entry {
+    label: string,
+    value: string,
+  }
+
+  record key-value-node {
+    entries: list<key-value-entry>,
+  }
+
   record slider-node {
     id: string,
-    label: option<string>,
     value: f64,
     min: f64,
     max: f64,
-    step: option<f64>,
+    step: f64,
     on-change: command-descriptor,
+  }
+
+  record number-stepper-node {
+    id: string,
+    value: f64,
+    step: f64,
+    uniform: bool,
+    on-absolute: command-descriptor,
+    on-delta: command-descriptor,
+  }
+
+  record ring-node {
+    id: string,
+    orb-id: string,
+    t: f64,
+    disabled: option<bool>,
+    on-change: command-descriptor,
+  }
+
+  record icon-select-node {
+    id: string,
+    value: string,
+    uniform: bool,
+    classifier-kind: string,
+    on-change: command-descriptor,
+  }
+
+  variant ui-control-node {
+    input(input-node),
+    select(select-node),
+    toggle(toggle-node),
+    vec3(vec3-node),
+    button(button-node),
+    key-value(key-value-node),
+    slider(slider-node),
+    number-stepper(number-stepper-node),
+    ring(ring-node),
+    icon-select(icon-select-node),
+  }
+
+  record field-node {
+    id: string,
+    label: string,
+    child: ui-control-node,
   }
 
   record section-node {
     id: string,
-    title: string,
+    label: option<string>,
+    default-open: option<bool>,
     children: list<ui-node>,
   }
 
   record tree-item-node {
     id: string,
     label: string,
+    description: option<string>,
     icon-id: option<string>,
-    expanded: option<bool>,
     selected: option<bool>,
-    children: list<ui-node>,
+    default-open: option<bool>,
+    command: option<command-descriptor>,
+    draggable: option<bool>,
+    drag-data: option<list<tuple<string, string>>>,
+    items: option<list<tree-item-node>>,
+    control: option<ui-control-node>,
+    is-hidden: option<bool>,
+  }
+
+  record tree-section-node {
+    id: string,
+    label: option<string>,
+    default-open: option<bool>,
+    items: list<tree-item-node>,
   }
 
   record tree-node {
-    id: string,
-    items: list<tree-item-node>,
+    sections: list<tree-section-node>,
+    selected-ids: option<list<string>>,
+    highlighted-ids: option<list<string>>,
+    selection-change: option<command-descriptor>,
   }
 
   record canvas-2d-scene {
@@ -121,6 +195,15 @@ interface ui {
     pixels-base64: string,
   }
 
+  record virtual-file-system-scene {
+    schema-json: string,
+    rows-json: string,
+    selected-row-ids-json: option<string>,
+    hovered-row-id: option<string>,
+    empty-message: option<string>,
+    drag-drop-enabled: option<bool>,
+  }
+
   record component-scene-node {
     surface-id: string,
     controller-id: string,
@@ -133,6 +216,7 @@ interface ui {
     text-editor: option<text-editor-scene>,
     table: option<table-scene>,
     raster: option<raster-scene>,
+    virtual-file-system: option<virtual-file-system-scene>,
   }
 
   variant ui-node {
@@ -143,7 +227,13 @@ interface ui {
     input(input-node),
     select(select-node),
     toggle(toggle-node),
+    vec3(vec3-node),
+    key-value(key-value-node),
     slider(slider-node),
+    number-stepper(number-stepper-node),
+    ring(ring-node),
+    icon-select(icon-select-node),
+    field(field-node),
     section(section-node),
     tree(tree-node),
     component-scene(component-scene-node),
@@ -151,6 +241,8 @@ interface ui {
 }
 
 interface types {
+  use ui.{ui-node};
+
   record command-descriptor {
     controller-id: string,
     command: string,
@@ -164,6 +256,200 @@ interface types {
   }
 
   type json-value = string;
+
+  record measure-select-item {
+    id: string,
+    value: string,
+    label: string,
+  }
+
+  variant window-measure {
+    select(
+      id: string,
+      label: option<string>,
+      value: string,
+      items: list<measure-select-item>,
+      on-change: command-descriptor,
+    ),
+    slider(
+      id: string,
+      label: option<string>,
+      value: f64,
+      min: f64,
+      max: f64,
+      step: option<f64>,
+      on-change: command-descriptor,
+    ),
+    toggle(
+      id: string,
+      icon-id: string,
+      label: option<string>,
+      pressed: bool,
+      text: option<string>,
+      on-change: command-descriptor,
+    ),
+    group(
+      id: string,
+      label: string,
+      default-open: option<bool>,
+      children: list<window-measure>,
+    ),
+  }
+
+  record window-layout-window-node {
+    kind: string,
+    window-kind-id: string,
+    title: option<string>,
+    instance-id: option<string>,
+    template-id: option<string>,
+  }
+
+  record window-layout-stack-node {
+    kind: string,
+    size: option<f64>,
+    children: list<window-layout-window-node>,
+  }
+
+  record window-layout-axis-node {
+    kind: string,
+    size: option<f64>,
+    children: list<window-layout-child>,
+  }
+
+  variant window-layout-child {
+    axis(window-layout-axis-node),
+    stack(window-layout-stack-node),
+  }
+
+  variant window-layout-root {
+    axis(window-layout-axis-node),
+    stack(window-layout-stack-node),
+  }
+
+  record window-layout {
+    root: window-layout-root,
+  }
+
+  record named-layout {
+    id: string,
+    label: string,
+    icon-id: option<string>,
+    layout: window-layout,
+    origin: string,
+    group-path: option<list<string>>,
+  }
+
+  record window-engagement-option {
+    id: string,
+    label: option<string>,
+    icon-id: option<string>,
+    pressed: option<bool>,
+    disabled: option<bool>,
+    command: option<command-descriptor>,
+  }
+
+  record window-engagement-input {
+    id: option<string>,
+    value: option<string>,
+    placeholder: option<string>,
+    disabled: option<bool>,
+    on-change: option<command-descriptor>,
+    on-submit: option<command-descriptor>,
+    on-repeat-last: option<command-descriptor>,
+    on-abort: option<command-descriptor>,
+  }
+
+  record window-engagement-status {
+    id: string,
+    text: string,
+  }
+
+  record window-engagement-possible {
+    id: string,
+    label: string,
+    detail: option<string>,
+    command: option<command-descriptor>,
+  }
+
+  record window-engagement-ring-option {
+    id: string,
+    label: string,
+    disabled: option<bool>,
+  }
+
+  record window-engagement-toggle-group-option {
+    id: string,
+    label: string,
+    disabled: option<bool>,
+  }
+
+  record window-engagement-select-item {
+    id: string,
+    value: string,
+    label: string,
+  }
+
+  variant window-engagement-control {
+    slider(
+      id: option<string>,
+      label: option<string>,
+      value: f64,
+      min: f64,
+      max: f64,
+      step: option<f64>,
+      unit: option<string>,
+      disabled: option<bool>,
+      on-change: option<command-descriptor>,
+      on-commit: option<command-descriptor>,
+    ),
+    stepper(
+      id: option<string>,
+      label: option<string>,
+      value: f64,
+      min: option<f64>,
+      max: option<f64>,
+      step: option<f64>,
+      unit: option<string>,
+      disabled: option<bool>,
+      on-change: option<command-descriptor>,
+      on-commit: option<command-descriptor>,
+    ),
+    ring(
+      id: option<string>,
+      label: option<string>,
+      value: option<string>,
+      options: list<window-engagement-ring-option>,
+      disabled: option<bool>,
+      on-select: option<command-descriptor>,
+    ),
+    toggle-group(
+      id: option<string>,
+      label: option<string>,
+      value: option<string>,
+      options: list<window-engagement-toggle-group-option>,
+      disabled: option<bool>,
+      on-select: option<command-descriptor>,
+    ),
+    select(
+      id: option<string>,
+      label: option<string>,
+      value: option<string>,
+      placeholder: option<string>,
+      items: list<window-engagement-select-item>,
+      disabled: option<bool>,
+      on-change: option<command-descriptor>,
+    ),
+  }
+
+  record window-engagement {
+    session-active: option<bool>,
+    options: option<list<window-engagement-option>>,
+    input: option<window-engagement-input>,
+    control: option<window-engagement-control>,
+    controls: option<list<window-engagement-control>>,
+    status: option<list<window-engagement-status>>,
+    possible-engagements: option<list<window-engagement-possible>>,
+  }
 
   record keybinding {
     keys: string,
@@ -179,6 +465,9 @@ interface types {
     id: string,
     label: string,
     body-key: string,
+    icon-id: option<string>,
+    measures: list<window-measure>,
+    engagement: option<window-engagement>,
   }
 
   record panel-tab-definition {
@@ -198,6 +487,8 @@ interface types {
     window-kinds: list<window-kind-definition>,
     panel-tabs: list<panel-tab-definition>,
     keybindings: list<keybinding>,
+    named-layouts: list<named-layout>,
+    default-layout: option<window-layout>,
   }
 
   record program-definition {
