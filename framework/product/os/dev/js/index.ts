@@ -4,8 +4,11 @@
 
 import "../globals.css";
 
-const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";
-const pluginFilter = import.meta.env.VITE_SEMIO_PLUGIN ?? import.meta.env.SEMIO_PLUGIN ?? "s";
+const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "wgpu";
+const pluginFromUrl =
+	typeof location !== "undefined" ? new URLSearchParams(location.search).get("plugin") : null;
+const pluginFilter =
+	pluginFromUrl ?? import.meta.env.VITE_SEMIO_PLUGIN ?? import.meta.env.SEMIO_PLUGIN ?? "s";
 
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest) {
 	if (renderer === "wgpu") {

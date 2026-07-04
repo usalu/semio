@@ -543,7 +543,9 @@ impl PluginApp for LowpolyPlayApp {
                 LOWPOLY_PLAY_APP_ID,
                 World3dScene {
                     camera_json: default_camera_json(),
+                    meshes_json: "[]".into(),
                     instances_json: world_instances_json(&envelope.fixture),
+                    selection_json: "[]".into(),
                 },
             ),
             LOWPOLY_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),

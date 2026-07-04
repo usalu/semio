@@ -529,7 +529,9 @@ impl PluginApp for CadApp {
                 CAD_PLAY_APP_ID,
                 World3dScene {
                     camera_json: camera_json(&envelope.document.camera),
+                    meshes_json: "[]".into(),
                     instances_json: world_instances_json(&envelope.document, &envelope.runtime),
+                    selection_json: "[]".into(),
                 },
             ),
             CAD_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),

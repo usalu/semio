@@ -1,25 +1,20 @@
 //! 🧊 Raw wgpu WASM renderer for declarative framework UiNode trees.
 
-pub mod draw;
-pub mod gpu;
-pub mod input;
-pub mod layout_engine;
+pub mod interpreter;
 pub mod plugin_bridge;
 pub mod scenes;
-pub mod shaders;
 pub mod shell;
-pub mod text;
-pub mod theme;
-pub mod widgets;
+pub mod world3d;
 
-use draw::DrawList;
-use gpu::{schedule_frame, GpuContext};
-use input::{attach_dom_listeners, InputState};
 use plugin_bridge::{filter_plugins, parse_plugin_entries};
+use semio_framework_core::CommandDescriptor;
 use shell::ShellState;
 use std::cell::RefCell;
 use std::rc::Rc;
-use text::{fetch_font_bytes, FontAtlas};
+use ui_wgpu::{
+    attach_dom_listeners, fetch_font_bytes, schedule_frame, DrawList, FontAtlas, GpuContext,
+    HitKind, InputState, PointerCallbacks, PointerModifiers, Theme,
+};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 
@@ -28,17 +23,54 @@ struct AppRuntime {
     atlas: FontAtlas,
     shell: ShellState,
     draw: DrawList,
-    input: InputState,
+    input: InputState<CommandDescriptor>,
+    theme: Theme,
+    last_pointer_x: f32,
+    last_pointer_y: f32,
+    pointer_down: bool,
+    pointer_button: i16,
+    modifiers: PointerModifiers,
+    wheel_delta: f32,
+    asset_poll_pending: bool,
 }
 
 impl AppRuntime {
     fn frame(&mut self) {
         self.input.clear_frame();
         self.draw.clear();
-        self.shell
-            .render_chrome(&mut self.draw, &mut self.atlas, &mut self.input);
+        let wheel_delta = self.wheel_delta;
+        self.wheel_delta = 0.0;
+        if wheel_delta.abs() > 0.0 {
+            let x = self.last_pointer_x;
+            let y = self.last_pointer_y;
+            let shell = &mut self.shell;
+            for state in shell.world3d_states.values_mut() {
+                if state.bounds.inset(8.0).contains(x, y) {
+                    world3d::handle_world3d_wheel(state, wheel_delta);
+                }
+            }
+        }
+        self.shell.render_chrome(
+            &mut self.draw,
+            &mut self.atlas,
+            &mut self.input,
+            &self.theme,
+            &mut self.gpu,
+        );
         if let Err(err) = self.gpu.render_frame(&self.draw) {
             web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] render frame: {err}")));
+        }
+        if !self.asset_poll_pending {
+            self.asset_poll_pending = true;
+            let runtime = self as *mut AppRuntime;
+            spawn_local(async move {
+                unsafe {
+                    if let Some(app) = runtime.as_mut() {
+                        app.shell.poll_world3d_assets().await;
+                        app.asset_poll_pending = false;
+                    }
+                }
+            });
         }
     }
 
@@ -46,6 +78,99 @@ impl AppRuntime {
         self.gpu.resize(css_width, css_height, dpr);
         self.shell.screen_w = (css_width * dpr).max(1.0);
         self.shell.screen_h = (css_height * dpr).max(1.0);
+    }
+
+    async fn dispatch_world3d_commands(&mut self, commands: Vec<CommandDescriptor>) {
+        for command in commands {
+            if let Err(err) = self.shell.dispatch_command(command).await {
+                web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] command failed: {err}")));
+            }
+        }
+    }
+
+    async fn handle_pointer_button(
+        &mut self,
+        x: f32,
+        y: f32,
+        down: bool,
+        button: i16,
+        modifiers: PointerModifiers,
+    ) {
+        self.last_pointer_x = x;
+        self.last_pointer_y = y;
+        self.pointer_down = down;
+        self.pointer_button = button;
+        self.modifiers = modifiers.clone();
+        let mut world_commands = Vec::new();
+        for state in self.shell.world3d_states.values_mut() {
+            if !state.bounds.inset(8.0).contains(x, y) {
+                continue;
+            }
+            if let Some(command) = world3d::handle_world3d_pointer_button(
+                state,
+                x,
+                y,
+                down,
+                button,
+                modifiers.shift,
+                modifiers.ctrl,
+            ) {
+                world_commands.push(command);
+            }
+        }
+        if !world_commands.is_empty() {
+            self.dispatch_world3d_commands(world_commands).await;
+            return;
+        }
+        if !down {
+            return;
+        }
+        let hit = self.input.hit_at(x, y).cloned();
+        let Some(hit) = hit else { return };
+        if let Some(command) = hit.event.clone() {
+            if let Err(err) = self.shell.dispatch_command(command).await {
+                web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] command failed: {err}")));
+            }
+        }
+        if hit.kind == HitKind::Input {
+            self.input.focused_id = hit.control_id.clone();
+        }
+    }
+
+    async fn handle_pointer_move(
+        &mut self,
+        x: f32,
+        y: f32,
+        down: bool,
+        button: i16,
+        modifiers: PointerModifiers,
+    ) {
+        let drag_dx = x - self.last_pointer_x;
+        let drag_dy = y - self.last_pointer_y;
+        self.last_pointer_x = x;
+        self.last_pointer_y = y;
+        self.pointer_down = down;
+        self.pointer_button = button;
+        self.modifiers = modifiers.clone();
+        if down && (button == 2 || button == 1) {
+            for state in self.shell.world3d_states.values_mut() {
+                if state.bounds.inset(8.0).contains(x, y) {
+                    world3d::handle_world3d_pointer_drag(state, drag_dx, drag_dy, button, modifiers.shift);
+                }
+            }
+        }
+        let mut world_commands = Vec::new();
+        for state in self.shell.world3d_states.values_mut() {
+            if !state.bounds.inset(8.0).contains(x, y) {
+                continue;
+            }
+            if let Some(command) = world3d::handle_world3d_pointer_move(state, x, y, down, button) {
+                world_commands.push(command);
+            }
+        }
+        if !world_commands.is_empty() {
+            self.dispatch_world3d_commands(world_commands).await;
+        }
     }
 }
 
@@ -73,7 +198,7 @@ pub async fn semio_renderer_boot(
     canvas.set_width((css_width * dpr) as u32);
     canvas.set_height((css_height * dpr) as u32);
 
-    let font_bytes = fetch_font_bytes("/asset/font/kelly-slab/latin.woff2")
+    let font_bytes = fetch_font_bytes("/asset/font/kelly-slab/latin.ttf")
         .await
         .unwrap_or_default();
     let atlas = FontAtlas::from_bytes(&font_bytes)
@@ -102,48 +227,56 @@ pub async fn semio_renderer_boot(
         shell,
         draw: DrawList::default(),
         input: InputState::default(),
+        theme: Theme::default(),
+        last_pointer_x: 0.0,
+        last_pointer_y: 0.0,
+        pointer_down: false,
+        pointer_button: 0,
+        modifiers: PointerModifiers::default(),
+        wheel_delta: 0.0,
+        asset_poll_pending: false,
     }));
 
     start_frame_loop(runtime.clone());
 
     let runtime_pointer = runtime.clone();
+    let runtime_move = runtime.clone();
+    let runtime_wheel = runtime.clone();
     let runtime_keyboard = runtime.clone();
+
     attach_dom_listeners(
         &canvas,
-        Rc::new(move |x, y, down| {
-            let Ok(mut app) = runtime_pointer.try_borrow_mut() else {
-                return;
-            };
-            app.input.pointer_x = x;
-            app.input.pointer_y = y;
-            app.input.pointer_down = down;
-            if !down {
-                return;
-            }
-            let hit = app.input.hit_at(x, y).cloned();
-            let Some(hit) = hit else { return };
-            if let Some(command) = hit.command.clone() {
-                let shell_runtime = runtime_pointer.clone();
+        PointerCallbacks {
+            on_move: Rc::new(move |x, y, down, button, modifiers| {
+                let runtime = runtime_move.clone();
                 spawn_local(async move {
-                    if let Ok(mut app) = shell_runtime.try_borrow_mut() {
-                        if let Err(err) = app.shell.dispatch_command(command).await {
-                            web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] command failed: {err}")));
-                        }
+                    if let Ok(mut app) = runtime.try_borrow_mut() {
+                        app.handle_pointer_move(x, y, down, button, modifiers).await;
                     }
                 });
-            }
-            if hit.kind == input::HitKind::Input {
-                app.input.focused_id = hit.control_id.clone();
-            }
-        }),
-        Rc::new(move |key| {
-            let Ok(mut app) = runtime_keyboard.try_borrow_mut() else {
-                return;
-            };
-            if app.input.focused_id.is_some() {
-                app.input.text_buffer.push_str(&key);
-            }
-        }),
+            }),
+            on_button: Rc::new(move |x, y, down, button, modifiers| {
+                let runtime = runtime_pointer.clone();
+                spawn_local(async move {
+                    if let Ok(mut app) = runtime.try_borrow_mut() {
+                        app.handle_pointer_button(x, y, down, button, modifiers).await;
+                    }
+                });
+            }),
+            on_wheel: Rc::new(move |delta, _modifiers| {
+                if let Ok(mut app) = runtime_wheel.try_borrow_mut() {
+                    app.wheel_delta += delta;
+                }
+            }),
+            on_key: Rc::new(move |key| {
+                let Ok(mut app) = runtime_keyboard.try_borrow_mut() else {
+                    return;
+                };
+                if app.input.focused_id.is_some() {
+                    app.input.text_buffer.push_str(&key);
+                }
+            }),
+        },
     );
 
     let runtime_resize = runtime.clone();
@@ -168,16 +301,4 @@ pub async fn semio_renderer_boot(
 
     web_sys::console::log_1(&JsValue::from_str("[DEBUG] wgpu renderer booted"));
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::draw::ear_clip_polygon;
-
-    #[test]
-    fn ear_clip_produces_triangles() {
-        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
-        let tris = ear_clip_polygon(&square);
-        assert!(tris.len() >= 3);
-    }
 }

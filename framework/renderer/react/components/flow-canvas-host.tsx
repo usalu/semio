@@ -12,6 +12,7 @@ import {
 } from "@semio-tech/flow-react";
 import type { CommandDescriptor, UiComponentSceneNode } from "../types.ts";
 import { OS_MEDIA_FLOW_MODULE_ID, applyFlowFixtureJsonToMediaGraphCommands, parseMediaGraphFromFixture } from "../os-media-graph-flow.ts";
+import { useUIFindSafe } from "../ui-search-find.tsx";
 
 //#region FlowCanvasHost
 const OS_MEDIA_FLOW_CTX_SKIP = new Set([
@@ -76,6 +77,7 @@ export function FlowCanvasHost({
 	useEffect(() => extensionHost.subscribe(() => setExtensionRevision(extensionHost.getRevision())), [extensionHost]);
 
 	const graph = useMemo(() => parseMediaGraphFromFixture(fixtureJson), [fixtureJson]);
+	const findContext = useUIFindSafe();
 
 	const dispatchCommand = useCallback(
 		(command: string, args?: Record<string, unknown>) => {
@@ -87,6 +89,24 @@ export function FlowCanvasHost({
 		},
 		[node.controllerId, node.surfaceId, onCommand],
 	);
+
+	useEffect(() => {
+		if (!findContext) return;
+		findContext.setFindItems(
+			graph.nodes.map((entry) => ({
+				id: entry.instanceId,
+				label: entry.label,
+				category: "Media graph",
+			})),
+		);
+		findContext.setOnFindItem((itemId) => {
+			const mediaNode = graph.nodes.find((entry) => entry.instanceId === itemId);
+			if (!mediaNode) return;
+			dispatchCommand("setMediaNodeSelection", { nodeIds: [mediaNode.id] });
+			dispatchCommand("selectInstance", { instanceId: mediaNode.instanceId });
+		});
+		return () => findContext.setOnFindItem(undefined);
+	}, [dispatchCommand, findContext, graph.nodes]);
 
 	const handleFixtureChange = useCallback(
 		(nextJson: string) => {

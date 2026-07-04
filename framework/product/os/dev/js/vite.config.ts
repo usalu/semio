@@ -3,11 +3,15 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
+import { uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "..");
 const repoRoot = path.resolve(playDir, "../../../..");
-const renderer = process.env.SEMIO_RENDERER ?? "react";
+const pluginModulesDir = path.join(playDir, "plugin-modules");
+const rendererModulesDir = path.join(playDir, "renderer-modules");
+const renderer = process.env.SEMIO_RENDERER ?? "wgpu";
+const uiAssetsRoot = path.join(repoRoot, "ui/asset");
 
 export default defineConfig({
 	root: playDir,
@@ -17,15 +21,29 @@ export default defineConfig({
 			"@semio-tech/framework-renderer-react": path.resolve(repoRoot, "framework/renderer/react/index.tsx"),
 			"@semio-tech/framework-renderer-wgpu": path.resolve(repoRoot, "framework/renderer/wgpu/index.ts"),
 			"@semio-tech/framework-core": path.resolve(repoRoot, "framework/core/js/index.ts"),
+			"@semio-tech/framework-os-core": path.resolve(repoRoot, "framework/product/os/core/js/index.ts"),
+			"@semio-tech/writer-core": path.resolve(repoRoot, "writer/core/js/internal.ts"),
+			"/plugin-modules": pluginModulesDir,
+			"/renderer-modules": rendererModulesDir,
 		},
 	},
 	server: {
 		port: Number(process.env.S_OS_PORT ?? 6066),
 		strictPort: true,
-		fs: { allow: [repoRoot] },
+		fs: { allow: [repoRoot, pluginModulesDir, rendererModulesDir] },
 	},
-	plugins: renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()],
+	plugins: [
+		...uiAssetsVitePlugin(uiAssetsRoot),
+		...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),
+	],
 	optimizeDeps: {
+		include: [
+			"react-reconciler",
+			"react-reconciler/constants",
+			"three",
+			"@react-three/fiber",
+			"fuse.js",
+		],
 		exclude: renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : [],
 	},
 	define: {

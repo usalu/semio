@@ -8,7 +8,7 @@ import { BundleScript, ScriptRouter, getWorkspaceRoot, runBundleScriptMain, runV
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
 const crateName = "semio-framework-renderer-wgpu";
-const outDir = join(repoRoot, "framework/product/os/dev/public/renderer-modules/wgpu");
+const outDir = join(repoRoot, "framework/product/os/dev/renderer-modules/wgpu");
 
 function ensureWasmTarget(): void {
 	const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });

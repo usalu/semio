@@ -197,7 +197,9 @@ export type Canvas2dScene = {
 
 export type World3dScene = {
 	readonly cameraJson: string;
+	readonly meshesJson: string;
 	readonly instancesJson: string;
+	readonly selectionJson: string;
 };
 
 export type NodeGraphScene = {

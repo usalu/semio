@@ -11,12 +11,10 @@ path = "lib.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../core/rs" }
+ui_wgpu = { path = "../../../../ui/wgpu/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"] }
-fontdue = "0.9.3"
 base64 = "0.22.1"
-bytemuck = { version = "1.24.0", features = ["derive"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"
@@ -42,6 +40,9 @@ web-sys = { version = "0.3.98", features = [
     "RequestMode",
     "Response",
     "Headers",
+    "Blob",
+    "Url",
+    "HtmlAnchorElement",
     "console",
 ] }
 

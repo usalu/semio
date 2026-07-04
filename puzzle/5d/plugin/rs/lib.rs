@@ -463,7 +463,9 @@ impl PluginApp for Puzzle5dPlayApp {
                 PUZZLE5D_PLAY_APP_ID,
                 World3dScene {
                     camera_json: camera3d_json(&envelope.document.camera3d),
+                    meshes_json: "[]".into(),
                     instances_json: world_instances_json(&envelope.document, &envelope.runtime.selection),
+                    selection_json: serde_json::to_string(&envelope.runtime.selection).unwrap_or_else(|_| "[]".into()),
                 },
             ),
             PUZZLE5D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),

@@ -413,7 +413,9 @@ impl PluginApp for Procedural3dPlayApp {
                 PROCEDURAL_3D_PLAY_APP_ID,
                 World3dScene {
                     camera_json: r#"{"x":6.0,"y":-6.0,"z":4.0,"fov":45}"#.into(),
+                    meshes_json: "[]".into(),
                     instances_json: preview_instances_json(&host),
+                    selection_json: "[]".into(),
                 },
             ),
             PROCEDURAL_3D_PLAY_BODY_HIERARCHY => {

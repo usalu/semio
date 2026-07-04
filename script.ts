@@ -4,16 +4,18 @@
  */
 import { spawn, spawnSync } from "node:child_process";
 import {
-  Script,
-  ScriptRouter,
-  devToolingEnv,
-  dispatchSubcommand,
-  runCmd,
-  installMicroCommitGitHooks,
-  runCommit,
-  runMicroCommit,
-  runWorkspaceScriptMain,
-  tryRun,
+	Script,
+	ScriptRouter,
+	devToolingEnv,
+	dispatchSubcommand,
+	frameworkOsPlaygroundDevEnv,
+	resolveFrameworkOsPlaygroundPlugin,
+	runCmd,
+	installMicroCommitGitHooks,
+	runCommit,
+	runMicroCommit,
+	runWorkspaceScriptMain,
+	tryRun,
 } from "./repo/lib/js/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -28,8 +30,17 @@ const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap")
 
 export { Script };
 
-function resolvePlaygroundDevApp(_segments: string[]): { readonly app: string; readonly rest: string[] } | null {
-  return null;
+function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; readonly rest: string[] } | null {
+	const resolved = resolveFrameworkOsPlaygroundPlugin(segments);
+	if (!resolved) return null;
+	return { app: resolved.plugin, rest: [...resolved.rest] };
+}
+
+function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void {
+	runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", ...rest], {
+		cwd: WORKSPACE_ROOT,
+		env: frameworkOsPlaygroundDevEnv(plugin),
+	});
 }
 
 //#region 🔖NativeOsScript
@@ -234,18 +245,12 @@ export class DevScript extends Script {
       return;
     }
     if (segments[0] === "s") {
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", ...segments.slice(1)], {
-        cwd: this.root,
-        env: devToolingEnv(),
-      });
+      runFrameworkOsPlaygroundDev("s", segments.slice(1));
       return;
     }
     const playgroundApp = resolvePlaygroundDevApp(segments);
     if (playgroundApp) {
-      runCmd("bun", ["nx", "run", "@semio-tech/framework-playground-dev:dev", "--", "--app", playgroundApp.app, ...playgroundApp.rest], {
-        cwd: this.root,
-        env: devToolingEnv(),
-      });
+      runFrameworkOsPlaygroundDev(playgroundApp.app, playgroundApp.rest);
       return;
     }
     if (segments[0] === "mcp") {

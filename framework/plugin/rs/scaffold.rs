@@ -242,7 +242,15 @@ impl PluginApp for StandardPluginApp {
                         .get("camera")
                         .map(|value| value.to_string())
                         .unwrap_or_else(|| r#"{"x":0,"y":0,"z":5}"#.into()),
+                    meshes_json: document
+                        .get("meshes")
+                        .map(|value| value.to_string())
+                        .unwrap_or_else(|| "[]".into()),
                     instances_json: world_instances_json(&document, document_json),
+                    selection_json: document
+                        .get("selection")
+                        .map(|value| value.to_string())
+                        .unwrap_or_else(|| "[]".into()),
                 },
             ),
             SceneKind::NodeGraph => {

@@ -16,7 +16,7 @@ import { PLUGIN_BUILD_TARGETS } from "./js/plugin-registry.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
-const pluginOutRoot = join(repoRoot, "framework/product/os/dev/public/plugin-modules");
+const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
 
 function ensureWasmTarget(): void {
 	const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
@@ -84,7 +84,7 @@ class PluginWatchScript extends BundleScript {
 class DevScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		await new PluginBuildScript(this.root).run([]);
-		const renderer = process.env.SEMIO_RENDERER ?? "react";
+		const renderer = process.env.SEMIO_RENDERER ?? "wgpu";
 		if (renderer === "wgpu") {
 			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
 			const wgpuBuild = spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
@@ -106,7 +106,7 @@ class DevScript extends BundleScript {
 class BuildScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		await new PluginBuildScript(this.root).run([]);
-		const renderer = process.env.SEMIO_RENDERER ?? "react";
+		const renderer = process.env.SEMIO_RENDERER ?? "wgpu";
 		if (renderer === "wgpu") {
 			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
 			spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });

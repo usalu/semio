@@ -25,7 +25,9 @@ import {
   allPlaygroundReservedPorts,
   playgroundDevPort,
   playgroundEmbedUrl,
-  playgroundPlayViteDefine,
+  frameworkOsPlaygroundDevEnv,
+  resolveFrameworkOsPlaygroundPlugin,
+  FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES,
 } from "./index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
@@ -523,6 +525,30 @@ describe("playground static sites", () => {
     expect(playgroundDevPort("cad")).toBe(6020);
     expect(playgroundDevPort("dag")).toBe(6017);
     expect(allPlaygroundReservedPorts().size).toBeGreaterThanOrEqual(Object.keys(PLAYGROUND_PORTS).length);
+  });
+
+  test("resolveFrameworkOsPlaygroundPlugin maps CLI segments to OS plugin ids", () => {
+    expect(resolveFrameworkOsPlaygroundPlugin(["dag"])).toEqual({ plugin: "dag", rest: [] });
+    expect(resolveFrameworkOsPlaygroundPlugin(["gis", "2d"])).toEqual({ plugin: "gis2d", rest: [] });
+    expect(resolveFrameworkOsPlaygroundPlugin(["procedural", "3d", "fixture", "hexagonal-column"])).toEqual({
+      plugin: "procedural3d",
+      rest: ["fixture", "hexagonal-column"],
+    });
+    expect(resolveFrameworkOsPlaygroundPlugin(["trinity", "jack"])).toEqual({ plugin: "trinity", rest: [] });
+    expect(resolveFrameworkOsPlaygroundPlugin(["unknown"])).toBeNull();
+    expect(Object.keys(FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES).length).toBeGreaterThan(20);
+  });
+
+  test("frameworkOsPlaygroundDevEnv defaults wgpu renderer and maps legacy play ports", () => {
+    const dagEnv = frameworkOsPlaygroundDevEnv("dag", {}, { DAG_PLAY_PORT: "6017" });
+    expect(dagEnv.SEMIO_RENDERER).toBe("wgpu");
+    expect(dagEnv.SEMIO_PLUGIN).toBe("dag");
+    expect(dagEnv.S_OS_PORT).toBe("6017");
+
+    const cadEnv = frameworkOsPlaygroundDevEnv("cad", {}, { CAD_JS_RENDERER_PLAY_PORT: "6020" });
+    expect(cadEnv.SEMIO_RENDERER).toBe("wgpu");
+    expect(cadEnv.SEMIO_PLUGIN).toBe("cad");
+    expect(cadEnv.S_OS_PORT).toBe("6020");
   });
 
   test("assigns a unique port per dev and test slot", () => {

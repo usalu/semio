@@ -49,7 +49,11 @@ if (import.meta.env.VITEST) {
   initBimSync({ module: readFileSync(join(reactDir, "../module/bim/rs/pkg/flow_module_bim_bg.wasm")) });
   initDrawSync({ module: readFileSync(join(reactDir, "../module/draw/rs/pkg/flow_module_draw_bg.wasm")) });
 } else if (typeof window !== "undefined") {
-  await initFlowWasm({ module_or_path: flowCoreWasmUrl });
+	try {
+		await initFlowWasm({ module_or_path: flowCoreWasmUrl });
+	} catch (error) {
+		console.warn("[DEBUG] flow wasm init deferred", error);
+	}
 }
 
 let flowWasmBoot: Promise<void> | null = null;

@@ -1,6 +1,7 @@
-//! 🧮 Flex stack layout for UiNode trees.
+//! 🧮 Flex stack layout for widget trees.
 
-use crate::theme::{Rect, GAP_STANDARD, PADDING_STANDARD};
+use crate::geometry::Rect;
+use crate::theme::Theme;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Direction {
@@ -8,32 +9,21 @@ pub enum Direction {
     Horizontal,
 }
 
-pub struct LayoutNode {
-    pub rect: Rect,
-    pub child_index: usize,
-    pub children: Vec<LayoutNode>,
-}
-
-pub struct MeasuredSize {
-    pub width: f32,
-    pub height: f32,
-}
-
-pub fn gap_for_token(token: Option<&str>) -> f32 {
+pub fn gap_for_token(theme: &Theme, token: Option<&str>) -> f32 {
     match token {
         Some("tight") => 4.0,
         Some("loose") => 12.0,
         Some("none") | Some("0") => 0.0,
-        _ => GAP_STANDARD,
+        _ => theme.gap_standard,
     }
 }
 
-pub fn padding_for_token(token: Option<&str>) -> f32 {
+pub fn padding_for_token(theme: &Theme, token: Option<&str>) -> f32 {
     match token {
         Some("none") | Some("0") => 0.0,
         Some("tight") => 6.0,
         Some("loose") => 16.0,
-        _ => PADDING_STANDARD,
+        _ => theme.padding_standard,
     }
 }
 
@@ -93,10 +83,12 @@ mod tests {
 
     #[test]
     fn vertical_layout_distributes_children() {
+        let theme = Theme::default();
         let bounds = Rect::new(0.0, 0.0, 100.0, 100.0);
         let rects = layout_vertical(bounds, 4.0, 8.0, &[20.0, 30.0]);
         assert_eq!(rects.len(), 2);
         assert!(rects[0].h > 20.0);
         assert!(rects[1].y > rects[0].y);
+        let _ = theme;
     }
 }

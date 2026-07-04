@@ -594,7 +594,9 @@ fn render_model_scene(fixture: &ShootingFixture) -> UiNode {
         SHOOTING_PLAY_APP_ID,
         World3dScene {
             camera_json: camera_json(&fixture.camera),
+            meshes_json: "[]".into(),
             instances_json: world_instances_json(fixture),
+            selection_json: "[]".into(),
         },
     )
 }

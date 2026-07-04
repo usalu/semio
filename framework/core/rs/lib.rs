@@ -2,6 +2,7 @@
 
 pub mod command_bus;
 pub mod layout;
+pub mod mesh;
 pub mod platform;
 pub mod ui;
 
@@ -18,6 +19,10 @@ pub use layout::{
     FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
     FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
+};
+pub use mesh::{
+    mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_kind, mesh_ico_sphere, mesh_plane,
+    mesh_to_glb, mesh_to_obj, mesh_torus, mesh_uv_sphere, MeshData,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use ui::*;

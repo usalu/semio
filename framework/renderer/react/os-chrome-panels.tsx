@@ -3,8 +3,6 @@ import {
 	Button,
 	Icon,
 	Input,
-	staticSidePanelTabDefinition,
-	staticTreePanelDefinition,
 	type SidePanelTabConfig,
 	type TreeDataItem,
 	type TreePanelConfig,
@@ -164,26 +162,30 @@ function shellTabIcon(iconId: string): React.FC<{ size?: number }> {
 
 export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | null): SidePanelTabConfig[] {
 	return [
-		staticSidePanelTabDefinition({
+		{
 			id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID,
 			icon: shellTabIcon("framework.display.windows"),
 			name: "Windows",
 			order: -100,
-			tree: staticTreePanelDefinition(() => {
-				const host = getHost();
-				return host ? buildDisplayWindowsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
-			}),
-		}),
-		staticSidePanelTabDefinition({
+			tree: {
+				resolveTree: () => {
+					const host = getHost();
+					return host ? buildDisplayWindowsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
+				},
+			},
+		},
+		{
 			id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID,
 			icon: shellTabIcon("framework.display.layout"),
 			name: "Layout",
 			order: -99,
-			tree: staticTreePanelDefinition(() => {
-				const host = getHost();
-				return host ? buildDisplayLayoutTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
-			}),
-		}),
+			tree: {
+				resolveTree: () => {
+					const host = getHost();
+					return host ? buildDisplayLayoutTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
+				},
+			},
+		},
 	];
 }
 //#endregion DisplayPanel
@@ -257,16 +259,18 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
 }
 
 export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null): SidePanelTabConfig {
-	return staticSidePanelTabDefinition({
+	return {
 		id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
 		icon: shellTabIcon("framework.settings.general"),
 		name: "Settings",
 		order: -98,
-		tree: staticTreePanelDefinition(() => {
-			const host = getHost();
-			return host ? buildSettingsGeneralTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Settings unavailable" }] }] };
-		}),
-	});
+		tree: {
+			resolveTree: () => {
+				const host = getHost();
+				return host ? buildSettingsGeneralTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Settings unavailable" }] }] };
+			},
+		},
+	};
 }
 
 export function useNamedLayoutHost(options: {
@@ -277,7 +281,11 @@ export function useNamedLayoutHost(options: {
 	readonly onApplyLayout: (layout: WindowLayout) => void;
 	readonly namedLayoutStore: { getSnapshot: () => readonly NamedLayout[]; save: (layout: NamedLayout) => void; remove: (layoutId: string) => void; subscribe: (listener: () => void) => () => void };
 }): DisplayHostApi {
-	const userLayouts = useSyncExternalStore(options.namedLayoutStore.subscribe, options.namedLayoutStore.getSnapshot, options.namedLayoutStore.getSnapshot);
+	const userLayouts = useSyncExternalStore(
+		(listener) => options.namedLayoutStore.subscribe(listener),
+		() => options.namedLayoutStore.getSnapshot(),
+		() => options.namedLayoutStore.getSnapshot(),
+	);
 	return useMemo(
 		(): DisplayHostApi => ({
 			windowKinds: options.windowKinds,

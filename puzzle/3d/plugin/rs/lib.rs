@@ -443,7 +443,9 @@ impl PluginApp for Puzzle3dPlayApp {
                 PUZZLE3D_PLAY_APP_ID,
                 World3dScene {
                     camera_json: camera_json(&envelope.fixture.camera),
+                    meshes_json: "[]".into(),
                     instances_json: world_instances_json(&envelope.fixture, &envelope.runtime.selection),
+                    selection_json: serde_json::to_string(&envelope.runtime.selection).unwrap_or_else(|_| "[]".into()),
                 },
             ),
             PUZZLE3D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),

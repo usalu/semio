@@ -1165,6 +1165,97 @@ export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): st
 }
 //#endregion 🔌PlaygroundDevPorts
 
+//#region 🖥️FrameworkOsPlaygroundDev
+/** @emoji 🧊 CLI alias segments → `SEMIO_PLUGIN` id for framework OS dev playgrounds. */
+export const FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES: Readonly<Record<string, string>> = {
+	s: "s",
+	draw: "draw",
+	note: "note",
+	writer: "writer",
+	raster: "raster",
+	forms: "forms",
+	vcs: "vcs",
+	flow: "flow",
+	dag: "dag",
+	imperative: "imperative",
+	sequence: "sequence",
+	layout: "layout",
+	lowpoly: "lowpoly",
+	shooting: "shooting",
+	"2d": "puzzle2d",
+	"3d": "puzzle3d",
+	"5d": "puzzle5d",
+	"gis 2d": "gis2d",
+	wires: "reasoning-wires",
+	cad: "cad",
+	"procedural 2d": "procedural2d",
+	"procedural 3d": "procedural3d",
+	"trinity jack": "trinity",
+	"trinity rewrite": "trinity-rewrite",
+	presentation: "presentation",
+};
+
+/** @emoji 🔌 Legacy play-port env vars mapped to `S_OS_PORT` per plugin id. */
+export const FRAMEWORK_OS_PLAYGROUND_PORT_ENV: Readonly<Record<string, string>> = {
+	s: "S_OS_PORT",
+	draw: "S_OS_PORT",
+	note: "NOTE_PLAY_PORT",
+	writer: "WRITER_PLAY_PORT",
+	raster: "RASTER_PLAY_PORT",
+	forms: "FORMS_PLAY_PORT",
+	vcs: "VCS_PLAY_PORT",
+	flow: "FLOW_PLAY_PORT",
+	dag: "DAG_PLAY_PORT",
+	imperative: "IMPERATIVE_PLAY_PORT",
+	sequence: "SEQUENCE_PLAY_PORT",
+	layout: "LAYOUT_PLAY_PORT",
+	lowpoly: "LOWPOLY_PLAY_PORT",
+	puzzle2d: "PUZZLE_2D_PLAY_PORT",
+	puzzle3d: "PUZZLE_3D_PLAY_PORT",
+	puzzle5d: "PUZZLE_5D_PLAY_PORT",
+	gis2d: "GIS_2D_PLAY_PORT",
+	"reasoning-wires": "WIRES_PLAY_PORT",
+	cad: "CAD_JS_RENDERER_PLAY_PORT",
+	procedural2d: "PROCEDURAL_2D_PLAY_PORT",
+	procedural3d: "PROCEDURAL_3D_PLAY_PORT",
+	shooting: "SHOOTING_PLAY_PORT",
+	trinity: "TRINITY_JACK_PLAY_PORT",
+	"trinity-rewrite": "TRINITY_REWRITE_PLAY_PORT",
+	presentation: "PRESENTATION_PLAY_PORT",
+};
+
+/** @emoji 🎯 Resolves `bun ./script.ts dev …` segments to a framework OS plugin filter. */
+export function resolveFrameworkOsPlaygroundPlugin(
+	segments: readonly string[],
+): { readonly plugin: string; readonly rest: readonly string[] } | null {
+	if (segments.length === 0) return null;
+	for (let len = segments.length; len >= 1; len--) {
+		const alias = segments.slice(0, len).join(" ");
+		const plugin = FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES[alias];
+		if (plugin) {
+			return { plugin, rest: segments.slice(len) };
+		}
+	}
+	return null;
+}
+
+/** @emoji 🧊 Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and plugin filter. */
+export function frameworkOsPlaygroundDevEnv(
+	plugin: string,
+	extra: NodeJS.ProcessEnv = {},
+	env: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+	const portEnv = FRAMEWORK_OS_PLAYGROUND_PORT_ENV[plugin];
+	const port = portEnv && env[portEnv] ? { S_OS_PORT: env[portEnv] } : {};
+	return devToolingEnv({
+		SEMIO_PLUGIN: plugin,
+		SEMIO_RENDERER: "wgpu",
+		...port,
+		...extra,
+	});
+}
+//#endregion 🖥️FrameworkOsPlaygroundDev
+
 /** 🧰Play/vite dev env with optional file-watcher polling defaults. */
 export function playPollingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
   return devToolingEnv({

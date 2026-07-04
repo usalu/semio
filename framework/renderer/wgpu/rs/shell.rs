@@ -1,19 +1,19 @@
 //! 🖥️ OS shell chrome — navbar, panels, sessions, and studio mode.
 
-use crate::draw::DrawList;
-use crate::input::{HitKind, HitTarget, InputState};
-use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
-use crate::text::FontAtlas;
-use crate::theme::{
-    Rect, Rgba, BORDER_RADIUS, FONT_SIZE_BODY, FONT_SIZE_SMALL,
-    NAVBAR_HEIGHT, PANEL_HEADER_HEIGHT,
+use crate::interpreter::{framework_widget_context, render_ui_node};
+use crate::world3d::{
+    fetch_pending_glb_meshes, handle_world3d_pointer_button, handle_world3d_pointer_drag,
+    handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
-use crate::widgets::{draw_text, render_ui_node, WidgetContext};
+use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
 use semio_framework_core::{
     AppDefinition, CommandDescriptor, PanelTabDefinition, UiNode, ViewState,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use ui_wgpu::{
+    draw_text, DrawList, FontAtlas, HitKind, HitTarget, InputState, Rect, Rgba, Theme,
+};
 
 const S_HOME_APP_ID: &str = "home";
 const S_PLAY_CATALOGUE_TAB_ID: &str = "s-play-catalogue";
@@ -72,6 +72,7 @@ pub struct ShellState {
     pub error: Option<String>,
     pub screen_w: f32,
     pub screen_h: f32,
+    pub world3d_states: HashMap<String, World3dState>,
 }
 
 impl ShellState {
@@ -93,6 +94,7 @@ impl ShellState {
             error: None,
             screen_w: 1280.0,
             screen_h: 720.0,
+            world3d_states: HashMap::new(),
         }
     }
 
@@ -245,12 +247,18 @@ impl ShellState {
         Ok(())
     }
 
-    pub async fn handle_pointer(&mut self, x: f32, y: f32, down: bool, input: &InputState) -> Result<(), String> {
+    pub async fn handle_pointer(
+        &mut self,
+        x: f32,
+        y: f32,
+        down: bool,
+        input: &InputState<CommandDescriptor>,
+    ) -> Result<(), String> {
         if !down {
             return Ok(());
         }
         if let Some(hit) = input.hit_at(x, y) {
-            if let Some(command) = &hit.command {
+            if let Some(command) = &hit.event {
                 self.dispatch_command(command.clone()).await?;
             } else if hit.kind == HitKind::Input {
                 if let Some(id) = &hit.control_id {
@@ -259,6 +267,53 @@ impl ShellState {
             }
         }
         Ok(())
+    }
+
+    pub async fn handle_world3d_input(
+        &mut self,
+        x: f32,
+        y: f32,
+        down: bool,
+        button: i16,
+        shift: bool,
+        ctrl: bool,
+        wheel_delta: f32,
+        drag_dx: f32,
+        drag_dy: f32,
+    ) -> Result<(), String> {
+        if wheel_delta.abs() > 0.0 {
+            for state in self.world3d_states.values_mut() {
+                if state.bounds.inset(8.0).contains(x, y) {
+                    handle_world3d_wheel(state, wheel_delta);
+                }
+            }
+        }
+        if (drag_dx.abs() > 0.0 || drag_dy.abs() > 0.0) && down {
+            for state in self.world3d_states.values_mut() {
+                if state.bounds.inset(8.0).contains(x, y) {
+                    handle_world3d_pointer_drag(state, drag_dx, drag_dy, button, shift);
+                }
+            }
+        }
+        let mut commands = Vec::new();
+        for state in self.world3d_states.values_mut() {
+            if !state.bounds.inset(8.0).contains(x, y) {
+                continue;
+            }
+            if let Some(command) = handle_world3d_pointer_button(state, x, y, down, button, shift, ctrl) {
+                commands.push(command);
+            } else if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
+                commands.push(command);
+            }
+        }
+        for command in commands {
+            self.dispatch_command(command).await?;
+        }
+        Ok(())
+    }
+
+    pub async fn poll_world3d_assets(&mut self) {
+        fetch_pending_glb_meshes(&mut self.world3d_states).await;
     }
 
     pub async fn dispatch_command(&mut self, command: CommandDescriptor) -> Result<(), String> {
@@ -293,6 +348,15 @@ impl ShellState {
                         vs.panel_json = Some(panel.to_string());
                         view_state = Some(vs);
                     }
+                }
+            }
+            if op.get("op").and_then(|v| v.as_str()) == Some("downloadMediaExport") {
+                if let (Some(filename), Some(mime_type), Some(data)) = (
+                    op.get("filename").and_then(|v| v.as_str()),
+                    op.get("mimeType").and_then(|v| v.as_str()),
+                    op.get("data").and_then(|v| v.as_str()),
+                ) {
+                    download_media_export(filename, mime_type, data);
                 }
             }
             if op.get("op").and_then(|v| v.as_str()) == Some("spawnProgram") {
@@ -343,21 +407,23 @@ impl ShellState {
     }
 
     pub fn render_chrome(
-        &self,
+        &mut self,
         draw: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState,
+        input: &mut InputState<CommandDescriptor>,
+        theme: &Theme,
+        gpu: &mut ui_wgpu::GpuContext,
     ) {
         let w = self.screen_w;
         let h = self.screen_h;
-        draw.push_solid([0.0, 0.0, w, h], Rgba::BACKGROUND);
-        self.render_navbar(draw, atlas, input, w);
-        let body_y = NAVBAR_HEIGHT;
-        let body_h = h - NAVBAR_HEIGHT;
+        draw.push_solid([0.0, 0.0, w, h], theme.background);
+        self.render_navbar(draw, atlas, input, theme, w);
+        let body_y = theme.navbar_height;
+        let body_h = h - theme.navbar_height;
         let mut content_x = 0.0;
         let mut content_w = w;
         if self.left_panel_open {
-            self.render_left_panel(draw, atlas, input, content_x, body_y, self.left_panel_width, body_h);
+            self.render_left_panel(draw, atlas, input, theme, content_x, body_y, self.left_panel_width, body_h, gpu);
             content_x += self.left_panel_width;
             content_w -= self.left_panel_width;
         }
@@ -366,77 +432,90 @@ impl ShellState {
                 draw,
                 atlas,
                 input,
+                theme,
                 w - self.right_panel_width,
                 body_y,
                 self.right_panel_width,
                 body_h,
+                gpu,
             );
             content_w -= self.right_panel_width;
         }
-        self.render_main_window(draw, atlas, input, Rect::new(content_x, body_y, content_w, body_h));
+        self.render_main_window(draw, atlas, input, theme, Rect::new(content_x, body_y, content_w, body_h), gpu);
         if let Some(error) = &self.error {
+            let mut ctx = framework_widget_context(draw, atlas, input, theme);
             draw_text(
-                &mut WidgetContext { draw, atlas, input },
+                &mut ctx,
                 error,
                 12.0,
                 h - 24.0,
-                FONT_SIZE_SMALL,
+                theme.font_size_small,
                 Rgba::new(0.95, 0.35, 0.35, 1.0),
             );
         }
     }
 
-    fn render_navbar(&self, draw: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState, width: f32) {
-        draw.push_solid([0.0, 0.0, width, NAVBAR_HEIGHT], Rgba::NAVBAR);
+    fn render_navbar(
+        &self,
+        draw: &mut DrawList,
+        atlas: &mut FontAtlas,
+        input: &mut InputState<CommandDescriptor>,
+        theme: &Theme,
+        width: f32,
+    ) {
+        draw.push_solid([0.0, 0.0, width, theme.navbar_height], theme.navbar);
         let title = self
             .session
             .as_ref()
             .map(|s| s.app.label.as_str())
             .unwrap_or("semio");
+        let mut ctx = framework_widget_context(draw, atlas, input, theme);
         draw_text(
-            &mut WidgetContext { draw, atlas, input },
+            &mut ctx,
             title,
             12.0,
-            NAVBAR_HEIGHT * 0.5 + FONT_SIZE_BODY * 0.5 - 2.0,
-            FONT_SIZE_BODY,
-            Rgba::TEXT,
+            theme.navbar_height * 0.5 + theme.font_size_body * 0.5 - 2.0,
+            theme.font_size_body,
+            theme.text,
         );
         if self.studio_mode {
             draw_text(
-                &mut WidgetContext { draw, atlas, input },
+                &mut ctx,
                 "S Studio",
                 120.0,
-                NAVBAR_HEIGHT * 0.5 + FONT_SIZE_SMALL,
-                FONT_SIZE_SMALL,
-                Rgba::ACCENT,
+                theme.navbar_height * 0.5 + theme.font_size_small,
+                theme.font_size_small,
+                theme.accent,
             );
         }
-        let toggle_rect = Rect::new(width - 80.0, 6.0, 32.0, NAVBAR_HEIGHT - 12.0);
+        let toggle_rect = Rect::new(width - 80.0, 6.0, 32.0, theme.navbar_height - 12.0);
         draw.push_rounded(
             [toggle_rect.x, toggle_rect.y, toggle_rect.w, toggle_rect.h],
-            Rgba::BUTTON,
-            BORDER_RADIUS,
+            theme.button,
+            theme.border_radius,
         );
         input.register_hit(HitTarget {
             rect: toggle_rect,
-            command: None,
+            event: None,
             control_id: Some("panel.toggle.left".into()),
             kind: HitKind::NavbarItem,
         });
     }
 
     fn render_left_panel(
-        &self,
+        &mut self,
         draw: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState,
+        input: &mut InputState<CommandDescriptor>,
+        theme: &Theme,
         x: f32,
         y: f32,
         width: f32,
         height: f32,
+        gpu: &mut ui_wgpu::GpuContext,
     ) {
-        draw.push_solid([x, y, width, height], Rgba::PANEL);
-        draw.push_line(x + width, y, x + width, y + height, Rgba::PANEL_BORDER, 1.0);
+        draw.push_solid([x, y, width, height], theme.panel);
+        draw.push_line(x + width, y, x + width, y + height, theme.panel_border, 1.0);
         let session = match &self.session {
             Some(s) => s,
             None => return,
@@ -448,7 +527,7 @@ impl ShellState {
             .collect();
         let mut tab_y = y + 4.0;
         for tab in left_tabs {
-            let rect = Rect::new(x + 4.0, tab_y, width - 8.0, PANEL_HEADER_HEIGHT);
+            let rect = Rect::new(x + 4.0, tab_y, width - 8.0, theme.panel_header_height);
             let active = session
                 .view_state
                 .panel_json
@@ -456,19 +535,20 @@ impl ShellState {
                 .and_then(|_| Self::panel_state_from_view(&session.view_state))
                 .map(|p| p.active_panel_tab == tab.id)
                 .unwrap_or(false);
-            let bg = if active { Rgba::SELECTED } else { Rgba::BUTTON };
-            draw.push_rounded([rect.x, rect.y, rect.w, rect.h], bg, BORDER_RADIUS);
+            let bg = if active { theme.selected } else { theme.button };
+            draw.push_rounded([rect.x, rect.y, rect.w, rect.h], bg, theme.border_radius);
+            let mut ctx = framework_widget_context(draw, atlas, input, theme);
             draw_text(
-                &mut WidgetContext { draw, atlas, input },
+                &mut ctx,
                 &tab.label,
                 rect.x + 8.0,
                 rect.y + 20.0,
-                FONT_SIZE_SMALL,
-                Rgba::TEXT,
+                theme.font_size_small,
+                theme.text,
             );
             input.register_hit(HitTarget {
                 rect,
-                command: Some(CommandDescriptor {
+                event: Some(CommandDescriptor {
                     controller_id: session.app.controller_id.clone(),
                     command: format!("panel.select.{}", tab.id),
                     args: None,
@@ -476,28 +556,31 @@ impl ShellState {
                 control_id: Some(tab.id.clone()),
                 kind: HitKind::PanelTab,
             });
-            tab_y += PANEL_HEADER_HEIGHT + 4.0;
+            tab_y += theme.panel_header_height + 4.0;
             if active {
                 if let Some(ui) = self.panel_ui.get(&tab.id) {
                     let content = Rect::new(x + 8.0, tab_y, width - 16.0, height - (tab_y - y) - 8.0);
-                    render_ui_node(ui, content, &mut WidgetContext { draw, atlas, input });
+                    let mut ctx = framework_widget_context(draw, atlas, input, theme);
+                    render_ui_node(ui, content, &mut ctx, gpu, &mut self.world3d_states);
                 }
             }
         }
     }
 
     fn render_right_panel(
-        &self,
+        &mut self,
         draw: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState,
+        input: &mut InputState<CommandDescriptor>,
+        theme: &Theme,
         x: f32,
         y: f32,
         width: f32,
         height: f32,
+        gpu: &mut ui_wgpu::GpuContext,
     ) {
-        draw.push_solid([x, y, width, height], Rgba::PANEL);
-        draw.push_line(x, y, x, y + height, Rgba::PANEL_BORDER, 1.0);
+        draw.push_solid([x, y, width, height], theme.panel);
+        draw.push_line(x, y, x, y + height, theme.panel_border, 1.0);
         let session = match &self.session {
             Some(s) => s,
             None => return,
@@ -510,39 +593,44 @@ impl ShellState {
             .collect();
         let mut tab_y = y + 4.0;
         for tab in right_tabs {
-            let rect = Rect::new(x + 4.0, tab_y, width - 8.0, PANEL_HEADER_HEIGHT);
-            draw.push_rounded([rect.x, rect.y, rect.w, rect.h], Rgba::BUTTON, BORDER_RADIUS);
+            let rect = Rect::new(x + 4.0, tab_y, width - 8.0, theme.panel_header_height);
+            draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.button, theme.border_radius);
+            let mut ctx = framework_widget_context(draw, atlas, input, theme);
             draw_text(
-                &mut WidgetContext { draw, atlas, input },
+                &mut ctx,
                 &tab.label,
                 rect.x + 8.0,
                 rect.y + 20.0,
-                FONT_SIZE_SMALL,
-                Rgba::TEXT,
+                theme.font_size_small,
+                theme.text,
             );
-            tab_y += PANEL_HEADER_HEIGHT + 4.0;
+            tab_y += theme.panel_header_height + 4.0;
             if let Some(ui) = self.panel_ui.get(&tab.id) {
                 let content = Rect::new(x + 8.0, tab_y, width - 16.0, height * 0.45);
-                render_ui_node(ui, content, &mut WidgetContext { draw, atlas, input });
+                let mut ctx = framework_widget_context(draw, atlas, input, theme);
+                render_ui_node(ui, content, &mut ctx, gpu, &mut self.world3d_states);
             }
         }
     }
 
     fn render_main_window(
-        &self,
+        &mut self,
         draw: &mut DrawList,
         atlas: &mut FontAtlas,
-        input: &mut InputState,
+        input: &mut InputState<CommandDescriptor>,
+        theme: &Theme,
         bounds: Rect,
+        gpu: &mut ui_wgpu::GpuContext,
     ) {
-        draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], Rgba::BACKGROUND);
+        draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.background);
         let session = match &self.session {
             Some(s) => s,
             None => return,
         };
         if self.studio_mode {
             if let Some(spawned_ui) = &self.spawned_ui {
-                render_ui_node(spawned_ui, bounds.inset(8.0), &mut WidgetContext { draw, atlas, input });
+                let mut ctx = framework_widget_context(draw, atlas, input, theme);
+                render_ui_node(spawned_ui, bounds.inset(8.0), &mut ctx, gpu, &mut self.world3d_states);
                 return;
             }
         }
@@ -552,17 +640,50 @@ impl ShellState {
             .or_else(|| session.app.window_kinds.first().map(|w| &w.id));
         if let Some(id) = window_id {
             if let Some(ui) = self.window_ui.get(id) {
-                render_ui_node(ui, bounds.inset(8.0), &mut WidgetContext { draw, atlas, input });
+                let mut ctx = framework_widget_context(draw, atlas, input, theme);
+                render_ui_node(ui, bounds.inset(8.0), &mut ctx, gpu, &mut self.world3d_states);
                 return;
             }
         }
         draw_text(
-            &mut WidgetContext { draw, atlas, input },
+            &mut framework_widget_context(draw, atlas, input, theme),
             &session.app.label,
             bounds.x + 16.0,
             bounds.y + 32.0,
-            FONT_SIZE_BODY,
-            Rgba::TEXT_MUTED,
+            theme.font_size_body,
+            theme.text_muted,
         );
     }
 }
+
+#[cfg(target_arch = "wasm32")]
+fn download_media_export(filename: &str, mime_type: &str, data: &str) {
+    use wasm_bindgen::JsCast;
+    use web_sys::{Blob, HtmlAnchorElement, Url};
+
+    let window = match web_sys::window() {
+        Some(window) => window,
+        None => return,
+    };
+    let document = match window.document() {
+        Some(document) => document,
+        None => return,
+    };
+    let parts = js_sys::Array::new();
+    parts.push(&wasm_bindgen::JsValue::from_str(data));
+    let blob = Blob::new_with_str_sequence(&parts).unwrap();
+    let url = Url::create_object_url_with_blob(&blob).unwrap();
+    let anchor: HtmlAnchorElement = document
+        .create_element("a")
+        .unwrap()
+        .dyn_into()
+        .unwrap();
+    anchor.set_href(&url);
+    anchor.set_download(filename);
+    anchor.set_attribute("type", mime_type).ok();
+    anchor.click();
+    Url::revoke_object_url(&url).ok();
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn download_media_export(_filename: &str, _mime_type: &str, _data: &str) {}

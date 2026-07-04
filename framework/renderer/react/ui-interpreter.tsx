@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import { lazy, Suspense, type ReactElement, type ReactNode } from "react";
 import {
 	Button,
 	ChromeAwareWindowScrollSurface,
@@ -26,13 +26,47 @@ import {
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import type { CommandDescriptor, UiControlNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "./types.ts";
-import { Canvas2dHost } from "./components/canvas-2d-host.tsx";
-import { FlowCanvasHost } from "./components/flow-canvas-host.tsx";
-import { NodeGraphHost } from "./components/node-graph-host.tsx";
-import { RasterHost } from "./components/raster-host.tsx";
-import { TableHost } from "./components/table-host.tsx";
-import { TextEditorHost } from "./components/text-editor-host.tsx";
-import { World3dHost } from "./components/world-3d-host.tsx";
+
+const Canvas2dHost = lazy(() => import("./components/canvas-2d-host.tsx").then((module) => ({ default: module.Canvas2dHost })));
+const FlowCanvasHost = lazy(() => import("./components/flow-canvas-host.tsx").then((module) => ({ default: module.FlowCanvasHost })));
+const NodeGraphHost = lazy(() => import("./components/node-graph-host.tsx").then((module) => ({ default: module.NodeGraphHost })));
+const RasterHost = lazy(() => import("./components/raster-host.tsx").then((module) => ({ default: module.RasterHost })));
+const TableHost = lazy(() => import("./components/table-host.tsx").then((module) => ({ default: module.TableHost })));
+const TextEditorHost = lazy(() => import("./components/text-editor-host.tsx").then((module) => ({ default: module.TextEditorHost })));
+const World3dHost = lazy(() => import("./components/world-3d-host.tsx").then((module) => ({ default: module.World3dHost })));
+
+function ComponentSceneFallback() {
+	return <p className="text-muted-foreground p-2 text-xs">Loading surface…</p>;
+}
+
+function renderComponentSceneHost(
+	node: Extract<UiNode, { type: "componentScene" }>,
+	onCommand: (command: CommandDescriptor) => void,
+): ReactNode {
+	const host = (() => {
+		switch (node.componentKind) {
+			case "canvas-2d":
+				return <Canvas2dHost node={node} onCommand={onCommand} />;
+			case "world-3d":
+				return <World3dHost node={node} onCommand={onCommand} />;
+			case "node-graph":
+				return <NodeGraphHost node={node} onCommand={onCommand} />;
+			case "flow-canvas":
+				return <FlowCanvasHost node={node} onCommand={onCommand} />;
+			case "text-editor":
+				return <TextEditorHost node={node} onCommand={onCommand} />;
+			case "table":
+				return <TableHost node={node} onCommand={onCommand} />;
+			case "raster":
+				return <RasterHost node={node} onCommand={onCommand} />;
+			case "virtualFileSystem":
+				return <VirtualFileSystemHost node={node} onCommand={onCommand} />;
+			default:
+				return <p className="text-muted-foreground text-xs">Unknown component: {node.componentKind}</p>;
+		}
+	})();
+	return <Suspense fallback={<ComponentSceneFallback />}>{host}</Suspense>;
+}
 
 //#region UiInterpreterContext
 export type UiInterpreterContext = {
@@ -422,26 +456,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
 		case "tree":
 			return <DeclarativeTreePanel treeNode={node} onCommand={context.onCommand} />;
 		case "componentScene":
-			switch (node.componentKind) {
-				case "canvas-2d":
-					return <Canvas2dHost node={node} onCommand={context.onCommand} />;
-				case "world-3d":
-					return <World3dHost node={node} onCommand={context.onCommand} />;
-				case "node-graph":
-					return <NodeGraphHost node={node} onCommand={context.onCommand} />;
-				case "flow-canvas":
-					return <FlowCanvasHost node={node} onCommand={context.onCommand} />;
-				case "text-editor":
-					return <TextEditorHost node={node} onCommand={context.onCommand} />;
-				case "table":
-					return <TableHost node={node} onCommand={context.onCommand} />;
-				case "raster":
-					return <RasterHost node={node} onCommand={context.onCommand} />;
-				case "virtualFileSystem":
-					return <VirtualFileSystemHost node={node} onCommand={context.onCommand} />;
-				default:
-					return <p className="text-muted-foreground text-xs">Unknown component: {node.componentKind}</p>;
-			}
+			return renderComponentSceneHost(node, context.onCommand);
 	}
 }
 //#endregion InterpretUiNode

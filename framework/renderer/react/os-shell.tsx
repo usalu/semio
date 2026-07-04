@@ -29,7 +29,6 @@ import {
 	createEvenWindowLayout,
 	getLevelBgClass,
 	navbarFillItem,
-	staticSidePanelTabDefinition,
 	staticTreePanelDefinition,
 	useMediaQuery,
 	useSidePanelChromeHotkeys,
@@ -76,6 +75,17 @@ import {
 	type WindowMeasure,
 } from "./types.ts";
 import { interpretUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
+import { UISearch, UIFind, UIFindProvider } from "./ui-search-find.tsx";
+import {
+	createFrameworkDisplayPanelTabs,
+	createFrameworkSettingsPanelTab,
+	useNamedLayoutHost,
+	type SettingsHostApi,
+} from "./os-chrome-panels.tsx";
+import {
+	NamedLayoutStore,
+	createBrowserStoragePort,
+} from "@semio-tech/framework-core";
 
 //#region ShellTypes
 type LoadedPluginState = {
@@ -132,8 +142,16 @@ const DEFAULT_RIGHT_PANEL_SIZE = 320;
 type UIHistoryEntry = { readonly uri: string };
 type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: number };
 
-function useUIHistory(initialUri = "/") {
-	const [history, setHistory] = useState<UIHistory>({ entries: [{ uri: initialUri }], index: 0 });
+function readBrowserUri(): string {
+	if (typeof window === "undefined") return "/";
+	return `${window.location.pathname}${window.location.search}` || "/";
+}
+
+function useUIHistory(initialUri = "/", syncBrowser = false) {
+	const [history, setHistory] = useState<UIHistory>(() => ({
+		entries: [{ uri: syncBrowser ? readBrowserUri() : initialUri }],
+		index: 0,
+	}));
 	const uri = history.entries[history.index]?.uri ?? initialUri;
 	const canGoBack = history.index > 0;
 	const canGoForward = history.index < history.entries.length - 1;
@@ -162,8 +180,29 @@ function useUIHistory(initialUri = "/") {
 			return { entries: [...newEntries, { uri: targetUri }], index: newEntries.length };
 		});
 	}, []);
+	const syncUri = useCallback((targetUri: string) => {
+		setHistory((prev) => {
+			const existingIndex = prev.entries.findIndex((entry) => entry.uri === targetUri);
+			if (existingIndex >= 0) return { ...prev, index: existingIndex };
+			const newEntries = prev.entries.slice(0, prev.index + 1);
+			return { entries: [...newEntries, { uri: targetUri }], index: newEntries.length };
+		});
+	}, []);
 
-	return { uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate };
+	useEffect(() => {
+		if (!syncBrowser || typeof window === "undefined") return;
+		const current = `${window.location.pathname}${window.location.search}`;
+		if (current !== uri) window.history.pushState(null, "", uri);
+	}, [syncBrowser, uri]);
+
+	useEffect(() => {
+		if (!syncBrowser || typeof window === "undefined") return;
+		const onPopState = () => syncUri(readBrowserUri());
+		window.addEventListener("popstate", onPopState);
+		return () => window.removeEventListener("popstate", onPopState);
+	}, [syncBrowser, syncUri]);
+
+	return { uri, canGoBack, canGoForward, canGoUp, parentUri, goBack, goForward, goUp, navigate, syncUri };
 }
 
 function downloadMediaExport(filename: string, mimeType: string, data: string): void {
@@ -249,6 +288,37 @@ function convertFrameworkLayoutNodeToModeLayout(
 function convertFrameworkLayoutToModeLayout(layout: WindowLayout | undefined, windowIds: readonly string[]): WindowLayoutNode {
 	if (!layout?.root) return createEvenWindowLayout(windowIds.length ? windowIds : ["main"]);
 	return convertFrameworkLayoutNodeToModeLayout(layout.root);
+}
+
+function modeLayoutNodeToFramework(
+	node: WindowLayoutNode,
+): WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode {
+	if (node.kind === "window") {
+		return { kind: "window", windowKindId: node.id, ...(node.title ? { title: node.title } : {}) };
+	}
+	if (node.kind === "stack") {
+		return {
+			kind: "stack",
+			...(node.size !== undefined ? { size: node.size } : {}),
+			children: node.children.map((child) => ({
+				kind: "window" as const,
+				windowKindId: child.id,
+				...(child.title ? { title: child.title } : {}),
+			})),
+		};
+	}
+	return {
+		kind: node.kind,
+		...(node.size !== undefined ? { size: node.size } : {}),
+		children: node.children.map((child) => modeLayoutNodeToFramework(child) as WindowLayoutStackNode | WindowLayoutAxisNode),
+	};
+}
+
+function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, fallback?: WindowLayout): WindowLayout | undefined {
+	if (!shellLayout) return fallback;
+	const root = modeLayoutNodeToFramework(shellLayout);
+	if (root.kind === "window") return { root: { kind: "stack", children: [root] } };
+	return { root };
 }
 
 function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): string | null {
@@ -525,11 +595,18 @@ export function FrameworkOsShell({
 	const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
 	const [shellLayout, setShellLayout] = useState<WindowLayoutNode | null>(null);
 	const [activeExampleId, setActiveExampleId] = useState("demo");
+	const [searchOpen, setSearchOpen] = useState(false);
+	const [findOpen, setFindOpen] = useState(false);
 	const importStudioInputRef = useRef<HTMLInputElement>(null);
 	const [uiTheme, setUiTheme] = useState<ElementsSurfaceTheme>(() => readStoredUiChromeTheme());
 	const [uiCompact, setUiCompact] = useState(() => readStoredUiChromeCompact());
 	const [uiExpertise, setUiExpertise] = useState(() => readStoredUiChromeExpertise());
-	const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/");
+	const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode);
+
+	const namedLayoutStore = useMemo(
+		() => new NamedLayoutStore(session?.app.id ?? "framework-os", createBrowserStoragePort()),
+		[session?.app.id],
+	);
 
 	const registry = useMemo(() => {
 		if (studioMode) return plugins;
@@ -604,12 +681,15 @@ export function FrameworkOsShell({
 		async (nextSession: ActiveSession) => {
 			const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
 			if (!plugin) return;
-			const [windowNodes, ...panelNodes] = await Promise.all([
+			const windowCount = nextSession.app.windowKinds.length;
+			const rendered = await Promise.all([
 				...nextSession.app.windowKinds.map((kind) =>
 					plugin.render(nextSession.instanceId, kind.bodyKey, nextSession.viewState),
 				),
 				...nextSession.app.panelTabs.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey, nextSession.viewState)),
 			]);
+			const windowNodes = rendered.slice(0, windowCount);
+			const panelNodes = rendered.slice(windowCount);
 			setWindowUiByKind(
 				Object.fromEntries(
 					nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]!]),
@@ -761,10 +841,21 @@ export function FrameworkOsShell({
 					osInstanceId?: string;
 					label?: string;
 					documentJson?: string;
+					document?: unknown;
 					filename?: string;
 					mimeType?: string;
 					data?: string;
 				};
+				if (op.op === "setDocument" && op.document != null) {
+					const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId)?.handle;
+					if (plugin) {
+						await plugin.handleCommand(
+							baseSession.instanceId,
+							JSON.stringify({ controllerId: baseSession.app.controllerId, command: "setDocument", args: { document: op.document } }),
+							nextViewState,
+						);
+					}
+				}
 				if (op.op === "setPanel" && op.panel) {
 					nextViewState = { ...nextViewState, panelJson: panelJsonFromState(op.panel) };
 				}
@@ -815,9 +906,13 @@ export function FrameworkOsShell({
 				}
 			}
 			const nextSession = { ...baseSession, viewState: nextViewState };
-			if (nextSession.pluginId === session?.pluginId) {
-				setSession((current) => (current ? { ...current, viewState: nextViewState } : current));
-			}
+			setSession((current) => {
+				if (!current) return nextSession;
+				if (current.pluginId === nextSession.pluginId && current.instanceId === nextSession.instanceId) {
+					return { ...current, viewState: nextViewState };
+				}
+				return nextSession;
+			});
 			await refreshUi(nextSession);
 		},
 		[ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshUi, session?.pluginId, switchToSApp],
@@ -969,6 +1064,53 @@ export function FrameworkOsShell({
 			if (canGoUp) goUp();
 		}, [canGoUp, goUp]),
 	);
+	useCommandHotkey("mod+p", useCallback(() => setSearchOpen((open) => !open), []));
+	useCommandHotkey("mod+f", useCallback(() => setFindOpen((open) => !open), []));
+
+	const applyNamedLayout = useCallback(
+		(layout: WindowLayout) => {
+			if (!session) return;
+			const windowIds = session.app.windowKinds.map((kind) => kind.id);
+			setShellLayout(convertFrameworkLayoutToModeLayout(layout, windowIds));
+			const defaultWindowId = findDefaultActiveWindowKindId(layout, session.app.windowKinds);
+			if (defaultWindowId) setActiveWindowId(defaultWindowId);
+		},
+		[session],
+	);
+
+	const displayHostRef = useRef<ReturnType<typeof useNamedLayoutHost> | null>(null);
+	const displayHost = useNamedLayoutHost({
+		appId: session?.app.id ?? "framework-os",
+		windowKinds: session?.app.windowKinds ?? [],
+		builtinLayouts: session?.app.namedLayouts ?? [],
+		currentLayout: captureCurrentFrameworkLayout(shellLayout, session?.app.defaultLayout),
+		onApplyLayout: applyNamedLayout,
+		namedLayoutStore,
+	});
+	displayHostRef.current = displayHost;
+
+	const settingsHostRef = useRef<SettingsHostApi | null>(null);
+	const settingsHost: SettingsHostApi = useMemo(
+		() => ({
+			compact: uiCompact,
+			setCompact: setUiCompact,
+			expertise: uiExpertise,
+			setExpertise: setUiExpertise,
+			theme: uiTheme,
+			setTheme: setUiTheme,
+		}),
+		[uiCompact, uiExpertise, uiTheme],
+	);
+	settingsHostRef.current = settingsHost;
+
+	const frameworkDisplayTabs = useMemo(
+		() => createFrameworkDisplayPanelTabs(() => displayHostRef.current),
+		[displayHost],
+	);
+	const frameworkSettingsTab = useMemo(
+		() => createFrameworkSettingsPanelTab(() => settingsHostRef.current),
+		[settingsHost],
+	);
 
 	useEffect(() => {
 		if (!session?.app.keybindings.length) return;
@@ -1009,17 +1151,17 @@ export function FrameworkOsShell({
 		if (!session) return [];
 		const pluginLeftTabs = session.app.panelTabs
 			.filter((tab) => panelSideForGroup(tab.group) === "left")
-			.map((tab, order) =>
-				staticSidePanelTabDefinition({
-					id: tab.id,
-					icon: panelTabIcon(tab.id, tab.group),
-					name: tab.label,
-					order,
-					tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onCommand)),
-				}),
-			);
-		if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
-		const hierarchyTab: SidePanelTabConfig = staticSidePanelTabDefinition({
+			.map((tab, order) => ({
+				id: tab.id,
+				icon: panelTabIcon(tab.id, tab.group),
+				name: tab.label,
+				order,
+				tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onCommand)),
+			}));
+		if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) {
+			return [...frameworkDisplayTabs, ...pluginLeftTabs];
+		}
+		const hierarchyTab: SidePanelTabConfig = {
 			id: FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
 			icon: shellTabIcon(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID),
 			name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
@@ -1027,24 +1169,23 @@ export function FrameworkOsShell({
 			tree: staticTreePanelDefinition({
 				sections: [{ id: "hierarchy.root", label: "Scene", items: [{ id: "hierarchy.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} spawned app(s)` : "—" }] }],
 			}),
-		});
-		return [hierarchyTab, ...pluginLeftTabs];
-	}, [onCommand, panel?.spawnedApps.length, panelUiByKey, session, studioMode]);
+		};
+		return [hierarchyTab, ...frameworkDisplayTabs, ...pluginLeftTabs];
+	}, [frameworkDisplayTabs, onCommand, panel?.spawnedApps.length, panelUiByKey, session, studioMode]);
 
 	const rightPanelTabs = useMemo((): SidePanelTabConfig[] => {
 		if (!session) return [];
-		return session.app.panelTabs
+		const pluginRightTabs = session.app.panelTabs
 			.filter((tab) => panelSideForGroup(tab.group) === "right")
-			.map((tab, order) =>
-				staticSidePanelTabDefinition({
-					id: tab.id,
-					icon: panelTabIcon(tab.id, tab.group),
-					name: tab.label,
-					order,
-					tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onCommand)),
-				}),
-			);
-	}, [onCommand, panelUiByKey, session]);
+			.map((tab, order) => ({
+				id: tab.id,
+				icon: panelTabIcon(tab.id, tab.group),
+				name: tab.label,
+				order,
+				tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onCommand)),
+			}));
+		return [frameworkSettingsTab, ...pluginRightTabs];
+	}, [frameworkSettingsTab, onCommand, panelUiByKey, session]);
 
 	const panelToggles = useMemo((): PanelToggleItem[] => {
 		const items: PanelToggleItem[] = [];
@@ -1133,6 +1274,14 @@ export function FrameworkOsShell({
 			});
 		}
 		items.push(navbarFillItem());
+		items.push({
+			key: "search",
+			content: <Toggle id="ui.search.toggle" pressed={searchOpen} onPressedChange={setSearchOpen} icon={<Icon icon="search" size="small" />} />,
+		});
+		items.push({
+			key: "find",
+			content: <Toggle id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<Icon icon="text-search" size="small" />} />,
+		});
 		if (panelToggles.length > 0) {
 			items.push({ key: "panel-toggles", content: <PanelToggleGroup items={panelToggles} /> });
 		}
@@ -1181,7 +1330,80 @@ export function FrameworkOsShell({
 			});
 		}
 		return items;
-	}, [activeExampleId, canGoBack, canGoForward, canGoUp, exampleOptions, goBack, goForward, goUp, navigateFromBreadcrumb, onCommand, panelToggles, session?.app.id, session?.app.label, shellUri, studioMode, uiCompact, uiExpertise, uiTheme]);
+	}, [activeExampleId, canGoBack, canGoForward, canGoUp, exampleOptions, findOpen, goBack, goForward, goUp, navigateFromBreadcrumb, onCommand, panelToggles, searchOpen, session?.app.id, session?.app.label, shellUri, studioMode, uiCompact, uiExpertise, uiTheme]);
+
+	const searchItems = useMemo(() => {
+		if (!session) return [];
+		const items: import("./ui-search-find.tsx").UISearchItem[] = [];
+		for (const tab of session.app.panelTabs) {
+			items.push({
+				id: `panel.${tab.id}`,
+				label: tab.label,
+				category: "Panels",
+				icon: <Icon icon="panel-left" size="small" />,
+				onSelect: () => onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId: tab.id } }),
+			});
+		}
+		for (const kind of session.app.windowKinds) {
+			items.push({
+				id: `window.${kind.id}`,
+				label: kind.label,
+				category: "Windows",
+				icon: <Icon icon="app-window" size="small" />,
+				onSelect: () => setActiveWindowId(kind.id),
+			});
+		}
+		for (const binding of session.app.keybindings) {
+			items.push({
+				id: `keybinding.${binding.keys}`,
+				label: binding.command.command,
+				description: binding.keys,
+				category: "Commands",
+				onSelect: () => onCommand(binding.command),
+			});
+		}
+		if (studioMode && panel) {
+			for (const program of panel.programs) {
+				items.push({
+					id: `spawn.${program.programId}`,
+					label: `Spawn ${program.label}`,
+					category: "Catalogue",
+					onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "spawnApp", args: { programId: program.programId } }),
+				});
+			}
+			items.push(
+				{
+					id: "studio.undo",
+					label: "Undo",
+					category: "Studio",
+					icon: <Icon icon="undo-2" size="small" />,
+					onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "undo" }),
+				},
+				{
+					id: "studio.redo",
+					label: "Redo",
+					category: "Studio",
+					icon: <Icon icon="redo-2" size="small" />,
+					onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "redo" }),
+				},
+				{
+					id: "studio.home",
+					label: "Go Home",
+					category: "Navigation",
+					onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "goHome" }),
+				},
+			);
+		}
+		if (studioMode && session.app.id === S_HOME_APP_ID) {
+			items.push({
+				id: "home.createStudio",
+				label: "Create Studio",
+				category: "Home",
+				onSelect: () => onCommand({ controllerId: S_HOME_CONTROLLER_ID, command: "createStudio" }),
+			});
+		}
+		return items;
+	}, [onCommand, panel, session, studioMode]);
 
 	const footerItems = useMemo((): FooterItem[] => {
 		if (!session) return [];
@@ -1330,46 +1552,50 @@ export function FrameworkOsShell({
 	}, [activeWindowId, error, modeWindows, onCommand, panel, session, shellLayout, studioMode, updateStudioPanel]);
 
 	return (
-		<LevelProvider level="window">
-			<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
-				<Layout
-					mobile={mobile}
-					navbar={<Navbar items={navbarItems} showFullscreenToggle />}
-					footer={<Footer items={footerItems} />}
-					leftSidePanel={
-						leftPanelTabs.length > 0
-							? {
-									position: "left",
-									visible: leftPanelVisible,
-									size: leftPanelSize,
-									onSizeChange: setLeftPanelSize,
-									tabs: leftPanelTabs,
-									activeTabId: activeLeftPanelTabId,
-									onActiveTabChange: (tabId) => {
-										if (studioMode && session?.app.id === S_PLAY_APP_ID) {
-											onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "setActivePanelTab", args: { tabId } });
-										}
-									},
-								}
-							: undefined
-					}
-					rightSidePanel={
-						rightPanelTabs.length > 0
-							? {
-									position: "right",
-									visible: rightPanelVisible,
-									size: rightPanelSize,
-									onSizeChange: setRightPanelSize,
-									tabs: rightPanelTabs,
-									activeTabId: activePanelTabId,
-									onActiveTabChange: (tabId) => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "setActivePanelTab", args: { tabId } }),
-								}
-							: undefined
-					}
-					canvas={canvas}
-				/>
-			</div>
-		</LevelProvider>
+		<UIFindProvider>
+			<LevelProvider level="window">
+				<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+					<Layout
+						mobile={mobile}
+						navbar={<Navbar items={navbarItems} showFullscreenToggle />}
+						footer={<Footer items={footerItems} />}
+						leftSidePanel={
+							leftPanelTabs.length > 0
+								? {
+										position: "left",
+										visible: leftPanelVisible,
+										size: leftPanelSize,
+										onSizeChange: setLeftPanelSize,
+										tabs: leftPanelTabs,
+										activeTabId: activeLeftPanelTabId,
+										onActiveTabChange: (tabId) => {
+											if (studioMode && session?.app.id === S_PLAY_APP_ID) {
+												onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "setActivePanelTab", args: { tabId } });
+											}
+										},
+									}
+								: undefined
+						}
+						rightSidePanel={
+							rightPanelTabs.length > 0
+								? {
+										position: "right",
+										visible: rightPanelVisible,
+										size: rightPanelSize,
+										onSizeChange: setRightPanelSize,
+										tabs: rightPanelTabs,
+										activeTabId: activePanelTabId,
+										onActiveTabChange: (tabId) => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "setActivePanelTab", args: { tabId } }),
+									}
+								: undefined
+						}
+						canvas={canvas}
+					/>
+				</div>
+				<UISearch items={searchItems} open={searchOpen} onOpenChange={setSearchOpen} />
+				<UIFind open={findOpen} onOpenChange={setFindOpen} />
+			</LevelProvider>
+		</UIFindProvider>
 	);
 }
 //#endregion FrameworkOsShell

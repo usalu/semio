@@ -147,8 +147,10 @@ impl FontAtlas {
         if bytes.is_empty() {
             return Ok(Self::builtin());
         }
-        let font = fontdue::Font::from_bytes(bytes, fontdue::FontSettings::default())
-            .map_err(|err| format!("font load failed: {err}"))?;
+        let font = match fontdue::Font::from_bytes(bytes, fontdue::FontSettings::default()) {
+            Ok(font) => font,
+            Err(_) => return Ok(Self::builtin()),
+        };
         Ok(Self {
             width: 2048,
             height: 2048,
@@ -245,6 +247,20 @@ impl FontAtlas {
             max_height = max_height.max((glyph.height as f32 + glyph.bearing_y) * scale);
         }
         (width, max_height.max(size))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::FontAtlas;
+
+    #[test]
+    fn from_bytes_uses_builtin_for_woff2_and_empty_input() {
+        assert!(FontAtlas::from_bytes(&[]).is_ok());
+        let woff2 = b"wOF2\x00\x01\x00\x00";
+        let mut atlas = FontAtlas::from_bytes(woff2).expect("woff2 should fall back to builtin");
+        let glyph = atlas.ensure_glyph('A');
+        assert!(glyph.width > 0);
     }
 }
 

@@ -1,18 +1,27 @@
 //! 🎬 Native component scene hosts for canvas-2d, tables, graphs, and 3D views.
 
-use crate::draw::{ear_clip_polygon, DrawList};
-use crate::input::{HitKind, HitTarget, InputState};
-use crate::text::FontAtlas;
-use crate::theme::{Rect, Rgba, BORDER_RADIUS, FONT_SIZE_BODY, FONT_SIZE_SMALL};
-use crate::widgets::{draw_text, WidgetContext};
+use crate::interpreter::FrameworkWidgetContext;
+use crate::world3d::{render_world_3d, World3dState};
 use base64::Engine;
 use semio_framework_core::{CommandDescriptor, UiComponentSceneNode};
 use serde::Deserialize;
 use serde_json::Value;
+use std::collections::HashMap;
+use ui_wgpu::{draw_text, ear_clip_polygon, HitKind, HitTarget, Rect, Rgba};
 
-pub fn render_component_scene(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
-    ctx.draw
-        .push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], Rgba::PANEL, BORDER_RADIUS);
+pub fn render_component_scene(
+    scene: &UiComponentSceneNode,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    gpu: &mut ui_wgpu::GpuContext,
+    world3d_states: &mut HashMap<String, World3dState>,
+) {
+    let theme = ctx.theme;
+    ctx.draw.push_rounded(
+        [bounds.x, bounds.y, bounds.w, bounds.h],
+        theme.panel,
+        theme.border_radius,
+    );
     match scene.component_kind.as_str() {
         "raster" => render_raster(scene, bounds, ctx),
         "table" => render_table(scene, bounds, ctx),
@@ -21,23 +30,30 @@ pub fn render_component_scene(scene: &UiComponentSceneNode, bounds: Rect, ctx: &
         "flow-canvas" => render_flow_canvas(scene, bounds, ctx),
         "virtualFileSystem" => render_vfs(scene, bounds, ctx),
         "text-editor" => render_text_editor(scene, bounds, ctx),
-        "world-3d" => render_world_3d(scene, bounds, ctx),
+        "world-3d" => {
+            let state = world3d_states
+                .entry(scene.surface_id.clone())
+                .or_insert_with(|| World3dState::new(scene.surface_id.clone(), scene.controller_id.clone()));
+            render_world_3d(scene, bounds, ctx, state, gpu);
+        }
         _ => render_placeholder(&scene.component_kind, bounds, ctx),
     }
 }
 
-fn render_placeholder(kind: &str, bounds: Rect, ctx: &mut WidgetContext<'_>) {
+fn render_placeholder(kind: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
     draw_text(
         ctx,
         &format!("{kind} host"),
         bounds.x + 12.0,
         bounds.y + 24.0,
-        FONT_SIZE_BODY,
-        Rgba::TEXT_MUTED,
+        theme.font_size_body,
+        theme.text_muted,
     );
 }
 
-fn render_raster(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
+fn render_raster(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
     let Some(raster) = &scene.raster else {
         return render_placeholder("raster", bounds, ctx);
     };
@@ -52,8 +68,8 @@ fn render_raster(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetCon
             &format!("{}×{} raster", raster.width, raster.height),
             inner.x + 8.0,
             inner.y + 20.0,
-            FONT_SIZE_SMALL,
-            Rgba::TEXT_MUTED,
+            theme.font_size_small,
+            theme.text_muted,
         );
         let _ = bytes;
     }
@@ -65,7 +81,8 @@ struct TableColumn {
     label: String,
 }
 
-fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
+fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
     let Some(table) = &scene.table else {
         return render_placeholder("table", bounds, ctx);
     };
@@ -79,18 +96,24 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetCont
     };
     for (index, column) in columns.iter().enumerate() {
         let x = inner.x + index as f32 * col_w;
-        draw_text(ctx, &column.label, x + 4.0, inner.y + 16.0, FONT_SIZE_SMALL, Rgba::TEXT_MUTED);
+        draw_text(ctx, &column.label, x + 4.0, inner.y + 16.0, theme.font_size_small, theme.text_muted);
         ctx.draw
-            .push_line(x, inner.y + 22.0, x, inner.y + inner.h, Rgba::SEPARATOR, 1.0);
+            .push_line(x, inner.y + 22.0, x, inner.y + inner.h, theme.separator, 1.0);
     }
-    ctx.draw
-        .push_line(inner.x, inner.y + 24.0, inner.x + inner.w, inner.y + 24.0, Rgba::SEPARATOR, 1.0);
+    ctx.draw.push_line(
+        inner.x,
+        inner.y + 24.0,
+        inner.x + inner.w,
+        inner.y + 24.0,
+        theme.separator,
+        1.0,
+    );
     for (row_index, row) in rows.iter().enumerate() {
         let y = inner.y + 28.0 + row_index as f32 * 20.0;
         for (col_index, column) in columns.iter().enumerate() {
             let x = inner.x + col_index as f32 * col_w;
             let value = row.get(&column.id).and_then(|v| v.as_str()).unwrap_or("—");
-            draw_text(ctx, value, x + 4.0, y + 14.0, FONT_SIZE_SMALL, Rgba::TEXT);
+            draw_text(ctx, value, x + 4.0, y + 14.0, theme.font_size_small, theme.text);
         }
     }
 }
@@ -105,14 +128,15 @@ struct CanvasLayer {
     height: f64,
 }
 
-fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
+fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
     let Some(canvas) = &scene.canvas_2d else {
         return render_placeholder("canvas-2d", bounds, ctx);
     };
     let layers: Vec<CanvasLayer> = serde_json::from_str(&canvas.layers_json).unwrap_or_default();
     let inner = bounds.inset(8.0);
     ctx.draw
-        .push_solid([inner.x, inner.y, inner.w, inner.h], Rgba::CANVAS_CLEAR);
+        .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let zoom = canvas.zoom as f32;
     let cam_x = canvas.camera_x as f32;
     let cam_y = canvas.camera_y as f32;
@@ -123,7 +147,7 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Widget
         let h = layer.height as f32 * zoom;
         ctx.draw
             .push_rounded([x, y, w.max(8.0), h.max(8.0)], Rgba::new(0.25, 0.35, 0.55, 0.8), 4.0);
-        draw_text(ctx, &layer.name, x + 4.0, y + 14.0, FONT_SIZE_SMALL, Rgba::TEXT);
+        draw_text(ctx, &layer.name, x + 4.0, y + 14.0, theme.font_size_small, theme.text);
     }
 }
 
@@ -141,7 +165,8 @@ struct GraphEdge {
     target: String,
 }
 
-fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
+fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
     let Some(graph) = &scene.node_graph else {
         return render_placeholder("node-graph", bounds, ctx);
     };
@@ -149,7 +174,7 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Widge
     let edges: Vec<GraphEdge> = serde_json::from_str(&graph.edges_json).unwrap_or_default();
     let inner = bounds.inset(8.0);
     ctx.draw
-        .push_solid([inner.x, inner.y, inner.w, inner.h], Rgba::CANVAS_CLEAR);
+        .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let node_map: std::collections::HashMap<&str, &GraphNode> =
         nodes.iter().map(|n| (n.id.as_str(), n)).collect();
     for edge in &edges {
@@ -158,15 +183,15 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Widge
             let y0 = inner.y + src.y as f32 + 20.0;
             let x1 = inner.x + dst.x as f32 + 60.0;
             let y1 = inner.y + dst.y as f32 + 20.0;
-            ctx.draw.push_line(x0, y0, x1, y1, Rgba::ACCENT, 2.0);
+            ctx.draw.push_line(x0, y0, x1, y1, theme.accent, 2.0);
         }
     }
     for node in &nodes {
         let x = inner.x + node.x as f32;
         let y = inner.y + node.y as f32;
         ctx.draw
-            .push_rounded([x, y, 120.0, 40.0], Rgba::BUTTON, BORDER_RADIUS);
-        draw_text(ctx, &node.label, x + 8.0, y + 24.0, FONT_SIZE_SMALL, Rgba::TEXT);
+            .push_rounded([x, y, 120.0, 40.0], theme.button, theme.border_radius);
+        draw_text(ctx, &node.label, x + 8.0, y + 24.0, theme.font_size_small, theme.text);
     }
 }
 
@@ -182,7 +207,8 @@ struct FlowFixture {
     layout: std::collections::HashMap<String, Value>,
 }
 
-fn render_flow_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
+fn render_flow_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
     let Some(flow) = &scene.flow_canvas else {
         return render_placeholder("flow-canvas", bounds, ctx);
     };
@@ -192,7 +218,7 @@ fn render_flow_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Widg
     });
     let inner = bounds.inset(8.0);
     ctx.draw
-        .push_solid([inner.x, inner.y, inner.w, inner.h], Rgba::CANVAS_CLEAR);
+        .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     for widget in &fixture.widgets {
         let (x, y) = fixture
             .layout
@@ -206,8 +232,8 @@ fn render_flow_canvas(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Widg
         let px = inner.x + x;
         let py = inner.y + y;
         ctx.draw
-            .push_rounded([px, py, 100.0, 36.0], Rgba::BUTTON, BORDER_RADIUS);
-        draw_text(ctx, &widget.kind, px + 8.0, py + 22.0, FONT_SIZE_SMALL, Rgba::TEXT);
+            .push_rounded([px, py, 100.0, 36.0], theme.button, theme.border_radius);
+        draw_text(ctx, &widget.kind, px + 8.0, py + 22.0, theme.font_size_small, theme.text);
     }
 }
 
@@ -218,7 +244,8 @@ struct VfsRow {
     level: u32,
 }
 
-fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
+fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
     let Some(vfs) = &scene.virtual_file_system else {
         return render_placeholder("virtualFileSystem", bounds, ctx);
     };
@@ -231,19 +258,20 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContex
             &row.name,
             inner.x + row.level as f32 * 14.0 + 8.0,
             y,
-            FONT_SIZE_SMALL,
-            Rgba::TEXT,
+            theme.font_size_small,
+            theme.text,
         );
     }
 }
 
-fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
+fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
     let Some(editor) = &scene.text_editor else {
         return render_placeholder("text-editor", bounds, ctx);
     };
     let inner = bounds.inset(8.0);
     ctx.draw
-        .push_solid([inner.x, inner.y, inner.w, inner.h], Rgba::INPUT_BG);
+        .push_solid([inner.x, inner.y, inner.w, inner.h], theme.input_bg);
     let lines: Vec<&str> = editor.buffer.lines().collect();
     for (index, line) in lines.iter().enumerate() {
         draw_text(
@@ -251,52 +279,9 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Widg
             line,
             inner.x + 8.0,
             inner.y + 16.0 + index as f32 * 18.0,
-            FONT_SIZE_SMALL,
-            Rgba::TEXT,
+            theme.font_size_small,
+            theme.text,
         );
     }
 }
 
-fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
-    let inner = bounds.inset(8.0);
-    ctx.draw
-        .push_solid([inner.x, inner.y, inner.w, inner.h], Rgba::new(0.04, 0.05, 0.08, 1.0));
-    let cx = inner.x + inner.w * 0.5;
-    let cy = inner.y + inner.h * 0.55;
-    let size = inner.w.min(inner.h) * 0.25;
-    let cube: [[f32; 2]; 4] = [
-        [cx - size, cy - size * 0.5],
-        [cx + size * 0.2, cy - size],
-        [cx + size, cy + size * 0.2],
-        [cx - size * 0.3, cy + size],
-    ];
-    let tris = ear_clip_polygon(&cube);
-    for tri in tris.chunks(3) {
-        if tri.len() == 3 {
-            ctx.draw.push_triangle_fan(tri, Rgba::new(0.45, 0.55, 0.85, 0.9));
-        }
-    }
-    if scene.world_3d.is_none() {
-        draw_text(
-            ctx,
-            "world-3d (empty)",
-            inner.x + 12.0,
-            inner.y + 20.0,
-            FONT_SIZE_SMALL,
-            Rgba::TEXT_MUTED,
-        );
-    }
-}
-
-pub fn scene_hit_target(scene: &UiComponentSceneNode, bounds: Rect) -> HitTarget {
-    HitTarget {
-        rect: bounds,
-        command: Some(CommandDescriptor {
-            controller_id: scene.controller_id.clone(),
-            command: format!("scene.{}", scene.component_kind),
-            args: None,
-        }),
-        control_id: Some(scene.surface_id.clone()),
-        kind: HitKind::Generic,
-    }
-}

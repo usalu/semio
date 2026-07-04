@@ -944,7 +944,7 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s⚛️react",
+      "name": "🛠️dev🖥️s🧊wgpu",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -952,7 +952,7 @@
       "env": {
         "S_OS_PORT": "6066",
         "SEMIO_PLUGIN": "s",
-        "SEMIO_RENDERER": "react"
+        "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
         "group": "3_dev",
@@ -965,7 +965,7 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s🧊wgpu",
+      "name": "🛠️dev🖥️s🧊wgpu-alt",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -1018,7 +1018,8 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6064",
-        "SEMIO_PLUGIN": "draw"
+        "SEMIO_PLUGIN": "draw",
+        "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
         "group": "3_dev",

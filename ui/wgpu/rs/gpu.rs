@@ -1,21 +1,25 @@
-//! 🖥️ WebGPU device, surface, and frame loop for the WASM renderer.
+//! 🖥️ WebGPU device, surface, and frame loop.
 
-use crate::draw::{DrawList, UiPipelines};
+use crate::draw::{DrawList, MeshGpuStore, UiPipelines};
 use crate::text::FontAtlas;
 use wgpu::Surface;
 
 pub struct GpuContext {
-    pub device: wgpu::Device,
-    pub queue: wgpu::Queue,
-    pub surface: Surface<'static>,
-    pub config: wgpu::SurfaceConfiguration,
-    pub pipelines: UiPipelines,
-    pub width: u32,
-    pub height: u32,
-    pub dpr: f32,
+    device: wgpu::Device,
+    queue: wgpu::Queue,
+    surface: Surface<'static>,
+    config: wgpu::SurfaceConfiguration,
+    pipelines: UiPipelines,
+    depth_texture: Option<wgpu::Texture>,
+    depth_view: Option<wgpu::TextureView>,
+    mesh_store: MeshGpuStore,
+    width: u32,
+    height: u32,
+    dpr: f32,
 }
 
 impl GpuContext {
+    #[cfg(target_arch = "wasm32")]
     pub async fn from_canvas(canvas: web_sys::HtmlCanvasElement, dpr: f32) -> Result<Self, String> {
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::BROWSER_WEBGPU,
@@ -34,7 +38,7 @@ impl GpuContext {
             .map_err(|err| format!("adapter: {err:?}"))?;
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
-                label: Some("framework_renderer_wgpu"),
+                label: Some("ui_wgpu"),
                 required_features: wgpu::Features::empty(),
                 required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
                 memory_hints: Default::default(),
@@ -64,16 +68,41 @@ impl GpuContext {
         };
         surface.configure(&device, &config);
         let pipelines = UiPipelines::new(&device, &queue, format);
-        Ok(Self {
+        let mut gpu = Self {
             device,
             queue,
             surface,
             config,
             pipelines,
+            depth_texture: None,
+            depth_view: None,
+            mesh_store: MeshGpuStore::default(),
             width,
             height,
             dpr,
-        })
+        };
+        gpu.ensure_depth();
+        Ok(gpu)
+    }
+
+    fn ensure_depth(&mut self) {
+        let depth_texture = self.device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("ui_depth"),
+            size: wgpu::Extent3d {
+                width: self.width.max(1),
+                height: self.height.max(1),
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: self.pipelines.depth_format(),
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[],
+        });
+        let depth_view = depth_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        self.depth_texture = Some(depth_texture);
+        self.depth_view = Some(depth_view);
     }
 
     pub fn resize(&mut self, css_width: f32, css_height: f32, dpr: f32) {
@@ -88,6 +117,16 @@ impl GpuContext {
         self.config.width = width;
         self.config.height = height;
         self.surface.configure(&self.device, &self.config);
+        self.ensure_depth();
+    }
+
+    pub fn mesh_store_mut(&mut self) -> &mut MeshGpuStore {
+        &mut self.mesh_store
+    }
+
+    pub fn ensure_mesh(&mut self, key: &str, positions: &[f32], normals: &[f32], indices: &[u32]) {
+        self.mesh_store
+            .ensure_mesh(&self.device, key, positions, normals, indices);
     }
 
     pub fn render_frame(&mut self, draw: &DrawList) -> Result<(), String> {
@@ -98,13 +137,16 @@ impl GpuContext {
         let view = frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
         let mut encoder = self
             .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("frame_encoder") });
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("ui_wgpu_frame") });
+        let depth_view = self.depth_view.as_ref();
         self.pipelines.render(
             &self.device,
             &self.queue,
             &mut encoder,
             &view,
+            depth_view,
             draw,
+            &self.mesh_store,
             self.width as f32,
             self.height as f32,
         );
@@ -117,11 +159,19 @@ impl GpuContext {
         self.pipelines
             .upload_glyph_atlas(&self.queue, &atlas.pixels, atlas.width, atlas.height);
     }
+
+    pub fn width(&self) -> u32 {
+        self.width
+    }
+
+    pub fn height(&self) -> u32 {
+        self.height
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
 pub fn schedule_frame(callback: impl FnMut() + 'static) {
-    use wasm_bindgen::prelude::*;
+    use wasm_bindgen::closure::Closure;
     use wasm_bindgen::JsCast;
 
     let mut callback = callback;
@@ -129,9 +179,6 @@ pub fn schedule_frame(callback: impl FnMut() + 'static) {
         callback();
     }) as Box<dyn FnMut()>);
     web_sys::window()
-        .and_then(|w| {
-            w.request_animation_frame(closure.as_ref().unchecked_ref())
-                .ok()
-        });
+        .and_then(|w| w.request_animation_frame(closure.as_ref().unchecked_ref()).ok());
     closure.forget();
 }

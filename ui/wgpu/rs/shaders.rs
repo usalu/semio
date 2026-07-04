@@ -120,21 +120,38 @@ struct Globals {
 struct VertexInput {
     @location(0) position: vec3<f32>,
     @location(1) normal: vec3<f32>,
-    @location(2) color: vec4<f32>,
+}
+
+struct InstanceInput {
+    @location(3) model0: vec4<f32>,
+    @location(4) model1: vec4<f32>,
+    @location(5) model2: vec4<f32>,
+    @location(6) model3: vec4<f32>,
+    @location(7) color: vec4<f32>,
+    @location(8) flags: vec4<f32>,
 }
 
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) color: vec4<f32>,
     @location(1) normal: vec3<f32>,
+    @location(2) flags: vec4<f32>,
 }
 
 @vertex
-fn vs_main(vertex: VertexInput) -> VertexOutput {
+fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
     var out: VertexOutput;
-    out.clip_position = globals.view_proj * vec4<f32>(vertex.position, 1.0);
-    out.color = vertex.color;
-    out.normal = vertex.normal;
+    let model = mat4x4<f32>(instance.model0, instance.model1, instance.model2, instance.model3);
+    let world_pos = model * vec4<f32>(vertex.position, 1.0);
+    out.clip_position = globals.view_proj * world_pos;
+    let normal_matrix = mat3x3<f32>(
+        model[0].xyz,
+        model[1].xyz,
+        model[2].xyz
+    );
+    out.normal = normalize(normal_matrix * vertex.normal);
+    out.color = instance.color;
+    out.flags = instance.flags;
     return out;
 }
 
@@ -142,6 +159,13 @@ fn vs_main(vertex: VertexInput) -> VertexOutput {
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let n = normalize(in.normal);
     let diffuse = max(dot(n, normalize(globals.light_dir.xyz)), 0.15);
-    return vec4<f32>(in.color.rgb * diffuse, in.color.a);
+    var color = in.color.rgb * diffuse;
+    if (in.flags.x > 0.5) {
+        color = mix(color, vec3<f32>(0.35, 0.75, 1.0), 0.45);
+    }
+    if (in.flags.y > 0.5) {
+        color = mix(color, vec3<f32>(1.0, 0.85, 0.35), 0.35);
+    }
+    return vec4<f32>(color, in.color.a);
 }
 "#;

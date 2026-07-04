@@ -556,7 +556,9 @@ pub struct Canvas2dScene {
 #[serde(rename_all = "camelCase")]
 pub struct World3dScene {
     pub camera_json: String,
+    pub meshes_json: String,
     pub instances_json: String,
+    pub selection_json: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
