@@ -3141,6 +3141,11 @@ async def _coda_http_payload_handler(request) -> JSONResponse:
     return JSONResponse(payload)
 
 
+async def _coda_canvas_handler(request):
+    """Directly serve the Building Planner UI in the browser."""
+    return HTMLResponse(get_building_ui())
+
+
 @contextlib.asynccontextmanager
 async def _coda_http_app_lifespan(app):
     """🔄Manage the FastMCP session lifecycle during the HTTP server execution."""
@@ -3155,6 +3160,7 @@ _coda_http_app = Starlette(
     lifespan=_coda_http_app_lifespan,
     routes=[
         Route("/app/payload/{token}", _coda_http_payload_handler, methods=["GET", "OPTIONS"]),
+        Route("/canvas", _coda_canvas_handler, methods=["GET"]),
     ],
 )
 

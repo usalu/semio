@@ -15,6 +15,7 @@ console_error_panic_hook = "0.1"
 geo = "0.33.1"
 geo-booleanop = "0.3.2"
 js-sys = "0.3"
+generational-arena = { version = "0.2.9", features = ["serde"] }
 
 [profile.release]
 wasm-opt = false

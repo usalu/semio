@@ -1,7 +1,4 @@
-
-
 # Source: Internal Heat Gains.md
-
 
 # Internal Heat Gains Calculation Engine
 
@@ -14,15 +11,15 @@ The internal gains engine calculates the "free" heat generated inside the buildi
 1. **The Standardized Method (DIN 18599-2 / 6.5):** Uses generic flat rates ($W/m^2$) based on usage profiles, handles material transport mass flows, and adjusts for exhaust-air lighting systems. Required for official Energy Certificates.
 2. **The Detailed Custom Method:** Allows users to define the exact number of people and specific electrical equipment in a room for precise load sizing.
 
-```
+```mermaid
 flowchart TD
     %% UI Inputs
     subgraph UI ["User Interface (Inputs)"]
         G["Geometry Engine\n(A_NGF)"]
-        Q1[Usage Profile\n(Standard Method)]
-        Q2[Custom Inventory\n(Detailed Method)]
-        Q3[Material Transport\n(Mass Flow, Temp)]
-        Q4[Lighting System\n(Standard vs Exhaust)]
+        Q1["Usage Profile\n(Standard Method)"]
+        Q2["Custom Inventory\n(Detailed Method)"]
+        Q3["Material Transport\n(Mass Flow, Temp)"]
+        Q4["Lighting System\n(Standard vs Exhaust)"]
     end
 
     %% Database / Norms
@@ -81,13 +78,13 @@ flowchart TD
 
 ### B. User Questions (Parameters)
 
-| Mode               | UI Prompts                                               | Available Options                                                          | How Rust uses it                                                                        |
-| ------------------ | -------------------------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| **Standard** | "What is the primary usage?"                             | Residential, Office, Retail, etc.                                          | Fetches$q_{I,p}$,$q_{I,app}$, and$q_{I,sink,app}$from DIN 18599-10.               |
-| **Standard** | "What kind of lighting fixtures are installed?"          | - Standard (No Exhaust)- Exhaust via Ceiling Cavity- Exhaust via Air Ducts | Maps to the$\mu_l$room load factor (1.0, 0.75, or 0.65) to reduce lighting heat gain. |
-| **Material Transport** | "Are large amounts of cold or hot materials regularly brought into this space?" | Type (e.g., Frozen Goods, Metal) & Volume (None / Pallets / Truckloads) | Infers mass flow ($\dot{m}$) and $\Delta T$ based on typical material properties and volume. |
-| **Detailed** | "How many people are usually in this room?"              | Number input                                                               | Multiplies count by standard metabolic heat (e.g., 80W).                                |
-| **Detailed** | "Add electrical equipment"                               | Add item (Name, Watts, Duty Cycle)                                         | Multiplies item count by wattage and duty-cycle.                                        |
+| Mode                         | UI Prompts                                                                      | Available Options                                                          | How Rust uses it                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Standard**           | "What is the primary usage?"                                                    | Residential, Office, Retail, etc.                                          | Fetches$q_{I,p}$,$q_{I,app}$, and$q_{I,sink,app}$from DIN 18599-10.                        |
+| **Standard**           | "What kind of lighting fixtures are installed?"                                 | - Standard (No Exhaust)- Exhaust via Ceiling Cavity- Exhaust via Air Ducts | Maps to the$\mu_l$room load factor (1.0, 0.75, or 0.65) to reduce lighting heat gain.          |
+| **Material Transport** | "Are large amounts of cold or hot materials regularly brought into this space?" | Type (e.g., Frozen Goods, Metal) & Volume (None / Pallets / Truckloads)    | Infers mass flow ($\dot{m}$) and $\Delta T$ based on typical material properties and volume. |
+| **Detailed**           | "How many people are usually in this room?"                                     | Number input                                                               | Multiplies count by standard metabolic heat (e.g., 80W).                                         |
+| **Detailed**           | "Add electrical equipment"                                                      | Add item (Name, Watts, Duty Cycle)                                         | Multiplies item count by wattage and duty-cycle.                                                 |
 
 ## 3. Core Calculations (DIN/TS 18599-2 Section 6.5)
 
@@ -168,7 +165,7 @@ This table extracts the precise values specified by DIN V 18599-10 for generatin
 
 This Rust architecture supports the strict separation required by DIN 18599-2, handling both sources, sinks, material flows, and explicitly categorized exhaust lighting.
 
-```
+```rust
 // --- DATA MODELS ---
 
 /// Represents the standard usage profile data derived strictly from DIN V 18599-10.
@@ -382,7 +379,6 @@ Instead of asking for a specific DIN 18599-10 profile directly, we ask:
 *   "How do you control the heating in this space?" -> Maps to the Automation Class. For example, "Manual radiator knobs" translates to Class C, while "Smart Home system" translates to Class A or B, lowering the heating setpoint automatically in the engine.
 ```
 
-
 # Source: Solar Heat Gains.md
 
 # Solar Heat Gains Calculation Engine
@@ -396,7 +392,7 @@ The solar gains engine calculates how much solar energy enters the building. Thi
 1. **Transparent Gains (** $Q_{s,w}$**):** Solar radiation passing directly through windows to heat the interior. This is heavily reduced by frames, dirty glass, angle of incidence, and shading devices.
 2. **Opaque Gains & Sky Losses (** $Q_{s,op}$**):** Solar radiation warming the exterior walls/roofs, heavily offset by thermal radiation emitted from the building out into the cold night sky.
 
-```
+```mermaid
 flowchart TD
     %% UI Inputs
     subgraph UI ["User Interface (Inputs)"]
@@ -457,20 +453,20 @@ To accurately calculate solar gains, the UI must gather geometry and component p
 
 ### A. Window Parameters (Transparent)
 
-| UI Prompt                 | Determines                         | DIN Variable                           |
-| ------------------------- | ---------------------------------- | -------------------------------------- |
-| **"Window Area"**         | Total size of the opening ($m^2$)  | $A_w$                                  |
-| **"Orientation & Tilt"**  | Dictates the sun exposure          | $I_s$                                  |
-| **"Glazing Type"**        | Double, Triple, Solar Control      | $g$-value (Total Energy Transmittance) |
-| **"Frame Material/Type"** | Thick vs. Thin frames              | $F_F$(Frame Fraction)                  |
-| **"Shading Devices"**     | Exterior Blinds, Interior Curtains | $F_C$(Shading Reduction Factor)        |
-| **"Surrounding Shadows"** | Overhangs, Neighboring Buildings   | $F_S$(Surroundings Shading Factor)     |
+| UI Prompt                       | Determines                          | DIN Variable                             |
+| ------------------------------- | ----------------------------------- | ---------------------------------------- |
+| **"Window Area"**         | Total size of the opening ($m^2$) | $A_w$                                  |
+| **"Orientation & Tilt"**  | Dictates the sun exposure           | $I_s$                                  |
+| **"Glazing Type"**        | Double, Triple, Solar Control       | $g$-value (Total Energy Transmittance) |
+| **"Frame Material/Type"** | Thick vs. Thin frames               | $F_F$(Frame Fraction)                  |
+| **"Shading Devices"**     | Exterior Blinds, Interior Curtains  | $F_C$(Shading Reduction Factor)        |
+| **"Surrounding Shadows"** | Overhangs, Neighboring Buildings    | $F_S$(Surroundings Shading Factor)     |
 
 ### B. Wall/Roof Parameters (Opaque)
 
-| UI Prompt            | Determines                                 | DIN Variable                |
-| -------------------- | ------------------------------------------ | --------------------------- |
-| **"Wall/Roof Area"** | Total exposed surface ($m^2$)              | $A_{op}$                    |
+| UI Prompt                  | Determines                                 | DIN Variable                  |
+| -------------------------- | ------------------------------------------ | ----------------------------- |
+| **"Wall/Roof Area"** | Total exposed surface ($m^2$)            | $A_{op}$                    |
 | **"Surface Color"**  | Light (White), Medium (Brick), Dark (Grey) | $\alpha$(Solar Absorptance) |
 
 ## 3. Core Calculations (DIN/TS 18599-2 Section 6.4)
@@ -516,12 +512,12 @@ To execute the logic, the engine relies on strict fallback parameters provided b
 
 If exact manufacturer data is missing, DIN defaults apply:
 
-| Glazing Type                     | $g$-value       |
-| -------------------------------- | --------------- |
-| Single Glazing                   | `0.85`          |
-| Double Glazing (Standard)        | `0.75`          |
-| Double Glazing (Low-E / Thermal) | `0.60`          |
-| Triple Glazing (Low-E / Thermal) | `0.50`          |
+| Glazing Type                     | $g$-value         |
+| -------------------------------- | ------------------- |
+| Single Glazing                   | `0.85`            |
+| Double Glazing (Standard)        | `0.75`            |
+| Double Glazing (Low-E / Thermal) | `0.60`            |
+| Triple Glazing (Low-E / Thermal) | `0.50`            |
 | Solar Control Glass              | `0.30`to `0.40` |
 
 ### Table B: Frame Fraction ($F_F$)
@@ -529,7 +525,7 @@ If exact manufacturer data is missing, DIN defaults apply:
 The percentage of the window area that is opaque frame.
 
 | Window Description                              | Frame Fraction ($F_F$)       |
-| ----------------------------------------------- | ---------------------------- |
+| ----------------------------------------------- | ------------------------------ |
 | Standard Window                                 | `0.30`(30% Frame, 70% Glass) |
 | Very Large Windows / Glass Facades              | `0.20`                       |
 | Small Windows / Divided panes (Sprossenfenster) | `0.40`                       |
@@ -539,7 +535,7 @@ The percentage of the window area that is opaque frame.
 Operable shading heavily reduces solar penetration.
 
 | Shading Device                         | Reduction Factor ($F_C$) |
-| -------------------------------------- | ------------------------ |
+| -------------------------------------- | -------------------------- |
 | No Shading                             | `1.00`                   |
 | Interior Curtains (White / Light)      | `0.80`                   |
 | Interior Curtains (Dark)               | `0.60`                   |
@@ -551,7 +547,7 @@ Operable shading heavily reduces solar penetration.
 How much sun the exterior walls/roof absorb based on color.
 
 | Surface Color                      | Solar Absorptance ($\alpha$) |
-| ---------------------------------- | ---------------------------- |
+| ---------------------------------- | ------------------------------ |
 | Light (White, very light grey)     | `0.30`                       |
 | Medium (Red brick, concrete, wood) | `0.60`                       |
 | Dark (Dark grey, black roof tiles) | `0.90`                       |
@@ -560,7 +556,7 @@ How much sun the exterior walls/roof absorb based on color.
 
 This Rust architecture encapsulates the exact physics required by the standard, safely isolating transparent and opaque behaviors.
 
-```
+```rust
 // --- CONSTANTS FROM DIN 18599 ---
 const F_W_STANDARD: f64 = 0.90; // Correction for non-perpendicular radiation
 const R_SE_STANDARD: f64 = 0.04; // External surface resistance (m²K/W)
@@ -684,7 +680,6 @@ impl SolarGainsEngine {
 // let q_s_total = engine.total_solar_gain_wh();
 ```
 
-
 # Source: transmission.md
 
 # Transmission Energy Calculation Engine
@@ -700,11 +695,11 @@ flowchart TD
     %% UI Inputs
     subgraph UI ["User Interface (Inputs)"]
         G["Geometry Engine\n(Areas, Perimeter, Roof Pitch)"]
-        Q1[Thermal Bridge Question]
-        Q2[Ground Contact Question]
-        Q3[Shutter Control Question]
-        Q4[Climate Region]
-        Q5[Usage Profile & Automation]
+        Q1["Thermal Bridge Question"]
+        Q2["Ground Contact Question"]
+        Q3["Shutter Control Question"]
+        Q4["Climate Region"]
+        Q5["Usage Profile & Automation"]
     end
 
     %% Database
@@ -779,14 +774,14 @@ The UI dynamically calculates the shape of the building and provides these numbe
 
 The UI presents the following human-readable questions to determine the building physics context:
 
-| Parameter Key             | UI Question / Prompt                                           | Available Options                                                                                                       | How Rust uses it                                                                                                                               |
-| :------------------------ | :------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------- |
-| `thermal_bridge_category` | **"What is the thermal bridge planning standard?"**            | - Standard Default<br>- Good Planning<br>- Excellent Planning<br>- Internal Insulation Issues                           | Determines the $\Delta U_{WB}$ penalty (0.10, 0.05, 0.03, or 0.15).                                                                            |
-| `ground_contact_type`     | **"What is below the lowest floor?"**                          | - Unheated Basement<br>- Floor Slab On Ground<br>- Heated Basement<br>- Ventilated Crawl Space<br>- Groundwater Contact | Maps to the $F_x$ temperature correction factor (e.g., 0.5 for standard unheated ground, 1.0 for groundwater).                                 |
-| `shutter_control`         | **"How are window shutters controlled?"**                      | - Manual<br>- Automated<br>- None                                                                                       | Determines the shutter usage fraction ($f_{sh}$) which improves the effective window U-value ($U_{w,eff}$).                                    |
-| `climate_region`          | **"In which climate region is the building located?"**         | 15 German Cities (e.g. Potsdam, Mannheim, Fichtelberg)                                                                  | Maps to a specific 12-month temperature profile to dynamically calculate the external average temperature ($\theta_e$) for the heating season. |
-| `usage_profile`           | **"What is the primary usage of the building?"**               | - Residential<br>- Single Office<br>- Hospital Room<br>- Gymnasium<br>- etc.                                            | Establishes the baseline indoor heating setpoint ($\theta_{int}$) and determines the number of active heating days ($d_{hs}$).                 |
-| `automation_class`        | **"What class of automation/smart thermostats is installed?"** | Class A, B, C, D                                                                                                        | Dynamically shifts the heating setpoint ($\theta_{int}$) down for smart energy-saving configurations (e.g., -1.5°C).                           |
+| Parameter Key               | UI Question / Prompt                                                 | Available Options                                                                                       | How Rust uses it                                                                                                                                 |
+| :-------------------------- | :------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `thermal_bridge_category` | **"What is the thermal bridge planning standard?"**            | - Standard Default- Good Planning- Excellent Planning- Internal Insulation Issues                       | Determines the$\Delta U_{WB}$ penalty (0.10, 0.05, 0.03, or 0.15).                                                                             |
+| `ground_contact_type`     | **"What is below the lowest floor?"**                          | - Unheated Basement- Floor Slab On Ground- Heated Basement- Ventilated Crawl Space- Groundwater Contact | Maps to the$F_x$ temperature correction factor (e.g., 0.5 for standard unheated ground, 1.0 for groundwater).                                  |
+| `shutter_control`         | **"How are window shutters controlled?"**                      | - Manual- Automated- None                                                                               | Determines the shutter usage fraction ($f_{sh}$) which improves the effective window U-value ($U_{w,eff}$).                                  |
+| `climate_region`          | **"In which climate region is the building located?"**         | 15 German Cities (e.g. Potsdam, Mannheim, Fichtelberg)                                                  | Maps to a specific 12-month temperature profile to dynamically calculate the external average temperature ($\theta_e$) for the heating season. |
+| `usage_profile`           | **"What is the primary usage of the building?"**               | - Residential- Single Office- Hospital Room- Gymnasium- etc.                                            | Establishes the baseline indoor heating setpoint ($\theta_{int}$) and determines the number of active heating days ($d_{hs}$).               |
+| `automation_class`        | **"What class of automation/smart thermostats is installed?"** | Class A, B, C, D                                                                                        | Dynamically shifts the heating setpoint ($\theta_{int}$) down for smart energy-saving configurations (e.g., -1.5°C).                          |
 
 ---
 
@@ -880,6 +875,7 @@ pub struct BuildingComponent {
 
   **Surface Resistances ($R_{si}$ and $R_{se}$):**
   DIN EN ISO 6946 dictates these constants. They almost never change unless the heat flow direction changes:
+
   - **External Walls (Horizontal heat flow):** $R_{si} = 0.13$, $R_{se} = 0.04$
   - **Roofs (Upward heat flow):** $R_{si} = 0.10$, $R_{se} = 0.04$
   - **Floors (Downward heat flow):** $R_{si} = 0.17$, $R_{se} = 0.04$
@@ -891,6 +887,7 @@ pub struct BuildingComponent {
   $U_{new} = \frac{1}{\frac{1}{U_{existing}} + \frac{d}{\lambda}}$
 
   The UI provides four standard materials with their typical $\lambda$ values:
+
   1. **EPS (Expanded Polystyrene)**
      - **Use Case in TABULA:** The absolute standard for external wall insulation (ETICS/WDVS) in "Standard Refurbishment" scenarios.
      - **Standard Lambda ($\lambda$):** 0.035 - 0.040 W/(m·K)
@@ -1050,7 +1047,6 @@ This calculates the actual energy (in Watt-hours or kWh) lost or gained through 
   $$
 
   _(Calculated for all components **$j$** where **$\theta_i > \theta_e$**)_
-
 - **Transmission Heat Source (Gain - when cooling is needed):**
 
   $$
@@ -1072,50 +1068,50 @@ This calculates the actual energy (in Watt-hours or kWh) lost or gained through 
 - and **Table 7** (Non-Residential, depending on the usage profile 1-43):
 
 | Lfd. Nr. | Nutzung (Usage Profile)             | Heating Temp. (°C) | Cooling Temp. (°C) | Automation Shift (Class D / C / B / A) |
-| :------- | :---------------------------------- | :----------------- | :----------------- | :------------------------------------- |
-| 1        | Einzelbüro                          | 21                 | 24                 | 0 K / 0 K / -1.0 K / -1.5 K            |
-| 2        | Gruppenbüro (2-6 Plätze)            | 21                 | 24                 | 0 K / 0 K / -1.0 K / -1.5 K            |
-| 3        | Großraumbüro (ab 7 Plätze)          | 21                 | 24                 | 0 K / 0 K / -1.0 K / -1.5 K            |
-| 4        | Besprechung, Sitzung, Seminar       | 21                 | 24                 | 0 K / 0 K / -1.0 K / -1.5 K            |
-| 5        | Schalterhalle                       | 21                 | 24                 | 0 K / 0 K / -1.0 K / -1.5 K            |
-| 6        | Einzelhandel/Kaufhaus               | 21                 | 24                 | 0 K / 0 K / -1.5 K / -2.0 K            |
-| 7        | Einzelhandel (Lebensmittel/Kühl)    | 21                 | 24                 | 0 K / 0 K / -1.5 K / -2.0 K            |
-| 8        | Klassenzimmer, Gruppenraum          | 21                 | 24                 | 0 K / 0 K / -1.2 K / -2.0 K            |
-| 9        | Hörsaal, Auditorium                 | 21                 | 24                 | 0 K / 0 K / -1.5 K / -2.0 K            |
-| 10       | Bettenzimmer                        | 22                 | 24                 | 0 K / 0 K / -1.0 K / -1.5 K            |
-| 11       | Hotelzimmer                         | 21                 | 24                 | 0 K / 0 K / -1.0 K / -1.5 K            |
-| 12       | Kantine                             | 21                 | 24                 | 0 K / 0 K / -1.5 K / -2.0 K            |
-| 13       | Restaurant                          | 21                 | 24                 | 0 K / 0 K / -1.5 K / -2.0 K            |
-| 14       | Küchen in Nichtwohngebäuden         | 21                 | 24                 | 0 K / 0 K / -1.5 K / -2.0 K            |
-| 15       | Küche - Vorbereitung, Lager         | 21                 | 24                 | 0 K / 0 K / -1.5 K / -2.0 K            |
-| 16       | WC und Sanitärräume                 | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 17       | Sonstige Aufenthaltsräume           | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 18       | Nebenflächen (ohne Aufenthalt)      | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 19       | Verkehrsflächen                     | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 20       | Lager, Technik, Archive             | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 21       | Rechenzentrum                       | 21                 | 24                 | 0 K / 0 K / -0.5 K / -0.5 K            |
-| 22       | Gewerbliche Halle - schwere Arbeit  | 15                 | 28                 | 0 K / 0 K / -1.2 K / -1.8 K            |
-| 23       | Gewerbliche Halle - mittelschwere   | 17                 | 26                 | 0 K / 0 K / -1.2 K / -1.8 K            |
-| 24       | Gewerbliche Halle - leichte Arbeit  | 20                 | 24                 | 0 K / 0 K / -1.2 K / -1.8 K            |
-| 25       | Zuschauerbereich (Theater/Veranst.) | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 26       | Foyer (Theater/Veranstaltungen)     | 21                 | 24                 | 0 K / 0 K / -0.3 K / -0.5 K            |
-| 27       | Bühne (Theater/Veranstaltungen)     | 21                 | 24                 | 0 K / 0 K / -0.3 K / -0.5 K            |
-| 28       | Messe/Kongress                      | 21                 | 24                 | 0 K / 0 K / -1.5 K / -2.0 K            |
-| 29       | Ausstellungsräume / Museum          | 21                 | 24                 | 0 K / 0 K / -0.75 K / -1.25 K          |
-| 30       | Bibliothek - Lesesaal               | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 31       | Bibliothek - Freihandbereich        | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 32       | Bibliothek - Magazin und Depot      | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 33       | Turnhalle (ohne Zuschauer)          | 19                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 34       | Parkhäuser (Büro/Privat)            | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 35       | Parkhäuser (öffentlich)             | 21                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 36       | Saunabereich                        | 24                 | None               | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 37       | Fitnessraum                         | 20                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 38       | Labor                               | 22                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 39       | Untersuchungs-/Behandlungsräume     | 22                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 40       | Spezialpflegebereiche               | 24                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 41       | Flure des Pflegebereichs            | 22                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 42       | Arztpraxen/Therapeutische Praxen    | 22                 | 24                 | 0 K / 0 K / -0.5 K / -1.0 K            |
-| 43       | Lagerhallen, Logistikhallen         | 12                 | 26                 | 0 K / 0 K / -0.5 K / -1.0 K            |
+| :------- | :---------------------------------- | :------------------ | :------------------ | :------------------------------------- |
+| 1        | Einzelbüro                         | 21                  | 24                  | 0 K / 0 K / -1.0 K / -1.5 K            |
+| 2        | Gruppenbüro (2-6 Plätze)          | 21                  | 24                  | 0 K / 0 K / -1.0 K / -1.5 K            |
+| 3        | Großraumbüro (ab 7 Plätze)       | 21                  | 24                  | 0 K / 0 K / -1.0 K / -1.5 K            |
+| 4        | Besprechung, Sitzung, Seminar       | 21                  | 24                  | 0 K / 0 K / -1.0 K / -1.5 K            |
+| 5        | Schalterhalle                       | 21                  | 24                  | 0 K / 0 K / -1.0 K / -1.5 K            |
+| 6        | Einzelhandel/Kaufhaus               | 21                  | 24                  | 0 K / 0 K / -1.5 K / -2.0 K            |
+| 7        | Einzelhandel (Lebensmittel/Kühl)   | 21                  | 24                  | 0 K / 0 K / -1.5 K / -2.0 K            |
+| 8        | Klassenzimmer, Gruppenraum          | 21                  | 24                  | 0 K / 0 K / -1.2 K / -2.0 K            |
+| 9        | Hörsaal, Auditorium                | 21                  | 24                  | 0 K / 0 K / -1.5 K / -2.0 K            |
+| 10       | Bettenzimmer                        | 22                  | 24                  | 0 K / 0 K / -1.0 K / -1.5 K            |
+| 11       | Hotelzimmer                         | 21                  | 24                  | 0 K / 0 K / -1.0 K / -1.5 K            |
+| 12       | Kantine                             | 21                  | 24                  | 0 K / 0 K / -1.5 K / -2.0 K            |
+| 13       | Restaurant                          | 21                  | 24                  | 0 K / 0 K / -1.5 K / -2.0 K            |
+| 14       | Küchen in Nichtwohngebäuden       | 21                  | 24                  | 0 K / 0 K / -1.5 K / -2.0 K            |
+| 15       | Küche - Vorbereitung, Lager        | 21                  | 24                  | 0 K / 0 K / -1.5 K / -2.0 K            |
+| 16       | WC und Sanitärräume               | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 17       | Sonstige Aufenthaltsräume          | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 18       | Nebenflächen (ohne Aufenthalt)     | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 19       | Verkehrsflächen                    | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 20       | Lager, Technik, Archive             | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 21       | Rechenzentrum                       | 21                  | 24                  | 0 K / 0 K / -0.5 K / -0.5 K            |
+| 22       | Gewerbliche Halle - schwere Arbeit  | 15                  | 28                  | 0 K / 0 K / -1.2 K / -1.8 K            |
+| 23       | Gewerbliche Halle - mittelschwere   | 17                  | 26                  | 0 K / 0 K / -1.2 K / -1.8 K            |
+| 24       | Gewerbliche Halle - leichte Arbeit  | 20                  | 24                  | 0 K / 0 K / -1.2 K / -1.8 K            |
+| 25       | Zuschauerbereich (Theater/Veranst.) | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 26       | Foyer (Theater/Veranstaltungen)     | 21                  | 24                  | 0 K / 0 K / -0.3 K / -0.5 K            |
+| 27       | Bühne (Theater/Veranstaltungen)    | 21                  | 24                  | 0 K / 0 K / -0.3 K / -0.5 K            |
+| 28       | Messe/Kongress                      | 21                  | 24                  | 0 K / 0 K / -1.5 K / -2.0 K            |
+| 29       | Ausstellungsräume / Museum         | 21                  | 24                  | 0 K / 0 K / -0.75 K / -1.25 K          |
+| 30       | Bibliothek - Lesesaal               | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 31       | Bibliothek - Freihandbereich        | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 32       | Bibliothek - Magazin und Depot      | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 33       | Turnhalle (ohne Zuschauer)          | 19                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 34       | Parkhäuser (Büro/Privat)          | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 35       | Parkhäuser (öffentlich)           | 21                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 36       | Saunabereich                        | 24                  | None                | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 37       | Fitnessraum                         | 20                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 38       | Labor                               | 22                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 39       | Untersuchungs-/Behandlungsräume    | 22                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 40       | Spezialpflegebereiche               | 24                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 41       | Flure des Pflegebereichs            | 22                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 42       | Arztpraxen/Therapeutische Praxen    | 22                  | 24                  | 0 K / 0 K / -0.5 K / -1.0 K            |
+| 43       | Lagerhallen, Logistikhallen         | 12                  | 26                  | 0 K / 0 K / -0.5 K / -1.0 K            |
 
 - _Details:_ Must be adjusted by the Building Automation shift ( **$\Delta\theta_{EMS}$** ) found in **Table 5/9**.
 
@@ -1139,7 +1135,7 @@ This calculates the actual energy (in Watt-hours or kWh) lost or gained through 
 | 11     | Fichtelberg            | -3,3 | -3,5 | -1,3 | 2,3  | 7,4  | 9,8  | 12,2 | 12,4 | 8,1  | 4,4  | -0,6 | -2,8 | 3,8        |
 | 12     | Mannheim               | 2,4  | 3,6  | 7,1  | 10,6 | 15,6 | 18,1 | 20,1 | 20,2 | 15,7 | 11,0 | 5,7  | 3,1  | 11,1       |
 | 13     | Passau                 | -1,2 | 0,4  | 4,3  | 8,2  | 13,7 | 16,4 | 18,0 | 17,8 | 13,1 | 8,7  | 3,0  | -0,2 | 8,6        |
-| 14     | Stötten                | -0,5 | 0,3  | 3,4  | 6,8  | 11,8 | 14,4 | 16,6 | 16,7 | 12,3 | 8,5  | 2,6  | -0,2 | 7,8        |
+| 14     | Stötten               | -0,5 | 0,3  | 3,4  | 6,8  | 11,8 | 14,4 | 16,6 | 16,7 | 12,3 | 8,5  | 2,6  | -0,2 | 7,8        |
 | 15     | Garmisch-Partenkirchen | -2,3 | -0,5 | 3,2  | 7,0  | 11,8 | 14,8 | 16,6 | 16,4 | 12,3 | 8,4  | 1,9  | -1,8 | 7,4        |
 
 ##### Design Extremes for Equipment Sizing ($\theta_{e,min}$ and $\theta_{e,max}$)
@@ -1160,41 +1156,41 @@ For maximum load calculations, Table 12 provides the extreme single-day external
 
 1. **Days per Month ($d_{mth}$) - From Table 11**
    These are the standard calendar days used to determine the total hours available in a given month. The standard assumes a non-leap year (365 days).
+
    - Jan: 31 | Feb: 28 | Mar: 31 | Apr: 30 | May: 31 | Jun: 30
    - Jul: 31 | Aug: 31 | Sep: 30 | Oct: 31 | Nov: 30 | Dec: 31
    - Total hours in a month: $t_{mth} = d_{mth} \times 24 \text{ hours}$ (e.g., January = 744 hours).
-
 2. **Residential Buildings (Wohngebäude) - From Table 5**
    For any residential building, the operating times are strictly fixed to one profile:
+
    - Usage days per year ($d_{nutz,a}$): 365 days
    - Daily heating/cooling operation ($t_{h,op,d}$): 17 hours/day
    - _Application:_ This means a residential home is fully heated for 17 hours a day, 7 days a week. The remaining 7 hours of the day are calculated using the setback temperature ($\Delta\theta_{i,NA} = 4\text{ K}$).
-
 3. **Non-Residential Buildings (Nichtwohngebäude) - From Table 6**
    For non-residential buildings, the operating times depend entirely on the usage profile. I have extracted the Usage Days per Year ($d_{nutz,a}$) and the Daily Heating Operation Hours ($t_{h,op,d}$) for all 43 profiles.
    _(Note: The daily heating operation time $t_{h,op,d}$ in the standard already includes the necessary pre-heating and post-heating times required to bring the building up to temperature before people arrive)._
 
 | Lfd. Nr. | Nutzung (Usage Profile)             | Usage Days / Year (d_nutz) | Daily Heating Hours (t_h,op,d) |
 | :------- | :---------------------------------- | :------------------------- | :----------------------------- |
-| 1        | Einzelbüro                          | 250                        | 13                             |
-| 2        | Gruppenbüro (2-6 Plätze)            | 250                        | 13                             |
-| 3        | Großraumbüro (ab 7 Plätze)          | 250                        | 13                             |
+| 1        | Einzelbüro                         | 250                        | 13                             |
+| 2        | Gruppenbüro (2-6 Plätze)          | 250                        | 13                             |
+| 3        | Großraumbüro (ab 7 Plätze)       | 250                        | 13                             |
 | 4        | Besprechung, Sitzung, Seminar       | 250                        | 13                             |
 | 5        | Schalterhalle                       | 250                        | 13                             |
 | 6        | Einzelhandel/Kaufhaus               | 300                        | 12                             |
-| 7        | Einzelhandel (Lebensmittel/Kühl)    | 300                        | 12                             |
+| 7        | Einzelhandel (Lebensmittel/Kühl)   | 300                        | 12                             |
 | 8        | Klassenzimmer, Gruppenraum          | 250                        | 12                             |
-| 9        | Hörsaal, Auditorium                 | 250                        | 12                             |
+| 9        | Hörsaal, Auditorium                | 250                        | 12                             |
 | 10       | Bettenzimmer (Krankenhaus)          | 365                        | 24                             |
 | 11       | Hotelzimmer                         | 365                        | 24                             |
 | 12       | Kantine                             | 250                        | 12                             |
 | 13       | Restaurant                          | 365                        | 14                             |
-| 14       | Küchen in Nichtwohngebäuden         | 365                        | 14                             |
-| 15       | Küche - Vorbereitung, Lager         | 365                        | 14                             |
-| 16       | WC und Sanitärräume                 | 250                        | 13                             |
-| 17       | Sonstige Aufenthaltsräume           | 250                        | 13                             |
-| 18       | Nebenflächen (ohne Aufenthalt)      | 250                        | 13                             |
-| 19       | Verkehrsflächen                     | 250                        | 13                             |
+| 14       | Küchen in Nichtwohngebäuden       | 365                        | 14                             |
+| 15       | Küche - Vorbereitung, Lager        | 365                        | 14                             |
+| 16       | WC und Sanitärräume               | 250                        | 13                             |
+| 17       | Sonstige Aufenthaltsräume          | 250                        | 13                             |
+| 18       | Nebenflächen (ohne Aufenthalt)     | 250                        | 13                             |
+| 19       | Verkehrsflächen                    | 250                        | 13                             |
 | 20       | Lager, Technik, Archive             | 250                        | 13                             |
 | 21       | Rechenzentrum                       | 365                        | 24                             |
 | 22       | Gewerbliche Halle - schwere Arbeit  | 250                        | 14                             |
@@ -1202,19 +1198,19 @@ For maximum load calculations, Table 12 provides the extreme single-day external
 | 24       | Gewerbliche Halle - leichte Arbeit  | 250                        | 14                             |
 | 25       | Zuschauerbereich (Theater/Veranst.) | 200                        | 10                             |
 | 26       | Foyer (Theater/Veranstaltungen)     | 200                        | 10                             |
-| 27       | Bühne (Theater/Veranstaltungen)     | 200                        | 10                             |
+| 27       | Bühne (Theater/Veranstaltungen)    | 200                        | 10                             |
 | 28       | Messe/Kongress                      | 200                        | 14                             |
-| 29       | Ausstellungsräume / Museum          | 300                        | 12                             |
+| 29       | Ausstellungsräume / Museum         | 300                        | 12                             |
 | 30       | Bibliothek - Lesesaal               | 300                        | 13                             |
 | 31       | Bibliothek - Freihandbereich        | 300                        | 13                             |
 | 32       | Bibliothek - Magazin und Depot      | 300                        | 13                             |
 | 33       | Turnhalle (ohne Zuschauer)          | 300                        | 14                             |
-| 34       | Parkhäuser (Büro/Privat)            | 250                        | 13                             |
-| 35       | Parkhäuser (öffentlich)             | 300                        | 14                             |
+| 34       | Parkhäuser (Büro/Privat)          | 250                        | 13                             |
+| 35       | Parkhäuser (öffentlich)           | 300                        | 14                             |
 | 36       | Saunabereich                        | 365                        | 14                             |
 | 37       | Fitnessraum                         | 365                        | 14                             |
 | 38       | Labor                               | 250                        | 13                             |
-| 39       | Untersuchungs-/Behandlungsräume     | 250                        | 13                             |
+| 39       | Untersuchungs-/Behandlungsräume    | 250                        | 13                             |
 | 40       | Spezialpflegebereiche               | 365                        | 24                             |
 | 41       | Flure des Pflegebereichs            | 365                        | 24                             |
 | 42       | Arztpraxen/Therapeutische Praxen    | 250                        | 12                             |
@@ -1232,29 +1228,23 @@ $$
 
 - _Where to find:_ **Table 5** (Unheated rooms) and **Table 6** (Ground slabs/basements).
 - _Details:_ e.g., **$F_x = 0.8$** for unheated attics, **$F_x = 0.5$** for unheated basements.
-
-- **Table 5: Unheated Spaces ($F_x$ für unbeheizte Räume):**
-
-  | Lfd. Nr. | Art des angrenzenden unbeheizten Raumes (Type of Unheated Space)    | F_x Factor |
+- **Table 5: Unheated Spaces ($F_x$ für unbeheizte Räume):**| Lfd. Nr. | Art des angrenzenden unbeheizten Raumes (Type of Unheated Space)    | F_x Factor |
   | :------- | :------------------------------------------------------------------ | :--------- |
   | 1        | Dachraum (Unheated Attic / Roof space)                              | 0.8        |
   | 2        | Unbeheizter Glasvorbau / Wintergarten (Unheated Sunspace)           | 0.8        |
-  | 3        | Kriechkeller, stark belüftet (Crawl space, heavily ventilated)      | 0.8        |
+  | 3        | Kriechkeller, stark belüftet (Crawl space, heavily ventilated)     | 0.8        |
   | 4        | Angrenzender unbeheizter Raum (Standard adjacent unheated room)     | 0.5        |
   | 5        | Unbeheizter Keller (Unheated Basement, general)                     | 0.5        |
-  | 6        | Treppenhaus, außenliegend (Staircase with large exterior walls)     | 0.5        |
-  | 7        | Kriechkeller, unbelüftet (Crawl space, unventilated)                | 0.5        |
+  | 6        | Treppenhaus, außenliegend (Staircase with large exterior walls)    | 0.5        |
+  | 7        | Kriechkeller, unbelüftet (Crawl space, unventilated)               | 0.5        |
   | 8        | Treppenhaus, innenliegend (Staircase mostly surrounded by building) | 0.35       |
-
-- **Table 6: Ground Contact ($F_x$ für Bauteile gegen Erdreich):**
-
-  | Lfd. Nr. | Bauteil gegen Erdreich (Component against the ground)              | F_x Factor |
-  | :------- | :----------------------------------------------------------------- | :--------- |
-  | 1        | Bodenplatte auf Erdreich (Floor slab directly on ground)           | 0.5        |
+- **Table 6: Ground Contact ($F_x$ für Bauteile gegen Erdreich):**| Lfd. Nr. | Bauteil gegen Erdreich (Component against the ground)               | F_x Factor |
+  | :------- | :------------------------------------------------------------------ | :--------- |
+  | 1        | Bodenplatte auf Erdreich (Floor slab directly on ground)            | 0.5        |
   | 2        | Wände gegen Erdreich, < 1,5m Tiefe (Basement walls, shallow depth) | 0.5        |
   | 3        | Wände gegen Erdreich, > 1,5m Tiefe (Basement walls, deep depth)    | 0.5        |
   | 4        | Fußboden des beheizten Kellers (Floor of a heated basement)        | 0.5        |
-  | 5        | Bauteile gegen Grundwasser (Components touching groundwater)       | 1.0        |
+  | 5        | Bauteile gegen Grundwasser (Components touching groundwater)        | 1.0        |
 
 #### 3. Direct Transmission to Exterior (**$H_{T,D}$**)
 
@@ -1268,18 +1258,15 @@ $$
 
 - _Where to find:_ **Table 7** (18599-2)
 - _Details:_ Adjusts window U-values based on their tilt angle (**$0^\circ$** to **$90^\circ$**) and glazing type (single, double, triple). Default is **$1.0$** for opaque walls.
-
-- **Table 7: Inclination Factor ($f_{neig,j}$):**
-
-  | Neigung (Grad °) | Einfachglas (Single) | Zweifachglas (Double) | Dreifachglas (Triple) \* |
-  | :--------------- | :------------------- | :-------------------- | :----------------------- |
-  | 0° (Horizontal)  | 1,25                 | 1,21                  | 1,20                     |
-  | 15°              | 1,21                 | 1,22                  | 1,16                     |
-  | 30°              | 1,19                 | 1,21                  | 1,13                     |
-  | 45°              | 1,21                 | 1,15                  | 1,07                     |
-  | 60°              | 1,00                 | 1,13                  | 1,05                     |
-  | 75°              | 1,00                 | 1,08                  | 1,02                     |
-  | 90° (Vertikal)   | 1,00                 | 1,00                  | 1,00                     |
+- **Table 7: Inclination Factor ($f_{neig,j}$):**| Neigung (Grad °) | Einfachglas (Single) | Zweifachglas (Double) | Dreifachglas (Triple)\* |
+  | :---------------- | :------------------- | :-------------------- | :---------------------- |
+  | 0° (Horizontal)  | 1,25                 | 1,21                  | 1,20                    |
+  | 15°              | 1,21                 | 1,22                  | 1,16                    |
+  | 30°              | 1,19                 | 1,21                  | 1,13                    |
+  | 45°              | 1,21                 | 1,15                  | 1,07                    |
+  | 60°              | 1,00                 | 1,13                  | 1,05                    |
+  | 75°              | 1,00                 | 1,08                  | 1,02                    |
+  | 90° (Vertikal)   | 1,00                 | 1,00                  | 1,00                    |
 
 ##### 1. Das mathematische Prinzip
 
@@ -1367,12 +1354,12 @@ Calculates the extra heat lost through structural joints (balconies, window fram
 - _Where to find:_ **Section 6.1.4 (Text categories)** (18599-2)
 - _Details:_ Flat values of **$0.10$** (default), **$0.05$**, **$0.03$**, or **$0.15 W/(m^2K)$** depending on the construction quality and adherence to DIN 4108 Beiblatt 2.
 
-| Penalty Value ($\Delta U_{WB}$) | Construction Condition / Requirement (Anwendungsbedingung)                                                                                                                                                 |
-| :------------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.15 W/(m²K)                    | Increased Penalty: Must be used for buildings with internal insulation (Innendämmung) where solid floor ceilings intersect the exterior wall without thermal separation, creating massive thermal bridges. |
-| 0.10 W/(m²K)                    | Standard Default (Ohne Nachweis): Used when no special thermal bridge planning is done, or if the construction details do not conform to the standard examples provided in DIN 4108 Beiblatt 2.            |
-| 0.05 W/(m²K)                    | Good Planning (Kategorie A): Allowed only if it is explicitly proven that all thermal bridges in the building match the standard, energy-optimized design examples shown in DIN 4108 Beiblatt 2.           |
-| 0.03 W/(m²K)                    | Excellent Planning (Kategorie B): Allowed only if proven that all thermal bridges match the highly-insulated, premium design examples (Category B) defined in DIN 4108 Beiblatt 2.                         |
+| Penalty Value ($\Delta U_{WB}$) | Construction Condition / Requirement (Anwendungsbedingung)                                                                                                                                                  |
+| :-------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.15 W/(m²K)                     | Increased Penalty: Must be used for buildings with internal insulation (Innendämmung) where solid floor ceilings intersect the exterior wall without thermal separation, creating massive thermal bridges. |
+| 0.10 W/(m²K)                     | Standard Default (Ohne Nachweis): Used when no special thermal bridge planning is done, or if the construction details do not conform to the standard examples provided in DIN 4108 Beiblatt 2.             |
+| 0.05 W/(m²K)                     | Good Planning (Kategorie A): Allowed only if it is explicitly proven that all thermal bridges in the building match the standard, energy-optimized design examples shown in DIN 4108 Beiblatt 2.            |
+| 0.03 W/(m²K)                     | Excellent Planning (Kategorie B): Allowed only if proven that all thermal bridges match the highly-insulated, premium design examples (Category B) defined in DIN 4108 Beiblatt 2.                          |
 
 #### 6. Effective Thermal Transmittance for Windows with Shutters (**$U_{w,eff}$**)
 
@@ -1386,14 +1373,11 @@ $$
 
 - _Where to find:_ **Annex G, Tables G.1, G.2, G.3** (18599-2)
 - _Details:_ The fraction of the day the shutter is closed, depending on the automation control type.
-
-- **Table G.1: Residential Buildings (Wohngebäude):**
-
-  | Monat (Month) | f_sh : Manuell (Manual Control) | f_sh : Automatisch (Automated / Motorized) |
+- **Table G.1: Residential Buildings (Wohngebäude):**| Monat (Month) | f_sh : Manuell (Manual Control) | f_sh : Automatisch (Automated / Motorized) |
   | :------------ | :------------------------------ | :----------------------------------------- |
   | Januar        | 0,43                            | 0,61                                       |
   | Februar       | 0,38                            | 0,54                                       |
-  | März          | 0,32                            | 0,45                                       |
+  | März         | 0,32                            | 0,45                                       |
   | April         | 0,25                            | 0,36                                       |
   | Mai           | 0,20                            | 0,28                                       |
   | Juni          | 0,16                            | 0,23                                       |
@@ -1403,14 +1387,11 @@ $$
   | Oktober       | 0,37                            | 0,53                                       |
   | November      | 0,42                            | 0,60                                       |
   | Dezember      | 0,45                            | 0,64                                       |
-
-- **Table G.2 & G.3: Non-Residential Buildings (Nichtwohngebäude):**
-
-  | Monat (Month) | f_sh : Non-Residential (Manual) | f_sh : Non-Residential (Automated / BMS) |
+- **Table G.2 & G.3: Non-Residential Buildings (Nichtwohngebäude):**| Monat (Month) | f_sh : Non-Residential (Manual) | f_sh : Non-Residential (Automated / BMS) |
   | :------------ | :------------------------------ | :--------------------------------------- |
   | Januar        | 0,00                            | 0,61                                     |
   | Februar       | 0,00                            | 0,54                                     |
-  | März          | 0,00                            | 0,45                                     |
+  | März         | 0,00                            | 0,45                                     |
   | April         | 0,00                            | 0,36                                     |
   | Mai           | 0,00                            | 0,28                                     |
   | Juni          | 0,00                            | 0,23                                     |
@@ -1436,7 +1417,6 @@ By asking chronological and physical questions, the user's brain can "walk throu
 Building age and renovation history are the strongest predictors of building physics. A building from 1960 that hasn't been renovated will almost always fall into Tightness Category IV (obvious leaks) and have specific default U-values (which we fetch from TABULA).
 We manage complex transmission and insulation values by asking simple questions like "When was the building built?" and "When were the windows and roof last replaced or heavily renovated?".
 
-
 # Source: ventilation.md
 
 # Ventilation Energy Calculation Engine
@@ -1447,15 +1427,15 @@ This document explains the physics and logic used in the Rust calculation engine
 
 The ventilation engine calculates how much heat is lost (or gained) when indoor air is replaced by outdoor air. It combines the building's internal air volume, the air-tightness of the envelope, mechanical air exchange rates, supply air temperatures (heat recovery), and a highly dynamic model for occupant window-opening behavior.
 
-```
+```mermaid
 flowchart TD
     %% UI Inputs
     subgraph UI ["User Interface (Inputs)"]
         G["Geometry Engine\n(A_NGF, V)"]
-        Q1[Air Tightness / n50]
-        Q3[Mech. Air Flow\n(V_mech_b, V_ETA)]
-        Q4[Usage Profile\n(V_A, t_nutz, t_V,mech)]
-        Q5[Heat Recovery\n(eta_t)]
+        Q1["Air Tightness / n50"]
+        Q3["Mech. Air Flow\n(V_mech_b, V_ETA)"]
+        Q4["Usage Profile\n(V_A, t_nutz, t_V,mech)"]
+        Q5["Heat Recovery\n(eta_t)"]
     end
 
     %% Rust Engine Middle Layer
@@ -1644,18 +1624,20 @@ If a mechanical system is present but the heat exchanger's exact efficiency is n
 By asking chronological and physical questions, the user's brain can "walk through" their building, keeping the frontend conversational while the backend remains strictly DIN-compliant.
 
 ### The Lungs: Passive Breathing (has_atd, air_tightness)
+
 Users don't understand "infiltration" or "ATDs", but they know what their windows look like.
-*   **has_atd**: "Do your windows or exterior walls have small, built-in ventilation slits that let air trickle in even when they are closed?" Yes -> `has_atd = true`, No -> `has_atd = false`.
-*   **air_tightness ($n_{50}$)**: "Has your building ever officially passed a Blower-Door pressure test?" If Yes, Category I. If No: "When were the windows and roof last replaced?" After 2000 -> Category II. Before 2000, no drafts -> Category III. Before 2000, drafts -> Category IV.
+
+* **has_atd**: "Do your windows or exterior walls have small, built-in ventilation slits that let air trickle in even when they are closed?" Yes -> `has_atd = true`, No -> `has_atd = false`.
+* **air_tightness ($n_{50}$)**: "Has your building ever officially passed a Blower-Door pressure test?" If Yes, Category I. If No: "When were the windows and roof last replaced?" After 2000 -> Category II. Before 2000, no drafts -> Category III. Before 2000, drafts -> Category IV.
 
 ### The Heart: Active Systems (Mechanical Volumes, Heat Recovery)
-Mechanical ventilation is intimidating. If a user doesn't know their exact flow rate ($m^3/h$), DIN 18599 allows us to assume the system was sized correctly to meet the minimum required fresh air rate ($n_{nutz}$).
-*   **Mechanical Ventilation Volumes**: "Do you have an active, motorized ventilation system?" If yes, but they don't know the exact airflow rate ($m^3/h$), our software applies an *Estimation Trick*. It automatically calculates the minimum required fresh air ($n_{nutz}$) and assumes the system was designed correctly, setting supply and exhaust equal to $n_{nutz} \times Volume$.
-*   **Heat Recovery Efficiency**: "Does your ventilation system feature 'Heat Recovery'?" If yes, and they don't know the percentage, we can safely estimate 80% (0.80) as a default fallback for modern systems.
 
+Mechanical ventilation is intimidating. If a user doesn't know their exact flow rate ($m^3/h$), DIN 18599 allows us to assume the system was sized correctly to meet the minimum required fresh air rate ($n_{nutz}$).
+
+* **Mechanical Ventilation Volumes**: "Do you have an active, motorized ventilation system?" If yes, but they don't know the exact airflow rate ($m^3/h$), our software applies an *Estimation Trick*. It automatically calculates the minimum required fresh air ($n_{nutz}$) and assumes the system was designed correctly, setting supply and exhaust equal to $n_{nutz} \times Volume$.
+* **Heat Recovery Efficiency**: "Does your ventilation system feature 'Heat Recovery'?" If yes, and they don't know the percentage, we can safely estimate 80% (0.80) as a default fallback for modern systems.
 
 # Source: x.md
-
 
 # Energy Balance Engine
 
@@ -1665,7 +1647,7 @@ This document explains the physics and logic used in the Rust calculation engine
 
 The energy balance engine acts as the "Master Solver." It takes the raw outputs from the four separate physics engines (Transmission, Ventilation, Internal Gains, Solar Gains) and mathematically merges them.
 
-```
+```mermaid
 flowchart TD
     %% Inputs from our 4 Engines
     subgraph Sinks ["Heat Sinks (Losses)"]
@@ -1968,7 +1950,7 @@ impl EnergyBalanceEngine {
 
         let gamma = q_g / q_l;
         let (a_0, tau_0) = self.period.solver_constants();
-    
+  
         // Calculate the curve-fitting parameter 'a'
         let a = a_0 + (tau / tau_0);
 
@@ -1997,7 +1979,7 @@ impl EnergyBalanceEngine {
 
         // 2. Calculate thermal inertia (how long the building stores heat)
         let tau = self.calculate_time_constant(h_t, h_v);
-    
+  
         // 3. Calculate how much of the gains we can actually use (eta)
         let eta = self.calculate_gain_utilization_factor(q_l, q_g, tau);
 
@@ -2017,7 +1999,7 @@ impl EnergyBalanceEngine {
 
         // Convert Wh to kWh, then divide by area to get kWh/(m²·a)
         let specific_demand_kwh = (annual_q_h_wh / 1000.0) / floor_area_m2;
-    
+  
         EnergyClass::from_specific_demand(specific_demand_kwh)
     }
 }

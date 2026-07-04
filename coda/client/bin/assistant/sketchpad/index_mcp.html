@@ -8,6 +8,11 @@
     <meta name="description" content="Interactive 3D zone-based building energy analysis — MCP App edition">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- KaTeX for Math Rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -17,8 +22,8 @@
 
         body {
             overflow: hidden;
-            background: #0a0f1e;
-            color: #e2e8f0;
+            background: #f8fafc;
+            color: #0f172a;
             font-family: 'Inter', sans-serif;
         }
 
@@ -33,8 +38,8 @@
 
         /* ── Left Panel ── */
         .panel-left {
-            background: rgba(15, 23, 42, 0.95);
-            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.95);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
             padding: 16px;
             display: flex;
             flex-direction: column;
@@ -53,14 +58,14 @@
 
         .subtitle {
             font-size: 0.72rem;
-            color: #64748b;
+            color: #475569;
             margin-bottom: 16px;
         }
 
         /* Section Card */
         .section-card {
-            background: rgba(30, 41, 59, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(241, 245, 249, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.08);
             border-radius: 10px;
             padding: 12px;
             margin-bottom: 10px;
@@ -68,7 +73,7 @@
 
         .section-card h3 {
             font-size: 0.8rem;
-            color: #94a3b8;
+            color: #334155;
             margin-bottom: 8px;
         }
 
@@ -81,8 +86,8 @@
         }
 
         .zone-card {
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
             border-radius: 8px;
             padding: 10px;
             margin-bottom: 6px;
@@ -115,7 +120,7 @@
 
         .zone-card .dims {
             font-size: 0.78rem;
-            color: #94a3b8;
+            color: #334155;
         }
 
         .zone-card .dims span {
@@ -151,7 +156,7 @@
 
         label {
             font-size: 0.68rem;
-            color: #64748b;
+            color: #475569;
             display: block;
             margin-bottom: 2px;
         }
@@ -159,9 +164,9 @@
         input,
         select {
             width: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #e2e8f0;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.15);
+            color: #0f172a;
             padding: 7px 8px;
             border-radius: 6px;
             font-size: 0.82rem;
@@ -177,14 +182,14 @@
 
         input:disabled,
         select:disabled {
-            background: rgba(255, 255, 255, 0.03);
-            color: #64748b;
+            background: #f1f5f9;
+            color: #475569;
             border-color: rgba(255, 255, 255, 0.05);
             cursor: not-allowed;
         }
 
         select option {
-            background: #1e293b;
+            background: #ffffff;
         }
 
         .btn-primary {
@@ -234,13 +239,13 @@
             bottom: 16px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             padding: 8px 20px;
             font-size: 0.78rem;
-            color: #94a3b8;
+            color: #334155;
             display: flex;
             gap: 16px;
         }
@@ -255,7 +260,7 @@
             position: absolute;
             top: 16px;
             right: 16px;
-            background: rgba(15, 23, 42, 0.92);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(56, 189, 248, 0.2);
             border-radius: 12px;
@@ -282,8 +287,15 @@
         .results-overlay .result-row {
             display: flex;
             justify-content: space-between;
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: background 0.2s, border-radius 0.2s;
+            border-radius: 4px;
+        }
+
+        .results-overlay .result-row:hover {
+            background: rgba(56, 189, 248, 0.15);
         }
 
         .results-overlay .result-row:last-child {
@@ -291,11 +303,11 @@
         }
 
         .results-overlay .result-label {
-            color: #94a3b8;
+            color: #334155;
         }
 
         .results-overlay .result-value {
-            color: #e2e8f0;
+            color: #0f172a;
             font-weight: 600;
         }
 
@@ -313,6 +325,71 @@
                 opacity: 1;
                 transform: translateX(0);
             }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Documentation Info Panel */
+        .info-panel {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            left: auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            width: 340px;
+            max-width: 90%;
+            max-height: calc(100% - 32px);
+            overflow-y: auto;
+            font-size: 0.85rem;
+            display: none;
+            flex-direction: column;
+            animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -10px 10px 30px rgba(0,0,0,0.6);
+            z-index: 60;
+        }
+
+        .info-panel.visible {
+            display: flex;
+        }
+
+        .info-panel h4 {
+            font-size: 1rem;
+            color: #a78bfa;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .info-panel .doc-text {
+            color: #334155;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        .info-panel .close-btn {
+            background: none;
+            border: none;
+            color: #475569;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        
+        .info-panel .close-btn:hover {
+            color: #ef4444;
         }
 
         /* Inline notification */
@@ -354,8 +431,8 @@
 
         /* Wall Segment Cards */
         .wall-seg {
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: #f1f5f9;
+            border: 1px solid rgba(0, 0, 0, 0.08);
             border-radius: 8px;
             padding: 6px 8px;
             margin-bottom: 4px;
@@ -394,7 +471,7 @@
         }
 
         .wall-seg-info {
-            color: #94a3b8;
+            color: #334155;
             font-size: 0.7rem;
         }
 
@@ -460,18 +537,18 @@
             transform: translateX(-50%);
             display: flex;
             gap: 8px;
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(8px);
             padding: 8px;
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             z-index: 10;
         }
 
         .toolbar button {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #e2e8f0;
+            background: #f8fafc;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #0f172a;
             padding: 6px 12px;
             border-radius: 6px;
             font-size: 0.8rem;
@@ -503,7 +580,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(8px);
             z-index: 1000;
             display: flex;
@@ -520,8 +597,8 @@
         }
 
         .modal-content {
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(0, 0, 0, 0.1);
             border-radius: 12px;
             width: 500px;
             padding: 24px;
@@ -541,7 +618,7 @@
             right: 16px;
             background: none;
             border: none;
-            color: #64748b;
+            color: #475569;
             font-size: 1.2rem;
             cursor: pointer;
             transition: color 0.2s;
@@ -557,10 +634,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(0,0,0,0.2);
+            background: rgba(241,245,249,0.8);
             border-radius: 8px;
             padding: 20px;
-            border: 1px dashed rgba(255,255,255,0.1);
+            border: 1px dashed rgba(0,0,0,0.1);
         }
 
         .wall-block {
@@ -589,7 +666,7 @@
 
         .base-wall span {
             font-size: 0.65rem;
-            color: #64748b;
+            color: #475569;
         }
 
         .insulation-wall {
@@ -642,7 +719,7 @@
             width: 100%;
             height: 4px;
             cursor: pointer;
-            background: rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.1);
             border-radius: 2px;
         }
 
@@ -656,11 +733,11 @@
         .math-table th, .math-table td {
             padding: 8px;
             text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
         .math-table th {
-            color: #94a3b8;
+            color: #334155;
             font-weight: 500;
         }
 
@@ -668,6 +745,28 @@
             text-align: right;
             font-family: monospace;
             color: #38bdf8;
+        }
+
+        /* Graph Filters */
+        .graph-filter-btn {
+            background: #f8fafc;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #0f172a;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .graph-filter-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+        .graph-filter-btn.active {
+            background: rgba(56, 189, 248, 0.3);
+            border-color: #38bdf8;
+            color: #38bdf8;
+            font-weight: 600;
         }
     </style>
     <script type="importmap">
@@ -1072,7 +1171,7 @@
 
             <!-- System Logs -->
             <div class="section-card" id="logs-panel"
-                style="margin-top: 10px; border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2);">
+                style="margin-top: 10px; border: 1px solid rgba(0,0,0,0.05); background: rgba(241,245,249,0.8);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
                     <h3 style="margin-bottom:0; font-size:0.75rem; color:#94a3b8;">💻 System Logs</h3>
                     <button id="btn-clear-logs"
@@ -1090,12 +1189,40 @@
             <div class="toolbar">
                 <button id="btn-mode-orbit" class="active">Orbit</button>
                 <button id="btn-mode-select">Select</button>
-                <div style="width: 1px; background: rgba(255,255,255,0.1); margin: 0 4px;" id="toolbar-divider" style="display:none;"></div>
+                <div style="width: 1px; background: rgba(0,0,0,0.1); margin: 0 4px;" id="toolbar-divider" style="display:none;"></div>
                 <button id="btn-transform-translate" style="display:none;" class="active">Moving</button>
                 <button id="btn-transform-scale" style="display:none;">Scaling</button>
+                <div style="width: 1px; background: rgba(0,0,0,0.1); margin: 0 4px;"></div>
+                <button id="btn-toggle-graph">Graph View</button>
+                <button id="btn-get-suggestions">Get Suggestions</button>
+                <button id="btn-load-benchmark">Load Benchmark</button>
             </div>
 
             <div id="canvas-container"></div>
+            <!-- Graph container overlay -->
+            <div id="graph-container" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#f8fafc; z-index:5;"></div>
+            
+            <!-- Graph Controls Overlay -->
+            <div id="graph-controls" style="display:none; position:absolute; top:16px; left:16px; z-index:50; background:rgba(255, 255, 255, 0.85); backdrop-filter:blur(8px); padding:16px; border-radius:12px; border:1px solid rgba(0,0,0,0.1); box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 260px;">
+                <h4 style="margin:0 0 12px 0; color:#38bdf8; font-size:1rem; display:flex; align-items:center; gap:6px;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    Graph Filters
+                </h4>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;" id="graph-filter-buttons">
+                    <button class="graph-filter-btn active" data-group="all">All</button>
+                    <button class="graph-filter-btn" data-group="Building">Building</button>
+                    <button class="graph-filter-btn" data-group="Space">Space</button>
+                    <button class="graph-filter-btn" data-group="Wall">Wall</button>
+                    <button class="graph-filter-btn" data-group="Window">Window</button>
+                    <button class="graph-filter-btn" data-group="Roof">Roof</button>
+                    <button class="graph-filter-btn" data-group="Slab">Slab</button>
+                    <button class="graph-filter-btn" data-group="Calculation">Calculation</button>
+                </div>
+                <div style="margin-top: 16px; font-size: 0.8rem; color: #334155; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 12px;">
+                    <em>Click a node to isolate it and its direct connections.</em>
+                </div>
+                <button id="btn-reset-graph-focus" style="margin-top:12px; width:100%; padding:8px; display:none; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.5); color:#ef4444; border-radius:6px; cursor:pointer; font-weight: 600; transition: all 0.2s;">Reset Focus</button>
+            </div>
 
             <!-- Toast notification -->
             <div class="toast" id="toast"></div>
@@ -1135,10 +1262,37 @@
                 <div id="results-content"></div>
             </div>
 
+            <!-- Physics Info Panel -->
+            <div class="info-panel" id="info-panel">
+                <h4><span id="info-title">Property</span> <button class="close-btn" id="btn-close-info">&times;</button></h4>
+                <div class="doc-text" id="info-content">Click on a property node in the graph to see its physics documentation.</div>
+            </div>
+
             <div class="status-bar" id="status-bar">
                 <div>Zones: <span class="stat-value" id="stat-zones">0</span></div>
                 <div>Area: <span class="stat-value" id="stat-area">–</span></div>
                 <div>Perimeter: <span class="stat-value" id="stat-perimeter">–</span></div>
+            </div>
+
+            <!-- Suggestions Modal -->
+            <div class="modal-overlay" id="suggestions-modal">
+                <div class="modal-content">
+                    <button class="modal-close" id="btn-close-suggestions">×</button>
+                    <h3 style="color:#38bdf8; margin-bottom:12px;">Energy Suggestions</h3>
+                    <ul id="suggestions-list" style="color:#e2e8f0; font-size:0.85rem; padding-left:20px;">
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Formula Modal -->
+            <div class="modal-overlay" id="formula-modal">
+                <div class="modal-content" style="width: 550px; max-height: 80vh; overflow-y: auto;">
+                    <button class="modal-close" id="btn-close-formula">×</button>
+                    <h3 id="formula-modal-title" style="color:#38bdf8; margin-bottom:16px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+                        Formula Explanation
+                    </h3>
+                    <div id="formula-modal-body" style="color:#e2e8f0; font-size:0.85rem; line-height:1.5;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1162,7 +1316,7 @@
             </h2>
             
             <div style="margin-bottom: 16px;">
-                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; color: #e2e8f0;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem; color: #0f172a;">
                     <input type="checkbox" id="custom-wall-override" style="width: 16px; height: 16px; margin: 0;">
                     <span style="font-weight: 600;">Enable Custom Insulation Override</span>
                 </label>
@@ -1222,7 +1376,7 @@
                     <td class="val" id="math-r-ins">--</td>
                 </tr>
                 <tr style="background: rgba(56, 189, 248, 0.1);">
-                    <th style="color: #e2e8f0;">Final Combined U-Value</th>
+                    <th style="color: #0f172a;">Final Combined U-Value</th>
                     <td class="val" id="math-u-final" style="font-weight: 700;">--</td>
                 </tr>
             </table>

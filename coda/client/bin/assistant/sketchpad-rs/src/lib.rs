@@ -4,6 +4,8 @@ use std::collections::HashMap;
 use std::cell::RefCell;
 use serde_json::Value;
 
+pub mod ontology;
+
 pub mod transmission {
 //! # Transmission Module
 //!
@@ -613,7 +615,7 @@ pub mod ventilation {
     const DEFAULT_F: f64 = 15.0; // Standard Windexposition
 
     /// Categories according to Table 8 (DIN 18599-2)
-    #[derive(Debug, Clone, Copy, PartialEq)]
+    #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize)]
     pub enum TightnessCategory {
         CategoryI,   // Measured/Tested
         CategoryII,  // New, untested
@@ -1845,10 +1847,569 @@ fn calculate_energy(state: &State) -> Value {
     let q_g_h_out = q_h_nd + q_d_h_total + q_s_h_total;
 
     // 4. Apply TABULA Equation 19: Delivered Energy
+
+pub struct EnergyAnalysisResult {
+    pub transmission_loss_kwh: f64,
+    pub ventilation_loss_kwh: f64,
+    pub solar_gains_kwh: f64,
+    pub internal_gains_kwh: f64,
+    pub final_heating_demand_kwh: f64,
+    pub q_h_nd_kwh: f64,
+    pub h_t_wb: f64,
+    pub f_x: f64,
+    pub n50: f64,
+    pub r_se: f64,
+    pub r_si: f64,
+    pub h_t_d: f64,
+    pub h_t_iu: f64,
+    pub h_v_inf: f64,
+    pub h_v_win: f64,
+    pub h_v_mech: f64,
+    pub h_tr: f64,
+    pub h_ve: f64,
+}
+
+fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_window: f64, res: &EnergyAnalysisResult) -> crate::ontology::BuildingKnowledgeGraph {
+    use crate::ontology::*;
+    let mut graph = BuildingKnowledgeGraph::new();
+
+    let b_idx = graph.add_entity(EntityData::Building(BuildingData {
+        name: "Building".to_string(),
+        building_type: crate::transmission::BuildingType::Residential,
+        building_category: None,
+        year_class: state.params.year_class.clone(),
+        scenario: state.params.scenario.clone(),
+        num_stories: state.params.num_stories,
+        heating_system: state.params.heating_system.clone(),
+        thermal_bridge_category: crate::transmission::ThermalBridgeCategory::StandardDefault,
+        total_conditioned_volume: state.geometry.as_ref().map(|g| g.total_conditioned_volume).unwrap_or(0.0),
+        total_floor_area: state.geometry.as_ref().map(|g| g.total_floor_area).unwrap_or(0.0),
+        total_roof_area: state.geometry.as_ref().map(|g| g.total_roof_area).unwrap_or(0.0),
+        total_ground_area: state.geometry.as_ref().map(|g| g.total_ground_area).unwrap_or(0.0),
+        exterior_perimeter: state.geometry.as_ref().map(|g| g.exterior_perimeter).unwrap_or(0.0),
+        roof_pitch_deg: None,
+        building_rotation_deg: state.params.building_rotation_deg,
+        window_to_wall_ratio: state.params.window_to_wall_ratio,
+    }));
+
+    let p_vol = graph.add_entity(EntityData::Property(PropertyData { 
+        name: "Volume (V_e)".into(), value: format!("{:.1}", state.geometry.as_ref().map(|g| g.total_conditioned_volume).unwrap_or(0.0)), unit: "m³".into(),
+        doc: Some("**Conditioned Volume ($V_e$)**\nThe total heated volume of the building. Used to calculate ventilation air mass flows ($V_e \\cdot n$).".into())
+    }));
+    let p_year = graph.add_entity(EntityData::Property(PropertyData { 
+        name: "Year Class".into(), value: state.params.year_class.clone(), unit: "".into(),
+        doc: Some("**Year Class**\nThe construction age bracket. Dictates default U-values, infiltration rates, and system efficiencies if not explicitly overridden.".into())
+    }));
+    let p_heat = graph.add_entity(EntityData::Property(PropertyData { 
+        name: "Heating System".into(), value: state.params.heating_system.clone(), unit: "".into(),
+        doc: Some("**Heating System**\nThe primary thermal generator. Affects the primary energy factor ($f_P$) and conversion efficiency ($e_g$).".into())
+    }));
+    graph.add_relationship(Relationship::HasProperty { host: b_idx, property: p_vol });
+    graph.add_relationship(Relationship::HasProperty { host: b_idx, property: p_year });
+    graph.add_relationship(Relationship::HasProperty { host: b_idx, property: p_heat });
+
+    // Global Building Ventilation Calculation
+    let calc_vent = graph.add_entity(EntityData::Calculation(CalculationData {
+        name: "Ventilation Heat Loss (H_V)".into(),
+        formula: "H_V = \\rho_{air} \\cdot c_{a} \\cdot n \\cdot V_e".into(),
+        doc: "Calculates the heat loss due to air exchange (infiltration and window airing).".into(),
+    }));
+    graph.add_relationship(Relationship::InputsTo { parameter: p_vol, calculation: calc_vent });
+
+    let p_n50 = graph.add_entity(EntityData::Property(PropertyData {
+        name: "n50 (Blower Door)".into(), value: format!("{:.2}", res.n50), unit: "1/h".into(),
+        doc: Some("Air change rate at 50 Pa pressure difference. Measures building envelope airtightness.".into())
+    }));
+    let p_hv_inf = graph.add_entity(EntityData::Property(PropertyData {
+        name: "H_{V,inf}".into(), value: format!("{:.1}", res.h_v_inf), unit: "W/K".into(),
+        doc: Some("Ventilation heat transfer coefficient for infiltration through envelope leaks.".into())
+    }));
+    let p_hv_win = graph.add_entity(EntityData::Property(PropertyData {
+        name: "H_{V,win}".into(), value: format!("{:.1}", res.h_v_win), unit: "W/K".into(),
+        doc: Some("Ventilation heat transfer coefficient for window airing.".into())
+    }));
+    let p_hv_mech = graph.add_entity(EntityData::Property(PropertyData {
+        name: "H_{V,mech}".into(), value: format!("{:.1}", res.h_v_mech), unit: "W/K".into(),
+        doc: Some("Ventilation heat transfer coefficient for mechanical ventilation (considering heat recovery).".into())
+    }));
+    let p_h_ve = graph.add_entity(EntityData::Property(PropertyData {
+        name: "H_V (Total)".into(), value: format!("{:.1}", res.h_ve), unit: "W/K".into(),
+        doc: Some("Total ventilation heat transfer coefficient.".into())
+    }));
+    
+    graph.add_relationship(Relationship::InputsTo { parameter: p_n50, calculation: calc_vent });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_hv_inf, calculation: calc_vent });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_hv_win, calculation: calc_vent });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_hv_mech, calculation: calc_vent });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_h_ve, calculation: calc_vent });
+
+    let r_vent = graph.add_entity(EntityData::Property(PropertyData {
+        name: "Ventilation Loss Result".into(), value: format!("{:.0}", res.ventilation_loss_kwh), unit: "kWh/a".into(),
+        doc: Some("Final calculated annual heat loss due to ventilation (Q_v).".into())
+    }));
+    graph.add_relationship(Relationship::OutputsTo { calculation: calc_vent, result: r_vent });
+
+
+    if let Some(geom) = &state.geometry {
+        let a_wall_total = geom.envelope_data.n.gross_wall_area + geom.envelope_data.e.gross_wall_area + geom.envelope_data.s.gross_wall_area + geom.envelope_data.w.gross_wall_area;
+        let win_area_total = geom.envelope_data.n.window_area + geom.envelope_data.s.window_area + geom.envelope_data.e.window_area + geom.envelope_data.w.window_area;
+        let has_zones = state.ui_state.as_ref().and_then(|ui| ui.get("raw_zones").and_then(|z| z.as_array())).map(|a| !a.is_empty()).unwrap_or(false);
+
+        if has_zones {
+            let raw_zones = state.ui_state.as_ref().unwrap().get("raw_zones").unwrap().as_array().unwrap();
+            let mut total_zone_area = 0.0;
+            for zone in raw_zones {
+                let w = zone.get("geometry").and_then(|g| g.get("width")).and_then(|v| v.as_f64()).unwrap_or(0.0);
+                let l = zone.get("geometry").and_then(|g| g.get("length")).and_then(|v| v.as_f64()).unwrap_or(0.0);
+                total_zone_area += w * l;
+            }
+            if total_zone_area == 0.0 { total_zone_area = 1.0; } 
+
+            for zone in raw_zones {
+                let z_name = zone.get("type").and_then(|v| v.as_str()).unwrap_or("Zone").to_string();
+                let z_width = zone.get("geometry").and_then(|g| g.get("width")).and_then(|v| v.as_f64()).unwrap_or(0.0);
+                let z_length = zone.get("geometry").and_then(|g| g.get("length")).and_then(|v| v.as_f64()).unwrap_or(0.0);
+                let z_area = z_width * z_length;
+                let scale_factor = z_area / total_zone_area;
+
+                let z_idx = graph.add_entity(EntityData::Space(SpaceData {
+                    name: z_name, volume: z_area * state.params.story_height, net_floor_area: z_area,
+                    room_depth: None, ceiling_height: Some(state.params.story_height), is_critical_room: false, unheated_space_type: None
+                }));
+                graph.add_relationship(Relationship::Aggregates { parent: b_idx, child: z_idx });
+
+                let p_area = graph.add_entity(EntityData::Property(PropertyData { 
+                    name: "Area (A_NGF)".into(), value: format!("{:.1}", z_area), unit: "m²".into(),
+                    doc: Some("**Net Floor Area ($A_{NGF}$)**\nThe reference area used to multiply specific internal gains ($q_I$).".into())
+                }));
+                graph.add_relationship(Relationship::HasProperty { host: z_idx, property: p_area });
+
+                // Calculations
+                let calc_internal = graph.add_entity(EntityData::Calculation(CalculationData {
+                    name: "Internal Gains (Q_I)".into(),
+                    formula: "Q_{I} = q_{I} \\cdot A_{NGF} \\cdot t".into(),
+                    doc: "Heat generated by people, equipment, and lighting.".into(),
+                }));
+                let calc_trans = graph.add_entity(EntityData::Calculation(CalculationData {
+                    name: "Transmission Loss (H_T)".into(),
+                    formula: "H_{T,D} = \\sum (A_j \\cdot U_j \\cdot f_{neig,j})".into(),
+                    doc: "Direct transmission heat loss through the opaque envelope and windows.".into(),
+                }));
+
+    let p_ht_d = graph.add_entity(EntityData::Property(PropertyData {
+        name: "H_{T,D}".into(), value: format!("{:.1}", res.h_t_d), unit: "W/K".into(),
+        doc: Some("Direct transmission heat transfer coefficient to the exterior environment.".into())
+    }));
+    let p_ht_iu = graph.add_entity(EntityData::Property(PropertyData {
+        name: "H_{T,iu}".into(), value: format!("{:.1}", res.h_t_iu), unit: "W/K".into(),
+        doc: Some("Transmission heat transfer coefficient to unheated spaces.".into())
+    }));
+    let p_ht_wb = graph.add_entity(EntityData::Property(PropertyData {
+        name: "H_{T,wb}".into(), value: format!("{:.1}", res.h_t_wb), unit: "W/K".into(),
+        doc: Some("Transmission heat transfer coefficient for thermal bridges.".into())
+    }));
+    let p_fx = graph.add_entity(EntityData::Property(PropertyData {
+        name: "f_x (Ground)".into(), value: format!("{:.2}", res.f_x), unit: "-".into(),
+        doc: Some("Temperature weighting factor for ground-coupled components.".into())
+    }));
+    let p_rse = graph.add_entity(EntityData::Property(PropertyData {
+        name: "R_se".into(), value: format!("{:.2}", res.r_se), unit: "m²K/W".into(),
+        doc: Some("External surface thermal resistance.".into())
+    }));
+    let p_rsi = graph.add_entity(EntityData::Property(PropertyData {
+        name: "R_si".into(), value: format!("{:.2}", res.r_si), unit: "m²K/W".into(),
+        doc: Some("Internal surface thermal resistance.".into())
+    }));
+    let p_h_tr = graph.add_entity(EntityData::Property(PropertyData {
+        name: "H_T (Total)".into(), value: format!("{:.1}", res.h_tr), unit: "W/K".into(),
+        doc: Some("Total transmission heat transfer coefficient.".into())
+    }));
+
+    graph.add_relationship(Relationship::InputsTo { parameter: p_ht_d, calculation: calc_trans });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_ht_iu, calculation: calc_trans });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_ht_wb, calculation: calc_trans });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_fx, calculation: calc_trans });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_rse, calculation: calc_trans });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_rsi, calculation: calc_trans });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_h_tr, calculation: calc_trans });
+
+    let r_trans = graph.add_entity(EntityData::Property(PropertyData {
+        name: "Transmission Loss Result".into(), value: format!("{:.0}", res.transmission_loss_kwh), unit: "kWh/a".into(),
+        doc: Some("Final calculated annual heat loss due to transmission (Q_T).".into())
+    }));
+    graph.add_relationship(Relationship::OutputsTo { calculation: calc_trans, result: r_trans });
+
+    // Assuming calc_internal and calc_solar exist in scope here or we will link them directly after they are created.
+
+
+                let calc_solar_op = graph.add_entity(EntityData::Calculation(CalculationData {
+                    name: "Opaque Solar/Sky (Q_s,op)".into(),
+                    formula: "Q_{s,op} = A_{op} \\cdot U_{op} \\cdot R_{se} \\cdot (\\alpha \\cdot I_s - F_{sky} \\cdot h_r \\cdot \\Delta\\theta_{er})".into(),
+                    doc: "Solar gains on opaque walls minus radiation lost to the cold night sky.".into(),
+                }));
+
+                graph.add_relationship(Relationship::InputsTo { parameter: p_area, calculation: calc_internal });
+
+                let r_int = graph.add_entity(EntityData::Property(PropertyData {
+                    name: "Internal Gains Result".into(), value: format!("{:.0}", res.internal_gains_kwh), unit: "kWh/a".into(),
+                    doc: Some("Final calculated annual heat gains from people and equipment (Q_I).".into())
+                }));
+                graph.add_relationship(Relationship::OutputsTo { calculation: calc_internal, result: r_int });
+
+
+                // --- WALL ---
+                let w_idx = graph.add_entity(EntityData::Wall(WallData {
+                    area: a_wall_total * scale_factor, u_value: u_wall, thickness: 0.3,
+                    r_si: 0.13, r_se: 0.04, f_neig: 1.0, f_x: 1.0, solar_absorptance: 0.6, is_roof: false
+                }));
+                graph.add_relationship(Relationship::BoundsSpace { space: z_idx, boundary_element: w_idx });
+                
+                let wp_u = graph.add_entity(EntityData::Property(PropertyData { 
+                    name: "U-Value".into(), value: format!("{:.2}", u_wall), unit: "W/(m²K)".into(),
+                    doc: Some("Measures heat transfer rate. Lower values indicate better insulation.".into())
+                }));
+                let wp_alpha = graph.add_entity(EntityData::Property(PropertyData { 
+                    name: "Solar Absorptance (\\alpha)".into(), value: "0.6".into(), unit: "-".into(),
+                    doc: Some("Solar radiation absorbed based on color.".into())
+                }));
+                let wp_rse = graph.add_entity(EntityData::Property(PropertyData { 
+                    name: "R_se".into(), value: "0.04".into(), unit: "m²K/W".into(),
+                    doc: Some("External Surface Resistance. Standard is 0.04 for walls.".into())
+                }));
+                let wp_area = graph.add_entity(EntityData::Property(PropertyData { 
+                    name: "Area".into(), value: format!("{:.1}", a_wall_total * scale_factor), unit: "m²".into(),
+                    doc: Some("Total exposed area. Directly proportional to transmission heat losses.".into())
+                }));
+                graph.add_relationship(Relationship::HasProperty { host: w_idx, property: wp_u });
+                graph.add_relationship(Relationship::HasProperty { host: w_idx, property: wp_alpha });
+                graph.add_relationship(Relationship::HasProperty { host: w_idx, property: wp_rse });
+                graph.add_relationship(Relationship::HasProperty { host: w_idx, property: wp_area });
+
+                graph.add_relationship(Relationship::InputsTo { parameter: wp_u, calculation: calc_trans });
+                graph.add_relationship(Relationship::InputsTo { parameter: wp_area, calculation: calc_trans });
+                graph.add_relationship(Relationship::InputsTo { parameter: wp_alpha, calculation: calc_solar_op });
+                graph.add_relationship(Relationship::InputsTo { parameter: wp_rse, calculation: calc_solar_op });
+                graph.add_relationship(Relationship::InputsTo { parameter: wp_area, calculation: calc_solar_op });
+
+                // --- WINDOW ---
+                if win_area_total > 0.0 {
+                    let win_idx = graph.add_entity(EntityData::Window(WindowData {
+                        area: win_area_total * scale_factor, u_value: u_window, u_w_sh: u_window, f_sh: 0.0, g_value: 0.6, frame_fraction: 0.3, f_neig: 1.0, f_x: 1.0, shading_factor_fc: 1.0, surroundings_shading_fs: 1.0,
+                        shutter_control: crate::transmission::ShutterControl::Manual, glazing_type: crate::transmission::WindowGlazingType::Double, inclination_angle: crate::transmission::WindowInclinationAngle::Deg90,
+                    }));
+                    graph.add_relationship(Relationship::FillsVoid { host: w_idx, filler: win_idx });
+
+                    let calc_solar = graph.add_entity(EntityData::Calculation(CalculationData {
+                        name: "Solar Gains (Q_S)".into(),
+                        formula: "Q_{s,w} = I_s \\cdot A_w \\cdot (1 - F_F) \\cdot F_w \\cdot g \\cdot F_C \\cdot F_S".into(),
+                        doc: "Solar energy passing directly through windows, minus frame and shading.".into(),
+                    }));
+
+                    let win_g = graph.add_entity(EntityData::Property(PropertyData { 
+                        name: "g-Value".into(), value: "0.6".into(), unit: "-".into(),
+                        doc: Some("Total Solar Energy Transmittance. Fraction of solar radiation passing through glass.".into())
+                    }));
+                    let win_ff = graph.add_entity(EntityData::Property(PropertyData { 
+                        name: "Frame Fraction (F_F)".into(), value: "0.3".into(), unit: "-".into(),
+                        doc: Some("Percentage of window area that is opaque frame.".into())
+                    }));
+                    let win_fc = graph.add_entity(EntityData::Property(PropertyData { 
+                        name: "Shading Factor (F_C)".into(), value: "1.0".into(), unit: "-".into(),
+                        doc: Some("Operable Shading Factor from blinds or curtains.".into())
+                    }));
+                    let win_u = graph.add_entity(EntityData::Property(PropertyData { 
+                        name: "U-Value".into(), value: format!("{:.2}", u_window), unit: "W/(m²K)".into(),
+                        doc: Some("Measures heat transfer through window.".into())
+                    }));
+                    let win_area_prop = graph.add_entity(EntityData::Property(PropertyData { 
+                        name: "Area".into(), value: format!("{:.2}", win_area_total * scale_factor), unit: "m²".into(),
+                        doc: Some("Window size area.".into())
+                    }));
+                    graph.add_relationship(Relationship::HasProperty { host: win_idx, property: win_g });
+                    graph.add_relationship(Relationship::HasProperty { host: win_idx, property: win_ff });
+                    graph.add_relationship(Relationship::HasProperty { host: win_idx, property: win_fc });
+                    graph.add_relationship(Relationship::HasProperty { host: win_idx, property: win_u });
+                    graph.add_relationship(Relationship::HasProperty { host: win_idx, property: win_area_prop });
+
+                    graph.add_relationship(Relationship::InputsTo { parameter: win_u, calculation: calc_trans });
+                    graph.add_relationship(Relationship::InputsTo { parameter: win_area_prop, calculation: calc_trans });
+                    graph.add_relationship(Relationship::InputsTo { parameter: win_g, calculation: calc_solar });
+                    graph.add_relationship(Relationship::InputsTo { parameter: win_ff, calculation: calc_solar });
+                    graph.add_relationship(Relationship::InputsTo { parameter: win_fc, calculation: calc_solar });
+                    graph.add_relationship(Relationship::InputsTo { parameter: win_area_prop, calculation: calc_solar });
+
+                    let r_sol = graph.add_entity(EntityData::Property(PropertyData {
+                        name: "Solar Gains Result".into(), value: format!("{:.0}", res.solar_gains_kwh), unit: "kWh/a".into(),
+                        doc: Some("Final calculated annual solar heat gains through windows (Q_S).".into())
+                    }));
+                    graph.add_relationship(Relationship::OutputsTo { calculation: calc_solar, result: r_sol });
+
+                }
+
+                // --- ROOF ---
+                let r_idx = graph.add_entity(EntityData::Roof(RoofData {
+                    area: geom.total_roof_area * scale_factor, u_value: u_roof, r_si: 0.1, r_se: 0.04, f_neig: 1.0, f_x: 1.0, solar_absorptance: 0.8
+                }));
+                graph.add_relationship(Relationship::BoundsSpace { space: z_idx, boundary_element: r_idx });
+                
+                let rp_fneig = graph.add_entity(EntityData::Property(PropertyData { 
+                    name: "f_neig".into(), value: "1.0".into(), unit: "-".into(),
+                    doc: Some("Inclination Correction Factor ($f_{neig}$)".into())
+                }));
+                let rp_u = graph.add_entity(EntityData::Property(PropertyData { 
+                    name: "U-Value".into(), value: format!("{:.2}", u_roof), unit: "W/(m²K)".into(),
+                    doc: None
+                }));
+                graph.add_relationship(Relationship::HasProperty { host: r_idx, property: rp_fneig });
+                graph.add_relationship(Relationship::HasProperty { host: r_idx, property: rp_u });
+
+                graph.add_relationship(Relationship::InputsTo { parameter: rp_u, calculation: calc_trans });
+                graph.add_relationship(Relationship::InputsTo { parameter: rp_fneig, calculation: calc_trans });
+
+                // --- SLAB ---
+                let s_idx = graph.add_entity(EntityData::Slab(SlabData {
+                    area: geom.total_ground_area * scale_factor, u_value: u_floor, r_si: 0.17, r_se: 0.04, f_x: 0.6, ground_contact: None
+                }));
+                graph.add_relationship(Relationship::BoundsSpace { space: z_idx, boundary_element: s_idx });
+
+                let sp_fx = graph.add_entity(EntityData::Property(PropertyData { 
+                    name: "f_x".into(), value: "0.6".into(), unit: "-".into(),
+                    doc: Some("Temperature Correction Factor ($f_x$) for ground/unheated spaces.".into())
+                }));
+                let sp_u = graph.add_entity(EntityData::Property(PropertyData { 
+                    name: "U-Value".into(), value: format!("{:.2}", u_floor), unit: "W/(m²K)".into(),
+                    doc: None
+                }));
+                graph.add_relationship(Relationship::HasProperty { host: s_idx, property: sp_fx });
+                graph.add_relationship(Relationship::HasProperty { host: s_idx, property: sp_u });
+
+                graph.add_relationship(Relationship::InputsTo { parameter: sp_u, calculation: calc_trans });
+                graph.add_relationship(Relationship::InputsTo { parameter: sp_fx, calculation: calc_trans });
+            }
+        } else {
+            let z_idx = graph.add_entity(EntityData::Space(SpaceData {
+                name: "Main Zone".into(), volume: geom.total_conditioned_volume, net_floor_area: geom.total_floor_area,
+                room_depth: None, ceiling_height: None, is_critical_room: false, unheated_space_type: None
+            }));
+            graph.add_relationship(Relationship::Aggregates { parent: b_idx, child: z_idx });
+
+            let w_idx = graph.add_entity(EntityData::Wall(WallData {
+                area: a_wall_total, u_value: u_wall, thickness: 0.3,
+                r_si: 0.13, r_se: 0.04, f_neig: 1.0, f_x: 1.0, solar_absorptance: 0.6, is_roof: false
+            }));
+            graph.add_relationship(Relationship::BoundsSpace { space: z_idx, boundary_element: w_idx });
+            
+            let wp_u = graph.add_entity(EntityData::Property(PropertyData { 
+                name: "U-Value".into(), value: format!("{:.2}", u_wall), unit: "W/(m²K)".into(),
+                doc: Some("Measures the rate of heat transfer through a structure. Lower values indicate better insulation.".into())
+            }));
+            graph.add_relationship(Relationship::HasProperty { host: w_idx, property: wp_u });
+        }
+    }
+
+    // Final Energy Balance Calculation
+    let calc_heating = graph.add_entity(EntityData::Calculation(CalculationData {
+        name: "Heating Demand (Q_{H,nd})".into(),
+        formula: r"Q_{H,nd} = Q_T + Q_V - \eta \cdot (Q_S + Q_I)".into(),
+        doc: "Total heat energy required to maintain the setpoint temperature, after subtracting useful solar and internal gains.".into(),
+    }));
+
+    let p_qt = graph.add_entity(EntityData::Property(PropertyData {
+        name: "Q_T (Transmission)".into(), value: format!("{:.0}", res.transmission_loss_kwh), unit: "kWh/a".into(),
+        doc: None
+    }));
+    let p_qv = graph.add_entity(EntityData::Property(PropertyData {
+        name: "Q_V (Ventilation)".into(), value: format!("{:.0}", res.ventilation_loss_kwh), unit: "kWh/a".into(),
+        doc: None
+    }));
+    let p_qs = graph.add_entity(EntityData::Property(PropertyData {
+        name: "Q_S (Solar)".into(), value: format!("{:.0}", res.solar_gains_kwh), unit: "kWh/a".into(),
+        doc: None
+    }));
+    let p_qi = graph.add_entity(EntityData::Property(PropertyData {
+        name: "Q_I (Internal)".into(), value: format!("{:.0}", res.internal_gains_kwh), unit: "kWh/a".into(),
+        doc: None
+    }));
+
+    graph.add_relationship(Relationship::InputsTo { parameter: p_qt, calculation: calc_heating });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_qv, calculation: calc_heating });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_qs, calculation: calc_heating });
+    graph.add_relationship(Relationship::InputsTo { parameter: p_qi, calculation: calc_heating });
+
+    let r_heating = graph.add_entity(EntityData::Property(PropertyData {
+        name: "Heating Demand Result".into(), value: format!("{:.0}", res.q_h_nd_kwh), unit: "kWh/a".into(),
+        doc: Some("Final Heating Demand (Q_{H,nd}).".into())
+    }));
+    graph.add_relationship(Relationship::OutputsTo { calculation: calc_heating, result: r_heating });
+
+    // Final Delivered Energy Calculation
+    let calc_final = graph.add_entity(EntityData::Calculation(CalculationData {
+        name: "Delivered Energy (Q_{End})".into(),
+        formula: r"Q_{End} = (Q_{H,nd} + Q_{d,h} + Q_{s,h}) \cdot e_{g,h}".into(),
+        doc: "Total energy billed by the utility, factoring in the efficiency of the heating system.".into(),
+    }));
+
+    graph.add_relationship(Relationship::InputsTo { parameter: r_heating, calculation: calc_final });
+    // p_heat is already added earlier, we could link it here but p_heat was created way earlier in scope.
+    // We will just add the efficiency factor directly as an input to represent the system.
+    let p_eff = graph.add_entity(EntityData::Property(PropertyData {
+        name: "e_{g,h} (Efficiency)".into(), value: format!("{:.2}", res.final_heating_demand_kwh / res.q_h_nd_kwh), unit: "-".into(),
+        doc: Some("Total system loss factor of the heating generator.".into())
+    }));
+    graph.add_relationship(Relationship::InputsTo { parameter: p_eff, calculation: calc_final });
+
+    let r_final = graph.add_entity(EntityData::Property(PropertyData {
+        name: "Final Energy Result".into(), value: format!("{:.0}", res.final_heating_demand_kwh), unit: "kWh/a".into(),
+        doc: Some("Total Delivered Energy (Q_{End}).".into())
+    }));
+    graph.add_relationship(Relationship::OutputsTo { calculation: calc_final, result: r_final });
+
+
+    graph
+}
+
     // Q_del_h = Q_g_h_out * e_g_h
     let q_final = q_g_h_out * e_g_h;
 
     let energy_class = balance_engine.determine_energy_class(q_final * 1000.0, a_floor_total);
+
+    // region Overheating
+    let mut overheating_windows = Vec::new();
+    let f_c_val = match state.params.shutter_control.as_str() {
+        "Automated" => 0.30,
+        "Manual" => 0.50,
+        _ => 1.00,
+    };
+
+    if win_n > 0.0 {
+        overheating_windows.push(overheating::OverheatingWindow {
+            area: win_n,
+            g_value,
+            f_c: f_c_val,
+            f_s: 1.0,
+            inclination_deg: 90.0,
+            is_north_oriented: true,
+            is_permanently_shaded: false,
+        });
+    }
+    if win_e > 0.0 {
+        overheating_windows.push(overheating::OverheatingWindow {
+            area: win_e,
+            g_value,
+            f_c: f_c_val,
+            f_s: 1.0,
+            inclination_deg: 90.0,
+            is_north_oriented: false,
+            is_permanently_shaded: false,
+        });
+    }
+    if win_s > 0.0 {
+        overheating_windows.push(overheating::OverheatingWindow {
+            area: win_s,
+            g_value,
+            f_c: f_c_val,
+            f_s: 1.0,
+            inclination_deg: 90.0,
+            is_north_oriented: false,
+            is_permanently_shaded: false,
+        });
+    }
+    if win_w > 0.0 {
+        overheating_windows.push(overheating::OverheatingWindow {
+            area: win_w,
+            g_value,
+            f_c: f_c_val,
+            f_s: 1.0,
+            inclination_deg: 90.0,
+            is_north_oriented: false,
+            is_permanently_shaded: false,
+        });
+    }
+    if win_h > 0.0 {
+        overheating_windows.push(overheating::OverheatingWindow {
+            area: win_h,
+            g_value,
+            f_c: f_c_val,
+            f_s: 1.0,
+            inclination_deg: 0.0,
+            is_north_oriented: false,
+            is_permanently_shaded: false,
+        });
+    }
+
+    let category = if state.params.usage_profile == "Residential" {
+        overheating::BuildingCategory::Residential
+    } else {
+        overheating::BuildingCategory::NonResidential
+    };
+
+    let summer_region = match state.params.climate_region.as_str() {
+        "Bremerhaven" | "Rostock" | "Hamburg" | "Fichtelberg" | "Braunlage" => overheating::SummerClimateRegion::A,
+        "Mannheim" => overheating::SummerClimateRegion::C,
+        _ => overheating::SummerClimateRegion::B,
+    };
+
+    let night_ventilation = if state.params.mech_supply > 0.0 || state.params.has_atd {
+        overheating::NightVentilation::Increased
+    } else {
+        overheating::NightVentilation::None
+    };
+
+    let room = overheating::CriticalRoom {
+        actual_floor_area: a_floor_total,
+        room_depth: 5.0,
+        room_height: state.params.story_height,
+        has_opposite_windows: (win_n > 0.0 && win_s > 0.0) || (win_e > 0.0 && win_w > 0.0),
+        category,
+        climate_region: summer_region,
+        construction: overheating::ConstructionClass::Medium,
+        night_ventilation,
+        has_passive_cooling: false,
+        windows: overheating_windows,
+    };
+
+    let overheating_result = overheating::OverheatingEngine::evaluate_room(&room);
+    // endregion Overheating
+
+    // Build the graph
+    
+    let results = EnergyAnalysisResult {
+        transmission_loss_kwh: q_ht_tr_total,
+        ventilation_loss_kwh: q_ht_ve,
+        solar_gains_kwh: q_sol,
+        internal_gains_kwh: q_int,
+        final_heating_demand_kwh: q_final,
+        q_h_nd_kwh: q_h_nd,
+        h_t_wb,
+        f_x: f_x_ground,
+        n50,
+        r_se: 0.04,
+        r_si: 0.13,
+        h_t_d,
+        h_t_iu,
+        h_v_inf,
+        h_v_win,
+        h_v_mech,
+        h_tr,
+        h_ve,
+    };
+    let knowledge_graph = map_state_to_graph(state, u_wall, u_roof, u_floor, u_window, &results);
+
+    
+    // Generate Suggestions
+    let mut suggestions = Vec::new();
+    if q_ht_tr_total > q_ht_ve * 1.5 {
+        suggestions.push("Transmission losses are dominating. Consider upgrading wall or roof insulation.".to_string());
+    }
+    if q_ht_ve > q_ht_tr_total * 0.8 {
+        suggestions.push("Ventilation losses are high. Adding a Heat Recovery Ventilation (HRV) system could be beneficial.".to_string());
+    }
+    if u_window > 1.2 {
+        suggestions.push(format!("Window U-value ({:.2} W/m²K) is relatively high. Triple glazing is recommended.", u_window));
+    }
+    if q_sol < q_ht_total * 0.1 {
+        suggestions.push("Solar gains are very low. If renovating, consider larger south-facing windows to improve passive heating.".to_string());
+    }
 
     serde_json::json!({
         "status": "success",
@@ -1891,6 +2452,18 @@ fn calculate_energy(state: &State) -> Value {
             "r_wall_base": r_base_wall,
             "r_insulation": r_ins_wall,
             "u_wall_final": u_wall
+        },
+        "suggestions": suggestions,
+        "graph": knowledge_graph.to_vis_network_json(),
+        "overheating": {
+            "exemption": match overheating_result.exemption {
+                overheating::ExemptionStatus::ExemptSmallWindows => "Exempt (Small Windows)",
+                overheating::ExemptionStatus::ExemptResidentialHighlyShaded => "Exempt (Highly Shaded)",
+                overheating::ExemptionStatus::NotExempt => "Not Exempt",
+            },
+            "s_vorh": overheating_result.s_vorh,
+            "s_zul": overheating_result.s_zul,
+            "passes": overheating_result.passes
         }
     })
 }
@@ -2444,6 +3017,55 @@ mod tests {
     }
 
     #[test]
+    fn test_tabula_sfh_1859() {
+        let state = State {
+            geometry: Some(BuildingGeometry {
+                total_conditioned_volume: 613.2,
+                total_floor_area: 219.0,
+                total_roof_area: 109.5,
+                total_ground_area: 109.5,
+                exterior_perimeter: 41.85,
+                roof_pitch_deg: Some(0.0),
+                envelope_data: EnvelopeData {
+                    n: EnvelopeDirectionData { gross_wall_area: 58.5, window_area: 8.7 },
+                    e: EnvelopeDirectionData { gross_wall_area: 58.5, window_area: 8.7 },
+                    s: EnvelopeDirectionData { gross_wall_area: 58.5, window_area: 8.7 },
+                    w: EnvelopeDirectionData { gross_wall_area: 58.5, window_area: 8.7 },
+                    h: EnvelopeDirectionData { gross_wall_area: 0.0, window_area: 0.0 },
+                }
+            }),
+            params: Parameters {
+                building_type: "SFH".to_string(),
+                year_class: "...1859".to_string(),
+                scenario: "Existing State".to_string(),
+                story_height: 2.8,
+                num_stories: 2,
+                window_to_wall_ratio: 0.15,
+                building_rotation_deg: 0.0,
+                heating_system: "Gas Condensing Boiler".to_string(),
+                climate_region: "Potsdam".to_string(),
+                usage_profile: "Residential".to_string(),
+                automation_class: "C".to_string(),
+                thermal_bridge_category: "Standard Default".to_string(),
+                ground_contact_type: "Unheated Basement".to_string(),
+                shutter_control: "Manual".to_string(),
+                ..Default::default()
+            },
+            ui_state: None,
+        };
+
+        let result = calculate_energy(&state);
+        
+        let q_h_nd_m2a = result["heating_demand"]["specific_Q_H_nd_kWh_m2a"]
+            .as_f64()
+            .expect("Should have heating demand");
+
+        println!("Calculated Q_h_nd: {} kWh/m2a", q_h_nd_m2a);
+        
+        assert!((q_h_nd_m2a - 167.3).abs() < 5.0, "Heating demand is way off: expected ~167, got {}", q_h_nd_m2a);
+    }
+
+    #[test]
     fn test_ventilation_calculation() {
         let n50 = 1.5;
         let f_atd = ventilation::calculate_f_atd(false, n50);
@@ -2745,3 +3367,406 @@ mod tests {
         assert!(demand < 75.0, "Advanced refurbishment should bring demand below 75 kWh/m²a.");
     }
 }
+
+pub mod overheating {
+    use serde::{Deserialize, Serialize};
+
+    // --- ENUMS & CONSTANTS ---
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum SummerClimateRegion {
+        A, // Cool (e.g., Northern Coast)
+        B, // Moderate (e.g., Central Germany)
+        C, // Hot (e.g., Rhine Valley, Stuttgart)
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum NightVentilation {
+        None,      // Windows remain closed
+        Increased, // Windows tilted / Mech. Ventilation (n >= 2.0 1/h)
+        High,      // Wide open cross-ventilation (n >= 5.0 1/h)
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum BuildingCategory {
+        Residential,
+        NonResidential,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum ConstructionClass {
+        Light,  // Timber frame, drywall, suspended ceilings
+        Medium, // Mixed masonry/lightweight
+        Heavy,  // Solid concrete/brick walls and floors
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum ExemptionStatus {
+        ExemptSmallWindows,           // Passed via § 8.3.2 (a)
+        ExemptResidentialHighlyShaded, // Passed via § 8.3.2 (b)
+        NotExempt,                    // Must calculate S_vorh <= S_zul
+    }
+
+    // --- DATA MODELS ---
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct OverheatingWindow {
+        pub area: f64,                 // A_w in m² (Clear opening dimension)
+        pub g_value: f64,              // Glass solar transmittance (perpendicular)
+        pub f_c: f64,                  // Sun protection reduction factor
+        pub f_s: f64,                  // Structural shading factor (1.0 if none)
+        pub inclination_deg: f64,      // 90 is vertical, 0 is horizontal flat roof
+        pub is_north_oriented: bool,   // True if oriented NE through N to NW
+        pub is_permanently_shaded: bool, // True if blocked by adjacent building, etc.
+    }
+
+    impl OverheatingWindow {
+        /// Calculates g_tot = g * F_C * F_S (Eq. 3 modified for structural shading)
+        pub fn g_tot(&self) -> f64 {
+            self.g_value * self.f_c * self.f_s
+        }
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct CriticalRoom {
+        pub actual_floor_area: f64, // A_G in m²
+        pub room_depth: f64,        // Depth from the window facade in meters
+        pub room_height: f64,       // Clear ceiling height in meters
+        pub has_opposite_windows: bool, // True if windows are on opposite walls (cross-ventilation geometry)
+        
+        pub category: BuildingCategory,
+        pub climate_region: SummerClimateRegion,
+        pub construction: ConstructionClass,
+        pub night_ventilation: NightVentilation,
+        pub has_passive_cooling: bool,
+        pub windows: Vec<OverheatingWindow>,
+    }
+
+    impl CriticalRoom {
+        /// Calculates the effective Net Floor Area according to § 8.3.4 (a)
+        pub fn effective_floor_area(&self) -> f64 {
+            // Maximum depth allowed is 3x height (or 6x if opposite windows exist)
+            let max_depth_multiplier = if self.has_opposite_windows { 6.0 } else { 3.0 };
+            let max_allowable_depth = max_depth_multiplier * self.room_height;
+            
+            if self.room_depth > max_allowable_depth && self.room_depth > 0.0 {
+                // Scale down the area proportionally to the depth cap
+                self.actual_floor_area * (max_allowable_depth / self.room_depth)
+            } else {
+                self.actual_floor_area
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct OverheatingResult {
+        pub exemption: ExemptionStatus,
+        pub s_vorh: f64,   // Existing solar entry
+        pub s_zul: f64,    // Maximum allowable solar entry
+        pub passes: bool,  // True if S_vorh <= S_zul OR if Exempt
+    }
+
+    // --- CALCULATION ENGINE ---
+
+    pub struct OverheatingEngine;
+
+    impl OverheatingEngine {
+        
+        /// Checks if the room bypasses the calculation entirely (§ 8.3.2)
+        pub fn check_exemptions(room: &CriticalRoom, f_w_g: f64) -> ExemptionStatus {
+            // Rule A: Exempt due to very small windows (Table 7)
+            let mut strict_limit = 1.0;
+            for w in &room.windows {
+                let limit = if w.inclination_deg <= 60.0 {
+                    0.07 // 7% for roof windows
+                } else if !w.is_north_oriented {
+                    0.10 // 10% for East, South, West vertical windows
+                } else {
+                    0.15 // 15% for North vertical windows
+                };
+                
+                if limit < strict_limit {
+                    strict_limit = limit;
+                }
+            }
+            
+            if f_w_g <= strict_limit {
+                return ExemptionStatus::ExemptSmallWindows;
+            }
+
+            // Rule B: Exempt Residential with heavy shading and night ventilation
+            if room.category == BuildingCategory::Residential 
+                && f_w_g <= 0.35 
+                && room.night_ventilation != NightVentilation::None 
+            {
+                let mut all_shaded_properly = true;
+                
+                for w in &room.windows {
+                    // Check applies to East, South, West windows
+                    if !w.is_north_oriented {
+                        let required_fc = if w.g_value > 0.40 { 0.30 } else { 0.35 };
+                        if w.f_c > required_fc {
+                            all_shaded_properly = false;
+                            break;
+                        }
+                    }
+                }
+                
+                // If there are no windows, or all applicable windows meet the strict F_c requirement
+                if all_shaded_properly && !room.windows.is_empty() {
+                    return ExemptionStatus::ExemptResidentialHighlyShaded;
+                }
+            }
+
+            ExemptionStatus::NotExempt
+        }
+
+        /// Executes the full GEG Verification
+        pub fn evaluate_room(room: &CriticalRoom) -> OverheatingResult {
+            let a_g_eff = room.effective_floor_area();
+            if a_g_eff <= 0.0 {
+                return OverheatingResult { exemption: ExemptionStatus::NotExempt, s_vorh: 0.0, s_zul: 0.0, passes: true };
+            }
+
+            let total_window_area: f64 = room.windows.iter().map(|w| w.area).sum();
+            let f_w_g = total_window_area / a_g_eff; // Floor-area-related window fraction
+
+            // 1. Check Exemptions
+            let exemption = Self::check_exemptions(room, f_w_g);
+            if exemption != ExemptionStatus::NotExempt {
+                return OverheatingResult { exemption, s_vorh: 0.0, s_zul: 0.0, passes: true };
+            }
+
+            // 2. Calculate Existing Solar Entry (S_vorh) - Eq. 2
+            let sum_window_entries: f64 = room.windows.iter()
+                .map(|w| w.area * w.g_tot())
+                .sum();
+            let s_vorh = sum_window_entries / a_g_eff;
+
+            // 3. Calculate Allowable Solar Entry (S_zul) - Eq. 4 & Table 8
+            let s_zul = Self::calculate_s_zul(room, f_w_g, total_window_area);
+
+            OverheatingResult {
+                exemption,
+                s_vorh,
+                s_zul,
+                // Pass if existing entry is less than or equal to allowable entry
+                passes: s_vorh <= (s_zul + 1e-6), 
+            }
+        }
+
+        /// Calculates S_zul (Equation 4 & Table 8)
+        fn calculate_s_zul(room: &CriticalRoom, f_w_g: f64, total_window_area: f64) -> f64 {
+            // --- S1: Base Value from Table 8 ---
+            let s_1 = Self::get_s1_base_value(
+                room.category,
+                room.night_ventilation,
+                room.climate_region,
+                room.construction,
+            );
+
+            // --- S2: Geometry Modifier ---
+            let (a, b) = match room.category {
+                BuildingCategory::Residential => (0.060, 0.231),
+                BuildingCategory::NonResidential => (0.030, 0.115),
+            };
+            let s_2 = a - (b * f_w_g);
+
+            // --- S3: Solar Control Glass Modifier ---
+            // Proportional addition for windows with g <= 0.40
+            let s_3 = if total_window_area > 0.0 {
+                let sun_protect_area: f64 = room.windows.iter()
+                    .filter(|w| w.g_value <= 0.40)
+                    .map(|w| w.area)
+                    .sum();
+                0.03 * (sun_protect_area / total_window_area)
+            } else {
+                0.0
+            };
+
+            // --- S4: Roof Window Penalty ---
+            // Calculates fraction of windows with inclination between 0 and 60 degrees
+            let s_4 = if total_window_area > 0.0 {
+                let roof_window_area: f64 = room.windows.iter()
+                    .filter(|w| w.inclination_deg >= 0.0 && w.inclination_deg <= 60.0)
+                    .map(|w| w.area)
+                    .sum();
+                let f_neig = roof_window_area / total_window_area;
+                -0.035 * f_neig
+            } else {
+                0.0
+            };
+
+            // --- S5: North/Shaded Window Bonus ---
+            // Applies to vertical North windows OR permanently shaded windows
+            let s_5 = if total_window_area > 0.0 {
+                let shaded_area: f64 = room.windows.iter()
+                    .filter(|w| (w.inclination_deg > 60.0 && w.is_north_oriented) || w.is_permanently_shaded)
+                    .map(|w| w.area)
+                    .sum();
+                let f_nord = shaded_area / total_window_area;
+                0.10 * f_nord
+            } else {
+                0.0
+            };
+
+            // --- S6: Passive Cooling Bonus ---
+            let s_6 = if room.has_passive_cooling {
+                match room.construction {
+                    ConstructionClass::Light => 0.02,
+                    ConstructionClass::Medium => 0.04,
+                    ConstructionClass::Heavy => 0.06,
+                }
+            } else {
+                0.0
+            };
+
+            // Sum all modifiers
+            s_1 + s_2 + s_3 + s_4 + s_5 + s_6
+        }
+
+        /// Direct mapping of Table 8 Base Values
+        fn get_s1_base_value(category: BuildingCategory, vent: NightVentilation, region: SummerClimateRegion, weight: ConstructionClass) -> f64 {
+            match (category, vent, region, weight) {
+                // RESIDENTIAL - NONE
+                (BuildingCategory::Residential, NightVentilation::None, SummerClimateRegion::A, ConstructionClass::Light) => 0.071,
+                (BuildingCategory::Residential, NightVentilation::None, SummerClimateRegion::A, ConstructionClass::Medium) => 0.080,
+                (BuildingCategory::Residential, NightVentilation::None, SummerClimateRegion::A, ConstructionClass::Heavy) => 0.087,
+                (BuildingCategory::Residential, NightVentilation::None, SummerClimateRegion::B, ConstructionClass::Light) => 0.056,
+                (BuildingCategory::Residential, NightVentilation::None, SummerClimateRegion::B, ConstructionClass::Medium) => 0.067,
+                (BuildingCategory::Residential, NightVentilation::None, SummerClimateRegion::B, ConstructionClass::Heavy) => 0.074,
+                (BuildingCategory::Residential, NightVentilation::None, SummerClimateRegion::C, ConstructionClass::Light) => 0.041,
+                (BuildingCategory::Residential, NightVentilation::None, SummerClimateRegion::C, ConstructionClass::Medium) => 0.054,
+                (BuildingCategory::Residential, NightVentilation::None, SummerClimateRegion::C, ConstructionClass::Heavy) => 0.061,
+
+                // RESIDENTIAL - INCREASED
+                (BuildingCategory::Residential, NightVentilation::Increased, SummerClimateRegion::A, ConstructionClass::Light) => 0.098,
+                (BuildingCategory::Residential, NightVentilation::Increased, SummerClimateRegion::A, ConstructionClass::Medium) => 0.114,
+                (BuildingCategory::Residential, NightVentilation::Increased, SummerClimateRegion::A, ConstructionClass::Heavy) => 0.125,
+                (BuildingCategory::Residential, NightVentilation::Increased, SummerClimateRegion::B, ConstructionClass::Light) => 0.088,
+                (BuildingCategory::Residential, NightVentilation::Increased, SummerClimateRegion::B, ConstructionClass::Medium) => 0.103,
+                (BuildingCategory::Residential, NightVentilation::Increased, SummerClimateRegion::B, ConstructionClass::Heavy) => 0.113,
+                (BuildingCategory::Residential, NightVentilation::Increased, SummerClimateRegion::C, ConstructionClass::Light) => 0.078,
+                (BuildingCategory::Residential, NightVentilation::Increased, SummerClimateRegion::C, ConstructionClass::Medium) => 0.092,
+                (BuildingCategory::Residential, NightVentilation::Increased, SummerClimateRegion::C, ConstructionClass::Heavy) => 0.101,
+
+                // RESIDENTIAL - HIGH
+                (BuildingCategory::Residential, NightVentilation::High, SummerClimateRegion::A, ConstructionClass::Light) => 0.128,
+                (BuildingCategory::Residential, NightVentilation::High, SummerClimateRegion::A, ConstructionClass::Medium) => 0.160,
+                (BuildingCategory::Residential, NightVentilation::High, SummerClimateRegion::A, ConstructionClass::Heavy) => 0.181,
+                (BuildingCategory::Residential, NightVentilation::High, SummerClimateRegion::B, ConstructionClass::Light) => 0.117,
+                (BuildingCategory::Residential, NightVentilation::High, SummerClimateRegion::B, ConstructionClass::Medium) => 0.152,
+                (BuildingCategory::Residential, NightVentilation::High, SummerClimateRegion::B, ConstructionClass::Heavy) => 0.171,
+                (BuildingCategory::Residential, NightVentilation::High, SummerClimateRegion::C, ConstructionClass::Light) => 0.105,
+                (BuildingCategory::Residential, NightVentilation::High, SummerClimateRegion::C, ConstructionClass::Medium) => 0.143,
+                (BuildingCategory::Residential, NightVentilation::High, SummerClimateRegion::C, ConstructionClass::Heavy) => 0.158,
+
+                // NON-RESIDENTIAL - NONE
+                (BuildingCategory::NonResidential, NightVentilation::None, SummerClimateRegion::A, ConstructionClass::Light) => 0.013,
+                (BuildingCategory::NonResidential, NightVentilation::None, SummerClimateRegion::A, ConstructionClass::Medium) => 0.020,
+                (BuildingCategory::NonResidential, NightVentilation::None, SummerClimateRegion::A, ConstructionClass::Heavy) => 0.025,
+                (BuildingCategory::NonResidential, NightVentilation::None, SummerClimateRegion::B, ConstructionClass::Light) => 0.007,
+                (BuildingCategory::NonResidential, NightVentilation::None, SummerClimateRegion::B, ConstructionClass::Medium) => 0.013,
+                (BuildingCategory::NonResidential, NightVentilation::None, SummerClimateRegion::B, ConstructionClass::Heavy) => 0.018,
+                (BuildingCategory::NonResidential, NightVentilation::None, SummerClimateRegion::C, ConstructionClass::Light) => 0.000,
+                (BuildingCategory::NonResidential, NightVentilation::None, SummerClimateRegion::C, ConstructionClass::Medium) => 0.006,
+                (BuildingCategory::NonResidential, NightVentilation::None, SummerClimateRegion::C, ConstructionClass::Heavy) => 0.011,
+
+                // NON-RESIDENTIAL - INCREASED
+                (BuildingCategory::NonResidential, NightVentilation::Increased, SummerClimateRegion::A, ConstructionClass::Light) => 0.071,
+                (BuildingCategory::NonResidential, NightVentilation::Increased, SummerClimateRegion::A, ConstructionClass::Medium) => 0.089,
+                (BuildingCategory::NonResidential, NightVentilation::Increased, SummerClimateRegion::A, ConstructionClass::Heavy) => 0.101,
+                (BuildingCategory::NonResidential, NightVentilation::Increased, SummerClimateRegion::B, ConstructionClass::Light) => 0.060,
+                (BuildingCategory::NonResidential, NightVentilation::Increased, SummerClimateRegion::B, ConstructionClass::Medium) => 0.081,
+                (BuildingCategory::NonResidential, NightVentilation::Increased, SummerClimateRegion::B, ConstructionClass::Heavy) => 0.092,
+                (BuildingCategory::NonResidential, NightVentilation::Increased, SummerClimateRegion::C, ConstructionClass::Light) => 0.048,
+                (BuildingCategory::NonResidential, NightVentilation::Increased, SummerClimateRegion::C, ConstructionClass::Medium) => 0.072,
+                (BuildingCategory::NonResidential, NightVentilation::Increased, SummerClimateRegion::C, ConstructionClass::Heavy) => 0.083,
+
+                // NON-RESIDENTIAL - HIGH
+                (BuildingCategory::NonResidential, NightVentilation::High, SummerClimateRegion::A, ConstructionClass::Light) => 0.090,
+                (BuildingCategory::NonResidential, NightVentilation::High, SummerClimateRegion::A, ConstructionClass::Medium) => 0.135,
+                (BuildingCategory::NonResidential, NightVentilation::High, SummerClimateRegion::A, ConstructionClass::Heavy) => 0.170,
+                (BuildingCategory::NonResidential, NightVentilation::High, SummerClimateRegion::B, ConstructionClass::Light) => 0.082,
+                (BuildingCategory::NonResidential, NightVentilation::High, SummerClimateRegion::B, ConstructionClass::Medium) => 0.124,
+                (BuildingCategory::NonResidential, NightVentilation::High, SummerClimateRegion::B, ConstructionClass::Heavy) => 0.160,
+                (BuildingCategory::NonResidential, NightVentilation::High, SummerClimateRegion::C, ConstructionClass::Light) => 0.074,
+                (BuildingCategory::NonResidential, NightVentilation::High, SummerClimateRegion::C, ConstructionClass::Medium) => 0.113,
+                (BuildingCategory::NonResidential, NightVentilation::High, SummerClimateRegion::C, ConstructionClass::Heavy) => 0.145,
+            }
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn test_exemption_residential_highly_shaded() {
+            let room = CriticalRoom {
+                actual_floor_area: 25.0,
+                room_depth: 5.0,
+                room_height: 2.5,
+                has_opposite_windows: false,
+                category: BuildingCategory::Residential,
+                climate_region: SummerClimateRegion::C,
+                construction: ConstructionClass::Light,
+                night_ventilation: NightVentilation::Increased,
+                has_passive_cooling: false,
+                windows: vec![
+                    OverheatingWindow {
+                        area: 5.0, // f_w_g = 5/25 = 0.20 (<= 0.35 threshold)
+                        g_value: 0.60,
+                        f_c: 0.25, // <= 0.30 threshold for g > 0.4
+                        f_s: 1.0,
+                        inclination_deg: 90.0,
+                        is_north_oriented: false,
+                        is_permanently_shaded: false,
+                    }
+                ]
+            };
+
+            let result = OverheatingEngine::evaluate_room(&room);
+            assert_eq!(result.exemption, ExemptionStatus::ExemptResidentialHighlyShaded);
+            assert_eq!(result.passes, true);
+        }
+
+        #[test]
+        fn test_effective_area_capping() {
+            // A terribly designed, extremely deep room (10m deep, only 2.5m high)
+            let room = CriticalRoom {
+                actual_floor_area: 50.0, // 5m wide x 10m deep
+                room_depth: 10.0,
+                room_height: 2.5,
+                has_opposite_windows: false, // Cap is 3 * 2.5 = 7.5m
+                category: BuildingCategory::Residential,
+                climate_region: SummerClimateRegion::C,
+                construction: ConstructionClass::Light,
+                night_ventilation: NightVentilation::None,
+                has_passive_cooling: false,
+                windows: vec![
+                    OverheatingWindow {
+                        area: 10.0,
+                        g_value: 0.60,
+                        f_c: 1.0,
+                        f_s: 1.0,
+                        inclination_deg: 90.0,
+                        is_north_oriented: false,
+                        is_permanently_shaded: false,
+                    }
+                ]
+            };
+
+            let result = OverheatingEngine::evaluate_room(&room);
+            
+            // Effective area should be capped: width 5m * max_depth 7.5m = 37.5m²
+            // This means f_w_g is calculated as 10/37.5 = 0.266 instead of 10/50 = 0.20
+            // S_vorh = (10 * 0.6) / 37.5 = 0.16
+            
+            assert_eq!(result.exemption, ExemptionStatus::NotExempt);
+            assert_eq!(result.passes, false); // Massive overheating expected
+            assert!((result.s_vorh - 0.16).abs() < 0.001);
+        }
+    }
+}
+

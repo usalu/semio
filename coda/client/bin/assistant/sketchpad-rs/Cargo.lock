@@ -152,6 +152,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "generational-arena"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "877e94aff08e743b651baaea359664321055749b398adff8740a7399af7796e7"
+dependencies = [
+ "cfg-if",
+ "serde",
+]
+
+[[package]]
 name = "geo"
 version = "0.33.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -502,6 +512,7 @@ name = "sketchpad-rs"
 version = "0.1.0"
 dependencies = [
  "console_error_panic_hook",
+ "generational-arena",
  "geo",
  "geo-booleanop",
  "js-sys",

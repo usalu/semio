@@ -1206,7 +1206,109 @@ function syncUIFromState(state) {
     updateStats();
 }
 
+window.visNetwork = null;
+window.currentSuggestions = [];
+
+function initGraph(graphData) {
+    const container = document.getElementById('graph-container');
+    if (!container || !window.vis) return;
+    const data = {
+        nodes: new vis.DataSet(graphData.nodes),
+        edges: new vis.DataSet(graphData.edges)
+    };
+    const options = {
+        nodes: { shape: 'box', margin: 10, font: { color: '#ffffff' } },
+        edges: { color: '#38bdf8', arrows: 'to' },
+        groups: {
+            Building: { color: { background: '#ef4444', border: '#b91c1c' } },
+            Space: { color: { background: '#38bdf8', border: '#0284c7' } },
+            Wall: { color: { background: '#fbbf24', border: '#b45309' } },
+            Roof: { color: { background: '#f59e0b', border: '#b45309' } },
+            Slab: { color: { background: '#d97706', border: '#b45309' } },
+            Window: { color: { background: '#818cf8', border: '#4f46e5' } },
+            Calculation: { shape: 'diamond', font: { size: 16, bold: true }, color: { background: '#22c55e', border: '#166534' } }
+        },
+        physics: { stabilization: true }
+    };
+    window.visNetwork = new vis.Network(container, data, options);
+
+    // Setup click handler for physics documentation
+    window.visNetwork.on("click", function (params) {
+        const infoPanel = document.getElementById('info-panel');
+        if (params.nodes.length > 0) {
+            const nodeId = params.nodes[0];
+            const nodesDataset = window.visNetwork.body.data.nodes;
+            const node = nodesDataset.get(nodeId);
+            
+            if (node && node.doc) {
+                const infoTitle = document.getElementById('info-title');
+                const infoContent = document.getElementById('info-content');
+                
+                // Extract property name cleanly
+                infoTitle.innerText = node.label.split(':')[0];
+                
+                // Simple markdown-to-HTML parser for the doc
+                let htmlDoc = node.doc.replace(/\*\*(.*?)\*\*/g, '<b style="color:white;">$1</b>');
+                htmlDoc = htmlDoc.replace(/\n/g, '<br/><br/>');
+                
+                infoContent.innerHTML = htmlDoc;
+                infoPanel.classList.add('visible');
+                
+                // Render math equations using KaTeX if available
+                if (window.renderMathInElement) {
+                    window.renderMathInElement(infoContent, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false}
+                        ],
+                        throwOnError: false
+                    });
+                }
+            } else {
+                infoPanel.classList.remove('visible');
+            }
+        } else {
+            infoPanel.classList.remove('visible');
+        }
+    });
+}
+function updateGraph(graphData) {
+    if (!window.visNetwork) {
+        initGraph(graphData);
+    } else {
+        window.visNetwork.setData({
+            nodes: new vis.DataSet(graphData.nodes),
+            edges: new vis.DataSet(graphData.edges)
+        });
+    }
+}
+
+function renderSuggestions() {
+    const list = document.getElementById('suggestions-list');
+    if (!list) return;
+    list.innerHTML = '';
+    if (window.currentSuggestions.length === 0) {
+        list.innerHTML = '<li>No suggestions currently.</li>';
+    } else {
+        window.currentSuggestions.forEach(s => {
+            const li = document.createElement('li');
+            li.style.marginBottom = '6px';
+            li.textContent = s;
+            list.appendChild(li);
+        });
+    }
+}
+
 function displayRustResults(data) {
+    // Update Graph and Suggestions
+    if (data.graph) {
+        updateGraph(data.graph);
+    }
+    if (data.suggestions) {
+        window.currentSuggestions = data.suggestions;
+        renderSuggestions();
+    }
+
     // Update the bottom status bar
     if (data.envelope_areas_m2) {
         document.getElementById('stat-area').textContent = data.envelope_areas_m2.total_floor.toFixed(1) + ' m²';
@@ -1216,44 +1318,75 @@ function displayRustResults(data) {
     }
 
     // Populate and show the floating Results Overlay card
+    window.lastEnergyData = data;
     const overlay = document.getElementById('results-overlay');
     const content = document.getElementById('results-content');
     if (overlay && content) {
         let html = '';
         if (data.envelope_areas_m2) {
-            html += `<div class="result-row"><span class="result-label">Floor Area:</span><span class="result-value">${data.envelope_areas_m2.total_floor.toFixed(1)} m²</span></div>`;
+            html += `<div class="result-row" data-result-key="floor_area"><span class="result-label">Floor Area:</span><span class="result-value">${data.envelope_areas_m2.total_floor.toFixed(1)} m²</span></div>`;
         }
         if (data.tabula_u_values) {
-            html += `<div class="result-row"><span class="result-label">U-Wall:</span><span class="result-value">${data.tabula_u_values.wall_W_m2K.toFixed(2)} W/m²K</span></div>`;
-            html += `<div class="result-row"><span class="result-label">U-Window:</span><span class="result-value">${data.tabula_u_values.window_W_m2K.toFixed(2)} W/m²K</span></div>`;
+            html += `<div class="result-row" data-result-key="u_wall"><span class="result-label">U-Wall:</span><span class="result-value">${data.tabula_u_values.wall_W_m2K.toFixed(2)} W/m²K</span></div>`;
+            html += `<div class="result-row" data-result-key="u_window"><span class="result-label">U-Window:</span><span class="result-value">${data.tabula_u_values.window_W_m2K.toFixed(2)} W/m²K</span></div>`;
         }
         if (data.heating_demand) {
-            html += `<div class="result-row"><span class="result-label">Heating Demand:</span><span class="result-value highlight">${data.heating_demand.specific_Q_H_nd_kWh_m2a.toFixed(1)} kWh/m²a</span></div>`;
+            html += `<div class="result-row" data-result-key="heating_demand"><span class="result-label">Heating Demand:</span><span class="result-value highlight">${data.heating_demand.specific_Q_H_nd_kWh_m2a.toFixed(1)} kWh/m²a</span></div>`;
         }
         if (data.heat_losses) {
-            html += `<div class="result-row"><span class="result-label">Heat Losses:</span><span class="result-value">${data.heat_losses.Q_ht_kWh_a.toFixed(1)} kWh/a</span></div>`;
+            html += `<div class="result-row" data-result-key="heat_losses"><span class="result-label">Heat Losses:</span><span class="result-value">${data.heat_losses.Q_ht_kWh_a.toFixed(1)} kWh/a</span></div>`;
             if (data.heat_losses.transmission_loss_kWh_a) {
-                html += `<div class="result-row"><span class="result-label">Transmission Loss:</span><span class="result-value">${data.heat_losses.transmission_loss_kWh_a.toFixed(1)} kWh/a</span></div>`;
+                html += `<div class="result-row" data-result-key="transmission_loss"><span class="result-label" style="padding-left:12px;">• Transmission Loss:</span><span class="result-value">${data.heat_losses.transmission_loss_kWh_a.toFixed(1)} kWh/a</span></div>`;
             }
             if (data.heat_losses.ventilation_loss_kWh_a) {
-                html += `<div class="result-row"><span class="result-label">Ventilation Loss:</span><span class="result-value">${data.heat_losses.ventilation_loss_kWh_a.toFixed(1)} kWh/a</span></div>`;
+                html += `<div class="result-row" data-result-key="ventilation_loss"><span class="result-label" style="padding-left:12px;">• Ventilation Loss:</span><span class="result-value">${data.heat_losses.ventilation_loss_kWh_a.toFixed(1)} kWh/a</span></div>`;
             }
         }
         if (data.heat_gains) {
             if (typeof data.heat_gains.solar_gains_kWh_a === 'number') {
-                html += `<div class="result-row"><span class="result-label">Solar Gains:</span><span class="result-value">${data.heat_gains.solar_gains_kWh_a.toFixed(1)} kWh/a</span></div>`;
+                html += `<div class="result-row" data-result-key="solar_gains"><span class="result-label">Solar Gains:</span><span class="result-value">${data.heat_gains.solar_gains_kWh_a.toFixed(1)} kWh/a</span></div>`;
             }
             if (typeof data.heat_gains.internal_gains_kWh_a === 'number') {
-                html += `<div class="result-row"><span class="result-label" style="color: #38bdf8; font-weight: 600;">Internal Gains (DIN V 18599):</span><span class="result-value highlight" style="color: #38bdf8;">${data.heat_gains.internal_gains_kWh_a.toFixed(1)} kWh/a</span></div>`;
+                html += `<div class="result-row" data-result-key="internal_gains"><span class="result-label" style="color: #38bdf8; font-weight: 600;">Internal Gains (DIN V 18599):</span><span class="result-value highlight" style="color: #38bdf8;">${data.heat_gains.internal_gains_kWh_a.toFixed(1)} kWh/a</span></div>`;
             }
         }
         if (data.final_energy) {
-            html += `<div class="result-row"><span class="result-label">Final Energy:</span><span class="result-value">${data.final_energy.specific_Q_final_kWh_m2a.toFixed(1)} kWh/m²a</span></div>`;
+            html += `<div class="result-row" data-result-key="final_energy"><span class="result-label">Final Energy:</span><span class="result-value">${data.final_energy.specific_Q_final_kWh_m2a.toFixed(1)} kWh/m²a</span></div>`;
+        }
+        if (data.overheating) {
+            const isExempt = data.overheating.exemption !== "Not Exempt";
+            const passes = data.overheating.passes;
+            const statusText = isExempt ? data.overheating.exemption : (passes ? "Pass" : "Fail");
+            const textColor = (passes || isExempt) ? "#22c55e" : "#ef4444";
+            html += `<div class="result-row" data-result-key="overheating"><span class="result-label" style="color: ${textColor}; font-weight: 600;">Summer Overheating:</span><span class="result-value highlight" style="color: ${textColor}; font-weight: 600;">${statusText} (S_v: ${data.overheating.s_vorh.toFixed(3)} / S_z: ${data.overheating.s_zul.toFixed(3)})</span></div>`;
         }
         content.innerHTML = html;
         overlay.classList.add('visible');
     }
     updateInsulationVisualizer(data);
+
+    // If formula modal is currently active, update its live calculations
+    const modal = document.getElementById('formula-modal');
+    if (modal && modal.classList.contains('active')) {
+        const key = modal.getAttribute('data-active-key');
+        const config = RESULT_CONFIGS[key];
+        const bodyEl = document.getElementById('formula-modal-body');
+        if (config && bodyEl) {
+            const liveContainer = bodyEl.querySelector('.live-explanation-container');
+            if (liveContainer && config.calculateExplanation) {
+                liveContainer.innerHTML = config.calculateExplanation(data);
+                if (window.renderMathInElement) {
+                    window.renderMathInElement(liveContainer, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false}
+                        ],
+                        throwOnError: false
+                    });
+                }
+            }
+        }
+    }
 }
 
 function updateInsulationVisualizer(data) {
@@ -1309,10 +1442,18 @@ function updateInsulationVisualizer(data) {
 async function dispatchState() {
     try {
         if (!window.sketchpadRs) {
-            if (window.wasmInitPromise) await window.wasmInitPromise;
-            else {
-                logToConsole("WASM engine not ready yet.");
-                return;
+            let retries = 30; // 3 seconds max
+            while (!window.sketchpadRs && !window.wasmInitPromise && retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                retries--;
+            }
+            if (!window.sketchpadRs) {
+                if (window.wasmInitPromise) {
+                    await window.wasmInitPromise;
+                } else {
+                    logToConsole("WASM engine not ready yet.");
+                    return;
+                }
             }
         }
         const payload = getRustStatePayload();
@@ -1451,8 +1592,391 @@ function initCompass() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Event Listeners & Init
+// //#region Result Formulas & Calculations Modal
 // ─────────────────────────────────────────────────────────────────────────────
+
+const RESULT_CONFIGS = {
+    floor_area: {
+        title: "Floor Area ($A_{NGF}$)",
+        formula: "The Net Floor Area is the total usable floor area of the building, calculated by summing the area of all 2D zones and multiplying by the number of stories:<br/>$$A_{NGF} = A_{2D} \\times n_{stories}$$",
+        inputs: ["num-stories", "story-height"],
+        calculateExplanation: (data) => {
+            if (!data.envelope_areas_m2) return '';
+            const total = data.envelope_areas_m2.total_floor;
+            const num_stories = parseInt(document.getElementById('num-stories').value) || 1;
+            const area_2d = total / num_stories;
+            return `
+                <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live Calculation:</strong><br/>
+                    $$A_{NGF} = ${area_2d.toFixed(1)}\\text{ m}^2 \\times ${num_stories} = ${total.toFixed(1)}\\text{ m}^2$$
+                </div>
+            `;
+        }
+    },
+    u_wall: {
+        title: "U-Wall (Thermal Transmittance of Walls)",
+        formula: "The U-value measures heat loss through the wall. Lower values mean better insulation. Calculated as:<br/>$$U_{wall} = \\frac{1}{R_{si} + \\sum \\frac{d_i}{\\lambda_i} + R_{se}}$$ <br/> Where $R_{si} = 0.13\\text{ m}^2K/W$ and $R_{se} = 0.04\\text{ m}^2K/W$. By default, standard values are fetched from the TABULA database based on building age, typologies, and refurbishment scenario.",
+        inputs: ["tabula-type", "tabula-year", "tabula-scenario", "custom-wall-mat", "custom-wall-thick"],
+        calculateExplanation: (data) => {
+            if (!data.tabula_u_values) return '';
+            const u_wall = data.tabula_u_values.wall_W_m2K;
+            let breakdownHtml = '';
+            if (data.wall_insulation_breakdown) {
+                const breakdown = data.wall_insulation_breakdown;
+                breakdownHtml = `
+                    <div style="margin-top: 8px; font-size: 0.85rem; color: #94a3b8;">
+                        • Base Wall U-Value: ${breakdown.u_wall_base.toFixed(3)} W/m²K<br/>
+                        • Combined U-Value: ${breakdown.u_wall_final.toFixed(3)} W/m²K
+                    </div>
+                `;
+            }
+            return `
+                <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live U-Wall:</strong> <span style="color:#38bdf8; font-weight:700;">${u_wall.toFixed(3)} W/m²K</span>
+                    ${breakdownHtml}
+                </div>
+            `;
+        }
+    },
+    u_window: {
+        title: "U-Window (Thermal Transmittance of Windows)",
+        formula: "The U-value of windows, determined by glazing and shutter control. If night shutters are automated or manual, the effective U-value is adjusted:<br/>$$U_{w,eff} = U_w \\cdot (1 - f_{sh}) + U_{w,sh} \\cdot f_{sh}$$<br/>Where $f_{sh}$ is the shutter usage fraction (dependent on automation class and climate region) and $U_{w,sh}$ represents the combined window+shutter resistance.",
+        inputs: ["shutter-control", "tabula-year"],
+        calculateExplanation: (data) => {
+            if (!data.tabula_u_values) return '';
+            const u_win = data.tabula_u_values.window_W_m2K;
+            return `
+                <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live U-Window:</strong> <span style="color:#38bdf8; font-weight:700;">${u_win.toFixed(3)} W/m²K</span>
+                </div>
+            `;
+        }
+    },
+    heating_demand: {
+        title: "Heating Demand ($Q_{h}$)",
+        formula: "The annual space heating demand of the building based on the DIN V 4108-6/DIN V 18599 monthly energy balance:<br/>$$Q_h = Q_l - \\eta \\cdot Q_g$$<br/>Where $Q_l$ is total losses (transmission + ventilation), $Q_g$ is total gains (solar + internal), and $\\eta$ is the gain utilization factor dependent on building thermal mass time constant $\\tau$.",
+        inputs: ["tabula-type", "tabula-year", "tabula-scenario", "heating-system", "thermal-bridge", "ground-contact", "shutter-control", "climate-region", "usage-profile", "automation-class"],
+        calculateExplanation: (data) => {
+            if (!data.heating_demand) return '';
+            const spec = data.heating_demand.specific_Q_H_nd_kWh_m2a;
+            const q_h = data.heating_demand.Q_H_nd_kWh_a;
+            return `
+                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live Annual Heating Demand:</strong> <span style="color:#10b981; font-weight:700;">${q_h.toFixed(1)} kWh/a</span><br/>
+                    <strong>Specific Demand:</strong> <span style="color:#10b981; font-weight:700;">${spec.toFixed(1)} kWh/m²a</span>
+                </div>
+            `;
+        }
+    },
+    heat_losses: {
+        title: "Total Heat Losses ($Q_l$)",
+        formula: "The sum of heat lost through the building envelope via conduction (transmission) and air exchanges (ventilation):<br/>$$Q_l = Q_T + Q_V$$",
+        inputs: ["thermal-bridge", "ground-contact", "climate-region", "air-tightness", "has-atd", "mech-supply", "mech-exhaust", "heat-recovery", "mech-hours"],
+        calculateExplanation: (data) => {
+            if (!data.heat_losses) return '';
+            const q_l = data.heat_losses.Q_ht_kWh_a;
+            const q_t = data.heat_losses.transmission_loss_kWh_a || 0;
+            const q_v = data.heat_losses.ventilation_loss_kWh_a || 0;
+            return `
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live Total Losses ($Q_l$):</strong> <span style="color:#f87171; font-weight:700;">${q_l.toFixed(1)} kWh/a</span><br/>
+                    <strong>Transmission Losses ($Q_T$):</strong> ${q_t.toFixed(1)} kWh/a<br/>
+                    <strong>Ventilation Losses ($Q_V$):</strong> ${q_v.toFixed(1)} kWh/a
+                </div>
+            `;
+        }
+    },
+    transmission_loss: {
+        title: "Transmission Loss ($Q_T$)",
+        formula: "Heat loss through walls, roofs, windows, and thermal bridges directly to the outside or ground:<br/>$$Q_T = [ H_{T,D} + H_{T,iu} \\cdot F_x + H_{T,WB} ] \\cdot (\\theta_i - \\theta_e) \\cdot t$$<br/>Where $H_{T,D}$ is direct transmission, $F_x$ is temperature correction factor, and $H_{T,WB}$ is the thermal bridge penalty.",
+        inputs: ["thermal-bridge", "ground-contact", "climate-region"],
+        calculateExplanation: (data) => {
+            if (!data.heat_losses || !data.heat_losses.transmission_loss_kWh_a) return '';
+            const q_t = data.heat_losses.transmission_loss_kWh_a;
+            return `
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live Transmission Losses ($Q_T$):</strong> <span style="color:#f87171; font-weight:700;">${q_t.toFixed(1)} kWh/a</span>
+                </div>
+            `;
+        }
+    },
+    ventilation_loss: {
+        title: "Ventilation Loss ($Q_V$)",
+        formula: "Heat loss caused by building air change through window airing, infiltration, and mechanical ventilation systems:<br/>$$Q_V = [ H_{V,inf} + H_{V,win} + H_{V,mech} ] \\cdot (\\theta_i - \\theta_{V,supply}) \\cdot t$$",
+        inputs: ["air-tightness", "has-atd", "mech-supply", "mech-exhaust", "heat-recovery", "mech-hours"],
+        calculateExplanation: (data) => {
+            if (!data.heat_losses || !data.heat_losses.ventilation_loss_kWh_a) return '';
+            const q_v = data.heat_losses.ventilation_loss_kWh_a;
+            return `
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live Ventilation Losses ($Q_V$):</strong> <span style="color:#f87171; font-weight:700;">${q_v.toFixed(1)} kWh/a</span>
+                </div>
+            `;
+        }
+    },
+    solar_gains: {
+        title: "Solar Gains ($Q_S$)",
+        formula: "Passive solar heat gains received through transparent building elements (windows):<br/>$$Q_S = \\sum I_j \\cdot A_{w,j} \\cdot g \\cdot F_F \\cdot F_C$$<br/>Where $I_j$ is solar radiation, $A_{w,j}$ is window area, $g$ is solar factor, $F_F$ is frame fraction, and $F_C$ is shading factor.",
+        inputs: ["climate-region", "building-rotation"],
+        calculateExplanation: (data) => {
+            if (!data.heat_gains || typeof data.heat_gains.solar_gains_kWh_a !== 'number') return '';
+            const q_s = data.heat_gains.solar_gains_kWh_a;
+            return `
+                <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live Solar Heat Gains ($Q_S$):</strong> <span style="color:#38bdf8; font-weight:700;">${q_s.toFixed(1)} kWh/a</span>
+                </div>
+            `;
+        }
+    },
+    internal_gains: {
+        title: "Internal Gains ($Q_I$)",
+        formula: "Heat generated inside the building by occupants, electrical equipment, and artificial lighting, depending on usage profile:<br/>$$Q_I = [ q_{occ} \\cdot N_{occ} + q_{equip} + q_{lighting} ] \\cdot t$$",
+        inputs: ["usage-profile", "custom-occupants", "custom-equipment", "lighting-exhaust", "material-transport"],
+        calculateExplanation: (data) => {
+            if (!data.heat_gains || typeof data.heat_gains.internal_gains_kWh_a !== 'number') return '';
+            const q_i = data.heat_gains.internal_gains_kWh_a;
+            return `
+                <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live Internal Heat Gains ($Q_I$):</strong> <span style="color:#38bdf8; font-weight:700;">${q_i.toFixed(1)} kWh/a</span>
+                </div>
+            `;
+        }
+    },
+    final_energy: {
+        title: "Final Energy ($Q_{f}$)",
+        formula: "The actual energy purchased for heating, factoring in the efficiency (SPF/COP or boiler losses) of the heating system:<br/>$$Q_{final} = \\frac{Q_h}{\\eta_{sys}}$$ <br/> Where the system efficiency $\\eta_{sys}$ depends on the heat generator type.",
+        inputs: ["heating-system"],
+        calculateExplanation: (data) => {
+            if (!data.final_energy) return '';
+            const q_f = data.final_energy.specific_Q_final_kWh_m2a;
+            return `
+                <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Live Specific Final Energy:</strong> <span style="color:#38bdf8; font-weight:700;">${q_f.toFixed(1)} kWh/m²a</span>
+                </div>
+            `;
+        }
+    },
+    overheating: {
+        title: "Summer Overheating ($S_{vorh}$ vs $S_{zul}$)",
+        formula: "Thermal protection against summer overheating according to DIN 4108-2. The existing solar entry factor $S_{vorh}$ must not exceed the maximum allowable solar entry factor $S_{zul}$:<br/>$$S_{vorh} = \\frac{\\sum A_i \\cdot g_{tot,i}}{A_{NGF,eff}} \\le S_{zul}$$<br/>Where $g_{tot} = g \\cdot F_C \\cdot F_S$. Certain rooms are exempt if windows are small or heavily shaded.",
+        inputs: ["tabula-year", "shutter-control", "climate-region", "usage-profile", "air-tightness", "has-atd", "mech-supply"],
+        calculateExplanation: (data) => {
+            if (!data.overheating) return '';
+            const sv = data.overheating.s_vorh;
+            const sz = data.overheating.s_zul;
+            const isExempt = data.overheating.exemption !== "Not Exempt";
+            const status = isExempt ? `Exempt (${data.overheating.exemption})` : (data.overheating.passes ? "Pass" : "Fail");
+            return `
+                <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 12px; border-radius: 8px; margin: 12px 0;">
+                    <strong>Status:</strong> <span style="font-weight:700;">${status}</span><br/>
+                    <strong>Existing Solar Entry ($S_{vorh}$):</strong> ${sv.toFixed(4)}<br/>
+                    <strong>Allowable Solar Entry ($S_{zul}$):</strong> ${sz.toFixed(4)}
+                </div>
+            `;
+        }
+    }
+};
+
+const FRIENDLY_LABELS = {
+    'num-stories': 'Number of Stories',
+    'story-height': 'Story Height (m)',
+    'tabula-type': 'House Type',
+    'tabula-year': 'Year of Build',
+    'tabula-scenario': 'Refurbishment Status',
+    'custom-wall-mat': 'Wall Material Override',
+    'custom-wall-thick': 'Wall Thickness Override (m)',
+    'shutter-control': 'Shutter Control',
+    'heating-system': 'Heating System',
+    'thermal-bridge': 'Thermal Bridge Category',
+    'ground-contact': 'Ground Contact Type',
+    'climate-region': 'Climate Region',
+    'usage-profile': 'Usage Profile (DIN V 18599)',
+    'automation-class': 'Automation Class',
+    'air-tightness': 'Air Tightness Category',
+    'has-atd': 'Has Air Transfer Devices (ATD)',
+    'mech-supply': 'Mech. Supply (m³/h)',
+    'mech-exhaust': 'Mech. Exhaust (m³/h)',
+    'heat-recovery': 'Heat Recovery (%)',
+    'mech-hours': 'Mech. Sys Hrs/Day',
+    'lighting-exhaust': 'Lighting Exhaust Type',
+    'material-transport': 'Material Transport',
+    'custom-occupants': 'Occupants (Custom)',
+    'custom-equipment': 'Equipment (Watts)',
+    'building-rotation': 'Building Rotation (North Angle)'
+};
+
+function createModalInputControl(sourceId) {
+    const sourceEl = document.getElementById(sourceId);
+    if (!sourceEl) return '';
+    
+    let labelText = FRIENDLY_LABELS[sourceId] || sourceId;
+
+    let controlHtml = '';
+    if (sourceEl.tagName === 'SELECT') {
+        let optionsHtml = '';
+        Array.from(sourceEl.options).forEach(opt => {
+            optionsHtml += `<option value="${opt.value}" ${opt.value === sourceEl.value ? 'selected' : ''}>${opt.text}</option>`;
+        });
+        controlHtml = `
+            <div class="modal-form-row" style="margin-bottom: 12px;">
+                <label style="display:block; margin-bottom:4px; font-weight:500; color:#94a3b8; font-size:0.85rem;">${labelText}</label>
+                <select data-source-id="${sourceId}" style="width:100%; background:#1e293b; border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#e2e8f0; padding:6px 10px; font-size:0.85rem;">
+                    ${optionsHtml}
+                </select>
+            </div>
+        `;
+    } else if (sourceEl.tagName === 'INPUT' && sourceEl.type === 'checkbox') {
+        controlHtml = `
+            <div class="modal-form-row" style="margin-bottom: 12px; display:flex; align-items:center; gap:8px;">
+                <input type="checkbox" data-source-id="${sourceId}" ${sourceEl.checked ? 'checked' : ''} style="width:16px; height:16px; margin:0; cursor:pointer;">
+                <label style="font-weight:500; color:#e2e8f0; font-size:0.85rem; cursor:pointer;">${labelText}</label>
+            </div>
+        `;
+    } else if (sourceEl.tagName === 'INPUT' && (sourceEl.type === 'number' || sourceEl.type === 'range' || sourceEl.type === 'hidden')) {
+        const minAttr = sourceEl.getAttribute('min') ? `min="${sourceEl.getAttribute('min')}"` : '';
+        const maxAttr = sourceEl.getAttribute('max') ? `max="${sourceEl.getAttribute('max')}"` : '';
+        const stepAttr = sourceEl.getAttribute('step') ? `step="${sourceEl.getAttribute('step')}"` : '';
+        
+        if (sourceEl.type === 'range') {
+            controlHtml = `
+                <div class="modal-form-row" style="margin-bottom: 12px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                        <label style="font-weight:500; color:#94a3b8; font-size:0.85rem;">${labelText}</label>
+                        <span class="modal-range-val" style="color:#38bdf8; font-weight:600; font-size:0.85rem;">${sourceEl.value}°</span>
+                    </div>
+                    <input type="range" data-source-id="${sourceId}" value="${sourceEl.value}" ${minAttr} ${maxAttr} ${stepAttr} style="width:100%; cursor:pointer;">
+                </div>
+            `;
+        } else {
+            controlHtml = `
+                <div class="modal-form-row" style="margin-bottom: 12px;">
+                    <label style="display:block; margin-bottom:4px; font-weight:500; color:#94a3b8; font-size:0.85rem;">${labelText}</label>
+                    <input type="number" data-source-id="${sourceId}" value="${sourceEl.value}" ${minAttr} ${maxAttr} ${stepAttr} style="width:100%; background:#1e293b; border:1px solid rgba(255,255,255,0.1); border-radius:6px; color:#e2e8f0; padding:6px 10px; font-size:0.85rem;">
+                </div>
+            `;
+        }
+    }
+    return controlHtml;
+}
+
+function openFormulaModal(key) {
+    const config = RESULT_CONFIGS[key];
+    if (!config) return;
+
+    const modal = document.getElementById('formula-modal');
+    const titleEl = document.getElementById('formula-modal-title');
+    const bodyEl = document.getElementById('formula-modal-body');
+
+    if (!modal || !titleEl || !bodyEl) return;
+
+    titleEl.innerHTML = config.title;
+
+    let inputsHtml = '';
+    if (config.inputs && config.inputs.length > 0) {
+        inputsHtml += `<h4 style="color:#e2e8f0; margin:16px 0 8px 0; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:4px; font-size:0.9rem;">Interactive Inputs</h4>`;
+        config.inputs.forEach(id => {
+            inputsHtml += createModalInputControl(id);
+        });
+    }
+
+    bodyEl.innerHTML = `
+        <div class="formula-section" style="margin-bottom: 16px;">
+            <h4 style="color:#e2e8f0; margin-bottom:6px; font-size:0.9rem;">Calculation Method & Formula</h4>
+            <div class="formula-description" style="color:#94a3b8; background:rgba(0,0,0,0.15); border-radius:8px; padding:12px; border:1px solid rgba(255,255,255,0.03);">
+                ${config.formula}
+            </div>
+        </div>
+        <div class="live-explanation-container">
+            ${config.calculateExplanation ? config.calculateExplanation(window.lastEnergyData || {}) : ''}
+        </div>
+        <div class="modal-inputs-form" style="margin-top:16px;">
+            ${inputsHtml}
+        </div>
+    `;
+
+    bodyEl.querySelectorAll('[data-source-id]').forEach(control => {
+        const sourceId = control.getAttribute('data-source-id');
+        const sourceEl = document.getElementById(sourceId);
+        if (!sourceEl) return;
+
+        const eventName = (control.tagName === 'INPUT' && control.type === 'range') ? 'input' : 'change';
+
+        control.addEventListener(eventName, () => {
+            if (control.type === 'checkbox') {
+                sourceEl.checked = control.checked;
+            } else {
+                sourceEl.value = control.value;
+            }
+
+            if (control.type === 'range') {
+                const valDisplay = control.parentElement.querySelector('.modal-range-val');
+                if (valDisplay) valDisplay.textContent = control.value + '°';
+            }
+
+            sourceEl.dispatchEvent(new Event('input'));
+            sourceEl.dispatchEvent(new Event('change'));
+
+            dispatchState().then(() => {
+                const liveContainer = bodyEl.querySelector('.live-explanation-container');
+                if (liveContainer && config.calculateExplanation) {
+                    liveContainer.innerHTML = config.calculateExplanation(window.lastEnergyData || {});
+                    if (window.renderMathInElement) {
+                        window.renderMathInElement(liveContainer, {
+                            delimiters: [
+                                {left: '$$', right: '$$', display: true},
+                                {left: '$', right: '$', display: false}
+                            ],
+                            throwOnError: false
+                        });
+                    }
+                }
+            });
+        });
+    });
+
+    if (window.renderMathInElement) {
+        window.renderMathInElement(bodyEl, {
+            delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+            ],
+            throwOnError: false
+        });
+    }
+
+    modal.classList.add('active');
+    modal.setAttribute('data-active-key', key);
+}
+
+const btnCloseFormula = document.getElementById('btn-close-formula');
+const formulaModal = document.getElementById('formula-modal');
+if (btnCloseFormula && formulaModal) {
+    btnCloseFormula.addEventListener('click', () => {
+        formulaModal.classList.remove('active');
+        formulaModal.removeAttribute('data-active-key');
+    });
+    formulaModal.addEventListener('click', (e) => {
+        if (e.target === formulaModal) {
+            formulaModal.classList.remove('active');
+            formulaModal.removeAttribute('data-active-key');
+        }
+    });
+}
+
+const resultsContent = document.getElementById('results-content');
+if (resultsContent) {
+    resultsContent.addEventListener('click', (e) => {
+        const row = e.target.closest('.result-row');
+        if (row) {
+            const key = row.getAttribute('data-result-key');
+            if (key) {
+                openFormulaModal(key);
+            }
+        }
+    });
+}
+
+// //#endregion
 
 function initEventListeners() {
     document.getElementById('btn-add-zone').addEventListener('click', () => {
@@ -1602,6 +2126,41 @@ function initEventListeners() {
     if (btnCloseSimulator) {
         btnCloseSimulator.addEventListener('click', () => {
             simulatorModal.classList.remove('active');
+        });
+    }
+
+    const btnToggleGraph = document.getElementById('btn-toggle-graph');
+    const graphContainer = document.getElementById('graph-container');
+    const canvasContainer = document.getElementById('canvas-container');
+    
+    if (btnToggleGraph && graphContainer && canvasContainer) {
+        btnToggleGraph.addEventListener('click', () => {
+            if (graphContainer.style.display === 'none') {
+                graphContainer.style.display = 'block';
+                canvasContainer.style.display = 'none';
+                btnToggleGraph.classList.add('active');
+                if (window.visNetwork) window.visNetwork.fit();
+            } else {
+                graphContainer.style.display = 'none';
+                canvasContainer.style.display = 'block';
+                btnToggleGraph.classList.remove('active');
+            }
+        });
+    }
+
+    const btnGetSuggestions = document.getElementById('btn-get-suggestions');
+    const btnCloseSuggestions = document.getElementById('btn-close-suggestions');
+    const suggestionsModal = document.getElementById('suggestions-modal');
+
+    if (btnGetSuggestions && suggestionsModal) {
+        btnGetSuggestions.addEventListener('click', () => {
+            suggestionsModal.classList.add('active');
+            renderSuggestions();
+        });
+    }
+    if (btnCloseSuggestions && suggestionsModal) {
+        btnCloseSuggestions.addEventListener('click', () => {
+            suggestionsModal.classList.remove('active');
         });
     }
 }
