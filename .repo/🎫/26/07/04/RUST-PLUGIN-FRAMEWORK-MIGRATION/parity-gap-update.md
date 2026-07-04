@@ -19,10 +19,27 @@
 ### Pass 1 — Shell
 - Workbench left / details right panels, 40/30/30 layout, engagement rail, catalogue drag-drop, navbar chrome
 
-## Still open
-- Flow operator extension registration (`buildOsMediaFlowOperatorInfos`) for neuron previews
-- Full ProductShell settings/display panels
-- Per-tech spawned instance hosts (full `s/react` surface routing)
+### Pass 4 — Instance document sync on drill-in
+
+- `materialize_os_app_instance_document_json` + fixture registry in `framework/product/os/core/rs/instance.rs`
+- s plugin registers `semio.draw.json` / `jack.writer.json` fixtures; `openPluginInstance` carries `documentJson`
+- `os-shell` applies `setDocument` to spawned plugin WASM instance before render
+
+### Pass 5 — Interactive graph + compiled DAG + drill-in sync
+
+- Graph mutations: `moveMediaNode`, `connectMediaPorts`, `disconnectMediaEdge`, `removeAppInstance`, `patchAppSource` in s plugin
+- `spawnApp` routes to s-play (not shell `spawnProgram` intercept)
+- Compiled DAG: `media_graph_to_dag_fixture` + `dag_fixture_to_wire_literal` wire DSL in WriterCanvas
+- VFS double-click → `openInstance` / `exportMedia` / studio navigation
+- Bidirectional drill-in: spawned `setDocument` → `patchAppSource` on studio document
+- Parameters panel: min/max/step, categorical options; `addOption`/`removeOption` patch
+- Footer toolbar: undo / redo / checkpoint for studio mode
+
+## Still open (ProductShell chrome)
+- Global search (Ctrl+P) and per-window find (Ctrl+F)
+- Named layout save/load
+- Display and settings side panels
+- Browser History API URI sync (`popstate`)
 
 ## Tests
 - `cargo test -p s-plugin`: 17 passed

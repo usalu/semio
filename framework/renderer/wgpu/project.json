@@ -1,0 +1,23 @@
+{
+  "name": "@semio-tech/framework-renderer-wgpu",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "framework/renderer/wgpu",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test",
+        "cwd": "framework/renderer/wgpu"
+      }
+    },
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts wasm",
+        "cwd": "framework/renderer/wgpu"
+      }
+    }
+  },
+  "tags": ["scope:framework", "type:renderer"]
+}

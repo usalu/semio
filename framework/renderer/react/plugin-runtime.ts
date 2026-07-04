@@ -1,4 +1,11 @@
 import type { PluginManifest, UiNode, ViewState } from "./types.ts";
+import {
+	DEFAULT_PLUGIN_REGISTRY,
+	loadPluginModule as loadCorePluginModule,
+	loadPluginWasm as loadCorePluginWasm,
+	type PluginRegistryEntry,
+	type PluginWasmHandle as CorePluginWasmHandle,
+} from "@semio-tech/framework-core";
 
 export type PluginWasmHandle = {
 	readonly pluginId: string;
@@ -10,55 +17,27 @@ export type PluginWasmHandle = {
 	readonly dispose: () => void;
 };
 
-export type PluginRegistryEntry = {
-	readonly pluginId: string;
-	readonly moduleUrl: string;
-};
-
-export const DEFAULT_PLUGIN_REGISTRY: readonly PluginRegistryEntry[] = [
-	{ pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" },
-];
+export type { PluginRegistryEntry };
+export { DEFAULT_PLUGIN_REGISTRY };
 
 export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-	const module = (await import(/* @vite-ignore */ moduleUrl)) as {
-		default?: () => Promise<void> | void;
-		semio_plugin_manifest?: () => string;
-		semio_plugin_create_app?: (appId: string) => number;
-		semio_plugin_destroy_app?: (instanceId: number) => void;
-		semio_plugin_handle_command?: (instanceId: number, commandJson: string, viewStateJson: string) => string;
-		semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
-	};
-	if (module.default) await module.default();
-	if (!module.semio_plugin_manifest) {
-		throw new Error(`[DEBUG] plugin ${pluginId} missing semio_plugin_manifest export`);
-	}
-	const manifest = JSON.parse(module.semio_plugin_manifest()) as PluginManifest;
-	return {
-		pluginId,
-		manifest,
-		async createApp(appId: string) {
-			const create = module.semio_plugin_create_app;
-			if (!create) throw new Error(`plugin ${pluginId} missing create_app`);
-			return create(appId);
-		},
-		async destroyApp(instanceId: number) {
-			module.semio_plugin_destroy_app?.(instanceId);
-		},
-		async handleCommand(instanceId: number, commandJson: string, viewState: ViewState) {
-			const handle = module.semio_plugin_handle_command;
-			if (!handle) return [];
-			const raw = handle(instanceId, commandJson, JSON.stringify(viewState));
-			return JSON.parse(raw) as string[];
-		},
-		async render(instanceId: number, bodyKey: string, viewState: ViewState) {
-			const render = module.semio_plugin_render;
-			if (!render) throw new Error(`plugin ${pluginId} missing render`);
-			return JSON.parse(render(instanceId, bodyKey, JSON.stringify(viewState))) as UiNode;
-		},
-		dispose() {},
-	};
+	return adaptPluginHandle(await loadCorePluginModule(pluginId, moduleUrl));
 }
 
 export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-	return loadPluginModule(pluginId, moduleUrl);
+	return adaptPluginHandle(await loadCorePluginWasm(pluginId, moduleUrl));
+}
+
+function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
+	return {
+		pluginId: handle.pluginId,
+		manifest: handle.manifest as unknown as PluginManifest,
+		createApp: (appId) => handle.createApp(appId),
+		destroyApp: (instanceId) => handle.destroyApp(instanceId),
+		handleCommand: (instanceId, commandJson, viewState) =>
+			handle.handleCommand(instanceId, commandJson, viewState),
+		render: async (instanceId, bodyKey, viewState) =>
+			(await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
+		dispose: () => handle.dispose(),
+	};
 }

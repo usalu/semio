@@ -2,7 +2,6 @@
 
 use crate::draw::{DrawList, UiPipelines};
 use crate::text::FontAtlas;
-use std::sync::{Arc, Mutex};
 use wgpu::Surface;
 
 pub struct GpuContext {
@@ -32,7 +31,7 @@ impl GpuContext {
                 force_fallback_adapter: false,
             })
             .await
-            .ok_or("no adapter")?;
+            .map_err(|err| format!("adapter: {err:?}"))?;
         let (device, queue) = adapter
             .request_device(&wgpu::DeviceDescriptor {
                 label: Some("framework_renderer_wgpu"),
@@ -119,8 +118,6 @@ impl GpuContext {
             .upload_glyph_atlas(&self.queue, &atlas.pixels, atlas.width, atlas.height);
     }
 }
-
-pub type SharedGpu = Arc<Mutex<GpuContext>>;
 
 #[cfg(target_arch = "wasm32")]
 pub fn schedule_frame(callback: impl FnMut() + 'static) {

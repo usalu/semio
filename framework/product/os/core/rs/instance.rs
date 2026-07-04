@@ -1,7 +1,7 @@
 //! 📦 App instance schemas, parameters, and studio bindings.
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -463,6 +463,65 @@ pub fn media_port_spec_id(port_id: &str) -> Option<String> {
 }
 //#endregion 🔖Parameters
 
+//#region 🔖Materialize
+use std::sync::{Mutex, OnceLock};
+
+static OS_FIXTURE_JSON: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
+
+fn os_fixture_json_registry() -> &'static Mutex<HashMap<String, String>> {
+    OS_FIXTURE_JSON.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+/// @emoji 📎 Registers bundled fixture JSON for `payloadRef` materialization.
+pub fn register_os_fixture_json(slug: &str, json: &str) {
+    os_fixture_json_registry()
+        .lock()
+        .expect("fixture registry")
+        .insert(slug.into(), json.into());
+}
+
+/// @emoji 📎 Resolves `fixture:` and `upstream:` payload references on a source document.
+pub fn resolve_os_source_document(
+    source: &OsSourceDocument,
+    upstream_instances: &[OsAppInstance],
+) -> OsSourceDocument {
+    if let Some(payload_ref) = source.payload_ref.as_deref() {
+        if let Some(slug) = payload_ref.strip_prefix("fixture:") {
+            if let Some(json) = os_fixture_json_registry().lock().ok().and_then(|registry| registry.get(slug).cloned()) {
+                return OsSourceDocument {
+                    inline: Some(json),
+                    payload_ref: None,
+                    ..source.clone()
+                };
+            }
+        }
+        if let Some(upstream_id) = payload_ref.strip_prefix("upstream:") {
+            if let Some(upstream) = upstream_instances.iter().find(|entry| entry.id == upstream_id) {
+                return upstream.source_document.clone();
+            }
+        }
+    }
+    source.clone()
+}
+
+/// @emoji 🧩 Materializes a plugin document JSON from a studio app instance projection.
+pub fn materialize_os_app_instance_document_json(
+    instance: &OsAppInstance,
+    bindings: &[OsParameterFieldBinding],
+    parameters: &[OsParameter],
+    upstream_instances: &[OsAppInstance],
+) -> String {
+    let resolved = resolve_os_source_document(&instance.source_document, upstream_instances);
+    let projection = if let Some(inline) = resolved.inline {
+        serde_json::from_str::<Value>(&inline).unwrap_or_else(|_| json!({ "schema": resolved.format }))
+    } else {
+        json!({ "schema": resolved.format })
+    };
+    let with_params = apply_parameter_values_to_projection(projection, bindings, parameters, &instance.id);
+    serde_json::to_string(&with_params).unwrap_or_else(|_| "{}".into())
+}
+//#endregion 🔖Materialize
+
 //#region 🧪Tests
 #[cfg(test)]
 mod tests {
@@ -502,6 +561,28 @@ mod tests {
             "i1",
         );
         assert_eq!(overridden["brushSize"], 42.0);
+    }
+
+    #[test]
+    fn materializes_fixture_backed_instance_documents() {
+        register_os_fixture_json("semio.draw.json", r#"{"schema":"draw.document","id":"semio"}"#);
+        let instance = OsAppInstance {
+            id: "app-draw-1".into(),
+            program_id: "draw".into(),
+            app_id: "draw".into(),
+            label: "Draw".into(),
+            yields: "2d.drawing".into(),
+            source_document: OsSourceDocument {
+                format: "draw.document".into(),
+                vcs_json: None,
+                inline: None,
+                payload_ref: Some("fixture:semio.draw.json".into()),
+            },
+        };
+        let json = materialize_os_app_instance_document_json(&instance, &[], &[], &[]);
+        let parsed: Value = serde_json::from_str(&json).expect("json");
+        assert_eq!(parsed["schema"], "draw.document");
+        assert_eq!(parsed["id"], "semio");
     }
 }
 //#endregion 🧪Tests

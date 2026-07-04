@@ -102,6 +102,7 @@ export function FlowCanvasHost({
 
 	const handleSelectionChange = useCallback(
 		(nodeIds: readonly string[]) => {
+			dispatchCommand("setMediaNodeSelection", { nodeIds: [...nodeIds] });
 			const nodeId = nodeIds[0];
 			if (!nodeId) return;
 			const mediaNode = graph.nodes.find((entry) => entry.id === nodeId);

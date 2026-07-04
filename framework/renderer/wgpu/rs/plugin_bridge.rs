@@ -1,7 +1,8 @@
 //! 🔌 JS bridge for wasm-bindgen plugin modules.
 
-use js_sys::{Array, Function, Object, Reflect};
+use js_sys::{Array, Function, Reflect};
 use semio_framework_core::{PluginManifest, UiNode, ViewState};
+use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 
@@ -9,10 +10,7 @@ use wasm_bindgen_futures::JsFuture;
 pub struct PluginBridgeEntry {
     pub plugin_id: String,
     pub manifest: PluginManifest,
-    create_app: Function,
-    destroy_app: Option<Function>,
-    handle_command: Option<Function>,
-    render: Function,
+    handle: Rc<JsValue>,
 }
 
 impl PluginBridgeEntry {
@@ -27,27 +25,18 @@ impl PluginBridgeEntry {
             .ok_or("manifest not string")?;
         let manifest: PluginManifest =
             serde_json::from_str(&manifest_json).map_err(|err| format!("manifest parse: {err}"))?;
-        let create_app = get_fn(&handle, "createApp")?;
-        let destroy_app = Reflect::get(&handle, &JsValue::from_str("destroyApp"))
-            .ok()
-            .and_then(|v| v.dyn_into::<Function>().ok());
-        let handle_command = Reflect::get(&handle, &JsValue::from_str("handleCommand"))
-            .ok()
-            .and_then(|v| v.dyn_into::<Function>().ok());
-        let render = get_fn(&handle, "render")?;
+        let _create_app = get_fn(&handle, "createApp")?;
+        let _render = get_fn(&handle, "render")?;
         Ok(Self {
             plugin_id,
             manifest,
-            create_app,
-            destroy_app,
-            handle_command,
-            render,
+            handle: Rc::new(handle),
         })
     }
 
     pub async fn create_app(&self, app_id: &str) -> Result<u32, String> {
-        let result = self
-            .create_app
+        let create_app = get_fn(self.handle.as_ref(), "createApp")?;
+        let result = create_app
             .call1(&JsValue::NULL, &JsValue::from_str(app_id))
             .map_err(|_| "create_app failed")?;
         if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
@@ -61,7 +50,9 @@ impl PluginBridgeEntry {
     }
 
     pub fn destroy_app(&self, instance_id: u32) {
-        if let Some(destroy) = &self.destroy_app {
+        if let Ok(destroy) = Reflect::get(self.handle.as_ref(), &JsValue::from_str("destroyApp"))
+            .and_then(|v| v.dyn_into::<Function>())
+        {
             let _ = destroy.call1(&JsValue::NULL, &JsValue::from_f64(instance_id as f64));
         }
     }
@@ -72,7 +63,10 @@ impl PluginBridgeEntry {
         command_json: &str,
         view_state: &ViewState,
     ) -> Result<Vec<String>, String> {
-        let Some(handle) = &self.handle_command else {
+        let handle = Reflect::get(self.handle.as_ref(), &JsValue::from_str("handleCommand"))
+            .ok()
+            .and_then(|v| v.dyn_into::<Function>().ok());
+        let Some(handle) = handle else {
             return Ok(Vec::new());
         };
         let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
@@ -113,9 +107,9 @@ impl PluginBridgeEntry {
         body_key: &str,
         view_state: &ViewState,
     ) -> Result<UiNode, String> {
+        let render = get_fn(self.handle.as_ref(), "render")?;
         let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
-        let result = self
-            .render
+        let result = render
             .call3(
                 &JsValue::NULL,
                 &JsValue::from_f64(instance_id as f64),

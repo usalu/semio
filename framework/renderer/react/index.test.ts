@@ -13,6 +13,14 @@ import type { UiNode } from "./types.ts";
 
 const noopCommand = () => {};
 
+describe("framework plugin runtime", () => {
+	it("loads plugin modules through framework-core", async () => {
+		const { loadPluginModule } = await import("@semio-tech/framework-core");
+		const handle = await loadPluginModule("mock", "data:application/javascript,export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock',label:'Mock',version:'0',apps:[],programs:[],examples:[]})}");
+		expect(handle.manifest.pluginId).toBe("mock");
+	});
+});
+
 describe("framework renderer types", () => {
 	it("accepts component scene nodes", () => {
 		const node: UiNode = {

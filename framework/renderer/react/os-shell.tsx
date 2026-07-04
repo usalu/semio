@@ -688,19 +688,50 @@ export function FrameworkOsShell({
 		[loadedPlugins, refreshUi],
 	);
 
+	const syncSpawnedPluginDocument = useCallback(
+		async (
+			plugin: PluginWasmHandle,
+			app: AppDefinition,
+			pluginInstanceId: number,
+			documentJson: string,
+			viewState: ViewState,
+		) => {
+			try {
+				const document = JSON.parse(documentJson) as Record<string, unknown>;
+				await plugin.handleCommand(
+					pluginInstanceId,
+					JSON.stringify({ controllerId: app.controllerId, command: "setDocument", args: { document } }),
+					viewState,
+				);
+			} catch (syncError) {
+				console.error("[DEBUG] spawned plugin document sync failed", syncError);
+			}
+		},
+		[],
+	);
+
 	const ensureSpawnedPlugin = useCallback(
-		async (program: StudioProgramEntry, label?: string, osInstanceId?: string) => {
+		async (program: StudioProgramEntry, label?: string, osInstanceId?: string, documentJson?: string) => {
 			const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
 			if (!pluginEntry || !session) return;
+			const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
 			const currentPanel = parsePanelState(session.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
-			const existing = currentPanel.spawnedApps.find(
-				(entry) => entry.appId === program.appId && entry.pluginId === program.pluginId,
-			);
+			const existing = osInstanceId
+				? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId)
+				: currentPanel.spawnedApps.find(
+						(entry) => entry.appId === program.appId && entry.pluginId === program.pluginId,
+					);
 			if (existing) {
+				if (documentJson && app) {
+					await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, documentJson, session.viewState);
+				}
 				updateStudioPanel(buildStudioPanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, existing.id));
 				return;
 			}
 			const instanceId = await pluginEntry.handle.createApp(program.appId);
+			if (documentJson && app) {
+				await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, documentJson, session.viewState);
+			}
 			const spawnedId = osInstanceId ?? `${program.pluginId}-${instanceId}`;
 			updateStudioPanel(
 				buildStudioPanelState(
@@ -714,7 +745,7 @@ export function FrameworkOsShell({
 				),
 			);
 		},
-		[loadedPlugins, session, updateStudioPanel],
+		[loadedPlugins, session, syncSpawnedPluginDocument, updateStudioPanel],
 	);
 
 	const processPluginOps = useCallback(
@@ -729,6 +760,7 @@ export function FrameworkOsShell({
 					appId?: string;
 					osInstanceId?: string;
 					label?: string;
+					documentJson?: string;
 					filename?: string;
 					mimeType?: string;
 					data?: string;
@@ -771,14 +803,14 @@ export function FrameworkOsShell({
 					const currentPanel = parsePanelState(nextViewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
 					const program = currentPanel.programs.find((entry) => entry.programId === op.programId && entry.appId === op.appId)
 						?? currentPanel.programs.find((entry) => entry.programId === op.programId);
-					if (program) await ensureSpawnedPlugin(program, op.label, op.osInstanceId);
+					if (program) await ensureSpawnedPlugin(program, op.label, op.osInstanceId, op.documentJson);
 				}
 				if (op.op === "openPluginInstance" && op.programId && op.appId) {
 					const currentPanel = parsePanelState(nextViewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
 					const program = currentPanel.programs.find((entry) => entry.programId === op.programId)
 						?? { pluginId: "", programId: op.programId, appId: op.appId, label: op.label ?? op.programId, yields: "" };
 					if (program.pluginId) {
-						await ensureSpawnedPlugin(program, op.label, op.osInstanceId);
+						await ensureSpawnedPlugin(program, op.label, op.osInstanceId, op.documentJson);
 					}
 				}
 			}
@@ -822,7 +854,7 @@ export function FrameworkOsShell({
 				return;
 			}
 
-			if (studioMode && command.command === "spawnApp") {
+			if (studioMode && command.command === "spawnApp" && command.controllerId !== S_PLAY_CONTROLLER_ID) {
 				const programId = typeof command.args === "object" && command.args != null && "programId" in command.args
 					? String((command.args as { programId?: string }).programId ?? "")
 					: "";
@@ -864,7 +896,35 @@ export function FrameworkOsShell({
 
 			void plugin
 				.handleCommand(targetSession.instanceId, JSON.stringify(command), targetSession.viewState)
-				.then((ops) => processPluginOps(ops, targetSession))
+				.then(async (ops) => {
+					if (
+						studioMode &&
+						session.pluginId === "s" &&
+						panel?.activeSpawnedId &&
+						command.controllerId !== session.app.controllerId
+					) {
+						const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+						const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.handle;
+						if (spawned && sPlugin) {
+							for (const opJson of ops) {
+								const op = JSON.parse(opJson) as { op?: string; document?: unknown };
+								if (op.op === "setDocument" && op.document != null) {
+									const patchOps = await sPlugin.handleCommand(
+										session.instanceId,
+										JSON.stringify({
+											controllerId: S_PLAY_CONTROLLER_ID,
+											command: "patchAppSource",
+											args: { instanceId: spawned.id, inline: JSON.stringify(op.document) },
+										}),
+										session.viewState,
+									);
+									await processPluginOps(patchOps, session);
+								}
+							}
+						}
+					}
+					await processPluginOps(ops, targetSession);
+				})
 				.catch((commandError) => {
 					console.error("[DEBUG] command failed", commandError);
 				});
@@ -1125,18 +1185,60 @@ export function FrameworkOsShell({
 
 	const footerItems = useMemo((): FooterItem[] => {
 		if (!session) return [];
-		return [
+		const items: FooterItem[] = [
 			{
 				id: "framework.footer.app",
 				text: session.app.label,
 				icon: <Icon icon={session.app.iconId && session.app.iconId in ICONS ? (session.app.iconId as IconName) : "app-window"} size="small" />,
 			},
 		];
-	}, [session]);
+		if (studioMode && session.app.controllerId === S_PLAY_CONTROLLER_ID) {
+			items.push(
+				{
+					id: "framework.footer.undo",
+					text: "Undo",
+					icon: <Icon icon="undo-2" size="small" />,
+					onClick: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "undo" }),
+				},
+				{
+					id: "framework.footer.redo",
+					text: "Redo",
+					icon: <Icon icon="redo-2" size="small" />,
+					onClick: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "redo" }),
+				},
+				{
+					id: "framework.footer.checkpoint",
+					text: "Checkpoint",
+					icon: <Icon icon="git-commit-horizontal" size="small" />,
+					onClick: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "commitCheckpoint" }),
+				},
+			);
+		}
+		return items;
+	}, [onCommand, session, studioMode]);
 
 	const modeWindows = useMemo((): ModeWindowDescriptor[] => {
-		if (!session || Object.keys(windowUiByKind).length === 0) return [];
-		const windows: ModeWindowDescriptor[] = session.app.windowKinds.map((kind) => ({
+		if (!session) return [];
+		if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
+			const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+			if (spawned) {
+				return [
+					{
+						id: spawned.id,
+						title: spawned.label,
+						fill: true,
+						showControls: true,
+						children: (
+							<ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+								{interpretUiNode(spawnedWindowUi, { onCommand })}
+							</ChromeAwareWindowScrollSurface>
+						),
+					},
+				];
+			}
+		}
+		if (Object.keys(windowUiByKind).length === 0) return [];
+		return session.app.windowKinds.map((kind) => ({
 			id: kind.id,
 			title: kind.label,
 			fill: true,
@@ -1149,23 +1251,6 @@ export function FrameworkOsShell({
 				</ChromeAwareWindowScrollSurface>
 			),
 		}));
-		if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
-			const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-			if (spawned) {
-				windows.push({
-					id: spawned.id,
-					title: spawned.label,
-					fill: true,
-					showControls: true,
-					children: (
-						<ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-							{interpretUiNode(spawnedWindowUi, { onCommand })}
-						</ChromeAwareWindowScrollSurface>
-					),
-				});
-			}
-		}
-		return windows;
 	}, [onCommand, panel, session, spawnedWindowUi, studioMode, windowUiByKind]);
 
 	const canvas = useMemo(() => {
@@ -1185,7 +1270,11 @@ export function FrameworkOsShell({
 		const focusedSpawned = panel?.activeSpawnedId ? panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId) : undefined;
 		const focusedBar = focusedSpawned ? (
 			<div className="flex items-center gap-2 border-b border-border/60 px-3 py-2 text-sm text-muted-foreground">
-				<button type="button" className="hover:text-foreground" onClick={() => updateStudioPanel(buildStudioPanelState(panel.programs, panel.spawnedApps, panel.activePanelTab, undefined))}>
+				<button
+					type="button"
+					className="hover:text-foreground"
+					onClick={() => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "closeFocusedInstance" })}
+				>
 					← Back to Media Graph
 				</button>
 				<span>·</span>

@@ -12,7 +12,9 @@
     "test": "bun nx run @semio-tech/framework-os-dev:test"
   },
   "dependencies": {
+    "@semio-tech/framework-core": "workspace:*",
     "@semio-tech/framework-renderer-react": "workspace:*",
+    "@semio-tech/framework-renderer-wgpu": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "@semio-tech/ui-styling": "workspace:*"
   },

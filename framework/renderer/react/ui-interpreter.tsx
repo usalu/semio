@@ -309,6 +309,47 @@ function VirtualFileSystemHost({
 					args: { surfaceId: node.surfaceId, ids },
 				})
 			}
+			onRowDoubleClick={(row) => {
+				const uri = row.navigateUri;
+				if (!uri) return;
+				if (uri.startsWith("os://instance/")) {
+					onCommand({
+						controllerId: node.controllerId,
+						command: "openInstance",
+						args: { surfaceId: node.surfaceId, instanceId: uri.slice("os://instance/".length) },
+					});
+					return;
+				}
+				if (uri.startsWith("os://export/")) {
+					const [, instanceId, , format] = uri.split("/");
+					if (instanceId && format) {
+						onCommand({
+							controllerId: node.controllerId,
+							command: "exportMedia",
+							args: { surfaceId: node.surfaceId, instanceId, format },
+						});
+					}
+					return;
+				}
+				if (uri.startsWith("/studios/")) {
+					const studioId = uri.split("/")[2];
+					if (studioId) {
+						onCommand({
+							controllerId: node.controllerId,
+							command: "navigateVirtualFileSystemNode",
+							args: { surfaceId: node.surfaceId, studioId },
+						});
+					}
+					return;
+				}
+				if (uri.startsWith("studio:")) {
+					onCommand({
+						controllerId: node.controllerId,
+						command: "navigateVirtualFileSystemNode",
+						args: { surfaceId: node.surfaceId, studioId: uri.slice("studio:".length) },
+					});
+				}
+			}}
 		/>
 	);
 }

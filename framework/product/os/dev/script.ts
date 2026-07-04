@@ -84,6 +84,12 @@ class PluginWatchScript extends BundleScript {
 class DevScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		await new PluginBuildScript(this.root).run([]);
+		const renderer = process.env.SEMIO_RENDERER ?? "react";
+		if (renderer === "wgpu") {
+			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
+			const wgpuBuild = spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+			if (wgpuBuild.status !== 0) throw new Error("wgpu renderer build failed");
+		}
 		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 		runViteBunxDev(this.root, segments, {
 			portEnv: "S_OS_PORT",
@@ -91,6 +97,7 @@ class DevScript extends BundleScript {
 			fixedPort: true,
 			env: {
 				SEMIO_PLUGIN: plugin,
+				SEMIO_RENDERER: renderer,
 			},
 		});
 	}
@@ -99,6 +106,11 @@ class DevScript extends BundleScript {
 class BuildScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		await new PluginBuildScript(this.root).run([]);
+		const renderer = process.env.SEMIO_RENDERER ?? "react";
+		if (renderer === "wgpu") {
+			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
+			spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+		}
 		spawnSync("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...segments], {
 			cwd: this.root,
 			stdio: "inherit",

@@ -391,6 +391,136 @@ export function createNamedLayout(
 	};
 }
 
+export function mergeById<T extends { id: string }>(base: readonly T[] | undefined, extension: readonly T[] | undefined): T[] | undefined {
+	if (!base?.length && !extension?.length) return undefined;
+	const merged = new Map<string, T>();
+	base?.forEach((entry) => merged.set(entry.id, entry));
+	extension?.forEach((entry) => merged.set(entry.id, entry));
+	return [...merged.values()];
+}
+
+export function mergeNamedLayouts(base: readonly NamedLayout[] | undefined, extension: readonly NamedLayout[] | undefined): NamedLayout[] {
+	return mergeById(base, extension) ?? [];
+}
+
+export type PlatformSubscriber = () => void;
+
+export abstract class Store<TSnapshot> {
+	private readonly listeners = new Set<PlatformSubscriber>();
+	private disposed = false;
+
+	abstract getSnapshot(): TSnapshot;
+
+	subscribe(listener: PlatformSubscriber): () => void {
+		this.listeners.add(listener);
+		return () => this.listeners.delete(listener);
+	}
+
+	protected notify(): void {
+		if (this.disposed) return;
+		for (const listener of this.listeners) listener();
+	}
+
+	dispose(): void {
+		this.disposed = true;
+		this.listeners.clear();
+	}
+}
+
+export interface StoragePort {
+	get(key: string): string | null;
+	set(key: string, value: string): void;
+	remove(key: string): void;
+}
+
+function namedLayoutStorageKey(appId: string): string {
+	return `compose.display.layouts.${appId}`;
+}
+
+export class NamedLayoutStore extends Store<readonly NamedLayout[]> {
+	private layouts: NamedLayout[] = [];
+
+	constructor(
+		private readonly appId: string,
+		private readonly storage: StoragePort,
+	) {
+		super();
+		this.layouts = this.readPersisted();
+	}
+
+	getSnapshot(): readonly NamedLayout[] {
+		return this.layouts;
+	}
+
+	save(layout: NamedLayout): void {
+		const next = mergeNamedLayouts(
+			this.layouts.filter((entry) => entry.id !== layout.id),
+			[layout],
+		);
+		this.layouts = next;
+		this.persist();
+		this.notify();
+	}
+
+	remove(layoutId: string): void {
+		const next = this.layouts.filter((entry) => entry.id !== layoutId);
+		if (next.length === this.layouts.length) return;
+		this.layouts = next;
+		this.persist();
+		this.notify();
+	}
+
+	private readPersisted(): NamedLayout[] {
+		const raw = this.storage.get(namedLayoutStorageKey(this.appId));
+		if (!raw) return [];
+		try {
+			const parsed = JSON.parse(raw) as unknown;
+			if (!Array.isArray(parsed)) return [];
+			return parsed.filter(
+				(entry): entry is NamedLayout =>
+					Boolean(entry) &&
+					typeof entry === "object" &&
+					typeof (entry as NamedLayout).id === "string" &&
+					typeof (entry as NamedLayout).label === "string" &&
+					(entry as NamedLayout).origin === "user" &&
+					Boolean((entry as NamedLayout).layout),
+			);
+		} catch {
+			return [];
+		}
+	}
+
+	private persist(): void {
+		this.storage.set(namedLayoutStorageKey(this.appId), JSON.stringify(this.layouts));
+	}
+}
+
+export function createBrowserStoragePort(): StoragePort {
+	return {
+		get: (key) => {
+			try {
+				return typeof localStorage !== "undefined" ? localStorage.getItem(key) : null;
+			} catch {
+				return null;
+			}
+		},
+		set: (key, value) => {
+			try {
+				if (typeof localStorage !== "undefined") localStorage.setItem(key, value);
+			} catch {
+				/* ignore */
+			}
+		},
+		remove: (key) => {
+			try {
+				if (typeof localStorage !== "undefined") localStorage.removeItem(key);
+			} catch {
+				/* ignore */
+			}
+		},
+	};
+}
+
 export function uiInspectorAllEqual<T>(values: readonly T[]): boolean {
 	if (values.length <= 1) return true;
 	const first = values[0];
@@ -480,3 +610,103 @@ function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeI
 	if (node.type === "separator") return { id: `${fallbackId}.sep`, label: "—" };
 	return { id: fallbackId, label: node.type };
 }
+
+//#region PluginRuntime
+export type PluginViewState = {
+	readonly activeModeId?: string;
+	readonly activeWindowKindId?: string;
+	readonly selectionJson?: string;
+	readonly panelJson?: string;
+};
+
+export type PluginUiNode = Record<string, unknown> & { readonly type: string };
+
+export type PluginManifest = {
+	readonly pluginId: string;
+	readonly label: string;
+	readonly version: string;
+	readonly apps: readonly Record<string, unknown>[];
+	readonly programs: readonly {
+		readonly programId: string;
+		readonly appId: string;
+		readonly label: string;
+		readonly yields: string;
+	}[];
+	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string }[];
+};
+
+export type PluginWasmHandle = {
+	readonly pluginId: string;
+	readonly manifest: PluginManifest;
+	readonly createApp: (appId: string) => Promise<number>;
+	readonly destroyApp: (instanceId: number) => Promise<void>;
+	readonly handleCommand: (instanceId: number, commandJson: string, viewState: PluginViewState) => Promise<string[]>;
+	readonly render: (instanceId: number, bodyKey: string, viewState: PluginViewState) => Promise<PluginUiNode>;
+	readonly dispose: () => void;
+};
+
+export type PluginRegistryEntry = {
+	readonly pluginId: string;
+	readonly moduleUrl: string;
+};
+
+export const DEFAULT_PLUGIN_REGISTRY: readonly PluginRegistryEntry[] = [
+	{ pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" },
+];
+
+export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+	const module = (await import(/* @vite-ignore */ moduleUrl)) as {
+		default?: () => Promise<void> | void;
+		semio_plugin_manifest?: () => string;
+		semio_plugin_create_app?: (appId: string) => number;
+		semio_plugin_destroy_app?: (instanceId: number) => void;
+		semio_plugin_handle_command?: (instanceId: number, commandJson: string, viewStateJson: string) => string;
+		semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
+	};
+	if (module.default) await module.default();
+	if (!module.semio_plugin_manifest) {
+		throw new Error(`[DEBUG] plugin ${pluginId} missing semio_plugin_manifest export`);
+	}
+	const manifest = JSON.parse(module.semio_plugin_manifest()) as PluginManifest;
+	return {
+		pluginId,
+		manifest,
+		async createApp(appId: string) {
+			const create = module.semio_plugin_create_app;
+			if (!create) throw new Error(`plugin ${pluginId} missing create_app`);
+			return create(appId);
+		},
+		async destroyApp(instanceId: number) {
+			module.semio_plugin_destroy_app?.(instanceId);
+		},
+		async handleCommand(instanceId: number, commandJson: string, viewState: PluginViewState) {
+			const handle = module.semio_plugin_handle_command;
+			if (!handle) return [];
+			const raw = handle(instanceId, commandJson, JSON.stringify(viewState));
+			return JSON.parse(raw) as string[];
+		},
+		async render(instanceId: number, bodyKey: string, viewState: PluginViewState) {
+			const render = module.semio_plugin_render;
+			if (!render) throw new Error(`plugin ${pluginId} missing render`);
+			return JSON.parse(render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode;
+		},
+		dispose() {},
+	};
+}
+
+export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+	return loadPluginModule(pluginId, moduleUrl);
+}
+
+export function pluginHandleForBridge(handle: PluginWasmHandle) {
+	return {
+		manifest: () => JSON.stringify(handle.manifest),
+		createApp: (appId: string) => handle.createApp(appId),
+		destroyApp: (instanceId: number) => handle.destroyApp(instanceId),
+		handleCommand: (instanceId: number, commandJson: string, viewStateJson: string) =>
+			handle.handleCommand(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)),
+		render: (instanceId: number, bodyKey: string, viewStateJson: string) =>
+			handle.render(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState).then((node) => JSON.stringify(node)),
+	};
+}
+//#endregion PluginRuntime

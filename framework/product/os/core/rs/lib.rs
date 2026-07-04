@@ -17,7 +17,8 @@ pub use instance::{
     apply_parameter_values_to_projection, create_default_os_parameter, create_os_id,
     is_parameter_port_id, media_port_id_for_spec, media_port_spec_id, os_parameter_types_compatible,
     os_parameter_value, parameter_id_from_port_id, parameter_port_id, patch_os_parameter,
-    resolve_parameter_values_for_instance, set_json_pointer_value, OsAppInstance, OsInstanceState,
+    resolve_parameter_values_for_instance, set_json_pointer_value, materialize_os_app_instance_document_json,
+    register_os_fixture_json, resolve_os_source_document, OsAppInstance, OsInstanceState,
     OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OsSourceDocument,
     OS_PARAMETER_PORT_PREFIX,
 };

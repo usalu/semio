@@ -3,9 +3,12 @@
 use semio_framework_os::{
     create_os_studio, default_os_projection, delete_os_studio,
     import_os_studio_from_json, list_os_media_graph_vfs_children, list_os_programs,
-    list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, os_app_registration,
-    os_document_from_json, build_os_media_flow_operator_infos, os_media_graph_to_flow_fixture, os_media_graph_vfs_schema,
-    os_parameter_types_compatible, os_parameter_value, os_program_by_id, seed_os_studio_catalog_if_empty, MediaGraphPosition,
+    list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, media_port_spec_id,
+    os_app_registration,
+    os_document_from_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json,
+    os_media_graph_to_flow_fixture, os_media_graph_vfs_schema,
+    os_parameter_types_compatible, os_parameter_value, os_program_by_id, parameter_id_from_port_id,
+    register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, MediaGraphPosition,
     OsAppInstance, OsDocument, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
     OsParameterType, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
 };
@@ -26,6 +29,9 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock};
 use vcs::{create_document_vcs_envelope, DocumentBackboneRef, MemoryBackbonePort};
+use mathematical_graph_port_directed_dag::{
+    dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec,
+};
 
 //#region 🔖Constants
 const S_HOME_APP_ID: &str = "home";
@@ -128,7 +134,16 @@ struct SHomeDocument {
 //#endregion 🔖Types
 
 //#region 🔖CatalogBackbone
+fn ensure_studio_fixtures_registered() {
+    static FIXTURES: LazyLock<()> = LazyLock::new(|| {
+        register_os_fixture_json("semio.draw.json", include_str!("../../../draw/example/semio.draw.json"));
+        register_os_fixture_json("jack.writer.json", include_str!("../../../writer/example/jack.writer.json"));
+    });
+    let _ = &*FIXTURES;
+}
+
 static CATALOG_PORT: LazyLock<Arc<MemoryBackbonePort>> = LazyLock::new(|| {
+    ensure_studio_fixtures_registered();
     let port = Arc::new(MemoryBackbonePort::new());
     if list_os_studio_catalog_entries(port.clone())
         .map(|entries| entries.is_empty())
@@ -575,6 +590,109 @@ fn parameter_value_control(parameter: &OsParameter) -> UiNode {
     }
 }
 
+fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
+    match parameter {
+        OsParameter::Numeric {
+            id,
+            min,
+            max,
+            step,
+            ..
+        } => {
+            let mut fields = Vec::new();
+            if let Some(min) = min {
+                fields.push(UiNode::Field(UiFieldNode {
+                    id: format!("s-play-parameters.{id}.min"),
+                    label: "Min".into(),
+                    child: UiControlNode::NumberStepper(UiNumberStepperNode {
+                        id: format!("s-play-parameters.{id}.min.stepper"),
+                        value: *min,
+                        step: 1.0,
+                        uniform: true,
+                        on_absolute: s_play_cmd(
+                            "patchParameter",
+                            Some(json!({ "parameterId": id, "field": "min" })),
+                        ),
+                        on_delta: s_play_cmd(
+                            "patchParameter",
+                            Some(json!({ "parameterId": id, "field": "min" })),
+                        ),
+                    }),
+                }));
+            }
+            if let Some(max) = max {
+                fields.push(UiNode::Field(UiFieldNode {
+                    id: format!("s-play-parameters.{id}.max"),
+                    label: "Max".into(),
+                    child: UiControlNode::NumberStepper(UiNumberStepperNode {
+                        id: format!("s-play-parameters.{id}.max.stepper"),
+                        value: *max,
+                        step: 1.0,
+                        uniform: true,
+                        on_absolute: s_play_cmd(
+                            "patchParameter",
+                            Some(json!({ "parameterId": id, "field": "max" })),
+                        ),
+                        on_delta: s_play_cmd(
+                            "patchParameter",
+                            Some(json!({ "parameterId": id, "field": "max" })),
+                        ),
+                    }),
+                }));
+            }
+            if let Some(step) = step {
+                fields.push(UiNode::Field(UiFieldNode {
+                    id: format!("s-play-parameters.{id}.step"),
+                    label: "Step".into(),
+                    child: UiControlNode::NumberStepper(UiNumberStepperNode {
+                        id: format!("s-play-parameters.{id}.step.stepper"),
+                        value: *step,
+                        step: 0.1,
+                        uniform: true,
+                        on_absolute: s_play_cmd(
+                            "patchParameter",
+                            Some(json!({ "parameterId": id, "field": "step" })),
+                        ),
+                        on_delta: s_play_cmd(
+                            "patchParameter",
+                            Some(json!({ "parameterId": id, "field": "step" })),
+                        ),
+                    }),
+                }));
+            }
+            fields
+        }
+        OsParameter::Categorical { id, options, .. } => vec![
+            UiNode::Field(UiFieldNode {
+                id: format!("s-play-parameters.{id}.options"),
+                label: "Options".into(),
+                child: UiControlNode::Input(UiInputNode {
+                    id: format!("s-play-parameters.{id}.options.input"),
+                    input_kind: "text".into(),
+                    value: options.join(", "),
+                    placeholder: Some("Comma-separated options".into()),
+                    commit: None,
+                    on_change: s_play_cmd(
+                        "patchParameter",
+                        Some(json!({ "parameterId": id, "field": "options" })),
+                    ),
+                }),
+            }),
+            UiNode::Button(UiButtonNode {
+                id: Some(format!("s-play-parameters.{id}.add-option")),
+                icon_id: "plus".into(),
+                label: "Add Option".into(),
+                command: s_play_cmd(
+                    "patchParameter",
+                    Some(json!({ "parameterId": id, "field": "addOption", "value": "New" })),
+                ),
+                style: None,
+            }),
+        ],
+        _ => Vec::new(),
+    }
+}
+
 fn build_parameters_tree(document: &OsDocument) -> UiNode {
     let projection = projection_from_document(document);
     let mut children = vec![UiSectionNode {
@@ -633,17 +751,18 @@ fn build_parameters_tree(document: &OsDocument) -> UiNode {
                     }),
                 },
             }),
-            UiNode::Button(UiButtonNode {
-                id: Some(format!("s-play-parameters.{parameter_id}.remove")),
-                icon_id: "trash-2".into(),
-                label: "Remove".into(),
-                command: s_play_cmd(
-                    "removeParameter",
-                    Some(json!({ "parameterId": parameter_id })),
-                ),
-                style: None,
-            }),
         ];
+        parameter_children.extend(parameter_constraint_fields(parameter));
+        parameter_children.push(UiNode::Button(UiButtonNode {
+            id: Some(format!("s-play-parameters.{parameter_id}.remove")),
+            icon_id: "trash-2".into(),
+            label: "Remove".into(),
+            command: s_play_cmd(
+                "removeParameter",
+                Some(json!({ "parameterId": parameter_id })),
+            ),
+            style: None,
+        }));
         children.push(UiSectionNode {
             id: format!("s-play-parameters.{parameter_id}"),
             label: Some(match parameter {
@@ -877,6 +996,160 @@ impl OsParameterId for OsParameter {
 }
 //#endregion 🔖StudioPanels
 
+//#region 🔖CompiledDag
+fn parameter_name(parameter: &OsParameter) -> &str {
+    match parameter {
+        OsParameter::Numeric { name, .. }
+        | OsParameter::Categorical { name, .. }
+        | OsParameter::Toggle { name, .. }
+        | OsParameter::Text { name, .. } => name,
+    }
+}
+
+fn media_port_label(
+    port_id: &str,
+    parameter_by_id: &HashMap<String, &OsParameter>,
+) -> String {
+    parameter_id_from_port_id(port_id)
+        .and_then(|id| parameter_by_id.get(&id).map(|row| parameter_name(row).to_string()))
+        .or_else(|| media_port_spec_id(port_id))
+        .unwrap_or_else(|| port_id.to_string())
+}
+
+fn media_graph_to_dag_fixture(projection: &OsProjection) -> DagFixture {
+    let instance_by_id: HashMap<_, _> = projection
+        .app_instances
+        .iter()
+        .map(|row| (row.id.clone(), row))
+        .collect();
+    let parameter_by_id: HashMap<_, _> = projection
+        .parameters
+        .iter()
+        .map(|row| match row {
+            OsParameter::Numeric { id, .. }
+            | OsParameter::Categorical { id, .. }
+            | OsParameter::Toggle { id, .. }
+            | OsParameter::Text { id, .. } => (id.clone(), row),
+        })
+        .collect();
+    let nodes = projection
+        .media_graph
+        .nodes
+        .iter()
+        .map(|node| {
+            let instance = instance_by_id.get(&node.instance_id);
+            let registration = instance
+                .and_then(|row| os_app_registration(&row.program_id, &row.app_id));
+            let icon = format!(
+                "emoji:{}",
+                registration
+                    .map(|row| row.component_kind.clone())
+                    .unwrap_or_else(|| "s".into())
+            );
+            DagNodeSpec {
+                id: node.id.clone(),
+                name: instance
+                    .map(|row| row.label.clone())
+                    .unwrap_or_else(|| node.instance_id.clone()),
+                abbreviation: instance
+                    .map(|row| {
+                        if row.app_id.chars().count() <= 3 {
+                            row.app_id.clone()
+                        } else {
+                            row.app_id.chars().take(3).collect()
+                        }
+                    })
+                    .unwrap_or_else(|| "app".into()),
+                icon: icon.clone(),
+                x: node.x + node.width / 2.0,
+                y: node.y + node.height / 2.0,
+                width: node.width,
+                height: node.height,
+                operator_kind: instance.map(|row| row.program_id.clone()),
+                kind: DagNodeKind::AppInstance {
+                    instance_id: node.instance_id.clone(),
+                    program_id: instance
+                        .map(|row| row.program_id.clone())
+                        .unwrap_or_default(),
+                    app_id: instance
+                        .map(|row| row.app_id.clone())
+                        .unwrap_or_default(),
+                    icon,
+                    inputs: node
+                        .inputs
+                        .iter()
+                        .map(|port| {
+                            let mut spec = IoPortSpec::simple(
+                                &port.id,
+                                media_port_label(&port.id, &parameter_by_id),
+                            );
+                            spec.resource_kind = Some(port.resource_kind.clone());
+                            spec
+                        })
+                        .collect(),
+                    outputs: node
+                        .outputs
+                        .iter()
+                        .map(|port| {
+                            let mut spec = IoPortSpec::simple(
+                                &port.id,
+                                media_port_label(&port.id, &parameter_by_id),
+                            );
+                            spec.resource_kind = Some(port.resource_kind.clone());
+                            spec
+                        })
+                        .collect(),
+                },
+                ..Default::default()
+            }
+        })
+        .collect();
+    let edges = projection
+        .media_graph
+        .edges
+        .iter()
+        .map(|edge| DagFixtureEdge {
+            id: edge.id.clone(),
+            source: format!("{}:{}", edge.source_node_id, edge.source_port_id),
+            target: format!("{}:{}", edge.target_node_id, edge.target_port_id),
+            ..Default::default()
+        })
+        .collect();
+    DagFixture {
+        schema: "dag.fixture".into(),
+        camera: DagCamera {
+            x: 0.0,
+            y: 0.0,
+            zoom: 1.0,
+        },
+        nodes,
+        edges,
+    }
+}
+
+fn compiled_dag_wire_literal(document: &OsDocument) -> String {
+    let projection = projection_from_document(document);
+    let fixture = media_graph_to_dag_fixture(&projection);
+    dag_fixture_to_wire_literal(&fixture)
+}
+
+fn compiled_dag_engagement(document: &OsDocument) -> WindowEngagement {
+    let wire = compiled_dag_wire_literal(document);
+    WindowEngagement {
+        session_active: Some(false),
+        options: None,
+        input: None,
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus {
+            id: "s-compiled-dag-status".into(),
+            text: if wire.trim().is_empty() { "Empty".into() } else { "Compiled".into() },
+        }]),
+        possible_engagements: None,
+    }
+}
+//#endregion 🔖CompiledDag
+
 //#region 🔖StudioWindows
 fn render_media_graph(document: &OsDocument, _runtime: &StudioRuntimeState) -> UiNode {
     let projection = projection_from_document(document);
@@ -898,13 +1171,12 @@ fn render_media_graph(document: &OsDocument, _runtime: &StudioRuntimeState) -> U
 }
 
 fn render_compiled_dag(document: &OsDocument) -> UiNode {
-    let projection = projection_from_document(document);
-    let fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances);
+    let wire = compiled_dag_wire_literal(document);
     build_text_editor_scene(
         S_PLAY_SURFACE_COMPILED_DAG,
         S_PLAY_CONTROLLER_ID,
         TextEditorScene {
-            buffer: serde_json::to_string_pretty(&fixture).unwrap_or_else(|_| "{}".into()),
+            buffer: wire,
             language: Some("wire".into()),
             selection_json: None,
         },
@@ -1037,12 +1309,58 @@ impl SStudioApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("value");
                 let value = args.and_then(|value| value.get("value")).cloned();
-                if let (Some(parameter_id), Some(value)) = (parameter_id, value) {
-                    let mut patch = serde_json::Map::new();
-                    patch.insert(field.into(), value);
-                    let _ = store
-                        .patch_parameter(parameter_id, &Value::Object(patch))
-                        .expect("patch parameter");
+                if let Some(parameter_id) = parameter_id {
+                    let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                    let patch = if field == "addOption" {
+                        value
+                            .and_then(|value| value.as_str().map(str::to_string))
+                            .and_then(|option| {
+                                projection
+                                    .parameters
+                                    .iter()
+                                    .find(|entry| parameter_entity_id(entry) == parameter_id)
+                                    .and_then(|entry| match entry {
+                                        OsParameter::Categorical { options, .. } => {
+                                            let mut next_options = options.clone();
+                                            if !next_options.iter().any(|row| row == &option) {
+                                                next_options.push(option.clone());
+                                            }
+                                            Some(json!({ "options": next_options, "value": option }))
+                                        }
+                                        _ => None,
+                                    })
+                            })
+                    } else if field == "removeOption" {
+                        value
+                            .and_then(|value| value.as_str().map(str::to_string))
+                            .and_then(|option| {
+                                projection
+                                    .parameters
+                                    .iter()
+                                    .find(|entry| parameter_entity_id(entry) == parameter_id)
+                                    .and_then(|entry| match entry {
+                                        OsParameter::Categorical { options, value, .. } => {
+                                            let next_options: Vec<_> = options
+                                                .iter()
+                                                .filter(|row| row.as_str() != option)
+                                                .cloned()
+                                                .collect();
+                                            let next_value = if next_options.iter().any(|row| row == value) {
+                                                value.clone()
+                                            } else {
+                                                next_options.first().cloned().unwrap_or_default()
+                                            };
+                                            Some(json!({ "options": next_options, "value": next_value }))
+                                        }
+                                        _ => None,
+                                    })
+                            })
+                    } else {
+                        value.map(|value| json!({ field: value }))
+                    };
+                    if let Some(patch) = patch {
+                        let _ = store.patch_parameter(parameter_id, &patch).expect("patch parameter");
+                    }
                 }
             }
             "addParameter" => {
@@ -1097,15 +1415,86 @@ impl SStudioApp {
                         .unwrap_or(MediaGraphPosition { x: 80.0, y: 80.0 });
                     if let Ok(instance_id) = store.spawn_app_instance(program_id, app_id, None, position) {
                         runtime.active_instance_id = Some(instance_id.clone());
-                        runtime.focused_instance_id = Some(instance_id.clone());
-                        ops.push(json!({
-                            "op": "spawnPluginInstance",
-                            "programId": program_id,
-                            "appId": app_id,
-                            "osInstanceId": instance_id,
-                        })
-                        .to_string());
                     }
+                }
+            }
+            "moveMediaNode" => {
+                if let (Some(node_id), Some(x), Some(y)) = (
+                    args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()),
+                    args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()),
+                    args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()),
+                ) {
+                    let _ = store.dispatch_apply(vec![OsOp::MoveMediaNode {
+                        node_id: node_id.into(),
+                        x,
+                        y,
+                    }]);
+                }
+            }
+            "connectMediaPorts" => {
+                if let (
+                    Some(source_node_id),
+                    Some(source_port_id),
+                    Some(target_node_id),
+                    Some(target_port_id),
+                ) = (
+                    args.and_then(|value| value.get("sourceNodeId"))
+                        .and_then(|value| value.as_str()),
+                    args.and_then(|value| value.get("sourcePortId"))
+                        .and_then(|value| value.as_str()),
+                    args.and_then(|value| value.get("targetNodeId"))
+                        .and_then(|value| value.as_str()),
+                    args.and_then(|value| value.get("targetPortId"))
+                        .and_then(|value| value.as_str()),
+                ) {
+                    let _ = store.dispatch_apply(vec![OsOp::ConnectMediaPorts {
+                        edge: semio_framework_os::OsMediaGraphEdge {
+                            id: create_os_id("edge"),
+                            source_node_id: source_node_id.into(),
+                            source_port_id: source_port_id.into(),
+                            target_node_id: target_node_id.into(),
+                            target_port_id: target_port_id.into(),
+                        },
+                    }]);
+                }
+            }
+            "disconnectMediaEdge" => {
+                if let Some(edge_id) = args
+                    .and_then(|value| value.get("edgeId"))
+                    .and_then(|value| value.as_str())
+                {
+                    let _ = store.dispatch_apply(vec![OsOp::DisconnectMediaEdge {
+                        edge_id: edge_id.into(),
+                    }]);
+                }
+            }
+            "removeAppInstance" => {
+                if let Some(instance_id) = args
+                    .and_then(|value| value.get("instanceId"))
+                    .and_then(|value| value.as_str())
+                {
+                    let _ = store.dispatch_apply(vec![OsOp::RemoveAppInstance {
+                        instance_id: instance_id.into(),
+                    }]);
+                    if runtime.active_instance_id.as_deref() == Some(instance_id) {
+                        runtime.active_instance_id = None;
+                    }
+                    if runtime.focused_instance_id.as_deref() == Some(instance_id) {
+                        runtime.focused_instance_id = None;
+                    }
+                }
+            }
+            "patchAppSource" => {
+                if let (Some(instance_id), Some(inline)) = (
+                    args.and_then(|value| value.get("instanceId"))
+                        .and_then(|value| value.as_str()),
+                    args.and_then(|value| value.get("inline"))
+                        .and_then(|value| value.as_str()),
+                ) {
+                    let _ = store.dispatch_apply(vec![OsOp::PatchAppSource {
+                        instance_id: instance_id.into(),
+                        inline: inline.into(),
+                    }]);
                 }
             }
             "commitCheckpoint" => {
@@ -1399,12 +1788,20 @@ impl SStudioApp {
                         .iter()
                         .find(|row| row.id == instance_id)
                     {
+                        ensure_studio_fixtures_registered();
+                        let document_json = materialize_os_app_instance_document_json(
+                            instance,
+                            &projection.parameter_bindings,
+                            &projection.parameters,
+                            &projection.app_instances,
+                        );
                         ops.push(json!({
                             "op": "openPluginInstance",
                             "programId": instance.program_id,
                             "appId": instance.app_id,
                             "osInstanceId": instance.id,
                             "label": instance.label,
+                            "documentJson": document_json,
                         })
                         .to_string());
                     }
@@ -1486,6 +1883,25 @@ impl PluginApp for SStudioApp {
                 let mut panel = parse_panel_state(view_state);
                 panel.active_panel_tab = tab.into();
                 return vec![set_panel_op(&panel)];
+            }
+        }
+        if command == "closeFocusedInstance" {
+            let mut panel = parse_panel_state(view_state);
+            panel.active_spawned_id = None;
+            let mut envelope = parse_studio_envelope(document_json);
+            envelope.runtime.focused_instance_id = None;
+            return vec![set_panel_op(&panel), set_studio_document_op(&envelope)];
+        }
+        if command == "navigateVirtualFileSystemNode" {
+            if let Some(studio_id) = args
+                .and_then(|value| value.get("studioId"))
+                .and_then(|value| value.as_str())
+            {
+                return vec![json!({
+                    "op": "navigate",
+                    "uri": format!("/studios/{studio_id}")
+                })
+                .to_string()];
             }
         }
         let mut envelope = parse_studio_envelope(document_json);
@@ -1639,6 +2055,14 @@ fn create_studio_app() -> App {
         window.measures = measures;
         window.engagement = Some(engagement);
     }
+    let compiled_engagement = compiled_dag_engagement(&demo_os_document());
+    if let Some(window) = definition
+        .window_kinds
+        .iter_mut()
+        .find(|window| window.id == S_PLAY_WINDOW_COMPILED_DAG)
+    {
+        window.engagement = Some(compiled_engagement);
+    }
     let mut app = App {
         definition,
         examples: vec![],
@@ -1727,6 +2151,8 @@ mod tests {
         let node = app.render(S_PLAY_BODY_COMPILED_DAG, &envelope, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("text-editor"));
+        let wire = compiled_dag_wire_literal(&parse_studio_envelope(&envelope).document);
+        assert!(wire.contains("appInstance") || wire.contains("draw"));
     }
 
     #[test]
@@ -1742,6 +2168,31 @@ mod tests {
         let app = create_home_app();
         assert_eq!(app.definition.id, "home");
         assert_eq!(app.definition.controller_id, "s-home");
+    }
+
+    #[test]
+    fn move_media_node_updates_projection() {
+        let mut envelope = initial_studio_envelope();
+        let node_id = projection_from_document(&envelope.document)
+            .media_graph
+            .nodes
+            .first()
+            .expect("node")
+            .id
+            .clone();
+        SStudioApp::handle_studio_command(
+            &mut envelope,
+            "moveMediaNode",
+            Some(&json!({ "nodeId": node_id, "x": 120.0, "y": 160.0 })),
+        );
+        let node = projection_from_document(&envelope.document)
+            .media_graph
+            .nodes
+            .into_iter()
+            .find(|row| row.id == node_id)
+            .expect("node");
+        assert!((node.x - 120.0).abs() < 0.01);
+        assert!((node.y - 160.0).abs() < 0.01);
     }
 
     #[test]
@@ -1887,6 +2338,33 @@ mod tests {
         assert_eq!(envelope.runtime.focused_instance_id.as_deref(), Some(instance_id.as_str()));
         SStudioApp::handle_studio_command(&mut envelope, "closeFocusedInstance", None);
         assert!(envelope.runtime.focused_instance_id.is_none());
+    }
+
+    #[test]
+    fn open_instance_emits_materialized_document_json() {
+        ensure_studio_fixtures_registered();
+        let mut envelope = initial_studio_envelope();
+        let instance_id = projection_from_document(&envelope.document)
+            .app_instances
+            .iter()
+            .find(|instance| instance.program_id == "draw")
+            .expect("draw instance")
+            .id
+            .clone();
+        let ops = SStudioApp::handle_studio_command(
+            &mut envelope,
+            "openInstance",
+            Some(&json!({ "instanceId": instance_id })),
+        );
+        let open_op = ops
+            .iter()
+            .find(|op| op.contains("openPluginInstance"))
+            .expect("open op");
+        let parsed: Value = serde_json::from_str(open_op).expect("json");
+        assert_eq!(parsed["op"], "openPluginInstance");
+        let document: Value = serde_json::from_str(parsed["documentJson"].as_str().expect("document json")).expect("document");
+        assert_eq!(document["schema"], "draw.document");
+        assert_eq!(document["id"], "semio");
     }
 
     #[test]

@@ -2,6 +2,7 @@
 
 use crate::theme::Rect;
 use semio_framework_core::CommandDescriptor;
+use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct HitTarget {
@@ -79,22 +80,23 @@ impl InputState {
 #[cfg(target_arch = "wasm32")]
 pub fn attach_dom_listeners(
     canvas: &web_sys::HtmlCanvasElement,
-    on_pointer: impl Fn(f32, f32, bool) + 'static,
-    on_key: impl Fn(String) + 'static,
+    on_pointer: Rc<dyn Fn(f32, f32, bool)>,
+    on_key: Rc<dyn Fn(String)>,
 ) {
     use wasm_bindgen::closure::Closure;
     use wasm_bindgen::JsCast;
-    use web_sys::{Event, KeyboardEvent, MouseEvent};
+    use web_sys::MouseEvent;
 
     let canvas_clone = canvas.clone();
-    let pointer_down = std::rc::Rc::new(std::cell::Cell::new(false));
+    let pointer_down = Rc::new(std::cell::Cell::new(false));
     let pointer_down_move = pointer_down.clone();
+    let on_pointer_move = on_pointer.clone();
 
     let move_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
         let rect = canvas_clone.get_bounding_client_rect();
         let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
         let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
-        on_pointer(x, y, pointer_down_move.get());
+        on_pointer_move(x, y, pointer_down_move.get());
     }) as Box<dyn FnMut(MouseEvent)>);
     canvas
         .add_event_listener_with_callback("mousemove", move_cb.as_ref().unchecked_ref())
@@ -103,12 +105,13 @@ pub fn attach_dom_listeners(
 
     let canvas_down = canvas.clone();
     let pointer_down_down = pointer_down.clone();
+    let on_pointer_down = on_pointer.clone();
     let down_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
         pointer_down_down.set(true);
         let rect = canvas_down.get_bounding_client_rect();
         let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
         let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
-        on_pointer(x, y, true);
+        on_pointer_down(x, y, true);
     }) as Box<dyn FnMut(MouseEvent)>);
     canvas
         .add_event_listener_with_callback("mousedown", down_cb.as_ref().unchecked_ref())
@@ -117,23 +120,24 @@ pub fn attach_dom_listeners(
 
     let canvas_up = canvas.clone();
     let pointer_down_up = pointer_down.clone();
+    let on_pointer_up = on_pointer;
     let up_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
         pointer_down_up.set(false);
         let rect = canvas_up.get_bounding_client_rect();
         let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
         let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
-        on_pointer(x, y, false);
+        on_pointer_up(x, y, false);
     }) as Box<dyn FnMut(MouseEvent)>);
     canvas
         .add_event_listener_with_callback("mouseup", up_cb.as_ref().unchecked_ref())
         .ok();
     up_cb.forget();
 
-    let key_cb = Closure::wrap(Box::new(move |event: KeyboardEvent| {
+    let key_cb = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
         if let Some(key) = event.key().chars().next() {
             on_key(key.to_string());
         }
-    }) as Box<dyn FnMut(KeyboardEvent)>);
+    }) as Box<dyn FnMut(web_sys::KeyboardEvent)>);
     canvas.set_tab_index(0);
     canvas
         .add_event_listener_with_callback("keydown", key_cb.as_ref().unchecked_ref())

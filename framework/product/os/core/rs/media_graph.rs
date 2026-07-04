@@ -353,8 +353,8 @@ pub fn build_os_media_flow_operator_infos(
                 icon: format!(
                     "emoji:{}",
                     registration
-                        .map(|row| row.component_kind.as_str())
-                        .unwrap_or("s")
+                        .map(|row| row.component_kind.clone())
+                        .unwrap_or_else(|| "s".into())
                 ),
                 summary: instance
                     .map(|row| format!("{}/{}", row.program_id, row.app_id))
@@ -367,8 +367,7 @@ pub fn build_os_media_flow_operator_infos(
                         let label = parameter_id
                             .as_ref()
                             .and_then(|id| parameter_by_id.get(id))
-                            .map(parameter_label)
-                            .map(str::to_string)
+                            .map(|parameter| parameter_label(*parameter).to_string())
                             .or_else(|| media_port_spec_id(&port.id))
                             .unwrap_or_else(|| port.id.clone());
                         os_media_flow_channel_spec(&port.id, &port.resource_kind, &label)

@@ -944,14 +944,15 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s",
+      "name": "🛠️dev🖥️s⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6066",
-        "SEMIO_PLUGIN": "s"
+        "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "react"
       },
       "presentation": {
         "group": "3_dev",
@@ -960,6 +961,27 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6066)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🖥️s🧊wgpu",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6067",
+        "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6067)",
         "uriFormat": "%s"
       }
     },

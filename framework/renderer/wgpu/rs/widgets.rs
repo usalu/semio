@@ -197,23 +197,23 @@ fn render_button(button: &UiButtonNode, bounds: Rect, ctx: &mut WidgetContext<'_
 fn render_input(input: &UiInputNode, bounds: Rect, ctx: &mut WidgetContext<'_>) {
     ctx.draw
         .push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], Rgba::INPUT_BG, BORDER_RADIUS);
-    let value = if ctx.input.focused_id.as_deref() == Some(input.id.as_str()) {
-        ctx.input.text_buffer.as_str()
+    let (display, muted) = if ctx.input.focused_id.as_deref() == Some(input.id.as_str()) {
+        (ctx.input.text_buffer.clone(), false)
+    } else if input.value.is_empty() {
+        (
+            input.placeholder.clone().unwrap_or_default(),
+            true,
+        )
     } else {
-        input.value.as_str()
-    };
-    let display = if value.is_empty() {
-        input.placeholder.as_deref().unwrap_or("")
-    } else {
-        value
+        (input.value.clone(), false)
     };
     draw_text(
         ctx,
-        display,
+        &display,
         bounds.x + 8.0,
         bounds.y + (bounds.h + FONT_SIZE_BODY) * 0.5 - 2.0,
         FONT_SIZE_BODY,
-        if value.is_empty() { Rgba::TEXT_MUTED } else { Rgba::TEXT },
+        if muted { Rgba::TEXT_MUTED } else { Rgba::TEXT },
     );
     ctx.input.register_hit(HitTarget {
         rect: bounds,

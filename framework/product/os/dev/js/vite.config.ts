@@ -7,6 +7,7 @@ import { defineConfig } from "vite";
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "..");
 const repoRoot = path.resolve(playDir, "../../../..");
+const renderer = process.env.SEMIO_RENDERER ?? "react";
 
 export default defineConfig({
 	root: playDir,
@@ -14,6 +15,8 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@semio-tech/framework-renderer-react": path.resolve(repoRoot, "framework/renderer/react/index.tsx"),
+			"@semio-tech/framework-renderer-wgpu": path.resolve(repoRoot, "framework/renderer/wgpu/index.ts"),
+			"@semio-tech/framework-core": path.resolve(repoRoot, "framework/core/js/index.ts"),
 		},
 	},
 	server: {
@@ -21,8 +24,12 @@ export default defineConfig({
 		strictPort: true,
 		fs: { allow: [repoRoot] },
 	},
-	plugins: [react(), tailwindcss()],
+	plugins: renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()],
+	optimizeDeps: {
+		exclude: renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : [],
+	},
 	define: {
 		"import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "s"),
+		"import.meta.env.VITE_SEMIO_RENDERER": JSON.stringify(renderer),
 	},
 });
