@@ -10,6 +10,7 @@ import {
 	type NodeTypes,
 } from "@semio-tech/ui-react";
 import type { CommandDescriptor, UiComponentSceneNode } from "../types.ts";
+import { useUIFindSafe } from "../ui-search-find.tsx";
 
 //#region MediaGraphTypes
 type MediaGraphPort = {
@@ -51,6 +52,19 @@ type DiagramViewport = {
 	readonly x: number;
 	readonly y: number;
 	readonly zoom: number;
+};
+
+type GraphFindItem = {
+	readonly id: string;
+	readonly label: string;
+	readonly category?: string;
+};
+
+type GraphContextMenuItem = {
+	readonly id: string;
+	readonly label: string;
+	readonly command: string;
+	readonly args?: Record<string, unknown>;
 };
 //#endregion MediaGraphTypes
 
@@ -129,6 +143,15 @@ function parseViewport(viewportJson: string): DiagramViewport {
 	}
 }
 
+function parseJsonArray<T>(json: string | undefined): readonly T[] {
+	if (!json) return [];
+	try {
+		return JSON.parse(json) as T[];
+	} catch {
+		return [];
+	}
+}
+
 function mediaGraphNodesToDiagramNodes(records: readonly MediaGraphNodeRecord[]): Node<MediaGraphNodeData>[] {
 	return records.map((record) => ({
 		id: record.id,
@@ -164,22 +187,14 @@ export function NodeGraphHost({
 	readonly onCommand: (command: CommandDescriptor) => void;
 }) {
 	const scene = node.nodeGraph;
-	const parsedNodes = useMemo(() => {
-		if (!scene) return [] as MediaGraphNodeRecord[];
-		try {
-			return JSON.parse(scene.nodesJson) as MediaGraphNodeRecord[];
-		} catch {
-			return [];
-		}
-	}, [scene]);
-	const parsedEdges = useMemo(() => {
-		if (!scene) return [] as MediaGraphEdgeRecord[];
-		try {
-			return JSON.parse(scene.edgesJson) as MediaGraphEdgeRecord[];
-		} catch {
-			return [];
-		}
-	}, [scene]);
+	const editable = scene?.editable ?? true;
+	const parsedNodes = useMemo(() => parseJsonArray<MediaGraphNodeRecord>(scene?.nodesJson), [scene?.nodesJson]);
+	const parsedEdges = useMemo(() => parseJsonArray<MediaGraphEdgeRecord>(scene?.edgesJson), [scene?.edgesJson]);
+	const findItems = useMemo(() => parseJsonArray<GraphFindItem>(scene?.findItemsJson), [scene?.findItemsJson]);
+	const contextMenuItems = useMemo(
+		() => parseJsonArray<GraphContextMenuItem>(scene?.contextMenuJson),
+		[scene?.contextMenuJson],
+	);
 	const viewport = useMemo(() => parseViewport(scene?.viewportJson ?? "{}"), [scene?.viewportJson]);
 	const initialNodes = useMemo(() => mediaGraphNodesToDiagramNodes(parsedNodes), [parsedNodes]);
 	const initialEdges = useMemo(() => mediaGraphEdgesToDiagramEdges(parsedEdges), [parsedEdges]);
@@ -201,10 +216,34 @@ export function NodeGraphHost({
 		[node.controllerId, node.surfaceId, onCommand],
 	);
 
+	const findContext = useUIFindSafe();
+	const setFindItems = findContext?.setFindItems;
+	const setOnFindItem = findContext?.setOnFindItem;
+	const onFindItemRef = useRef<(itemId: string) => void>(() => {});
+
+	onFindItemRef.current = (itemId: string) => {
+		const mediaNode = parsedNodes.find((entry) => entry.instanceId === itemId);
+		if (!mediaNode) return;
+		dispatch("setMediaNodeSelection", { nodeIds: [mediaNode.id] });
+		dispatch("selectInstance", { instanceId: mediaNode.instanceId! });
+	};
+
+	useEffect(() => {
+		if (!setFindItems || findItems.length === 0) return;
+		setFindItems(findItems);
+	}, [findItems, setFindItems]);
+
+	useEffect(() => {
+		if (!setOnFindItem || findItems.length === 0) return;
+		setOnFindItem((itemId) => onFindItemRef.current(itemId));
+		return () => setOnFindItem(undefined);
+	}, [findItems.length, setOnFindItem]);
+
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	const handleCatalogueDrop = useCallback(
 		(event: DragEvent<HTMLDivElement>) => {
+			if (!editable) return;
 			event.preventDefault();
 			const raw = event.dataTransfer.getData(CATALOGUE_DRAG_MIME);
 			if (!raw) return;
@@ -221,7 +260,15 @@ export function NodeGraphHost({
 			const y = (event.clientY - rect.top - viewport.y) / viewport.zoom;
 			dispatch("spawnApp", { programId: payload.programId, appId: payload.appId, position: { x, y } });
 		},
-		[dispatch, viewport.x, viewport.y, viewport.zoom],
+		[dispatch, editable, viewport.x, viewport.y, viewport.zoom],
+	);
+
+	const handleNodeDoubleClick = useCallback(
+		(_event: React.MouseEvent, clickedNode: Node) => {
+			const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
+			if (record?.instanceId) dispatch("openInstance", { instanceId: record.instanceId });
+		},
+		[dispatch, parsedNodes],
 	);
 
 	if (!scene) return <div className="semio-node-graph-empty">No graph scene</div>;
@@ -232,9 +279,15 @@ export function NodeGraphHost({
 			className="semio-node-graph-host relative h-full min-h-[24rem] w-full"
 			data-surface-id={node.surfaceId}
 			onDragOver={(event) => {
-				if (event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) event.preventDefault();
+				if (editable && event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) event.preventDefault();
 			}}
 			onDrop={handleCatalogueDrop}
+			onContextMenu={(event) => {
+				if (!editable || contextMenuItems.length === 0) return;
+				event.preventDefault();
+				const first = contextMenuItems[0];
+				if (first) dispatch(first.command, first.args);
+			}}
 		>
 			<Diagram
 				className="h-full w-full"
@@ -248,26 +301,45 @@ export function NodeGraphHost({
 				panOnDrag={[0, 1]}
 				selectionOnDrag
 				elementsSelectable
-				nodesDraggable
+				nodesDraggable={editable}
+				nodesConnectable={editable}
+				edgesReconnectable={editable}
 				onNodesChange={(nextNodes) => setNodes(nextNodes as Node<MediaGraphNodeData>[])}
 				onEdgesChange={(nextEdges) => setEdges(nextEdges)}
-				onNodeDragStop={(_event, draggedNode) => {
-					dispatch("moveMediaNode", { nodeId: draggedNode.id, x: draggedNode.position.x, y: draggedNode.position.y });
-				}}
-				onConnect={(connection) => {
-					if (!connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return;
-					dispatch("connectMediaPorts", {
-						sourceNodeId: connection.source,
-						sourcePortId: connection.sourceHandle,
-						targetNodeId: connection.target,
-						targetPortId: connection.targetHandle,
-					});
-				}}
+				onNodeDragStop={
+					editable
+						? (_event, draggedNode) => {
+								dispatch("moveMediaNode", { nodeId: draggedNode.id, x: draggedNode.position.x, y: draggedNode.position.y });
+							}
+						: undefined
+				}
+				onConnect={
+					editable
+						? (connection) => {
+								if (!connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return;
+								dispatch("connectMediaPorts", {
+									sourceNodeId: connection.source,
+									sourcePortId: connection.sourceHandle,
+									targetNodeId: connection.target,
+									targetPortId: connection.targetHandle,
+								});
+							}
+						: undefined
+				}
 				onNodeClick={(_event, clickedNode) => {
 					const record = parsedNodes.find((entry) => entry.id === clickedNode.id);
 					if (record?.instanceId) dispatch("selectInstance", { instanceId: record.instanceId });
 					else dispatch("selectNode", { nodeId: clickedNode.id });
 				}}
+				onNodeDoubleClick={handleNodeDoubleClick}
+				onSelectionChange={
+					findItems.length > 0
+						? (selection) => {
+								const nodeIds = selection.nodes.map((entry) => entry.id);
+								dispatch("setMediaNodeSelection", { nodeIds });
+							}
+						: undefined
+				}
 				onPaneClick={() => dispatch("graphPointerDown")}
 			/>
 		</div>

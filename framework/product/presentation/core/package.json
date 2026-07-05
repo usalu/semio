@@ -9,9 +9,7 @@
     ".": "./js/index.ts"
   },
   "dependencies": {
-    "@semio-tech/vcs-core": "workspace:*",
-    "@semio-tech/framework-os-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "@semio-tech/framework-os-core": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

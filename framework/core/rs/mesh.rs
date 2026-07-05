@@ -14,6 +14,22 @@ pub struct MeshData {
     pub colors: Vec<f32>,
     #[serde(default)]
     pub indices: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub uvs: Vec<f32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub face_ids: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub vertex_ids: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub edge_positions: Vec<f32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub edge_ids: Vec<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub edge_uvs: Vec<f32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub edge_is_seam: Vec<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub paint_texture_base64: Option<String>,
 }
 
 impl MeshData {
@@ -500,6 +516,7 @@ pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
         normals,
         colors: Vec::new(),
         indices,
+        ..Default::default()
     };
     if mesh.normals.is_empty() {
         mesh.compute_normals();

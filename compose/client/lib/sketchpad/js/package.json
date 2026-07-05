@@ -12,12 +12,7 @@
   "dependencies": {
     "@semio-tech/framework-os-core": "workspace:*",
     "@semio-tech/framework-core": "workspace:*",
-    "@semio-tech/framework-playground-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*",
-    "@semio-tech/framework-platform-renderer-react": "workspace:*",
     "@mdx-js/react": "^3.1.1",
-    "@semio-tech/compose-js": "*",
-    "@semio-tech/reasoning-mindmap-wires-react": "workspace:*",
     "@semio-tech/compose-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "fflate": "^0.8.2",

@@ -539,11 +539,7 @@ fn render_graph(envelope: &TrinityJackEnvelope) -> UiNode {
     build_node_graph_scene(
         TRINITY_JACK_PLAY_SURFACE_GRAPH,
         TRINITY_JACK_PLAY_CONTROLLER_ID,
-        NodeGraphScene {
-            nodes_json,
-            edges_json,
-            viewport_json,
-        },
+        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
     )
 }
 
@@ -551,11 +547,7 @@ fn render_editor(envelope: &TrinityJackEnvelope) -> UiNode {
     build_text_editor_scene(
         TRINITY_JACK_PLAY_SURFACE_EDITOR,
         TRINITY_JACK_PLAY_CONTROLLER_ID,
-        TextEditorScene {
-            buffer: envelope.runtime.jack_query.clone(),
-            language: Some("jack".into()),
-            selection_json: None,
-        },
+        TextEditorScene::base(envelope.runtime.jack_query.clone(), Some("jack".into()), None),
     )
 }
 

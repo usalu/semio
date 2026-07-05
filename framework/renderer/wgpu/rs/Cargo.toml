@@ -44,6 +44,7 @@ web-sys = { version = "0.3.98", features = [
     "Url",
     "HtmlAnchorElement",
     "console",
+    "MediaQueryList",
 ] }
 
 [dev-dependencies]

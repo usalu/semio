@@ -1362,22 +1362,6 @@ export function createPlaygroundPlayViteConfig(options: PlaygroundPlayViteOption
             find: "@semio-tech/graph-dsl-core",
             replacement: resolve(repoRoot, "mathematical/graph/dsl/core/js/index.ts"),
           },
-          {
-            find: "@semio-tech/writer-core/internal",
-            replacement: resolve(repoRoot, "writer/core/js/internal.ts"),
-          },
-          {
-            find: "@semio-tech/writer-core",
-            replacement: resolve(repoRoot, "writer/core/js/index.ts"),
-          },
-          {
-            find: "@semio-tech/vcs-core/internal",
-            replacement: resolve(repoRoot, "vcs/core/js/internal.ts"),
-          },
-          {
-            find: "@semio-tech/vcs-core",
-            replacement: resolve(repoRoot, "vcs/core/js/index.ts"),
-          },
         ]
       : [];
   const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [...extraAliases, ...osHubAliases]);

@@ -257,6 +257,87 @@ pub fn os_media_graph_to_flow_fixture(
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct OsMediaNodeGraphPayload {
+    pub nodes_json: String,
+    pub edges_json: String,
+    pub viewport_json: String,
+    pub find_items_json: String,
+}
+
+/** @emoji 🕸️ Serializes an OS media graph into generic node-graph scene payloads. */
+pub fn os_media_graph_to_node_graph_payload(
+    graph: &OsMediaGraph,
+    instances: &[OsAppInstance],
+) -> OsMediaNodeGraphPayload {
+    let instance_by_id: HashMap<_, _> = instances.iter().map(|instance| (instance.id.clone(), instance)).collect();
+    let nodes: Vec<_> = graph
+        .nodes
+        .iter()
+        .map(|node| {
+            let instance = instance_by_id.get(&node.instance_id);
+            let label = instance
+                .map(|entry| format!("{} / {}", entry.program_id, entry.app_id))
+                .unwrap_or_else(|| node.instance_id.clone());
+            json!({
+                "id": node.id,
+                "instanceId": node.instance_id,
+                "label": label,
+                "x": node.x,
+                "y": node.y,
+                "width": node.width,
+                "height": node.height,
+                "inputs": node.inputs.iter().map(|port| json!({
+                    "id": port.id,
+                    "resourceKind": port.resource_kind,
+                    "direction": port.direction,
+                    "label": port.id,
+                })).collect::<Vec<_>>(),
+                "outputs": node.outputs.iter().map(|port| json!({
+                    "id": port.id,
+                    "resourceKind": port.resource_kind,
+                    "direction": port.direction,
+                    "label": port.id,
+                })).collect::<Vec<_>>(),
+            })
+        })
+        .collect();
+    let edges: Vec<_> = graph
+        .edges
+        .iter()
+        .map(|edge| {
+            json!({
+                "id": edge.id,
+                "sourceNodeId": edge.source_node_id,
+                "sourcePortId": edge.source_port_id,
+                "targetNodeId": edge.target_node_id,
+                "targetPortId": edge.target_port_id,
+            })
+        })
+        .collect();
+    let find_items: Vec<_> = graph
+        .nodes
+        .iter()
+        .map(|node| {
+            let instance = instance_by_id.get(&node.instance_id);
+            json!({
+                "id": node.instance_id,
+                "label": instance
+                    .map(|entry| format!("{} / {}", entry.program_id, entry.app_id))
+                    .unwrap_or_else(|| node.instance_id.clone()),
+                "category": "Media graph",
+            })
+        })
+        .collect();
+    OsMediaNodeGraphPayload {
+        nodes_json: serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()),
+        edges_json: serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()),
+        viewport_json: r#"{"x":0,"y":0,"zoom":1}"#.into(),
+        find_items_json: serde_json::to_string(&find_items).unwrap_or_else(|_| "[]".into()),
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OsMediaFlowChannelSpec {
     pub name: String,
     pub code: String,

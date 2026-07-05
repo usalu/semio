@@ -10,8 +10,7 @@
     "build": "bun nx run @semio-tech/mit-bestand-praesentation-projektetage:build"
   },
   "dependencies": {
-    "@semio-tech/framework-presentation-core": "workspace:*",
-    "@semio-tech/framework-presentation-renderer-react": "workspace:*"
+    "@semio-tech/framework-presentation-core": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.18",

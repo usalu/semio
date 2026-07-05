@@ -4,6 +4,7 @@ pub mod command_bus;
 pub mod layout;
 pub mod mesh;
 pub mod platform;
+pub mod tools;
 pub mod ui;
 
 pub use command_bus::{CommandBus, CommandHandler};
@@ -25,4 +26,5 @@ pub use mesh::{
     mesh_to_glb, mesh_to_obj, mesh_torus, mesh_uv_sphere, MeshData,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
+pub use tools::{tool_button, tool_collection, tool_separator, tool_toggle, ToolNode};
 pub use ui::*;

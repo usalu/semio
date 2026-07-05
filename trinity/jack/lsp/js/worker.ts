@@ -5,7 +5,7 @@ import {
 	isJsonRpcResponse,
 	type LanguageServer,
 	type LspMessage,
-} from "@semio-tech/writer-core";
+} from "./protocol.ts";
 import init, { JackLspSession } from "../rs/pkg/trinity_jack_lsp.js";
 
 let session: JackLspSession | null = null;

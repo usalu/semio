@@ -1,6 +1,11 @@
 //! 🎨 Theme colors and metrics for wgpu UI rendering.
 
 use crate::geometry::Rect;
+use ui_styling::{
+    metrics::{chrome as chrome_metrics, dom, typography},
+    radii, strokes, ChromeTheme, CHROME_DARK, CHROME_LIGHT,
+};
+use ui_styling::theme::ThemeName;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Rgba {
@@ -19,6 +24,14 @@ impl Rgba {
         let [lr, lg, lb, la] = ui_styling::color::rgba8_to_linear(r, g, b, a);
         Self::new(lr, lg, lb, la)
     }
+
+    fn from_chrome(c: &[f32; 4]) -> Self {
+        Self::new(c[0], c[1], c[2], c[3])
+    }
+
+    pub fn with_alpha(self, a: f32) -> Self {
+        Self::new(self.r, self.g, self.b, a)
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -31,6 +44,7 @@ pub struct Theme {
     pub text_muted: Rgba,
     pub accent: Rgba,
     pub accent_hover: Rgba,
+    pub active_foreground: Rgba,
     pub button: Rgba,
     pub button_hover: Rgba,
     pub input_bg: Rgba,
@@ -44,7 +58,19 @@ pub struct Theme {
     pub control_height: f32,
     pub font_size_body: f32,
     pub font_size_small: f32,
+    pub font_size_emphasized: f32,
+    pub footer_height: f32,
+    pub panel_inset: f32,
+    pub panel_min_width: f32,
+    pub panel_max_width: f32,
+    pub overlay_bg: Rgba,
+    pub overlay_shadow: Rgba,
+    pub focus_ring: Rgba,
+    pub row_hover: Rgba,
     pub border_radius: f32,
+    pub border_normal: Rgba,
+    pub border_emphasized: Rgba,
+    pub stroke_hairline: f32,
 }
 
 impl Default for Theme {
@@ -53,31 +79,67 @@ impl Default for Theme {
     }
 }
 
+fn chrome_px(ui_spacing_mult: f64) -> f32 {
+    (chrome_metrics::UI_SPACING_COMPACT_PX * ui_spacing_mult) as f32
+}
+
+fn panel_width(ui_spacing_mult: f64) -> f32 {
+    (chrome_metrics::UI_SPACING_COMPACT_PX * ui_spacing_mult) as f32
+}
+
+fn from_chrome(chrome: &ChromeTheme) -> Theme {
+    Theme {
+        background: Rgba::from_chrome(&chrome.canvas),
+        panel: Rgba::from_chrome(&chrome.panel),
+        panel_border: Rgba::from_chrome(&chrome.border_normal),
+        navbar: Rgba::from_chrome(&chrome.window),
+        text: Rgba::from_chrome(&chrome.foreground),
+        text_muted: Rgba::from_chrome(&chrome.muted_foreground),
+        accent: Rgba::from_chrome(&chrome.accent),
+        accent_hover: Rgba::from_chrome(&chrome.active_hover),
+        active_foreground: Rgba::from_chrome(&chrome.active_foreground),
+        button: Rgba::from_chrome(&chrome.window),
+        button_hover: Rgba::from_chrome(&chrome.hover_interactive_fill),
+        input_bg: Rgba::from_chrome(&chrome.canvas),
+        separator: Rgba::from_chrome(&chrome.border_normal),
+        selected: Rgba::from_chrome(&chrome.active_base),
+        canvas_clear: Rgba::from_chrome(&chrome.canvas),
+        gap_standard: chrome_px(chrome_metrics::GAP_STANDARD_UI_SPACING),
+        padding_standard: chrome_px(chrome_metrics::PADDING_STANDARD_UI_SPACING),
+        navbar_height: chrome_px(chrome_metrics::NAVBAR_HEIGHT_UI_SPACING),
+        panel_header_height: chrome_px(chrome_metrics::PANEL_HEADER_HEIGHT_UI_SPACING),
+        control_height: chrome_px(chrome_metrics::CONTROL_HEIGHT_UI_SPACING),
+        font_size_body: typography::TEXT_SM_PX as f32,
+        font_size_small: typography::TEXT_XS_PX as f32,
+        font_size_emphasized: typography::TEXT_BASE_PX as f32,
+        footer_height: chrome_px(chrome_metrics::FOOTER_HEIGHT_UI_SPACING),
+        panel_inset: chrome_px(chrome_metrics::PANEL_INSET_UI_SPACING),
+        panel_min_width: panel_width(dom::LAYOUT_PANEL_MIN_UI_SPACING),
+        panel_max_width: panel_width(dom::LAYOUT_PANEL_MAX_UI_SPACING),
+        overlay_bg: Rgba::from_chrome(&chrome.overlay_bg),
+        overlay_shadow: Rgba::new(0.0, 0.0, 0.0, 0.0),
+        focus_ring: Rgba::from_chrome(&chrome.accent).with_alpha(0.6),
+        row_hover: Rgba::from_chrome(&chrome.hover_interactive_fill),
+        border_radius: radii::CHROME as f32,
+        border_normal: Rgba::from_chrome(&chrome.border_normal),
+        border_emphasized: Rgba::from_chrome(&chrome.border_emphasized),
+        stroke_hairline: strokes::CHROME_BORDER_HAIRLINE as f32,
+    }
+}
+
 impl Theme {
+    pub fn light() -> Self {
+        from_chrome(&CHROME_LIGHT)
+    }
+
     pub fn dark() -> Self {
-        Self {
-            background: Rgba::new(0.07, 0.07, 0.08, 1.0),
-            panel: Rgba::new(0.11, 0.11, 0.12, 1.0),
-            panel_border: Rgba::new(0.18, 0.18, 0.20, 1.0),
-            navbar: Rgba::new(0.09, 0.09, 0.10, 1.0),
-            text: Rgba::new(0.92, 0.92, 0.94, 1.0),
-            text_muted: Rgba::new(0.62, 0.62, 0.66, 1.0),
-            accent: Rgba::new(0.35, 0.55, 0.95, 1.0),
-            accent_hover: Rgba::new(0.42, 0.62, 1.0, 1.0),
-            button: Rgba::new(0.16, 0.16, 0.18, 1.0),
-            button_hover: Rgba::new(0.22, 0.22, 0.25, 1.0),
-            input_bg: Rgba::new(0.05, 0.05, 0.06, 1.0),
-            separator: Rgba::new(0.20, 0.20, 0.22, 1.0),
-            selected: Rgba::new(0.25, 0.40, 0.75, 0.35),
-            canvas_clear: Rgba::new(0.05, 0.05, 0.06, 1.0),
-            gap_standard: 8.0,
-            padding_standard: 12.0,
-            navbar_height: 40.0,
-            panel_header_height: 32.0,
-            control_height: 28.0,
-            font_size_body: 13.0,
-            font_size_small: 11.0,
-            border_radius: 6.0,
+        from_chrome(&CHROME_DARK)
+    }
+
+    pub fn for_name(name: ThemeName) -> Self {
+        match name {
+            ThemeName::Light => Self::light(),
+            ThemeName::Dark => Self::dark(),
         }
     }
 }

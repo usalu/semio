@@ -25,8 +25,8 @@ pub use instance::{
 pub use media_graph::{
     assert_os_media_export_coverage, empty_media_graph, export_os_app_instance_media,
     list_os_media_graph_vfs_children, media_graph_node_for_instance, os_media_export_extension_for_format,
-    os_media_graph_to_flow_fixture, os_media_graph_vfs_export_id, os_media_graph_vfs_instance_folder_id,
-    build_os_media_flow_operator_infos, OsMediaFlowOperatorInfo,
+    os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_export_id, os_media_graph_vfs_instance_folder_id,
+    build_os_media_flow_operator_infos, OsMediaFlowOperatorInfo, OsMediaNodeGraphPayload,
     os_media_graph_vfs_instance_id, os_media_graph_vfs_schema, os_media_graph_vfs_source_id,
     os_media_neuron_kind_for_node, register_os_media_export_handler, required_os_media_export_formats,
     sync_media_graph_parameter_ports, validate_media_graph, MediaGraphPosition, MediaGraphValidation,

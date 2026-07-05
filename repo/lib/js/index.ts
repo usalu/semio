@@ -1249,7 +1249,7 @@ export function frameworkOsPlaygroundDevEnv(
 	const port = portEnv && env[portEnv] ? { S_OS_PORT: env[portEnv] } : {};
 	return devToolingEnv({
 		SEMIO_PLUGIN: plugin,
-		SEMIO_RENDERER: "wgpu",
+		SEMIO_RENDERER: env.SEMIO_RENDERER ?? "react",
 		...port,
 		...extra,
 	});

@@ -642,6 +642,7 @@ export type PluginWasmHandle = {
 	readonly destroyApp: (instanceId: number) => Promise<void>;
 	readonly handleCommand: (instanceId: number, commandJson: string, viewState: PluginViewState) => Promise<string[]>;
 	readonly render: (instanceId: number, bodyKey: string, viewState: PluginViewState) => Promise<PluginUiNode>;
+	readonly tools: (instanceId: number, viewState: PluginViewState) => Promise<readonly Record<string, unknown>[]>;
 	readonly dispose: () => void;
 };
 
@@ -662,6 +663,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 		semio_plugin_destroy_app?: (instanceId: number) => void;
 		semio_plugin_handle_command?: (instanceId: number, commandJson: string, viewStateJson: string) => string;
 		semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
+		semio_plugin_tools?: (instanceId: number, viewStateJson: string) => string;
 	};
 	if (module.default) await module.default();
 	if (!module.semio_plugin_manifest) {
@@ -690,6 +692,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 			if (!render) throw new Error(`plugin ${pluginId} missing render`);
 			return JSON.parse(render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode;
 		},
+		async tools(instanceId: number, viewState: PluginViewState) {
+			const tools = module.semio_plugin_tools;
+			if (!tools) return [];
+			return JSON.parse(tools(instanceId, JSON.stringify(viewState))) as Record<string, unknown>[];
+		},
 		dispose() {},
 	};
 }
@@ -707,6 +714,8 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
 			handle.handleCommand(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)),
 		render: (instanceId: number, bodyKey: string, viewStateJson: string) =>
 			handle.render(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState).then((node) => JSON.stringify(node)),
+		tools: (instanceId: number, viewStateJson: string) =>
+			handle.tools(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((nodes) => JSON.stringify(nodes)),
 	};
 }
 //#endregion PluginRuntime

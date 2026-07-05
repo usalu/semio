@@ -114,7 +114,10 @@ STYLING_STROKES: Final[dict[str, float | list[float]]] = {
     "mapLineScaleCap": 1.38,
     "mapLineScaleRaw": 280,
     "mapRoadLodRegion": 0.4,
-    "mapRoadLodCity": 0.3
+    "mapRoadLodCity": 0.3,
+    "chromeBorderHairline": 1,
+    "chromeBorderDefault": 2,
+    "chromeBorderFocus": 3
 }
 STYLING_RADII: Final[dict[str, float]] = {
     "nodeDefault": 24,
@@ -124,7 +127,8 @@ STYLING_RADII: Final[dict[str, float]] = {
     "nodeRectDefault": 40,
     "dagHandleWorld": 5,
     "mapPositionMarker": 8,
-    "mapLabelAnchorOffset": 6
+    "mapLabelAnchorOffset": 6,
+    "chrome": 0
 }
 STYLING_OPACITIES: Final[dict[str, float]] = {
     "gridMinorAlpha": 0.22,
@@ -294,6 +298,23 @@ STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
         "lineWidthSelected": 3,
         "lineWidthDefault": 2
     },
+    "chrome": {
+        "uiSpacingCompactPx": 3.2,
+        "navbarHeightUiSpacing": 9,
+        "footerHeightUiSpacing": 9,
+        "controlHeightUiSpacing": 7,
+        "panelHeaderHeightUiSpacing": 7,
+        "gapStandardUiSpacing": 1,
+        "paddingStandardUiSpacing": 1,
+        "panelInsetUiSpacing": 1
+    },
+    "typography": {
+        "text2xsPx": 9.6,
+        "textXsPx": 11.2,
+        "textSmPx": 12.8,
+        "textBasePx": 14.4,
+        "textLgPx": 16
+    },
     "dom": {
         "iconTinyUiSpacing": 3.75,
         "iconSmallUiSpacing": 6.25,
@@ -365,6 +386,42 @@ BOARD_LIGHT: Final[BoardTheme] = BoardTheme(raster_clear=(240, 236, 221, 255), g
 BOARD_DARK: Final[BoardTheme] = BoardTheme(raster_clear=(12, 28, 33, 255), grid_minor_stroke=(85, 95, 93, 56), edge_stroke=(162, 165, 157, 255), edge_stroke_hovered=(247, 243, 227, 255), edge_stroke_selected=(255, 52, 79, 255), edge_stroke_selection_exit=(52, 209, 191, 255), edge_stroke_disabled=(32, 36, 35, 97), node_fill=(46, 60, 61, 255), node_stroke=(162, 165, 157, 255), node_fill_hovered=(85, 95, 93, 255), node_stroke_hovered=(247, 243, 227, 255), node_fill_selected=(255, 52, 79, 255), node_stroke_selected=(255, 52, 79, 255), node_fill_selection_exit=(47, 96, 92, 255), node_stroke_selection_exit=(52, 209, 191, 255), node_fill_disabled=(23, 30, 31, 128), node_stroke_disabled=(32, 36, 35, 97), indirect_handle_fill=(47, 96, 92, 255), indirect_handle_stroke=(52, 209, 191, 255), handle_fill=(12, 28, 33, 0), handle_stroke=(162, 165, 157, 255), handle_fill_hovered=(85, 95, 93, 255), handle_stroke_hovered=(162, 165, 157, 255), handle_fill_selected=(255, 52, 79, 255), handle_stroke_selected=(255, 52, 79, 255), handle_fill_selection_exit=(47, 96, 92, 255), handle_stroke_selection_exit=(52, 209, 191, 255), handle_fill_disabled=(23, 30, 31, 128), handle_stroke_disabled=(32, 36, 35, 97), wire_stroke=(162, 165, 157, 255), wire_stroke_hovered=(247, 243, 227, 255), wire_stroke_selected=(255, 52, 79, 255), wire_stroke_highlighted=(52, 209, 191, 255), wire_stroke_disabled=(32, 36, 35, 97), selection_preview_fill=(31, 6, 9, 31), selection_preview_stroke=(255, 52, 79, 179), label_fill=(211, 210, 197, 255), label_fill_hovered=(247, 243, 227, 255), label_halo=(12, 28, 33, 199))
 
 @dataclass(frozen=True, slots=True)
+class CanvasTheme:
+    raster_clear: tuple[int, int, int, int]
+    icon_fg: tuple[int, int, int, int]
+    icon_bg: tuple[int, int, int, int]
+    label_fill: tuple[int, int, int, int]
+    label_halo: tuple[int, int, int, int]
+
+CANVAS_LIGHT: Final[CanvasTheme] = CanvasTheme(raster_clear=(240, 236, 221, 255), icon_fg=(0, 0, 0, 255), icon_bg=(255, 255, 255, 255), label_fill=(0, 17, 23, 255), label_halo=(247, 243, 227, 255))
+CANVAS_DARK: Final[CanvasTheme] = CanvasTheme(raster_clear=(12, 28, 33, 255), icon_fg=(247, 243, 227, 255), icon_bg=(0, 17, 23, 255), label_fill=(247, 243, 227, 255), label_halo=(12, 28, 33, 255))
+
+@dataclass(frozen=True, slots=True)
+class ChromeTheme:
+    base: tuple[int, int, int, int]
+    canvas: tuple[int, int, int, int]
+    window: tuple[int, int, int, int]
+    panel: tuple[int, int, int, int]
+    foreground: tuple[int, int, int, int]
+    muted_foreground: tuple[int, int, int, int]
+    accent: tuple[int, int, int, int]
+    accent_foreground: tuple[int, int, int, int]
+    active_base: tuple[int, int, int, int]
+    active_foreground: tuple[int, int, int, int]
+    active_hover: tuple[int, int, int, int]
+    hover_interactive_fill: tuple[int, int, int, int]
+    hover_window: tuple[int, int, int, int]
+    hover_panel: tuple[int, int, int, int]
+    border_normal: tuple[int, int, int, int]
+    border_emphasized: tuple[int, int, int, int]
+    border_element: tuple[int, int, int, int]
+    temporary: tuple[int, int, int, int]
+    overlay_bg: tuple[int, int, int, int]
+
+CHROME_LIGHT: Final[ChromeTheme] = ChromeTheme(base=(247, 243, 227, 255), canvas=(240, 236, 221, 255), window=(235, 232, 217, 255), panel=(201, 200, 189, 255), foreground=(0, 17, 23, 255), muted_foreground=(123, 130, 125, 255), accent=(255, 52, 79, 255), accent_foreground=(0, 17, 23, 255), active_base=(255, 52, 79, 255), active_foreground=(0, 17, 23, 255), active_hover=(230, 47, 71, 255), hover_interactive_fill=(123, 130, 125, 255), hover_window=(211, 210, 197, 255), hover_panel=(162, 165, 157, 255), border_normal=(123, 130, 125, 255), border_emphasized=(0, 17, 23, 255), border_element=(123, 130, 125, 255), temporary=(151, 155, 148, 255), overlay_bg=(151, 155, 148, 250))
+CHROME_DARK: Final[ChromeTheme] = ChromeTheme(base=(0, 17, 23, 255), canvas=(12, 28, 33, 255), window=(7, 24, 29, 255), panel=(29, 43, 47, 255), foreground=(247, 243, 227, 255), muted_foreground=(123, 130, 125, 255), accent=(255, 52, 79, 255), accent_foreground=(247, 243, 227, 255), active_base=(255, 52, 79, 255), active_foreground=(247, 243, 227, 255), active_hover=(230, 47, 71, 255), hover_interactive_fill=(123, 130, 125, 255), hover_window=(36, 50, 53, 255), hover_panel=(85, 95, 93, 255), border_normal=(123, 130, 125, 255), border_emphasized=(247, 243, 227, 255), border_element=(123, 130, 125, 255), temporary=(36, 50, 53, 255), overlay_bg=(36, 50, 53, 250))
+
+@dataclass(frozen=True, slots=True)
 class MapTheme:
     surface_clear: tuple[int, int, int, int]
     land_fill: tuple[int, int, int, int]
@@ -379,14 +436,3 @@ class MapTheme:
 
 MAP_LIGHT: Final[MapTheme] = MapTheme(surface_clear=(12, 28, 33, 255), land_fill=(46, 60, 61, 255), land_stroke=(51, 64, 65, 107), label_fill=(247, 243, 227, 255), label_halo=(12, 28, 33, 235), region_fill=(52, 209, 191, 56), region_stroke=(52, 209, 191, 230), route_stroke=(250, 149, 0, 235), position_fill=(255, 52, 79, 255), position_stroke=(247, 243, 227, 255))
 MAP_DARK: Final[MapTheme] = MapTheme(surface_clear=(6, 23, 28, 255), land_fill=(12, 28, 33, 255), land_stroke=(51, 64, 65, 107), label_fill=(247, 243, 227, 255), label_halo=(6, 23, 28, 235), region_fill=(52, 209, 191, 56), region_stroke=(52, 209, 191, 230), route_stroke=(250, 149, 0, 235), position_fill=(255, 52, 79, 255), position_stroke=(247, 243, 227, 255))
-
-@dataclass(frozen=True, slots=True)
-class CanvasTheme:
-    raster_clear: tuple[int, int, int, int]
-    icon_fg: tuple[int, int, int, int]
-    icon_bg: tuple[int, int, int, int]
-    label_fill: tuple[int, int, int, int]
-    label_halo: tuple[int, int, int, int]
-
-CANVAS_LIGHT: Final[CanvasTheme] = CanvasTheme(raster_clear=(240, 236, 221, 255), icon_fg=(0, 0, 0, 255), icon_bg=(255, 255, 255, 255), label_fill=(0, 17, 23, 255), label_halo=(247, 243, 227, 255))
-CANVAS_DARK: Final[CanvasTheme] = CanvasTheme(raster_clear=(12, 28, 33, 255), icon_fg=(247, 243, 227, 255), icon_bg=(0, 17, 23, 255), label_fill=(247, 243, 227, 255), label_halo=(12, 28, 33, 255))

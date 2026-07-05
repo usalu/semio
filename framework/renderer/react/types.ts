@@ -206,18 +206,20 @@ export type NodeGraphScene = {
 	readonly nodesJson: string;
 	readonly edgesJson: string;
 	readonly viewportJson: string;
-};
-
-export type FlowCanvasScene = {
-	readonly fixtureJson: string;
-	readonly operatorsJson?: string;
 	readonly editable?: boolean;
+	readonly operatorsJson?: string;
+	readonly contextMenuJson?: string;
+	readonly findItemsJson?: string;
 };
 
 export type TextEditorScene = {
 	readonly buffer: string;
 	readonly language?: string;
 	readonly selectionJson?: string;
+	readonly tokensJson?: string;
+	readonly diagnosticsJson?: string;
+	readonly completionsJson?: string;
+	readonly overlaysJson?: string;
 };
 
 export type TableScene = {
@@ -250,7 +252,6 @@ export type UiComponentSceneNode = {
 	readonly canvas2d?: Canvas2dScene;
 	readonly world3d?: World3dScene;
 	readonly nodeGraph?: NodeGraphScene;
-	readonly flowCanvas?: FlowCanvasScene;
 	readonly textEditor?: TextEditorScene;
 	readonly table?: TableScene;
 	readonly raster?: RasterScene;
@@ -473,7 +474,7 @@ export type AppDefinition = {
 	readonly label: string;
 	readonly iconId?: string;
 	readonly controllerId: string;
-	readonly modes: readonly { readonly id: string; readonly label: string }[];
+	readonly modes: readonly { readonly id: string; readonly label: string; readonly tools?: readonly ToolNode[] }[];
 	readonly defaultModeId?: string;
 	readonly windowKinds: readonly {
 		readonly id: string;
@@ -553,6 +554,29 @@ export type ToolNode =
 			readonly order?: number;
 			readonly disabled?: boolean;
 			readonly children: readonly ToolNode[];
+	  }
+	| {
+			readonly id: string;
+			readonly kind: "button";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly disabled?: boolean;
+			readonly onPress: CommandDescriptor;
+	  }
+	| {
+			readonly id: string;
+			readonly kind: "toggle";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly pressed?: boolean;
+			readonly disabled?: boolean;
+			readonly onChange: CommandDescriptor;
 	  };
 
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";

@@ -2,7 +2,7 @@
 
 use semio_framework_core::{
     AppDefinition, CommandDescriptor, ExampleDefinition, Keybinding, ModeDefinition,
-    NamedLayout, PanelTabDefinition, PluginManifest, ProgramDefinition, UiNode, ViewState,
+    NamedLayout, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode, UiNode, ViewState,
     WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
 };
 use serde_json::Value;
@@ -11,6 +11,7 @@ use std::collections::HashMap;
 pub struct ModeSpec {
     pub id: String,
     pub label: String,
+    pub tools: Vec<ToolNode>,
 }
 
 pub struct WindowKindSpec {
@@ -76,7 +77,16 @@ impl AppBuilder {
         self.modes.push(ModeSpec {
             id: id.into(),
             label: label.into(),
+            tools: Vec::new(),
         });
+        self
+    }
+
+    pub fn mode_tools(mut self, mode_id: impl AsRef<str>, tools: Vec<ToolNode>) -> Self {
+        let mode_id = mode_id.as_ref();
+        if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
+            mode.tools = tools;
+        }
         self
     }
 
@@ -165,6 +175,7 @@ impl AppBuilder {
                 .map(|mode| ModeDefinition {
                     id: mode.id,
                     label: mode.label,
+                    tools: mode.tools,
                 })
                 .collect(),
             default_mode_id,
@@ -252,6 +263,9 @@ pub trait PluginApp: Send {
     fn initial_document_json(&self) -> String;
     fn handle_command(&mut self, command: &str, args: Option<&Value>, document_json: &str, view_state: &ViewState) -> Vec<String>;
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode;
+    fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+        Vec::new()
+    }
 }
 
 pub struct AppInstance {

@@ -24,14 +24,70 @@ pub fn world3d_meshes_json_from_kinds(kinds: &[String]) -> String {
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
+pub fn world3d_mesh_id_from_url(url: &str) -> String {
+    let slug = url
+        .trim_start_matches('/')
+        .rsplit('/')
+        .next()
+        .unwrap_or(url)
+        .trim_end_matches(".glb")
+        .trim_end_matches(".gltf");
+    format!("mesh:{slug}")
+}
+
+pub fn world3d_meshes_json_from_urls(urls: &[String]) -> String {
+    let meshes: Vec<Value> = urls
+        .iter()
+        .map(|url| {
+            json!({
+                "id": world3d_mesh_id_from_url(url),
+                "url": url,
+            })
+        })
+        .collect();
+    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+}
+
+pub fn world3d_meshes_json_from_kinds_and_urls(kinds: &[String], urls: &[String]) -> String {
+    let mut meshes: Vec<Value> = kinds
+        .iter()
+        .map(|kind| {
+            let data = mesh_from_kind(kind);
+            json!({ "id": kind, "data": data })
+        })
+        .collect();
+    for url in urls {
+        let id = world3d_mesh_id_from_url(url);
+        if meshes.iter().any(|entry| entry.get("id").and_then(|v| v.as_str()) == Some(id.as_str())) {
+            continue;
+        }
+        meshes.push(json!({ "id": id, "url": url }));
+    }
+    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
+}
+
 pub fn world3d_selection_json(method: &str, ids: &[String], hovered_id: Option<&str>) -> String {
-    json!({
+    world3d_selection_json_with_granularity(method, ids, hovered_id, None)
+}
+
+pub fn world3d_selection_json_with_granularity(
+    method: &str,
+    ids: &[String],
+    hovered_id: Option<&str>,
+    granularity: Option<&str>,
+) -> String {
+    let mut value = json!({
         "method": method,
         "mode": "replace",
         "ids": ids,
         "hoveredId": hovered_id,
-    })
-    .to_string()
+    });
+    if let Some(entry) = granularity {
+        if let Some(object) = value.as_object_mut() {
+            object.insert("granularity".into(), json!(entry));
+        }
+    }
+    value.to_string()
 }
 
 pub fn world3d_scene(

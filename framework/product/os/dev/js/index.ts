@@ -4,7 +4,7 @@
 
 import "../globals.css";
 
-const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "wgpu";
+const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";
 const pluginFromUrl =
 	typeof location !== "undefined" ? new URLSearchParams(location.search).get("plugin") : null;
 const pluginFilter =

@@ -1,5 +1,4 @@
 /** 🃏 Jack query execution for board-style graph fixtures in TypeScript. */
-import { jackSymbolAtOffset, jackVariableOccurrences } from "@semio-tech/writer-core/internal";
 
 export type JackResultKind = "table" | "graph";
 
@@ -106,6 +105,31 @@ export function runJackOnBoardFixture(fixtureJson: string, query: string): JackR
     return { kind: "graph", columns: ["graph"], rows: [], graphFixtureJson: JSON.stringify(subset) };
   }
   return { kind: "table", columns, rows };
+}
+
+function jackSymbolAtOffset(query: string, offset: number): { readonly kind: "variable" | "other"; readonly name: string } | null {
+  const pattern = /\b([A-Za-z_][A-Za-z0-9_]*)\b/g;
+  for (const match of query.matchAll(pattern)) {
+    if (match.index == null) continue;
+    const start = match.index;
+    const end = start + match[0].length;
+    if (offset < start || offset >= end) continue;
+    const name = match[1]!;
+    const before = query.slice(Math.max(0, start - 24), start);
+    const isVariable = /:\s*$/.test(before) || /\(\s*$/.test(before) || /\bAS\s+$/i.test(before);
+    return { kind: isVariable ? "variable" : "other", name };
+  }
+  return null;
+}
+
+function jackVariableOccurrences(query: string, varName: string): readonly { readonly start: number; readonly end: number }[] {
+  const pattern = new RegExp(`\\b${varName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "g");
+  const occurrences: { start: number; end: number }[] = [];
+  for (const match of query.matchAll(pattern)) {
+    if (match.index == null) continue;
+    occurrences.push({ start: match.index, end: match.index + match[0].length });
+  }
+  return occurrences;
 }
 
 export function jackHoverOccurrencesForQuery(query: string, activeVar: string | null): readonly { readonly start: number; readonly end: number }[] {

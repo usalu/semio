@@ -116,6 +116,21 @@ pub fn plugin_render(instance_id: u32, body_key: &str, view_state_json: &str) ->
     })
 }
 
+pub fn plugin_tools(instance_id: u32, view_state_json: &str) -> Result<Vec<semio_framework_core::ToolNode>, String> {
+    let view_state: ViewState =
+        serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
+    INSTANCES.with(|instances| {
+        let list = instances.borrow();
+        let instance = list
+            .iter()
+            .find(|instance| instance.id == instance_id)
+            .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
+        Ok(instance
+            .app
+            .tools(&instance.document_json, &view_state))
+    })
+}
+
 fn apply_document_op(document_json: &str, op_json: &str) -> Result<String, String> {
     let mut document: serde_json::Value =
         serde_json::from_str(document_json).map_err(|error| error.to_string())?;
@@ -164,6 +179,7 @@ macro_rules! wasm_plugin_exports {
             use super::_PLUGIN_INIT;
             use semio_framework_plugin::plugin_runtime::{
                 plugin_create_app, plugin_destroy_app, plugin_handle_command, plugin_manifest, plugin_render,
+                plugin_tools,
             };
             use wasm_bindgen::prelude::*;
 
@@ -207,6 +223,13 @@ macro_rules! wasm_plugin_exports {
                 let node = plugin_render(instance_id, body_key, view_state_json)
                     .map_err(|error| JsValue::from_str(&error))?;
                 serde_json::to_string(&node).map_err(|error| JsValue::from_str(&error.to_string()))
+            }
+
+            #[wasm_bindgen]
+            pub fn semio_plugin_tools(instance_id: u32, view_state_json: &str) -> Result<String, JsValue> {
+                let tools = plugin_tools(instance_id, view_state_json)
+                    .map_err(|error| JsValue::from_str(&error))?;
+                serde_json::to_string(&tools).map_err(|error| JsValue::from_str(&error.to_string()))
             }
         }
     };

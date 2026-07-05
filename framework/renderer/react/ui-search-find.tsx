@@ -119,7 +119,18 @@ function areFindItemsShallowEqual(previousItems: readonly UIFindItem[], nextItem
 	if (previousItems === nextItems) return true;
 	if (previousItems.length !== nextItems.length) return false;
 	for (let index = 0; index < nextItems.length; index += 1) {
-		if (previousItems[index] !== nextItems[index]) return false;
+		const previous = previousItems[index];
+		const next = nextItems[index];
+		if (
+			!previous ||
+			!next ||
+			previous.id !== next.id ||
+			previous.label !== next.label ||
+			previous.description !== next.description ||
+			previous.category !== next.category
+		) {
+			return false;
+		}
 	}
 	return true;
 }

@@ -235,11 +235,7 @@ fn render_script(envelope: &ImperativePlayEnvelope) -> UiNode {
     build_text_editor_scene(
         IMPERATIVE_PLAY_SURFACE_SCRIPT,
         IMPERATIVE_PLAY_APP_ID,
-        TextEditorScene {
-            buffer: host.compile_text(),
-            language: Some("imperative".into()),
-            selection_json: None,
-        },
+        TextEditorScene::base(host.compile_text(), Some("imperative".into()), None),
     )
 }
 //#endregion 🔖Render

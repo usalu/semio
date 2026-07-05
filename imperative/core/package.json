@@ -6,20 +6,10 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./js/index.ts",
-    "./worker-client": "./js/worker-client.ts"
-  },
-  "scripts": {
-    "test": "bun nx run @semio-tech/imperative-core:test"
-  },
-  "dependencies": {
-    "@semio-tech/vcs-core": "workspace:*",
-    "@semio-tech/framework-os-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "./pkg/imperative_core.js": "./rs/pkg/imperative_core.js"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "typescript": "^5.9.3"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

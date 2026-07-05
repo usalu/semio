@@ -1,6 +1,14 @@
-import { useCallback, useMemo, useRef, useState } from "react";
-import { BufferAttribute, BufferGeometry } from "three";
-import { WorldCanvas, WorldLayerStack, WorldLodGridHelper } from "@semio-tech/infinite-world-r3f";
+import { useCallback, useMemo, useRef, useState, Suspense } from "react";
+import { BufferAttribute, BufferGeometry, MeshStandardMaterial, Quaternion } from "three";
+import { useLoader } from "@react-three/fiber";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import {
+	DEFAULT_LOD_GRID_FACTOR,
+	DEFAULT_MANUAL_LOD,
+	WorldCanvas,
+	WorldLayerStack,
+	WorldLodBridge,
+} from "@semio-tech/infinite-world-r3f";
 import {
 	marqueeCoverageFromGesture,
 	marqueeModeFromModifiers,
@@ -100,6 +108,21 @@ function geometryFromMesh(mesh: NonNullable<WorldMeshRecord["data"]>) {
 	if (mesh.indices.length > 0) geometry.setIndex([...mesh.indices]);
 	return geometry;
 }
+
+function GlbInstanceMesh({ url, color }: { readonly url: string; readonly color: string }) {
+	const gltf = useLoader(GLTFLoader, url);
+	const scene = useMemo(() => {
+		const cloned = gltf.scene.clone(true);
+		cloned.traverse((child) => {
+			if ("isMesh" in child && (child as { isMesh?: boolean }).isMesh) {
+				const mesh = child as import("three").Mesh;
+				mesh.material = new MeshStandardMaterial({ color });
+			}
+		});
+		return cloned;
+	}, [gltf.scene, color]);
+	return <primitive object={scene} />;
+}
 //#endregion WorldSceneParsing
 
 //#region WorldInstancesLayer
@@ -125,13 +148,17 @@ function WorldInstancesLayer({
 
 	return (
 		<WorldLayerStack>
-			<WorldLodGridHelper />
 			<group>
 				{instances.map((instance, index) => {
 					const meshId = instance.meshId ?? "box";
+					const meshRecord = meshById.get(meshId);
 					const geometry = geometries.get(meshId);
 					const position = instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0];
 					const scale = instance.scale ?? [1, 1, 1];
+					const rotation = instance.rotation;
+					const quaternion = rotation
+						? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3])
+						: undefined;
 					const color =
 						instance.color ??
 						(instance.selected ? "#60a5fa" : instance.hovered ? "#fbbf24" : "#94a3b8");
@@ -140,6 +167,7 @@ function WorldInstancesLayer({
 							key={instance.id}
 							position={position as [number, number, number]}
 							scale={scale as [number, number, number]}
+							quaternion={quaternion}
 							onPointerDown={(event) => {
 								event.stopPropagation();
 								onInstancePointerDown(instance.id, event);
@@ -150,7 +178,11 @@ function WorldInstancesLayer({
 							}}
 							onPointerOut={() => onInstancePointerMove(null)}
 						>
-							{geometry ? (
+							{meshRecord?.url ? (
+								<Suspense fallback={null}>
+									<GlbInstanceMesh url={meshRecord.url} color={color} />
+								</Suspense>
+							) : geometry ? (
 								<mesh geometry={geometry}>
 									<meshStandardMaterial color={color} />
 								</mesh>
@@ -183,6 +215,7 @@ export function World3dHost({
 	const instances = useMemo(() => parseInstances(scene?.instancesJson ?? "[]"), [scene?.instancesJson]);
 	const selection = useMemo(() => parseSelection(scene?.selectionJson ?? "{}"), [scene?.selectionJson]);
 	const hostRef = useRef<HTMLDivElement | null>(null);
+	const lodRef = useRef(DEFAULT_MANUAL_LOD);
 	const [marqueePath, setMarqueePath] = useState<readonly SelectionMarqueePoint[]>([]);
 	const [marqueeActive, setMarqueeActive] = useState(false);
 
@@ -273,14 +306,26 @@ export function World3dHost({
 			onPointerUp={handlePointerUp}
 		>
 			<WorldCanvas className="h-full w-full" cameraUp={[0, 0, 1]} cameraPosition={camera.position} cameraFov={camera.fov}>
-				<ambientLight intensity={0.65} />
-				<directionalLight intensity={0.85} position={[4, 6, 8]} />
-				<WorldInstancesLayer
-					instances={instances}
-					meshes={meshes}
-					onInstancePointerDown={handleInstancePointerDown}
-					onInstancePointerMove={handleInstancePointerMove}
-				/>
+				<WorldLodBridge
+					lodRef={lodRef}
+					distanceReference={100}
+					gridFactor={DEFAULT_LOD_GRID_FACTOR}
+					gridSnapEnabled={false}
+					showLodGrid
+					automaticLod
+					depthVariableLod={false}
+					manualLod={DEFAULT_MANUAL_LOD}
+					gridDatum={[0, 0, 0]}
+				>
+					<ambientLight intensity={0.65} />
+					<directionalLight intensity={0.85} position={[4, 6, 8]} />
+					<WorldInstancesLayer
+						instances={instances}
+						meshes={meshes}
+						onInstancePointerDown={handleInstancePointerDown}
+						onInstancePointerMove={handleInstancePointerMove}
+					/>
+				</WorldLodBridge>
 			</WorldCanvas>
 			{marqueeActive && marqueePath.length > 1 && marqueeStart && marqueeEnd ? (
 				method === "lasso" ? (

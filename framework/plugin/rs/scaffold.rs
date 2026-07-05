@@ -259,14 +259,14 @@ impl PluginApp for StandardPluginApp {
                 build_node_graph_scene(
                     self.spec.surface_id,
                     self.spec.app_id,
-                    NodeGraphScene {
+                    NodeGraphScene::base(
                         nodes_json,
                         edges_json,
-                        viewport_json: document
+                        document
                             .get("viewport")
                             .map(|value| value.to_string())
                             .unwrap_or_else(|| r#"{"x":0,"y":0,"zoom":1}"#.into()),
-                    },
+                    ),
                 )
             }
             SceneKind::TextEditor => {
@@ -274,11 +274,7 @@ impl PluginApp for StandardPluginApp {
                 build_text_editor_scene(
                     self.spec.surface_id,
                     self.spec.app_id,
-                    TextEditorScene {
-                        buffer,
-                        language,
-                        selection_json: None,
-                    },
+                    TextEditorScene::base(buffer, language, None),
                 )
             }
             SceneKind::Table => {

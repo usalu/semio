@@ -28,7 +28,6 @@ import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import type { CommandDescriptor, UiControlNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "./types.ts";
 
 const Canvas2dHost = lazy(() => import("./components/canvas-2d-host.tsx").then((module) => ({ default: module.Canvas2dHost })));
-const FlowCanvasHost = lazy(() => import("./components/flow-canvas-host.tsx").then((module) => ({ default: module.FlowCanvasHost })));
 const NodeGraphHost = lazy(() => import("./components/node-graph-host.tsx").then((module) => ({ default: module.NodeGraphHost })));
 const RasterHost = lazy(() => import("./components/raster-host.tsx").then((module) => ({ default: module.RasterHost })));
 const TableHost = lazy(() => import("./components/table-host.tsx").then((module) => ({ default: module.TableHost })));
@@ -51,8 +50,6 @@ function renderComponentSceneHost(
 				return <World3dHost node={node} onCommand={onCommand} />;
 			case "node-graph":
 				return <NodeGraphHost node={node} onCommand={onCommand} />;
-			case "flow-canvas":
-				return <FlowCanvasHost node={node} onCommand={onCommand} />;
 			case "text-editor":
 				return <TextEditorHost node={node} onCommand={onCommand} />;
 			case "table":

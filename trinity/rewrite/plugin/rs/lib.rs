@@ -477,11 +477,7 @@ fn render_fixture_graph(surface_id: &str, fixture_json: &str) -> UiNode {
     build_node_graph_scene(
         surface_id,
         TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        NodeGraphScene {
-            nodes_json,
-            edges_json,
-            viewport_json,
-        },
+        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
     )
 }
 
@@ -489,11 +485,7 @@ fn render_text_editor(surface_id: &str, buffer: &str, language: &str) -> UiNode 
     build_text_editor_scene(
         surface_id,
         TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        TextEditorScene {
-            buffer: buffer.into(),
-            language: Some(language.into()),
-            selection_json: None,
-        },
+        TextEditorScene::base(buffer.into(), Some(language.into()), None),
     )
 }
 //#endregion 🔖Render

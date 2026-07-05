@@ -2,7 +2,6 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { Canvas2dHost } from "./components/canvas-2d-host.tsx";
-import { FlowCanvasHost } from "./components/flow-canvas-host.tsx";
 import { NodeGraphHost } from "./components/node-graph-host.tsx";
 import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
@@ -70,29 +69,36 @@ describe("framework renderer hosts", () => {
 		expect(markup).toContain("semio-node-graph-host");
 	});
 
-	it("renders flow canvas host from media graph fixture json", () => {
+	it("renders editable node graph host with find items", () => {
 		const markup = renderToStaticMarkup(
-			createElement(FlowCanvasHost, {
+			createElement(NodeGraphHost, {
 				node: {
 					type: "componentScene",
 					surfaceId: "s.play.media-graph",
 					controllerId: "s-play",
-					componentKind: "flow-canvas",
-					flowCanvas: {
-						fixtureJson: JSON.stringify({
-							schema: "flow.fixture",
-							camera: { x: 0, y: 0, zoom: 1 },
-							widgets: [{ kind: "neuron", id: "node-a", params: { instanceId: "app-a" } }],
-							synapses: [],
-							layout: { "node-a": { x: 100, y: 100 } },
-						}),
+					componentKind: "node-graph",
+					nodeGraph: {
+						nodesJson: JSON.stringify([
+							{
+								id: "node-a",
+								instanceId: "app-a",
+								label: "Draw",
+								x: 10,
+								y: 20,
+								inputs: [{ id: "in", resourceKind: "2d.drawing" }],
+								outputs: [{ id: "out", resourceKind: "2d.drawing" }],
+							},
+						]),
+						edgesJson: "[]",
+						viewportJson: '{"x":0,"y":0,"zoom":1}',
 						editable: true,
+						findItemsJson: JSON.stringify([{ id: "app-a", label: "Draw", category: "Media graph" }]),
 					},
 				},
 				onCommand: noopCommand,
 			}),
 		);
-		expect(markup).toContain("semio-flow-canvas-host");
+		expect(markup).toContain("semio-node-graph-host");
 	});
 
 	it("renders canvas 2d host with infinite canvas session", () => {
@@ -156,7 +162,11 @@ describe("framework renderer hosts", () => {
 					surfaceId: "writer.play.editor",
 					controllerId: "writer-play",
 					componentKind: "text-editor",
-					textEditor: { buffer: "hello", language: "plain" },
+					textEditor: {
+						buffer: "hello",
+						language: "jack",
+						tokensJson: JSON.stringify([{ class: "ident", start: 0, end: 5 }]),
+					},
 				},
 				onCommand: noopCommand,
 			}),

@@ -9,6 +9,8 @@ struct Globals {
 @group(0) @binding(0) var<uniform> globals: Globals;
 @group(0) @binding(1) var glyph_atlas: texture_2d<f32>;
 @group(0) @binding(2) var glyph_sampler: sampler;
+@group(0) @binding(3) var icon_atlas: texture_2d<f32>;
+@group(0) @binding(4) var icon_sampler: sampler;
 
 struct VertexInput {
     @location(0) corner: vec2<f32>,
@@ -54,6 +56,8 @@ fn sdf_rounded_rect(p: vec2<f32>, half_size: vec2<f32>, radius: f32) -> f32 {
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let kind = i32(in.params.z + 0.5);
+    let glyph = textureSample(glyph_atlas, glyph_sampler, in.uv);
+    let icon = textureSample(icon_atlas, icon_sampler, in.uv);
     if (kind == 1) {
         let half = in.size * 0.5;
         let p = in.local - half;
@@ -66,8 +70,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         return vec4<f32>(in.color.rgb, alpha);
     }
     if (kind == 2) {
-        let glyph = textureSample(glyph_atlas, glyph_sampler, in.uv);
         return vec4<f32>(in.color.rgb, glyph.r * in.color.a);
+    }
+    if (kind == 4) {
+        return vec4<f32>(icon.rgb * in.color.rgb, icon.a * in.color.a);
     }
     if (kind == 3) {
         return in.color;

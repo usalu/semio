@@ -467,11 +467,7 @@ fn render_main_graph(envelope: &FlowPlayEnvelope) -> UiNode {
     build_node_graph_scene(
         FLOW_PLAY_SURFACE_MAIN,
         FLOW_PLAY_APP_ID,
-        NodeGraphScene {
-            nodes_json,
-            edges_json,
-            viewport_json,
-        },
+        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
     )
 }
 
@@ -480,11 +476,7 @@ fn render_compiled_dag(envelope: &FlowPlayEnvelope) -> UiNode {
     build_text_editor_scene(
         FLOW_PLAY_SURFACE_COMPILED,
         FLOW_PLAY_APP_ID,
-        TextEditorScene {
-            buffer: host.compiled_wire_literal(),
-            language: Some("wire".into()),
-            selection_json: None,
-        },
+        TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None),
     )
 }
 //#endregion 🔖Render

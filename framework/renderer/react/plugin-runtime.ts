@@ -1,4 +1,4 @@
-import type { PluginManifest, UiNode, ViewState } from "./types.ts";
+import type { PluginManifest, ToolNode, UiNode, ViewState } from "./types.ts";
 import {
 	DEFAULT_PLUGIN_REGISTRY,
 	loadPluginModule as loadCorePluginModule,
@@ -14,6 +14,7 @@ export type PluginWasmHandle = {
 	readonly destroyApp: (instanceId: number) => Promise<void>;
 	readonly handleCommand: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<string[]>;
 	readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
+	readonly tools: (instanceId: number, viewState: ViewState) => Promise<readonly ToolNode[]>;
 	readonly dispose: () => void;
 };
 
@@ -38,6 +39,8 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
 			handle.handleCommand(instanceId, commandJson, viewState),
 		render: async (instanceId, bodyKey, viewState) =>
 			(await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
+		tools: async (instanceId, viewState) =>
+			(await handle.tools(instanceId, viewState)) as unknown as ToolNode[],
 		dispose: () => handle.dispose(),
 	};
 }

@@ -6,17 +6,17 @@ use semio_framework_os::{
     list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, media_port_spec_id,
     os_app_registration,
     os_document_from_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json,
-    os_media_graph_to_flow_fixture, os_media_graph_vfs_schema,
+    os_media_graph_to_node_graph_payload, os_media_graph_vfs_schema,
     os_parameter_types_compatible, os_parameter_value, os_program_by_id, parameter_id_from_port_id,
     register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, MediaGraphPosition,
     OsAppInstance, OsDocument, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
     OsParameterType, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
 };
 use semio_framework_plugin::{
-    build_flow_canvas_scene, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
+    build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
     create_default_layout, create_tab_stack_layout, layout::MeasureSelectItem,
     layout::WindowEngagementStatus, ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text,
-    App, CommandDescriptor, FlowCanvasScene, ModeDefinition, PluginApp, PluginBundle, TextEditorScene,
+    App, CommandDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene,
     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
     UiSelectItem, UiSelectNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, VirtualFileSystemScene,
@@ -1146,19 +1146,23 @@ fn compiled_dag_engagement(document: &OsDocument) -> WindowEngagement {
 //#region 🔖StudioWindows
 fn render_media_graph(document: &OsDocument, _runtime: &StudioRuntimeState) -> UiNode {
     let projection = projection_from_document(document);
-    let fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances);
+    let graph_payload = os_media_graph_to_node_graph_payload(&projection.media_graph, &projection.app_instances);
     let operators = build_os_media_flow_operator_infos(
         &projection.media_graph,
         &projection.app_instances,
         &projection.parameters,
     );
-    build_flow_canvas_scene(
+    build_node_graph_scene(
         S_PLAY_SURFACE_MEDIA_GRAPH,
         S_PLAY_CONTROLLER_ID,
-        FlowCanvasScene {
-            fixture_json: serde_json::to_string(&fixture).unwrap_or_else(|_| "{}".into()),
-            operators_json: Some(serde_json::to_string(&operators).unwrap_or_else(|_| "[]".into())),
+        NodeGraphScene {
+            nodes_json: graph_payload.nodes_json,
+            edges_json: graph_payload.edges_json,
+            viewport_json: graph_payload.viewport_json,
             editable: Some(true),
+            operators_json: Some(serde_json::to_string(&operators).unwrap_or_else(|_| "[]".into())),
+            context_menu_json: None,
+            find_items_json: Some(graph_payload.find_items_json),
         },
     )
 }
@@ -1168,11 +1172,7 @@ fn render_compiled_dag(document: &OsDocument) -> UiNode {
     build_text_editor_scene(
         S_PLAY_SURFACE_COMPILED_DAG,
         S_PLAY_CONTROLLER_ID,
-        TextEditorScene {
-            buffer: wire,
-            language: Some("wire".into()),
-            selection_json: None,
-        },
+        TextEditorScene::base(wire, Some("wire".into()), None),
     )
 }
 //#endregion 🔖StudioWindows
@@ -2143,7 +2143,7 @@ mod tests {
         let envelope = initial_studio_document_json();
         let node = app.render(S_PLAY_BODY_MEDIA_GRAPH, &envelope, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("flow-canvas"));
+        assert!(json.contains("node-graph"));
     }
 
     #[test]

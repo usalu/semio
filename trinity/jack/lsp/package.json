@@ -1,8 +1,5 @@
 {
   "name": "@semio-tech/trinity-jack-lsp-worker",
   "private": true,
-  "type": "module",
-  "dependencies": {
-    "@semio-tech/writer-core": "workspace:*"
-  }
+  "type": "module"
 }

@@ -8,8 +8,6 @@
   "dependencies": {
     "@electron/fuses": "^2.0.0",
     "@semio-tech/framework-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*",
-    "@semio-tech/framework-platform-renderer-react": "workspace:*",
     "@semio-tech/ui-react": "workspace:*",
     "electron-squirrel-startup": "^1.0.1",
     "react": "^19.2.3",

@@ -103,7 +103,7 @@ class DevScript extends BundleScript {
 			const filterPlugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 			await buildPlugins(filterPlugin);
 		}
-		const renderer = process.env.SEMIO_RENDERER ?? "wgpu";
+		const renderer = process.env.SEMIO_RENDERER ?? "react";
 		if (renderer === "wgpu") {
 			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
 			const wgpuBuild = spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
@@ -125,7 +125,7 @@ class DevScript extends BundleScript {
 class BuildScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		await new PluginBuildScript(this.root).run([]);
-		const renderer = process.env.SEMIO_RENDERER ?? "wgpu";
+		const renderer = process.env.SEMIO_RENDERER ?? "react";
 		if (renderer === "wgpu") {
 			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
 			spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });

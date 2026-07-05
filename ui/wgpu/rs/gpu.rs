@@ -1,6 +1,6 @@
 //! 🖥️ WebGPU device, surface, and frame loop.
 
-use crate::draw::{DrawList, FrameBuffers, MeshGpuStore, UiPipelines};
+use crate::draw::{DrawList, FrameBuffers, MeshGpuStore, RasterTextureStore, UiPipelines};
 use crate::text::FontAtlas;
 use wgpu::Surface;
 
@@ -14,6 +14,7 @@ pub struct GpuContext {
     depth_texture: Option<wgpu::Texture>,
     depth_view: Option<wgpu::TextureView>,
     mesh_store: MeshGpuStore,
+    raster_store: RasterTextureStore,
     width: u32,
     height: u32,
     dpr: f32,
@@ -69,6 +70,7 @@ impl GpuContext {
         };
         surface.configure(&device, &config);
         let pipelines = UiPipelines::new(&device, &queue, format);
+        let raster_store = RasterTextureStore::new(&device, pipelines.bind_group_layout());
         let mut gpu = Self {
             device,
             queue,
@@ -79,6 +81,7 @@ impl GpuContext {
             depth_texture: None,
             depth_view: None,
             mesh_store: MeshGpuStore::default(),
+            raster_store,
             width,
             height,
             dpr,
@@ -131,7 +134,7 @@ impl GpuContext {
             .ensure_mesh(&self.device, key, version, positions, normals, indices);
     }
 
-    pub fn render_frame(&mut self, draw: &DrawList) -> Result<(), String> {
+    pub fn render_frame(&mut self, draw: &DrawList, overlay: Option<&DrawList>) -> Result<(), String> {
         let frame = self
             .surface
             .get_current_texture()
@@ -148,6 +151,7 @@ impl GpuContext {
             &view,
             depth_view,
             draw,
+            overlay,
             &self.mesh_store,
             &mut self.frame_buffers,
             self.width as f32,
@@ -161,6 +165,31 @@ impl GpuContext {
     pub fn upload_font_atlas(&self, atlas: &FontAtlas) {
         self.pipelines
             .upload_glyph_atlas(&self.queue, &atlas.pixels, atlas.width, atlas.height);
+    }
+
+    pub fn upload_icon_atlas(&self, atlas: &crate::draw::IconAtlas) {
+        self.pipelines.upload_icon_atlas(
+            &self.queue,
+            &atlas.pixels,
+            atlas.width,
+            atlas.height,
+        );
+    }
+
+    pub fn ensure_raster_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
+        self.raster_store.ensure_raster(
+            &self.device,
+            &self.queue,
+            self.pipelines.globals_buffer(),
+            &self.pipelines.glyph_view(),
+            self.pipelines.glyph_sampler(),
+            &self.pipelines.icon_view(),
+            self.pipelines.icon_sampler(),
+            key,
+            pixels,
+            width,
+            height,
+        );
     }
 
     pub fn width(&self) -> u32 {

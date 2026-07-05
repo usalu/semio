@@ -6,19 +6,10 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./js/index.ts"
-  },
-  "scripts": {
-    "test": "bun nx run @semio-tech/sequence-core:test"
-  },
-  "dependencies": {
-    "@semio-tech/imperative-core": "workspace:*",
-    "@semio-tech/framework-os-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
+    "./pkg/sequence_core.js": "./rs/pkg/sequence_core.js"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "typescript": "^5.9.3"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

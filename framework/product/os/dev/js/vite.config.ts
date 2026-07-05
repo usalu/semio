@@ -10,7 +10,7 @@ const playDir = path.resolve(configDir, "..");
 const repoRoot = path.resolve(playDir, "../../../..");
 const pluginModulesDir = path.join(playDir, "plugin-modules");
 const rendererModulesDir = path.join(playDir, "renderer-modules");
-const renderer = process.env.SEMIO_RENDERER ?? "wgpu";
+const renderer = process.env.SEMIO_RENDERER ?? "react";
 const uiAssetsRoot = path.join(repoRoot, "ui/asset");
 
 export default defineConfig({
@@ -21,16 +21,12 @@ export default defineConfig({
 			"@semio-tech/ui-react": path.resolve(repoRoot, "ui/js/react/index.tsx"),
 			"@semio-tech/ui-asset": path.resolve(repoRoot, "ui/asset"),
 			"@semio-tech/ui-styling": path.resolve(repoRoot, "ui/styling/js"),
-			"@semio-tech/flow-react": path.resolve(repoRoot, "flow/react/index.tsx"),
-			"@semio-tech/dag-react": path.resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx"),
-			"@semio-tech/writer-react": path.resolve(repoRoot, "writer/react/index.tsx"),
 			"@semio-tech/infinite-cavas-react-renderer": path.resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx"),
 			"@semio-tech/infinite-world-r3f": path.resolve(repoRoot, "infinite/world/r3f/index.tsx"),
 			"@semio-tech/framework-renderer-react": path.resolve(repoRoot, "framework/renderer/react/index.tsx"),
 			"@semio-tech/framework-renderer-wgpu": path.resolve(repoRoot, "framework/renderer/wgpu/index.ts"),
 			"@semio-tech/framework-core": path.resolve(repoRoot, "framework/core/js/index.ts"),
 			"@semio-tech/framework-os-core": path.resolve(repoRoot, "framework/product/os/core/js/index.ts"),
-			"@semio-tech/writer-core": path.resolve(repoRoot, "writer/core/js/internal.ts"),
 			"/plugin-modules": pluginModulesDir,
 			"/renderer-modules": rendererModulesDir,
 		},

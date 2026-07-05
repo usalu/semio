@@ -1,5 +1,6 @@
 //! 🧊 Raw wgpu WASM renderer for declarative framework UiNode trees.
 
+pub mod dock;
 pub mod interpreter;
 pub mod plugin_bridge;
 pub mod scenes;
@@ -13,16 +14,34 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use ui_wgpu::{
     attach_dom_listeners, fetch_font_bytes, schedule_frame, DrawList, FontAtlas, GpuContext,
-    HitKind, InputState, PointerCallbacks, PointerModifiers, Theme,
+    IconAtlas, InputState, KeyAction, PointerCallbacks, PointerModifiers, Theme,
 };
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
 
+fn prefers_dark_scheme() -> bool {
+    web_sys::window()
+        .and_then(|window| window.match_media("(prefers-color-scheme: dark)").ok().flatten())
+        .map(|query| query.matches())
+        .unwrap_or(true)
+}
+
+fn resolve_theme(theme_id: &str) -> Theme {
+    match theme_id {
+        "light" => Theme::light(),
+        "dark" => Theme::dark(),
+        _ if prefers_dark_scheme() => Theme::dark(),
+        _ => Theme::light(),
+    }
+}
+
 struct AppRuntime {
     gpu: GpuContext,
     atlas: FontAtlas,
+    icons: IconAtlas,
     shell: ShellState,
     draw: DrawList,
+    overlay: DrawList,
     input: InputState<CommandDescriptor>,
     theme: Theme,
     last_pointer_x: f32,
@@ -37,28 +56,46 @@ struct AppRuntime {
 
 impl AppRuntime {
     fn frame(&mut self) {
+        self.theme = resolve_theme(&self.shell.theme_id);
+        self.input.update_hover(self.last_pointer_x, self.last_pointer_y);
         self.input.clear_frame();
         self.draw.clear();
+        self.overlay.clear();
         let wheel_delta = self.wheel_delta;
         self.wheel_delta = 0.0;
         if wheel_delta.abs() > 0.0 {
             let x = self.last_pointer_x;
             let y = self.last_pointer_y;
-            let shell = &mut self.shell;
-            for state in shell.world3d_states.values_mut() {
+            self.shell
+                .handle_pointer_wheel(x, y, wheel_delta, &self.input);
+            for state in self.shell.world3d_states.values_mut() {
                 if state.bounds.inset(8.0).contains(x, y) {
                     world3d::handle_world3d_wheel(state, wheel_delta);
                 }
             }
         }
+        ICON_ATLAS_RUNTIME.with(|cell| {
+            if let Some(atlas) = cell.borrow_mut().take() {
+                self.icons = atlas;
+                self.gpu.upload_icon_atlas(&self.icons);
+            }
+        });
         self.shell.render_chrome(
             &mut self.draw,
+            &mut self.overlay,
             &mut self.atlas,
+            &self.icons,
             &mut self.input,
             &self.theme,
             &mut self.gpu,
         );
-        if let Err(err) = self.gpu.render_frame(&self.draw) {
+        for upload in scenes::drain_pending_raster_uploads() {
+            self.gpu.ensure_raster_texture(&upload.key, &upload.pixels, upload.width, upload.height);
+        }
+        if self.atlas.take_dirty() {
+            self.gpu.upload_font_atlas(&self.atlas);
+        }
+        if let Err(err) = self.gpu.render_frame(&self.draw, Some(&self.overlay)) {
             web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] render frame: {err}")));
         }
         if !self.asset_poll_pending {
@@ -140,18 +177,12 @@ impl AppRuntime {
             self.dispatch_world3d_commands(world_commands).await;
             return;
         }
-        if !down {
-            return;
-        }
-        let hit = self.input.hit_at(x, y).cloned();
-        let Some(hit) = hit else { return };
-        if let Some(command) = hit.event.clone() {
-            if let Err(err) = self.shell.dispatch_command(command).await {
-                web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] command failed: {err}")));
-            }
-        }
-        if hit.kind == HitKind::Input {
-            self.input.focused_id = hit.control_id.clone();
+        if let Err(err) = self
+            .shell
+            .handle_pointer_button(x, y, down, button, &mut self.input)
+            .await
+        {
+            web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] pointer failed: {err}")));
         }
     }
 
@@ -170,6 +201,8 @@ impl AppRuntime {
         self.pointer_down = down;
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
+        self.shell
+            .handle_pointer_move(x, y, down, &mut self.input, &self.theme);
         if down && (button == 2 || button == 1) {
             for state in self.shell.world3d_states.values_mut() {
                 if state.bounds.inset(8.0).contains(x, y) {
@@ -189,6 +222,13 @@ impl AppRuntime {
         if !world_commands.is_empty() {
             self.dispatch_world3d_commands(world_commands).await;
         }
+    }
+
+    async fn handle_context_menu(&mut self, x: f32, y: f32) {
+        let _ = self
+            .shell
+            .handle_pointer_button(x, y, true, 2, &mut self.input)
+            .await;
     }
 }
 
@@ -242,8 +282,10 @@ pub async fn semio_renderer_boot(
     let runtime = Rc::new(RefCell::new(AppRuntime {
         gpu,
         atlas,
+        icons: IconAtlas::default(),
         shell,
         draw: DrawList::default(),
+        overlay: DrawList::default(),
         input: InputState::default(),
         theme: Theme::default(),
         last_pointer_x: 0.0,
@@ -263,6 +305,7 @@ pub async fn semio_renderer_boot(
     let runtime_move = runtime.clone();
     let runtime_wheel = runtime.clone();
     let runtime_keyboard = runtime.clone();
+    let runtime_context = runtime.clone();
 
     attach_dom_listeners(
         &canvas,
@@ -283,18 +326,33 @@ pub async fn semio_renderer_boot(
                     }
                 });
             }),
-            on_wheel: Rc::new(move |delta, _modifiers| {
+            on_wheel: Rc::new(move |delta, _x, _y, _modifiers| {
                 if let Ok(mut app) = runtime_wheel.try_borrow_mut() {
                     app.wheel_delta += delta;
                 }
             }),
-            on_key: Rc::new(move |key| {
+            on_key: Rc::new(move |action, _modifiers| {
                 let Ok(mut app) = runtime_keyboard.try_borrow_mut() else {
                     return;
                 };
                 if app.input.focused_id.is_some() {
-                    app.input.text_buffer.push_str(&key);
+                    match action {
+                        KeyAction::Char(key) => app.input.text_buffer.push_str(&key),
+                        KeyAction::Backspace => app.input.backspace(),
+                        KeyAction::Delete => app.input.delete_forward(),
+                        KeyAction::Enter | KeyAction::Escape | KeyAction::ArrowLeft
+                        | KeyAction::ArrowRight | KeyAction::ArrowUp | KeyAction::ArrowDown
+                        | KeyAction::Tab => {}
+                    }
                 }
+            }),
+            on_context_menu: Rc::new(move |x, y| {
+                let runtime = runtime_context.clone();
+                spawn_local(async move {
+                    if let Ok(mut app) = runtime.try_borrow_mut() {
+                        app.handle_context_menu(x, y).await;
+                    }
+                });
             }),
         },
     );
@@ -321,4 +379,19 @@ pub async fn semio_renderer_boot(
 
     web_sys::console::log_1(&JsValue::from_str("[DEBUG] wgpu renderer booted"));
     Ok(())
+}
+
+#[wasm_bindgen(js_name = uploadIconAtlas)]
+pub fn upload_icon_atlas(width: u32, height: u32, pixels: &[u8], entries_json: &str) -> Result<(), JsValue> {
+    let entries_map: std::collections::HashMap<String, [f32; 4]> = serde_json::from_str(entries_json)
+        .map_err(|err| JsValue::from_str(&format!("[DEBUG] icon entries parse: {err}")))?;
+    let entries: Vec<(String, [f32; 4])> = entries_map.into_iter().collect();
+    ICON_ATLAS_RUNTIME.with(|cell| {
+        cell.borrow_mut().replace(IconAtlas::from_packed(width, height, pixels.to_vec(), entries));
+    });
+    Ok(())
+}
+
+thread_local! {
+    static ICON_ATLAS_RUNTIME: RefCell<Option<IconAtlas>> = RefCell::new(None);
 }

@@ -18,7 +18,7 @@ pub struct LowpolyTransform {
 }
 
 impl Default for LowpolyTransform {
-    fn default() -> Self {
+    pub fn default() -> Self {
         Self {
             position: [0.0, 0.0, 0.0],
             rotation: [0.0, 0.0, 0.0],
@@ -37,7 +37,7 @@ pub struct LowpolySelectionTargets {
 }
 
 impl Default for LowpolySelectionTargets {
-    fn default() -> Self {
+    pub fn default() -> Self {
         Self {
             mesh: true,
             vertex: false,
@@ -59,7 +59,7 @@ pub struct LowpolySelection {
 }
 
 impl Default for LowpolySelection {
-    fn default() -> Self {
+    pub fn default() -> Self {
         Self {
             targets: LowpolySelectionTargets::default(),
             keys: Vec::new(),
@@ -128,7 +128,7 @@ pub struct LowpolyFixture {
 }
 
 impl Default for LowpolyFixture {
-    fn default() -> Self {
+    pub fn default() -> Self {
         default_fixture()
     }
 }
@@ -162,7 +162,7 @@ pub fn default_fixture() -> LowpolyFixture {
 
 //#region Document
 
-struct LowpolyDocument {
+pub struct LowpolyDocument {
     fixture: LowpolyFixture,
     meshes: Vec<HalfedgeMesh>,
     next_object_serial: u32,
@@ -170,7 +170,7 @@ struct LowpolyDocument {
 }
 
 impl LowpolyDocument {
-    fn new(fixture: LowpolyFixture) -> Result<Self, String> {
+    pub fn new(fixture: LowpolyFixture) -> Result<Self, String> {
         let mut doc = Self {
             fixture,
             meshes: Vec::new(),
@@ -182,7 +182,7 @@ impl LowpolyDocument {
         Ok(doc)
     }
 
-    fn replace_fixture(&mut self, fixture: LowpolyFixture, preserved_pixels: HashMap<String, Vec<Vec<u8>>>) -> Result<(), String> {
+    pub fn replace_fixture(&mut self, fixture: LowpolyFixture, preserved_pixels: HashMap<String, Vec<Vec<u8>>>) -> Result<(), String> {
         self.fixture = fixture;
         self.reload_meshes()?;
         self.paint_pixels = preserved_pixels;
@@ -190,7 +190,7 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    fn ensure_all_paint_buffers(&mut self) {
+    pub fn ensure_all_paint_buffers(&mut self) {
         let specs: Vec<(String, usize)> = self
             .fixture
             .objects
@@ -202,7 +202,7 @@ impl LowpolyDocument {
         }
     }
 
-    fn ensure_object_paint_buffers(&mut self, object_id: &str, layer_count: usize) {
+    pub fn ensure_object_paint_buffers(&mut self, object_id: &str, layer_count: usize) {
         let layers = self.paint_pixels.entry(object_id.to_string()).or_default();
         while layers.len() < layer_count {
             layers.push(empty_paint_pixels());
@@ -213,7 +213,7 @@ impl LowpolyDocument {
         }
     }
 
-    fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], String> {
+    pub fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], String> {
         self.paint_pixels
             .get(object_id)
             .and_then(|layers| layers.get(layer_index))
@@ -221,7 +221,7 @@ impl LowpolyDocument {
             .ok_or_else(|| "layer index out of range".into())
     }
 
-    fn layer_pixels_mut(&mut self, object_id: &str, layer_index: usize) -> Result<&mut Vec<u8>, String> {
+    pub fn layer_pixels_mut(&mut self, object_id: &str, layer_index: usize) -> Result<&mut Vec<u8>, String> {
         let layer_count = self
             .object_index(object_id)
             .ok()
@@ -235,7 +235,7 @@ impl LowpolyDocument {
             .ok_or_else(|| "layer index out of range".into())
     }
 
-    fn reload_meshes(&mut self) -> Result<(), String> {
+    pub fn reload_meshes(&mut self) -> Result<(), String> {
         self.meshes.clear();
         for obj in &self.fixture.objects {
             let mesh = HalfedgeMesh::from_json(&obj.mesh_json).map_err(|e| format!("{e:?}"))?;
@@ -244,61 +244,61 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    fn sync_meshes_to_fixture(&mut self) -> Result<(), String> {
+    pub fn sync_meshes_to_fixture(&mut self) -> Result<(), String> {
         for (obj, mesh) in self.fixture.objects.iter_mut().zip(self.meshes.iter()) {
             obj.mesh_json = mesh.to_json().map_err(|e| format!("{e:?}"))?;
         }
         Ok(())
     }
 
-    fn active_index(&self) -> Option<usize> {
+    pub fn active_index(&self) -> Option<usize> {
         self.fixture
             .objects
             .iter()
             .position(|o| o.id == self.fixture.active_object_id)
     }
 
-    fn active_mesh_mut(&mut self) -> Result<&mut HalfedgeMesh, String> {
+    pub fn active_mesh_mut(&mut self) -> Result<&mut HalfedgeMesh, String> {
         let idx = self.active_index().ok_or_else(|| "no active object".to_string())?;
         self.meshes.get_mut(idx).ok_or_else(|| "mesh missing".to_string())
     }
 
-    fn active_mesh(&self) -> Result<&HalfedgeMesh, String> {
+    pub fn active_mesh(&self) -> Result<&HalfedgeMesh, String> {
         let idx = self.active_index().ok_or_else(|| "no active object".to_string())?;
         self.meshes.get(idx).ok_or_else(|| "mesh missing".to_string())
     }
 
-    fn selected_face_ids(&self) -> Vec<FaceId> {
+    pub fn selected_face_ids(&self) -> Vec<FaceId> {
         if self.fixture.selection.mode != "face" {
             return Vec::new();
         }
         self.fixture.selection.ids.iter().map(|&id| FaceId(id)).collect()
     }
 
-    fn selected_vertex_ids(&self) -> Vec<VertexId> {
+    pub fn selected_vertex_ids(&self) -> Vec<VertexId> {
         if self.fixture.selection.mode != "vertex" {
             return Vec::new();
         }
         self.fixture.selection.ids.iter().map(|&id| VertexId(id)).collect()
     }
 
-    fn selected_edge_ids(&self) -> Vec<kernel_3d_mesh::EdgeId> {
+    pub fn selected_edge_ids(&self) -> Vec<kernel_3d_mesh::EdgeId> {
         if self.fixture.selection.mode != "edge" {
             return Vec::new();
         }
         self.fixture.selection.ids.iter().map(|&id| kernel_3d_mesh::EdgeId(id)).collect()
     }
 
-    fn normalize_selection_mode(mode: &str) -> String {
+    pub fn normalize_selection_mode(mode: &str) -> String {
         if mode == "object" { "mesh".into() } else { mode.into() }
     }
 
-    fn apply_selection(&mut self, mode: &str, ids: Vec<u32>) {
+    pub fn apply_selection(&mut self, mode: &str, ids: Vec<u32>) {
         self.fixture.selection.mode = Self::normalize_selection_mode(mode);
         self.fixture.selection.ids = ids;
     }
 
-    fn selection_vertex_ids(&self) -> Result<Vec<VertexId>, String> {
+    pub fn selection_vertex_ids(&self) -> Result<Vec<VertexId>, String> {
         let mesh = self.active_mesh()?;
         match self.fixture.selection.mode.as_str() {
             "vertex" => Ok(self.selected_vertex_ids()),
@@ -332,7 +332,7 @@ impl LowpolyDocument {
         }
     }
 
-    fn selection_transform_pivot(&self) -> Result<Vec3, String> {
+    pub fn selection_transform_pivot(&self) -> Result<Vec3, String> {
         let mesh = self.active_mesh()?;
         if self.fixture.selection.mode == "mesh" {
             let count = mesh.vertex_count();
@@ -356,7 +356,7 @@ impl LowpolyDocument {
         Ok(sum.scale(1.0 / verts.len() as f32))
     }
 
-    fn add_primitive(&mut self, kind: &str) -> Result<String, String> {
+    pub fn add_primitive(&mut self, kind: &str) -> Result<String, String> {
         let mut mesh = match kind {
             "box" => HalfedgeMesh::box_prim(1.0, 1.0, 1.0),
             "plane" => HalfedgeMesh::plane_prim(2.0, 2.0),
@@ -391,7 +391,7 @@ impl LowpolyDocument {
         Ok(id)
     }
 
-    fn object_index(&self, object_id: &str) -> Result<usize, String> {
+    pub fn object_index(&self, object_id: &str) -> Result<usize, String> {
         self.fixture
             .objects
             .iter()
@@ -399,7 +399,7 @@ impl LowpolyDocument {
             .ok_or_else(|| "object not found".to_string())
     }
 
-    fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<serde_json::Value, String> {
+    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<serde_json::Value, String> {
         let transfer = mesh.tessellate().map_err(|e| format!("{e:?}"))?;
         Ok(serde_json::json!({
             "positions": transfer.positions,
@@ -415,7 +415,7 @@ impl LowpolyDocument {
         }))
     }
 
-    fn tessellate_all_json(&self) -> Result<String, String> {
+    pub fn tessellate_all_json(&self) -> Result<String, String> {
         let active = self.fixture.active_object_id.clone();
         let mut items = Vec::new();
         for (idx, obj) in self.fixture.objects.iter().enumerate() {
@@ -433,7 +433,7 @@ impl LowpolyDocument {
         serde_json::to_string(&items).map_err(|e| e.to_string())
     }
 
-    fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), String> {
+    pub fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), String> {
         let idx = self.object_index(object_id)?;
         if self.fixture.objects[idx].paint_layers.is_empty() {
             self.fixture.objects[idx].paint_layers.push(LowpolyPaintLayer::new("Base"));
@@ -444,7 +444,7 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, String> {
+    pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, String> {
         let idx = self.object_index(object_id)?;
         let layers = &self.fixture.objects[idx].paint_layers;
         let mut out = vec![0u8; LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4];
@@ -472,7 +472,7 @@ impl LowpolyDocument {
         Ok(out)
     }
 
-    fn paint_stroke(
+    pub fn paint_stroke(
         &mut self,
         object_id: &str,
         layer_index: usize,
@@ -523,7 +523,7 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), String> {
+    pub fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), String> {
         self.ensure_paint_layer(object_id, layer_index)?;
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
         let size = LOWPOLY_PAINT_TEXTURE_SIZE;
@@ -573,7 +573,7 @@ impl LowpolyDocument {
         Ok(())
     }
 
-    fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], String> {
+    pub fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], String> {
         let composite = self.composite_layers(object_id)?;
         let size = LOWPOLY_PAINT_TEXTURE_SIZE;
         let x = ((u.clamp(0.0, 1.0) * (size as f32 - 1.0)).round() as usize).min(size - 1);
@@ -596,22 +596,22 @@ fn map_err(e: MeshKernelError) -> String {
 
 //#region WasmSession
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 #[wasm_bindgen(js_name = defaultFixtureJson)]
 pub fn default_fixture_json() -> Result<String, JsValue> {
     serde_json::to_string(&default_fixture()).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct LowpolySession {
     doc: LowpolyDocument,
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 impl LowpolySession {
     #[wasm_bindgen(constructor)]
@@ -1024,7 +1024,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn default_fixture_has_rock_object() {
+    pub fn default_fixture_has_rock_object() {
         let fixture = default_fixture();
         assert_eq!(fixture.schema, "lowpoly.fixture");
         assert_eq!(fixture.objects.len(), 1);
@@ -1032,14 +1032,14 @@ mod tests {
     }
 
     #[test]
-    fn document_loads_meshes() {
+    pub fn document_loads_meshes() {
         let doc = LowpolyDocument::new(default_fixture()).unwrap();
         assert_eq!(doc.meshes.len(), 1);
         assert!(doc.meshes[0].face_count() > 0);
     }
 
     #[test]
-    fn active_mesh_tessellates() {
+    pub fn active_mesh_tessellates() {
         let doc = LowpolyDocument::new(default_fixture()).unwrap();
         let transfer = doc.active_mesh().unwrap().tessellate().unwrap();
         assert!(!transfer.positions.is_empty());
@@ -1047,7 +1047,7 @@ mod tests {
     }
 
     #[test]
-    fn add_primitive_box() {
+    pub fn add_primitive_box() {
         let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
         let id = doc.add_primitive("box").unwrap();
         assert!(doc.fixture.objects.iter().any(|o| o.id == id));
@@ -1055,7 +1055,7 @@ mod tests {
     }
 
     #[test]
-    fn tessellate_all_returns_every_object() {
+    pub fn tessellate_all_returns_every_object() {
         let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
         let _ = doc.add_primitive("box").unwrap();
         let json = doc.tessellate_all_json().unwrap();
@@ -1064,7 +1064,7 @@ mod tests {
     }
 
     #[test]
-    fn fixture_json_excludes_paint_pixels() {
+    pub fn fixture_json_excludes_paint_pixels() {
         let doc = LowpolyDocument::new(default_fixture()).unwrap();
         let json = serde_json::to_string(&doc.fixture).unwrap();
         assert!(json.len() < 100_000);
@@ -1072,7 +1072,7 @@ mod tests {
     }
 
     #[test]
-    fn painted_pixels_survive_fixture_reload() {
+    pub fn painted_pixels_survive_fixture_reload() {
         let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
         let object_id = doc.fixture.active_object_id.clone();
         doc.paint_stroke(&object_id, 0, 0.5, 0.5, 4.0, [255, 0, 0, 255], 0.5, 1.0, false).unwrap();
@@ -1086,14 +1086,14 @@ mod tests {
     }
 
     #[test]
-    fn default_fixture_mesh_has_unwrapped_uvs() {
+    pub fn default_fixture_mesh_has_unwrapped_uvs() {
         let doc = LowpolyDocument::new(default_fixture()).unwrap();
         let transfer = doc.active_mesh().unwrap().tessellate().unwrap();
         assert!(transfer.uvs.iter().any(|uv| *uv > 0.0));
     }
 
     #[test]
-    fn empty_paint_pixels_are_opaque_white() {
+    pub fn empty_paint_pixels_are_opaque_white() {
         let pixels = empty_paint_pixels();
         assert_eq!(pixels[0], 255);
         assert_eq!(pixels[1], 255);
@@ -1102,7 +1102,7 @@ mod tests {
     }
 
     #[test]
-    fn paint_stroke_writes_pixels() {
+    pub fn paint_stroke_writes_pixels() {
         let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
         let object_id = doc.fixture.active_object_id.clone();
         doc.paint_stroke(&object_id, 0, 0.5, 0.5, 4.0, [255, 0, 0, 255], 0.5, 1.0, false).unwrap();
@@ -1113,7 +1113,7 @@ mod tests {
     }
 
     #[test]
-    fn face_selection_vertex_ids_are_localized() {
+    pub fn face_selection_vertex_ids_are_localized() {
         let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
         doc.fixture.selection = LowpolySelection {
             targets: LowpolySelectionTargets {
@@ -1134,7 +1134,7 @@ mod tests {
     }
 
     #[test]
-    fn face_translate_moves_only_selected_vertices() {
+    pub fn face_translate_moves_only_selected_vertices() {
         let mut doc = LowpolyDocument::new(default_fixture()).unwrap();
         doc.fixture.selection = LowpolySelection {
             targets: LowpolySelectionTargets {

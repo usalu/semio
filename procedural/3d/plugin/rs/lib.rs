@@ -460,11 +460,7 @@ impl PluginApp for Procedural3dPlayApp {
                 build_node_graph_scene(
                     PROCEDURAL_3D_PLAY_SURFACE_MAIN,
                     PROCEDURAL_3D_PLAY_APP_ID,
-                    NodeGraphScene {
-                        nodes_json,
-                        edges_json,
-                        viewport_json,
-                    },
+        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
                 )
             }
             PROCEDURAL_3D_PLAY_BODY_PREVIEW => build_world_3d_scene(

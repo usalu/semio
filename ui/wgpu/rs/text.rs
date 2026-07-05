@@ -26,6 +26,7 @@ pub struct FontAtlas {
     cursor_x: u32,
     cursor_y: u32,
     row_height: u32,
+    dirty: bool,
 }
 
 const BITMAP_GLYPH_W: u32 = 8;
@@ -140,7 +141,14 @@ impl FontAtlas {
             cursor_x: 1,
             cursor_y: 1,
             row_height: 0,
+            dirty: false,
         }
+    }
+
+    pub fn take_dirty(&mut self) -> bool {
+        let dirty = self.dirty;
+        self.dirty = false;
+        dirty
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
@@ -160,6 +168,7 @@ impl FontAtlas {
             cursor_x: 1,
             cursor_y: 1,
             row_height: 0,
+            dirty: false,
         })
     }
 
@@ -207,6 +216,7 @@ impl FontAtlas {
         );
         self.cursor_x += width + 2;
         self.row_height = self.row_height.max(height);
+        self.dirty = true;
     }
 
     fn rasterize_bitmap(&self, ch: char) -> (fontdue::Metrics, Vec<u8>, u32, u32) {
@@ -247,6 +257,36 @@ impl FontAtlas {
             max_height = max_height.max((glyph.height as f32 + glyph.bearing_y) * scale);
         }
         (width, max_height.max(size))
+    }
+
+    pub fn measure_text_wrapped(&mut self, text: &str, max_width: f32, size: f32) -> (f32, f32) {
+        let mut lines = Vec::new();
+        let mut current = String::new();
+        for word in text.split_whitespace() {
+            let trial = if current.is_empty() {
+                word.to_string()
+            } else {
+                format!("{current} {word}")
+            };
+            let (w, _) = self.measure_text(&trial, size);
+            if w > max_width && !current.is_empty() {
+                lines.push(current);
+                current = word.to_string();
+            } else {
+                current = trial;
+            }
+        }
+        if !current.is_empty() {
+            lines.push(current);
+        }
+        let line_h = size * 1.35;
+        let height = lines.len().max(1) as f32 * line_h;
+        let width = lines
+            .iter()
+            .map(|line| self.measure_text(line, size).0)
+            .fold(0.0f32, f32::max)
+            .min(max_width);
+        (width, height)
     }
 }
 

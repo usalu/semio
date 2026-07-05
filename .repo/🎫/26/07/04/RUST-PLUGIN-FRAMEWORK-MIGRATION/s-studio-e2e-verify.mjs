@@ -30,16 +30,20 @@ async function waitFor(page, predicate, label, deadline) {
 
 async function openStudio(page, deadline) {
 	await page.keyboard.press("Meta+n");
-	return waitFor(
-		page,
-		({ text }) => /Catalogue/i.test(text) && /Parameters/i.test(text) && /\/studios\//.test(text),
-		"studio workspace",
-		deadline,
-	);
+	while (Date.now() < deadline) {
+		const text = await page.locator("body").innerText().catch(() => "");
+		const path = await page.evaluate(() => location.pathname);
+		const children = await page.locator("#root *").count();
+		if (/Catalogue/i.test(text) && /Parameters/i.test(text) && path.startsWith("/studios/")) {
+			return { text, children };
+		}
+		await page.waitForTimeout(500);
+	}
+	throw new Error("timeout waiting for studio workspace");
 }
 
 async function activateMediaGraphWindow(page) {
-	await page.locator(".semio-flow-canvas-host").first().click({ force: true });
+	await page.locator(".semio-node-graph-host").first().click({ force: true });
 	await page.waitForTimeout(200);
 }
 
@@ -59,7 +63,7 @@ async function spawnDrawFromEngagement(page) {
 }
 
 async function openCommandPalette(page) {
-	await page.locator(".semio-flow-canvas-host").first().click({ force: true });
+	await page.locator(".semio-node-graph-host").first().click({ force: true });
 	await page.waitForTimeout(100);
 	await page.keyboard.press("Meta+p");
 	await page.waitForSelector("[role='dialog'] [data-slot='command-input']", { timeout: 10_000 });
@@ -88,7 +92,7 @@ async function main() {
 	console.log(`[DEBUG] navigating to ${baseUrl}`);
 	await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
 	await page.waitForFunction(
-		() => document.body.innerText.includes("Home") && document.querySelectorAll("#root *").length > 200,
+		() => document.body.innerText.includes("Home") && /Demo Studio|New Studio/i.test(document.body.innerText) && document.querySelectorAll("#root *").length > 150,
 		{ timeout: 120_000 },
 	);
 
@@ -107,11 +111,11 @@ async function main() {
 	console.log(`[DEBUG] studio loaded at ${pathAfterCreate}`);
 	assert(pathAfterCreate.startsWith("/studios/"), "studio uri should be under /studios/");
 
-	await page.waitForFunction(() => document.querySelector(".semio-flow-canvas-host") != null, { timeout: 30_000 });
+	await page.waitForFunction(() => document.querySelector(".semio-node-graph-host") != null, { timeout: 30_000 });
 
 	const bodyText = await page.locator("body").innerText();
 	assert(!/Missing window:/i.test(bodyText), "all studio windows should render");
-	assert((await page.locator(".semio-flow-canvas-host").count()) > 0, "flow canvas host should render");
+	assert((await page.locator(".semio-node-graph-host").count()) > 0, "node graph host should render");
 	assert((await page.locator(".semio-text-editor-host").count()) > 0, "compiled dag editor should render");
 	console.log("[DEBUG] three studio windows rendered");
 
@@ -142,21 +146,18 @@ async function main() {
 
 	await page.keyboard.press("Meta+f");
 	await page.waitForTimeout(500);
-	await page.locator("[id='ui.find.toggle']").first().click({ force: true });
-	await page.waitForTimeout(500);
 	assert((await page.locator("[role='dialog'] [data-slot='command-input']").count()) > 0, "find palette should open");
 	console.log("[DEBUG] find palette available");
 	await page.keyboard.press("Escape");
 
-	await page.locator('[data-slot="breadcrumb-link"]', { hasText: "Home" }).first().click({ force: true });
-	await waitFor(page, ({ text }) => text.includes("Demo Studio") || text.includes("New Studio"), "home via breadcrumb", deadline);
-	console.log("[DEBUG] breadcrumb home navigation works");
+	await page.getByRole("button", { name: "← Home" }).click({ force: true });
+	await waitFor(page, ({ text }) => text.includes("Demo Studio") || text.includes("New Studio"), "home via studio bar", deadline);
+	console.log("[DEBUG] studio home bar navigation works");
 
-	const demoStudio = page.getByText(/^Demo Studio$/i).first();
-	if (await demoStudio.count()) {
-		await demoStudio.dblclick();
-		await page.waitForTimeout(3000);
-		assert((await page.evaluate(() => location.pathname)).startsWith("/studios/"), "vfs open studio should navigate");
+	const demoStudioRow = page.locator('[data-row-id="studio:default"]');
+	if (await demoStudioRow.count()) {
+		await demoStudioRow.dblclick({ force: true });
+		await page.waitForFunction(() => location.pathname.startsWith("/studios/"), { timeout: 15_000 });
 		assert(/Catalogue/i.test(await page.locator("body").innerText()), "opened studio from home vfs");
 		console.log("[DEBUG] home vfs open studio works");
 	}

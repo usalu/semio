@@ -5043,6 +5043,7 @@ name = "puzzle3d-plugin"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "puzzle_3d",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -8871,6 +8872,7 @@ dependencies = [
 name = "writer-plugin"
 version = "0.1.0"
 dependencies = [
+ "regex",
  "semio-framework-plugin",
  "serde",
  "serde_json",

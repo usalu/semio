@@ -516,11 +516,7 @@ fn render_main_graph(fixture: &DagFixture) -> UiNode {
     build_node_graph_scene(
         DAG_PLAY_SURFACE_MAIN,
         DAG_PLAY_APP_ID,
-        NodeGraphScene {
-            nodes_json,
-            edges_json,
-            viewport_json,
-        },
+        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
     )
 }
 
@@ -528,11 +524,7 @@ fn render_compiled_dag(fixture: &DagFixture) -> UiNode {
     build_text_editor_scene(
         DAG_PLAY_SURFACE_COMPILED,
         DAG_PLAY_APP_ID,
-        TextEditorScene {
-            buffer: dag_fixture_to_wire_literal(fixture),
-            language: Some("wire".into()),
-            selection_json: None,
-        },
+        TextEditorScene::base(dag_fixture_to_wire_literal(fixture), Some("wire".into()), None),
     )
 }
 //#endregion 🔖Render

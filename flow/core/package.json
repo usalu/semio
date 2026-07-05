@@ -6,18 +6,10 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./js/index.ts",
     "./pkg/flow_core.js": "./rs/pkg/flow_core.js"
   },
-  "dependencies": {
-    "@semio-tech/vcs-core": "workspace:*",
-    "@semio-tech/graph-manifest": "workspace:*",
-    "@semio-tech/framework-os-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*"
-  },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "vitest": "^4.0.17"
+    "typescript": "^5.9.3"
   },
   "license": "LGPL-3.0-or-later",
   "repository": {

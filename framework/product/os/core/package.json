@@ -10,9 +10,7 @@
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",
-    "@semio-tech/framework-platform-core": "workspace:*",
-    "@semio-tech/graph-manifest": "workspace:*",
-    "@semio-tech/vcs-core": "workspace:*"
+    "@semio-tech/graph-manifest": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

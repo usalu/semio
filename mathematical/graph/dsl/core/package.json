@@ -3,9 +3,6 @@
   "private": true,
   "type": "module",
   "main": "./index.ts",
-  "dependencies": {
-    "@semio-tech/writer-core": "workspace:*"
-  },
   "exports": {
     ".": "./js/index.ts"
   }

@@ -4,6 +4,7 @@
 import { type Subprocess, spawn } from "bun";
 import { chromium } from "playwright";
 import { join } from "node:path";
+import { PNG } from "pngjs";
 
 const repoRoot = join(import.meta.dir, "../../../../../..");
 const plugins = [
@@ -31,20 +32,83 @@ async function waitForDev(url: string): Promise<void> {
 	throw new Error(`dev server not ready at ${url}`);
 }
 
-async function canvasHasVisibleContent(page: import("playwright").Page): Promise<boolean> {
-	const canvas = page.locator("#semio-wgpu-canvas");
-	const box = await canvas.boundingBox();
-	if (!box || box.width < 1 || box.height < 1) return false;
-	const png = await canvas.screenshot({ type: "png" });
-	if (png.length < 200) return false;
-	let min = 255;
-	let max = 0;
-	for (let i = 100; i < Math.min(png.length, 4000); i++) {
-		const value = png[i]!;
-		if (value < min) min = value;
-		if (value > max) max = value;
+const BG_R = 13;
+const BG_G = 13;
+const BG_B = 15;
+const BG_TOLERANCE = 6;
+const CHROME_LUMA_MIN = 72;
+const CHROME_PIXEL_MIN_RATIO = 0.001;
+const CHROME_MAX_LUMA_MIN = 80;
+
+type PaintStats = {
+	readonly nonBackgroundRatio: number;
+	readonly navbarChromeRatio: number;
+	readonly footerChromeRatio: number;
+	readonly navbarMaxLuma: number;
+	readonly footerMaxLuma: number;
+};
+
+function analyzePngBuffer(png: Buffer): PaintStats {
+	const { data, width: w, height: h } = PNG.sync.read(png);
+	if (w < 8 || h < 8) throw new Error("screenshot too small");
+	const isBg = (r: number, g: number, b: number) =>
+		Math.abs(r - BG_R) <= BG_TOLERANCE &&
+		Math.abs(g - BG_G) <= BG_TOLERANCE &&
+		Math.abs(b - BG_B) <= BG_TOLERANCE;
+	const luma = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
+	let nonBg = 0;
+	const total = w * h;
+	const stripStats = (y0: number, y1: number, x0 = 0, x1 = w) => {
+		let nonBgStrip = 0;
+		let chromeStrip = 0;
+		let maxLuma = 0;
+		let count = 0;
+		for (let y = y0; y < y1; y++) {
+			for (let x = x0; x < x1; x++) {
+				const i = (y * w + x) * 4;
+				const r = data[i]!;
+				const g = data[i + 1]!;
+				const b = data[i + 2]!;
+				const l = luma(r, g, b);
+				count += 1;
+				maxLuma = Math.max(maxLuma, l);
+				if (!isBg(r, g, b)) nonBgStrip += 1;
+				if (l >= CHROME_LUMA_MIN) chromeStrip += 1;
+			}
+		}
+		return {
+			nonBgRatio: count > 0 ? nonBgStrip / count : 0,
+			chromeRatio: count > 0 ? chromeStrip / count : 0,
+			maxLuma,
+		};
+	};
+	for (let i = 0; i < data.length; i += 4) {
+		if (!isBg(data[i]!, data[i + 1]!, data[i + 2]!)) nonBg += 1;
 	}
-	return max - min > 8;
+	const navbarH = Math.max(8, Math.floor(h * 0.06));
+	const footerH = Math.max(8, Math.floor(h * 0.05));
+	const navbar = stripStats(0, navbarH);
+	const footer = stripStats(h - footerH, h);
+	return {
+		nonBackgroundRatio: nonBg / total,
+		navbarChromeRatio: navbar.chromeRatio,
+		footerChromeRatio: footer.chromeRatio,
+		navbarMaxLuma: navbar.maxLuma,
+		footerMaxLuma: footer.maxLuma,
+	};
+}
+
+async function canvasPaintStats(page: import("playwright").Page): Promise<PaintStats> {
+	const png = await page.locator("#semio-wgpu-canvas").screenshot({ type: "png" });
+	return analyzePngBuffer(Buffer.from(png));
+}
+
+async function canvasHasVisibleContent(page: import("playwright").Page): Promise<boolean> {
+	const stats = await canvasPaintStats(page);
+	if (stats.nonBackgroundRatio < 0.01) return false;
+	if (stats.navbarChromeRatio < CHROME_PIXEL_MIN_RATIO || stats.navbarMaxLuma < CHROME_MAX_LUMA_MIN) return false;
+	if (stats.footerChromeRatio < CHROME_PIXEL_MIN_RATIO || stats.footerMaxLuma < CHROME_MAX_LUMA_MIN) return false;
+	return true;
 }
 
 async function waitForWgpuBoot(page: import("playwright").Page): Promise<void> {
@@ -66,17 +130,22 @@ async function smokePlugin(
 	pluginId: string,
 ): Promise<string> {
 	const errors: string[] = [];
+	const warnings: string[] = [];
 	const page = await browser.newPage();
 	try {
 		page.on("pageerror", (error) => errors.push(error.message));
 		page.on("console", (message) => {
-			if (message.type() !== "error") return;
 			const text = message.text();
+			if (message.type() === "warning" && !text.includes("[DEBUG]")) {
+				warnings.push(text);
+			}
+			if (message.type() !== "error") return;
 			if (
 				text.includes("boot failed") ||
 				text.includes("atlas failed") ||
 				text.includes("Failed to resolve import") ||
-				text.includes("Uncaught")
+				text.includes("Uncaught") ||
+				text.includes("WebGPU")
 			) {
 				errors.push(text);
 			}
@@ -89,12 +158,43 @@ async function smokePlugin(
 		await waitForWgpuBoot(page);
 		await page.waitForTimeout(1200);
 		const painted = await canvasHasVisibleContent(page);
-		if (!painted) throw new Error("canvas screenshot has no visible content");
+		if (!painted) {
+			const stats = await canvasPaintStats(page).catch(() => null);
+			throw new Error(
+				stats
+					? `canvas paint check failed ratio=${stats.nonBackgroundRatio.toFixed(4)} navbarChrome=${stats.navbarChromeRatio.toFixed(4)} footerChrome=${stats.footerChromeRatio.toFixed(4)} navbarMaxL=${stats.navbarMaxLuma.toFixed(1)} footerMaxL=${stats.footerMaxLuma.toFixed(1)}`
+					: "canvas screenshot has no visible content",
+			);
+		}
+		if (pluginId === "s" || pluginId === "flow") {
+			await interactionSmoke(page, pluginId);
+		}
+		if (warnings.length > 0) throw new Error(`console warnings: ${warnings.join(" | ")}`);
 		if (errors.length > 0) throw new Error(errors.join(" | "));
+		const shotPath = join(import.meta.dir, `screenshot-${pluginId}.png`);
+		await page.locator("#semio-wgpu-canvas").screenshot({ path: shotPath });
 		return `ok canvas painted plugin=${pluginId}`;
 	} finally {
 		await page.close();
 	}
+}
+
+async function interactionSmoke(page: import("playwright").Page, pluginId: string): Promise<void> {
+	const canvas = page.locator("#semio-wgpu-canvas");
+	const box = await canvas.boundingBox();
+	if (!box) throw new Error("canvas missing for interaction smoke");
+	const click = async (rx: number, ry: number) => {
+		await page.mouse.click(box.x + box.width * rx, box.y + box.height * ry);
+		await page.waitForTimeout(200);
+	};
+	await click(0.92, 0.04);
+	await click(0.88, 0.04);
+	if (pluginId === "flow") {
+		await click(0.5, 0.55);
+		await click(0.62, 0.48);
+	}
+	const painted = await canvasHasVisibleContent(page);
+	if (!painted) throw new Error("canvas empty after interaction smoke");
 }
 
 let devProc: Subprocess | null = null;

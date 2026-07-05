@@ -31,7 +31,10 @@ pub mod color {
 
 // #region 🔖Theme
 pub mod theme {
-    use super::generated::{BoardTheme, CanvasTheme, MapTheme, BOARD_DARK, BOARD_LIGHT, CANVAS_DARK, CANVAS_LIGHT, MAP_DARK, MAP_LIGHT};
+    use super::generated::{
+        BoardTheme, CanvasTheme, ChromeTheme, MapTheme, BOARD_DARK, BOARD_LIGHT, CANVAS_DARK, CANVAS_LIGHT,
+        CHROME_DARK, CHROME_LIGHT, MAP_DARK, MAP_LIGHT,
+    };
 
     /// @emoji 🎨 Active theme name for canvas hosts.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -59,6 +62,13 @@ pub mod theme {
             match self {
                 Self::Light => &CANVAS_LIGHT,
                 Self::Dark => &CANVAS_DARK,
+            }
+        }
+
+        pub fn chrome(self) -> &'static ChromeTheme {
+            match self {
+                Self::Light => &CHROME_LIGHT,
+                Self::Dark => &CHROME_DARK,
             }
         }
 
@@ -97,9 +107,10 @@ mod tests {
 
     #[test]
     fn light_and_dark_themes_differ() {
-        use super::{BOARD_DARK, BOARD_LIGHT, MAP_DARK, MAP_LIGHT};
+        use super::{BOARD_DARK, BOARD_LIGHT, CHROME_DARK, CHROME_LIGHT, MAP_DARK, MAP_LIGHT};
         assert_ne!(BOARD_LIGHT.raster_clear, BOARD_DARK.raster_clear);
         assert_ne!(MAP_LIGHT.surface_clear, MAP_DARK.surface_clear);
+        assert_ne!(CHROME_LIGHT.canvas, CHROME_DARK.canvas);
     }
 
     #[test]

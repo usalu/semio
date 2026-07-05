@@ -361,11 +361,7 @@ fn render_main_graph(envelope: &SequencePlayEnvelope) -> UiNode {
     build_node_graph_scene(
         SEQUENCE_PLAY_SURFACE_MAIN,
         SEQUENCE_PLAY_APP_ID,
-        NodeGraphScene {
-            nodes_json,
-            edges_json,
-            viewport_json,
-        },
+        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
     )
 }
 
@@ -374,11 +370,7 @@ fn render_script(envelope: &SequencePlayEnvelope) -> UiNode {
     build_text_editor_scene(
         SEQUENCE_PLAY_SURFACE_SCRIPT,
         SEQUENCE_PLAY_APP_ID,
-        TextEditorScene {
-            buffer: host.compile_text(),
-            language: Some("imperative".into()),
-            selection_json: None,
-        },
+        TextEditorScene::base(host.compile_text(), Some("imperative".into()), None),
     )
 }
 
@@ -387,11 +379,7 @@ fn render_compiled_dag(envelope: &SequencePlayEnvelope) -> UiNode {
     build_text_editor_scene(
         SEQUENCE_PLAY_SURFACE_COMPILED,
         SEQUENCE_PLAY_APP_ID,
-        TextEditorScene {
-            buffer: host.compiled_wire_literal(),
-            language: Some("wire".into()),
-            selection_json: None,
-        },
+        TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None),
     )
 }
 //#endregion 🔖Render

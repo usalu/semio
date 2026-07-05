@@ -336,6 +336,7 @@ pub fn render_world_3d(
         event: None,
         control_id: Some(state.surface_id.clone()),
         kind: HitKind::World3d,
+        drag_axis: None,
     });
 }
 
@@ -345,6 +346,7 @@ pub fn world3d_hit_target(scene: &UiComponentSceneNode, bounds: Rect) -> HitTarg
         event: None,
         control_id: Some(scene.surface_id.clone()),
         kind: HitKind::World3d,
+        drag_axis: None,
     }
 }
 

@@ -165,6 +165,10 @@ function resolveThemes(tokens: Tokens): Record<string, Record<string, Record<str
 	return out;
 }
 
+function themeGroupNames(resolvedThemes: ReturnType<typeof resolveThemes>): string[] {
+	return Object.keys(resolvedThemes.light ?? {}).sort();
+}
+
 function emitPaletteFonts(tokens: Tokens): string {
 	const assetBase = "/asset";
 	const lines: string[] = ["/* Generated from ui/styling/tokens.json — run `bun ./script.ts generate`. */"];
@@ -219,44 +223,24 @@ function emitTypeScriptTokens(tokens: Tokens, resolvedThemes: ReturnType<typeof 
 	lines.push(emitJsonConst("STYLING_OPACITIES", tokens.opacities ?? {}));
 	lines.push(emitJsonConst("STYLING_METRICS", resolveMetrics(tokens.metrics)));
 	lines.push(emitJsonConst("STYLING_CANVAS_FONTS", tokens.canvasFonts ?? {}));
-	const wasmThemes: Record<string, Record<string, number[]>> = {};
-	for (const [themeName, groups] of Object.entries(resolvedThemes)) {
-		if (!groups.board) {
-			continue;
+	for (const group of themeGroupNames(resolvedThemes)) {
+		const groupThemes: Record<string, Record<string, number[]>> = {};
+		for (const [themeName, groups] of Object.entries(resolvedThemes)) {
+			const paints = groups[group];
+			if (!paints) {
+				continue;
+			}
+			groupThemes[themeName] = {};
+			for (const [paintName, rgba] of Object.entries(paints)) {
+				groupThemes[themeName]![paintName] = [...rgba];
+			}
 		}
-		wasmThemes[themeName] = {};
-		for (const [paintName, rgba] of Object.entries(groups.board)) {
-			const camel = paintName;
-			wasmThemes[themeName]![camel] = [...rgba];
+		lines.push(emitJsonConst(`STYLING_${group.toUpperCase()}_THEMES`, groupThemes));
+		if (group === "board") {
+			lines.push("export type StylingThemeName = keyof typeof STYLING_BOARD_THEMES;");
 		}
+		lines.push("");
 	}
-	lines.push(emitJsonConst("STYLING_BOARD_THEMES", wasmThemes));
-	lines.push("export type StylingThemeName = keyof typeof STYLING_BOARD_THEMES;");
-	lines.push("");
-	const mapThemes: Record<string, Record<string, number[]>> = {};
-	for (const [themeName, groups] of Object.entries(resolvedThemes)) {
-		if (!groups.map) {
-			continue;
-		}
-		mapThemes[themeName] = {};
-		for (const [paintName, rgba] of Object.entries(groups.map)) {
-			mapThemes[themeName]![paintName] = [...rgba];
-		}
-	}
-	lines.push(emitJsonConst("STYLING_MAP_THEMES", mapThemes));
-	lines.push("");
-	const canvasThemes: Record<string, Record<string, number[]>> = {};
-	for (const [themeName, groups] of Object.entries(resolvedThemes)) {
-		if (!groups.canvas) {
-			continue;
-		}
-		canvasThemes[themeName] = {};
-		for (const [paintName, rgba] of Object.entries(groups.canvas)) {
-			canvasThemes[themeName]![paintName] = [...rgba];
-		}
-	}
-	lines.push(emitJsonConst("STYLING_CANVAS_THEMES", canvasThemes));
-	lines.push("");
 	return lines.join("\n");
 }
 
@@ -340,7 +324,7 @@ function emitRust(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveTheme
 	}
 	lines.push("}");
 	lines.push("");
-	for (const group of ["board", "map", "canvas"] as const) {
+	for (const group of themeGroupNames(resolvedThemes)) {
 		lines.push(`pub struct ${toPascalCase(group)}Theme {`);
 		const sample = resolvedThemes.light?.[group];
 		if (sample) {
@@ -387,7 +371,7 @@ function emitPython(tokens: Tokens, resolvedThemes: ReturnType<typeof resolveThe
 	lines.push(`STYLING_OPACITIES: Final[dict[str, float]] = ${JSON.stringify(tokens.opacities ?? {}, null, 4)}`);
 	lines.push(`STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = ${JSON.stringify(resolveMetrics(tokens.metrics), null, 4)}`);
 	lines.push("");
-	for (const group of ["board", "map", "canvas"] as const) {
+	for (const group of themeGroupNames(resolvedThemes)) {
 		lines.push("@dataclass(frozen=True, slots=True)");
 		lines.push(`class ${toPascalCase(group)}Theme:`);
 		const sample = resolvedThemes.light?.[group];

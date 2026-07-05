@@ -214,7 +214,7 @@ struct BrushCollisionFreeResult {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct BrushPlacePayload {
+pub struct BrushPlacePayload {
     target_vortex_full_id: String,
     object_kind_id: String,
     source_vortex_index: usize,
@@ -226,7 +226,7 @@ struct BrushPlacePayload {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct FillBuildProgress {
+pub struct FillBuildProgress {
     count: usize,
     max_count: usize,
     done: bool,
@@ -1276,9 +1276,44 @@ impl Puzzle3dEngine {
         fill.stalled = true;
         false
     }
+
+    fn apply_fill_count(&mut self, count: usize) -> Option<Fixture> {
+        if let Some(fill) = &mut self.fill {
+            fill.max_count = count.min(FILL_COUNT_MAX);
+            fill.stalled = false;
+        }
+        loop {
+            let done = self
+                .fill
+                .as_ref()
+                .map(|fill| fill.stalled || fill.sequence.len() >= fill.max_count)
+                .unwrap_or(true);
+            if done {
+                break;
+            }
+            if !self.fill_step_one() {
+                break;
+            }
+        }
+        self.fill.as_ref().map(|fill| fill.fixture.clone())
+    }
+
+    fn apply_brush_placement(&mut self, payload: &BrushPlacePayload) -> Option<Fixture> {
+        let catalogs = self.scene.as_ref()?.kind_catalogs.as_ref()?.clone();
+        let fixture = &self.scene.as_ref()?.fixture;
+        let next = apply_brush_placement_to_fixture(fixture, payload, &catalogs);
+        if next.objects.len() == fixture.objects.len() {
+            return None;
+        }
+        if let Some(scene) = &mut self.scene {
+            scene.fixture = next.clone();
+        }
+        self.rebuild_queue();
+        Some(next)
+    }
 }
 
-fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlacePayload, catalogs: &KindCatalogBundle) -> Fixture {
+pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlacePayload, catalogs: &KindCatalogBundle) -> Fixture {
     let Some(kind) = catalog_object_kind_by_id(catalogs, &payload.object_kind_id) else {
         return fixture.clone();
     };
@@ -1363,6 +1398,24 @@ impl Puzzle3dPrecomputeSession {
     pub fn fill_progress(&self) -> String {
         let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
+    }
+
+    pub fn apply_brush_placement_json(&mut self, payload_json: &str) -> Result<String, JsValue> {
+        let payload: BrushPlacePayload =
+            serde_json::from_str(payload_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let fixture = self
+            .engine
+            .apply_brush_placement(&payload)
+            .ok_or_else(|| JsValue::from_str("brush placement rejected"))?;
+        serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    pub fn apply_fill_count(&mut self, count: u32) -> Result<String, JsValue> {
+        let fixture = self
+            .engine
+            .apply_fill_count(count as usize)
+            .ok_or_else(|| JsValue::from_str("fill session unavailable"))?;
+        serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
 
@@ -1504,6 +1557,43 @@ impl Puzzle3dPrecomputeSession {
     pub fn fill_progress(&self) -> String {
         let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
+    }
+
+    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, String> {
+        let payload: BrushPlacePayload = serde_json::from_str(payload_json)?;
+        let fixture = self
+            .engine
+            .apply_brush_placement(&payload)
+            .ok_or_else(|| "brush placement rejected".to_string())?;
+        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+    }
+
+    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, String> {
+        let fixture = self
+            .engine
+            .apply_fill_count(count as usize)
+            .ok_or_else(|| "fill session unavailable".to_string())?;
+        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl Puzzle3dPrecomputeSession {
+    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, String> {
+        let payload: BrushPlacePayload = serde_json::from_str(payload_json).map_err(|e| e.to_string())?;
+        let fixture = self
+            .engine
+            .apply_brush_placement(&payload)
+            .ok_or_else(|| "brush placement rejected".to_string())?;
+        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+    }
+
+    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, String> {
+        let fixture = self
+            .engine
+            .apply_fill_count(count as usize)
+            .ok_or_else(|| "fill session unavailable".to_string())?;
+        serde_json::to_string(&fixture).map_err(|e| e.to_string())
     }
 }
 

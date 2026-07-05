@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { createRoot } from "react-dom/client";
 import {
 	App,
-	Breadcrumb,
 	ButtonGroup,
 	ButtonGroupItem,
 	ChromeAwareWindowScrollSurface,
@@ -26,9 +25,12 @@ import {
 	WindowMeasureTreeLeaf,
 	WindowMeasuresTree,
 	bootstrapElementsSurfaceChromeDocument,
+	cn,
 	createEvenWindowLayout,
 	getLevelBgClass,
+	interactiveActiveFillClass,
 	navbarFillItem,
+	shellChromeTitleClassName,
 	staticTreePanelDefinition,
 	useMediaQuery,
 	useSidePanelChromeHotkeys,
@@ -73,8 +75,10 @@ import {
 	type WindowLayoutStackNode,
 	type WindowLayoutWindowNode,
 	type WindowMeasure,
+	type ToolNode,
 } from "./types.ts";
 import { interpretUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
+import { ToolTree } from "./tool-tree.tsx";
 import { UISearch, UIFind, UIFindProvider } from "./ui-search-find.tsx";
 import {
 	createFrameworkDisplayPanelTabs,
@@ -334,21 +338,6 @@ function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowK
 	return windowKinds[0]?.id ?? null;
 }
 
-function uriToBreadcrumbItems(uri: string, onNavigate: (href: string) => void) {
-	if (uri === "/" || uri === "") {
-		return [{ id: "breadcrumb.root", content: "Home", onNavigate: () => onNavigate("/") }];
-	}
-	const segments = uri.split("/").filter(Boolean);
-	const items: { id: string; content: string; onNavigate: () => void }[] = [{ id: "breadcrumb.root", content: "Home", onNavigate: () => onNavigate("/") }];
-	let path = "";
-	for (const segment of segments) {
-		path += `/${segment}`;
-		const href = path;
-		items.push({ id: `breadcrumb.${href}`, content: segment === "studios" ? "Studios" : segment, onNavigate: () => onNavigate(href) });
-	}
-	return items;
-}
-
 function windowEngagementControlToSpec(
 	control: WindowEngagementControl | undefined,
 	onCommand: (command: CommandDescriptor) => void,
@@ -586,15 +575,18 @@ export function FrameworkOsShell({
 	const [session, setSession] = useState<ActiveSession | null>(null);
 	const [windowUiByKind, setWindowUiByKind] = useState<Readonly<Record<string, UiNode>>>({});
 	const [panelUiByKey, setPanelUiByKey] = useState<Readonly<Record<string, UiNode>>>({});
+	const [activeToolNodes, setActiveToolNodes] = useState<readonly ToolNode[]>([]);
 	const [spawnedWindowUi, setSpawnedWindowUi] = useState<UiNode | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [leftPanelVisible, setLeftPanelVisible] = useState(true);
 	const [rightPanelVisible, setRightPanelVisible] = useState(true);
+	const [activeLeftPanelKind, setActiveLeftPanelKind] = useState<"workbench" | "display">("workbench");
+	const [activeRightPanelKind, setActiveRightPanelKind] = useState<"details" | "settings">("details");
 	const [leftPanelSize, setLeftPanelSize] = useState(DEFAULT_LEFT_PANEL_SIZE);
 	const [rightPanelSize, setRightPanelSize] = useState(DEFAULT_RIGHT_PANEL_SIZE);
 	const [activeWindowId, setActiveWindowId] = useState<string | null>(null);
 	const [shellLayout, setShellLayout] = useState<WindowLayoutNode | null>(null);
-	const [activeExampleId, setActiveExampleId] = useState("demo");
+	const [activeExampleId, setActiveExampleId] = useState("");
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [findOpen, setFindOpen] = useState(false);
 	const importStudioInputRef = useRef<HTMLInputElement>(null);
@@ -695,16 +687,21 @@ export function FrameworkOsShell({
 					plugin.render(nextSession.instanceId, kind.bodyKey, nextSession.viewState),
 				),
 				...nextSession.app.panelTabs.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey, nextSession.viewState)),
+				plugin.tools(nextSession.instanceId, nextSession.viewState),
 			]);
 			if (generation !== refreshGenerationRef.current) return;
 			const windowNodes = rendered.slice(0, windowCount);
-			const panelNodes = rendered.slice(windowCount);
+			const panelNodes = rendered.slice(windowCount, windowCount + nextSession.app.panelTabs.length);
+			const dynamicTools = rendered[rendered.length - 1] as readonly ToolNode[];
 			setWindowUiByKind(
 				Object.fromEntries(
 					nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]!]),
 				),
 			);
 			setPanelUiByKey(Object.fromEntries(nextSession.app.panelTabs.map((tab, index) => [tab.id, panelNodes[index]!])));
+			const activeModeId = nextSession.viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
+			const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
+			setActiveToolNodes(dynamicTools.length > 0 ? dynamicTools : staticTools);
 			const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
 			setShellLayout(convertFrameworkLayoutToModeLayout(nextSession.app.defaultLayout, windowIds));
 			const defaultWindowId = findDefaultActiveWindowKindId(nextSession.app.defaultLayout, nextSession.app.windowKinds);
@@ -1164,10 +1161,9 @@ export function FrameworkOsShell({
 		return () => window.removeEventListener("keydown", onKeyDown);
 	}, [onCommand, session]);
 
-	const activePanelTabId = panel?.activePanelTab ?? session?.app.panelTabs.find((tab) => panelSideForGroup(tab.group) === "left")?.id ?? session?.app.panelTabs[0]?.id;
-	const activeLeftPanelTabId = studioMode && session?.app.id === S_PLAY_APP_ID ? (panel?.activePanelTab ?? S_PLAY_CATALOGUE_TAB_ID) : FRAMEWORK_PANEL_TAB_HIERARCHY_ID;
+	const activePanelTabId = panel?.activePanelTab ?? session?.app.panelTabs.find((tab) => panelSideForGroup(tab.group) === "right")?.id ?? session?.app.panelTabs[0]?.id;
 
-	const leftPanelTabs = useMemo((): SidePanelTabConfig[] => {
+	const workbenchLeftTabs = useMemo((): SidePanelTabConfig[] => {
 		if (!session) return [];
 		const pluginLeftTabs = session.app.panelTabs
 			.filter((tab) => panelSideForGroup(tab.group) === "left")
@@ -1178,9 +1174,9 @@ export function FrameworkOsShell({
 				order,
 				tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onCommand)),
 			}));
-		if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) {
-			return [...frameworkDisplayTabs, ...pluginLeftTabs];
-		}
+		if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
+		const hasPluginHierarchyTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_HIERARCHY_ID);
+		if (hasPluginHierarchyTab) return pluginLeftTabs;
 		const hierarchyTab: SidePanelTabConfig = {
 			id: FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
 			icon: shellTabIcon(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID),
@@ -1190,12 +1186,12 @@ export function FrameworkOsShell({
 				sections: [{ id: "hierarchy.root", label: "Scene", items: [{ id: "hierarchy.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} spawned app(s)` : "—" }] }],
 			}),
 		};
-		return [hierarchyTab, ...frameworkDisplayTabs, ...pluginLeftTabs];
-	}, [frameworkDisplayTabs, onCommand, panel?.spawnedApps.length, panelUiByKey, session, studioMode]);
+		return [hierarchyTab, ...pluginLeftTabs];
+	}, [onCommand, panel?.spawnedApps.length, panelUiByKey, session, studioMode]);
 
-	const rightPanelTabs = useMemo((): SidePanelTabConfig[] => {
+	const detailsRightTabs = useMemo((): SidePanelTabConfig[] => {
 		if (!session) return [];
-		const pluginRightTabs = session.app.panelTabs
+		return session.app.panelTabs
 			.filter((tab) => panelSideForGroup(tab.group) === "right")
 			.map((tab, order) => ({
 				id: tab.id,
@@ -1204,144 +1200,179 @@ export function FrameworkOsShell({
 				order,
 				tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onCommand)),
 			}));
-		return [frameworkSettingsTab, ...pluginRightTabs];
-	}, [frameworkSettingsTab, onCommand, panelUiByKey, session]);
+	}, [onCommand, panelUiByKey, session]);
+
+	const settingsRightTabs = useMemo((): SidePanelTabConfig[] => [frameworkSettingsTab], [frameworkSettingsTab]);
+
+	const leftPanelTabs = useMemo(
+		(): SidePanelTabConfig[] => (activeLeftPanelKind === "display" ? frameworkDisplayTabs : workbenchLeftTabs),
+		[activeLeftPanelKind, frameworkDisplayTabs, workbenchLeftTabs],
+	);
+
+	const rightPanelTabs = useMemo(
+		(): SidePanelTabConfig[] => (activeRightPanelKind === "settings" ? settingsRightTabs : detailsRightTabs),
+		[activeRightPanelKind, detailsRightTabs, settingsRightTabs],
+	);
+
+	const activeLeftPanelTabId = useMemo(() => {
+		if (activeLeftPanelKind === "display") return frameworkDisplayTabs[0]?.id ?? FRAMEWORK_PANEL_TAB_HIERARCHY_ID;
+		if (studioMode && session?.app.id === S_PLAY_APP_ID) return panel?.activePanelTab ?? S_PLAY_CATALOGUE_TAB_ID;
+		return workbenchLeftTabs[0]?.id ?? FRAMEWORK_PANEL_TAB_HIERARCHY_ID;
+	}, [activeLeftPanelKind, frameworkDisplayTabs, panel?.activePanelTab, session?.app.id, studioMode, workbenchLeftTabs]);
+
+	const activeRightPanelTabId = useMemo(() => {
+		if (activeRightPanelKind === "settings") return settingsRightTabs[0]?.id;
+		if (panel?.activePanelTab && detailsRightTabs.some((tab) => tab.id === panel.activePanelTab)) return panel.activePanelTab;
+		return detailsRightTabs[0]?.id ?? activePanelTabId;
+	}, [activePanelTabId, activeRightPanelKind, detailsRightTabs, panel?.activePanelTab, settingsRightTabs]);
+
+	const workbenchIcon = useMemo(() => {
+		const TabIcon = workbenchLeftTabs[0]?.icon;
+		return TabIcon ? <TabIcon size={16} /> : <Icon icon="folder" size="small" />;
+	}, [workbenchLeftTabs]);
+
+	const detailsIcon = useMemo(() => {
+		const TabIcon = detailsRightTabs[0]?.icon;
+		return TabIcon ? <TabIcon size={16} /> : <Icon icon="info" size="small" />;
+	}, [detailsRightTabs]);
+
+	const displayIcon = useMemo(() => {
+		const TabIcon = frameworkDisplayTabs[0]?.icon;
+		return TabIcon ? <TabIcon size={16} /> : <Icon icon="layout-grid" size="small" />;
+	}, [frameworkDisplayTabs]);
+
+	const settingsIcon = useMemo(() => <Icon icon="settings-2" size="small" />, []);
 
 	const panelToggles = useMemo((): PanelToggleItem[] => {
 		const items: PanelToggleItem[] = [];
-		if (leftPanelTabs.length > 0) {
+		if (frameworkDisplayTabs.length > 0) {
 			items.push({
-				id: "framework.panel.left",
-				icon: <Icon icon="panel-left" size="small" />,
-				pressed: leftPanelVisible,
-				onPressedChange: setLeftPanelVisible,
+				id: "ui.panelToggle.display",
+				icon: displayIcon,
+				pressed: leftPanelVisible && activeLeftPanelKind === "display",
+				onPressedChange: (pressed) => {
+					if (pressed) setActiveLeftPanelKind("display");
+					setLeftPanelVisible((visible) => pressed || (activeLeftPanelKind === "workbench" && visible));
+				},
 			});
 		}
-		if (rightPanelTabs.length > 0) {
-			items.push({
-				id: "framework.panel.right",
-				icon: <Icon icon="panel-right" size="small" />,
-				pressed: rightPanelVisible,
-				onPressedChange: setRightPanelVisible,
-			});
-		}
+		items.push({
+			id: "ui.panelToggle.workbench",
+			icon: workbenchIcon,
+			pressed: leftPanelVisible && activeLeftPanelKind === "workbench",
+			onPressedChange: (pressed) => {
+				if (pressed) setActiveLeftPanelKind("workbench");
+				setLeftPanelVisible((visible) => pressed || (activeLeftPanelKind === "display" && visible));
+			},
+		});
+		items.push({
+			id: "ui.panelToggle.details",
+			icon: detailsIcon,
+			pressed: rightPanelVisible && activeRightPanelKind === "details",
+			onPressedChange: (pressed) => {
+				if (pressed) setActiveRightPanelKind("details");
+				setRightPanelVisible((visible) => pressed || (activeRightPanelKind === "settings" && visible));
+			},
+		});
+		items.push({
+			id: "ui.panelToggle.settings",
+			icon: settingsIcon,
+			pressed: rightPanelVisible && activeRightPanelKind === "settings",
+			onPressedChange: (pressed) => {
+				if (pressed) setActiveRightPanelKind("settings");
+				setRightPanelVisible((visible) => pressed || (activeRightPanelKind === "details" && visible));
+			},
+		});
 		return items;
-	}, [leftPanelTabs.length, leftPanelVisible, rightPanelTabs.length, rightPanelVisible]);
+	}, [
+		activeLeftPanelKind,
+		activeRightPanelKind,
+		detailsIcon,
+		displayIcon,
+		frameworkDisplayTabs.length,
+		leftPanelVisible,
+		rightPanelVisible,
+		settingsIcon,
+		workbenchIcon,
+	]);
 
-	const sPluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.manifest, [loadedPlugins]);
+	const activePluginManifest = useMemo(
+		() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest,
+		[loadedPlugins, session?.pluginId],
+	);
 	const exampleOptions = useMemo(
-		() => (sPluginManifest?.examples ?? []).map((example) => ({ id: example.id, label: example.label })),
-		[sPluginManifest],
+		() => (activePluginManifest?.examples ?? []).map((example) => ({ id: example.id, label: example.label })),
+		[activePluginManifest],
 	);
 
-	const navigateFromBreadcrumb = useCallback(
-		(href: string) => {
-			navigateHistory(href);
-		},
-		[navigateHistory],
-	);
+	useEffect(() => {
+		if (exampleOptions.length === 0) return;
+		setActiveExampleId((current) => (exampleOptions.some((option) => option.id === current) ? current : exampleOptions[0]!.id));
+	}, [exampleOptions, session?.app.id, session?.pluginId]);
+
+	const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
 
 	const navbarItems = useMemo((): NavbarItem[] => {
+		if (!session) return [];
 		const items: NavbarItem[] = [
 			{
-				key: "logo",
+				key: "logoAndTitle",
+				className: "min-w-0 shrink-0 flex items-center gap-single",
 				content: (
 					<div className="flex items-center gap-single">
 						<SemioLogo className="size-workbench shrink-0" />
-						<span data-slot="app-name" className="px-single text-sm font-semibold">{session?.app.label ?? (studioMode ? "S Studio" : "semio os")}</span>
+						<span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>{session.app.label}</span>
 					</div>
 				),
 			},
-			{
-				key: "navHistory",
-				content: (
-					<ButtonGroup id="ui.nav">
-						<ButtonGroupItem id="ui.nav.back" onClick={goBack} className={canGoBack ? "" : "pointer-events-none opacity-30"} icon={<Icon icon="arrow-left" size="small" />} />
-						<ButtonGroupItem id="ui.nav.forward" onClick={goForward} className={canGoForward ? "" : "pointer-events-none opacity-30"} icon={<Icon icon="arrow-right" size="small" />} />
-						<ButtonGroupItem id="ui.nav.up" onClick={goUp} className={canGoUp ? "" : "pointer-events-none opacity-30"} icon={<Icon icon="arrow-up" size="small" />} />
-					</ButtonGroup>
-				),
-			},
-			{
-				key: "breadcrumb",
-				className: navbarFillItem().className,
-				content: <Breadcrumb className="min-w-0" items={uriToBreadcrumbItems(shellUri, navigateFromBreadcrumb)} />,
-			},
 		];
-		if (studioMode && session?.app.id === S_PLAY_APP_ID && exampleOptions.length > 0) {
+		if (exampleOptions.length > 0 && (!studioMode || session.app.id !== S_HOME_APP_ID)) {
 			items.push({
-				key: "example",
+				key: "fixture",
 				content: (
 					<NavbarExampleSelect
-						id="s.navbar.example"
+						id="playground.navbar.fixture"
 						value={activeExampleId}
 						options={exampleOptions}
 						onValueChange={(exampleId) => {
 							setActiveExampleId(exampleId);
-							onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "setActiveExample", args: { exampleId } });
+							onCommand({ controllerId: session.app.controllerId, command: "setActiveExample", args: { exampleId } });
 						}}
 					/>
 				),
 			});
+			items.push(navbarFillItem());
+		} else {
+			items.push(navbarFillItem());
 		}
-		items.push(navbarFillItem());
-		items.push({
-			key: "search",
-			content: <Toggle id="ui.search.toggle" pressed={searchOpen} onPressedChange={setSearchOpen} icon={<Icon icon="search" size="small" />} />,
-		});
-		items.push({
-			key: "find",
-			content: <Toggle id="ui.find.toggle" pressed={findOpen} onPressedChange={setFindOpen} icon={<Icon icon="text-search" size="small" />} />,
-		});
-		if (panelToggles.length > 0) {
-			items.push({ key: "panel-toggles", content: <PanelToggleGroup items={panelToggles} /> });
-		}
-		items.push({
-			key: "theme",
-			content: (
-				<Select value={uiTheme} onValueChange={(value) => setUiTheme(value as ElementsSurfaceTheme)}>
-					<SelectTrigger className="h-medium w-[7rem]">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="system">System</SelectItem>
-						<SelectItem value="light">Light</SelectItem>
-						<SelectItem value="dark">Dark</SelectItem>
-					</SelectContent>
-				</Select>
-			),
-		});
-		items.push({
-			key: "compact",
-			content: <Toggle id="ui-compact" text="Compact" pressed={uiCompact} onPressedChange={setUiCompact} />,
-		});
-		items.push({
-			key: "expertise",
-			content: (
-				<Select value={uiExpertise} onValueChange={(value) => setUiExpertise(value as Expertise)}>
-					<SelectTrigger className="h-medium w-[7rem]">
-						<SelectValue />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value={Expertise.BEGINNER}>Beginner</SelectItem>
-						<SelectItem value={Expertise.NORMAL}>Normal</SelectItem>
-						<SelectItem value={Expertise.EXPERT}>Expert</SelectItem>
-					</SelectContent>
-				</Select>
-			),
-		});
-		if (studioMode) {
+		items.push({ key: "panelToggles", content: <PanelToggleGroup items={panelToggles} /> });
+		if (session.app.modes.length > 1) {
 			items.push({
-				key: "uri",
+				key: "modes",
 				content: (
-					<span className="text-muted-foreground max-w-[12rem] truncate text-xs" title={shellUri}>
-						{shellUri}
-					</span>
+					<ButtonGroup id="playground.navbar.modes">
+						{session.app.modes.map((mode) => {
+							const isActive = activeModeId === mode.id;
+							return (
+								<ButtonGroupItem
+									key={mode.id}
+									id={`playground.navbar.modes.${mode.id}`}
+									className={cn(isActive && interactiveActiveFillClass)}
+									data-state={isActive ? "on" : undefined}
+									onClick={() => {
+										setSession((current) => (current ? { ...current, viewState: { ...current.viewState, activeModeId: mode.id } } : current));
+									}}
+									icon={<span className="hidden" />}
+									text={mode.label}
+								/>
+							);
+						})}
+					</ButtonGroup>
 				),
 			});
 		}
 		return items;
-	}, [activeExampleId, canGoBack, canGoForward, canGoUp, exampleOptions, findOpen, goBack, goForward, goUp, navigateFromBreadcrumb, onCommand, panelToggles, searchOpen, session?.app.id, session?.app.label, shellUri, studioMode, uiCompact, uiExpertise, uiTheme]);
+	}, [activeExampleId, activeModeId, exampleOptions, onCommand, panelToggles, session]);
 
 	const searchItems = useMemo(() => {
 		if (!session) return [];
@@ -1450,6 +1481,11 @@ export function FrameworkOsShell({
 		return items;
 	}, [onCommand, session, studioMode]);
 
+	const footerToolbar = useMemo(() => {
+		if (!activeToolNodes.length) return undefined;
+		return <ToolTree tools={activeToolNodes} onCommand={onCommand} />;
+	}, [activeToolNodes, onCommand]);
+
 	const modeWindows = useMemo((): ModeWindowDescriptor[] => {
 		if (!session) return [];
 		if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
@@ -1539,7 +1575,7 @@ export function FrameworkOsShell({
 						onActiveModeChange={(modeId) => {
 							setSession((current) => (current ? { ...current, viewState: { ...current.viewState, activeModeId: modeId } } : current));
 						}}
-						chrome={modes.length > 1}
+						chrome={false}
 					>
 						<Mode
 							className="h-full w-full"
@@ -1569,7 +1605,7 @@ export function FrameworkOsShell({
 					<Layout
 						mobile={mobile}
 						navbar={<Navbar items={navbarItems} showFullscreenToggle />}
-						footer={<Footer items={footerItems} />}
+						footer={<Footer items={footerItems} toolbar={footerToolbar} />}
 						leftSidePanel={
 							leftPanelTabs.length > 0
 								? {
@@ -1581,7 +1617,7 @@ export function FrameworkOsShell({
 										activeTabId: activeLeftPanelTabId,
 										onActiveTabChange: (tabId) => {
 											if (studioMode && session?.app.id === S_PLAY_APP_ID) {
-												onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "setActivePanelTab", args: { tabId } });
+												onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId } });
 											}
 										},
 									}
@@ -1595,8 +1631,12 @@ export function FrameworkOsShell({
 										size: rightPanelSize,
 										onSizeChange: setRightPanelSize,
 										tabs: rightPanelTabs,
-										activeTabId: activePanelTabId,
-										onActiveTabChange: (tabId) => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "setActivePanelTab", args: { tabId } }),
+										activeTabId: activeRightPanelTabId,
+										onActiveTabChange: (tabId) => {
+											if (studioMode && session?.app.id === S_PLAY_APP_ID) {
+												onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId } });
+											}
+										},
 									}
 								: undefined
 						}

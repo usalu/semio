@@ -113,7 +113,10 @@ export const STYLING_STROKES = {
   "mapLineScaleCap": 1.38,
   "mapLineScaleRaw": 280,
   "mapRoadLodRegion": 0.4,
-  "mapRoadLodCity": 0.3
+  "mapRoadLodCity": 0.3,
+  "chromeBorderHairline": 1,
+  "chromeBorderDefault": 2,
+  "chromeBorderFocus": 3
 } as const;
 
 export const STYLING_RADII = {
@@ -124,7 +127,8 @@ export const STYLING_RADII = {
   "nodeRectDefault": 40,
   "dagHandleWorld": 5,
   "mapPositionMarker": 8,
-  "mapLabelAnchorOffset": 6
+  "mapLabelAnchorOffset": 6,
+  "chrome": 0
 } as const;
 
 export const STYLING_OPACITIES = {
@@ -295,6 +299,23 @@ export const STYLING_METRICS = {
     "vortexDragThresholdPx": 6,
     "lineWidthSelected": 3,
     "lineWidthDefault": 2
+  },
+  "chrome": {
+    "uiSpacingCompactPx": 3.2,
+    "navbarHeightUiSpacing": 9,
+    "footerHeightUiSpacing": 9,
+    "controlHeightUiSpacing": 7,
+    "panelHeaderHeightUiSpacing": 7,
+    "gapStandardUiSpacing": 1,
+    "paddingStandardUiSpacing": 1,
+    "panelInsetUiSpacing": 1
+  },
+  "typography": {
+    "text2xsPx": 9.6,
+    "textXsPx": 11.2,
+    "textSmPx": 12.8,
+    "textBasePx": 14.4,
+    "textLgPx": 16
   },
   "dom": {
     "iconTinyUiSpacing": 3.75,
@@ -803,6 +824,310 @@ export const STYLING_BOARD_THEMES = {
 
 export type StylingThemeName = keyof typeof STYLING_BOARD_THEMES;
 
+export const STYLING_CANVAS_THEMES = {
+  "light": {
+    "rasterClear": [
+      240,
+      236,
+      221,
+      255
+    ],
+    "iconFg": [
+      0,
+      0,
+      0,
+      255
+    ],
+    "iconBg": [
+      255,
+      255,
+      255,
+      255
+    ],
+    "labelFill": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "labelHalo": [
+      247,
+      243,
+      227,
+      255
+    ]
+  },
+  "dark": {
+    "rasterClear": [
+      12,
+      28,
+      33,
+      255
+    ],
+    "iconFg": [
+      247,
+      243,
+      227,
+      255
+    ],
+    "iconBg": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "labelFill": [
+      247,
+      243,
+      227,
+      255
+    ],
+    "labelHalo": [
+      12,
+      28,
+      33,
+      255
+    ]
+  }
+} as const;
+
+
+export const STYLING_CHROME_THEMES = {
+  "light": {
+    "base": [
+      247,
+      243,
+      227,
+      255
+    ],
+    "canvas": [
+      240,
+      236,
+      221,
+      255
+    ],
+    "window": [
+      235,
+      232,
+      217,
+      255
+    ],
+    "panel": [
+      201,
+      200,
+      189,
+      255
+    ],
+    "foreground": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "mutedForeground": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "accent": [
+      255,
+      52,
+      79,
+      255
+    ],
+    "accentForeground": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "activeBase": [
+      255,
+      52,
+      79,
+      255
+    ],
+    "activeForeground": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "activeHover": [
+      230,
+      47,
+      71,
+      255
+    ],
+    "hoverInteractiveFill": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "hoverWindow": [
+      211,
+      210,
+      197,
+      255
+    ],
+    "hoverPanel": [
+      162,
+      165,
+      157,
+      255
+    ],
+    "borderNormal": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "borderEmphasized": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "borderElement": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "temporary": [
+      151,
+      155,
+      148,
+      255
+    ],
+    "overlayBg": [
+      151,
+      155,
+      148,
+      250
+    ]
+  },
+  "dark": {
+    "base": [
+      0,
+      17,
+      23,
+      255
+    ],
+    "canvas": [
+      12,
+      28,
+      33,
+      255
+    ],
+    "window": [
+      7,
+      24,
+      29,
+      255
+    ],
+    "panel": [
+      29,
+      43,
+      47,
+      255
+    ],
+    "foreground": [
+      247,
+      243,
+      227,
+      255
+    ],
+    "mutedForeground": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "accent": [
+      255,
+      52,
+      79,
+      255
+    ],
+    "accentForeground": [
+      247,
+      243,
+      227,
+      255
+    ],
+    "activeBase": [
+      255,
+      52,
+      79,
+      255
+    ],
+    "activeForeground": [
+      247,
+      243,
+      227,
+      255
+    ],
+    "activeHover": [
+      230,
+      47,
+      71,
+      255
+    ],
+    "hoverInteractiveFill": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "hoverWindow": [
+      36,
+      50,
+      53,
+      255
+    ],
+    "hoverPanel": [
+      85,
+      95,
+      93,
+      255
+    ],
+    "borderNormal": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "borderEmphasized": [
+      247,
+      243,
+      227,
+      255
+    ],
+    "borderElement": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "temporary": [
+      36,
+      50,
+      53,
+      255
+    ],
+    "overlayBg": [
+      36,
+      50,
+      53,
+      250
+    ]
+  }
+} as const;
+
+
 export const STYLING_MAP_THEMES = {
   "light": {
     "surfaceClear": [
@@ -925,74 +1250,6 @@ export const STYLING_MAP_THEMES = {
       247,
       243,
       227,
-      255
-    ]
-  }
-} as const;
-
-
-export const STYLING_CANVAS_THEMES = {
-  "light": {
-    "rasterClear": [
-      240,
-      236,
-      221,
-      255
-    ],
-    "iconFg": [
-      0,
-      0,
-      0,
-      255
-    ],
-    "iconBg": [
-      255,
-      255,
-      255,
-      255
-    ],
-    "labelFill": [
-      0,
-      17,
-      23,
-      255
-    ],
-    "labelHalo": [
-      247,
-      243,
-      227,
-      255
-    ]
-  },
-  "dark": {
-    "rasterClear": [
-      12,
-      28,
-      33,
-      255
-    ],
-    "iconFg": [
-      247,
-      243,
-      227,
-      255
-    ],
-    "iconBg": [
-      0,
-      17,
-      23,
-      255
-    ],
-    "labelFill": [
-      247,
-      243,
-      227,
-      255
-    ],
-    "labelHalo": [
-      12,
-      28,
-      33,
       255
     ]
   }

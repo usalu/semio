@@ -587,16 +587,14 @@ pub struct NodeGraphScene {
     pub nodes_json: String,
     pub edges_json: String,
     pub viewport_json: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FlowCanvasScene {
-    pub fixture_json: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub editable: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operators_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub editable: Option<bool>,
+    pub context_menu_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub find_items_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -607,6 +605,14 @@ pub struct TextEditorScene {
     pub language: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selection_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tokens_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub diagnostics_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub completions_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub overlays_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -656,8 +662,6 @@ pub struct UiComponentSceneNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub node_graph: Option<NodeGraphScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub flow_canvas: Option<FlowCanvasScene>,
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub text_editor: Option<TextEditorScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub table: Option<TableScene>,
@@ -691,6 +695,36 @@ pub enum UiNode {
     ComponentScene(UiComponentSceneNode),
 }
 
+impl NodeGraphScene {
+    /** @emoji 🕸️ Builds a node-graph scene with optional extensions unset. */
+    pub fn base(nodes_json: String, edges_json: String, viewport_json: String) -> Self {
+        Self {
+            nodes_json,
+            edges_json,
+            viewport_json,
+            editable: None,
+            operators_json: None,
+            context_menu_json: None,
+            find_items_json: None,
+        }
+    }
+}
+
+impl TextEditorScene {
+    /** @emoji ✍️ Builds a text-editor scene with optional extensions unset. */
+    pub fn base(buffer: String, language: Option<String>, selection_json: Option<String>) -> Self {
+        Self {
+            buffer,
+            language,
+            selection_json,
+            tokens_json: None,
+            diagnostics_json: None,
+            completions_json: None,
+            overlays_json: None,
+        }
+    }
+}
+
 pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
         direction: "vertical".into(),
@@ -717,7 +751,6 @@ fn component_scene(
     canvas_2d: Option<Canvas2dScene>,
     world_3d: Option<World3dScene>,
     node_graph: Option<NodeGraphScene>,
-    flow_canvas: Option<FlowCanvasScene>,
     text_editor: Option<TextEditorScene>,
     table: Option<TableScene>,
     raster: Option<RasterScene>,
@@ -732,7 +765,6 @@ fn component_scene(
         canvas_2d,
         world_3d,
         node_graph,
-        flow_canvas,
         text_editor,
         table,
         raster,
@@ -752,7 +784,6 @@ pub fn build_canvas_2d_scene(
         None,
         None,
         Some(scene),
-        None,
         None,
         None,
         None,
@@ -780,7 +811,6 @@ pub fn build_world_3d_scene(
         None,
         None,
         None,
-        None,
     )
 }
 
@@ -802,29 +832,6 @@ pub fn build_node_graph_scene(
         None,
         None,
         None,
-        None,
-    )
-}
-
-pub fn build_flow_canvas_scene(
-    surface_id: impl Into<String>,
-    controller_id: impl Into<String>,
-    scene: FlowCanvasScene,
-) -> UiNode {
-    component_scene(
-        surface_id,
-        controller_id,
-        "flow-canvas",
-        None,
-        None,
-        None,
-        None,
-        None,
-        Some(scene),
-        None,
-        None,
-        None,
-        None,
     )
 }
 
@@ -837,7 +844,6 @@ pub fn build_text_editor_scene(
         surface_id,
         controller_id,
         "text-editor",
-        None,
         None,
         None,
         None,
@@ -865,7 +871,6 @@ pub fn build_table_scene(
         None,
         None,
         None,
-        None,
         Some(scene),
         None,
         None,
@@ -881,7 +886,6 @@ pub fn build_raster_scene(
         surface_id,
         controller_id,
         "raster",
-        None,
         None,
         None,
         None,
@@ -913,7 +917,6 @@ pub fn build_virtual_file_system_scene(
         None,
         None,
         None,
-        None,
         Some(scene),
     )
 }
@@ -932,6 +935,8 @@ pub struct Keybinding {
 pub struct ModeDefinition {
     pub id: String,
     pub label: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tools: Vec<crate::tools::ToolNode>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

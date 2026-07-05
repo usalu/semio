@@ -460,11 +460,11 @@ fn render_editor(projection: &VcsDemoProjection) -> UiNode {
     build_text_editor_scene(
         VCS_PLAY_SURFACE_EDITOR,
         VCS_PLAY_APP_ID,
-        TextEditorScene {
-            buffer: serde_json::to_string_pretty(projection).unwrap_or_else(|_| "{}".into()),
-            language: Some("json".into()),
-            selection_json: None,
-        },
+        TextEditorScene::base(
+            serde_json::to_string_pretty(projection).unwrap_or_else(|_| "{}".into()),
+            Some("json".into()),
+            None,
+        ),
     )
 }
 

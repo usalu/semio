@@ -63,6 +63,9 @@ pub mod strokes {
     pub const MAP_LINE_SCALE_RAW: f64 = 280.0;
     pub const MAP_ROAD_LOD_REGION: f64 = 0.4;
     pub const MAP_ROAD_LOD_CITY: f64 = 0.3;
+    pub const CHROME_BORDER_HAIRLINE: f64 = 1.0;
+    pub const CHROME_BORDER_DEFAULT: f64 = 2.0;
+    pub const CHROME_BORDER_FOCUS: f64 = 3.0;
 }
 
 pub mod radii {
@@ -74,6 +77,7 @@ pub mod radii {
     pub const DAG_HANDLE_WORLD: f64 = 5.0;
     pub const MAP_POSITION_MARKER: f64 = 8.0;
     pub const MAP_LABEL_ANCHOR_OFFSET: f64 = 6.0;
+    pub const CHROME: f64 = 0.0;
 }
 
 pub mod opacities {
@@ -228,6 +232,23 @@ pub mod metrics {
         pub const VORTEX_DRAG_THRESHOLD_PX: f64 = 6.0;
         pub const LINE_WIDTH_SELECTED: f64 = 3.0;
         pub const LINE_WIDTH_DEFAULT: f64 = 2.0;
+    }
+    pub mod chrome {
+        pub const UI_SPACING_COMPACT_PX: f64 = 3.2;
+        pub const NAVBAR_HEIGHT_UI_SPACING: f64 = 9.0;
+        pub const FOOTER_HEIGHT_UI_SPACING: f64 = 9.0;
+        pub const CONTROL_HEIGHT_UI_SPACING: f64 = 7.0;
+        pub const PANEL_HEADER_HEIGHT_UI_SPACING: f64 = 7.0;
+        pub const GAP_STANDARD_UI_SPACING: f64 = 1.0;
+        pub const PADDING_STANDARD_UI_SPACING: f64 = 1.0;
+        pub const PANEL_INSET_UI_SPACING: f64 = 1.0;
+    }
+    pub mod typography {
+        pub const TEXT2XS_PX: f64 = 9.6;
+        pub const TEXT_XS_PX: f64 = 11.2;
+        pub const TEXT_SM_PX: f64 = 12.8;
+        pub const TEXT_BASE_PX: f64 = 14.4;
+        pub const TEXT_LG_PX: f64 = 16.0;
     }
     pub mod dom {
         pub const ICON_TINY_UI_SPACING: f64 = 3.75;
@@ -385,6 +406,96 @@ pub const BOARD_DARK: BoardTheme = BoardTheme {
     label_halo: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 0.78039216_f32],
 };
 
+pub struct CanvasTheme {
+    pub raster_clear: [f32; 4],
+    pub icon_fg: [f32; 4],
+    pub icon_bg: [f32; 4],
+    pub label_fill: [f32; 4],
+    pub label_halo: [f32; 4],
+}
+
+pub const CANVAS_LIGHT: CanvasTheme = CanvasTheme {
+    raster_clear: [0.87136712_f32, 0.83879901_f32, 0.72305513_f32, 1_f32],
+    icon_fg: [0_f32, 0_f32, 0_f32, 1_f32],
+    icon_bg: [1_f32, 1_f32, 1_f32, 1_f32],
+    label_fill: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
+    label_halo: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
+};
+
+pub const CANVAS_DARK: CanvasTheme = CanvasTheme {
+    raster_clear: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
+    icon_fg: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
+    icon_bg: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
+    label_fill: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
+    label_halo: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
+};
+
+pub struct ChromeTheme {
+    pub base: [f32; 4],
+    pub canvas: [f32; 4],
+    pub window: [f32; 4],
+    pub panel: [f32; 4],
+    pub foreground: [f32; 4],
+    pub muted_foreground: [f32; 4],
+    pub accent: [f32; 4],
+    pub accent_foreground: [f32; 4],
+    pub active_base: [f32; 4],
+    pub active_foreground: [f32; 4],
+    pub active_hover: [f32; 4],
+    pub hover_interactive_fill: [f32; 4],
+    pub hover_window: [f32; 4],
+    pub hover_panel: [f32; 4],
+    pub border_normal: [f32; 4],
+    pub border_emphasized: [f32; 4],
+    pub border_element: [f32; 4],
+    pub temporary: [f32; 4],
+    pub overlay_bg: [f32; 4],
+}
+
+pub const CHROME_LIGHT: ChromeTheme = ChromeTheme {
+    base: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
+    canvas: [0.87136712_f32, 0.83879901_f32, 0.72305513_f32, 1_f32],
+    window: [0.83076988_f32, 0.80695226_f32, 0.69387176_f32, 1_f32],
+    panel: [0.58407842_f32, 0.57758044_f32, 0.50888132_f32, 1_f32],
+    foreground: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
+    muted_foreground: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    accent: [1_f32, 0.03433981_f32, 0.07818742_f32, 1_f32],
+    accent_foreground: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
+    active_base: [1_f32, 0.03433981_f32, 0.07818742_f32, 1_f32],
+    active_foreground: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
+    active_hover: [0.79129794_f32, 0.02842604_f32, 0.06301002_f32, 1_f32],
+    hover_interactive_fill: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    hover_window: [0.65140564_f32, 0.64447968_f32, 0.55834039_f32, 1_f32],
+    hover_panel: [0.36130678_f32, 0.37626212_f32, 0.33716362_f32, 1_f32],
+    border_normal: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    border_emphasized: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
+    border_element: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    temporary: [0.30946892_f32, 0.3277781_f32, 0.29613827_f32, 1_f32],
+    overlay_bg: [0.30946892_f32, 0.3277781_f32, 0.29613827_f32, 0.98039216_f32],
+};
+
+pub const CHROME_DARK: ChromeTheme = ChromeTheme {
+    base: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
+    canvas: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
+    window: [0.00212469_f32, 0.00913406_f32, 0.01228649_f32, 1_f32],
+    panel: [0.01228649_f32, 0.02415763_f32, 0.02842604_f32, 1_f32],
+    foreground: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
+    muted_foreground: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    accent: [1_f32, 0.03433981_f32, 0.07818742_f32, 1_f32],
+    accent_foreground: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
+    active_base: [1_f32, 0.03433981_f32, 0.07818742_f32, 1_f32],
+    active_foreground: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
+    active_hover: [0.79129794_f32, 0.02842604_f32, 0.06301002_f32, 1_f32],
+    hover_interactive_fill: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    hover_window: [0.01764195_f32, 0.03189603_f32, 0.03560131_f32, 1_f32],
+    hover_panel: [0.09084171_f32, 0.11443537_f32, 0.10946171_f32, 1_f32],
+    border_normal: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    border_emphasized: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
+    border_element: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    temporary: [0.01764195_f32, 0.03189603_f32, 0.03560131_f32, 1_f32],
+    overlay_bg: [0.01764195_f32, 0.03189603_f32, 0.03560131_f32, 0.98039216_f32],
+};
+
 pub struct MapTheme {
     pub surface_clear: [f32; 4],
     pub land_fill: [f32; 4],
@@ -422,28 +533,4 @@ pub const MAP_DARK: MapTheme = MapTheme {
     route_stroke: [0.95597335_f32, 0.30054379_f32, 0_f32, 0.92156863_f32],
     position_fill: [1_f32, 0.03433981_f32, 0.07818742_f32, 1_f32],
     position_stroke: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
-};
-
-pub struct CanvasTheme {
-    pub raster_clear: [f32; 4],
-    pub icon_fg: [f32; 4],
-    pub icon_bg: [f32; 4],
-    pub label_fill: [f32; 4],
-    pub label_halo: [f32; 4],
-}
-
-pub const CANVAS_LIGHT: CanvasTheme = CanvasTheme {
-    raster_clear: [0.87136712_f32, 0.83879901_f32, 0.72305513_f32, 1_f32],
-    icon_fg: [0_f32, 0_f32, 0_f32, 1_f32],
-    icon_bg: [1_f32, 1_f32, 1_f32, 1_f32],
-    label_fill: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
-    label_halo: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
-};
-
-pub const CANVAS_DARK: CanvasTheme = CanvasTheme {
-    raster_clear: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
-    icon_fg: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
-    icon_bg: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
-    label_fill: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
-    label_halo: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
 };

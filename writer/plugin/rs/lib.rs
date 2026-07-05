@@ -1,5 +1,8 @@
 //! ✍️ Writer plugin — declarative writer app bundled as a hot-swappable WASM component.
 
+mod grammar;
+
+use grammar::tokenize_language;
 use semio_framework_plugin::{
     build_text_editor_scene, ui_declarative_sections_to_tree, ui_text, App,
     CommandDescriptor, PluginApp, PluginBundle, TextEditorScene, UiNode, UiSectionNode,
@@ -321,6 +324,8 @@ fn render_main_scene(document: &WriterDocument, view_state: &ViewState) -> UiNod
             .and_then(|value| value.get("editorSelection").cloned())
             .map(|value| value.to_string())
     });
+    let tokens = tokenize_language(&document.text, &document.language_id);
+    let tokens_json = serde_json::to_string(&tokens).ok();
     build_text_editor_scene(
         WRITER_PLAY_SURFACE_ID,
         WRITER_PLAY_CONTROLLER_ID,
@@ -328,6 +333,10 @@ fn render_main_scene(document: &WriterDocument, view_state: &ViewState) -> UiNod
             buffer: document.text.clone(),
             language: Some(document.language_id.clone()),
             selection_json,
+            tokens_json,
+            diagnostics_json: None,
+            completions_json: None,
+            overlays_json: None,
         },
     )
 }

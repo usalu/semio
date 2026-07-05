@@ -10,6 +10,7 @@ use wgpu::util::DeviceExt;
 pub const KIND_SOLID: f32 = 3.0;
 pub const KIND_ROUNDED: f32 = 1.0;
 pub const KIND_GLYPH: f32 = 2.0;
+pub const KIND_TEXTURED: f32 = 4.0;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -54,6 +55,15 @@ impl UiInstance {
             uv_rect,
         }
     }
+
+    pub fn textured(rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) -> Self {
+        Self {
+            rect,
+            color: [1.0, 1.0, 1.0, alpha],
+            params: [0.0, 0.0, KIND_TEXTURED, 0.0],
+            uv_rect,
+        }
+    }
 }
 
 #[repr(C)]
@@ -63,6 +73,7 @@ pub struct VectorVertex {
     pub color: [f32; 4],
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct ScissorRect {
     pub x: u32,
     pub y: u32,
@@ -70,30 +81,105 @@ pub struct ScissorRect {
     pub h: u32,
 }
 
-pub struct DrawList {
-    pub scene_passes: Vec<ScenePass3d>,
-    pub ui_instances: Vec<UiInstance>,
-    pub vector_vertices: Vec<VectorVertex>,
-    pub scissor: Option<ScissorRect>,
-}
+impl ScissorRect {
+    pub fn from_rect(rect: crate::geometry::Rect, _screen_h: f32) -> Self {
+        let x = rect.x.max(0.0) as u32;
+        let y = rect.y.max(0.0) as u32;
+        let w = rect.w.max(0.0) as u32;
+        let h = rect.h.max(0.0) as u32;
+        Self { x, y, w, h }
+    }
 
-impl Default for DrawList {
-    fn default() -> Self {
+    pub fn intersect(&self, other: &Self) -> Self {
+        let x0 = self.x.max(other.x);
+        let y0 = self.y.max(other.y);
+        let x1 = (self.x + self.w).min(other.x + other.w);
+        let y1 = (self.y + self.h).min(other.y + other.h);
         Self {
-            scene_passes: Vec::new(),
-            ui_instances: Vec::new(),
-            vector_vertices: Vec::new(),
-            scissor: None,
+            x: x0,
+            y: y0,
+            w: x1.saturating_sub(x0),
+            h: y1.saturating_sub(y0),
         }
     }
 }
 
+pub struct DrawLayer {
+    pub scissor: Option<ScissorRect>,
+    pub ui_instances: Vec<UiInstance>,
+    pub vector_vertices: Vec<VectorVertex>,
+}
+
+impl Default for DrawLayer {
+    fn default() -> Self {
+        Self {
+            scissor: None,
+            ui_instances: Vec::new(),
+            vector_vertices: Vec::new(),
+        }
+    }
+}
+
+pub struct DrawList {
+    pub scene_passes: Vec<ScenePass3d>,
+    pub layers: Vec<DrawLayer>,
+    scissor_stack: Vec<ScissorRect>,
+    screen_h: f32,
+}
+
+impl Default for DrawList {
+    fn default() -> Self {
+        let mut list = Self {
+            scene_passes: Vec::new(),
+            layers: Vec::new(),
+            scissor_stack: Vec::new(),
+            screen_h: 720.0,
+        };
+        list.layers.push(DrawLayer::default());
+        list
+    }
+}
+
 impl DrawList {
+    pub fn set_screen_height(&mut self, height: f32) {
+        self.screen_h = height;
+    }
+
+    fn active_layer(&mut self) -> &mut DrawLayer {
+        if self.layers.is_empty() {
+            self.layers.push(DrawLayer::default());
+        }
+        self.layers.last_mut().expect("layer")
+    }
+
     pub fn clear(&mut self) {
         self.scene_passes.clear();
-        self.ui_instances.clear();
-        self.vector_vertices.clear();
-        self.scissor = None;
+        self.layers.clear();
+        self.layers.push(DrawLayer::default());
+        self.scissor_stack.clear();
+    }
+
+    pub fn push_scissor(&mut self, rect: crate::geometry::Rect) {
+        let mut scissor = ScissorRect::from_rect(rect, self.screen_h);
+        if let Some(parent) = self.scissor_stack.last() {
+            scissor = parent.intersect(&scissor);
+        }
+        self.scissor_stack.push(scissor);
+        self.layers.push(DrawLayer {
+            scissor: Some(scissor),
+            ui_instances: Vec::new(),
+            vector_vertices: Vec::new(),
+        });
+    }
+
+    pub fn pop_scissor(&mut self) {
+        self.scissor_stack.pop();
+        let parent = self.scissor_stack.last().cloned();
+        self.layers.push(DrawLayer {
+            scissor: parent,
+            ui_instances: Vec::new(),
+            vector_vertices: Vec::new(),
+        });
     }
 
     pub fn push_scene_pass(&mut self, pass: ScenePass3d) {
@@ -101,16 +187,27 @@ impl DrawList {
     }
 
     pub fn push_solid(&mut self, rect: [f32; 4], color: Rgba) {
-        self.ui_instances.push(UiInstance::solid(rect, color));
+        self.active_layer()
+            .ui_instances
+            .push(UiInstance::solid(rect, color));
     }
 
     pub fn push_rounded(&mut self, rect: [f32; 4], color: Rgba, radius: f32) {
-        self.ui_instances
+        self.active_layer()
+            .ui_instances
             .push(UiInstance::rounded(rect, color, radius, 0.0, color));
     }
 
     pub fn push_glyph(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
-        self.ui_instances.push(UiInstance::glyph(rect, color, uv_rect));
+        self.active_layer()
+            .ui_instances
+            .push(UiInstance::glyph(rect, color, uv_rect));
+    }
+
+    pub fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
+        self.active_layer()
+            .ui_instances
+            .push(UiInstance::textured(rect, uv_rect, alpha));
     }
 
     pub fn push_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
@@ -120,7 +217,8 @@ impl DrawList {
         let nx = -dy / len * width * 0.5;
         let ny = dx / len * width * 0.5;
         let c = [color.r, color.g, color.b, color.a];
-        self.vector_vertices.extend_from_slice(&[
+        let layer = self.active_layer();
+        layer.vector_vertices.extend_from_slice(&[
             VectorVertex { position: [x0 + nx, y0 + ny], color: c },
             VectorVertex { position: [x1 + nx, y1 + ny], color: c },
             VectorVertex { position: [x0 - nx, y0 - ny], color: c },
@@ -135,11 +233,12 @@ impl DrawList {
             return;
         }
         let c = [color.r, color.g, color.b, color.a];
+        let layer = self.active_layer();
         for tri in 1..points.len() - 1 {
-            self.vector_vertices.push(VectorVertex { position: points[0], color: c });
-            self.vector_vertices
+            layer.vector_vertices.push(VectorVertex { position: points[0], color: c });
+            layer.vector_vertices
                 .push(VectorVertex { position: points[tri], color: c });
-            self.vector_vertices
+            layer.vector_vertices
                 .push(VectorVertex { position: points[tri + 1], color: c });
         }
     }
@@ -502,6 +601,137 @@ fn sign(p1: [f32; 2], p2: [f32; 2], p3: [f32; 2]) -> f32 {
     (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
 }
 
+pub struct IconAtlas {
+    pub width: u32,
+    pub height: u32,
+    pub pixels: Vec<u8>,
+    entries: std::collections::HashMap<String, [f32; 4]>,
+}
+
+impl Default for IconAtlas {
+    fn default() -> Self {
+        Self {
+            width: 1,
+            height: 1,
+            pixels: vec![0, 0, 0, 0],
+            entries: std::collections::HashMap::new(),
+        }
+    }
+}
+
+impl IconAtlas {
+    pub fn from_packed(width: u32, height: u32, pixels: Vec<u8>, entries: Vec<(String, [f32; 4])>) -> Self {
+        Self {
+            width,
+            height,
+            pixels,
+            entries: entries.into_iter().collect(),
+        }
+    }
+
+    pub fn icon_uv(&self, icon_id: &str) -> Option<[f32; 4]> {
+        self.entries.get(icon_id).copied()
+    }
+}
+
+pub struct RasterTexture {
+    pub texture: wgpu::Texture,
+    pub bind_group: wgpu::BindGroup,
+    pub width: u32,
+    pub height: u32,
+}
+
+pub struct RasterTextureStore {
+    textures: std::collections::HashMap<String, RasterTexture>,
+    layout: wgpu::BindGroupLayout,
+    sampler: wgpu::Sampler,
+}
+
+impl RasterTextureStore {
+    pub fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout) -> Self {
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("raster_sampler"),
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            ..Default::default()
+        });
+        Self {
+            textures: std::collections::HashMap::new(),
+            layout: layout.clone(),
+            sampler,
+        }
+    }
+
+    pub fn ensure_raster(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        globals_buffer: &wgpu::Buffer,
+        glyph_view: &wgpu::TextureView,
+        glyph_sampler: &wgpu::Sampler,
+        icon_view: &wgpu::TextureView,
+        icon_sampler: &wgpu::Sampler,
+        key: &str,
+        pixels: &[u8],
+        width: u32,
+        height: u32,
+    ) {
+        if self.textures.contains_key(key) {
+            return;
+        }
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("raster_texture"),
+            size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+        queue.write_texture(
+            wgpu::TexelCopyTextureInfo {
+                texture: &texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            pixels,
+            wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(width * 4),
+                rows_per_image: Some(height),
+            },
+            wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        );
+        let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("raster_bind_group"),
+            layout: &self.layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: globals_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(glyph_view) },
+                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(glyph_sampler) },
+                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(&view) },
+                wgpu::BindGroupEntry { binding: 4, resource: wgpu::BindingResource::Sampler(&self.sampler) },
+            ],
+        });
+        self.textures.insert(
+            key.to_string(),
+            RasterTexture {
+                texture,
+                bind_group,
+                width,
+                height,
+            },
+        );
+    }
+
+    pub fn get(&self, key: &str) -> Option<&RasterTexture> {
+        self.textures.get(key)
+    }
+}
+
 pub(crate) struct UiPipelines {
     ui_pipeline: wgpu::RenderPipeline,
     vector_pipeline: wgpu::RenderPipeline,
@@ -511,7 +741,50 @@ pub(crate) struct UiPipelines {
     world_globals_ring: WorldGlobalsRing,
     world_bind_group_layout: wgpu::BindGroupLayout,
     glyph_texture: wgpu::Texture,
+    glyph_sampler: wgpu::Sampler,
+    icon_texture: wgpu::Texture,
+    icon_sampler: wgpu::Sampler,
     glyph_bind_group: wgpu::BindGroup,
+    bind_group_layout: wgpu::BindGroupLayout,
+}
+
+struct LayerBatch {
+    scissor: Option<ScissorRect>,
+    ui_start: u32,
+    ui_count: u32,
+    vec_start: u32,
+    vec_count: u32,
+}
+
+fn build_layer_batches(draw: &DrawList) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
+    let mut all_ui = Vec::new();
+    let mut all_vec = Vec::new();
+    let mut batches = Vec::new();
+    for layer in &draw.layers {
+        if layer.ui_instances.is_empty() && layer.vector_vertices.is_empty() {
+            continue;
+        }
+        let ui_start = all_ui.len() as u32;
+        all_ui.extend_from_slice(&layer.ui_instances);
+        let vec_start = all_vec.len() as u32;
+        all_vec.extend_from_slice(&layer.vector_vertices);
+        batches.push(LayerBatch {
+            scissor: layer.scissor,
+            ui_start,
+            ui_count: layer.ui_instances.len() as u32,
+            vec_start,
+            vec_count: layer.vector_vertices.len() as u32,
+        });
+    }
+    (all_ui, all_vec, batches)
+}
+
+fn set_pass_scissor(pass: &mut wgpu::RenderPass<'_>, scissor: Option<ScissorRect>, width: f32, height: f32) {
+    if let Some(scissor) = scissor {
+        pass.set_scissor_rect(scissor.x, scissor.y, scissor.w, scissor.h);
+    } else {
+        pass.set_scissor_rect(0, 0, width as u32, height as u32);
+    }
 }
 
 impl UiPipelines {
@@ -545,6 +818,22 @@ impl UiPipelines {
                     ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 4,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
             ],
         });
 
@@ -564,8 +853,23 @@ impl UiPipelines {
             source: wgpu::ShaderSource::Wgsl(WORLD3D_SHADER.into()),
         });
 
+        let depth_state = Some(wgpu::DepthStencilState {
+            format: wgpu::TextureFormat::Depth24Plus,
+            depth_write_enabled: true,
+            depth_compare: wgpu::CompareFunction::Less,
+            stencil: wgpu::StencilState::default(),
+            bias: wgpu::DepthBiasState::default(),
+        });
+        let overlay_depth_state = Some(wgpu::DepthStencilState {
+            format: wgpu::TextureFormat::Depth24Plus,
+            depth_write_enabled: false,
+            depth_compare: wgpu::CompareFunction::Always,
+            stencil: wgpu::StencilState::default(),
+            bias: wgpu::DepthBiasState::default(),
+        });
+
         let quad_vertices: &[f32] = &[
-            0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0,
         ];
         let quad_vertex_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("ui_quad_vertices"),
@@ -599,6 +903,23 @@ impl UiPipelines {
             min_filter: wgpu::FilterMode::Linear,
             ..Default::default()
         });
+        let icon_texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("icon_atlas"),
+            size: wgpu::Extent3d { width: 2048, height: 2048, depth_or_array_layers: 1 },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+        let icon_view = icon_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let icon_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("icon_sampler"),
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            ..Default::default()
+        });
         let glyph_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("ui_bind_group"),
             layout: &globals_bind_group_layout,
@@ -606,6 +927,8 @@ impl UiPipelines {
                 wgpu::BindGroupEntry { binding: 0, resource: globals_buffer.as_entire_binding() },
                 wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(&glyph_view) },
                 wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&glyph_sampler) },
+                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(&icon_view) },
+                wgpu::BindGroupEntry { binding: 4, resource: wgpu::BindingResource::Sampler(&icon_sampler) },
             ],
         });
         let ui_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
@@ -653,7 +976,7 @@ impl UiPipelines {
                 compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState::default(),
-            depth_stencil: None,
+            depth_stencil: overlay_depth_state.clone(),
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
             cache: None,
@@ -691,7 +1014,7 @@ impl UiPipelines {
                 compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState::default(),
-            depth_stencil: None,
+            depth_stencil: overlay_depth_state,
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
             cache: None,
@@ -712,14 +1035,6 @@ impl UiPipelines {
         });
 
         let world_globals_ring = WorldGlobalsRing::new(device, &world_bind_group_layout, 8);
-
-        let depth_state = Some(wgpu::DepthStencilState {
-            format: wgpu::TextureFormat::Depth24Plus,
-            depth_write_enabled: true,
-            depth_compare: wgpu::CompareFunction::Less,
-            stencil: wgpu::StencilState::default(),
-            bias: wgpu::DepthBiasState::default(),
-        });
 
         let world_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("world3d_pipeline_layout"),
@@ -794,8 +1109,36 @@ impl UiPipelines {
             world_globals_ring,
             world_bind_group_layout,
             glyph_texture,
+            glyph_sampler,
+            icon_texture,
+            icon_sampler,
             glyph_bind_group,
+            bind_group_layout: globals_bind_group_layout,
         }
+    }
+
+    pub fn bind_group_layout(&self) -> &wgpu::BindGroupLayout {
+        &self.bind_group_layout
+    }
+
+    pub fn globals_buffer(&self) -> &wgpu::Buffer {
+        &self.globals_buffer
+    }
+
+    pub fn glyph_view(&self) -> wgpu::TextureView {
+        self.glyph_texture.create_view(&wgpu::TextureViewDescriptor::default())
+    }
+
+    pub fn glyph_sampler(&self) -> &wgpu::Sampler {
+        &self.glyph_sampler
+    }
+
+    pub fn icon_view(&self) -> wgpu::TextureView {
+        self.icon_texture.create_view(&wgpu::TextureViewDescriptor::default())
+    }
+
+    pub fn icon_sampler(&self) -> &wgpu::Sampler {
+        &self.icon_sampler
     }
 
     pub fn depth_format(&self) -> wgpu::TextureFormat {
@@ -946,6 +1289,24 @@ impl UiPipelines {
         );
     }
 
+    pub fn upload_icon_atlas(&self, queue: &wgpu::Queue, pixels: &[u8], width: u32, height: u32) {
+        queue.write_texture(
+            wgpu::TexelCopyTextureInfo {
+                texture: &self.icon_texture,
+                mip_level: 0,
+                origin: wgpu::Origin3d::ZERO,
+                aspect: wgpu::TextureAspect::All,
+            },
+            pixels,
+            wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(width * 4),
+                rows_per_image: Some(height),
+            },
+            wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        );
+    }
+
     pub fn render<'a>(
         &'a mut self,
         device: &wgpu::Device,
@@ -954,6 +1315,7 @@ impl UiPipelines {
         view: &'a wgpu::TextureView,
         depth_view: Option<&'a wgpu::TextureView>,
         draw: &DrawList,
+        overlay: Option<&DrawList>,
         mesh_store: &MeshGpuStore,
         frame_buffers: &mut FrameBuffers,
         width: f32,
@@ -965,29 +1327,6 @@ impl UiPipelines {
         } else {
             None
         };
-        let ui_buffer = if draw.ui_instances.is_empty() {
-            None
-        } else {
-            frame_buffers.ui_instances.upload(
-                device,
-                queue,
-                &draw.ui_instances,
-                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-                "ui_instances",
-            )
-        };
-        let vector_buffer = if draw.vector_vertices.is_empty() {
-            None
-        } else {
-            frame_buffers.vector_vertices.upload(
-                device,
-                queue,
-                &draw.vector_vertices,
-                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-                "vector_vertices",
-            )
-        };
-        let world_instance_buffer = frame_buffers.world_instances.slice();
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("ui_pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -1016,34 +1355,201 @@ impl UiPipelines {
             occlusion_query_set: None,
         });
 
-        if let (Some(prepared), Some(instance_buffer)) = (world_prepared, world_instance_buffer) {
+        if let (Some(prepared), Some(instance_buffer)) =
+            (world_prepared, frame_buffers.world_instances.slice())
+        {
             self.draw_world_passes(&mut pass, mesh_store, &prepared, instance_buffer, width, height);
         }
 
         pass.set_pipeline(&self.ui_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+        pass.set_scissor_rect(0, 0, width as u32, height as u32);
 
-        if let Some(scissor) = &draw.scissor {
-            pass.set_scissor_rect(scissor.x, scissor.y, scissor.w, scissor.h);
+        let (all_ui, all_vec, batches) = build_layer_batches(draw);
+        let ui_buffer = if all_ui.is_empty() {
+            None
+        } else {
+            frame_buffers.ui_instances.upload(
+                device,
+                queue,
+                &all_ui,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "ui_instances",
+            )
+        };
+        let vector_buffer = if all_vec.is_empty() {
+            None
+        } else {
+            frame_buffers.vector_vertices.upload(
+                device,
+                queue,
+                &all_vec,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "vector_vertices",
+            )
+        };
+
+        for batch in &batches {
+            set_pass_scissor(&mut pass, batch.scissor, width, height);
+            if batch.ui_count > 0 {
+                if let Some(instance_buffer) = &ui_buffer {
+                    pass.set_pipeline(&self.ui_pipeline);
+                    pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+                    pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
+                    pass.set_vertex_buffer(1, instance_buffer.clone());
+                    pass.draw(
+                        0..6,
+                        batch.ui_start..batch.ui_start + batch.ui_count,
+                    );
+                }
+            }
+            if batch.vec_count > 0 {
+                if let Some(vector_buffer) = &vector_buffer {
+                    pass.set_pipeline(&self.vector_pipeline);
+                    pass.set_vertex_buffer(0, vector_buffer.clone());
+                    pass.draw(
+                        batch.vec_start..batch.vec_start + batch.vec_count,
+                        0..1,
+                    );
+                }
+            }
         }
-
-        if let Some(instance_buffer) = ui_buffer {
-            pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
-            pass.set_vertex_buffer(1, instance_buffer);
-            pass.draw(0..6, 0..draw.ui_instances.len() as u32);
+        pass.set_scissor_rect(0, 0, width as u32, height as u32);
+        drop(pass);
+        if let Some(overlay) = overlay {
+            let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("ui_overlay_pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    },
+                    depth_slice: None,
+                })],
+                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment {
+                    view: depth,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            self.render_overlay(
+                device,
+                queue,
+                &mut overlay_pass,
+                overlay,
+                frame_buffers,
+                width,
+                height,
+            );
         }
+    }
 
-        if let Some(vector_buffer) = vector_buffer {
-            pass.set_pipeline(&self.vector_pipeline);
-            pass.set_vertex_buffer(0, vector_buffer);
-            pass.draw(0..draw.vector_vertices.len() as u32, 0..1);
+    pub fn render_overlay<'a>(
+        &'a self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        pass: &mut wgpu::RenderPass<'a>,
+        overlay: &DrawList,
+        frame_buffers: &mut FrameBuffers,
+        width: f32,
+        height: f32,
+    ) {
+        pass.set_pipeline(&self.ui_pipeline);
+        pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+
+        let (all_ui, all_vec, batches) = build_layer_batches(overlay);
+        let ui_buffer = if all_ui.is_empty() {
+            None
+        } else {
+            frame_buffers.ui_instances.upload(
+                device,
+                queue,
+                &all_ui,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "overlay_ui_instances",
+            )
+        };
+        let vector_buffer = if all_vec.is_empty() {
+            None
+        } else {
+            frame_buffers.vector_vertices.upload(
+                device,
+                queue,
+                &all_vec,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "overlay_vector_vertices",
+            )
+        };
+
+        for batch in &batches {
+            set_pass_scissor(pass, batch.scissor, width, height);
+            if batch.ui_count > 0 {
+                if let Some(instance_buffer) = &ui_buffer {
+                    pass.set_pipeline(&self.ui_pipeline);
+                    pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+                    pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
+                    pass.set_vertex_buffer(1, instance_buffer.clone());
+                    pass.draw(
+                        0..6,
+                        batch.ui_start..batch.ui_start + batch.ui_count,
+                    );
+                }
+            }
+            if batch.vec_count > 0 {
+                if let Some(vector_buffer) = &vector_buffer {
+                    pass.set_pipeline(&self.vector_pipeline);
+                    pass.set_vertex_buffer(0, vector_buffer.clone());
+                    pass.draw(
+                        batch.vec_start..batch.vec_start + batch.vec_count,
+                        0..1,
+                    );
+                }
+            }
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ear_clip_polygon, mesh_content_version, WORLD_GLOBALS_SLOT_SIZE};
+    use super::{ear_clip_polygon, mesh_content_version, DrawList, ScissorRect, WORLD_GLOBALS_SLOT_SIZE};
+    use crate::geometry::Rect;
+    use crate::theme::Rgba;
+
+    #[test]
+    fn scissor_intersects_child() {
+        let a = ScissorRect { x: 0, y: 0, w: 100, h: 100 };
+        let b = ScissorRect { x: 50, y: 50, w: 100, h: 100 };
+        let c = a.intersect(&b);
+        assert_eq!(c.w, 50);
+        assert_eq!(c.h, 50);
+    }
+
+    #[test]
+    fn scissor_from_rect_uses_top_left_origin() {
+        let scissor = ScissorRect::from_rect(Rect::new(10.0, 20.0, 80.0, 60.0), 720.0);
+        assert_eq!(scissor.x, 10);
+        assert_eq!(scissor.y, 20);
+        assert_eq!(scissor.w, 80);
+        assert_eq!(scissor.h, 60);
+    }
+
+    #[test]
+    fn draw_list_push_scissor_splits_layers() {
+        let mut draw = DrawList::default();
+        draw.set_screen_height(200.0);
+        draw.push_solid([0.0, 0.0, 200.0, 200.0], Rgba::new(1.0, 0.0, 0.0, 1.0));
+        draw.push_scissor(Rect::new(10.0, 10.0, 80.0, 80.0));
+        draw.push_solid([10.0, 10.0, 80.0, 80.0], Rgba::new(0.0, 1.0, 0.0, 1.0));
+        draw.pop_scissor();
+        assert!(draw.layers.len() >= 3);
+    }
 
     #[test]
     fn ear_clip_produces_triangles() {

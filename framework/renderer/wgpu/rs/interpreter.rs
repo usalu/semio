@@ -192,9 +192,24 @@ fn tree_item_to_widget(item: &semio_framework_core::UiTreeItemNode) -> TreeItem<
 
 pub fn framework_widget_context<'a>(
     draw: &'a mut ui_wgpu::DrawList,
+    overlay: Option<&'a mut ui_wgpu::DrawList>,
     atlas: &'a mut ui_wgpu::FontAtlas,
+    icons: Option<&'a ui_wgpu::IconAtlas>,
     input: &'a mut ui_wgpu::InputState<CommandDescriptor>,
     theme: &'a Theme,
+    scroll_offsets: &'a mut std::collections::HashMap<String, f32>,
+    collapsed_sections: &'a mut std::collections::HashMap<String, bool>,
+    open_selects: &'a mut std::collections::HashMap<String, bool>,
 ) -> FrameworkWidgetContext<'a> {
-    WidgetContext { draw, atlas, input, theme }
+    WidgetContext {
+        draw,
+        overlay,
+        atlas,
+        icons,
+        input,
+        theme,
+        scroll_offsets,
+        collapsed_sections,
+        open_selects,
+    }
 }
