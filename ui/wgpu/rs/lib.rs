@@ -1,6 +1,7 @@
 //! 🖱️ Business-logic-free wgpu UI toolkit for browser WASM renderers.
 
 pub mod chrome;
+pub mod cursor;
 pub mod draw;
 pub mod geometry;
 pub mod gpu;
@@ -11,6 +12,9 @@ pub mod text;
 pub mod theme;
 pub mod widgets;
 
+pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
+#[cfg(target_arch = "wasm32")]
+pub use cursor::apply_canvas_cursor;
 pub use draw::{mesh_content_version, DrawList, IconAtlas, MeshGpuStore, RasterTextureStore, ear_clip_polygon};
 pub use geometry::Rect;
 pub use gpu::GpuContext;
@@ -28,7 +32,7 @@ pub use kernel_3d_scene::{
     ray_aabb_slab, ray_pick_instance, rect_contains, screen_select_instances, transform_aabb,
 };
 pub use text::{fetch_font_bytes, FontAtlas};
-pub use theme::{Rgba, Theme};
+pub use theme::{GlassTier, Rgba, Theme};
 pub use chrome::{
     chrome_item_bg, chrome_item_text, item_bg, item_text, measure_action_item, push_chrome_border,
     push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY,

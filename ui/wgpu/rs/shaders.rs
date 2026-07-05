@@ -164,7 +164,7 @@ fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let n = normalize(in.normal);
-    let diffuse = max(dot(n, normalize(globals.light_dir.xyz)), 0.15);
+    let diffuse = max(dot(n, normalize(globals.light_dir.xyz)), 0.28);
     var color = in.color.rgb * diffuse;
     if (in.flags.x > 0.5) {
         color = mix(color, vec3<f32>(0.35, 0.75, 1.0), 0.45);
@@ -252,5 +252,154 @@ fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let sampled = textureSample(tex, tex_sampler, in.uv);
     return vec4<f32>(sampled.rgb * in.tint.rgb, sampled.a * in.tint.a);
+}
+"#;
+
+pub const BLUR_DOWNSAMPLE_SHADER: &str = r#"
+struct BlurGlobals {
+    src_mip: f32,
+    _pad: vec3<f32>,
+}
+
+@group(0) @binding(0) var<uniform> blur_globals: BlurGlobals;
+@group(0) @binding(1) var src_tex: texture_2d<f32>;
+@group(0) @binding(2) var src_samp: sampler;
+
+struct VertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+}
+
+@vertex
+fn vs_main(@builtin(vertex_index) vid: u32) -> VertexOutput {
+    var positions = array<vec2<f32>, 6>(
+        vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, -1.0), vec2<f32>(-1.0, 1.0),
+        vec2<f32>(-1.0, 1.0), vec2<f32>(1.0, -1.0), vec2<f32>(1.0, 1.0)
+    );
+    var uvs = array<vec2<f32>, 6>(
+        vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 1.0), vec2<f32>(0.0, 0.0),
+        vec2<f32>(0.0, 0.0), vec2<f32>(1.0, 1.0), vec2<f32>(1.0, 0.0)
+    );
+    var out: VertexOutput;
+    let pos = positions[vid];
+    out.clip_position = vec4<f32>(pos, 0.0, 1.0);
+    out.uv = uvs[vid];
+    return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    let mip = u32(blur_globals.src_mip);
+    let dim = vec2<f32>(textureDimensions(src_tex, mip));
+    let texel = vec2<f32>(1.0) / dim;
+    let uv = in.uv;
+    let src_mip = blur_globals.src_mip;
+    var c = textureSampleLevel(src_tex, src_samp, uv, src_mip) * 4.0;
+    c += textureSampleLevel(src_tex, src_samp, uv + vec2<f32>(-texel.x, 0.0), src_mip);
+    c += textureSampleLevel(src_tex, src_samp, uv + vec2<f32>(texel.x, 0.0), src_mip);
+    c += textureSampleLevel(src_tex, src_samp, uv + vec2<f32>(0.0, -texel.y), src_mip);
+    c += textureSampleLevel(src_tex, src_samp, uv + vec2<f32>(0.0, texel.y), src_mip);
+    return c / 8.0;
+}
+"#;
+
+pub const SCENE_BLIT_SHADER: &str = r#"
+@group(0) @binding(0) var scene_tex: texture_2d<f32>;
+@group(0) @binding(1) var scene_samp: sampler;
+
+struct VertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+}
+
+@vertex
+fn vs_main(@builtin(vertex_index) vid: u32) -> VertexOutput {
+    var positions = array<vec2<f32>, 6>(
+        vec2<f32>(-1.0, -1.0), vec2<f32>(1.0, -1.0), vec2<f32>(-1.0, 1.0),
+        vec2<f32>(-1.0, 1.0), vec2<f32>(1.0, -1.0), vec2<f32>(1.0, 1.0)
+    );
+    var uvs = array<vec2<f32>, 6>(
+        vec2<f32>(0.0, 1.0), vec2<f32>(1.0, 1.0), vec2<f32>(0.0, 0.0),
+        vec2<f32>(0.0, 0.0), vec2<f32>(1.0, 1.0), vec2<f32>(1.0, 0.0)
+    );
+    var out: VertexOutput;
+    let pos = positions[vid];
+    out.clip_position = vec4<f32>(pos, 0.0, 1.0);
+    out.uv = uvs[vid];
+    return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    return textureSampleLevel(scene_tex, scene_samp, in.uv, 0.0);
+}
+"#;
+
+pub const GLASS_SHADER: &str = r#"
+struct Globals {
+    screen_size: vec2<f32>,
+    _pad: vec2<f32>,
+}
+
+@group(0) @binding(0) var<uniform> globals: Globals;
+@group(1) @binding(0) var scene_tex: texture_2d<f32>;
+@group(1) @binding(1) var scene_samp: sampler;
+
+struct VertexInput {
+    @location(0) corner: vec2<f32>,
+}
+
+struct GlassInstanceInput {
+    @location(1) rect: vec4<f32>,
+    @location(2) tint: vec4<f32>,
+    @location(3) params: vec4<f32>,
+}
+
+struct VertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    @location(0) local: vec2<f32>,
+    @location(1) size: vec2<f32>,
+    @location(2) tint: vec4<f32>,
+    @location(3) params: vec4<f32>,
+    @location(4) scene_uv: vec2<f32>,
+}
+
+@vertex
+fn vs_main(vertex: VertexInput, instance: GlassInstanceInput) -> VertexOutput {
+    var out: VertexOutput;
+    let pos = instance.rect.xy + vertex.corner * instance.rect.zw;
+    let ndc = (pos / globals.screen_size) * 2.0 - vec2<f32>(1.0, 1.0);
+    out.clip_position = vec4<f32>(ndc.x, -ndc.y, 0.0, 1.0);
+    out.local = vertex.corner * instance.rect.zw;
+    out.size = instance.rect.zw;
+    out.tint = instance.tint;
+    out.params = instance.params;
+    out.scene_uv = pos / globals.screen_size;
+    return out;
+}
+
+fn sdf_rounded_rect(p: vec2<f32>, half_size: vec2<f32>, radius: f32) -> f32 {
+    let q = abs(p) - half_size + vec2<f32>(radius);
+    return length(max(q, vec2<f32>(0.0))) + min(max(q.x, q.y), 0.0) - radius;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    let half = in.size * 0.5;
+    let p = in.local - half;
+    let radius = in.params.x;
+    let dist = sdf_rounded_rect(p, half, radius);
+    let fill_alpha = 1.0 - smoothstep(-1.0, 0.0, dist);
+    if (fill_alpha <= 0.001) {
+        discard;
+    }
+    let mip = in.params.z;
+    let saturate = in.params.w;
+    let tint_alpha = in.params.y;
+    let blurred = textureSampleLevel(scene_tex, scene_samp, in.scene_uv, mip);
+    let luma = dot(blurred.rgb, vec3<f32>(0.2126, 0.7152, 0.0722));
+    let saturated = mix(vec3<f32>(luma), blurred.rgb, saturate);
+    let rgb = mix(saturated, in.tint.rgb, tint_alpha);
+    return vec4<f32>(rgb, fill_alpha);
 }
 "#;

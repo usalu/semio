@@ -4,8 +4,8 @@ use mathematical_graph_dsl::{complete, format, hover, lint, semantic_tokens, Boa
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
-use trinity_jack::{OwnedTrinityQueryableGraph};
-use trinity_ram::{Camera, Edge, Graph, GraphFixture, Manifest, Node, Port, PortDirection, PropertyBag};
+use trinity_jack::{example_graph_fixture, OwnedTrinityQueryableGraph};
+use trinity_ram::Graph;
 
 // #region 🔖LspTypes
 #[derive(Clone, Debug, Deserialize)]
@@ -115,38 +115,7 @@ impl Default for JackLanguageServer {
 
 impl JackLanguageServer {
     pub fn new() -> Self {
-        let fixture = GraphFixture {
-            schema: GraphFixture::SCHEMA.into(),
-            name: "jack-lsp".into(),
-            manifest_id: Some("nakagin".into()),
-            manifest: Manifest::nakagin_default(),
-            camera: Camera::default(),
-            root_node_id: Some("root".into()),
-            nodes: vec![Node {
-                id: "root".into(),
-                kind: "Piece".into(),
-                name: "core".into(),
-                x: 0.0,
-                y: 0.0,
-                width: 80.0,
-                height: 40.0,
-                properties: PropertyBag::new(),
-                ports: vec![Port {
-                    id: "out".into(),
-                    kind: "Connector".into(),
-                    direction: PortDirection::Out,
-                    properties: PropertyBag::new(),
-                }],
-            }],
-            edges: vec![Edge {
-                id: "e1".into(),
-                kind: "Connection".into(),
-                source: "root:out".into(),
-                target: "child:in".into(),
-                properties: PropertyBag::new(),
-            }],
-        };
-        let graph = Graph::from_fixture(fixture).expect("jack lsp default fixture");
+        let graph = Graph::from_fixture(example_graph_fixture()).expect("jack lsp default fixture");
         Self {
             backend: JackGraphBackend::Trinity(OwnedTrinityQueryableGraph(graph)),
             graph_domain: "trinity".into(),

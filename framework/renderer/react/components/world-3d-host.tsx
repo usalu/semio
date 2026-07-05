@@ -109,6 +109,7 @@ type WorldSelectionRecord = {
 	readonly gumballTarget?: readonly [number, number, number];
 	readonly gumballActive?: boolean;
 	readonly hoveredComponent?: WorldHoverComponent;
+	readonly showEdges?: boolean;
 };
 
 type SemanticColors = {
@@ -392,6 +393,7 @@ function WorldInstanceNode({
 	selectedComponentIds,
 	previewComponentIds,
 	hoveredComponent,
+	showEdges,
 	pickEnabled,
 	onPaintAt,
 	paintFromHit,
@@ -420,6 +422,7 @@ function WorldInstanceNode({
 	readonly selectedComponentIds: ReadonlySet<number>;
 	readonly previewComponentIds: ReadonlySet<number>;
 	readonly hoveredComponent?: WorldHoverComponent;
+	readonly showEdges?: boolean;
 	readonly pickEnabled: boolean;
 	readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
 	readonly paintFromHit: (
@@ -518,7 +521,7 @@ function WorldInstanceNode({
 							onComponentHover(null);
 						}}
 					/>
-					{targets.edge && edgeGeometry ? (
+					{(targets.edge || showEdges) && edgeGeometry ? (
 						<lineSegments
 							geometry={edgeGeometry}
 							onClick={(event) => {
@@ -776,6 +779,7 @@ function WorldInstancesLayer({
 							selectedComponentIds={selectedComponentIds}
 							previewComponentIds={previewComponentIds}
 							hoveredComponent={selection.hoveredComponent}
+							showEdges={selection.showEdges}
 							pickEnabled={pickEnabled}
 							onPaintAt={onPaintAt}
 							paintFromHit={paintFromHit}
@@ -1125,6 +1129,13 @@ export function World3dHost({
 
 	const handlePointerUp = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
+			if (marqueeActive && marqueePath.length === 1 && event.target === hostRef.current) {
+				dispatch("worldPick", {
+					granularity: selectionMode,
+					id: null,
+					merge: mergeModeToArg(marqueeModeFromModifiers(event)),
+				});
+			}
 			if (marqueeActive && marqueePath.length > 1 && hostRef.current && cameraRef.current) {
 				const rect = hostRef.current.getBoundingClientRect();
 				const camera = cameraRef.current;

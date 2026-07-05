@@ -46,7 +46,22 @@ async function rasterizeSvg(svg: string): Promise<ImageData | null> {
 async function rasterizeIcon(id: string): Promise<ImageData | null> {
 	const svg = ICONS[id as keyof typeof ICONS];
 	if (!svg) return null;
-	return rasterizeSvg(svg);
+	const image = await rasterizeSvg(svg);
+	if (!image || id === "semio-logo") return image;
+	return iconTintMask(image);
+}
+
+/** Converts rasterized stroke icons into a white mask so GPU tint multiply matches React `currentColor`. */
+function iconTintMask(image: ImageData): ImageData {
+	const out = new ImageData(image.width, image.height);
+	for (let i = 0; i < image.data.length; i += 4) {
+		const a = image.data[i + 3] ?? 0;
+		out.data[i] = 255;
+		out.data[i + 1] = 255;
+		out.data[i + 2] = 255;
+		out.data[i + 3] = a;
+	}
+	return out;
 }
 
 export async function buildIconAtlas(): Promise<{

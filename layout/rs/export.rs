@@ -143,7 +143,9 @@ pub fn export_document_png_cpu(doc: &LayoutDocument, page_id: &str) -> Result<Ve
     }
     let mut bytes = Vec::new();
     {
-        let encoder = png::Encoder::new(&mut bytes, width, height);
+        let mut encoder = png::Encoder::new(&mut bytes, width, height);
+        encoder.set_color(png::ColorType::Rgba);
+        encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
         writer.write_image_data(img.as_raw()).map_err(|e| e.to_string())?;
     }
@@ -202,7 +204,9 @@ pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, String
     let img: ImageBuffer<Rgba<u8>, Vec<u8>> = ImageBuffer::from_pixel(width, height, Rgba([255, 255, 255, 255]));
     let mut bytes = Vec::new();
     {
-        let encoder = png::Encoder::new(&mut bytes, width, height);
+        let mut encoder = png::Encoder::new(&mut bytes, width, height);
+        encoder.set_color(png::ColorType::Rgba);
+        encoder.set_depth(png::BitDepth::Eight);
         let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
         writer.write_image_data(img.as_raw()).map_err(|e| e.to_string())?;
     }
@@ -212,6 +216,7 @@ pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, String
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::document::{parse_layout_document, LAYOUT_FIXTURE_SCHEMA};
 
     #[test]
     fn svg_contains_root() {
@@ -226,5 +231,30 @@ mod tests {
         };
         let svg = export_display_list_svg(&list);
         assert!(svg.contains("<svg"));
+    }
+
+    #[test]
+    fn png_cpu_export_writes_valid_rgba_png() {
+        let json = include_str!("../example/sample.layout.json");
+        let doc = parse_layout_document(json).expect("sample fixture parses");
+        let bytes = export_document_png_cpu(&doc, "page-1").expect("png export succeeds");
+        assert!(bytes.starts_with(&[0x89, b'P', b'N', b'G']));
+    }
+
+    #[test]
+    fn pdf_export_writes_pdf_header() {
+        let json = include_str!("../example/sample.layout.json");
+        let doc = parse_layout_document(json).expect("sample fixture parses");
+        let bytes = export_document_pdf(&doc, "page-1").expect("pdf export succeeds");
+        assert!(bytes.starts_with(b"%PDF-1.4"));
+    }
+
+    #[test]
+    fn package_zip_bundles_document_and_preflight() {
+        let json = include_str!("../example/sample.layout.json");
+        let doc = parse_layout_document(json).expect("sample fixture parses");
+        let bytes = export_package_zip(json, "[]").expect("package export succeeds");
+        assert_eq!(doc.schema, LAYOUT_FIXTURE_SCHEMA);
+        assert!(bytes.starts_with(b"PK"));
     }
 }

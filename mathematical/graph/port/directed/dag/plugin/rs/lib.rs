@@ -720,7 +720,7 @@ impl PluginApp for DagPlayApp {
                                 envelope.fixture.edges.retain(|edge| {
                                     let (from, _) = split_endpoint(&edge.source);
                                     let (to, _) = split_endpoint(&edge.target);
-                                    !ids.iter().any(|id| id == from || id == to)
+                                    !ids.iter().any(|id| id == &from || id == &to)
                                 });
                                 envelope.runtime.selected_node_ids.clear();
                                 changed = true;
@@ -755,7 +755,7 @@ impl PluginApp for DagPlayApp {
                     envelope.fixture.edges.retain(|edge| {
                         let (from, _) = split_endpoint(&edge.source);
                         let (to, _) = split_endpoint(&edge.target);
-                        !ids.iter().any(|id| id == from || id == to)
+                        !ids.iter().any(|id| id == &from || id == &to)
                     });
                     envelope.runtime.selected_node_ids.clear();
                     return vec![set_document_op(&envelope)];

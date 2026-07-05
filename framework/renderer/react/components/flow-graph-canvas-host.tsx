@@ -8,13 +8,16 @@ import {
 	useCanvasThemeSync,
 	type CanvasPickTarget,
 } from "@semio-tech/ui-react";
+import { syncSessionCanvasTheme } from "@semio-tech/ui-styling";
 import type { CommandDescriptor, NodeGraphScene } from "../types.ts";
 import { nodeGraphCommands } from "../types.ts";
 import {
 	computeDagMarqueeOverlay,
 	paintDagLabelOverlays,
+	parseDagNodeIdArray,
 	parseDagOverlayCamera,
 	parseDagParamEditors,
+	parseDagPreselectJson,
 	parseDagSelectionUnionBoundsScreen,
 	parseDagStepperOverlays,
 	screenToWorld,
@@ -33,6 +36,7 @@ type GraphContextMenuItem = {
 
 //#region Sync
 function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
+	if (scene.operatorsJson) session.setNeuronKindInfosJson(scene.operatorsJson);
 	if (scene.fixtureJson) session.loadFixtureJson(scene.fixtureJson);
 	if (scene.selectionJson) session.setSelection(scene.selectionJson);
 	if (scene.previewOffJson) session.setPreviewOff(scene.previewOffJson);
@@ -266,7 +270,15 @@ export function FlowGraphCanvasHost({
 		try {
 			const labelJson = session.labelOverlayPaintStateJson();
 			setLabelStateJson(labelJson);
-			paintDagLabelOverlays(labelJson, labelCanvas, rect.width, rect.height, dpr);
+			const selectedIds = parseDagNodeIdArray(session.selectedWidgetIds());
+			const preselect = parseDagPreselectJson(session.preselectWidgetIdsJson());
+			const dimmedIds = parseDagNodeIdArray(session.previewOffWidgetIds());
+			paintDagLabelOverlays(labelJson, labelCanvas, rect.width, rect.height, dpr, {
+				hoveredId: session.hoveredWidgetId() ?? null,
+				selectedIds,
+				preselect,
+				dimmedIds,
+			});
 			setParamStateJson(session.paramOverlayPaintStateJson());
 			setStepperStateJson(session.stepperOverlayStateJson());
 		} catch {
@@ -349,7 +361,7 @@ export function FlowGraphCanvasHost({
 	}, [sceneSignature, paintOverlays, scene, sessionReady]);
 
 	useCanvasThemeSync(() => {
-		sessionRef.current?.setCanvasThemeJson?.(JSON.stringify({}));
+		syncSessionCanvasTheme(sessionRef.current);
 		sessionRef.current?.renderFrame();
 		paintOverlays();
 	});

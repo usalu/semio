@@ -6,7 +6,7 @@ use crate::geometry::Rect;
 use crate::input::{DragAxis, HitKind, HitTarget, InputState};
 use crate::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 use crate::text::FontAtlas;
-use crate::theme::{Rgba, Theme};
+use crate::theme::{GlassTier, Rgba, Theme};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -681,7 +681,7 @@ fn render_select_menu<E: Clone>(
     let menu_h = items.len() as f32 * item_h + 4.0;
     let menu = Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);
     let mut render_rows = |draw: &mut DrawList| {
-        draw.push_rounded([menu.x, menu.y, menu.w, menu.h], ctx.theme.overlay_bg, ctx.theme.border_radius);
+        draw.push_glass([menu.x, menu.y, menu.w, menu.h], ctx.theme.border_radius, GlassTier::Menu, ctx.theme);
         for (index, item) in items.iter().enumerate() {
             let row = Rect::new(menu.x + 2.0, menu.y + 2.0 + index as f32 * item_h, menu.w - 4.0, item_h);
             let row_hovered = ctx.input.hit_at(ctx.input.pointer_x, ctx.input.pointer_y)
@@ -1206,7 +1206,7 @@ fn render_tree_section_header<E: Clone>(
         drag_data: None,
     });
     if let Some(label) = &section.label {
-        let text_color = if collapsed { ctx.theme.text_muted } else { ctx.theme.text };
+        let text_color = if collapsed { ctx.theme.text_muted } else { ctx.theme.text_element };
         let label_x = content.x + ctx.theme.gap_standard;
         if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv("folder")) {
             draw_icon(ctx, uv, label_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
@@ -1277,17 +1277,19 @@ fn render_tree_item<E: Clone>(
     }
     let mut label_x = content.x + ctx.theme.gap_standard;
     let icon_id = tree_icon_id(item, expandable);
-    if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(icon_id)) {
-        draw_icon(ctx, uv, label_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, ctx.theme.text);
-        label_x += TREE_ICON_SIZE + ctx.theme.gap_standard;
-    }
     let text_color = if selected || highlighted {
         ctx.theme.active_foreground
+    } else if hovered {
+        ctx.theme.border_emphasized
     } else if item.is_hidden {
         ctx.theme.text_muted
     } else {
-        ctx.theme.text
+        ctx.theme.text_element
     };
+    if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(icon_id)) {
+        draw_icon(ctx, uv, label_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
+        label_x += TREE_ICON_SIZE + ctx.theme.gap_standard;
+    }
     draw_text(
         ctx,
         &item.label,
@@ -1321,7 +1323,12 @@ fn render_tree_item<E: Clone>(
         actions_x -= action_w;
         let action_rect = Rect::new(actions_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5 - 2.0, action_w, TREE_ICON_SIZE + 4.0);
         if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(&action.icon_id)) {
-            draw_icon(ctx, uv, action_rect.x + 2.0, action_rect.y + 2.0, TREE_ICON_SIZE, ctx.theme.text);
+            let action_color = if hovered {
+                ctx.theme.border_emphasized
+            } else {
+                ctx.theme.text_element
+            };
+            draw_icon(ctx, uv, action_rect.x + 2.0, action_rect.y + 2.0, TREE_ICON_SIZE, action_color);
         }
         if hovered {
             if let Some(label) = &action.label {

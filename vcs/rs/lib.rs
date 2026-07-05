@@ -358,7 +358,23 @@ where
         &self.applied_edit_ids
     }
 
+    /// @emoji ↪️ Pending redo stack (edit ids undone since the last fresh `Apply`).
+    pub fn redo_edit_ids(&self) -> &[String] {
+        &self.redo_edit_ids
+    }
+
     pub fn set_envelope(&mut self, envelope: DocumentVcsEnvelope<P, Op>, applied_edit_ids: Vec<String>) {
+        self.set_state(envelope, applied_edit_ids, Vec::new());
+    }
+
+    /// @emoji 💾 Restores full store state including the redo stack, so `Redo` survives
+    /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
+    pub fn set_state(
+        &mut self,
+        envelope: DocumentVcsEnvelope<P, Op>,
+        applied_edit_ids: Vec<String>,
+        redo_edit_ids: Vec<String>,
+    ) {
         self.backbone = envelope
             .backbone
             .as_ref()
@@ -372,7 +388,7 @@ where
             .unwrap_or(0);
         self.envelope = envelope;
         self.applied_edit_ids = applied_edit_ids;
-        self.redo_edit_ids.clear();
+        self.redo_edit_ids = redo_edit_ids;
         self.bump();
     }
 

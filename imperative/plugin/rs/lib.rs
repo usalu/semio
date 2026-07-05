@@ -94,6 +94,21 @@ fn host_from_envelope(envelope: &ImperativePlayEnvelope) -> ImperativeHost {
     ImperativeHost::from_document(envelope.document.clone())
 }
 
+/// 📍 Reads `owner`/`slot` off command args into a [`imperative_core::PathRef`] so nested
+/// control-step bodies (e.g. `control.if` then/else) resolve correctly; falls back to the root
+/// path unless both are present and `owner` names a real top-level step, avoiding an unresolvable
+/// or unknown reference that would otherwise panic the host.
+fn path_ref_from_args(args: Option<&Value>, document: &ImperativeDocument) -> imperative_core::PathRef {
+    let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str()).map(str::to_string);
+    let slot = args.and_then(|value| value.get("slot")).and_then(|value| value.as_str()).map(str::to_string);
+    match (owner, slot) {
+        (Some(owner), Some(slot)) if document.path.steps.iter().any(|step| step.id == owner) => {
+            imperative_core::PathRef { owner: Some(owner), slot: Some(slot) }
+        }
+        _ => imperative_core::PathRef::default(),
+    }
+}
+
 fn table_rows(steps: &[Step]) -> String {
     let rows: Vec<TableRow> = steps
         .iter()
@@ -241,15 +256,32 @@ fn build_inspector_tree(document: &ImperativeDocument, selected: &[String]) -> U
 //#endregion 🔖Panels
 
 //#region 🔖Render
+/// 📤 One table row per scope key so the full run output is legible instead of an 80-char
+/// truncated blob; falls back to the raw JSON when it isn't a plain object.
+fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
+    match serde_json::from_str::<Value>(run_output_json).ok().and_then(|value| value.as_object().cloned()) {
+        Some(scope) if !scope.is_empty() => scope
+            .into_iter()
+            .enumerate()
+            .map(|(index, (key, value))| TableRow {
+                index: offset + index + 1,
+                id: format!("run-output.{key}"),
+                kind: format!("{key} = {}", serde_json::to_string(&value).unwrap_or_else(|_| "null".into())),
+            })
+            .collect(),
+        _ => vec![TableRow {
+            index: offset + 1,
+            id: "run-output".into(),
+            kind: run_output_json.to_string(),
+        }],
+    }
+}
+
 fn render_main_table(envelope: &ImperativePlayEnvelope) -> UiNode {
     let mut rows_json = table_rows(&envelope.document.path.steps);
     if !envelope.runtime.run_output_json.is_empty() {
         if let Ok(mut rows) = serde_json::from_str::<Vec<TableRow>>(&rows_json) {
-            rows.push(TableRow {
-                index: rows.len() + 1,
-                id: "run-output".into(),
-                kind: envelope.runtime.run_output_json.chars().take(80).collect(),
-            });
+            rows.extend(run_output_rows(&envelope.runtime.run_output_json, rows.len()));
             rows_json = serde_json::to_string(&rows).unwrap_or(rows_json);
         }
     }
@@ -321,7 +353,7 @@ impl PluginApp for ImperativePlayApp {
             "addStepAt" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
                 let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
-                let path_ref = imperative_core::PathRef::default();
+                let path_ref = path_ref_from_args(args, &envelope.document);
                 push_undo_imperative(&mut envelope);
                 let id = host.add_step_at(&path_ref, kind, index);
                 envelope.document = host.document;
@@ -331,7 +363,7 @@ impl PluginApp for ImperativePlayApp {
             "removeStepAt" => {
                 let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                 if let Some(id) = id {
-                    let path_ref = imperative_core::PathRef::default();
+                    let path_ref = path_ref_from_args(args, &envelope.document);
                     push_undo_imperative(&mut envelope);
                     if host.remove_step_at(&path_ref, id) {
                         envelope.document = host.document;
@@ -344,7 +376,7 @@ impl PluginApp for ImperativePlayApp {
                 let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                 let new_index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
                 if let (Some(id), Some(new_index)) = (id, new_index) {
-                    let path_ref = imperative_core::PathRef::default();
+                    let path_ref = path_ref_from_args(args, &envelope.document);
                     push_undo_imperative(&mut envelope);
                     if host.move_step_at(&path_ref, id, new_index) {
                         envelope.document = host.document;
@@ -356,7 +388,7 @@ impl PluginApp for ImperativePlayApp {
                 let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                 let params = args.and_then(|value| value.get("params"));
                 if let (Some(id), Some(params)) = (id, params) {
-                    let path_ref = imperative_core::PathRef::default();
+                    let path_ref = path_ref_from_args(args, &envelope.document);
                     push_undo_imperative(&mut envelope);
                     if host.set_step_params_at(&path_ref, id, &params.to_string()).is_ok() {
                         envelope.document = host.document;
@@ -519,5 +551,60 @@ mod tests {
         let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
         let updated: ImperativePlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
         assert!(updated.document.path.steps.len() > 2);
+    }
+
+    fn apply_ops(document: &str, ops: &[String]) -> ImperativePlayEnvelope {
+        let mut envelope = parse_envelope(document);
+        for op in ops {
+            let parsed: Value = serde_json::from_str(op).unwrap();
+            envelope = serde_json::from_value(parsed["document"].clone()).unwrap();
+        }
+        envelope
+    }
+
+    #[test]
+    fn add_step_at_owner_slot_nests_into_control_body() {
+        let mut app = ImperativePlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("addStepAt", Some(&json!({ "kind": "control.if" })), &document, &ViewState::default());
+        let with_owner = apply_ops(&document, &ops);
+        let owner_id = with_owner.runtime.selected_step_ids[0].clone();
+        let document = serde_json::to_string(&with_owner).unwrap();
+        let ops = app.handle_command(
+            "addStepAt",
+            Some(&json!({ "kind": "log.print", "owner": owner_id, "slot": "then" })),
+            &document,
+            &ViewState::default(),
+        );
+        let nested = apply_ops(&document, &ops);
+        let owner_step = nested.document.path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
+        assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
+        assert_eq!(nested.document.path.steps.len(), with_owner.document.path.steps.len(), "nested step lives in the slot, not the root path");
+    }
+
+    #[test]
+    fn add_step_at_falls_back_to_root_for_unknown_owner() {
+        let mut app = ImperativePlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "addStepAt",
+            Some(&json!({ "kind": "log.print", "owner": "missing-step", "slot": "then" })),
+            &document,
+            &ViewState::default(),
+        );
+        let updated = apply_ops(&document, &ops);
+        assert!(updated.document.path.steps.iter().any(|step| step.id == updated.runtime.selected_step_ids[0]));
+    }
+
+    #[test]
+    fn run_command_expands_scope_into_readable_rows_without_truncation() {
+        let mut app = ImperativePlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("run", None, &document, &ViewState::default());
+        let ran = apply_ops(&document, &ops);
+        assert!(!ran.runtime.run_output_json.is_empty());
+        let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, &serde_json::to_string(&ran).unwrap(), &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("counter"), "run output row shows the full scope key, not an 80-char blob");
     }
 }

@@ -1,7 +1,9 @@
 //! 🌊 Flow plugin — declarative flow play app bundled as a hot-swappable WASM component.
 
 use flow_core::{
-    dag::DagFixture, flow_operator_catalogue_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
+    dag::{dag_lod_scale_json, DagDrawLod, DagFixture},
+    flow_neuron_kind_infos_json, flow_operator_catalogue_json,
+    forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     CameraJson, FlowFixture, FlowHost, Widget,
 };
 use semio_framework_plugin::{
@@ -10,13 +12,14 @@ use semio_framework_plugin::{
     selected_generation, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, CommandDescriptor, GenerationPlayState,
     NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_HIERARCHY_ID,     FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::sync::LazyLock;
 
 //#region 🔖Constants
@@ -37,16 +40,54 @@ const FLOW_PLAY_BODY_GENERATIONS: &str = "flow.play.generations";
 const FLOW_PLAY_BODY_GENERATE_FORM: &str = "flow.play.generate-form";
 const FLOW_PLAY_BODY_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 const FLOW_PLAY_SURFACE_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
+
+/// 📶 Window LOD select value: camera zoom picks the DAG draw tier.
+const FLOW_LOD_MODE_AUTOMATIC: &str = "automatic";
+
+/// 🧩 Built-in flow extensions: (id, name, commandId, commandTitle, effect).
+const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] = &[
+    ("auto-layout", "Auto Layout", "flow.extension.reorganize", "Reorganize Canvas", "reorganize"),
+    ("auto-evaluate", "Auto Evaluate", "flow.extension.evaluate", "Evaluate Fixture", "evaluate"),
+];
 //#endregion 🔖Constants
 
 //#region 🔖Types
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct FlowPlayRuntime {
     #[serde(default)]
     selected_node_ids: Vec<String>,
     #[serde(default)]
     last_eval_json: String,
+    #[serde(default = "default_flow_lod_mode")]
+    lod_mode: String,
+    #[serde(default)]
+    proximity_distance: f64,
+    #[serde(default = "default_catalogue_sections_json")]
+    catalogue_sections_json: String,
+    #[serde(default)]
+    extension_enabled: HashMap<String, bool>,
+}
+
+fn default_flow_lod_mode() -> String {
+    FLOW_LOD_MODE_AUTOMATIC.into()
+}
+
+fn default_catalogue_sections_json() -> String {
+    "[]".into()
+}
+
+impl Default for FlowPlayRuntime {
+    fn default() -> Self {
+        Self {
+            selected_node_ids: Vec::new(),
+            last_eval_json: String::new(),
+            lod_mode: default_flow_lod_mode(),
+            proximity_distance: 0.0,
+            catalogue_sections_json: default_catalogue_sections_json(),
+            extension_enabled: HashMap::new(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -117,13 +158,28 @@ fn flow_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
     }
 }
 
-fn seed_host_catalogue(host: &mut FlowHost) {
-    host.set_host_catalogue_json(&flow_operator_catalogue_json());
+fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
+    let mut sections: Vec<Value> = serde_json::from_str(&flow_operator_catalogue_json()).unwrap_or_default();
+    if let Ok(extra) = serde_json::from_str::<Vec<Value>>(extra_sections_json) {
+        sections.extend(extra);
+    }
+    host.set_host_catalogue_json(&serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into()));
+}
+
+fn apply_lod_and_proximity(host: &mut FlowHost, runtime: &FlowPlayRuntime) {
+    if runtime.lod_mode != FLOW_LOD_MODE_AUTOMATIC && DagDrawLod::from_id(&runtime.lod_mode).is_some() {
+        host.dag.set_automatic_lod(false);
+        host.dag.set_forced_draw_lod_label(&runtime.lod_mode);
+    } else {
+        host.dag.set_automatic_lod(true);
+    }
+    host.dag.set_proximity_distance(runtime.proximity_distance);
 }
 
 fn host_from_envelope(envelope: &FlowPlayEnvelope) -> FlowHost {
     let mut host = FlowHost::from_fixture(envelope.fixture.clone());
-    seed_host_catalogue(&mut host);
+    seed_host_catalogue(&mut host, &envelope.runtime.catalogue_sections_json);
+    apply_lod_and_proximity(&mut host, &envelope.runtime);
     host
 }
 
@@ -400,9 +456,8 @@ fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
             })
         })
         .collect();
-    if tree_sections.is_empty() {
-        return build_catalogue_tree_fallback();
-    }
+    let mut tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback() } else { tree_sections };
+    tree_sections.extend(flow_extensions_tree_sections(&envelope.runtime));
     UiNode::Tree(UiTreeNode {
         sections: tree_sections,
         selected_ids: Some(vec![]),
@@ -411,75 +466,153 @@ fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
     })
 }
 
-fn build_catalogue_tree_fallback() -> UiNode {
+/// 🧩 Installed/enabled extension palette plus commands surfaced by active extensions.
+fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime) -> Vec<UiTreeSectionNode> {
+    let installed: Vec<UiTreeItemNode> = FLOW_EXTENSIONS
+        .iter()
+        .map(|(id, name, _, _, _)| {
+            let enabled = runtime.extension_enabled.get(*id).copied().unwrap_or(false);
+            tree_item_with_command(
+                format!("flow-play-extensions.{id}"),
+                *name,
+                Some(if enabled { "enabled".into() } else { "disabled".into() }),
+                flow_cmd("toggleExtension", Some(json!({ "id": id, "enabled": !enabled }))),
+            )
+        })
+        .collect();
+    let commands: Vec<UiTreeItemNode> = FLOW_EXTENSIONS
+        .iter()
+        .filter(|(id, ..)| runtime.extension_enabled.get(*id).copied().unwrap_or(false))
+        .map(|(_, _, command_id, title, _)| {
+            tree_item_with_command(
+                format!("flow-play-extensions.command.{command_id}"),
+                *title,
+                Some((*command_id).into()),
+                flow_cmd("runExtensionCommand", Some(json!({ "commandId": command_id }))),
+            )
+        })
+        .collect();
+    let mut sections = vec![UiTreeSectionNode {
+        id: "flow-play-extensions.installed".into(),
+        label: Some("Extensions".into()),
+        default_open: Some(false),
+        items: installed,
+    }];
+    if !commands.is_empty() {
+        sections.push(UiTreeSectionNode {
+            id: "flow-play-extensions.commands".into(),
+            label: Some("Extension Commands".into()),
+            default_open: Some(false),
+            items: commands,
+        });
+    }
+    sections
+}
+
+fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
     let sources = [("inputSlider", "Slider"), ("inputStepper", "Stepper"), ("inputNote", "Note")];
     let components = [("math.add", "Add"), ("logic.and", "And"), ("text.concat", "Concat")];
     let sinks = [("outputPreview", "Preview"), ("outputExport", "Export")];
-    UiNode::Tree(UiTreeNode {
-        sections: vec![
-            UiTreeSectionNode {
-                id: "flow-play-catalogue.sources".into(),
-                label: Some("Sources".into()),
-                default_open: Some(true),
-                items: sources
-                    .iter()
-                    .map(|(kind, label)| {
-                        tree_item_with_command(
-                            format!("flow-play-catalogue.source.{kind}"),
-                            *label,
-                            Some((*kind).into()),
-                            flow_cmd("addWidget", Some(json!({ "kind": kind }))),
-                        )
-                    })
-                    .collect(),
-            },
-            UiTreeSectionNode {
-                id: "flow-play-catalogue.components".into(),
-                label: Some("Components".into()),
-                default_open: Some(true),
-                items: components
-                    .iter()
-                    .map(|(kind, label)| {
-                        tree_item_with_command(
-                            format!("flow-play-catalogue.component.{kind}"),
-                            *label,
-                            Some((*kind).into()),
-                            flow_cmd("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind }))),
-                        )
-                    })
-                    .collect(),
-            },
-            UiTreeSectionNode {
-                id: "flow-play-catalogue.sinks".into(),
-                label: Some("Sinks".into()),
-                default_open: Some(false),
-                items: sinks
-                    .iter()
-                    .map(|(kind, label)| {
-                        tree_item_with_command(
-                            format!("flow-play-catalogue.sink.{kind}"),
-                            *label,
-                            Some((*kind).into()),
-                            flow_cmd("addWidget", Some(json!({ "kind": kind }))),
-                        )
-                    })
-                    .collect(),
-            },
-        ],
-        selected_ids: Some(vec![]),
-        highlighted_ids: None,
-        selection_change: None,
-    })
+    vec![
+        UiTreeSectionNode {
+            id: "flow-play-catalogue.sources".into(),
+            label: Some("Sources".into()),
+            default_open: Some(true),
+            items: sources
+                .iter()
+                .map(|(kind, label)| {
+                    tree_item_with_command(
+                        format!("flow-play-catalogue.source.{kind}"),
+                        *label,
+                        Some((*kind).into()),
+                        flow_cmd("addWidget", Some(json!({ "kind": kind }))),
+                    )
+                })
+                .collect(),
+        },
+        UiTreeSectionNode {
+            id: "flow-play-catalogue.components".into(),
+            label: Some("Components".into()),
+            default_open: Some(true),
+            items: components
+                .iter()
+                .map(|(kind, label)| {
+                    tree_item_with_command(
+                        format!("flow-play-catalogue.component.{kind}"),
+                        *label,
+                        Some((*kind).into()),
+                        flow_cmd("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind }))),
+                    )
+                })
+                .collect(),
+        },
+        UiTreeSectionNode {
+            id: "flow-play-catalogue.sinks".into(),
+            label: Some("Sinks".into()),
+            default_open: Some(false),
+            items: sinks
+                .iter()
+                .map(|(kind, label)| {
+                    tree_item_with_command(
+                        format!("flow-play-catalogue.sink.{kind}"),
+                        *label,
+                        Some((*kind).into()),
+                        flow_cmd("addWidget", Some(json!({ "kind": kind }))),
+                    )
+                })
+                .collect(),
+        },
+    ]
 }
 
-fn build_inspector_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
+fn canvas_settings_field_group(runtime: &FlowPlayRuntime) -> UiInspectorFieldGroup {
+    let lod_items: Vec<UiSelectItem> = std::iter::once(UiSelectItem { value: FLOW_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() })
+        .chain(
+            serde_json::from_str::<Vec<Value>>(&dag_lod_scale_json())
+                .unwrap_or_default()
+                .into_iter()
+                .filter_map(|lod| {
+                    let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
+                    let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
+                    Some(UiSelectItem { value: id, label: name })
+                }),
+        )
+        .collect();
+    UiInspectorFieldGroup {
+        id: "flow-play-inspector.canvas".into(),
+        label: "Canvas".into(),
+        default_open: Some(true),
+        fields: vec![
+            UiNode::Field(UiFieldNode {
+                id: "flow-play-inspector.lod-mode".into(),
+                label: "LOD Mode".into(),
+                child: UiControlNode::Select(UiSelectNode {
+                    id: "flow-play-inspector.lod-mode.select".into(),
+                    value: runtime.lod_mode.clone(),
+                    items: lod_items,
+                    placeholder: None,
+                    on_change: flow_cmd("setLodMode", None),
+                }),
+            }),
+            UiNode::Field(UiFieldNode {
+                id: "flow-play-inspector.proximity-distance".into(),
+                label: "Proximity Distance".into(),
+                child: UiControlNode::Input(UiInputNode {
+                    id: "flow-play-inspector.proximity-distance.input".into(),
+                    input_kind: "number".into(),
+                    value: runtime.proximity_distance.to_string(),
+                    placeholder: None,
+                    commit: None,
+                    on_change: flow_cmd("setProximityDistance", None),
+                }),
+            }),
+        ],
+    }
+}
+
+fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &FlowPlayRuntime) -> UiNode {
     if selected.is_empty() {
-        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
-            id: "flow-play-inspector.empty".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
-            default_open: Some(true),
-            children: vec![ui_text("Select a widget in the canvas or hierarchy.")],
-        }]);
+        return ui_inspector_groups_to_tree(&[canvas_settings_field_group(runtime)]);
     }
     let widgets: Vec<&Widget> = selected
         .iter()
@@ -584,13 +717,20 @@ fn render_main_graph(envelope: &FlowPlayEnvelope) -> UiNode {
         FLOW_PLAY_APP_ID,
         NodeGraphScene {
             editable: Some(true),
-            operators_json: None,
+            operators_json: Some(flow_neuron_kind_infos_json()),
             context_menu_json: Some(
                 r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
             ),
             find_items_json: None,
             capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
-            lod_json: Some(r#"{"automatic":true}"#.into()),
+            lod_json: Some(
+                json!({
+                    "automatic": envelope.runtime.lod_mode == FLOW_LOD_MODE_AUTOMATIC,
+                    "forcedLabel": if envelope.runtime.lod_mode == FLOW_LOD_MODE_AUTOMATIC { Value::Null } else { json!(envelope.runtime.lod_mode) },
+                    "proximityDistance": envelope.runtime.proximity_distance,
+                })
+                .to_string(),
+            ),
             fixture_json,
             selection_json,
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
@@ -612,7 +752,7 @@ fn evaluate_generation_preview(envelope: &FlowPlayEnvelope, values: &serde_json:
     let patched = apply_generation_values_to_fixture(&fixture_json, values);
     let fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| envelope.fixture.clone());
     let mut host = FlowHost::from_fixture(fixture);
-    seed_host_catalogue(&mut host);
+    seed_host_catalogue(&mut host, &envelope.runtime.catalogue_sections_json);
     host.evaluate().unwrap_or_default()
 }
 
@@ -988,6 +1128,58 @@ impl PluginApp for FlowPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
+            "setLodMode" => {
+                if let Some(mode) = args.and_then(|value| value.get("mode").or_else(|| value.get("value"))).and_then(|value| value.as_str()) {
+                    if mode == FLOW_LOD_MODE_AUTOMATIC || DagDrawLod::from_id(mode).is_some() {
+                        envelope.runtime.lod_mode = mode.into();
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "setProximityDistance" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
+                    envelope.runtime.proximity_distance = value.max(0.0);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setCatalogueSections" => {
+                if let Some(sections) = args.and_then(|value| value.get("sections")) {
+                    envelope.runtime.catalogue_sections_json = sections.to_string();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "toggleExtension" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool());
+                if let (Some(id), Some(enabled)) = (id, enabled) {
+                    envelope.runtime.extension_enabled.insert(id.into(), enabled);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "runExtensionCommand" => {
+                let command_id = args.and_then(|value| value.get("commandId")).and_then(|value| value.as_str());
+                if let Some(command_id) = command_id {
+                    if let Some((id, _, _, _, effect)) = FLOW_EXTENSIONS.iter().find(|(_, _, cmd_id, ..)| *cmd_id == command_id) {
+                        if envelope.runtime.extension_enabled.get(*id).copied().unwrap_or(false) {
+                            match *effect {
+                                "reorganize" => {
+                                    if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
+                                        envelope.fixture = host.fixture.clone();
+                                    }
+                                }
+                                "evaluate" => {
+                                    if let Ok(eval_json) = host.evaluate() {
+                                        envelope.runtime.last_eval_json = eval_json;
+                                        envelope.fixture = host.fixture.clone();
+                                    }
+                                }
+                                _ => {}
+                            }
+                            return vec![set_document_op(&envelope)];
+                        }
+                    }
+                }
+            }
             _ => {}
         }
         Vec::new()
@@ -1003,7 +1195,7 @@ impl PluginApp for FlowPlayApp {
             FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope),
             FLOW_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
             FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope),
-            FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
+            FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, &envelope.runtime),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -1194,5 +1386,69 @@ mod tests {
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
         assert_eq!(updated.generation.generations.len(), 1);
         assert!(updated.generation.preview_text.as_deref().unwrap_or("").len() > 2);
+    }
+
+    fn document_after(app: &mut FlowPlayApp, document: &str, command: &str, args: Option<Value>) -> FlowPlayEnvelope {
+        let ops = app.handle_command(command, args.as_ref(), document, &ViewState::default());
+        assert_eq!(ops.len(), 1, "command {command} produced no op");
+        serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap()
+    }
+
+    #[test]
+    fn set_lod_mode_rejects_unknown_and_accepts_known() {
+        let mut app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        assert!(app.handle_command("setLodMode", Some(&json!({ "mode": "bogus" })), &document, &ViewState::default()).is_empty());
+        let next = document_after(&mut app, &document, "setLodMode", Some(json!({ "mode": "micro" })));
+        assert_eq!(next.runtime.lod_mode, "micro");
+        let node_graph = app.render(FLOW_PLAY_BODY_MAIN, &serde_json::to_string(&next).unwrap(), &ViewState::default());
+        let json = serde_json::to_string(&node_graph).unwrap();
+        assert!(json.contains("\\\"forcedLabel\\\":\\\"micro\\\"") || json.contains("\"forcedLabel\":\"micro\""));
+    }
+
+    #[test]
+    fn set_proximity_distance_clamps_to_zero() {
+        let mut app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        let next = document_after(&mut app, &document, "setProximityDistance", Some(json!({ "value": -5.0 })));
+        assert_eq!(next.runtime.proximity_distance, 0.0);
+        let next = document_after(&mut app, &document, "setProximityDistance", Some(json!({ "value": 160.0 })));
+        assert_eq!(next.runtime.proximity_distance, 160.0);
+    }
+
+    #[test]
+    fn set_catalogue_sections_persists_and_merges_into_catalogue() {
+        let mut app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        let sections = json!([{
+            "id": "custom",
+            "title": "Custom",
+            "items": [{
+                "kind": "neuron",
+                "neuronKind": "math.add",
+                "name": "CustomAdd",
+                "abbreviation": "Add",
+                "icon": "emoji:➕",
+                "summary": "Custom add operator",
+            }],
+        }]);
+        let next = document_after(&mut app, &document, "setCatalogueSections", Some(json!({ "sections": sections })));
+        assert!(next.runtime.catalogue_sections_json.contains("custom"));
+        let catalogue = app.render(FLOW_PLAY_BODY_CATALOGUE, &serde_json::to_string(&next).unwrap(), &ViewState::default());
+        assert!(serde_json::to_string(&catalogue).unwrap().contains("CustomAdd"));
+    }
+
+    #[test]
+    fn toggle_extension_and_run_command_reorganizes_fixture() {
+        let mut app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        assert!(app
+            .handle_command("runExtensionCommand", Some(&json!({ "commandId": "flow.extension.reorganize" })), &document, &ViewState::default())
+            .is_empty());
+        let toggled = document_after(&mut app, &document, "toggleExtension", Some(json!({ "id": "auto-layout", "enabled": true })));
+        assert_eq!(toggled.runtime.extension_enabled.get("auto-layout"), Some(&true));
+        let toggled_json = serde_json::to_string(&toggled).unwrap();
+        let ran = document_after(&mut app, &toggled_json, "runExtensionCommand", Some(json!({ "commandId": "flow.extension.reorganize" })));
+        assert_eq!(ran.fixture.widgets.len(), toggled.fixture.widgets.len());
     }
 }

@@ -152,7 +152,9 @@ export const STYLING_OPACITIES = {
   "labelHaloAlpha": 200,
   "selectionPreviewStrokeAlpha": 180,
   "handleFillTransparent": 0,
-  "glassPanelAlpha": 0.58
+  "glassPanelAlpha": 0.58,
+  "glassMenuAlpha": 0.36,
+  "glassWindowOptionsAlpha": 0.22
 } as const;
 
 export const STYLING_METRICS = {
@@ -309,7 +311,11 @@ export const STYLING_METRICS = {
     "panelHeaderHeightUiSpacing": 7,
     "gapStandardUiSpacing": 1,
     "paddingStandardUiSpacing": 1,
-    "panelInsetUiSpacing": 1
+    "panelInsetUiSpacing": 1,
+    "glassBlurPx": 24,
+    "glassPanelBlurPx": 40,
+    "glassWindowOptionsBlurPx": 14,
+    "glassSaturate": 1.45
   },
   "typography": {
     "text2xsPx": 9.6,

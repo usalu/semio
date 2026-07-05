@@ -329,7 +329,15 @@ pub fn handle_scene_wheel(
             });
             Vec::new()
         }
-        "node-graph" => engine_canvas::node_graph_wheel(scene, inner, x, y, delta, ctrl),
+        "node-graph" => engine_canvas::node_graph_wheel(
+            &scene.surface_id,
+            &scene.controller_id,
+            inner,
+            x,
+            y,
+            delta,
+            ctrl,
+        ),
         _ => Vec::new(),
     }
 }
@@ -384,7 +392,14 @@ pub fn handle_scene_pointer_move(
         }
         "node-graph" if down => {
             commands.extend(engine_canvas::node_graph_pointer_move(
-                scene, inner, x, y, false, false, false,
+                &scene.surface_id,
+                &scene.controller_id,
+                inner,
+                x,
+                y,
+                false,
+                false,
+                false,
             ));
         }
         "text-editor" if down => {
@@ -392,7 +407,16 @@ pub fn handle_scene_pointer_move(
         }
         "node-graph" | "text-editor" if !down => {
             commands.extend(match scene.component_kind.as_str() {
-                "node-graph" => engine_canvas::node_graph_pointer_move(scene, inner, x, y, false, false, false),
+                "node-graph" => engine_canvas::node_graph_pointer_move(
+                    &scene.surface_id,
+                    &scene.controller_id,
+                    inner,
+                    x,
+                    y,
+                    false,
+                    false,
+                    false,
+                ),
                 _ => engine_canvas::text_editor_pointer_move(scene, inner, x, y),
             });
         }
@@ -457,7 +481,15 @@ pub fn handle_scene_pointer_button(
             }
             "node-graph" => {
                 commands.extend(engine_canvas::node_graph_pointer_down(
-                    scene, inner, x, y, button, shift, false, false,
+                    &scene.surface_id,
+                    &scene.controller_id,
+                    inner,
+                    x,
+                    y,
+                    button,
+                    shift,
+                    false,
+                    false,
                 ));
             }
             "text-editor" => {
@@ -482,7 +514,14 @@ pub fn handle_scene_pointer_button(
             }
             "node-graph" => {
                 commands.extend(engine_canvas::node_graph_pointer_up(
-                    scene, inner, x, y, shift, false, false,
+                    &scene.surface_id,
+                    &scene.controller_id,
+                    inner,
+                    x,
+                    y,
+                    shift,
+                    false,
+                    false,
                 ));
             }
             "text-editor" => {
@@ -588,6 +627,7 @@ pub fn render_component_scene(
     ctx: &mut FrameworkWidgetContext<'_>,
     gpu: &mut ui_wgpu::GpuContext,
     world3d_states: &mut HashMap<String, World3dState>,
+    node_graph_states: &mut HashMap<String, NodeGraphSurface>,
 ) {
     let theme = ctx.theme;
     ctx.draw.set_screen_height(bounds.y + bounds.h);
@@ -600,7 +640,7 @@ pub fn render_component_scene(
         "raster" => render_raster(scene, bounds, ctx, gpu),
         "table" => render_table(scene, bounds, ctx),
         "canvas-2d" => render_canvas_2d(scene, bounds, ctx),
-        "node-graph" => render_node_graph(scene, bounds, ctx, gpu),
+        "node-graph" => render_node_graph(scene, bounds, ctx, gpu, node_graph_states),
         "virtualFileSystem" => render_vfs(scene, bounds, ctx),
         "text-editor" => render_text_editor(scene, bounds, ctx, gpu),
         "world-3d" => {
@@ -1073,6 +1113,11 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
 //#endregion Canvas2d
 
 //#region NodeGraph
+#[derive(Clone, Debug)]
+pub struct NodeGraphSurface {
+    pub bounds: Rect,
+    pub controller_id: String,
+}
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct GraphContextMenuItem {
@@ -1231,6 +1276,7 @@ fn render_node_graph(
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
     gpu: &mut ui_wgpu::GpuContext,
+    node_graph_states: &mut HashMap<String, NodeGraphSurface>,
 ) {
     let Some(graph) = &scene.node_graph else {
         return render_placeholder("node-graph", bounds, ctx);
@@ -1254,7 +1300,15 @@ fn render_node_graph(
         });
     }
     let inner = bounds;
+    node_graph_states.insert(
+        scene.surface_id.clone(),
+        NodeGraphSurface {
+            bounds: inner,
+            controller_id: scene.controller_id.clone(),
+        },
+    );
     engine_canvas::paint_node_graph(gpu, ctx, scene, inner);
+    engine_canvas::paint_node_graph_labels(ctx, scene, inner);
 }
 
 fn node_screen_pos(node: &GraphNode, state: &SceneSurfaceState, viewport: &Viewport, inner: Rect) -> (f32, f32) {

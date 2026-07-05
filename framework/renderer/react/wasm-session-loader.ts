@@ -28,6 +28,7 @@ export type FlowWasmSession = GraphWasmSession & {
 	setSelection(json: string): void;
 	setPreviewOff(json: string): void;
 	setCatalogueJson(json: string): void;
+	setNeuronKindInfosJson(json: string): void;
 	setComputingProgress(json: string): void;
 	setAutomaticLod(enabled: boolean): void;
 	setForcedDrawLodLabel(label: string): void;
@@ -48,6 +49,7 @@ export type FlowWasmSession = GraphWasmSession & {
 	hoveredChannelJson(): string;
 	pickTargetsAtScreenJson(sx: number, sy: number): string;
 	previewText(): string;
+	preselectWidgetIdsJson(): string;
 	previewOffWidgetIds(): string;
 	alignSelection(mode: string): void;
 	undo(): boolean;

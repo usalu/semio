@@ -30,6 +30,15 @@ const WIRES_HIERARCHY_RELATIONSHIP_PREFIX: &str = "wires-play-hierarchy.relation
 //#endregion 🔖Constants
 
 //#region 🔖Envelope
+/// 🖱️ In-flight pointer drag of one board node, tracked by screen delta so no viewport size is needed.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WiresDragState {
+    node_id: String,
+    last_x: f64,
+    last_y: f64,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ReasoningWiresPlayEnvelope {
@@ -37,6 +46,8 @@ struct ReasoningWiresPlayEnvelope {
     board_fixture: Value,
     #[serde(default)]
     selected_ids: Vec<String>,
+    #[serde(default)]
+    drag: Option<WiresDragState>,
 }
 
 fn default_empty_wires_fixture() -> Value {
@@ -63,6 +74,7 @@ fn default_envelope() -> ReasoningWiresPlayEnvelope {
         wires_fixture: default_empty_wires_fixture(),
         board_fixture: default_empty_board_fixture(),
         selected_ids: Vec::new(),
+        drag: None,
     }
 }
 
@@ -159,6 +171,7 @@ fn envelope_from_wires_fixture(wires: Value) -> ReasoningWiresPlayEnvelope {
         board_fixture: wires_fixture_board(&wires),
         wires_fixture: wires,
         selected_ids: Vec::new(),
+        drag: None,
     }
 }
 
@@ -279,6 +292,34 @@ fn relationship_edge_layers(wires: &Value, board: &Value) -> Vec<Value> {
         }
     }
     layers
+}
+
+/// 🕸️ Re-lays out the board with `puzzle_2d`'s force-graph solver, same as `puzzle/2d`'s `forceLayout`/`reorganize`.
+fn force_layout_board(board: &mut Value) {
+    let Ok(layout_json) = puzzle_2d::apply_force_graph_layout_to_fixture_v1_json(&board.to_string(), r#"{"mode":"force-graph"}"#) else {
+        return;
+    };
+    if let Ok(parsed) = serde_json::from_str(&layout_json) {
+        *board = parsed;
+    }
+}
+
+/// 🖱️ Nudges one board node's position by a world-space delta during a pointer drag.
+fn translate_node(board: &mut Value, node_id: &str, dx: f64, dy: f64) -> bool {
+    let Some(node) = board
+        .get_mut("nodes")
+        .and_then(|value| value.as_array_mut())
+        .and_then(|nodes| nodes.iter_mut().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(node_id)))
+    else {
+        return false;
+    };
+    let x = node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let y = node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
+    if let Some(obj) = node.as_object_mut() {
+        obj.insert("x".into(), json!(x + dx));
+        obj.insert("y".into(), json!(y + dy));
+    }
+    true
 }
 
 fn render_canvas(board: &Value, wires: &Value) -> UiNode {
@@ -683,6 +724,35 @@ impl PluginApp for WiresPlayApp {
                 envelope.selected_ids.clear();
                 return vec![set_document_op(&envelope)];
             }
+            "forceLayout" | "reorganize" => {
+                force_layout_board(&mut envelope.board_fixture);
+                return vec![set_document_op(&envelope)];
+            }
+            "canvasPointerDown" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                if let Some(id) = id.filter(|id| fixture_nodes(&envelope.board_fixture).iter().any(|node| node.get("id").and_then(|value| value.as_str()) == Some(*id))) {
+                    envelope.selected_ids = vec![id.to_string()];
+                    envelope.drag = Some(WiresDragState { node_id: id.to_string(), last_x: x, last_y: y });
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "canvasPointerMove" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                if let Some(drag) = envelope.drag.clone() {
+                    let zoom = fixture_camera(&envelope.board_fixture).2.max(1e-6);
+                    translate_node(&mut envelope.board_fixture, &drag.node_id, (x - drag.last_x) / zoom, (y - drag.last_y) / zoom);
+                    envelope.drag = Some(WiresDragState { node_id: drag.node_id, last_x: x, last_y: y });
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "canvasPointerUp" => {
+                if envelope.drag.take().is_some() {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             _ => {}
         }
         Vec::new()
@@ -779,6 +849,56 @@ mod tests {
     fn relationship_kind_labels_match_fixture() {
         assert_eq!(RelationshipKind::Owns.label(), "owns");
         assert_eq!(relationship_kind_display_name("is"), "Is");
+    }
+
+    fn apply_ops(document: &str, ops: &[String]) -> ReasoningWiresPlayEnvelope {
+        let mut envelope = parse_envelope(document);
+        for op in ops {
+            let parsed: Value = serde_json::from_str(op).unwrap();
+            envelope = serde_json::from_value(parsed["document"].clone()).unwrap();
+        }
+        envelope
+    }
+
+    #[test]
+    fn pointer_drag_translates_node_by_screen_delta() {
+        let mut app = WiresPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("addNode", Some(&json!({ "kind": "identity" })), &document, &ViewState::default());
+        let with_node = apply_ops(&document, &ops);
+        let document = serde_json::to_string(&with_node).unwrap();
+        let ops = app.handle_command("canvasPointerDown", Some(&json!({ "id": "node-1", "x": 100.0, "y": 100.0 })), &document, &ViewState::default());
+        let dragging = apply_ops(&document, &ops);
+        assert_eq!(dragging.drag.as_ref().map(|drag| drag.node_id.as_str()), Some("node-1"));
+        let document = serde_json::to_string(&dragging).unwrap();
+        let ops = app.handle_command("canvasPointerMove", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
+        let moved = apply_ops(&document, &ops);
+        let node = fixture_nodes(&moved.board_fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("node-1")).expect("node-1");
+        assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(40.0));
+        assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
+        let document = serde_json::to_string(&moved).unwrap();
+        let ops = app.handle_command("canvasPointerUp", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
+        let released = apply_ops(&document, &ops);
+        assert!(released.drag.is_none());
+    }
+
+    #[test]
+    fn force_layout_command_repositions_metabolism_nodes() {
+        let mut app = WiresPlayApp;
+        let envelope = envelope_from_wires_fixture(serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"));
+        let before: Vec<(f64, f64)> = fixture_nodes(&envelope.board_fixture)
+            .iter()
+            .map(|node| (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0)))
+            .collect();
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command("forceLayout", None, &document, &ViewState::default());
+        let laid_out = apply_ops(&document, &ops);
+        let after: Vec<(f64, f64)> = fixture_nodes(&laid_out.board_fixture)
+            .iter()
+            .map(|node| (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0)))
+            .collect();
+        assert_eq!(before.len(), after.len());
+        assert_ne!(before, after, "force layout should move at least one node");
     }
 
     #[test]

@@ -1,11 +1,11 @@
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
 use crate::dock::{
-    compute_dock_drop_zone, dock_from_window_layout, parse_path, DockDragKind, DockDragPayload,
-    DockDragState, DockDropZone, DockRenderContext, DockState,
+    compute_dock_drop_zone, dock_from_window_layout, drop_zone_indicator_rect, parse_path,
+    DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
 };
 use crate::interpreter::{framework_widget_context, render_ui_node};
-use crate::scenes::{clear_graph_node_context, resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click};
+use crate::scenes::{clear_graph_node_context, resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, NodeGraphSurface};
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_commands,
     handle_world3d_pointer_button,
@@ -24,8 +24,8 @@ use semio_framework_core::layout::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use ui_wgpu::{
-    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DrawList, DragAxis, FontAtlas, HitKind,
-    HitTarget, IconAtlas, InputState, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
+    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DrawList, DragAxis, FontAtlas, GlassTier,
+    HitKind, HitTarget, IconAtlas, InputState, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
     WidgetInteractionMaps,
 };
 
@@ -196,6 +196,7 @@ pub struct ShellState {
     pub screen_w: f32,
     pub screen_h: f32,
     pub world3d_states: HashMap<String, World3dState>,
+    pub node_graph_states: HashMap<String, NodeGraphSurface>,
     pub dock: DockState,
     pub active_left_kind: LeftPanelKind,
     pub active_right_kind: RightPanelKind,
@@ -210,6 +211,7 @@ pub struct ShellState {
     pub find_items: Vec<ShellFindItem>,
     pub find_selected: usize,
     pub engagement_expanded: HashMap<String, bool>,
+    pub engagement_activated: HashMap<String, bool>,
     pub measures_folded: HashMap<String, bool>,
     pub measures_expanded: HashMap<String, bool>,
     pub measures_width: HashMap<String, f32>,
@@ -276,6 +278,7 @@ impl ShellState {
             screen_w: 1280.0,
             screen_h: 720.0,
             world3d_states: HashMap::new(),
+            node_graph_states: HashMap::new(),
             dock: DockState::default(),
             active_left_kind: LeftPanelKind::Workbench,
             active_right_kind: RightPanelKind::Details,
@@ -290,6 +293,7 @@ impl ShellState {
             find_items: Vec::new(),
             find_selected: 0,
             engagement_expanded: HashMap::new(),
+            engagement_activated: HashMap::new(),
             measures_folded: HashMap::new(),
             measures_expanded: HashMap::new(),
             measures_width: HashMap::new(),
@@ -486,19 +490,6 @@ impl ShellState {
     fn begin_pending_dock_drag(&mut self, payload: DockDragPayload, x: f32, y: f32) {
         self.dock_drag_snapshot = Some(self.dock.to_window_layout());
         self.pending_dock_drag = Some((payload, (x, y)));
-    }
-
-    fn promote_dock_drag(&mut self, x: f32, y: f32) {
-        let Some((payload, _)) = self.pending_dock_drag.take() else {
-            return;
-        };
-        self.dock.remove_window(&payload.window_id);
-        self.dock_drag = Some(DockDragState {
-            payload,
-            x,
-            y,
-            drop_zone: None,
-        });
     }
 
     fn dock_tab_bars_for_drop(
@@ -941,7 +932,14 @@ impl ShellState {
                             .measures_width
                             .get(window_id)
                             .unwrap_or(&DEFAULT_MEASURES_RAIL_WIDTH);
-                        input.begin_drag(x, y, button, hit.control_id.clone(), Some(DragAxis::Horizontal));
+                        input.begin_drag(
+                            x,
+                            y,
+                            button,
+                            hit.control_id.clone(),
+                            Some(DragAxis::Horizontal),
+                            Some(hit.kind),
+                        );
                         return Ok(());
                     }
                 }
@@ -951,26 +949,46 @@ impl ShellState {
                     self.right_panel_width
                 };
                 self.panel_resize_origin_width = width;
-                input.begin_drag(x, y, button, hit.control_id.clone(), Some(DragAxis::Horizontal));
+                input.begin_drag(
+                    x,
+                    y,
+                    button,
+                    hit.control_id.clone(),
+                    Some(DragAxis::Horizontal),
+                    Some(hit.kind),
+                );
                 return Ok(());
             }
-            if hit.kind == HitKind::ScrollRegion {
+            if matches!(hit.kind, HitKind::DockSplit | HitKind::DockJoinCorner) {
                 if let Some(id) = hit.control_id.as_deref() {
                     if let Some(rest) = id.strip_prefix("dock.corner.r/") {
                         if let Some((row_part, col_part)) = rest.split_once("/c/") {
                             if let Some((row_path_str, row_index_str)) = row_part.rsplit_once('/') {
                                 if let Some((col_path_str, col_index_str)) = col_part.rsplit_once('/') {
-                                    self.split_resize_path = Some(parse_path(row_path_str));
+                                    let row_path = parse_path(row_path_str);
+                                    let col_path = parse_path(col_path_str);
+                                    self.split_resize_path = Some(row_path.clone());
                                     self.split_resize_index = row_index_str.parse().unwrap_or(0);
-                                    self.split_resize_secondary_path = Some(parse_path(col_path_str));
+                                    self.split_resize_secondary_path = Some(col_path.clone());
                                     self.split_resize_secondary_index = col_index_str.parse().unwrap_or(0);
-                                    if let Some(path) = &self.split_resize_path {
-                                        self.split_resize_origin = self.dock.begin_split_drag(path);
-                                    }
-                                    if let Some(path) = &self.split_resize_secondary_path {
-                                        self.split_resize_secondary_origin = self.dock.begin_split_drag(path);
-                                    }
-                                    input.begin_drag(x, y, button, Some(id.to_string()), Some(DragAxis::Both));
+                                    self.split_resize_origin = self.dock.begin_split_drag(&row_path);
+                                    self.split_resize_secondary_origin = self.dock.begin_split_drag(&col_path);
+                                    self.split_resize_axis_total = self
+                                        .dock
+                                        .split_axis_extent(&row_path, self.dock_canvas_bounds)
+                                        .unwrap_or(self.dock_canvas_bounds.w);
+                                    self.split_resize_secondary_axis_total = self
+                                        .dock
+                                        .split_axis_extent(&col_path, self.dock_canvas_bounds)
+                                        .unwrap_or(self.dock_canvas_bounds.h);
+                                    input.begin_drag(
+                                        x,
+                                        y,
+                                        button,
+                                        Some(id.to_string()),
+                                        Some(DragAxis::Both),
+                                        Some(hit.kind),
+                                    );
                                     return Ok(());
                                 }
                             }
@@ -983,7 +1001,23 @@ impl ShellState {
                             self.split_resize_path = Some(path.clone());
                             self.split_resize_index = index;
                             self.split_resize_origin = self.dock.begin_split_drag(&path);
-                            input.begin_drag(x, y, button, Some(id.to_string()), hit.drag_axis);
+                            self.split_resize_axis_total = self
+                                .dock
+                                .split_axis_extent(&path, self.dock_canvas_bounds)
+                                .unwrap_or_else(|| {
+                                    match hit.drag_axis {
+                                        Some(DragAxis::Vertical) => self.dock_canvas_bounds.h,
+                                        _ => self.dock_canvas_bounds.w,
+                                    }
+                                });
+                            input.begin_drag(
+                                x,
+                                y,
+                                button,
+                                Some(id.to_string()),
+                                hit.drag_axis,
+                                Some(hit.kind),
+                            );
                             return Ok(());
                         }
                     }
@@ -1061,7 +1095,7 @@ impl ShellState {
             }
             if hit.kind == HitKind::Slider {
                 if let Some(id) = hit.control_id.clone() {
-                    input.begin_drag(x, y, button, Some(id), hit.drag_axis);
+                    input.begin_drag(x, y, button, Some(id), hit.drag_axis, Some(hit.kind));
                     return Ok(());
                 }
             }
@@ -1205,7 +1239,7 @@ impl ShellState {
                 match id {
                     id if id.starts_with("shell.measures.resize.") => {
                         if let Some(window_id) = self.measures_resize_window_id.clone() {
-                            let next = (self.measures_resize_origin_width + dx).clamp(160.0, 640.0);
+                            let next = (self.measures_resize_origin_width - dx).clamp(160.0, 640.0);
                             self.measures_width.insert(window_id, next);
                         }
                     }
@@ -1436,9 +1470,15 @@ impl ShellState {
             }
             id if id.starts_with("shell.engagement.toggle.") => {
                 let window_id = id.trim_start_matches("shell.engagement.toggle.");
-                let expanded = self.engagement_expanded.get(window_id).copied().unwrap_or(false);
+                let activated = self
+                    .engagement_activated
+                    .get(window_id)
+                    .copied()
+                    .unwrap_or(false);
+                self.engagement_activated
+                    .insert(window_id.to_string(), !activated);
                 self.engagement_expanded
-                    .insert(window_id.to_string(), !expanded);
+                    .insert(window_id.to_string(), !activated);
                 return Ok(true);
             }
             id if id.starts_with("shell.measures.fold.") => {
@@ -1456,6 +1496,10 @@ impl ShellState {
                 let expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
                 self.measures_expanded
                     .insert(window_id.to_string(), !expanded);
+                if !expanded {
+                    self.engagement_activated.remove(window_id);
+                    self.engagement_expanded.insert(window_id.to_string(), false);
+                }
                 return Ok(true);
             }
             "ui.search.toggle" => {
@@ -1540,9 +1584,6 @@ impl ShellState {
                         }
                     }
                 }
-                return Ok(true);
-            }
-            id if id.starts_with("dock.tab.") => {
                 return Ok(true);
             }
             id if id.starts_with("dock.focus.") => {
@@ -2402,6 +2443,7 @@ fn render_chrome_group(
     theme: &Theme,
     rect: Rect,
     items: &[ChromeGroupItem<'_>],
+    register_hits: bool,
 ) {
     if items.is_empty() {
         return;
@@ -2445,14 +2487,16 @@ fn render_chrome_group(
                 chrome_item_text(theme, item.active, hovered),
             );
         }
-        input.register_hit(HitTarget {
-            rect: item_rect,
-            event: None,
-            control_id: Some(item.control_id.into()),
-            kind: item.kind.clone(),
-            drag_axis: None,
-            drag_data: None,
-        });
+        if register_hits {
+            input.register_hit(HitTarget {
+                rect: item_rect,
+                event: None,
+                control_id: Some(item.control_id.into()),
+                kind: item.kind.clone(),
+                drag_axis: None,
+                drag_data: None,
+            });
+        }
         x += item_w;
         if index + 1 < items.len() {
             draw.push_solid([x, inner_y, hair, inner_h], theme.border_normal);
@@ -2513,7 +2557,7 @@ fn render_footer_tool_nodes(
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item]);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
                 input.register_hit(HitTarget {
                     rect,
                     event: Some(on_press.clone()),
@@ -2548,7 +2592,7 @@ fn render_footer_tool_nodes(
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item]);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
                 input.register_hit(HitTarget {
                     rect,
                     event: Some(on_change.clone()),
@@ -2583,7 +2627,7 @@ fn render_footer_tool_nodes(
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item]);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
                 input.register_hit(HitTarget {
                     rect,
                     event: None,
@@ -2693,6 +2737,7 @@ impl ShellState {
         FIND_ITEM_SINK.with(|cell| cell.borrow_mut().clear());
         CONTEXT_MENU_SINK.with(|cell| cell.borrow_mut().clear());
         clear_graph_node_context();
+        self.node_graph_states.clear();
         self.widget_maps.clear_frame();
         let mut overlay_slot = Some(overlay);
         self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, gpu);
@@ -2912,15 +2957,15 @@ impl ShellState {
         let btn_y = (theme.navbar_height - btn_h) * 0.5;
         let mut x = theme.padding_standard;
         let logo_size = btn_h - theme.gap_standard;
-        chrome_icon(
-            draw,
-            icons,
-            "semio-logo",
-            x,
-            btn_y + (btn_h - logo_size) * 0.5,
-            logo_size,
-            theme.text,
-        );
+            chrome_icon(
+                draw,
+                icons,
+                "semio-logo",
+                x,
+                btn_y + (btn_h - logo_size) * 0.5,
+                logo_size,
+                Rgba::new(1.0, 1.0, 1.0, 1.0),
+            );
         x += logo_size + theme.gap_standard;
         let title = self
             .session
@@ -2964,6 +3009,7 @@ impl ShellState {
                     active: self.overlay_state == OverlayState::Dropdown("example".to_string()),
                     kind: HitKind::NavbarItem,
                 }],
+                true,
             );
             x += fixture_rect.w + theme.gap_standard;
         }
@@ -2985,6 +3031,7 @@ impl ShellState {
             theme,
             Rect::new(rx, btn_y, fullscreen_w, btn_h),
             &[fullscreen_item],
+            true,
         );
         rx -= theme.gap_standard;
         let mut toggle_items: Vec<ChromeGroupItem<'_>> = Vec::new();
@@ -3031,6 +3078,7 @@ impl ShellState {
             theme,
             Rect::new(rx, btn_y, toggle_w, btn_h),
             &toggle_items,
+            true,
         );
         rx -= theme.gap_standard;
         if let Some(session) = &self.session {
@@ -3077,6 +3125,7 @@ impl ShellState {
                     theme,
                     Rect::new(rx, btn_y, mode_w, btn_h),
                     &mode_items,
+                    true,
                 );
             }
         }
@@ -3154,6 +3203,7 @@ impl ShellState {
             theme,
             Rect::new(x, btn_y, group_w, btn_h),
             &footer_items,
+            true,
         );
         let mut tool_x = x + group_w + theme.gap_standard;
         tool_x = render_footer_tool_nodes(
@@ -3186,26 +3236,44 @@ impl ShellState {
         side_left: bool,
         gpu: &mut ui_wgpu::GpuContext,
     ) {
-        let panel_hovered = panel.contains(input.pointer_x, input.pointer_y);
-        let border_color = if panel_hovered {
-            theme.border_emphasized
+        const PANEL_RESIZE_HIT_PX: f32 = 20.0;
+        let resize_id = if side_left {
+            "panel.resize.left"
         } else {
-            theme.border_normal
+            "panel.resize.right"
         };
-        draw.push_rounded(
-            [panel.x, panel.y, panel.w, panel.h],
-            theme.glass_panel_fill(),
-            theme.border_radius,
-        );
+        let resize_edge_accent = input.drag.active
+            && input.drag.target_id.as_deref() == Some(resize_id)
+            || input
+                .hit_at(input.pointer_x, input.pointer_y)
+                .and_then(|hit| hit.control_id.as_deref())
+                == Some(resize_id);
+        let border = theme.border_normal;
         let hair = theme.stroke_hairline;
-        draw.push_solid([panel.x, panel.y, panel.w, hair], border_color);
-        draw.push_solid([panel.x, panel.y + panel.h - hair, panel.w, hair], border_color);
-        draw.push_solid([panel.x, panel.y, hair, panel.h], border_color);
-        draw.push_solid([panel.x + panel.w - hair, panel.y, hair, panel.h], border_color);
+        draw.push_glass(
+            [panel.x, panel.y, panel.w, panel.h],
+            theme.border_radius,
+            GlassTier::Panel,
+            theme,
+        );
+        let left_stroke = if resize_edge_accent && !side_left {
+            theme.accent
+        } else {
+            border
+        };
+        let right_stroke = if resize_edge_accent && side_left {
+            theme.accent
+        } else {
+            border
+        };
+        draw.push_solid([panel.x, panel.y, panel.w, hair], border);
+        draw.push_solid([panel.x, panel.y + panel.h - hair, panel.w, hair], border);
+        draw.push_solid([panel.x, panel.y, hair, panel.h], left_stroke);
+        draw.push_solid([panel.x + panel.w - hair, panel.y, hair, panel.h], right_stroke);
         let tab_bar_h = theme.panel_header_height;
         draw.push_solid(
             [panel.x, panel.y + tab_bar_h - hair, panel.w, hair],
-            border_color,
+            border,
         );
         let mut tab_x = panel.x;
         for (index, tab) in tabs.iter().enumerate() {
@@ -3214,7 +3282,7 @@ impl ShellState {
             let tw = theme.padding_standard * 2.0 + CHROME_ICON_TINY + theme.gap_standard + label_w;
             let rect = Rect::new(tab_x, panel.y, tw, tab_bar_h);
             if index > 0 {
-                draw.push_solid([tab_x, panel.y, hair, tab_bar_h], border_color);
+                draw.push_solid([tab_x, panel.y, hair, tab_bar_h], border);
             }
             let active = tab.id == active_tab_id;
             let hovered = rect.contains(input.pointer_x, input.pointer_y);
@@ -3228,7 +3296,15 @@ impl ShellState {
             draw.push_solid([rect.x, rect.y, rect.w, rect.h], bg);
             let icon_x = rect.x + theme.padding_standard;
             let icon_y = rect.y + (rect.h - CHROME_ICON_TINY) * 0.5;
-            chrome_icon(draw, icons, icon_id, icon_x, icon_y, CHROME_ICON_TINY, theme.text);
+            chrome_icon(
+                draw,
+                icons,
+                icon_id,
+                icon_x,
+                icon_y,
+                CHROME_ICON_TINY,
+                chrome_item_text(theme, active, hovered),
+            );
             chrome_text(
                 draw,
                 atlas,
@@ -3238,11 +3314,7 @@ impl ShellState {
                 icon_x + CHROME_ICON_TINY + theme.gap_standard,
                 rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0,
                 theme.font_size_small,
-                if active || hovered {
-                    theme.active_foreground
-                } else {
-                    theme.text
-                },
+                chrome_item_text(theme, active, hovered),
             );
             let prefix = if side_left {
                 "shell.panel.tab.left."
@@ -3298,28 +3370,26 @@ impl ShellState {
                 open_selects,
                 Some(widget_maps),
             );
-            render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states);
+            render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states);
         }
         draw.pop_scissor();
-        let handle_w = 5.0;
-        let resize_id = if side_left {
-            "panel.resize.left"
-        } else {
-            "panel.resize.right"
-        };
         let handle = if side_left {
-            Rect::new(panel.x + panel.w - handle_w, panel.y, handle_w, panel.h)
+            Rect::new(
+                panel.x + panel.w - PANEL_RESIZE_HIT_PX,
+                panel.y,
+                PANEL_RESIZE_HIT_PX,
+                panel.h,
+            )
         } else {
-            Rect::new(panel.x, panel.y, handle_w, panel.h)
+            Rect::new(panel.x, panel.y, PANEL_RESIZE_HIT_PX, panel.h)
         };
-        draw.push_solid([handle.x, handle.y, handle.w, handle.h], theme.separator);
         input.register_hit(HitTarget {
             rect: handle,
             event: None,
             control_id: Some(resize_id.into()),
             kind: HitKind::PanelResize,
             drag_axis: Some(DragAxis::Horizontal),
-        drag_data: None,
+            drag_data: None,
         });
     }
 
@@ -3432,7 +3502,6 @@ impl ShellState {
                 )
             })
             .collect();
-        self.split_resize_axis_total = canvas.w.max(canvas.h);
         self.dock_canvas_bounds = canvas;
         self.dock_drop_tab_bars = self.dock_tab_bars_for_drop(atlas, theme, canvas, &window_labels);
         self.dock_drop_bodies = self
@@ -3441,15 +3510,17 @@ impl ShellState {
             .into_iter()
             .map(|(path, rect, active)| (path, rect, active))
             .collect();
-        let mut dock_ctx = DockRenderContext {
-            draw,
-            atlas,
-            icons,
-            input,
-            theme,
-            window_labels: &window_labels,
-        };
-        self.dock.register_hits(&mut dock_ctx, canvas);
+        {
+            let mut dock_ctx = DockRenderContext {
+                draw,
+                atlas,
+                icons,
+                input,
+                theme,
+                window_labels: &window_labels,
+            };
+            self.dock.register_hits(&mut dock_ctx, canvas);
+        }
         let placements = self.dock.stack_body_rects(canvas, theme, &window_labels, atlas);
         let show_fallback = placements.is_empty();
         for (_, mut content, window_id) in placements {
@@ -3459,8 +3530,9 @@ impl ShellState {
                 .iter()
                 .find(|kind| kind.id == window_id)
                 .cloned();
+            let mut window_chip_hits: Vec<(Rect, String)> = Vec::new();
             if let Some(kind) = window_kind {
-                self.render_window_measures_rail(
+                if let Some(hit) = self.render_window_measures_rail(
                     draw,
                     overlay,
                     atlas,
@@ -3471,8 +3543,10 @@ impl ShellState {
                     &window_id,
                     &kind,
                     gpu,
-                );
-                self.render_window_engagement_rail(
+                ) {
+                    window_chip_hits.push(hit);
+                }
+                if let Some(hit) = self.render_window_engagement_rail(
                     draw,
                     overlay,
                     atlas,
@@ -3483,13 +3557,36 @@ impl ShellState {
                     &window_id,
                     &kind,
                     gpu,
-                );
+                ) {
+                    window_chip_hits.push(hit);
+                }
             }
             if let Some(ui) = self.window_ui.get(&window_id).cloned() {
                 self.render_window_content(
                     draw, overlay.as_deref_mut(), atlas, icons, input, theme, content, &ui, &window_id, gpu,
                 );
             }
+            for (rect, control_id) in window_chip_hits {
+                input.register_hit(HitTarget {
+                    rect,
+                    event: None,
+                    control_id: Some(control_id),
+                    kind: HitKind::Button,
+                    drag_axis: None,
+                    drag_data: None,
+                });
+            }
+        }
+        {
+            let mut resize_ctx = DockRenderContext {
+                draw,
+                atlas,
+                icons,
+                input,
+                theme,
+                window_labels: &window_labels,
+            };
+            self.dock.register_resize_hits(&mut resize_ctx, canvas);
         }
         if show_fallback {
             chrome_text(
@@ -3505,19 +3602,47 @@ impl ShellState {
             );
         }
         if let Some(drag) = &self.dock_drag {
+            if let Some(zone) = &drag.drop_zone {
+                if let Some(indicator) = drop_zone_indicator_rect(
+                    zone,
+                    &self.dock_drop_tab_bars,
+                    &self.dock_drop_bodies,
+                    self.dock_canvas_bounds,
+                    theme.gap_standard,
+                ) {
+                    draw.push_rounded(
+                        [indicator.x, indicator.y, indicator.w, indicator.h],
+                        theme.accent.with_alpha(0.2),
+                        theme.border_radius,
+                    );
+                    let hair = theme.stroke_hairline;
+                    draw.push_solid([indicator.x, indicator.y, indicator.w, hair], theme.accent);
+                    draw.push_solid(
+                        [indicator.x, indicator.y + indicator.h - hair, indicator.w, hair],
+                        theme.accent,
+                    );
+                    draw.push_solid([indicator.x, indicator.y, hair, indicator.h], theme.accent);
+                    draw.push_solid(
+                        [indicator.x + indicator.w - hair, indicator.y, hair, indicator.h],
+                        theme.accent,
+                    );
+                }
+            }
             let ghost = Rect::new(drag.x - 48.0, drag.y - 12.0, 120.0, theme.control_height);
-            draw.push_rounded([ghost.x, ghost.y, ghost.w, ghost.h], theme.panel, theme.border_radius);
-            chrome_text(
-                draw,
-                atlas,
-                input,
-                theme,
-                &drag.payload.ghost_label,
-                ghost.x + theme.padding_standard,
-                ghost.y + (ghost.h + theme.font_size_small) * 0.5 - 1.0,
-                theme.font_size_small,
-                theme.text,
-            );
+            if !matches!(drag.drop_zone, Some(DockDropZone::Tab { .. })) {
+                draw.push_rounded([ghost.x, ghost.y, ghost.w, ghost.h], theme.panel, theme.border_radius);
+                chrome_text(
+                    draw,
+                    atlas,
+                    input,
+                    theme,
+                    &drag.payload.ghost_label,
+                    ghost.x + theme.padding_standard,
+                    ghost.y + (ghost.h + theme.font_size_small) * 0.5 - 1.0,
+                    theme.font_size_small,
+                    theme.text,
+                );
+            }
         }
     }
 
@@ -3545,7 +3670,7 @@ impl ShellState {
             };
             let bar_w = measure_chrome_group_item(atlas, theme, &item);
             let bar = Rect::new(canvas.x, canvas.y, bar_w, bar_h);
-            render_chrome_group(draw, atlas, icons, input, theme, bar, &[item]);
+            render_chrome_group(draw, atlas, icons, input, theme, bar, &[item], true);
             canvas.y += bar_h + theme.gap_standard;
             canvas.h -= bar_h + theme.gap_standard;
             return canvas;
@@ -3569,7 +3694,7 @@ impl ShellState {
                 };
                 let bar_w = measure_chrome_group_item(atlas, theme, &item).min(canvas.w);
                 let bar = Rect::new(canvas.x, canvas.y, bar_w, bar_h);
-                render_chrome_group(draw, atlas, icons, input, theme, bar, &[item]);
+                render_chrome_group(draw, atlas, icons, input, theme, bar, &[item], true);
                 canvas.y += bar_h + theme.gap_standard;
                 canvas.h -= bar_h + theme.gap_standard;
             }
@@ -3618,7 +3743,7 @@ impl ShellState {
             open_selects,
             Some(widget_maps),
         );
-        render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states);
+        render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states);
         draw.pop_scissor();
     }
 
@@ -3744,7 +3869,7 @@ impl ShellState {
     ) {
         let row_h = theme.control_height;
         let h = items.len() as f32 * row_h + theme.padding_standard * 2.0;
-        overlay.push_rounded([x, y, w, h.max(row_h + 8.0)], theme.overlay_bg, theme.border_radius);
+        overlay.push_glass([x, y, w, h.max(row_h + 8.0)], theme.border_radius, GlassTier::Menu, theme);
         for (index, (_group, label, _)) in items.iter().enumerate() {
             let row = Rect::new(
                 x + theme.gap_standard,
@@ -3809,7 +3934,7 @@ impl ShellState {
         items: &[(String, String, usize)],
         item_prefix: &str,
     ) {
-        overlay.push_rounded([x, y, w, h], theme.overlay_bg, theme.border_radius);
+        overlay.push_glass([x, y, w, h], theme.border_radius, GlassTier::Menu, theme);
         chrome_text(
             overlay,
             atlas,
@@ -3912,6 +4037,26 @@ impl ShellState {
         }
     }
 
+    fn window_engagement_chrome_visible(
+        engagement: &semio_framework_core::layout::WindowEngagement,
+        window_id: &str,
+        engagement_inputs: &HashMap<String, String>,
+        activated: bool,
+    ) -> bool {
+        if engagement.session_active.unwrap_or(false) {
+            return true;
+        }
+        let draft = engagement_inputs
+            .get(window_id)
+            .or_else(|| engagement.input.as_ref().and_then(|input| input.value.as_ref()))
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty());
+        if draft.is_some() {
+            return true;
+        }
+        activated
+    }
+
     fn render_window_measures_rail(
         &mut self,
         draw: &mut DrawList,
@@ -3924,11 +4069,11 @@ impl ShellState {
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
         gpu: &mut ui_wgpu::GpuContext,
-    ) {
+    ) -> Option<(Rect, String)> {
         if kind.measures.is_empty() {
-            return;
+            return None;
         }
-        let folded = self.measures_folded.get(window_id).copied().unwrap_or(false);
+        let folded = self.measures_folded.get(window_id).copied().unwrap_or(true);
         let expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
         let rail_w = *self
             .measures_width
@@ -3943,21 +4088,22 @@ impl ShellState {
                 kind: HitKind::Button,
             };
             let chip_w = measure_chrome_group_item(atlas, theme, &item);
-            let chip = Rect::new(content.x, content.y + 8.0, chip_w, theme.control_height);
-            render_chrome_group(draw, atlas, icons, input, theme, chip, &[item]);
-            input.register_hit(HitTarget {
-                rect: chip,
-                event: None,
-                control_id: Some(format!("shell.measures.unfold.{window_id}")),
-                kind: HitKind::Button,
-                drag_axis: None,
-            drag_data: None,
-            });
-            return;
+            let chip = Rect::new(
+                content.x + content.w - chip_w,
+                content.y + 8.0,
+                chip_w,
+                theme.control_height,
+            );
+            if let Some(chip_draw) = overlay.as_deref_mut() {
+                render_chrome_group(chip_draw, atlas, icons, input, theme, chip, &[item], false);
+            } else {
+                render_chrome_group(draw, atlas, icons, input, theme, chip, &[item], false);
+            }
+            return Some((chip, format!("shell.measures.unfold.{window_id}")));
         }
         let width = if expanded { content.w * 0.45 } else { rail_w };
-        let rail = Rect::new(content.x, content.y, width, content.h);
-        draw.push_rounded([rail.x, rail.y, rail.w, rail.h], theme.panel, theme.border_radius);
+        let rail = Rect::new(content.x + content.w - width, content.y, width, content.h);
+        draw.push_glass([rail.x, rail.y, rail.w, rail.h], theme.border_radius, GlassTier::WindowOptions, theme);
         let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
         draw.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
         let focus_label = if expanded { "Unfocus" } else { "Focus" };
@@ -3984,6 +4130,7 @@ impl ShellState {
             theme,
             Rect::new(header.x, header.y, focus_w, header.h),
             &[focus_item],
+            true,
         );
         input.register_hit(HitTarget {
             rect: Rect::new(header.x, header.y, focus_w, header.h),
@@ -4002,6 +4149,7 @@ impl ShellState {
             theme,
             Rect::new(header.x + header.w - fold_w, header.y, fold_w, header.h),
             &[fold_item],
+            true,
         );
         input.register_hit(HitTarget {
             rect: Rect::new(header.x + header.w - fold_w, header.y, fold_w, header.h),
@@ -4031,7 +4179,7 @@ impl ShellState {
             );
         }
         if !expanded {
-            let resize = Rect::new(rail.x + rail.w - 3.0, rail.y, 6.0, rail.h);
+            let resize = Rect::new(rail.x - 3.0, rail.y, 6.0, rail.h);
             input.register_hit(HitTarget {
                 rect: resize,
                 event: None,
@@ -4041,8 +4189,8 @@ impl ShellState {
                 drag_data: None,
             });
         }
-        content.x += width + theme.gap_standard;
         content.w -= width + theme.gap_standard;
+        None
     }
 
     fn render_window_measure(
@@ -4204,50 +4352,52 @@ impl ShellState {
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
         gpu: &mut ui_wgpu::GpuContext,
-    ) {
+    ) -> Option<(Rect, String)> {
+        let measures_expanded = self
+            .measures_expanded
+            .get(window_id)
+            .copied()
+            .unwrap_or(false);
+        if measures_expanded {
+            return None;
+        }
+        let window_active = self.active_window_id.as_deref() == Some(window_id);
+        if !window_active {
+            return None;
+        }
         let engagement = self
             .window_engagements
             .get(&kind.id)
             .cloned()
             .or_else(|| kind.engagement.clone());
         let Some(engagement) = engagement else {
-            return;
+            return None;
         };
-        let expanded = self.engagement_expanded.get(window_id).copied().unwrap_or(false);
-        if !expanded {
+        let activated = self
+            .engagement_activated
+            .get(window_id)
+            .copied()
+            .unwrap_or(false);
+        if !activated {
             let item = ChromeGroupItem {
-                control_id: "shell.engagement.toggle",
+                control_id: "",
                 icon_id: Some("chevron-right"),
                 label: Some("Command"),
                 active: false,
                 kind: HitKind::Button,
             };
             let chip_w = measure_chrome_group_item(atlas, theme, &item);
-            let chip = Rect::new(
-                content.x + content.w - chip_w,
-                content.y + 8.0,
-                chip_w,
-                theme.control_height,
-            );
-            render_chrome_group(draw, atlas, icons, input, theme, chip, &[item]);
-            input.register_hit(HitTarget {
-                rect: chip,
-                event: None,
-                control_id: Some(format!("shell.engagement.toggle.{window_id}")),
-                kind: HitKind::Button,
-                drag_axis: None,
-            drag_data: None,
-            });
-            return;
+            let chip = Rect::new(content.x, content.y + 8.0, chip_w, theme.control_height);
+            if let Some(chip_draw) = overlay.as_deref_mut() {
+                render_chrome_group(chip_draw, atlas, icons, input, theme, chip, &[item], false);
+            } else {
+                render_chrome_group(draw, atlas, icons, input, theme, chip, &[item], false);
+            }
+            return Some((chip, format!("shell.engagement.toggle.{window_id}")));
         }
         let rail_w = DEFAULT_ENGAGEMENT_RAIL_WIDTH;
-        let rail = Rect::new(
-            content.x + content.w - rail_w,
-            content.y,
-            rail_w,
-            content.h,
-        );
-        draw.push_rounded([rail.x, rail.y, rail.w, rail.h], theme.panel, theme.border_radius);
+        let rail = Rect::new(content.x, content.y, rail_w, content.h);
+        draw.push_glass([rail.x, rail.y, rail.w, rail.h], theme.border_radius, GlassTier::WindowOptions, theme);
         let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
         draw.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
         let toggle_item = ChromeGroupItem {
@@ -4258,22 +4408,24 @@ impl ShellState {
             kind: HitKind::Button,
         };
         let toggle_w = measure_chrome_group_item(atlas, theme, &toggle_item);
+        let toggle_rect = Rect::new(header.x, header.y, toggle_w, header.h);
         render_chrome_group(
             draw,
             atlas,
             icons,
             input,
             theme,
-            Rect::new(header.x, header.y, toggle_w, header.h),
+            toggle_rect,
             &[toggle_item],
+            true,
         );
         input.register_hit(HitTarget {
-            rect: Rect::new(header.x, header.y, toggle_w, header.h),
+            rect: toggle_rect,
             event: None,
             control_id: Some(format!("shell.engagement.toggle.{window_id}")),
             kind: HitKind::Button,
             drag_axis: None,
-        drag_data: None,
+            drag_data: None,
         });
         let mut y = rail.y + theme.panel_header_height;
         if let Some(options) = &engagement.options {
@@ -4289,7 +4441,7 @@ impl ShellState {
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(rail.x + 8.0, y, item_w, theme.control_height);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item]);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
                 if let Some(command) = &option.command {
                     input.register_hit(HitTarget {
                         rect,
@@ -4349,7 +4501,9 @@ impl ShellState {
                 }
             }
         }
+        content.x += rail_w + theme.gap_standard;
         content.w -= rail_w + theme.gap_standard;
+        None
     }
 
     fn render_engagement_input(
@@ -4491,7 +4645,7 @@ impl ShellState {
         let w = 180.0;
         let h = menu.items.len() as f32 * row_h + 8.0;
         let rect = Rect::new(menu.x, menu.y, w, h);
-        overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.overlay_bg, theme.border_radius);
+        overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, GlassTier::Menu, theme);
         for (index, item) in menu.items.iter().enumerate() {
             let row = Rect::new(rect.x + 4.0, rect.y + 4.0 + index as f32 * row_h, w - 8.0, row_h);
             overlay.push_rounded([row.x, row.y, row.w, row.h], theme.button, theme.border_radius);
@@ -4524,7 +4678,7 @@ impl ShellState {
         let row_h = theme.control_height;
         let w = 112.0;
         let h = options.len() as f32 * row_h + theme.padding_standard * 2.0;
-        overlay.push_rounded([x, y, w, h], theme.overlay_bg, theme.border_radius);
+        overlay.push_glass([x, y, w, h], theme.border_radius, GlassTier::Menu, theme);
         for (index, (value, label)) in options.iter().enumerate() {
             let row = Rect::new(
                 x + theme.gap_standard,
@@ -4571,7 +4725,7 @@ impl ShellState {
         hint: &str,
     ) {
         let h = 120.0;
-        overlay.push_rounded([x, y, w, h], theme.overlay_bg, theme.border_radius);
+        overlay.push_glass([x, y, w, h], theme.border_radius, GlassTier::Menu, theme);
         chrome_text(overlay, atlas, input, theme, title,
             x + 12.0,
             y + 24.0,

@@ -22,6 +22,8 @@ wasm-bindgen-futures = "0.4.71"
 web-sys = { version = "0.3.98", features = [
     "Window",
     "HtmlCanvasElement",
+    "HtmlElement",
+    "CssStyleDeclaration",
     "MouseEvent",
     "WheelEvent",
     "KeyboardEvent",

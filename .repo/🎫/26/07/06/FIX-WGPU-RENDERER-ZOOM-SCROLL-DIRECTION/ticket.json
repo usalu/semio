@@ -1,0 +1,14 @@
+{
+  "title": "Fix Wgpu Renderer Zoom Scroll Direction",
+  "emoji": "🔍",
+  "status": "closed",
+  "description": "Fix the inverted scroll wheel zoom direction in the wgpu renderer",
+  "summary": "Fixed zoom scroll direction, added alt/meta+rightclick pan, suppressed context menu on modifier click, and resolved ui_wgpu compile issues.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1829"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪262642a2381f4d3b995718ef4b274123"
+  ]
+}

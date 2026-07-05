@@ -1,16 +1,16 @@
 //! 🗺️ GIS 2D plugin — GIS map play app bundled as a hot-swappable WASM component.
 
 use gis_2d::{
-    empty_gis_map_projection, projection, GisMapDocument, GisMapEnvelope, GisMapOp, GisMapStore, MapHost,
-    GIS_MAP_SCHEMA,
+    empty_gis_map_projection, gis_map_lod_scale_json, projection, GisMapDocument, GisMapEnvelope, GisMapOp,
+    GisMapStore, MapHost, GIS_MAP_LOD_MODE_AUTOMATIC, GIS_MAP_SCHEMA,
 };
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp,
-    PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiToggleNode, UiTreeItemNode,
-    UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ui_inspector_readonly_field, ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp,
+    PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode,
+    UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -45,7 +45,7 @@ const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
 //#endregion 🔖Constants
 
 //#region 🔖Types
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Gis2dPlayRuntime {
     #[serde(default)]
@@ -56,10 +56,49 @@ struct Gis2dPlayRuntime {
     map_fixture_json: String,
     #[serde(default = "default_map_camera_json")]
     camera_json: String,
+    #[serde(default = "default_render_mode")]
+    render_mode: String,
+    #[serde(default = "default_vector_style")]
+    vector_style: String,
+    #[serde(default = "default_lod_mode")]
+    lod_mode: String,
+    #[serde(default = "default_feature_selection_json")]
+    feature_selection_json: String,
 }
 
 fn default_map_camera_json() -> String {
     r#"{"x":0,"y":0,"zoom":1}"#.into()
+}
+
+fn default_render_mode() -> String {
+    "combined".into()
+}
+
+fn default_vector_style() -> String {
+    "colored".into()
+}
+
+fn default_lod_mode() -> String {
+    GIS_MAP_LOD_MODE_AUTOMATIC.into()
+}
+
+fn default_feature_selection_json() -> String {
+    r#"{"positions":[],"routes":[]}"#.into()
+}
+
+impl Default for Gis2dPlayRuntime {
+    fn default() -> Self {
+        Self {
+            selected_ids: Vec::new(),
+            layer_visibility: HashMap::new(),
+            map_fixture_json: String::new(),
+            camera_json: default_map_camera_json(),
+            render_mode: default_render_mode(),
+            vector_style: default_vector_style(),
+            lod_mode: default_lod_mode(),
+            feature_selection_json: default_feature_selection_json(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -119,7 +158,26 @@ fn map_host_from_play(play: &Gis2dPlayEnvelope) -> MapHost {
         let zoom = camera.get("zoom").and_then(|value| value.as_f64()).unwrap_or(1.0);
         host.set_camera(x, y, zoom);
     }
+    host.set_render_mode(&play.runtime.render_mode);
+    host.set_vector_style(&play.runtime.vector_style);
+    host.set_lod_mode(&play.runtime.lod_mode);
+    let _ = host.set_selection_json(&play.runtime.feature_selection_json);
     host
+}
+
+fn parse_feature_hit(hit_json: &str) -> Value {
+    let hit: Value = serde_json::from_str(hit_json).unwrap_or(Value::Null);
+    let (Some(kind), Some(id)) = (
+        hit.get("kind").and_then(|value| value.as_str()),
+        hit.get("id").and_then(|value| value.as_str()),
+    ) else {
+        return json!({ "positions": [], "routes": [] });
+    };
+    match kind {
+        "position" => json!({ "positions": [id], "routes": [] }),
+        "route" => json!({ "positions": [], "routes": [id] }),
+        _ => json!({ "positions": [], "routes": [] }),
+    }
 }
 
 fn map_canvas_layers(play: &Gis2dPlayEnvelope) -> String {
@@ -386,16 +444,98 @@ fn build_catalogue_tree(play: &Gis2dPlayEnvelope) -> UiNode {
     })
 }
 
+fn map_view_field_group(play: &Gis2dPlayEnvelope) -> UiInspectorFieldGroup {
+    let lod_items: Vec<UiSelectItem> = std::iter::once(UiSelectItem {
+        value: GIS_MAP_LOD_MODE_AUTOMATIC.into(),
+        label: "Automatic".into(),
+    })
+    .chain(
+        serde_json::from_str::<Vec<Value>>(&gis_map_lod_scale_json())
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|lod| {
+                let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
+                let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
+                Some(UiSelectItem { value: id, label: name })
+            }),
+    )
+    .collect();
+    let selection: Value = serde_json::from_str(&play.runtime.feature_selection_json).unwrap_or(json!({"positions":[],"routes":[]}));
+    let selected_count = selection.get("positions").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
+        + selection.get("routes").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0);
+    UiInspectorFieldGroup {
+        id: "gis2d-play-inspector.map-view".into(),
+        label: "Map View".into(),
+        default_open: Some(true),
+        fields: vec![
+            UiNode::Field(UiFieldNode {
+                id: "gis2d-play-inspector.render-mode".into(),
+                label: "Render Mode".into(),
+                child: UiControlNode::Select(UiSelectNode {
+                    id: "gis2d-play-inspector.render-mode.select".into(),
+                    value: play.runtime.render_mode.clone(),
+                    items: vec![
+                        UiSelectItem { value: "image".into(), label: "Image".into() },
+                        UiSelectItem { value: "vector".into(), label: "Vector".into() },
+                        UiSelectItem { value: "combined".into(), label: "Combined".into() },
+                    ],
+                    placeholder: None,
+                    on_change: gis2d_cmd("setRenderMode", None),
+                }),
+            }),
+            UiNode::Field(UiFieldNode {
+                id: "gis2d-play-inspector.vector-style".into(),
+                label: "Vector Style".into(),
+                child: UiControlNode::Select(UiSelectNode {
+                    id: "gis2d-play-inspector.vector-style.select".into(),
+                    value: play.runtime.vector_style.clone(),
+                    items: vec![
+                        UiSelectItem { value: "colored".into(), label: "Colored".into() },
+                        UiSelectItem { value: "figureGround".into(), label: "Figure Ground".into() },
+                        UiSelectItem { value: "invertedFigure".into(), label: "Inverted Figure".into() },
+                    ],
+                    placeholder: None,
+                    on_change: gis2d_cmd("setVectorStyle", None),
+                }),
+            }),
+            UiNode::Field(UiFieldNode {
+                id: "gis2d-play-inspector.lod-mode".into(),
+                label: "LOD Mode".into(),
+                child: UiControlNode::Select(UiSelectNode {
+                    id: "gis2d-play-inspector.lod-mode.select".into(),
+                    value: play.runtime.lod_mode.clone(),
+                    items: lod_items,
+                    placeholder: None,
+                    on_change: gis2d_cmd("setLodMode", None),
+                }),
+            }),
+            ui_inspector_readonly_field("gis2d-play-inspector.feature-selection", "Selected Features", selected_count.to_string()),
+        ],
+    }
+}
+
 fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
+    let map_view_group = map_view_field_group(play);
     if play.runtime.selected_ids.is_empty() {
         let visible_count = GIS_MAP_LAYER_IDS
             .iter()
             .filter(|(id, _, _)| layer_visible(&play.runtime, id))
             .count();
-        return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {}", GIS_MAP_SCHEMA)),
-            ui_text(format!("Layers visible: {visible_count}/{}", GIS_MAP_LAYER_IDS.len())),
-            ui_text("Select a map layer in the hierarchy."),
+        return ui_inspector_groups_to_tree(&[
+            map_view_group,
+            UiInspectorFieldGroup {
+                id: "gis2d-play-inspector.summary".into(),
+                label: "Map Layer".into(),
+                default_open: Some(true),
+                fields: vec![
+                    ui_inspector_readonly_field("gis2d-play-inspector.schema", "Schema", GIS_MAP_SCHEMA.to_string()),
+                    ui_inspector_readonly_field(
+                        "gis2d-play-inspector.visible-count",
+                        "Layers visible",
+                        format!("{visible_count}/{}", GIS_MAP_LAYER_IDS.len()),
+                    ),
+                ],
+            },
         ]);
     }
     let layer_id = &play.runtime.selected_ids[0];
@@ -406,26 +546,29 @@ fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
         .unwrap_or(layer_id.as_str());
     let visible = layer_visible(&play.runtime, layer_id);
     let mixed = ui_inspector_mixed_toggle(&[visible]);
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "gis2d-play-inspector.layer".into(),
-        label: "Map Layer".into(),
-        default_open: Some(true),
-        fields: vec![
-            ui_inspector_readonly_field("gis2d-play-inspector.id", "Id", layer_id.clone()),
-            ui_inspector_readonly_field("gis2d-play-inspector.label", "Label", label.to_string()),
-            UiNode::Field(UiFieldNode {
-                id: "gis2d-play-inspector.visible".into(),
-                label: "Visible".into(),
-                child: UiControlNode::Toggle(UiToggleNode {
-                    id: "gis2d-play-inspector.visible.toggle".into(),
-                    icon_id: "eye".into(),
-                    pressed: mixed.uniform && mixed.pressed,
-                    text: None,
-                    on_change: gis2d_cmd("toggleLayerVisibility", Some(json!({ "layerId": layer_id }))),
+    ui_inspector_groups_to_tree(&[
+        map_view_group,
+        UiInspectorFieldGroup {
+            id: "gis2d-play-inspector.layer".into(),
+            label: "Map Layer".into(),
+            default_open: Some(true),
+            fields: vec![
+                ui_inspector_readonly_field("gis2d-play-inspector.id", "Id", layer_id.clone()),
+                ui_inspector_readonly_field("gis2d-play-inspector.label", "Label", label.to_string()),
+                UiNode::Field(UiFieldNode {
+                    id: "gis2d-play-inspector.visible".into(),
+                    label: "Visible".into(),
+                    child: UiControlNode::Toggle(UiToggleNode {
+                        id: "gis2d-play-inspector.visible.toggle".into(),
+                        icon_id: "eye".into(),
+                        pressed: mixed.uniform && mixed.pressed,
+                        text: None,
+                        on_change: gis2d_cmd("toggleLayerVisibility", Some(json!({ "layerId": layer_id }))),
+                    }),
                 }),
-            }),
-        ],
-    }])
+            ],
+        },
+    ])
 }
 //#endregion 🔖Panels
 
@@ -583,6 +726,76 @@ impl PluginApp for Gis2dPlayApp {
                 play.runtime.camera_json = host.camera_json();
                 return vec![set_document_op(&play)];
             }
+            "setRenderMode" => {
+                if let Some(mode) = args.and_then(|value| value.get("mode").or_else(|| value.get("value"))).and_then(|value| value.as_str()) {
+                    play.runtime.render_mode = mode.into();
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "setVectorStyle" => {
+                if let Some(style) = args.and_then(|value| value.get("style").or_else(|| value.get("value"))).and_then(|value| value.as_str()) {
+                    play.runtime.vector_style = style.into();
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "setLodMode" => {
+                if let Some(mode) = args.and_then(|value| value.get("mode").or_else(|| value.get("value"))).and_then(|value| value.as_str()) {
+                    play.runtime.lod_mode = mode.into();
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "hitTestFeature" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let host = map_host_from_play(&play);
+                play.runtime.feature_selection_json = parse_feature_hit(&host.hit_test_feature_json(x, y)).to_string();
+                return vec![set_document_op(&play)];
+            }
+            "setFeatureSelection" => {
+                let selection = json!({
+                    "positions": args.and_then(|value| value.get("positions")).cloned().unwrap_or_else(|| json!([])),
+                    "routes": args.and_then(|value| value.get("routes")).cloned().unwrap_or_else(|| json!([])),
+                });
+                let mut host = map_host_from_play(&play);
+                if host.set_selection_json(&selection.to_string()).is_ok() {
+                    play.runtime.feature_selection_json = selection.to_string();
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "patchRoutes" | "patchRoute" => {
+                let route_ids: Vec<String> = if command == "patchRoute" {
+                    args.and_then(|value| value.get("routeId"))
+                        .and_then(|value| value.as_str())
+                        .map(|id| vec![id.to_string()])
+                        .unwrap_or_default()
+                } else {
+                    args.and_then(|value| value.get("routeIds"))
+                        .and_then(|value| serde_json::from_value(value.clone()).ok())
+                        .unwrap_or_default()
+                };
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str());
+                let value = args.and_then(|value| value.get("value"));
+                if let (false, Some(field), Some(value)) = (route_ids.is_empty(), field, value) {
+                    let mut descriptor: Value = serde_json::from_str(&play.runtime.map_fixture_json)
+                        .unwrap_or_else(|_| json!({ "positions": [], "routes": [], "regions": [] }));
+                    if let Some(routes) = descriptor.get_mut("routes").and_then(|value| value.as_array_mut()) {
+                        for route in routes.iter_mut() {
+                            let matches = route
+                                .get("id")
+                                .and_then(|value| value.as_str())
+                                .map(|id| route_ids.iter().any(|route_id| route_id == id))
+                                .unwrap_or(false);
+                            if matches {
+                                if let Some(object) = route.as_object_mut() {
+                                    object.insert(field.into(), value.clone());
+                                }
+                            }
+                        }
+                    }
+                    play.runtime.map_fixture_json = descriptor.to_string();
+                    return vec![set_document_op(&play)];
+                }
+            }
             _ => {}
         }
         Vec::new()
@@ -732,6 +945,93 @@ mod tests {
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert!(!layer_visible(&next.runtime, "raster"));
+    }
+
+    #[test]
+    fn set_render_mode_vector_style_lod_mode_persist() {
+        let mut app = Gis2dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("setRenderMode", Some(&json!({ "mode": "vector" })), &document, &ViewState::default());
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert_eq!(next.runtime.render_mode, "vector");
+        let document = serde_json::to_string(&next).unwrap();
+
+        let ops = app.handle_command("setVectorStyle", Some(&json!({ "style": "figureGround" })), &document, &ViewState::default());
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert_eq!(next.runtime.vector_style, "figureGround");
+        let document = serde_json::to_string(&next).unwrap();
+
+        let ops = app.handle_command("setLodMode", Some(&json!({ "mode": "city" })), &document, &ViewState::default());
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert_eq!(next.runtime.lod_mode, "city");
+
+        let host = map_host_from_play(&next);
+        assert_eq!(host.render_mode_str(), "vector");
+        assert_eq!(host.vector_style_str(), "figureGround");
+    }
+
+    #[test]
+    fn set_feature_selection_updates_runtime_and_host() {
+        let mut app = Gis2dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "setFeatureSelection",
+            Some(&json!({ "positions": ["p_institut_de_botanique_ulg_liege"], "routes": [] })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let selection: Value = serde_json::from_str(&next.runtime.feature_selection_json).unwrap();
+        assert_eq!(selection["positions"], json!(["p_institut_de_botanique_ulg_liege"]));
+    }
+
+    #[test]
+    fn hit_test_feature_with_no_match_clears_selection() {
+        let mut app = Gis2dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "hitTestFeature",
+            Some(&json!({ "x": -99999.0, "y": -99999.0 })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let selection: Value = serde_json::from_str(&next.runtime.feature_selection_json).unwrap();
+        assert_eq!(selection, json!({ "positions": [], "routes": [] }));
+    }
+
+    #[test]
+    fn patch_route_updates_matching_route_field() {
+        let mut app = Gis2dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "patchRoute",
+            Some(&json!({
+                "routeId": "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0",
+                "field": "label",
+                "value": "Renamed Route",
+            })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let descriptor: Value = serde_json::from_str(&next.runtime.map_fixture_json).unwrap();
+        let route = descriptor["routes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|route| route["id"] == "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0")
+            .unwrap();
+        assert_eq!(route["label"], "Renamed Route");
     }
 }
 //#endregion 🧪Tests

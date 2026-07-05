@@ -1,17 +1,17 @@
 //! 📐 Layout plugin — blueprint/preview document editor bundled as a hot-swappable WASM component.
 
+use base64::Engine;
 use layout_rs::{
-    export_document_svg, parse_layout_document, resolve_page, Frame, LayoutBounds, LayoutCamera, LayoutDocument,
-    LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins,
+    export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, parse_layout_document,
+    resolve_page, Frame, LayoutCamera, LayoutDocument, LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins,
 };
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene,
+    CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
+    UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
     FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -52,8 +52,6 @@ struct LayoutPlayRuntime {
     hovered_id: Option<String>,
     #[serde(default)]
     pan_drag: Option<LayoutPanDrag>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    last_export_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -73,7 +71,6 @@ impl Default for LayoutPlayRuntime {
             selected_ids: Vec::new(),
             hovered_id: None,
             pan_drag: None,
-            last_export_json: None,
         }
     }
 }
@@ -151,6 +148,10 @@ fn set_document_op(envelope: &LayoutPlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
 }
 
+fn download_media_export_op(filename: &str, mime_type: &str, data: &str) -> String {
+    json!({ "op": "downloadMediaExport", "filename": filename, "mimeType": mime_type, "data": data }).to_string()
+}
+
 fn layout_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
     CommandDescriptor {
         controller_id: LAYOUT_PLAY_APP_ID.into(),
@@ -204,6 +205,25 @@ fn story_excerpt(doc: &LayoutDocument, story_id: &str, max_len: usize) -> Option
         .find(|story| story.id == story_id)
         .map(|story| story.content.chars().take(max_len).collect::<String>())
         .filter(|text| !text.is_empty())
+}
+
+fn story_full_content(doc: &LayoutDocument, story_id: &str) -> String {
+    doc.stories.iter().find(|story| story.id == story_id).map(|story| story.content.clone()).unwrap_or_default()
+}
+
+fn link_path(doc: &LayoutDocument, link_id: &str) -> String {
+    doc.links.iter().find(|link| link.id == link_id).map(|link| link.path.clone()).unwrap_or_default()
+}
+
+fn rgba_to_text(color: &Option<[f32; 4]>) -> String {
+    color
+        .map(|channels| channels.iter().map(|channel| channel.to_string()).collect::<Vec<_>>().join(", "))
+        .unwrap_or_default()
+}
+
+fn text_to_rgba(text: &str) -> Option<[f32; 4]> {
+    let parts: Vec<f32> = text.split(',').filter_map(|part| part.trim().parse::<f32>().ok()).collect();
+    (parts.len() == 4).then(|| [parts[0], parts[1], parts[2], parts[3]])
 }
 
 fn frame_layer_content(doc: &LayoutDocument, frame: &Frame) -> (Option<[f32; 4]>, Option<[f32; 4]>, Option<String>, Option<String>, Option<String>) {
@@ -525,33 +545,60 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
     }
     let selected_id = &play.runtime.selected_ids[0];
     if let Some(page) = doc.pages.iter().find(|page| page.id == *selected_id) {
+        let mut fields = vec![
+            ui_inspector_readonly_field("layout-play-inspector.page-id", "Id", page.id.clone()),
+            UiNode::Field(UiFieldNode {
+                id: "layout-play-inspector.page-name".into(),
+                label: "Name".into(),
+                child: UiControlNode::Input(UiInputNode {
+                    id: "layout-play-inspector.page-name.input".into(),
+                    input_kind: "text".into(),
+                    value: page.name.clone(),
+                    placeholder: None,
+                    commit: Some("blur".into()),
+                    on_change: layout_cmd("patchPage", Some(json!({ "pageId": page.id, "field": "name" }))),
+                }),
+            }),
+        ];
+        for (field, label, value) in [
+            ("width", "Width", page.width),
+            ("height", "Height", page.height),
+            ("marginTop", "Margin Top", page.margins.top),
+            ("marginRight", "Margin Right", page.margins.right),
+            ("marginBottom", "Margin Bottom", page.margins.bottom),
+            ("marginLeft", "Margin Left", page.margins.left),
+            ("columnsGutter", "Gutter", page.columns.gutter),
+        ] {
+            fields.push(UiNode::Field(UiFieldNode {
+                id: format!("layout-play-inspector.page-{field}"),
+                label: label.into(),
+                child: UiControlNode::Input(UiInputNode {
+                    id: format!("layout-play-inspector.page-{field}.input"),
+                    input_kind: "number".into(),
+                    value: format!("{value}"),
+                    placeholder: None,
+                    commit: Some("blur".into()),
+                    on_change: layout_cmd("patchPage", Some(json!({ "pageId": page.id, "field": field }))),
+                }),
+            }));
+        }
+        fields.push(UiNode::Field(UiFieldNode {
+            id: "layout-play-inspector.page-columnsCount".into(),
+            label: "Columns".into(),
+            child: UiControlNode::Input(UiInputNode {
+                id: "layout-play-inspector.page-columnsCount.input".into(),
+                input_kind: "number".into(),
+                value: format!("{}", page.columns.count),
+                placeholder: None,
+                commit: Some("blur".into()),
+                on_change: layout_cmd("patchPage", Some(json!({ "pageId": page.id, "field": "columnsCount" }))),
+            }),
+        }));
         return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
             id: "layout-play-inspector.page".into(),
             label: "Page".into(),
             default_open: Some(true),
-            fields: vec![
-                ui_inspector_readonly_field("layout-play-inspector.page-id", "Id", page.id.clone()),
-                UiNode::Field(UiFieldNode {
-                    id: "layout-play-inspector.page-name".into(),
-                    label: "Name".into(),
-                    child: UiControlNode::Input(UiInputNode {
-                        id: "layout-play-inspector.page-name.input".into(),
-                        input_kind: "text".into(),
-                        value: page.name.clone(),
-                        placeholder: None,
-                        commit: Some("blur".into()),
-                        on_change: layout_cmd(
-                            "patchPage",
-                            Some(json!({ "pageId": page.id, "field": "name" })),
-                        ),
-                    }),
-                }),
-                ui_inspector_readonly_field(
-                    "layout-play-inspector.page-size",
-                    "Size",
-                    format!("{} × {}", page.width as i64, page.height as i64),
-                ),
-            ],
+            fields,
         }]);
     }
     for page in &doc.pages {
@@ -587,13 +634,92 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
                     }),
                 }));
             }
-            if let Frame::Text { story_id, .. } = frame {
-                if let Some(excerpt) = story_excerpt(doc, story_id, 240) {
-                    fields.push(ui_inspector_readonly_field(
-                        "layout-play-inspector.frame-story",
-                        "Story",
-                        excerpt,
-                    ));
+            match frame {
+                Frame::Rect { fill, stroke, .. } => {
+                    for (field, label, value) in [("fill", "Fill", fill), ("stroke", "Stroke", stroke)] {
+                        fields.push(UiNode::Field(UiFieldNode {
+                            id: format!("layout-play-inspector.frame-{field}"),
+                            label: label.into(),
+                            child: UiControlNode::Input(UiInputNode {
+                                id: format!("layout-play-inspector.frame-{field}.input"),
+                                input_kind: "text".into(),
+                                value: rgba_to_text(value),
+                                placeholder: Some("r, g, b, a".into()),
+                                commit: Some("blur".into()),
+                                on_change: layout_cmd(
+                                    "patchFrame",
+                                    Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field })),
+                                ),
+                            }),
+                        }));
+                    }
+                }
+                Frame::Text { story_id, wrap_mode, columns, .. } => {
+                    fields.push(UiNode::Field(UiFieldNode {
+                        id: "layout-play-inspector.frame-story".into(),
+                        label: "Story".into(),
+                        child: UiControlNode::Input(UiInputNode {
+                            id: "layout-play-inspector.frame-story.input".into(),
+                            input_kind: "text".into(),
+                            value: story_full_content(doc, story_id),
+                            placeholder: None,
+                            commit: Some("blur".into()),
+                            on_change: layout_cmd(
+                                "patchFrame",
+                                Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "storyContent" })),
+                            ),
+                        }),
+                    }));
+                    fields.push(UiNode::Field(UiFieldNode {
+                        id: "layout-play-inspector.frame-wrapMode".into(),
+                        label: "Wrap Mode".into(),
+                        child: UiControlNode::Select(UiSelectNode {
+                            id: "layout-play-inspector.frame-wrapMode.select".into(),
+                            value: wrap_mode.clone(),
+                            items: vec![
+                                UiSelectItem { value: "none".into(), label: "None".into() },
+                                UiSelectItem { value: "box".into(), label: "Box".into() },
+                                UiSelectItem { value: "contour".into(), label: "Contour".into() },
+                            ],
+                            placeholder: None,
+                            on_change: layout_cmd(
+                                "patchFrame",
+                                Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "wrapMode" })),
+                            ),
+                        }),
+                    }));
+                    fields.push(UiNode::Field(UiFieldNode {
+                        id: "layout-play-inspector.frame-columns".into(),
+                        label: "Columns".into(),
+                        child: UiControlNode::Input(UiInputNode {
+                            id: "layout-play-inspector.frame-columns.input".into(),
+                            input_kind: "number".into(),
+                            value: format!("{columns}"),
+                            placeholder: None,
+                            commit: Some("blur".into()),
+                            on_change: layout_cmd(
+                                "patchFrame",
+                                Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "columns" })),
+                            ),
+                        }),
+                    }));
+                }
+                Frame::Image { link_id, .. } => {
+                    fields.push(UiNode::Field(UiFieldNode {
+                        id: "layout-play-inspector.frame-linkPath".into(),
+                        label: "Link Path".into(),
+                        child: UiControlNode::Input(UiInputNode {
+                            id: "layout-play-inspector.frame-linkPath.input".into(),
+                            input_kind: "text".into(),
+                            value: link_path(doc, link_id),
+                            placeholder: None,
+                            commit: Some("blur".into()),
+                            on_change: layout_cmd(
+                                "patchFrame",
+                                Some(json!({ "frameId": frame_id, "pageId": page_id, "field": "linkPath" })),
+                            ),
+                        }),
+                    }));
                 }
             }
             let _ = name_mixed;
@@ -770,7 +896,6 @@ impl PluginApp for LayoutPlayApp {
                         "text" => Frame::Text {
                             id: frame_id.clone(),
                             layer_id,
-                            kind: "text".into(),
                             bounds: layout_rs::LayoutBounds {
                                 x: 48.0,
                                 y: 120.0,
@@ -789,7 +914,6 @@ impl PluginApp for LayoutPlayApp {
                         "image" => Frame::Image {
                             id: frame_id.clone(),
                             layer_id,
-                            kind: "image".into(),
                             bounds: layout_rs::LayoutBounds {
                                 x: 48.0,
                                 y: 280.0,
@@ -804,7 +928,6 @@ impl PluginApp for LayoutPlayApp {
                         _ => Frame::Rect {
                             id: frame_id.clone(),
                             layer_id,
-                            kind: "rect".into(),
                             bounds: layout_rs::LayoutBounds {
                                 x: 48.0,
                                 y: 48.0,
@@ -893,24 +1016,54 @@ impl PluginApp for LayoutPlayApp {
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
                     .unwrap_or_else(|| play.runtime.active_page_id.clone());
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args.and_then(|value| value.get("value"));
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
+                let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 push_undo(&mut play);
                 if let Some(page) = play.document.pages.iter_mut().find(|page| page.id == page_id) {
-                    match field {
+                    match field.as_str() {
                         "name" => {
-                            if let Some(name) = value.and_then(|entry| entry.as_str()) {
+                            if let Some(name) = value.as_str() {
                                 page.name = name.into();
                             }
                         }
                         "width" => {
-                            if let Some(width) = value.and_then(|entry| entry.as_f64()) {
+                            if let Some(width) = value.as_f64() {
                                 page.width = width;
                             }
                         }
                         "height" => {
-                            if let Some(height) = value.and_then(|entry| entry.as_f64()) {
+                            if let Some(height) = value.as_f64() {
                                 page.height = height;
+                            }
+                        }
+                        "marginTop" => {
+                            if let Some(margin) = value.as_f64() {
+                                page.margins.top = margin;
+                            }
+                        }
+                        "marginRight" => {
+                            if let Some(margin) = value.as_f64() {
+                                page.margins.right = margin;
+                            }
+                        }
+                        "marginBottom" => {
+                            if let Some(margin) = value.as_f64() {
+                                page.margins.bottom = margin;
+                            }
+                        }
+                        "marginLeft" => {
+                            if let Some(margin) = value.as_f64() {
+                                page.margins.left = margin;
+                            }
+                        }
+                        "columnsCount" => {
+                            if let Some(count) = value.as_f64() {
+                                page.columns.count = count.max(0.0) as u32;
+                            }
+                        }
+                        "columnsGutter" => {
+                            if let Some(gutter) = value.as_f64() {
+                                page.columns.gutter = gutter;
                             }
                         }
                         _ => {}
@@ -919,52 +1072,132 @@ impl PluginApp for LayoutPlayApp {
                 }
             }
             "patchFrame" => {
-                let frame_id = args.and_then(|value| value.get("frameId")).and_then(|value| value.as_str()).unwrap_or("");
+                let frame_id = args.and_then(|value| value.get("frameId")).and_then(|value| value.as_str()).unwrap_or("").to_string();
                 let page_id = args
                     .and_then(|value| value.get("pageId"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
                     .unwrap_or_else(|| play.runtime.active_page_id.clone());
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64());
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
+                let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 if frame_id.is_empty() {
                     return Vec::new();
                 }
+                let Some(page_index) = play.document.pages.iter().position(|page| page.id == page_id) else {
+                    return Vec::new();
+                };
+                let Some(frame_index) = play.document.pages[page_index].frames.iter().position(|frame| frame.id() == frame_id) else {
+                    return Vec::new();
+                };
                 push_undo(&mut play);
-                if let Some(page) = play.document.pages.iter_mut().find(|page| page.id == page_id) {
-                    if let Some(frame) = page.frames.iter_mut().find(|frame| frame.id() == frame_id) {
-                        if let Some(value) = value {
-                            patch_frame_bounds(frame, field, value);
+                match field.as_str() {
+                    "x" | "y" | "width" | "w" | "height" | "h" => {
+                        if let Some(number) = value.as_f64() {
+                            patch_frame_bounds(&mut play.document.pages[page_index].frames[frame_index], &field, number);
                         }
-                        return vec![set_document_op(&play)];
                     }
+                    "fill" | "stroke" => {
+                        if let Frame::Rect { fill, stroke, .. } = &mut play.document.pages[page_index].frames[frame_index] {
+                            let rgba = text_to_rgba(value.as_str().unwrap_or(""));
+                            if field == "fill" {
+                                *fill = rgba;
+                            } else {
+                                *stroke = rgba;
+                            }
+                        }
+                    }
+                    "wrapMode" => {
+                        if let (Frame::Text { wrap_mode, .. }, Some(mode)) =
+                            (&mut play.document.pages[page_index].frames[frame_index], value.as_str())
+                        {
+                            *wrap_mode = mode.into();
+                        }
+                    }
+                    "columns" => {
+                        if let (Frame::Text { columns, .. }, Some(count)) =
+                            (&mut play.document.pages[page_index].frames[frame_index], value.as_f64())
+                        {
+                            *columns = count.max(0.0) as u32;
+                        }
+                    }
+                    "storyContent" => {
+                        let story_id = match &play.document.pages[page_index].frames[frame_index] {
+                            Frame::Text { story_id, .. } => Some(story_id.clone()),
+                            _ => None,
+                        };
+                        if let (Some(story_id), Some(content)) = (story_id, value.as_str()) {
+                            if let Some(story) = play.document.stories.iter_mut().find(|story| story.id == story_id) {
+                                story.content = content.into();
+                            }
+                        }
+                    }
+                    "linkPath" => {
+                        let link_id = match &play.document.pages[page_index].frames[frame_index] {
+                            Frame::Image { link_id, .. } => Some(link_id.clone()),
+                            _ => None,
+                        };
+                        if let (Some(link_id), Some(path)) = (link_id, value.as_str()) {
+                            if let Some(link) = play.document.links.iter_mut().find(|link| link.id == link_id) {
+                                link.path = path.into();
+                            }
+                        }
+                    }
+                    _ => {}
                 }
+                return vec![set_document_op(&play)];
             }
-            "exportPng" | "exportSvg" => {
+            "exportPng" => {
                 let page_id = args
                     .and_then(|value| value.get("pageId"))
                     .and_then(|value| value.as_str())
-                    .unwrap_or(play.runtime.active_page_id.as_str());
-                let payload = if command == "exportSvg" {
-                    export_document_svg(&play.document, page_id)
-                        .map(|svg| json!({ "format": "svg", "pageId": page_id, "svg": svg }))
-                        .unwrap_or_else(|error| {
-                            json!({
-                                "format": "svg",
-                                "pageId": page_id,
-                                "error": error,
-                                "document": play.document,
-                            })
-                        })
-                } else {
-                    json!({
-                        "format": "png",
-                        "pageId": page_id,
-                        "document": play.document,
-                    })
+                    .unwrap_or(play.runtime.active_page_id.as_str())
+                    .to_string();
+                return match export_document_png_cpu(&play.document, &page_id) {
+                    Ok(bytes) => vec![download_media_export_op(
+                        &format!("{page_id}.png"),
+                        "image/png",
+                        &base64::engine::general_purpose::STANDARD.encode(bytes),
+                    )],
+                    Err(_) => Vec::new(),
                 };
-                play.runtime.last_export_json = Some(payload.to_string());
-                return vec![set_document_op(&play)];
+            }
+            "exportSvg" => {
+                let page_id = args
+                    .and_then(|value| value.get("pageId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or(play.runtime.active_page_id.as_str())
+                    .to_string();
+                return match export_document_svg(&play.document, &page_id) {
+                    Ok(svg) => vec![download_media_export_op(&format!("{page_id}.svg"), "image/svg+xml", &svg)],
+                    Err(_) => Vec::new(),
+                };
+            }
+            "exportPdf" => {
+                let page_id = args
+                    .and_then(|value| value.get("pageId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or(play.runtime.active_page_id.as_str())
+                    .to_string();
+                return match export_document_pdf(&play.document, &page_id) {
+                    Ok(bytes) => vec![download_media_export_op(
+                        &format!("{page_id}.pdf"),
+                        "application/pdf",
+                        &base64::engine::general_purpose::STANDARD.encode(bytes),
+                    )],
+                    Err(_) => Vec::new(),
+                };
+            }
+            "exportPackage" => {
+                let preflight_json = serde_json::to_string(&run_layout_preflight(&play.document)).unwrap_or_else(|_| "[]".into());
+                let doc_json = serde_json::to_string(&play.document).unwrap_or_default();
+                return match export_package_zip(&doc_json, &preflight_json) {
+                    Ok(bytes) => vec![download_media_export_op(
+                        &format!("{}.layout-package.zip", play.document.name),
+                        "application/zip",
+                        &base64::engine::general_purpose::STANDARD.encode(bytes),
+                    )],
+                    Err(_) => Vec::new(),
+                };
             }
             "canvasPointerDown" => {
                 let blueprint = surface_is_blueprint(args);
@@ -1186,6 +1419,127 @@ mod tests {
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.document.pages[0].frames.len(), before_count + 1);
+    }
+
+    #[test]
+    fn patch_page_supports_margins_and_columns() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        for (field, value) in [
+            ("marginTop", 60.0),
+            ("marginRight", 40.0),
+            ("marginBottom", 60.0),
+            ("marginLeft", 40.0),
+            ("columnsGutter", 18.0),
+        ] {
+            let ops = app.handle_command(
+                "patchPage",
+                Some(&json!({ "pageId": "page-1", "field": field, "value": value })),
+                &document,
+                &ViewState::default(),
+            );
+            assert_eq!(ops.len(), 1, "field {field} should apply");
+        }
+        let ops = app.handle_command(
+            "patchPage",
+            Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })),
+            &document,
+            &ViewState::default(),
+        );
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let page = next.document.pages.iter().find(|page| page.id == "page-1").unwrap();
+        assert_eq!(page.columns.count, 3);
+    }
+
+    #[test]
+    fn patch_frame_supports_rect_fill_and_stroke() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let after_add: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let document = serde_json::to_string(&after_add).unwrap();
+        let frame_id = after_add.runtime.selected_ids[0].clone();
+
+        let ops = app.handle_command(
+            "patchFrame",
+            Some(&json!({ "frameId": frame_id, "pageId": "page-1", "field": "fill", "value": "0.5, 0.4, 0.3, 1" })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let frame = next.document.pages[0].frames.iter().find(|frame| frame.id() == frame_id).unwrap();
+        let Frame::Rect { fill, .. } = frame else { panic!("expected rect frame") };
+        assert_eq!(fill.unwrap(), [0.5, 0.4, 0.3, 1.0]);
+    }
+
+    #[test]
+    fn patch_frame_supports_text_story_content_and_wrap_mode() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "patchFrame",
+            Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "storyContent", "value": "Edited story body." })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let story = next.document.stories.iter().find(|story| story.id == "story-1").unwrap();
+        assert_eq!(story.content, "Edited story body.");
+
+        let document = serde_json::to_string(&next).unwrap();
+        let ops = app.handle_command(
+            "patchFrame",
+            Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "wrapMode", "value": "contour" })),
+            &document,
+            &ViewState::default(),
+        );
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let frame = next.document.pages[0].frames.iter().find(|frame| frame.id() == "frame-text-1").unwrap();
+        let Frame::Text { wrap_mode, .. } = frame else { panic!("expected text frame") };
+        assert_eq!(wrap_mode, "contour");
+    }
+
+    #[test]
+    fn patch_frame_supports_image_link_path() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "patchFrame",
+            Some(&json!({ "frameId": "frame-image-1", "pageId": "page-1", "field": "linkPath", "value": "assets/updated.png" })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let link = next.document.links.iter().find(|link| link.id == "link-missing").unwrap();
+        assert_eq!(link.path, "assets/updated.png");
+    }
+
+    #[test]
+    fn export_commands_wire_to_real_layout_rs_exporters() {
+        let mut app = LayoutPlayApp;
+        let document = app.initial_document_json();
+        for (command, mime_type) in [
+            ("exportPng", "image/png"),
+            ("exportSvg", "image/svg+xml"),
+            ("exportPdf", "application/pdf"),
+            ("exportPackage", "application/zip"),
+        ] {
+            let ops = app.handle_command(command, Some(&json!({ "pageId": "page-1" })), &document, &ViewState::default());
+            assert_eq!(ops.len(), 1, "{command} should emit a download op");
+            let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+            assert_eq!(payload["op"], "downloadMediaExport");
+            assert_eq!(payload["mimeType"], mime_type);
+            assert!(!payload["data"].as_str().unwrap_or("").is_empty());
+        }
     }
 }
 //#endregion 🧪Tests

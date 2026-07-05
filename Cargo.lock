@@ -3888,6 +3888,7 @@ dependencies = [
 name = "layout-plugin"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "layout_rs",
  "semio-framework-os",
  "semio-framework-plugin",

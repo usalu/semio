@@ -128,6 +128,8 @@ struct LowpolyPlayRuntime {
     world_camera: LowpolyWorldCamera,
     #[serde(default)]
     engagement_input: String,
+    #[serde(default)]
+    show_edges: bool,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -471,6 +473,7 @@ fn world_selection_json_for(
         object.insert("selectionMode".into(), json!(envelope.fixture.selection.mode));
         object.insert("activeObjectId".into(), json!(envelope.fixture.active_object_id));
         object.insert("gumballActive".into(), json!(gumball_active(envelope)));
+        object.insert("showEdges".into(), json!(runtime.show_edges));
         if let Some(target) = runtime.hovered_target.as_ref() {
             object.insert("hoveredComponent".into(), json!(target));
         }
@@ -505,15 +508,20 @@ fn world_instances_json(fixture: &LowpolyFixture, runtime: &LowpolyPlayRuntime) 
     let instances: Vec<Value> = fixture
         .objects
         .iter()
-        .map(|object| {
+        .enumerate()
+        .map(|(object_index, object)| {
             let selected = runtime.selected_object_ids.iter().any(|id| id == &object.id)
-                || object.id == fixture.active_object_id;
+                || (fixture.selection.mode == "mesh"
+                    && fixture
+                        .selection
+                        .ids
+                        .iter()
+                        .any(|id| *id as usize == object_index));
             let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str())
                 || runtime
                     .hovered_target
                     .as_ref()
-                    .and_then(|target| target.object_id.as_deref())
-                    == Some(object.id.as_str());
+                    .is_some_and(|target| target.object_id.as_deref() == Some(object.id.as_str()));
             let rotation = euler_degrees_to_quaternion(object.transform.rotation);
             json!({
                 "id": object.id,
@@ -996,6 +1004,14 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
                 pressed: None,
                 disabled: None,
                 command: Some(lowpoly_cmd("toggleSmooth", None)),
+            },
+            WindowEngagementOption {
+                id: "lowpoly.opt.show-edges".into(),
+                label: Some("Show Edges".into()),
+                icon_id: Some("git-commit-horizontal".into()),
+                pressed: Some(envelope.runtime.show_edges),
+                disabled: None,
+                command: Some(lowpoly_cmd("toggleShowEdges", None)),
             },
         ]),
         input: Some(WindowEngagementInput {
@@ -1557,11 +1573,26 @@ impl PluginApp for LowpolyPlayApp {
             }
             "toggleSelectionKind" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("mesh");
-                match kind {
-                    "vertex" => envelope.fixture.selection.targets.vertex = !envelope.fixture.selection.targets.vertex,
-                    "edge" => envelope.fixture.selection.targets.edge = !envelope.fixture.selection.targets.edge,
-                    "face" => envelope.fixture.selection.targets.face = !envelope.fixture.selection.targets.face,
-                    _ => envelope.fixture.selection.targets.mesh = !envelope.fixture.selection.targets.mesh,
+                let enabled = match kind {
+                    "vertex" => {
+                        envelope.fixture.selection.targets.vertex = !envelope.fixture.selection.targets.vertex;
+                        envelope.fixture.selection.targets.vertex
+                    }
+                    "edge" => {
+                        envelope.fixture.selection.targets.edge = !envelope.fixture.selection.targets.edge;
+                        envelope.fixture.selection.targets.edge
+                    }
+                    "face" => {
+                        envelope.fixture.selection.targets.face = !envelope.fixture.selection.targets.face;
+                        envelope.fixture.selection.targets.face
+                    }
+                    _ => {
+                        envelope.fixture.selection.targets.mesh = !envelope.fixture.selection.targets.mesh;
+                        envelope.fixture.selection.targets.mesh
+                    }
+                };
+                if enabled {
+                    envelope.fixture.selection.mode = LowpolyDocument::normalize_selection_mode(kind);
                 }
                 return vec![set_document_op(&envelope)];
             }
@@ -1787,6 +1818,10 @@ impl PluginApp for LowpolyPlayApp {
                     doc.sync_meshes_to_fixture()
                 });
             }
+            "toggleShowEdges" => {
+                envelope.runtime.show_edges = !envelope.runtime.show_edges;
+                return vec![set_document_op(&envelope)];
+            }
             "worldSelect" => {
                 let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
                 let ids: Vec<String> = args
@@ -1875,11 +1910,24 @@ impl PluginApp for LowpolyPlayApp {
                     .and_then(|value| value.get("granularity"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("mesh");
-                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_u64()).unwrap_or(0) as u32;
                 let merge = args
                     .and_then(|value| value.get("merge"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("replace");
+                if args
+                    .and_then(|value| value.get("id"))
+                    .map_or(true, |value| value.is_null())
+                {
+                    if merge == "replace" {
+                        envelope.fixture.selection.ids.clear();
+                        sync_selection_keys(&mut envelope.fixture);
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+                let id = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_u64())
+                    .unwrap_or(0) as u32;
                 apply_component_selection(&mut envelope, granularity, &[id], merge);
                 return vec![set_document_op(&envelope)];
             }
@@ -2306,6 +2354,27 @@ mod tests {
     }
 
     #[test]
+    fn world_pick_null_clears_selection() {
+        let mut app = LowpolyPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "worldPick",
+            Some(&json!({ "granularity": "vertex", "id": 2, "merge": "replace" })),
+            &document,
+            &ViewState::default(),
+        );
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let clear_ops = app.handle_command(
+            "worldPick",
+            Some(&json!({ "granularity": "vertex", "id": null, "merge": "replace" })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        let cleared: LowpolyPlayEnvelope = apply_ops(&envelope, &clear_ops);
+        assert!(cleared.fixture.selection.ids.is_empty());
+    }
+
+    #[test]
     fn world_pick_updates_selection() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
@@ -2521,6 +2590,35 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("lowpoly-layer:1"));
         assert!(json.contains("normal"));
+    }
+
+    #[test]
+    fn toggle_show_edges_round_trips_through_runtime_and_selection_json() {
+        let mut app = LowpolyPlayApp::default();
+        let envelope = parse_envelope(&app.initial_document_json());
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command("toggleShowEdges", None, &document, &ViewState::default());
+        let next = apply_ops(&envelope, &ops);
+        assert!(next.runtime.show_edges);
+        let selection_json = world_selection_json_for(&next, None, None);
+        let value: Value = serde_json::from_str(&selection_json).unwrap();
+        assert_eq!(value["showEdges"], json!(true));
+    }
+
+    #[test]
+    fn toggle_selection_kind_sets_mode_when_enabled() {
+        let mut app = LowpolyPlayApp::default();
+        let envelope = parse_envelope(&app.initial_document_json());
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command(
+            "toggleSelectionKind",
+            Some(&json!({ "kind": "vertex" })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = apply_ops(&envelope, &ops);
+        assert!(next.fixture.selection.targets.vertex);
+        assert_eq!(next.fixture.selection.mode, "vertex");
     }
 
     fn apply_ops(envelope: &LowpolyPlayEnvelope, ops: &[String]) -> LowpolyPlayEnvelope {

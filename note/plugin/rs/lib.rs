@@ -1244,9 +1244,17 @@ impl PluginApp for NoteApp {
                     .map(str::to_string);
                 return vec![set_document_op(&play)];
             }
-            "nudgeSelection" => {
-                let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+            "nudgeSelection" | "nudgeSelectionUp" | "nudgeSelectionDown" | "nudgeSelectionLeft" | "nudgeSelectionRight" => {
+                const NUDGE_STEP: f64 = 1.0;
+                let (default_dx, default_dy) = match command {
+                    "nudgeSelectionUp" => (0.0, -NUDGE_STEP),
+                    "nudgeSelectionDown" => (0.0, NUDGE_STEP),
+                    "nudgeSelectionLeft" => (-NUDGE_STEP, 0.0),
+                    "nudgeSelectionRight" => (NUDGE_STEP, 0.0),
+                    _ => (0.0, 0.0),
+                };
+                let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(default_dx);
+                let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(default_dy);
                 if play.selected_ids.is_empty() {
                     return Vec::new();
                 }
@@ -1468,10 +1476,10 @@ fn create_note_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("escape", "clearSelection")
-            .keybinding("up", "nudgeSelection")
-            .keybinding("down", "nudgeSelection")
-            .keybinding("left", "nudgeSelection")
-            .keybinding("right", "nudgeSelection"),
+            .keybinding("up", "nudgeSelectionUp")
+            .keybinding("down", "nudgeSelectionDown")
+            .keybinding("left", "nudgeSelectionLeft")
+            .keybinding("right", "nudgeSelectionRight"),
     )
     .example("empty", "Empty", serde_json::to_string(&empty_note_document()).unwrap())
     .example("semio", "Semio", SEMIO_EXAMPLE_JSON)
@@ -1539,6 +1547,32 @@ mod tests {
         );
         assert_eq!(ops.len(), 1);
         assert!(ops[0].contains("\"kind\":\"text\""));
+    }
+
+    #[test]
+    fn nudge_direction_commands_move_selection_without_args() {
+        let mut app = NoteApp;
+        let mut play = parse_envelope(&serde_json::to_string(&empty_note_document()).unwrap());
+        let block = create_block_by_kind("text");
+        let block_id = block_id(&block).to_string();
+        play.document.blocks.push(block);
+        play.selected_ids = vec![block_id.clone()];
+        let document = serde_json::to_string(&play).unwrap();
+
+        for (command, expected_dx, expected_dy) in [
+            ("nudgeSelectionUp", 0.0, -1.0),
+            ("nudgeSelectionDown", 0.0, 1.0),
+            ("nudgeSelectionLeft", -1.0, 0.0),
+            ("nudgeSelectionRight", 1.0, 0.0),
+        ] {
+            let ops = app.handle_command(command, None, &document, &ViewState::default());
+            assert_eq!(ops.len(), 1, "{command} should emit a setDocument op");
+            let updated: NotePlayEnvelope =
+                serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+            let moved = find_block(&updated.document.blocks, &block_id).unwrap();
+            let (x, y, ..) = block_bounds(moved);
+            assert_eq!((x, y), (expected_dx, expected_dy), "{command} moved block to unexpected position");
+        }
     }
 }
 //#endregion 🧪Tests

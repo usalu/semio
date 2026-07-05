@@ -11,7 +11,7 @@ use semio_framework_plugin::{
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -186,6 +186,10 @@ struct Puzzle5dDocument {
 struct Puzzle5dSelection {
     #[serde(default)]
     part_ids: Vec<String>,
+    #[serde(default)]
+    grip_ids: Vec<String>,
+    #[serde(default)]
+    fastener_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -205,6 +209,10 @@ struct Puzzle5dRuntime {
     brush_candidate_index: usize,
     #[serde(default = "default_overlap_budget")]
     overlap_budget: f64,
+    #[serde(default)]
+    object_kind_weights: HashMap<String, f64>,
+    #[serde(default)]
+    vortex_kind_weights: HashMap<String, f64>,
 }
 
 fn default_active_tool() -> String {
@@ -276,8 +284,29 @@ fn puzzle5d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
     }
 }
 
+const PUZZLE5D_GRIP_SCREEN_RADIUS: f64 = 4.0;
+
+fn grip_screen_position(part: &Puzzle5dPart, grip: &Puzzle5dGrip) -> (f64, f64) {
+    let offset = part.part_2d.radius.max(8.0);
+    (
+        part.part_2d.x + grip.grip_2d.angle.cos() * offset,
+        part.part_2d.y + grip.grip_2d.angle.sin() * offset,
+    )
+}
+
+fn resolve_grip_screen_position(document: &Puzzle5dDocument, full_id: &str) -> Option<(f64, f64)> {
+    for part in &document.parts {
+        for grip in &part.grips {
+            if puzzle5d_grip_full_id(&part.id, &grip.id) == full_id {
+                return Some(grip_screen_position(part, grip));
+            }
+        }
+    }
+    None
+}
+
 fn canvas_layers_json(document: &Puzzle5dDocument, selection: &Puzzle5dSelection) -> String {
-    let layers: Vec<Value> = document
+    let mut layers: Vec<Value> = document
         .parts
         .iter()
         .map(|part| {
@@ -297,6 +326,37 @@ fn canvas_layers_json(document: &Puzzle5dDocument, selection: &Puzzle5dSelection
             })
         })
         .collect();
+    for part in &document.parts {
+        for grip in &part.grips {
+            let full_id = puzzle5d_grip_full_id(&part.id, &grip.id);
+            let (x, y) = grip_screen_position(part, grip);
+            layers.push(json!({
+                "id": full_id,
+                "kind": "circle",
+                "x": x,
+                "y": y,
+                "radius": PUZZLE5D_GRIP_SCREEN_RADIUS,
+                "label": grip.grip_kind,
+                "selected": selection.grip_ids.contains(&full_id),
+            }));
+        }
+    }
+    for fastener in &document.fasteners {
+        if let (Some((x0, y0)), Some((x1, y1))) = (
+            resolve_grip_screen_position(document, &fastener.attracting),
+            resolve_grip_screen_position(document, &fastener.attracted),
+        ) {
+            layers.push(json!({
+                "id": fastener.id,
+                "kind": "line",
+                "x0": x0,
+                "y0": y0,
+                "x1": x1,
+                "y1": y1,
+                "selected": selection.fastener_ids.contains(&fastener.id),
+            }));
+        }
+    }
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 
@@ -389,6 +449,87 @@ fn puzzle5d_grip_full_id(part_id: &str, grip_id: &str) -> String {
     }
 }
 
+fn world_grip_position(part: &Puzzle5dPart, grip: &Puzzle5dGrip) -> [f64; 3] {
+    let orientation = part.part_3d.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+    let rotated = quat_rotate_vector(orientation, grip.grip_3d.position);
+    [
+        part.part_3d.origin.first().copied().unwrap_or(0.0) + rotated[0],
+        part.part_3d.origin.get(1).copied().unwrap_or(0.0) + rotated[1],
+        part.part_3d.origin.get(2).copied().unwrap_or(0.0) + rotated[2],
+    ]
+}
+
+fn world_grip_direction(part: &Puzzle5dPart, grip: &Puzzle5dGrip) -> [f64; 3] {
+    let direction = grip.grip_3d.direction.unwrap_or([0.0, 0.0, -1.0]);
+    quat_rotate_vector(part.part_3d.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), direction)
+}
+
+fn resolve_grip_world_position(document: &Puzzle5dDocument, full_id: &str) -> Option<[f64; 3]> {
+    for part in &document.parts {
+        for grip in &part.grips {
+            if puzzle5d_grip_full_id(&part.id, &grip.id) == full_id {
+                return Some(world_grip_position(part, grip));
+            }
+        }
+    }
+    None
+}
+
+fn grip_color(kind_catalogs: Option<&Value>, grip_kind: &str) -> String {
+    let Some(catalogs) = kind_catalogs else {
+        return "#38bdf8".into();
+    };
+    let Some(entries) = catalogs.get("grips").and_then(|value| value.as_array()) else {
+        return "#38bdf8".into();
+    };
+    for entry in entries {
+        if entry.get("id").and_then(|value| value.as_str()) == Some(grip_kind) {
+            return entry
+                .get("color")
+                .and_then(|value| value.as_str())
+                .unwrap_or("#38bdf8")
+                .to_string();
+        }
+    }
+    "#38bdf8".into()
+}
+
+fn world_grips_json(document: &Puzzle5dDocument) -> String {
+    let mut records = Vec::new();
+    for part in &document.parts {
+        for grip in &part.grips {
+            records.push(json!({
+                "fullId": puzzle5d_grip_full_id(&part.id, &grip.id),
+                "objectId": part.id,
+                "vortexKind": grip.grip_kind,
+                "position": world_grip_position(part, grip),
+                "direction": world_grip_direction(part, grip),
+                "radius": grip.grip_3d.radius.max(0.36),
+                "color": grip_color(document.kind_catalogs.as_ref(), &grip.grip_kind),
+            }));
+        }
+    }
+    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+}
+
+fn world_fasteners_json(document: &Puzzle5dDocument) -> String {
+    let records: Vec<Value> = document
+        .fasteners
+        .iter()
+        .filter_map(|fastener| {
+            let from = resolve_grip_world_position(document, &fastener.attracting)?;
+            let to = resolve_grip_world_position(document, &fastener.attracted)?;
+            Some(json!({
+                "id": fastener.id,
+                "from": from,
+                "to": to,
+                "color": "#60a5fa",
+            }))
+        })
+        .collect();
+    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+}
+
 fn scene_config_json(envelope: &Puzzle5dEnvelope) -> String {
     let objects: Vec<Value> = envelope
         .document
@@ -441,7 +582,10 @@ fn scene_config_json(envelope: &Puzzle5dEnvelope) -> String {
         "overlapBudget": envelope.runtime.overlap_budget,
         "seed": 1,
         "hostRules": {},
-        "weights": { "objectWeights": {}, "vortexWeights": {} },
+        "weights": {
+            "objectWeights": envelope.runtime.object_kind_weights,
+            "vortexWeights": envelope.runtime.vortex_kind_weights,
+        },
     })
     .to_string()
 }
@@ -533,6 +677,9 @@ fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, runtime: &Puzzl
     if runtime.active_tool != "brush" {
         return None;
     }
+    if let Some(full_id) = runtime.selection.grip_ids.first() {
+        return session.brush_preview_json(full_id, runtime.brush_candidate_index);
+    }
     let grip_id = runtime
         .hovered_part_id
         .as_deref()
@@ -548,6 +695,7 @@ fn world_interaction_json(runtime: &Puzzle5dRuntime) -> String {
         "activeTool": runtime.active_tool,
         "brushCandidateIndex": runtime.brush_candidate_index,
         "fillCount": runtime.fill_count,
+        "hoveredVortexFullId": runtime.selection.grip_ids.first().cloned(),
     })
     .to_string()
 }
@@ -596,6 +744,22 @@ fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
     let half = angle * 0.5;
     let s = half.sin();
     [ax / len * s, ay / len * s, az / len * s, half.cos()]
+}
+
+fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
+    let [x, y, z, w] = quat;
+    let vx = vector[0];
+    let vy = vector[1];
+    let vz = vector[2];
+    let ix = w * vx + y * vz - z * vy;
+    let iy = w * vy + z * vx - x * vz;
+    let iz = w * vz + x * vy - y * vx;
+    let iw = -x * vx - y * vy - z * vz;
+    [
+        ix * w + iw * -x + iy * -z - iz * -y,
+        iy * w + iw * -y + iz * -x - ix * -z,
+        iz * w + iw * -z + ix * -y - iy * -x,
+    ]
 }
 
 fn resolve_part_kind_mesh_url(part_kind: &str, kind_catalogs: Option<&Value>) -> Option<String> {
@@ -771,6 +935,14 @@ impl PluginApp for Puzzle5dPlayApp {
                     }
                 }
             }
+            "setFixtureJson" => {
+                if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
+                    if let Ok(document) = serde_json::from_str::<Puzzle5dDocument>(json_text) {
+                        envelope.document = document;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
             "setActiveExample" => {
                 let example_id = args
                     .and_then(|value| value.get("exampleId"))
@@ -796,6 +968,25 @@ impl PluginApp for Puzzle5dPlayApp {
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
                     .unwrap_or_default();
                 envelope.runtime.selection.part_ids = part_ids;
+                return vec![set_document_op(&envelope)];
+            }
+            "deleteSelection" => {
+                let part_ids = envelope.runtime.selection.part_ids.clone();
+                let fastener_ids = envelope.runtime.selection.fastener_ids.clone();
+                let removed_grip_ids: Vec<String> = envelope
+                    .document
+                    .parts
+                    .iter()
+                    .filter(|part| part_ids.contains(&part.id))
+                    .flat_map(|part| part.grips.iter().map(|grip| puzzle5d_grip_full_id(&part.id, &grip.id)))
+                    .collect();
+                envelope.document.parts.retain(|part| !part_ids.contains(&part.id));
+                envelope.document.fasteners.retain(|fastener| {
+                    !fastener_ids.contains(&fastener.id)
+                        && !removed_grip_ids.contains(&fastener.attracting)
+                        && !removed_grip_ids.contains(&fastener.attracted)
+                });
+                envelope.runtime.selection = Puzzle5dSelection::default();
                 return vec![set_document_op(&envelope)];
             }
             "setActiveTool" => {
@@ -944,6 +1135,24 @@ impl PluginApp for Puzzle5dPlayApp {
                 }
                 return Vec::new();
             }
+            "setBrushPlacementOverlapBudget" => {
+                if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()) {
+                    envelope.runtime.overlap_budget = value.clamp(0.0, 1.0);
+                    drive_precompute(&mut self.precompute, &envelope);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setObjectKindWeight" | "setVortexKindWeight" => {
+                let kind_id = args.and_then(|v| v.get("kindId")).and_then(|v| v.as_str()).unwrap_or("");
+                let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0);
+                if command == "setObjectKindWeight" {
+                    envelope.runtime.object_kind_weights.insert(kind_id.into(), value);
+                } else {
+                    envelope.runtime.vortex_kind_weights.insert(kind_id.into(), value);
+                }
+                drive_precompute(&mut self.precompute, &envelope);
+                return vec![set_document_op(&envelope)];
+            }
             "addPartKind" => {
                 let part_kind = args
                     .and_then(|value| value.get("partKind"))
@@ -1079,6 +1288,83 @@ impl PluginApp for Puzzle5dPlayApp {
                     .map(str::to_string);
                 return vec![set_document_op(&envelope)];
             }
+            "worldVortexHover" => {
+                envelope.runtime.selection.grip_ids = args
+                    .and_then(|value| value.get("fullId"))
+                    .and_then(|value| value.as_str())
+                    .map(|full_id| vec![full_id.to_string()])
+                    .unwrap_or_default();
+                return vec![set_document_op(&envelope)];
+            }
+            "worldVortexSelect" => {
+                if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
+                    envelope.runtime.selection.grip_ids = vec![full_id.to_string()];
+                    envelope.runtime.selection.part_ids.clear();
+                    drive_precompute(&mut self.precompute, &envelope);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "worldRelocate" => {
+                let object_id = args
+                    .and_then(|value| value.get("objectId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                let position = args
+                    .and_then(|value| value.get("position"))
+                    .and_then(|value| value.as_array())
+                    .map(|values| {
+                        [
+                            values.first().and_then(|v| v.as_f64()).unwrap_or(0.0),
+                            values.get(1).and_then(|v| v.as_f64()).unwrap_or(0.0),
+                            values.get(2).and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        ]
+                    });
+                if let (Some(part), Some(position)) = (
+                    envelope.document.parts.iter_mut().find(|part| part.id == object_id),
+                    position,
+                ) {
+                    part.part_3d.origin = position;
+                    let proximity_radius = 0.75;
+                    let source_grip = part
+                        .grips
+                        .first()
+                        .map(|grip| (puzzle5d_grip_full_id(&part.id, &grip.id), world_grip_position(part, grip)));
+                    if let Some((source_id, source_pos)) = source_grip {
+                        for other in &envelope.document.parts {
+                            if other.id == object_id {
+                                continue;
+                            }
+                            for grip in &other.grips {
+                                let target_id = puzzle5d_grip_full_id(&other.id, &grip.id);
+                                if target_id == source_id {
+                                    continue;
+                                }
+                                let target_pos = world_grip_position(other, grip);
+                                let dx = source_pos[0] - target_pos[0];
+                                let dy = source_pos[1] - target_pos[1];
+                                let dz = source_pos[2] - target_pos[2];
+                                let distance = (dx * dx + dy * dy + dz * dz).sqrt();
+                                if distance <= proximity_radius
+                                    && !envelope.document.fasteners.iter().any(|entry| {
+                                        entry.attracting == source_id && entry.attracted == target_id
+                                            || entry.attracting == target_id && entry.attracted == source_id
+                                    })
+                                {
+                                    let fastener_id = format!("fastener-{}", PUZZLE5D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
+                                    envelope.document.fasteners.push(Puzzle5dFastener {
+                                        id: fastener_id,
+                                        attracting: source_id.clone(),
+                                        attracted: target_id,
+                                        fastener_kind: None,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    drive_precompute(&mut self.precompute, &envelope);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "setSelectionMethod" => {
                 let method = args
                     .and_then(|value| value.get("method"))
@@ -1116,8 +1402,8 @@ impl PluginApp for Puzzle5dPlayApp {
                         world_meshes_json(&envelope.document),
                         world_instances_json(&envelope.document, &envelope.runtime),
                         world_selection_json(&envelope.runtime),
-                        None,
-                        None,
+                        Some(world_grips_json(&envelope.document)),
+                        Some(world_fasteners_json(&envelope.document)),
                         None,
                         None,
                         brush_preview,
@@ -1272,6 +1558,152 @@ mod tests {
         );
         let envelope: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(envelope.document.parts.iter().any(|part| part.part_kind == "Test Part"));
+    }
+
+    fn two_grip_parts_envelope(origin_b: [f64; 3]) -> Puzzle5dEnvelope {
+        let grip = |id: &str| Puzzle5dGrip {
+            id: id.into(),
+            grip_kind: "k".into(),
+            grip_2d: Puzzle5dGrip2d::default(),
+            grip_3d: Puzzle5dGrip3d {
+                position: [0.0, 0.0, 0.0],
+                direction: None,
+                radius: 0.36,
+                label: None,
+            },
+        };
+        let part = |id: &str, origin: [f64; 3]| Puzzle5dPart {
+            id: id.into(),
+            part_kind: "Test".into(),
+            part_2d: Puzzle5dPart2d::default(),
+            part_3d: Puzzle5dPart3d {
+                origin,
+                mesh_url: None,
+                orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                scale: None,
+            },
+            grips: vec![grip("g0")],
+        };
+        let mut document = empty_document();
+        document.parts = vec![part("part-a", [0.0, 0.0, 0.0]), part("part-b", origin_b)];
+        Puzzle5dEnvelope {
+            document,
+            runtime: Puzzle5dRuntime::default(),
+        }
+    }
+
+    #[test]
+    fn delete_selection_removes_selected_parts_and_dangling_fasteners() {
+        let mut app = Puzzle5dPlayApp::default();
+        let mut envelope = two_grip_parts_envelope([0.0, 0.0, 0.0]);
+        envelope.document.fasteners.push(Puzzle5dFastener {
+            id: "fastener-0".into(),
+            attracting: "part-a:g0".into(),
+            attracted: "part-b:g0".into(),
+            fastener_kind: None,
+        });
+        envelope.runtime.selection.part_ids = vec!["part-b".into()];
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command("deleteSelection", None, &document, &ViewState::default());
+        let next: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(next.document.parts.iter().all(|part| part.id != "part-b"));
+        assert!(next.runtime.selection.part_ids.is_empty());
+        assert!(next.document.fasteners.is_empty());
+    }
+
+    #[test]
+    fn set_fixture_json_replaces_document() {
+        let mut app = Puzzle5dPlayApp::default();
+        let document = app.initial_document_json();
+        let replacement = serde_json::to_string(&empty_document()).unwrap();
+        let ops = app.handle_command("setFixtureJson", Some(&json!({ "json": replacement })), &document, &ViewState::default());
+        let envelope: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(envelope.document.parts.is_empty());
+    }
+
+    #[test]
+    fn world_vortex_hover_and_select_update_grip_selection() {
+        let mut app = Puzzle5dPlayApp::default();
+        let document = app.initial_document_json();
+        let full_id = "seed-left-001:v0";
+        let hover_ops = app.handle_command("worldVortexHover", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
+        let hovered: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &hover_ops);
+        assert_eq!(hovered.runtime.selection.grip_ids, vec![full_id.to_string()]);
+
+        let select_ops = app.handle_command("worldVortexSelect", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
+        let selected: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &select_ops);
+        assert_eq!(selected.runtime.selection.grip_ids, vec![full_id.to_string()]);
+        assert!(selected.runtime.selection.part_ids.is_empty());
+    }
+
+    #[test]
+    fn world_relocate_moves_part_and_creates_proximity_fastener() {
+        let mut app = Puzzle5dPlayApp::default();
+        let envelope = two_grip_parts_envelope([10.0, 10.0, 10.0]);
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command(
+            "worldRelocate",
+            Some(&json!({ "objectId": "part-b", "position": [0.0, 0.0, 0.0] })),
+            &document,
+            &ViewState::default(),
+        );
+        let next: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+        let moved = next.document.parts.iter().find(|part| part.id == "part-b").unwrap();
+        assert_eq!(moved.part_3d.origin, [0.0, 0.0, 0.0]);
+        assert_eq!(next.document.fasteners.len(), 1);
+        assert_eq!(next.document.fasteners[0].attracting, "part-b:g0");
+        assert_eq!(next.document.fasteners[0].attracted, "part-a:g0");
+    }
+
+    #[test]
+    fn set_brush_placement_overlap_budget_clamps_value() {
+        let mut app = Puzzle5dPlayApp::default();
+        let document = app.initial_document_json();
+        let ops = app.handle_command("setBrushPlacementOverlapBudget", Some(&json!({ "value": 5.0 })), &document, &ViewState::default());
+        let envelope: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.overlap_budget, 1.0);
+    }
+
+    #[test]
+    fn set_object_and_vortex_kind_weight_updates_runtime_maps() {
+        let mut app = Puzzle5dPlayApp::default();
+        let document = app.initial_document_json();
+        let object_ops = app.handle_command(
+            "setObjectKindWeight",
+            Some(&json!({ "kindId": "Hexagonal Cut Concrete Forest Left", "value": 2.0 })),
+            &document,
+            &ViewState::default(),
+        );
+        let with_object_weight: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &object_ops);
+        assert_eq!(with_object_weight.runtime.object_kind_weights.get("Hexagonal Cut Concrete Forest Left"), Some(&2.0));
+
+        let vortex_ops = app.handle_command(
+            "setVortexKindWeight",
+            Some(&json!({ "kindId": "b-l", "value": 0.5 })),
+            &document,
+            &ViewState::default(),
+        );
+        let with_vortex_weight: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &vortex_ops);
+        assert_eq!(with_vortex_weight.runtime.vortex_kind_weights.get("b-l"), Some(&0.5));
+    }
+
+    #[test]
+    fn canvas_layers_include_grip_and_fastener_records() {
+        let app = Puzzle5dPlayApp::default();
+        let document = app.initial_document_json();
+        let node = app.render(PUZZLE5D_PLAY_BODY_2D, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("seed-left-001:v0"));
+    }
+
+    #[test]
+    fn world_3d_scene_includes_grip_and_fastener_json() {
+        let app = Puzzle5dPlayApp::default();
+        let document = app.initial_document_json();
+        let node = app.render(PUZZLE5D_PLAY_BODY_3D, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("seed-left-001:v0"));
+        assert!(json.contains("vortexKind"));
     }
 
     fn apply_ops(envelope: &Puzzle5dEnvelope, ops: &[String]) -> Puzzle5dEnvelope {

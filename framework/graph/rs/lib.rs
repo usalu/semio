@@ -337,6 +337,10 @@ impl GraphHost {
         self.dag.hovered_channel_json()
     }
 
+    pub fn label_overlay_paint_state_json(&self) -> Result<String, String> {
+        self.dag.label_overlay_paint_state_json()
+    }
+
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64, zoom_gesture: bool) {
         if !zoom_gesture {
             let cam = &self.dag.fixture.camera;
@@ -383,6 +387,14 @@ impl GraphHost {
 
     pub fn fixture_json(&self) -> Result<String, String> {
         self.dag.fixture_json()
+    }
+
+    pub fn set_canvas_theme_dark(&mut self, dark: bool) {
+        self.dag.canvas_theme = dag::CanvasThemePalette::from_board_theme(if dark {
+            &ui_styling::BOARD_DARK
+        } else {
+            &ui_styling::BOARD_LIGHT
+        });
     }
 }
 //#endregion 🔖GraphHost

@@ -1,8 +1,8 @@
 //! 🖌️ Draw list and GPU pipeline for UI quads, vector geometry, and 3D scene passes.
 
 use kernel_3d_scene::ScenePass3d;
-use crate::shaders::{UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
-use crate::theme::Rgba;
+use crate::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
+use crate::theme::{GlassTier, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
 use std::mem;
 use wgpu::util::DeviceExt;
@@ -12,6 +12,120 @@ pub const KIND_ROUNDED: f32 = 1.0;
 pub const KIND_GLYPH: f32 = 2.0;
 pub const KIND_TEXTURED: f32 = 4.0;
 pub const KIND_RASTER: f32 = 5.0;
+pub const SCENE_MIP_LEVELS: u32 = 5;
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+struct BlurGlobals {
+    src_mip: f32,
+    _pad: [f32; 7],
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct GlassInstance {
+    pub rect: [f32; 4],
+    pub tint: [f32; 4],
+    pub params: [f32; 4],
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct GlassRegion {
+    pub rect: [f32; 4],
+    pub radius: f32,
+    pub tint: Rgba,
+    pub alpha: f32,
+    pub blur_px: f32,
+    pub saturate: f32,
+}
+
+pub struct SceneColorTarget {
+    texture: wgpu::Texture,
+    sample_view: wgpu::TextureView,
+    mip_views: Vec<wgpu::TextureView>,
+    sampler: wgpu::Sampler,
+    width: u32,
+    height: u32,
+}
+
+impl SceneColorTarget {
+    pub fn ensure(
+        device: &wgpu::Device,
+        target: &mut Option<Self>,
+        width: u32,
+        height: u32,
+        format: wgpu::TextureFormat,
+    ) {
+        let width = width.max(1);
+        let height = height.max(1);
+        if let Some(existing) = target {
+            if existing.width == width && existing.height == height {
+                return;
+            }
+        }
+        let texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("scene_color"),
+            size: wgpu::Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: SCENE_MIP_LEVELS,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            view_formats: &[],
+        });
+        let sample_view = texture.create_view(&wgpu::TextureViewDescriptor {
+            label: Some("scene_color_sample"),
+            format: Some(format),
+            dimension: Some(wgpu::TextureViewDimension::D2),
+            base_mip_level: 0,
+            mip_level_count: Some(SCENE_MIP_LEVELS),
+            ..Default::default()
+        });
+        let mip_views = (0..SCENE_MIP_LEVELS)
+            .map(|level| {
+                texture.create_view(&wgpu::TextureViewDescriptor {
+                    label: Some(&format!("scene_color_mip_{level}")),
+                    format: Some(format),
+                    dimension: Some(wgpu::TextureViewDimension::D2),
+                    base_mip_level: level,
+                    mip_level_count: Some(1),
+                    ..Default::default()
+                })
+            })
+            .collect();
+        let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("scene_color_sampler"),
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            mipmap_filter: wgpu::FilterMode::Linear,
+            ..Default::default()
+        });
+        *target = Some(Self {
+            texture,
+            sample_view,
+            mip_views,
+            sampler,
+            width,
+            height,
+        });
+    }
+
+    pub fn mip_view(&self, level: u32) -> &wgpu::TextureView {
+        &self.mip_views[level as usize]
+    }
+
+    pub fn sample_view(&self) -> &wgpu::TextureView {
+        &self.sample_view
+    }
+
+    pub fn sampler(&self) -> &wgpu::Sampler {
+        &self.sampler
+    }
+}
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -135,6 +249,7 @@ impl Default for DrawLayer {
 pub struct DrawList {
     pub scene_passes: Vec<ScenePass3d>,
     pub layers: Vec<DrawLayer>,
+    pub glass_regions: Vec<GlassRegion>,
     scissor_stack: Vec<ScissorRect>,
     screen_h: f32,
 }
@@ -144,6 +259,7 @@ impl Default for DrawList {
         let mut list = Self {
             scene_passes: Vec::new(),
             layers: Vec::new(),
+            glass_regions: Vec::new(),
             scissor_stack: Vec::new(),
             screen_h: 720.0,
         };
@@ -168,6 +284,7 @@ impl DrawList {
         self.scene_passes.clear();
         self.layers.clear();
         self.layers.push(DrawLayer::default());
+        self.glass_regions.clear();
         self.scissor_stack.clear();
     }
 
@@ -218,6 +335,18 @@ impl DrawList {
         self.active_layer()
             .ui_instances
             .push(UiInstance::rounded(rect, color, radius, 0.0, color));
+    }
+
+    pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, tier: GlassTier, theme: &Theme) {
+        let style = theme.glass(tier);
+        self.glass_regions.push(GlassRegion {
+            rect,
+            radius,
+            tint: style.tint,
+            alpha: style.alpha,
+            blur_px: style.blur_px,
+            saturate: style.saturate,
+        });
     }
 
     pub fn push_glyph(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
@@ -528,6 +657,7 @@ pub struct FrameBuffers {
     pub world_lines: GrowBuffer,
     pub ui_instances: GrowBuffer,
     pub vector_vertices: GrowBuffer,
+    pub glass_instances: GrowBuffer,
 }
 
 impl Default for FrameBuffers {
@@ -537,6 +667,7 @@ impl Default for FrameBuffers {
             world_lines: GrowBuffer::default(),
             ui_instances: GrowBuffer::default(),
             vector_vertices: GrowBuffer::default(),
+            glass_instances: GrowBuffer::default(),
         }
     }
 }
@@ -825,10 +956,16 @@ pub(crate) struct UiPipelines {
     world_pipeline: wgpu::RenderPipeline,
     world_pipeline_translucent: wgpu::RenderPipeline,
     world_line_pipeline: wgpu::RenderPipeline,
+    blur_downsample_pipeline: wgpu::RenderPipeline,
+    scene_blit_pipeline: wgpu::RenderPipeline,
+    glass_pipeline: wgpu::RenderPipeline,
     quad_vertex_buffer: wgpu::Buffer,
     globals_buffer: wgpu::Buffer,
+    blur_globals_buffer: wgpu::Buffer,
     world_globals_ring: WorldGlobalsRing,
     world_bind_group_layout: wgpu::BindGroupLayout,
+    blur_bind_group_layout: wgpu::BindGroupLayout,
+    scene_bind_group_layout: wgpu::BindGroupLayout,
     glyph_texture: wgpu::Texture,
     glyph_sampler: wgpu::Sampler,
     icon_texture: wgpu::Texture,
@@ -1190,7 +1327,7 @@ impl UiPipelines {
                 compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState {
-                cull_mode: Some(wgpu::Face::Back),
+                cull_mode: None,
                 ..Default::default()
             },
             depth_stencil: depth_state.clone(),
@@ -1306,6 +1443,194 @@ impl UiPipelines {
             cache: None,
         });
 
+        let blur_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("blur_downsample_shader"),
+            source: wgpu::ShaderSource::Wgsl(BLUR_DOWNSAMPLE_SHADER.into()),
+        });
+        let scene_blit_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("scene_blit_shader"),
+            source: wgpu::ShaderSource::Wgsl(SCENE_BLIT_SHADER.into()),
+        });
+        let glass_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("glass_shader"),
+            source: wgpu::ShaderSource::Wgsl(GLASS_SHADER.into()),
+        });
+
+        let blur_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("blur_downsample_layout"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Buffer {
+                        ty: wgpu::BufferBindingType::Uniform,
+                        has_dynamic_offset: false,
+                        min_binding_size: None,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 2,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
+            ],
+        });
+
+        let scene_bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("scene_sample_layout"),
+            entries: &[
+                wgpu::BindGroupLayoutEntry {
+                    binding: 0,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 1,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
+            ],
+        });
+
+        let blur_globals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+            label: Some("blur_globals"),
+            contents: bytemuck::bytes_of(&BlurGlobals {
+                src_mip: 0.0,
+                _pad: [0.0; 7],
+            }),
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+        });
+
+        let blur_downsample_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("blur_downsample_pipeline_layout"),
+            bind_group_layouts: &[&blur_bind_group_layout],
+            push_constant_ranges: &[],
+        });
+        let blur_downsample_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("blur_downsample_pipeline"),
+            layout: Some(&blur_downsample_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &blur_shader,
+                entry_point: Some("vs_main"),
+                buffers: &[],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &blur_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
+
+        let scene_blit_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("scene_blit_pipeline_layout"),
+            bind_group_layouts: &[&scene_bind_group_layout],
+            push_constant_ranges: &[],
+        });
+        let scene_blit_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("scene_blit_pipeline"),
+            layout: Some(&scene_blit_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &scene_blit_shader,
+                entry_point: Some("vs_main"),
+                buffers: &[],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &scene_blit_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::REPLACE),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
+
+        let glass_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("glass_pipeline_layout"),
+            bind_group_layouts: &[&globals_bind_group_layout, &scene_bind_group_layout],
+            push_constant_ranges: &[],
+        });
+        let glass_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("glass_pipeline"),
+            layout: Some(&glass_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &glass_shader,
+                entry_point: Some("vs_main"),
+                buffers: &[
+                    wgpu::VertexBufferLayout {
+                        array_stride: 8,
+                        step_mode: wgpu::VertexStepMode::Vertex,
+                        attributes: &[wgpu::VertexAttribute {
+                            offset: 0,
+                            shader_location: 0,
+                            format: wgpu::VertexFormat::Float32x2,
+                        }],
+                    },
+                    wgpu::VertexBufferLayout {
+                        array_stride: mem::size_of::<GlassInstance>() as wgpu::BufferAddress,
+                        step_mode: wgpu::VertexStepMode::Instance,
+                        attributes: &[
+                            wgpu::VertexAttribute { offset: 0, shader_location: 1, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 16, shader_location: 2, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 32, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
+                        ],
+                    },
+                ],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &glass_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: None,
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
+
         let _ = queue;
         Self {
             ui_pipeline,
@@ -1313,10 +1638,16 @@ impl UiPipelines {
             world_pipeline,
             world_pipeline_translucent,
             world_line_pipeline,
+            blur_downsample_pipeline,
+            scene_blit_pipeline,
+            glass_pipeline,
             quad_vertex_buffer,
             globals_buffer,
+            blur_globals_buffer,
             world_globals_ring,
             world_bind_group_layout,
+            blur_bind_group_layout,
+            scene_bind_group_layout,
             glyph_texture,
             glyph_sampler,
             icon_texture,
@@ -1446,6 +1777,9 @@ impl UiPipelines {
             return None;
         }
         let (prepared, all_instances, all_lines) = Self::prepare_world_passes(draw);
+        if all_instances.is_empty() && all_lines.is_empty() {
+            return None;
+        }
         self.world_globals_ring.ensure_slots(
             device,
             &self.world_bind_group_layout,
@@ -1453,20 +1787,24 @@ impl UiPipelines {
         );
         let globals: Vec<World3dGlobals> = prepared.iter().map(|pass| pass.globals).collect();
         self.world_globals_ring.write_passes(queue, &globals);
-        frame_buffers.world_instances.upload(
-            device,
-            queue,
-            &all_instances,
-            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            "world3d_instances",
-        )?;
-        frame_buffers.world_lines.upload(
-            device,
-            queue,
-            &all_lines,
-            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-            "world3d_lines",
-        )?;
+        if !all_instances.is_empty() {
+            frame_buffers.world_instances.upload(
+                device,
+                queue,
+                &all_instances,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "world3d_instances",
+            );
+        }
+        if !all_lines.is_empty() {
+            frame_buffers.world_lines.upload(
+                device,
+                queue,
+                &all_lines,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "world3d_lines",
+            );
+        }
         Some(prepared)
     }
 
@@ -1529,6 +1867,8 @@ impl UiPipelines {
         }
         pass.set_viewport(0.0, 0.0, screen_w, screen_h, 0.0, 1.0);
         pass.set_scissor_rect(0, 0, screen_w as u32, screen_h as u32);
+        pass.set_pipeline(&self.ui_pipeline);
+        pass.set_bind_group(0, &self.glyph_bind_group, &[]);
     }
 
     fn draw_world_range<'a>(
@@ -1641,6 +1981,7 @@ impl UiPipelines {
             return;
         }
         pass.set_pipeline(&self.vector_pipeline);
+        pass.set_bind_group(0, &self.glyph_bind_group, &[]);
         pass.set_vertex_buffer(0, vector_buffer.clone());
         pass.draw(start..start + count, 0..1);
     }
@@ -1802,6 +2143,7 @@ impl UiPipelines {
         queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
         view: &'a wgpu::TextureView,
+        scene: &'a SceneColorTarget,
         depth_view: Option<&'a wgpu::TextureView>,
         draw: &DrawList,
         overlay: Option<&DrawList>,
@@ -1812,6 +2154,7 @@ impl UiPipelines {
         height: f32,
     ) {
         self.update_globals(queue, width, height);
+        let scene_view = scene.mip_view(0);
         let world_prepared = if depth_view.is_some() {
             self.upload_world_passes(device, queue, draw, frame_buffers)
         } else {
@@ -1845,7 +2188,7 @@ impl UiPipelines {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("ui_pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                view,
+                view: scene_view,
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
@@ -1888,7 +2231,7 @@ impl UiPipelines {
             let mut raster_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("ui_raster_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view,
+                    view: scene_view,
                     resolve_target: None,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Load,
@@ -1918,7 +2261,37 @@ impl UiPipelines {
                 height,
             );
         }
+        // Blur mips are optional; mip 0 still holds the full scene for glass sampling.
+        // self.run_blur_chain(device, queue, encoder, scene);
+        self.blit_scene_to_swapchain(device, encoder, view, scene);
+        let max_mip = SCENE_MIP_LEVELS - 1;
+        self.composite_glass_regions(
+            device,
+            queue,
+            encoder,
+            view,
+            scene,
+            frame_buffers,
+            &draw.glass_regions,
+            max_mip,
+            width,
+            height,
+        );
         if let Some(overlay) = overlay {
+            if !overlay.glass_regions.is_empty() {
+                self.composite_glass_regions(
+                    device,
+                    queue,
+                    encoder,
+                    view,
+                    scene,
+                    frame_buffers,
+                    &overlay.glass_regions,
+                    max_mip,
+                    width,
+                    height,
+                );
+            }
             let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("ui_overlay_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -1951,6 +2324,184 @@ impl UiPipelines {
                 height,
             );
         }
+    }
+
+    fn run_blur_chain(
+        &self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        scene: &SceneColorTarget,
+    ) {
+        for mip in 1..SCENE_MIP_LEVELS {
+            queue.write_buffer(
+                &self.blur_globals_buffer,
+                0,
+                bytemuck::bytes_of(&BlurGlobals {
+                    src_mip: (mip - 1) as f32,
+                    _pad: [0.0; 7],
+                }),
+            );
+            let blur_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("blur_downsample_bind_group"),
+                layout: &self.blur_bind_group_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: self.blur_globals_buffer.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::TextureView(scene.sample_view()),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: wgpu::BindingResource::Sampler(scene.sampler()),
+                    },
+                ],
+            });
+            let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("blur_downsample_pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: scene.mip_view(mip),
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                        store: wgpu::StoreOp::Store,
+                    },
+                    depth_slice: None,
+                })],
+                depth_stencil_attachment: None,
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            pass.set_pipeline(&self.blur_downsample_pipeline);
+            pass.set_bind_group(0, &blur_bind_group, &[]);
+            pass.draw(0..6, 0..1);
+        }
+    }
+
+    fn blit_scene_to_swapchain(
+        &self,
+        device: &wgpu::Device,
+        encoder: &mut wgpu::CommandEncoder,
+        view: &wgpu::TextureView,
+        scene: &SceneColorTarget,
+    ) {
+        let scene_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("scene_blit_bind_group"),
+            layout: &self.scene_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(scene.sample_view()),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(scene.sampler()),
+                },
+            ],
+        });
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("scene_blit_pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                    store: wgpu::StoreOp::Store,
+                },
+                depth_slice: None,
+            })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        pass.set_pipeline(&self.scene_blit_pipeline);
+        pass.set_bind_group(0, &scene_bind_group, &[]);
+        pass.draw(0..6, 0..1);
+    }
+
+    fn composite_glass_regions(
+        &self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        view: &wgpu::TextureView,
+        scene: &SceneColorTarget,
+        frame_buffers: &mut FrameBuffers,
+        regions: &[GlassRegion],
+        max_mip: u32,
+        width: f32,
+        height: f32,
+    ) {
+        if regions.is_empty() {
+            return;
+        }
+        let instances: Vec<GlassInstance> = regions
+            .iter()
+            .map(|region| GlassInstance {
+                rect: region.rect,
+                tint: [
+                    region.tint.r,
+                    region.tint.g,
+                    region.tint.b,
+                    region.tint.a,
+                ],
+                params: [
+                    region.radius,
+                    region.alpha,
+                    Theme::glass_mip_level(region.blur_px, max_mip),
+                    region.saturate,
+                ],
+            })
+            .collect();
+        let glass_buffer = frame_buffers.glass_instances.upload(
+            device,
+            queue,
+            &instances,
+            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            "glass_instances",
+        );
+        let Some(glass_buffer) = glass_buffer else {
+            return;
+        };
+        let scene_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("glass_scene_bind_group"),
+            layout: &self.scene_bind_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(scene.sample_view()),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::Sampler(scene.sampler()),
+                },
+            ],
+        });
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("glass_composite_pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: wgpu::StoreOp::Store,
+                },
+                depth_slice: None,
+            })],
+            depth_stencil_attachment: None,
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        pass.set_pipeline(&self.glass_pipeline);
+        pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+        pass.set_bind_group(1, &scene_bind_group, &[]);
+        pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
+        pass.set_vertex_buffer(1, glass_buffer.slice(..));
+        pass.draw(0..6, 0..instances.len() as u32);
+        let _ = (width, height);
     }
 
     pub fn render_overlay<'a>(
@@ -2085,6 +2636,31 @@ mod tests {
         assert_eq!(pass.vector_watermark, 0);
         assert_eq!(draw.layers[0].ui_instances.len(), 2);
         assert_eq!(draw.layers[0].vector_vertices.len(), 6);
+    }
+
+    #[test]
+    fn mesh_instances_without_lines_are_valid_world_pass() {
+        use kernel_3d_scene::{Instance3d, SceneDraw3d, ScenePass3d};
+
+        let pass = ScenePass3d {
+            viewport: [0.0, 0.0, 320.0, 240.0],
+            view_proj: [0.0; 16],
+            light_dir: [0.4, 0.6, 0.8],
+            draws: vec![SceneDraw3d {
+                mesh_key: "box".into(),
+                mesh_version: 1,
+                instances: vec![Instance3d {
+                    id: "preview".into(),
+                    model: Instance3d::model_from_trs([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [1.0, 1.0, 1.0]),
+                    color: [0.7, 0.7, 0.75, 1.0],
+                    selected: false,
+                    hovered: false,
+                }],
+            }],
+            ..Default::default()
+        };
+        assert!(!pass.draws[0].instances.is_empty());
+        assert!(pass.line_draws.is_empty());
     }
 
     #[test]

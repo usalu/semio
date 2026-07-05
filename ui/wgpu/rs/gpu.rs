@@ -1,6 +1,6 @@
 //! 🖥️ WebGPU device, surface, and frame loop.
 
-use crate::draw::{DrawList, FrameBuffers, MeshGpuStore, RasterTextureStore, UiPipelines};
+use crate::draw::{DrawList, FrameBuffers, MeshGpuStore, RasterTextureStore, SceneColorTarget, UiPipelines};
 use crate::text::FontAtlas;
 use wgpu::Surface;
 
@@ -16,6 +16,7 @@ pub struct GpuContext {
     depth_view: Option<wgpu::TextureView>,
     mesh_store: MeshGpuStore,
     raster_store: RasterTextureStore,
+    scene_color: Option<SceneColorTarget>,
     width: u32,
     height: u32,
     dpr: f32,
@@ -89,6 +90,7 @@ impl GpuContext {
             depth_view: None,
             mesh_store: MeshGpuStore::default(),
             raster_store,
+            scene_color: None,
             width,
             height,
             dpr,
@@ -129,7 +131,18 @@ impl GpuContext {
         self.config.width = width;
         self.config.height = height;
         self.surface.configure(&self.device, &self.config);
+        self.scene_color = None;
         self.ensure_depth();
+    }
+
+    fn ensure_scene_color(&mut self) {
+        SceneColorTarget::ensure(
+            &self.device,
+            &mut self.scene_color,
+            self.width,
+            self.height,
+            self.color_target_format,
+        );
     }
 
     pub fn mesh_store_mut(&mut self) -> &mut MeshGpuStore {
@@ -142,6 +155,8 @@ impl GpuContext {
     }
 
     pub fn render_frame(&mut self, draw: &DrawList, overlay: Option<&DrawList>) -> Result<(), String> {
+        self.ensure_scene_color();
+        let scene = self.scene_color.as_ref().expect("scene_color");
         let frame = self
             .surface
             .get_current_texture()
@@ -159,6 +174,7 @@ impl GpuContext {
             &self.queue,
             &mut encoder,
             &view,
+            scene,
             depth_view,
             draw,
             overlay,

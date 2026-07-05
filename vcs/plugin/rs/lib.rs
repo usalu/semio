@@ -231,6 +231,33 @@ fn materialized_projection(play: &VcsPlayEnvelope) -> VcsDemoProjection {
         .unwrap_or_else(|_| play.envelope.vcs.initial_projection.clone())
 }
 
+fn vcs_demo_projection_diff_ops(current: &VcsDemoProjection, next: &VcsDemoProjection) -> Vec<VcsDemoOp> {
+    let mut operations = Vec::new();
+    if next.title != current.title {
+        operations.push(VcsDemoOp::SetTitle { title: next.title.clone() });
+    }
+    if next.counter != current.counter {
+        operations.push(VcsDemoOp::SetCounter { counter: next.counter });
+    }
+    if next.status != current.status {
+        operations.push(VcsDemoOp::SetStatus { status: next.status.clone() });
+    }
+    if next.notes != current.notes {
+        operations.push(VcsDemoOp::SetNotes { notes: next.notes.clone() });
+    }
+    for tag in &next.tags {
+        if !current.tags.contains(tag) {
+            operations.push(VcsDemoOp::AddTag { tag: tag.clone() });
+        }
+    }
+    for tag in &current.tags {
+        if !next.tags.contains(tag) {
+            operations.push(VcsDemoOp::RemoveTag { tag: tag.clone() });
+        }
+    }
+    operations
+}
+
 fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let authors = demo_authors();
     let alice = authors[0].clone();
@@ -658,6 +685,18 @@ impl PluginApp for VcsPlayApp {
                     return vec![set_document_op(&sync_store_to_envelope(&store, &play.selected_checkpoint_ids))];
                 }
             }
+            "textEdit" | "edit" => {
+                if let Some(text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) {
+                    if let Ok(next_projection) = serde_json::from_str::<VcsDemoProjection>(text) {
+                        let current = store.projection().unwrap_or_else(|_| empty_vcs_demo_projection());
+                        let operations = vcs_demo_projection_diff_ops(&current, &next_projection);
+                        if !operations.is_empty() {
+                            let _ = store.dispatch(DocumentVcsCommand::Apply { operations, description: None });
+                            return vec![set_document_op(&sync_store_to_envelope(&store, &play.selected_checkpoint_ids))];
+                        }
+                    }
+                }
+            }
             "noop" | "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => {}
             _ => {}
         }
@@ -759,6 +798,41 @@ mod tests {
         let node = app.render(VCS_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("vcs-play-hierarchy.checkpoint"));
+    }
+
+    #[test]
+    fn text_edit_command_persists_projection_changes() {
+        let mut app = VcsPlayApp;
+        let document = app.initial_document_json();
+        let before = materialized_projection(&parse_envelope(&document));
+        let mut edited = before.clone();
+        edited.title = "Edited via JSON".into();
+        edited.counter = before.counter + 41;
+        edited.tags.push("edited-in-place".into());
+        let text = serde_json::to_string_pretty(&edited).unwrap();
+        let ops = app.handle_command("textEdit", Some(&json!({ "text": text })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: VcsPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let after = materialized_projection(&next);
+        assert_eq!(after.title, "Edited via JSON");
+        assert_eq!(after.counter, before.counter + 41);
+        assert!(after.tags.contains(&"edited-in-place".to_string()));
+    }
+
+    #[test]
+    fn edit_command_is_alias_for_text_edit() {
+        let mut app = VcsPlayApp;
+        let document = app.initial_document_json();
+        let before = materialized_projection(&parse_envelope(&document));
+        let mut edited = before.clone();
+        edited.status = "reviewed".into();
+        let text = serde_json::to_string(&edited).unwrap();
+        let ops = app.handle_command("edit", Some(&json!({ "text": text })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: VcsPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        assert_eq!(materialized_projection(&next).status, "reviewed");
     }
 }
 //#endregion 🧪Tests

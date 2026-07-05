@@ -1,7 +1,7 @@
 {
-  "title": "Support React and WGPU Renderers in Playgrounds",
+  "title": "Fix Wgpu World3d Empty Preview",
   "emoji": "🎮",
-  "status": "closed",
+  "status": "open",
   "description": "Apps emit only generic framework component scenes; both React and wgpu renderers provide all rendering; app-level JS/React packages removed.",
   "summary": "Remove all wgpu-alt launch configurations",
   "github": {
@@ -12,6 +12,7 @@
     "⚪5c49cb5f9899464fbd41c7aacc04851d",
     "⚪481690bbe6df4880baf8655cb897613e",
     "⚪bd05bd8135e94c46bbd00de244b04916",
-    "⚪5ac40c1e01e24fe0b311da7341903434"
+    "⚪5ac40c1e01e24fe0b311da7341903434",
+    "⚪28a0e1b6a2f14e59bb431b16f337847c"
   ]
 }

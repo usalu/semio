@@ -1,14 +1,15 @@
 //! 🔗 Sequence plugin — declarative sequence play app bundled as a hot-swappable WASM component.
 
-use mathematical_graph_port_directed_dag::DagFixture;
+use mathematical_graph_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use sequence_core::{default_fixture, SequenceFixture, SequenceHost, SequenceStep};
 use semio_framework_plugin::{
-    build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, App, CommandDescriptor, NodeGraphScene,
-    PluginApp, PluginBundle, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
-    UiNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    build_node_graph_scene, build_text_editor_scene, create_default_layout, tool_button, tool_collection,
+    tool_toggle, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
+    App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiControlNode,
+    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
+    UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -38,6 +39,8 @@ struct SequencePlayRuntime {
     selected_step_ids: Vec<String>,
     #[serde(default)]
     last_run_json: String,
+    #[serde(default)]
+    orientation: DagLayoutOrientation,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -449,10 +452,22 @@ fn render_main_graph(envelope: &SequencePlayEnvelope) -> UiNode {
     host.layout_expanded_slots();
     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
     let viewport_json = serde_json::to_string(&envelope.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+    let selection_json = if envelope.runtime.selected_step_ids.is_empty() {
+        None
+    } else {
+        serde_json::to_string(&envelope.runtime.selected_step_ids).ok()
+    };
     build_node_graph_scene(
         SEQUENCE_PLAY_SURFACE_MAIN,
         SEQUENCE_PLAY_APP_ID,
-        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
+        NodeGraphScene {
+            editable: Some(true),
+            selection_json,
+            context_menu_json: Some(
+                r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+            ),
+            ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
+        },
     )
 }
 
@@ -479,6 +494,52 @@ fn render_compiled_dag(envelope: &SequencePlayEnvelope) -> UiNode {
     )
 }
 //#endregion 🔖Render
+
+//#region 🔖Tools
+fn orientation_arg(orientation: DagLayoutOrientation) -> Value {
+    match orientation {
+        DagLayoutOrientation::LeftRight => json!({ "orientation": "leftRight" }),
+        DagLayoutOrientation::TopBottom => json!({ "orientation": "topBottom" }),
+    }
+}
+
+fn edit_tools(envelope: &SequencePlayEnvelope) -> Vec<ToolNode> {
+    let orientation = envelope.runtime.orientation;
+    vec![
+        tool_collection(
+            "sequence-tools-execution",
+            "play",
+            "Run",
+            vec![
+                tool_button("sequence-tools-run", "play", "Run", sequence_cmd("run", None)),
+                tool_button("sequence-tools-stop", "square", "Stop", sequence_cmd("stop", None)),
+            ],
+        ),
+        tool_collection(
+            "sequence-tools-layout",
+            "layout-grid",
+            "Layout",
+            vec![
+                tool_button("sequence-tools-reorganize", "refresh-cw", "Reorganize", sequence_cmd("reorganize", None)),
+                tool_toggle(
+                    "sequence-tools-orientation-lr",
+                    "arrow-right",
+                    "Left to right",
+                    orientation == DagLayoutOrientation::LeftRight,
+                    sequence_cmd("setOrientation", Some(orientation_arg(DagLayoutOrientation::LeftRight))),
+                ),
+                tool_toggle(
+                    "sequence-tools-orientation-tb",
+                    "arrow-down",
+                    "Top to bottom",
+                    orientation == DagLayoutOrientation::TopBottom,
+                    sequence_cmd("setOrientation", Some(orientation_arg(DagLayoutOrientation::TopBottom))),
+                ),
+            ],
+        ),
+    ]
+}
+//#endregion 🔖Tools
 
 //#region 🔖SequencePlayApp
 struct SequencePlayApp;
@@ -509,9 +570,76 @@ impl PluginApp for SequencePlayApp {
                     }
                 }
             }
-            "setSelection" | "selectNode" => {
-                envelope.runtime.selected_step_ids = selection_ids(args);
+            "setSelection" | "selectNode" | "nodeGraphSelect" => {
+                envelope.runtime.selected_step_ids = node_graph_selection_ids(args);
                 return vec![set_document_op(&envelope)];
+            }
+            "nodeGraphHover" => return Vec::new(),
+            "nodeGraphViewport" => {
+                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
+                    if let Ok(camera) = serde_json::from_str(viewport_json) {
+                        envelope.fixture.camera = camera;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "nodeGraphEdit" => {
+                let ops = args
+                    .and_then(|value| value.get("ops"))
+                    .and_then(|value| value.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                let mut changed = false;
+                for op in ops {
+                    match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                        "setFixture" => {
+                            if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
+                                if let Ok(fixture) = serde_json::from_str::<SequenceFixture>(fixture_json) {
+                                    push_undo(&mut envelope);
+                                    envelope.fixture = fixture;
+                                    changed = true;
+                                }
+                            }
+                        }
+                        "deleteSelection" => {
+                            for step_id in envelope.runtime.selected_step_ids.clone() {
+                                push_undo(&mut envelope);
+                                if host.remove_step(&step_id) {
+                                    changed = true;
+                                }
+                            }
+                            if changed {
+                                envelope.fixture = host.fixture.clone();
+                                envelope.runtime.selected_step_ids.clear();
+                            }
+                        }
+                        "connect" => {
+                            let from = op.get("sourceNodeId").and_then(|value| value.as_str());
+                            let to = op.get("targetNodeId").and_then(|value| value.as_str());
+                            if let (Some(from), Some(to)) = (from, to) {
+                                push_undo(&mut envelope);
+                                if host.connect_steps(from, to).is_ok() {
+                                    envelope.fixture = host.fixture.clone();
+                                    changed = true;
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                if changed {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "deleteSelection" => {
+                for step_id in envelope.runtime.selected_step_ids.clone() {
+                    push_undo(&mut envelope);
+                    if host.remove_step(&step_id) {
+                        envelope.fixture = host.fixture;
+                        envelope.runtime.selected_step_ids.retain(|id| id != &step_id);
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
             }
             "graphPointerDown" => {
                 envelope.runtime.selected_step_ids.clear();
@@ -647,6 +775,31 @@ impl PluginApp for SequencePlayApp {
                 envelope.runtime.last_run_json = serde_json::to_string(&result).unwrap_or_default();
                 return vec![set_document_op(&envelope)];
             }
+            "stop" => {
+                envelope.runtime.last_run_json.clear();
+                return vec![set_document_op(&envelope)];
+            }
+            "reorganize" => {
+                let opts = DagLayoutOptions {
+                    orientation: envelope.runtime.orientation,
+                    ..DagLayoutOptions::default()
+                };
+                push_undo(&mut envelope);
+                if host.reorganize(&opts).is_ok() {
+                    envelope.fixture = host.fixture;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setOrientation" => {
+                let orientation = args.and_then(|value| value.get("orientation")).and_then(|value| value.as_str());
+                let orientation = match orientation {
+                    Some("topBottom") => DagLayoutOrientation::TopBottom,
+                    Some("leftRight") => DagLayoutOrientation::LeftRight,
+                    _ => return Vec::new(),
+                };
+                envelope.runtime.orientation = orientation;
+                return vec![set_document_op(&envelope)];
+            }
             "undo" => {
                 if let Some(previous) = envelope.undo_stack.pop() {
                     envelope.redo_stack.push(envelope.fixture.clone());
@@ -666,6 +819,10 @@ impl PluginApp for SequencePlayApp {
         Vec::new()
     }
 
+    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+        edit_tools(&parse_envelope(document_json))
+    }
+
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
@@ -678,6 +835,12 @@ impl PluginApp for SequencePlayApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+}
+
+fn node_graph_selection_ids(args: Option<&Value>) -> Vec<String> {
+    args.and_then(|value| value.get("nodeIds"))
+        .and_then(|value| serde_json::from_value(value.clone()).ok())
+        .unwrap_or_else(|| selection_ids(args))
 }
 
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
@@ -695,7 +858,7 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
 //#region 🔖Manifest
 fn create_sequence_app() -> App {
     App::from_builder(
-        App::builder(SEQUENCE_PLAY_APP_ID, "Sequence")
+        App::builder(SEQUENCE_PLAY_APP_ID, "Sequence").hierarchy(["semio", "sequence"])
             .icon_id("sequence")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -730,6 +893,7 @@ fn create_sequence_app() -> App {
                 "details",
                 SEQUENCE_PLAY_BODY_INSPECTOR,
             )
+            .mode_tools("edit", edit_tools(&default_envelope()))
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
@@ -807,5 +971,76 @@ mod tests {
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
         assert!(updated.fixture.steps.iter().all(|step| step.id != step_id));
+    }
+
+    #[test]
+    fn footer_tools_include_run_stop_reorganize_and_orientation() {
+        let app = SequencePlayApp;
+        let document = app.initial_document_json();
+        let tools = app.tools(&document, &ViewState::default());
+        let json = serde_json::to_string(&tools).unwrap();
+        assert!(json.contains("\"id\":\"sequence-tools-run\""));
+        assert!(json.contains("\"id\":\"sequence-tools-stop\""));
+        assert!(json.contains("\"id\":\"sequence-tools-reorganize\""));
+        assert!(json.contains("\"id\":\"sequence-tools-orientation-lr\""));
+        assert!(json.contains("\"id\":\"sequence-tools-orientation-tb\""));
+    }
+
+    #[test]
+    fn set_orientation_command_flips_toggle_state() {
+        let mut app = SequencePlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("setOrientation", Some(&json!({ "orientation": "topBottom" })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let updated: SequencePlayEnvelope =
+            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+        assert_eq!(updated.runtime.orientation, DagLayoutOrientation::TopBottom);
+        let tools = app.tools(&serde_json::to_string(&updated).unwrap(), &ViewState::default());
+        let tools_json = serde_json::to_string(&tools).unwrap();
+        assert!(tools_json.contains(r#""id":"sequence-tools-orientation-tb""#));
+        let lr_pressed = tools_json
+            .split(r#""id":"sequence-tools-orientation-lr""#)
+            .nth(1)
+            .and_then(|rest| rest.split_once("\"pressed\":"))
+            .map(|(_, rest)| rest.starts_with("false"))
+            .unwrap_or(false);
+        let tb_pressed = tools_json
+            .split(r#""id":"sequence-tools-orientation-tb""#)
+            .nth(1)
+            .and_then(|rest| rest.split_once("\"pressed\":"))
+            .map(|(_, rest)| rest.starts_with("true"))
+            .unwrap_or(false);
+        assert!(lr_pressed, "left-to-right toggle should be unpressed, got {tools_json}");
+        assert!(tb_pressed, "top-to-bottom toggle should be pressed, got {tools_json}");
+    }
+
+    #[test]
+    fn reorganize_command_spreads_step_positions_apart() {
+        let mut app = SequencePlayApp;
+        let mut envelope = default_envelope();
+        for step in envelope.fixture.steps.iter_mut() {
+            step.x = 0.0;
+            step.y = 0.0;
+        }
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command("reorganize", None, &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let updated: SequencePlayEnvelope =
+            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+        let xs: Vec<f64> = updated.fixture.steps.iter().map(|step| step.x).collect();
+        assert!(xs.iter().any(|x| *x != 0.0), "reorganize should spread steps apart, got {xs:?}");
+    }
+
+    #[test]
+    fn stop_command_clears_last_run_result() {
+        let mut app = SequencePlayApp;
+        let document = app.initial_document_json();
+        let ran = app.handle_command("run", None, &document, &ViewState::default());
+        let ran_document = serde_json::from_str::<Value>(&ran[0]).unwrap()["document"].to_string();
+        let ops = app.handle_command("stop", None, &ran_document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let updated: SequencePlayEnvelope =
+            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+        assert!(updated.runtime.last_run_json.is_empty());
     }
 }

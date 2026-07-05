@@ -10,6 +10,7 @@ use kernel_3d_scene::{
 };
 use semio_framework_core::{mesh_from_glb, mesh_from_kind, CommandDescriptor, MeshData, UiComponentSceneNode};
 use base64::Engine;
+use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
@@ -19,6 +20,36 @@ use ui_wgpu::{
 };
 
 //#region SceneRecords
+fn deserialize_optional_string_vec<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value = Option::<serde_json::Value>::deserialize(deserializer)?;
+    match value {
+        None => Ok(None),
+        Some(serde_json::Value::Array(items)) => Ok(Some(
+            items
+                .into_iter()
+                .filter_map(|item| match item {
+                    serde_json::Value::String(value) => Some(value),
+                    serde_json::Value::Number(value) => value.as_u64().map(|id| id.to_string()),
+                    _ => None,
+                })
+                .collect(),
+        )),
+        Some(other) => Err(D::Error::custom(format!(
+            "expected array for component ids, got {other}"
+        ))),
+    }
+}
+
+fn json_id_to_string(value: &serde_json::Value) -> Option<String> {
+    value
+        .as_str()
+        .map(str::to_string)
+        .or_else(|| value.as_u64().map(|id| id.to_string()))
+}
+
 #[derive(Clone, Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct WorldCameraRecord {
@@ -65,12 +96,14 @@ struct WorldSelectionRecord {
     ids: Option<Vec<String>>,
     hovered_id: Option<String>,
     granularity: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_string_vec")]
     component_ids: Option<Vec<String>>,
     transform_tool: Option<String>,
     interaction_mode: Option<String>,
     gumball_target: Option<[f64; 3]>,
     selection_mode: Option<String>,
     hovered_component: Option<serde_json::Value>,
+    show_edges: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -183,6 +216,10 @@ pub struct World3dState {
     marquee_preview_ids: Vec<String>,
     paint_stroke_active: bool,
     hovered_component_id: Option<String>,
+    hovered_component_object_id: Option<String>,
+    hovered_component_mode: Option<String>,
+    show_edges: bool,
+    press_object_id: Option<String>,
     mesh_paint_textures: HashMap<String, (u32, u32, Vec<u8>)>,
 }
 
@@ -240,6 +277,10 @@ impl World3dState {
             marquee_preview_ids: Vec::new(),
             paint_stroke_active: false,
             hovered_component_id: None,
+            hovered_component_object_id: None,
+            hovered_component_mode: None,
+            show_edges: false,
+            press_object_id: None,
             mesh_paint_textures: HashMap::new(),
         }
     }
@@ -366,6 +407,48 @@ fn component_mode_active(state: &World3dState) -> bool {
     )
 }
 
+const CLICK_DRAG_THRESHOLD_PX: f32 = 4.0;
+
+fn pointer_drag_distance(state: &World3dState, x: f32, y: f32) -> f32 {
+    let Some(start) = state.marquee_points.first() else {
+        return 0.0;
+    };
+    let dx = x - start[0];
+    let dy = y - start[1];
+    (dx * dx + dy * dy).sqrt()
+}
+
+fn is_click_gesture(state: &World3dState, x: f32, y: f32) -> bool {
+    pointer_drag_distance(state, x, y) <= CLICK_DRAG_THRESHOLD_PX
+}
+
+fn push_line_segment(
+    lines: &mut Vec<LineVertex3d>,
+    from: Vec3,
+    to: Vec3,
+    color: [f32; 4],
+) {
+    lines.push(LineVertex3d {
+        position: from.to_array(),
+        color,
+    });
+    lines.push(LineVertex3d {
+        position: to.to_array(),
+        color,
+    });
+}
+
+fn push_vertex_marker(lines: &mut Vec<LineVertex3d>, center: Vec3, color: [f32; 4], size: f32) {
+    push_line_segment(lines, center, center.add(Vec3::new(size, 0.0, 0.0)), color);
+    push_line_segment(lines, center, center.add(Vec3::new(0.0, size, 0.0)), color);
+    push_line_segment(lines, center, center.add(Vec3::new(0.0, 0.0, size)), color);
+}
+
+fn mesh_vertex(mesh: &Mesh3d, index: u32) -> Vec3 {
+    let i = index as usize * 3;
+    Vec3::new(mesh.positions[i], mesh.positions[i + 1], mesh.positions[i + 2])
+}
+
 fn append_component_overlays(
     state: &World3dState,
     lines: &mut Vec<LineVertex3d>,
@@ -373,7 +456,7 @@ fn append_component_overlays(
     preview: &[String],
     hovered: &Option<String>,
 ) {
-    if state.interaction_mode == "paint" || component_mode_active(state) {
+    if state.interaction_mode == "paint" || component_mode_active(state) || state.show_edges {
         let wire_color = [0.55, 0.65, 0.8, 0.75];
         for draw in &state.draws {
             let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -418,36 +501,78 @@ fn append_component_overlays(
             continue;
         };
         for instance in &draw.instances {
-            if state.granularity == "edge" {
-                for (edge_index, chunk) in mesh.edge_positions.chunks_exact(6).enumerate() {
-                    let id = mesh
-                        .edge_ids
-                        .get(edge_index)
-                        .map(|value| value.to_string())
-                        .unwrap_or_else(|| edge_index.to_string());
-                    if !ids.contains(&id) {
-                        continue;
+            match state.granularity.as_str() {
+                "vertex" => {
+                    for (vertex_index, chunk) in mesh.positions.chunks_exact(3).enumerate() {
+                        let id = mesh
+                            .vertex_ids
+                            .get(vertex_index)
+                            .map(|value| value.to_string())
+                            .unwrap_or_else(|| vertex_index.to_string());
+                        if !ids.contains(&id) {
+                            continue;
+                        }
+                        let color = if preview.contains(&id) {
+                            preview_color
+                        } else {
+                            highlight
+                        };
+                        let center = instance.model.transform_point(Vec3::new(
+                            chunk[0], chunk[1], chunk[2],
+                        ));
+                        push_vertex_marker(lines, center, color, 0.04);
                     }
-                    let color = if preview.contains(&id) {
-                        preview_color
-                    } else {
-                        highlight
-                    };
-                    let a = instance.model.transform_point(Vec3::new(
-                        chunk[0], chunk[1], chunk[2],
-                    ));
-                    let b = instance.model.transform_point(Vec3::new(
-                        chunk[3], chunk[4], chunk[5],
-                    ));
-                    lines.push(LineVertex3d {
-                        position: a.to_array(),
-                        color,
-                    });
-                    lines.push(LineVertex3d {
-                        position: b.to_array(),
-                        color,
-                    });
                 }
+                "edge" => {
+                    for (edge_index, chunk) in mesh.edge_positions.chunks_exact(6).enumerate() {
+                        let id = mesh
+                            .edge_ids
+                            .get(edge_index)
+                            .map(|value| value.to_string())
+                            .unwrap_or_else(|| edge_index.to_string());
+                        if !ids.contains(&id) {
+                            continue;
+                        }
+                        let color = if preview.contains(&id) {
+                            preview_color
+                        } else {
+                            highlight
+                        };
+                        let a = instance.model.transform_point(Vec3::new(
+                            chunk[0], chunk[1], chunk[2],
+                        ));
+                        let b = instance.model.transform_point(Vec3::new(
+                            chunk[3], chunk[4], chunk[5],
+                        ));
+                        push_line_segment(lines, a, b, color);
+                    }
+                }
+                "face" => {
+                    for (tri_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
+                        let id = mesh
+                            .face_ids
+                            .get(tri_index)
+                            .map(|value| value.to_string())
+                            .unwrap_or_else(|| tri_index.to_string());
+                        if !ids.contains(&id) {
+                            continue;
+                        }
+                        let color = if preview.contains(&id) {
+                            preview_color
+                        } else {
+                            highlight
+                        };
+                        let verts = [
+                            instance.model.transform_point(mesh_vertex(mesh, tri[0])),
+                            instance.model.transform_point(mesh_vertex(mesh, tri[1])),
+                            instance.model.transform_point(mesh_vertex(mesh, tri[2])),
+                        ];
+                        push_line_segment(lines, verts[0], verts[1], color);
+                        push_line_segment(lines, verts[1], verts[2], color);
+                        push_line_segment(lines, verts[2], verts[0], color);
+                    }
+                }
+                _ => {}
             }
         }
     }
@@ -844,12 +969,6 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         && state.scene_brush_preview_json.as_deref() == world.brush_preview_json.as_deref()
         && state.scene_interaction_json.as_deref() == world.interaction_json.as_deref();
     if unchanged {
-        #[cfg(target_arch = "wasm32")]
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "[DEBUG] world3d sync skipped surface={} draws={}",
-            state.surface_id,
-            state.draws.len(),
-        )));
         return;
     }
     let camera_changed = state.scene_camera_json.as_deref() != Some(world.camera_json.as_str());
@@ -975,6 +1094,9 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         .granularity
         .or(selection.selection_mode)
         .unwrap_or_else(|| "object".into());
+    if state.granularity == "object" {
+        state.granularity = "mesh".into();
+    }
     state.interaction_mode = selection
         .interaction_mode
         .unwrap_or_else(|| "model".into());
@@ -989,8 +1111,20 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         .hovered_component
         .as_ref()
         .and_then(|value| value.get("id"))
+        .and_then(json_id_to_string);
+    state.hovered_component_object_id = selection
+        .hovered_component
+        .as_ref()
+        .and_then(|value| value.get("objectId"))
         .and_then(|value| value.as_str())
         .map(str::to_string);
+    state.hovered_component_mode = selection
+        .hovered_component
+        .as_ref()
+        .and_then(|value| value.get("mode"))
+        .and_then(|value| value.as_str())
+        .map(str::to_string);
+    state.show_edges = selection.show_edges.unwrap_or(false);
     state.transform_tool = selection
         .transform_tool
         .unwrap_or_else(|| "translate".into());
@@ -1061,14 +1195,6 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
             instances,
         })
         .collect();
-    #[cfg(target_arch = "wasm32")]
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-        "[DEBUG] world3d sync surface={} meshes={} draws={} instances={}",
-        state.surface_id,
-        state.meshes.len(),
-        state.draws.len(),
-        state.draws.iter().map(|draw| draw.instances.len()).sum::<usize>(),
-    )));
 }
 
 pub fn render_world_3d(
@@ -1124,19 +1250,14 @@ pub fn render_world_3d(
         }
     }
     #[cfg(target_arch = "wasm32")]
-    {
-        let visible_instances: usize = culled_draws.iter().map(|draw| draw.instances.len()).sum();
+    if culled_draws.is_empty() {
         web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "[DEBUG] world3d surface={} sync_draws={} visible_draws={} visible_instances={} culled={} bounds={:.0}x{:.0}@{:.0},{:.0}",
+            "[DEBUG] world3d empty surface={} sync_draws={} culled={} bounds={:.0}x{:.0}",
             state.surface_id,
             state.draws.len(),
-            culled_draws.len(),
-            visible_instances,
             culled_count,
             inner.w,
             inner.h,
-            inner.x,
-            inner.y,
         )));
     }
     if culled_count > 0 {
@@ -1499,13 +1620,10 @@ pub fn handle_world3d_pointer_button(
                         return None;
                     }
                 }
-                if state.gumball_handle.is_none() {
-                    if let Some(object_id) = pick_instance_at(state, x, y, inner) {
-                        state.drag_object_id = Some(object_id.clone());
-                        state.drag_last_position = object_world_position(state, &object_id);
-                        state.drag_object_z = state.drag_last_position.map(|p| p[2]).unwrap_or(0.0);
-                        return None;
-                    }
+                if state.gumball_handle.is_none() && !component_mode_active(state) {
+                    state.press_object_id = pick_instance_at(state, x, y, inner);
+                } else {
+                    state.press_object_id = None;
                 }
             }
             state.marquee_active = true;
@@ -1520,7 +1638,18 @@ pub fn handle_world3d_pointer_button(
     }
     if button == 0 && state.marquee_active {
         state.marquee_active = false;
-        return marquee_select_command(state, inner, shift, ctrl);
+        if is_click_gesture(state, x, y) {
+            state.marquee_points.clear();
+            state.marquee_preview_ids.clear();
+            state.press_object_id = None;
+            state.drag_object_id = None;
+            state.drag_last_position = None;
+            if state.gumball_handle.is_none() {
+                return pick_select_command(state, x, y, inner, shift, ctrl);
+            }
+        } else {
+            return marquee_select_command(state, inner, shift, ctrl);
+        }
     }
     if button == 0 && state.interaction_mode == "paint" && state.paint_stroke_active {
         state.paint_stroke_active = false;
@@ -1540,17 +1669,20 @@ pub fn handle_world3d_pointer_button(
         }
         state.gumball_handle = None;
         reset_gumball_preview(state);
+        state.press_object_id = None;
         if let Some(object_id) = state.drag_object_id.take() {
             if let Some(position) = state.drag_last_position {
-                return Some(CommandDescriptor {
-                    controller_id: state.controller_id.clone(),
-                    command: "worldRelocate".into(),
-                    args: Some(json!({
-                        "surfaceId": state.surface_id,
-                        "objectId": object_id,
-                        "position": position,
-                    })),
-                });
+                if !is_click_gesture(state, x, y) {
+                    return Some(CommandDescriptor {
+                        controller_id: state.controller_id.clone(),
+                        command: "worldRelocate".into(),
+                        args: Some(json!({
+                            "surfaceId": state.surface_id,
+                            "objectId": object_id,
+                            "position": position,
+                        })),
+                    });
+                }
             }
         }
         if state.active_tool == "brush" {
@@ -1599,6 +1731,24 @@ pub fn handle_world3d_pointer_drag(
             gumball_drag_update(state, x, y, inner);
             return;
         }
+        if state.drag_object_id.is_none()
+            && state.gumball_handle.is_none()
+            && !component_mode_active(state)
+            && pointer_drag_distance(state, x, y) > CLICK_DRAG_THRESHOLD_PX
+        {
+            if let Some(object_id) = state
+                .press_object_id
+                .take()
+                .or_else(|| pick_instance_at(state, x, y, inner))
+            {
+                state.drag_object_id = Some(object_id.clone());
+                state.marquee_active = false;
+                state.marquee_points.clear();
+                state.marquee_preview_ids.clear();
+                state.drag_last_position = object_world_position(state, &object_id);
+                state.drag_object_z = state.drag_last_position.map(|p| p[2]).unwrap_or(0.0);
+            }
+        }
         if state.drag_object_id.is_some() && inner.contains(x, y) {
             if let Some(position) = ground_plane_pick(state, x, y, inner, state.drag_object_z) {
                 state.drag_last_position = Some(position);
@@ -1609,17 +1759,115 @@ pub fn handle_world3d_pointer_drag(
             return;
         }
     }
-    if button == 1 || (button == 2 && modifiers.shift) {
+    if button == 1 || (button == 2 && (modifiers.shift || modifiers.alt || modifiers.meta)) {
         state.orbit.pan(dx, dy);
-    } else if button == 2 && (modifiers.alt || modifiers.meta) {
-        state.orbit.orbit(dx, dy);
-    } else if button == 2 {
-        state.orbit.orbit(dx, dy);
     }
 }
 
 pub fn handle_world3d_wheel(state: &mut World3dState, delta: f32) {
-    state.orbit.zoom(delta);
+    state.orbit.zoom(-delta);
+}
+
+fn merge_string_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<String> {
+    match merge {
+        "add" => {
+            let mut merged = existing.to_vec();
+            for id in incoming {
+                if !merged.contains(id) {
+                    merged.push(id.clone());
+                }
+            }
+            merged
+        }
+        "toggle" | "invertive" => {
+            let mut merged = existing.to_vec();
+            for id in incoming {
+                if let Some(index) = merged.iter().position(|entry| entry == id) {
+                    merged.remove(index);
+                } else {
+                    merged.push(id.clone());
+                }
+            }
+            merged
+        }
+        _ => incoming.to_vec(),
+    }
+}
+
+/// Applies hover/selection command payloads to renderer-local world state before the plugin round-trip.
+pub fn apply_world_command_preview(state: &mut World3dState, command: &CommandDescriptor) {
+    let Some(args) = command.args.as_ref() else {
+        if command.command == "setHover" {
+            state.hovered_component_id = None;
+            state.hovered_component_object_id = None;
+            state.hovered_component_mode = None;
+            state.local_hover_id = None;
+            state.scene_selection_json = None;
+        }
+        return;
+    };
+    match command.command.as_str() {
+        "setHover" => {
+            if args.get("objectId").is_none() {
+                state.hovered_component_id = None;
+                state.hovered_component_object_id = None;
+                state.hovered_component_mode = None;
+                state.local_hover_id = None;
+            } else {
+                let object_id = args
+                    .get("objectId")
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                let mode = args
+                    .get("mode")
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                let id = args.get("id").and_then(json_id_to_string);
+                state.hovered_component_object_id = object_id.clone();
+                state.hovered_component_mode = mode;
+                state.hovered_component_id = id;
+                state.local_hover_id = object_id;
+            }
+            state.scene_selection_json = None;
+        }
+        "worldPick" => {
+            let merge = args
+                .get("merge")
+                .and_then(|value| value.as_str())
+                .unwrap_or("replace");
+            if let Some(granularity) = args.get("granularity").and_then(|value| value.as_str()) {
+                state.granularity = granularity.to_string();
+            }
+            if args.get("id").map_or(true, |value| value.is_null()) {
+                if merge == "replace" {
+                    state.component_ids.clear();
+                }
+            } else if let Some(id) = args.get("id").and_then(json_id_to_string) {
+                state.component_ids = merge_string_ids(&state.component_ids, &[id], merge);
+            }
+            state.scene_selection_json = None;
+        }
+        "worldSelect" => {
+            let merge = args
+                .get("merge")
+                .and_then(|value| value.as_str())
+                .unwrap_or("replace");
+            let ids: Vec<String> = args
+                .get("ids")
+                .and_then(|value| serde_json::from_value(value.clone()).ok())
+                .unwrap_or_default();
+            state.selected_ids = merge_string_ids(&state.selected_ids, &ids, merge);
+            state.scene_selection_json = None;
+        }
+        "worldHover" => {
+            state.local_hover_id = args
+                .get("id")
+                .and_then(|value| value.as_str())
+                .map(str::to_string);
+            state.scene_selection_json = None;
+        }
+        _ => {}
+    }
 }
 
 pub fn ingest_glb_mesh(state: &mut World3dState, url: &str, mesh: MeshData, mesh_id: String) {
@@ -1638,6 +1886,45 @@ fn pick_hover_command(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> 
             controller_id: state.controller_id.clone(),
             command: "worldVortexHover".into(),
             args: Some(json!({ "surfaceId": state.surface_id, "fullId": hit })),
+        });
+    }
+    if component_mode_active(state) {
+        if let Some((mode, id, object_id)) = pick_component_at(state, x, y, inner) {
+            if state.hovered_component_id.as_deref() == Some(id.as_str())
+                && state.hovered_component_object_id.as_deref() == Some(object_id.as_str())
+                && state.hovered_component_mode.as_deref() == Some(mode.as_str())
+            {
+                return None;
+            }
+            state.hovered_component_id = Some(id.clone());
+            state.hovered_component_object_id = Some(object_id.clone());
+            state.hovered_component_mode = Some(mode.clone());
+            state.local_hover_id = Some(object_id.clone());
+            let id_num = id.parse::<u64>().unwrap_or(0);
+            return Some(CommandDescriptor {
+                controller_id: state.controller_id.clone(),
+                command: "setHover".into(),
+                args: Some(json!({
+                    "objectId": object_id,
+                    "mode": mode,
+                    "id": id_num,
+                })),
+            });
+        }
+        if state.hovered_component_id.is_none()
+            && state.hovered_component_object_id.is_none()
+            && state.hovered_component_mode.is_none()
+        {
+            return None;
+        }
+        state.hovered_component_id = None;
+        state.hovered_component_object_id = None;
+        state.hovered_component_mode = None;
+        state.local_hover_id = None;
+        return Some(CommandDescriptor {
+            controller_id: state.controller_id.clone(),
+            command: "setHover".into(),
+            args: None,
         });
     }
     let hit = pick_instance_at(state, x, y, inner);
@@ -1665,7 +1952,7 @@ fn pick_select_command(
         return None;
     }
     if component_mode_active(state) {
-        let Some((granularity, id)) = pick_component_at(state, x, y, inner) else {
+        let Some((granularity, id, _object_id)) = pick_component_at(state, x, y, inner) else {
             return Some(CommandDescriptor {
                 controller_id: state.controller_id.clone(),
                 command: "worldPick".into(),
@@ -1683,6 +1970,22 @@ fn pick_select_command(
             args: Some(json!({
                 "surfaceId": state.surface_id,
                 "granularity": granularity,
+                "id": id.parse::<u64>().ok(),
+                "merge": merge,
+            })),
+        });
+    }
+    if state.granularity == "mesh" {
+        let hit = pick_instance_at(state, x, y, inner);
+        let id = hit
+            .as_deref()
+            .and_then(|object_id| instance_object_index(state, object_id));
+        return Some(CommandDescriptor {
+            controller_id: state.controller_id.clone(),
+            command: "worldPick".into(),
+            args: Some(json!({
+                "surfaceId": state.surface_id,
+                "granularity": "mesh",
                 "id": id,
                 "merge": merge,
             })),
@@ -1698,6 +2001,50 @@ fn pick_select_command(
             "merge": merge,
         })),
     })
+}
+
+fn instance_object_index(state: &World3dState, object_id: &str) -> Option<u32> {
+    let mut index = 0u32;
+    for draw in &state.draws {
+        for instance in &draw.instances {
+            if instance.id == object_id {
+                return Some(index);
+            }
+            index += 1;
+        }
+    }
+    None
+}
+
+fn merge_u32_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<u32> {
+    let parse = |ids: &[String]| -> Vec<u32> {
+        ids.iter().filter_map(|id| id.parse().ok()).collect()
+    };
+    let existing_ids = parse(existing);
+    let incoming_ids = parse(incoming);
+    match merge {
+        "add" => {
+            let mut merged = existing_ids;
+            for id in incoming_ids {
+                if !merged.contains(&id) {
+                    merged.push(id);
+                }
+            }
+            merged
+        }
+        "toggle" | "invertive" => {
+            let mut merged = existing_ids;
+            for id in incoming_ids {
+                if let Some(index) = merged.iter().position(|entry| *entry == id) {
+                    merged.remove(index);
+                } else {
+                    merged.push(id);
+                }
+            }
+            merged
+        }
+        _ => incoming_ids,
+    }
 }
 
 fn marquee_select_command(
@@ -1746,14 +2093,13 @@ fn marquee_select_command(
     state.marquee_preview_ids.clear();
     let merge = if shift { "add" } else if ctrl { "toggle" } else { "replace" };
     if component_mode_active(state) {
+        let merged = merge_u32_ids(&state.component_ids, &ids, merge);
         return Some(CommandDescriptor {
             controller_id: state.controller_id.clone(),
-            command: "worldPick".into(),
+            command: "setSelection".into(),
             args: Some(json!({
-                "surfaceId": state.surface_id,
-                "granularity": state.granularity,
-                "ids": ids,
-                "merge": merge,
+                "mode": state.granularity,
+                "ids": merged,
             })),
         });
     }
@@ -1848,7 +2194,12 @@ fn start_gumball_drag(state: &mut World3dState, handle: GumballHandle, x: f32, y
     }
 }
 
-fn pick_component_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option<(String, String)> {
+fn pick_component_at(
+    state: &World3dState,
+    x: f32,
+    y: f32,
+    inner: Rect,
+) -> Option<(String, String, String)> {
     let camera = state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let local_x = x - inner.x;
@@ -1856,7 +2207,7 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Optio
     let granularity = state.granularity.as_str();
     match granularity {
         "vertex" => {
-            let mut best: Option<(f32, String)> = None;
+            let mut best: Option<(f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
                     continue;
@@ -1875,23 +2226,23 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Optio
                         let dy = screen[1] - local_y;
                         let dist = (dx * dx + dy * dy).sqrt();
                         if dist <= 12.0
-                            && best.as_ref().map_or(true, |(best_dist, _)| dist < *best_dist)
+                            && best.as_ref().map_or(true, |(best_dist, _, _)| dist < *best_dist)
                         {
                             let id = mesh
                                 .vertex_ids
                                 .get(vertex_index)
                                 .map(|value| value.to_string())
                                 .unwrap_or_else(|| vertex_index.to_string());
-                            best = Some((dist, id));
+                            best = Some((dist, id, instance.id.clone()));
                         }
                     }
                 }
             }
-            return best.map(|(_, id)| (granularity.to_string(), id));
+            return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "edge" => {
             let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
-            let mut best: Option<(f32, String)> = None;
+            let mut best: Option<(f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
                     continue;
@@ -1906,24 +2257,24 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Optio
                         ));
                         if let Some(dist) = ray_segment_distance(origin, dir, a, b) {
                             if dist <= 0.08
-                                && best.as_ref().map_or(true, |(best_dist, _)| dist < *best_dist)
+                                && best.as_ref().map_or(true, |(best_dist, _, _)| dist < *best_dist)
                             {
                                 let id = mesh
                                     .edge_ids
                                     .get(edge_index)
                                     .map(|value| value.to_string())
                                     .unwrap_or_else(|| edge_index.to_string());
-                                best = Some((dist, id));
+                                best = Some((dist, id, instance.id.clone()));
                             }
                         }
                     }
                 }
             }
-            return best.map(|(_, id)| (granularity.to_string(), id));
+            return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "face" => {
             let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
-            let mut best: Option<(f32, String, usize)> = None;
+            let mut best: Option<(f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
                     continue;
@@ -1937,12 +2288,12 @@ fn pick_component_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Optio
                                 .get(hit.triangle_index)
                                 .map(|value| value.to_string())
                                 .unwrap_or_else(|| hit.triangle_index.to_string());
-                            best = Some((hit.distance, id, hit.triangle_index));
+                            best = Some((hit.distance, id, instance.id.clone()));
                         }
                     }
                 }
             }
-            return best.map(|(_, id, _)| (granularity.to_string(), id));
+            return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         _ => {}
     }
@@ -1977,7 +2328,7 @@ fn pick_paint_hit(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option<(
 }
 
 fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
-    if state.marquee_points.len() < 2 || !component_mode_active(state) {
+    if state.marquee_points.len() < 2 {
         state.marquee_preview_ids.clear();
         return;
     }
@@ -1992,16 +2343,28 @@ fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
     } else {
         state.marquee_points.clone()
     };
-    state.marquee_preview_ids = screen_select_components(
-        &state.meshes,
-        &state.draws,
-        view_proj,
-        inner.w,
-        inner.h,
-        &polygon,
-        rectangle,
-        state.granularity.as_str(),
-    );
+    state.marquee_preview_ids = if component_mode_active(state) {
+        screen_select_components(
+            &state.meshes,
+            &state.draws,
+            view_proj,
+            inner.w,
+            inner.h,
+            &polygon,
+            rectangle,
+            state.granularity.as_str(),
+        )
+    } else {
+        screen_select_instances(
+            &state.meshes,
+            &state.draws,
+            view_proj,
+            inner.w,
+            inner.h,
+            &polygon,
+            rectangle,
+        )
+    };
 }
 
 fn pick_instance_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option<String> {
@@ -2293,3 +2656,268 @@ pub async fn fetch_pending_reference_images(states: &mut HashMap<String, World3d
 
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn fetch_pending_reference_images(_states: &mut HashMap<String, World3dState>) {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use semio_framework_core::{UiComponentSceneNode, World3dScene};
+
+    fn topology_mesh() -> Mesh3d {
+        let mut mesh = Mesh3d::from_buffers(
+            vec![
+                0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0,
+            ],
+            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
+            vec![0, 1, 2, 1, 3, 2],
+        );
+        mesh.face_ids = vec![10, 11];
+        mesh.vertex_ids = vec![1, 2, 3, 4];
+        mesh.edge_positions = vec![
+            0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0,
+        ];
+        mesh.edge_ids = vec![5, 6];
+        mesh
+    }
+
+    fn scene_with_selection(selection_json: &str) -> UiComponentSceneNode {
+        UiComponentSceneNode {
+            surface_id: "surface-1".into(),
+            controller_id: "controller-1".into(),
+            component_kind: "world-3d".into(),
+            pane_id: None,
+            binding_id: None,
+            canvas_2d: None,
+            world_3d: Some(World3dScene {
+                camera_json: r#"{"position":[4.0,4.0,4.0],"target":[0.0,0.0,0.0],"up":[0.0,0.0,1.0],"fov":45.0}"#.into(),
+                meshes_json: r#"[{"id":"mesh-1","data":{"positions":[0,0,0,1,0,0,0,1,0],"normals":[0,0,1,0,0,1,0,0,1],"indices":[0,1,2],"faceIds":[10],"vertexIds":[1,2,3],"edgePositions":[0,0,0,1,0,0],"edgeIds":[5]}}]"#.into(),
+                instances_json: r#"[{"id":"obj-1","meshId":"mesh-1","position":[0,0,0],"rotation":[0,0,0,1],"scale":[1,1,1]}]"#.into(),
+                selection_json: selection_json.into(),
+                vortices_json: None,
+                attractions_json: None,
+                target_volumes_json: None,
+                references_json: None,
+                brush_preview_json: None,
+                interaction_json: None,
+            }),
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            raster: None,
+            virtual_file_system: None,
+        }
+    }
+
+    #[test]
+    fn sync_parses_numeric_component_ids_and_hovered_component() {
+        let selection = r#"{
+            "granularity":"vertex",
+            "componentIds":[1,2],
+            "hoveredComponent":{"objectId":"obj-1","mode":"vertex","id":3},
+            "showEdges":true
+        }"#;
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        sync_world3d_state(
+            &mut state,
+            &scene_with_selection(selection),
+            Rect {
+                x: 0.0,
+                y: 0.0,
+                w: 400.0,
+                h: 400.0,
+            },
+        );
+        assert_eq!(state.granularity, "vertex");
+        assert_eq!(state.component_ids, vec!["1".to_string(), "2".to_string()]);
+        assert_eq!(state.hovered_component_id.as_deref(), Some("3"));
+        assert_eq!(state.hovered_component_object_id.as_deref(), Some("obj-1"));
+        assert_eq!(state.hovered_component_mode.as_deref(), Some("vertex"));
+        assert!(state.show_edges);
+    }
+
+    #[test]
+    fn append_component_overlays_draws_vertex_and_face_highlights() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "vertex".into();
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let mut lines = Vec::new();
+        append_component_overlays(&state, &mut lines, &["1".into()], &[], &None);
+        assert!(!lines.is_empty());
+
+        state.granularity = "face".into();
+        let mut face_lines = Vec::new();
+        append_component_overlays(&state, &mut face_lines, &["10".into()], &[], &None);
+        assert!(!face_lines.is_empty());
+    }
+
+    #[test]
+    fn merge_u32_ids_supports_add_and_toggle() {
+        assert_eq!(
+            merge_u32_ids(&["1".into()], &["2".into()], "add"),
+            vec![1, 2]
+        );
+        assert_eq!(
+            merge_u32_ids(&["1".into(), "2".into()], &["2".into(), "3".into()], "toggle"),
+            vec![1, 3]
+        );
+    }
+
+    #[test]
+    fn pick_select_emits_numeric_world_pick_id() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "vertex".into();
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let inner = Rect {
+            x: 0.0,
+            y: 0.0,
+            w: 400.0,
+            h: 400.0,
+        };
+        let camera = state.orbit.to_camera();
+        let screen = kernel_3d_scene::project_point(
+            camera.view_proj(1.0),
+            Vec3::ZERO,
+            inner.w,
+            inner.h,
+        )
+        .expect("vertex projects");
+        let command = pick_select_command(&state, screen[0], screen[1], inner, false, false)
+            .expect("pick command");
+        assert_eq!(command.command, "worldPick");
+        let args = command.args.expect("args");
+        assert_eq!(args["id"], json!(1));
+    }
+
+    #[test]
+    fn marquee_component_mode_emits_set_selection_with_numeric_ids() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "vertex".into();
+        state.component_ids = vec!["1".into()];
+        state.marquee_points = vec![[10.0, 10.0], [390.0, 390.0]];
+        state.meshes.insert("mesh-1".into(), topology_mesh());
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let command = marquee_select_command(
+            &mut state,
+            Rect {
+                x: 0.0,
+                y: 0.0,
+                w: 400.0,
+                h: 400.0,
+            },
+            true,
+            false,
+        )
+        .expect("marquee command");
+        assert_eq!(command.command, "setSelection");
+        let args = command.args.expect("args");
+        assert_eq!(args["mode"], json!("vertex"));
+        assert!(args["ids"].as_array().is_some());
+    }
+
+    #[test]
+    fn click_release_routes_to_pick_select_instead_of_empty_marquee() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.active_tool = "select".into();
+        state.granularity = "mesh".into();
+        state.marquee_active = true;
+        state.marquee_points = vec![[120.0, 140.0]];
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let inner = Rect {
+            x: 0.0,
+            y: 0.0,
+            w: 400.0,
+            h: 400.0,
+        };
+        state.bounds = inner;
+        let command = handle_world3d_pointer_button(
+            &mut state,
+            120.0,
+            140.0,
+            false,
+            0,
+            &PointerModifiers::default(),
+        )
+        .expect("click should pick");
+        assert_eq!(command.command, "worldPick");
+        assert!(!state.marquee_active);
+    }
+
+    #[test]
+    fn apply_world_command_preview_updates_component_hover_and_selection() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        apply_world_command_preview(
+            &mut state,
+            &CommandDescriptor {
+                controller_id: "controller-1".into(),
+                command: "setHover".into(),
+                args: Some(json!({
+                    "objectId": "obj-1",
+                    "mode": "vertex",
+                    "id": 2,
+                })),
+            },
+        );
+        assert_eq!(state.hovered_component_id.as_deref(), Some("2"));
+        assert_eq!(state.hovered_component_mode.as_deref(), Some("vertex"));
+
+        apply_world_command_preview(
+            &mut state,
+            &CommandDescriptor {
+                controller_id: "controller-1".into(),
+                command: "worldPick".into(),
+                args: Some(json!({
+                    "granularity": "vertex",
+                    "id": 4,
+                    "merge": "replace",
+                })),
+            },
+        );
+        assert_eq!(state.component_ids, vec!["4".to_string()]);
+        assert_eq!(state.granularity, "vertex");
+    }
+}

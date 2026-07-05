@@ -41,7 +41,7 @@ pub struct TreeDragState {
     pub drop_position: TreeDropPosition,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum HitKind {
     Button,
     Toggle,
@@ -55,6 +55,8 @@ pub enum HitKind {
     Window,
     World3d,
     PanelResize,
+    DockSplit,
+    DockJoinCorner,
     ScrollRegion,
     ContextMenu,
     DropdownItem,
@@ -79,6 +81,7 @@ pub struct DragState {
     pub current_y: f32,
     pub target_id: Option<String>,
     pub axis: Option<DragAxis>,
+    pub kind: Option<HitKind>,
     pub points: Vec<[f32; 2]>,
 }
 
@@ -93,6 +96,7 @@ impl Default for DragState {
             current_y: 0.0,
             target_id: None,
             axis: None,
+            kind: None,
             points: Vec::new(),
         }
     }
@@ -178,7 +182,15 @@ impl<E: Clone> InputState<E> {
             .and_then(|hit| hit.control_id.clone());
     }
 
-    pub fn begin_drag(&mut self, x: f32, y: f32, button: i16, target_id: Option<String>, axis: Option<DragAxis>) {
+    pub fn begin_drag(
+        &mut self,
+        x: f32,
+        y: f32,
+        button: i16,
+        target_id: Option<String>,
+        axis: Option<DragAxis>,
+        kind: Option<HitKind>,
+    ) {
         self.drag = DragState {
             active: true,
             button,
@@ -188,6 +200,7 @@ impl<E: Clone> InputState<E> {
             current_y: y,
             target_id,
             axis,
+            kind,
             points: vec![[x, y]],
         };
     }
@@ -270,6 +283,14 @@ pub struct PointerCallbacks {
 }
 
 #[cfg(target_arch = "wasm32")]
+fn pointer_coords(canvas: &web_sys::HtmlCanvasElement, event: &web_sys::MouseEvent) -> (f32, f32) {
+    let rect = canvas.get_bounding_client_rect();
+    let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
+    let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
+    (x, y)
+}
+
+#[cfg(target_arch = "wasm32")]
 pub fn attach_dom_listeners(canvas: &web_sys::HtmlCanvasElement, callbacks: PointerCallbacks) {
     use wasm_bindgen::closure::Closure;
     use wasm_bindgen::JsCast;
@@ -283,9 +304,7 @@ pub fn attach_dom_listeners(canvas: &web_sys::HtmlCanvasElement, callbacks: Poin
     let on_move = callbacks.on_move.clone();
 
     let move_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
-        let rect = canvas_clone.get_bounding_client_rect();
-        let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
-        let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
+        let (x, y) = pointer_coords(&canvas_clone, &event);
         on_move(
             x,
             y,
@@ -306,9 +325,7 @@ pub fn attach_dom_listeners(canvas: &web_sys::HtmlCanvasElement, callbacks: Poin
     let down_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
         pointer_down_down.set(true);
         pointer_button_down.set(event.button());
-        let rect = canvas_down.get_bounding_client_rect();
-        let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
-        let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
+        let (x, y) = pointer_coords(&canvas_down, &event);
         on_button_down(x, y, true, event.button(), modifiers_from_event(&event));
     }) as Box<dyn FnMut(MouseEvent)>);
     canvas
@@ -318,19 +335,55 @@ pub fn attach_dom_listeners(canvas: &web_sys::HtmlCanvasElement, callbacks: Poin
 
     let canvas_up = canvas.clone();
     let pointer_down_up = pointer_down.clone();
-    let pointer_button_up = pointer_button.clone();
-    let on_button_up = callbacks.on_button;
+    let on_button_up = callbacks.on_button.clone();
     let up_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
+        if !pointer_down_up.get() {
+            return;
+        }
         pointer_down_up.set(false);
-        let rect = canvas_up.get_bounding_client_rect();
-        let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
-        let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
-        on_button_up(x, y, false, pointer_button_up.get(), modifiers_from_event(&event));
+        let (x, y) = pointer_coords(&canvas_up, &event);
+        on_button_up(x, y, false, event.button(), modifiers_from_event(&event));
     }) as Box<dyn FnMut(MouseEvent)>);
     canvas
         .add_event_listener_with_callback("mouseup", up_cb.as_ref().unchecked_ref())
         .ok();
     up_cb.forget();
+
+    if let Some(window) = web_sys::window() {
+        let canvas_win_move = canvas.clone();
+        let pointer_down_win_move = pointer_down.clone();
+        let pointer_button_win_move = pointer_button.clone();
+        let on_move_win = callbacks.on_move.clone();
+        let win_move_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
+            if !pointer_down_win_move.get() {
+                return;
+            }
+            let (x, y) = pointer_coords(&canvas_win_move, &event);
+            on_move_win(
+                x,
+                y,
+                true,
+                pointer_button_win_move.get(),
+                modifiers_from_event(&event),
+            );
+        }) as Box<dyn FnMut(MouseEvent)>);
+        let _ = window.add_event_listener_with_callback("mousemove", win_move_cb.as_ref().unchecked_ref());
+        win_move_cb.forget();
+
+        let canvas_win_up = canvas.clone();
+        let pointer_down_win_up = pointer_down.clone();
+        let on_button_win_up = callbacks.on_button.clone();
+        let win_up_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
+            if !pointer_down_win_up.get() {
+                return;
+            }
+            pointer_down_win_up.set(false);
+            let (x, y) = pointer_coords(&canvas_win_up, &event);
+            on_button_win_up(x, y, false, event.button(), modifiers_from_event(&event));
+        }) as Box<dyn FnMut(MouseEvent)>);
+        let _ = window.add_event_listener_with_callback("mouseup", win_up_cb.as_ref().unchecked_ref());
+        win_up_cb.forget();
+    }
 
     let canvas_wheel = canvas.clone();
     let on_wheel = callbacks.on_wheel;
@@ -392,9 +445,10 @@ pub fn attach_dom_listeners(canvas: &web_sys::HtmlCanvasElement, callbacks: Poin
     let on_context_menu = callbacks.on_context_menu;
     let ctx_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
         event.prevent_default();
-        let rect = canvas_ctx.get_bounding_client_rect();
-        let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
-        let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
+        if event.alt_key() || event.shift_key() || event.meta_key() {
+            return;
+        }
+        let (x, y) = pointer_coords(&canvas_ctx, &event);
         on_context_menu(x, y);
     }) as Box<dyn FnMut(MouseEvent)>);
     canvas

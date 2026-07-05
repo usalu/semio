@@ -357,11 +357,128 @@ fn pattern_graph_fixture(patterns: &[PatternJson], title: &str) -> GraphFixture 
     }
 }
 
+fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64) -> Node {
+    Node {
+        id: id.into(),
+        name: name.into(),
+        kind: kind.into(),
+        x,
+        y,
+        width: 160.0,
+        height: 56.0,
+        ports: vec![],
+        properties: Default::default(),
+    }
+}
+
+fn lhs_semantic_graph_fixture(lhs: &Lhs) -> GraphFixture {
+    let mut nodes = vec![semantic_rule_node(
+        "lhs-match",
+        "rewrite.match",
+        &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind),
+        0.0,
+        0.0,
+    )];
+    let mut edges = Vec::new();
+    if let Some(where_clause) = lhs.where_clause.as_deref().filter(|value| !value.trim().is_empty()) {
+        nodes.push(semantic_rule_node("lhs-where", "rewrite.where", where_clause, 220.0, 80.0));
+        edges.push(trinity_ram::Edge {
+            id: "lhs-match-where".into(),
+            kind: "rewrite.flow".into(),
+            source: "lhs-match:out".into(),
+            target: "lhs-where:in".into(),
+            properties: Default::default(),
+        });
+    }
+    GraphFixture {
+        schema: GraphFixture::SCHEMA.into(),
+        name: "lhs".into(),
+        manifest_id: Some("nakagin".into()),
+        manifest: trinity_ram::Manifest::nakagin_default(),
+        camera: trinity_ram::Camera { x: 0.0, y: 0.0, zoom: 1.0 },
+        nodes,
+        edges,
+        root_node_id: None,
+    }
+}
+
+fn rhs_semantic_graph_fixture(rhs: &Rhs) -> GraphFixture {
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
+    let mut y = 0.0;
+    for (index, pattern) in rhs.create.iter().enumerate() {
+        let id = format!("rhs-create-{index}");
+        nodes.push(semantic_rule_node(
+            &id,
+            "rewrite.create",
+            &format!("{}:{}", pattern.left_var, pattern.left_kind),
+            (index as f64) * 220.0,
+            y,
+        ));
+    }
+    y += 80.0;
+    for (index, pattern) in rhs.merge.iter().enumerate() {
+        let id = format!("rhs-merge-{index}");
+        nodes.push(semantic_rule_node(
+            &id,
+            "rewrite.merge",
+            &format!("{}:{}", pattern.left_var, pattern.left_kind),
+            (index as f64) * 220.0,
+            y,
+        ));
+    }
+    y += 80.0;
+    for (index, assignment) in rhs.set.iter().enumerate() {
+        let id = format!("rhs-set-{index}");
+        nodes.push(semantic_rule_node(
+            &id,
+            "rewrite.set",
+            &format!("{}.{} = {:?}", assignment.var, assignment.prop, assignment.value),
+            (index as f64) * 220.0,
+            y,
+        ));
+    }
+    y += 80.0;
+    for (index, name) in rhs.delete.iter().enumerate() {
+        let id = format!("rhs-delete-{index}");
+        nodes.push(semantic_rule_node(&id, "rewrite.delete", name, (index as f64) * 220.0, y));
+    }
+    y += 80.0;
+    for (index, parameter) in rhs.parameters.iter().enumerate() {
+        let id = format!("rhs-parameter-{index}");
+        let kind = match parameter.kind {
+            ParameterKind::String => "string",
+            ParameterKind::Number => "number",
+            ParameterKind::Boolean => "boolean",
+        };
+        nodes.push(semantic_rule_node(
+            &id,
+            "rewrite.parameter",
+            &format!("{}:{kind}", parameter.name),
+            (index as f64) * 220.0,
+            y,
+        ));
+    }
+    if nodes.is_empty() {
+        nodes.push(semantic_rule_node("rhs-empty", "rewrite.create", "result:Piece", 0.0, 0.0));
+    }
+    GraphFixture {
+        schema: GraphFixture::SCHEMA.into(),
+        name: "rhs".into(),
+        manifest_id: Some("nakagin".into()),
+        manifest: trinity_ram::Manifest::nakagin_default(),
+        camera: trinity_ram::Camera { x: 0.0, y: 0.0, zoom: 1.0 },
+        nodes,
+        edges,
+        root_node_id: None,
+    }
+}
+
 fn lhs_graph_fixture_json(lhs_json: &str) -> String {
     let Ok(lhs) = serde_json::from_str::<Lhs>(lhs_json) else {
         return NAKAGIN_FIXTURE_JSON.into();
     };
-    Graph::from_fixture(pattern_graph_fixture(&[lhs.pattern], "lhs"))
+    Graph::from_fixture(lhs_semantic_graph_fixture(&lhs))
         .ok()
         .and_then(|graph| graph.fixture_json().ok())
         .unwrap_or_else(|| NAKAGIN_FIXTURE_JSON.into())
@@ -371,19 +488,7 @@ fn rhs_graph_fixture_json(rhs_json: &str) -> String {
     let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
         return NAKAGIN_FIXTURE_JSON.into();
     };
-    let mut patterns = rhs.create.clone();
-    patterns.extend(rhs.merge.clone());
-    if patterns.is_empty() {
-        patterns.push(PatternJson {
-            left_var: "result".into(),
-            left_kind: "Piece".into(),
-            edge_var: None,
-            edge_kind: None,
-            right_var: None,
-            right_kind: None,
-        });
-    }
-    Graph::from_fixture(pattern_graph_fixture(&patterns, "rhs"))
+    Graph::from_fixture(rhs_semantic_graph_fixture(&rhs))
         .ok()
         .and_then(|graph| graph.fixture_json().ok())
         .unwrap_or_else(|| NAKAGIN_FIXTURE_JSON.into())
@@ -857,6 +962,7 @@ impl PluginApp for TrinityRewritePlayApp {
             }
             "setLhsJson" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
+                    push_undo(&mut envelope);
                     envelope.lhs_json = value.into();
                     envelope.after_fixture_json = apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
                     return vec![set_document_op(&envelope)];
@@ -864,6 +970,7 @@ impl PluginApp for TrinityRewritePlayApp {
             }
             "setRhsJson" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
+                    push_undo(&mut envelope);
                     envelope.rhs_json = value.into();
                     envelope.runtime.parameter_bindings = default_parameter_bindings(&envelope.rhs_json);
                     envelope.after_fixture_json = apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
@@ -888,6 +995,7 @@ impl PluginApp for TrinityRewritePlayApp {
                         Some(ParameterKind::String) | None => Some(PropertyValue::String(value.into())),
                     };
                     if let Some(parsed) = parsed {
+                        push_undo(&mut envelope);
                         envelope.runtime.parameter_bindings.insert(name.into(), parsed);
                         envelope.after_fixture_json =
                             apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
@@ -959,7 +1067,28 @@ impl PluginApp for TrinityRewritePlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
-            "setJackHover" => {
+            "setJackSelect" | "textSelect" => {
+                if let Some(var) = args.and_then(|v| v.get("var")).and_then(|v| v.as_str()) {
+                    envelope.runtime.active_select_var = var.into();
+                } else if let Some(start) = args.and_then(|v| v.get("start")).and_then(|v| v.as_u64()) {
+                    let query = compiled_jack_query(&envelope);
+                    let text = query.as_str();
+                    let offset = start as usize;
+                    if offset < text.len() {
+                        let slice = &text[offset..];
+                        let token: String = slice
+                            .chars()
+                            .take_while(|ch| ch.is_ascii_alphanumeric() || *ch == '_')
+                            .collect();
+                        if !token.is_empty() {
+                            envelope.runtime.active_select_var = token;
+                        }
+                    }
+                }
+                envelope.runtime.select_epoch += 1;
+                return vec![set_document_op(&envelope)];
+            }
+            "setJackHover" | "textHover" => {
                 if let Some(var) = args.and_then(|v| v.get("var")).and_then(|v| v.as_str()) {
                     envelope.runtime.active_hover_var = var.into();
                 } else if let Some(offset) = args.and_then(|v| v.get("offset")).and_then(|v| v.as_u64()) {

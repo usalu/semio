@@ -1,35 +1,53 @@
 //! 📏 CAD plugin — spatial model play app bundled as a hot-swappable WASM component.
 
-use cad_document::{empty_cad_projection, CadNode, CadOp, CadScene, CAD_DOCUMENT_SCHEMA};
+use cad_document::{empty_cad_projection, CadEnvelope, CadNode, CadOp, CadScene, CadStore, CAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, export_mesh_glb_bytes, export_mesh_obj,
-    merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
-    world3d_selection_json, App, CommandDescriptor, MeshData, PluginApp, PluginBundle, UiControlNode, UiFieldNode,
-    UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    build_world_3d_scene, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
+    world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, App,
+    CommandDescriptor, MeshData, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup,
+    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementOption,
+    WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
+    WindowLayoutWindowNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_plugin::layout::WindowEngagementStatus;
 use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
-use vcs::{Operation, OperationDiff};
+use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
 
 //#region 🔖Constants
 const CAD_PLAY_APP_ID: &str = "cad-play";
 const CAD_PLAY_CONTROLLER_ID: &str = "cad-play";
-const CAD_PLAY_SURFACE_COMPOSITE: &str = "cad.play.composite";
-const CAD_PLAY_BODY_COMPOSITE: &str = "cad.play.composite";
+const CAD_PLAY_BODY_SHAPE: &str = "cad.play.shape";
+const CAD_PLAY_BODY_BUILDING: &str = "cad.play.building";
+const CAD_PLAY_BODY_ENERGY: &str = "cad.play.energy";
+const CAD_PLAY_BODY_STRUCTURE_CLASSIC: &str = "cad.play.structure-classic";
 const CAD_PLAY_BODY_HIERARCHY: &str = "cad.play.hierarchy";
 const CAD_PLAY_BODY_CATALOGUE: &str = "cad.play.catalogue";
 const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";
-const CAD_PLAY_WINDOW_COMPOSITE: &str = "cad-composite";
+const CAD_PLAY_SURFACE_SHAPE: &str = "cad.play.scene3d/shape";
+const CAD_PLAY_SURFACE_BUILDING: &str = "cad.play.scene3d/building";
+const CAD_PLAY_SURFACE_ENERGY: &str = "cad.play.scene3d/energy";
+const CAD_PLAY_SURFACE_STRUCTURE_CLASSIC: &str = "cad.play.scene3d/structure-classic";
+const CAD_PLAY_WINDOW_SHAPE: &str = "cad-play-shape";
+const CAD_PLAY_WINDOW_BUILDING: &str = "cad-play-building";
+const CAD_PLAY_WINDOW_ENERGY: &str = "cad-play-energy";
+const CAD_PLAY_WINDOW_STRUCTURE_CLASSIC: &str = "cad-play-structure-classic";
 const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
 const CAD_FALLBACK_MESH_KIND: &str = "box";
+
+/// @emoji 🗂️ Indices into the quad play fixture's `models[]` array — one model definition per pane.
+const CAD_MODEL_INDEX_BUILDING: usize = 0;
+const CAD_MODEL_INDEX_ENERGY: usize = 1;
+const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 2;
+const CAD_MODEL_INDEX_SHAPE: usize = 3;
 
 static CAD_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
@@ -55,28 +73,33 @@ const FOREST_LEFT_MODEL_JSON: &str =
 
 //#region 🔖BrepMeshes
 use kernel_3d_brepkit::BrepkitKernel;
-use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
+use kernel_3d_engine::{block_on, BrepKernel, MeshTransfer};
 use semio_framework_core::mesh_from_indexed;
 use std::sync::{Mutex, OnceLock};
 
 static CAD_BREP_KERNEL: OnceLock<Mutex<BrepkitKernel>> = OnceLock::new();
 
+/// @emoji 📦 Universal fallback extent for typologies with no authored geometry to measure.
+const CAD_DEFAULT_TYPOLOGY_EXTENT: [f64; 3] = [1.0, 1.0, 1.0];
+
 fn cad_brep_kernel() -> &'static Mutex<BrepkitKernel> {
     CAD_BREP_KERNEL.get_or_init(|| Mutex::new(BrepkitKernel::new()))
 }
 
-fn typology_brep_mesh(typology: &str) -> MeshData {
+/// @emoji 📐 Tessellates a typology's primitive sized from authored geometry (or a universal
+/// fallback extent when no geometry was captured), instead of hardcoded per-typology constants.
+fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>) -> MeshData {
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return mesh_from_kind(typology_mesh_kind(typology));
     };
+    let [ex, ey, ez] = extent.unwrap_or(CAD_DEFAULT_TYPOLOGY_EXTENT);
+    let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
+    let is_cylindrical = typology_mesh_kind(typology) == "cylinder";
     let handle = block_on(async {
-        match typology {
-            "building.building.column" => kernel.cylinder_prim(0.25, 3.0).await,
-            "building.building.beam" => kernel.box_prim(6.0, 0.3, 0.4).await,
-            "building.building.slab" => kernel.box_prim(6.0, 4.0, 0.3).await,
-            "building.building.wall" => kernel.box_prim(0.2, 4.0, 3.0).await,
-            "spatial.shape.box" => kernel.box_prim(1.0, 1.0, 1.0).await,
-            _ => kernel.box_prim(1.0, 1.0, 1.0).await,
+        if is_cylindrical {
+            kernel.cylinder_prim(width.max(depth) * 0.5, height).await
+        } else {
+            kernel.box_prim(width, depth, height).await
         }
     });
     let Ok(handle) = handle else {
@@ -93,13 +116,15 @@ fn typology_brep_mesh(typology: &str) -> MeshData {
     mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index)
 }
 
+/// @emoji 🎯 Centroid of an object's authored vertices (matched by id prefix), or the origin.
 fn object_origin_from_vertices(object_id: &str, vertices: &[Value]) -> [f64; 3] {
     let bim_token = object_id.strip_prefix("object-").unwrap_or(object_id);
+    let prefix = format!("{bim_token}-");
     let mut count = 0usize;
     let mut sum = [0.0f64; 3];
     for vertex in vertices {
         let vertex_id = vertex.get("id").and_then(|value| value.as_str()).unwrap_or("");
-        if !vertex_id.starts_with(bim_token) || !vertex_id.contains("-vertex-") {
+        if !vertex_id.starts_with(&prefix) {
             continue;
         }
         let Some(position) = vertex.get("position").and_then(|value| value.as_array()) else {
@@ -120,15 +145,59 @@ fn object_origin_from_vertices(object_id: &str, vertices: &[Value]) -> [f64; 3] 
     [sum[0] / n, sum[1] / n, sum[2] / n]
 }
 
-fn cad_document_from_modelspace(json: &str, id: &str) -> Option<CadPlayDocument> {
-    let root: Value = serde_json::from_str(json).ok()?;
-    let objects = root.pointer("/models/0/model/objects")?.as_array()?;
+/// @emoji 📏 Authored bounding-box extent of an object's vertices (matched by id prefix).
+fn object_extent_from_vertices(object_id: &str, vertices: &[Value]) -> Option<[f64; 3]> {
+    let bim_token = object_id.strip_prefix("object-").unwrap_or(object_id);
+    let prefix = format!("{bim_token}-");
+    let mut min = [f64::MAX; 3];
+    let mut max = [f64::MIN; 3];
+    let mut count = 0usize;
+    for vertex in vertices {
+        let vertex_id = vertex.get("id").and_then(|value| value.as_str()).unwrap_or("");
+        if !vertex_id.starts_with(&prefix) {
+            continue;
+        }
+        let Some(position) = vertex.get("position").and_then(|value| value.as_array()) else {
+            continue;
+        };
+        if position.len() < 3 {
+            continue;
+        }
+        for axis in 0..3 {
+            let value = position[axis].as_f64().unwrap_or(0.0);
+            min[axis] = min[axis].min(value);
+            max[axis] = max[axis].max(value);
+        }
+        count += 1;
+    }
+    if count == 0 {
+        return None;
+    }
+    Some([
+        (max[0] - min[0]).max(0.05),
+        (max[1] - min[1]).max(0.05),
+        (max[2] - min[2]).max(0.05),
+    ])
+}
+
+/// @emoji 🗃️ Reads one pane's objects (with origin/extent derived from authored geometry) from
+/// the shared quad fixture's `models[modelIndex]` model definition.
+fn cad_document_pane_objects(source_json: &str, model_index: usize) -> Vec<CadObject> {
+    let Ok(root) = serde_json::from_str::<Value>(source_json) else {
+        return Vec::new();
+    };
+    let Some(objects) = root
+        .pointer(&format!("/models/{model_index}/model/objects"))
+        .and_then(|value| value.as_array())
+    else {
+        return Vec::new();
+    };
     let vertices = root
-        .pointer("/models/0/model/geometry/vertices")
+        .pointer(&format!("/models/{model_index}/model/geometry/vertices"))
         .and_then(|value| value.as_array())
         .map(|entries| entries.as_slice())
         .unwrap_or(&[]);
-    let cad_objects: Vec<CadObject> = objects
+    objects
         .iter()
         .filter_map(|entry| {
             let object_id = entry.get("id")?.as_str()?;
@@ -138,10 +207,6 @@ fn cad_document_from_modelspace(json: &str, id: &str) -> Option<CadPlayDocument>
                 .last()
                 .map(str::to_string)
                 .unwrap_or_else(|| object_id.to_string());
-            let mesh_url = TYPOLOGY_MESH_URLS
-                .iter()
-                .find(|(kind, _)| *kind == typology)
-                .map(|(_, url)| url.to_string());
             Some(CadObject {
                 id: object_id.into(),
                 label,
@@ -150,30 +215,14 @@ fn cad_document_from_modelspace(json: &str, id: &str) -> Option<CadPlayDocument>
                 origin: object_origin_from_vertices(object_id, vertices),
                 orientation: Some([0.0, 0.0, 0.0, 1.0]),
                 scale: None,
-                mesh_url,
+                mesh_url: TYPOLOGY_MESH_URLS
+                    .iter()
+                    .find(|(kind, _)| *kind == typology)
+                    .map(|(_, url)| url.to_string()),
+                extent: object_extent_from_vertices(object_id, vertices),
             })
         })
-        .collect();
-    if cad_objects.is_empty() {
-        return None;
-    }
-    Some(CadPlayDocument {
-        schema: "cad.document".into(),
-        id: id.into(),
-        camera: CadCamera {
-            position: [12.0, -12.0, 8.0],
-            target: [5.4, 2.34, 1.5],
-            zoom: 1.0,
-            fov: 50.0,
-        },
-        objects: cad_objects,
-        nodes: vec![CadNode {
-            id: "node-root".into(),
-            label: "Concrete Forest Left".into(),
-            kind: "group".into(),
-        }],
-        active_tool: Some("selectDirect".into()),
-    })
+        .collect()
 }
 //#endregion 🔖BrepMeshes
 
@@ -211,10 +260,13 @@ fn default_selection_method() -> String {
     "rectangle".into()
 }
 
+fn default_transform_tool() -> String {
+    "move".into()
+}
+
 fn typology_mesh_kind(typology: &str) -> &'static str {
     match typology {
-        "building.building.column" => "cylinder",
-        "spatial.shape.box" => "box",
+        "building.building.column" | "structure.structure.reinforcedconcretecolumn" => "cylinder",
         _ => "box",
     }
 }
@@ -235,6 +287,9 @@ struct CadObject {
     scale: Option<[f64; 3]>,
     #[serde(default, rename = "meshUrl")]
     mesh_url: Option<String>,
+    /// @emoji 📏 Authored bounding-box size, used to derive brep primitive dimensions.
+    #[serde(default)]
+    extent: Option<[f64; 3]>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -244,15 +299,25 @@ struct CadPlayDocument {
     id: String,
     #[serde(default)]
     camera: CadCamera,
+    /// @emoji 📐 Shape pane objects (also the default single-pane / addObject target).
     #[serde(default)]
     objects: Vec<CadObject>,
     #[serde(default)]
     nodes: Vec<CadNode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     active_tool: Option<String>,
+    /// @emoji 🏢 Building pane objects.
+    #[serde(default)]
+    building_objects: Vec<CadObject>,
+    /// @emoji 🔥 Energy pane objects.
+    #[serde(default)]
+    energy_objects: Vec<CadObject>,
+    /// @emoji 🏗️ Structure classic pane objects.
+    #[serde(default)]
+    structure_classic_objects: Vec<CadObject>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CadPlayRuntime {
     #[serde(default)]
@@ -263,6 +328,21 @@ struct CadPlayRuntime {
     selection_method: String,
     #[serde(default)]
     hovered_object_id: Option<String>,
+    /// @emoji 🕹️ Active gumball transform mode: "move" | "rotate" | "scale".
+    #[serde(default = "default_transform_tool")]
+    transform_tool: String,
+}
+
+impl Default for CadPlayRuntime {
+    fn default() -> Self {
+        Self {
+            selected_object_ids: Vec::new(),
+            selected_node_ids: Vec::new(),
+            selection_method: default_selection_method(),
+            hovered_object_id: None,
+            transform_tool: default_transform_tool(),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -271,22 +351,16 @@ struct CadPlayEnvelope {
     document: CadPlayDocument,
     #[serde(default)]
     runtime: CadPlayRuntime,
+    /// @emoji 🗄️ Node add/rename history, replayed through `vcs::DocumentVcsCommand`.
+    #[serde(default = "default_cad_history")]
+    history: CadEnvelope,
+    #[serde(default)]
+    applied_edit_ids: Vec<String>,
+    #[serde(default)]
+    redo_edit_ids: Vec<String>,
 }
 
 fn default_document() -> CadPlayDocument {
-    let mut scene = empty_cad_projection();
-    scene.nodes = vec![
-        CadNode {
-            id: "node-root".into(),
-            label: "Model".into(),
-            kind: "group".into(),
-        },
-        CadNode {
-            id: "node-box".into(),
-            label: "Box".into(),
-            kind: "solid".into(),
-        },
-    ];
     CadPlayDocument {
         schema: "cad.document".into(),
         id: "cad".into(),
@@ -305,87 +379,92 @@ fn default_document() -> CadPlayDocument {
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
             scale: None,
             mesh_url: Some("/mesh/hexagonal-cut-concrete-forest-left.glb".into()),
+            extent: None,
         }],
-        nodes: scene.nodes,
+        nodes: vec![
+            CadNode {
+                id: "node-root".into(),
+                label: "Model".into(),
+                kind: "group".into(),
+            },
+            CadNode {
+                id: "node-box".into(),
+                label: "Box".into(),
+                kind: "solid".into(),
+            },
+        ],
         active_tool: Some("selectDirect".into()),
+        building_objects: Vec::new(),
+        energy_objects: Vec::new(),
+        structure_classic_objects: Vec::new(),
     }
 }
 
-fn forest_play_document() -> CadPlayDocument {
-    cad_document_from_modelspace(FOREST_LEFT_MODEL_JSON, "hexagonal-cut-concrete-forest-left")
-        .unwrap_or_else(|| CadPlayDocument {
+/// @emoji 🪟 Builds the quad play document: shape/building/energy/structure-classic panes each
+/// sourced from their own model definition inside the shared fixture JSON.
+fn forest_play_document(source_json: &str, id: &str) -> CadPlayDocument {
+    let shape_objects = cad_document_pane_objects(source_json, CAD_MODEL_INDEX_SHAPE);
+    if shape_objects.is_empty() {
+        return default_document();
+    }
+    CadPlayDocument {
         schema: "cad.document".into(),
-        id: "hexagonal-cut-concrete-forest-left".into(),
+        id: id.into(),
         camera: CadCamera {
             position: [12.0, -12.0, 8.0],
             target: [5.4, 2.34, 1.5],
             zoom: 1.0,
             fov: 50.0,
         },
-        objects: vec![
-            CadObject {
-                id: "object-slab".into(),
-                label: "Slab".into(),
-                typology: "building.building.slab".into(),
-                visible: true,
-                origin: [5.4, 2.34, 1.5],
-                orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                scale: None,
-                mesh_url: None,
-            },
-            CadObject {
-                id: "object-column-10".into(),
-                label: "Column 10".into(),
-                typology: "building.building.column".into(),
-                visible: true,
-                origin: [4.05, 4.68, 3.0],
-                orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                scale: None,
-                mesh_url: None,
-            },
-            CadObject {
-                id: "object-column-11".into(),
-                label: "Column 11".into(),
-                typology: "building.building.column".into(),
-                visible: true,
-                origin: [6.75, 4.68, 3.0],
-                orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                scale: None,
-                mesh_url: None,
-            },
-            CadObject {
-                id: "object-beam-2".into(),
-                label: "Beam 2".into(),
-                typology: "building.building.beam".into(),
-                visible: true,
-                origin: [5.4, 2.34, 3.0],
-                orientation: Some([0.0, 0.7071, 0.0, 0.7071]),
-                scale: None,
-                mesh_url: None,
-            },
-        ],
-        nodes: vec![
-            CadNode {
-                id: "node-root".into(),
-                label: "Concrete Forest Left".into(),
-                kind: "group".into(),
-            },
-        ],
+        objects: shape_objects,
+        nodes: vec![CadNode {
+            id: "node-root".into(),
+            label: "Concrete Forest Left".into(),
+            kind: "group".into(),
+        }],
         active_tool: Some("selectDirect".into()),
-        })
+        building_objects: cad_document_pane_objects(source_json, CAD_MODEL_INDEX_BUILDING),
+        energy_objects: cad_document_pane_objects(source_json, CAD_MODEL_INDEX_ENERGY),
+        structure_classic_objects: cad_document_pane_objects(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC),
+    }
+}
+
+fn seed_cad_history(document: &CadPlayDocument) -> CadEnvelope {
+    create_document_vcs_envelope(
+        CAD_DOCUMENT_SCHEMA,
+        "cad-play-nodes",
+        CadScene {
+            schema: CAD_DOCUMENT_SCHEMA.into(),
+            id: document.id.clone(),
+            nodes: document.nodes.clone(),
+        },
+        None,
+    )
+}
+
+fn default_cad_history() -> CadEnvelope {
+    seed_cad_history(&default_document())
 }
 
 fn forest_play_envelope() -> CadPlayEnvelope {
+    let document = forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT);
     CadPlayEnvelope {
-        document: forest_play_document(),
+        history: seed_cad_history(&document),
+        document,
         runtime: CadPlayRuntime::default(),
+        applied_edit_ids: Vec::new(),
+        redo_edit_ids: Vec::new(),
     }
 }
 
 fn default_envelope() -> CadPlayEnvelope {
+    let document = default_document();
     CadPlayEnvelope {
-        document: default_document(),
+        history: seed_cad_history(&document),
+        document,
         runtime: CadPlayRuntime::default(),
+        applied_edit_ids: Vec::new(),
+        redo_edit_ids: Vec::new(),
     }
 }
 
@@ -440,12 +519,38 @@ fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
     [ax / len * s, ay / len * s, az / len * s, half.cos()]
 }
 
+//#region 🔖PaneHelpers
+/// @emoji 🧭 The 4 pane object lists, in document field order: shape/building/energy/structure.
+fn cad_pane_lists(document: &CadPlayDocument) -> [&Vec<CadObject>; 4] {
+    [
+        &document.objects,
+        &document.building_objects,
+        &document.energy_objects,
+        &document.structure_classic_objects,
+    ]
+}
+
+fn cad_pane_lists_mut(document: &mut CadPlayDocument) -> [&mut Vec<CadObject>; 4] {
+    [
+        &mut document.objects,
+        &mut document.building_objects,
+        &mut document.energy_objects,
+        &mut document.structure_classic_objects,
+    ]
+}
+
+/// @emoji 🌐 Objects across all 4 panes (ids are globally unique across the whole fixture).
+fn cad_all_objects(document: &CadPlayDocument) -> impl Iterator<Item = &CadObject> {
+    cad_pane_lists(document).into_iter().flatten()
+}
+//#endregion 🔖PaneHelpers
+
 fn apply_cad_translate(envelope: &mut CadPlayEnvelope, args: Option<&Value>) -> bool {
     let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
     let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-    for object in &mut envelope.document.objects {
+    for object in cad_pane_lists_mut(&mut envelope.document).into_iter().flatten() {
         if ids.contains(&object.id) {
             object.origin[0] += dx;
             object.origin[1] += dy;
@@ -462,7 +567,7 @@ fn apply_cad_rotate(envelope: &mut CadPlayEnvelope, args: Option<&Value>) -> boo
     let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
     let delta = quat_from_axis_angle(ax, ay, az, angle);
-    for object in &mut envelope.document.objects {
+    for object in cad_pane_lists_mut(&mut envelope.document).into_iter().flatten() {
         if ids.contains(&object.id) {
             let current = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
             object.orientation = Some(quat_mul(delta, current));
@@ -476,7 +581,7 @@ fn apply_cad_scale(envelope: &mut CadPlayEnvelope, args: Option<&Value>) -> bool
     let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
     let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
     let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-    for object in &mut envelope.document.objects {
+    for object in cad_pane_lists_mut(&mut envelope.document).into_iter().flatten() {
         if ids.contains(&object.id) {
             let current = object.scale.unwrap_or([1.0, 1.0, 1.0]);
             object.scale = Some([current[0] * sx, current[1] * sy, current[2] * sz]);
@@ -495,9 +600,9 @@ fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
         .map(|(_, url)| url.to_string())
 }
 
-fn collect_mesh_urls(document: &CadPlayDocument) -> Vec<String> {
+fn collect_mesh_urls(objects: &[CadObject]) -> Vec<String> {
     let mut urls = HashSet::new();
-    for object in &document.objects {
+    for object in objects {
         if let Some(url) = resolve_object_mesh_url(object) {
             urls.insert(url);
         }
@@ -509,9 +614,34 @@ fn object_scale_json(object: &CadObject) -> [f64; 3] {
     object.scale.unwrap_or([1.0, 1.0, 1.0])
 }
 
-fn world_instances_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) -> String {
-    let instances: Vec<Value> = document
-        .objects
+//#region 🔖Gumball
+/// @emoji 🕹️ Whether a visible gumball engagement should render for the current selection.
+fn gumball_active(runtime: &CadPlayRuntime) -> bool {
+    !runtime.selected_object_ids.is_empty()
+}
+
+/// @emoji 🎯 World-space pivot for the gumball: centroid of selected objects across all panes.
+fn gumball_target_for(document: &CadPlayDocument, selected_ids: &[String]) -> Option<[f64; 3]> {
+    let mut sum = [0.0; 3];
+    let mut count = 0usize;
+    for object in cad_all_objects(document) {
+        if selected_ids.contains(&object.id) {
+            sum[0] += object.origin[0];
+            sum[1] += object.origin[1];
+            sum[2] += object.origin[2];
+            count += 1;
+        }
+    }
+    if count == 0 {
+        return None;
+    }
+    let n = count as f64;
+    Some([sum[0] / n, sum[1] / n, sum[2] / n])
+}
+//#endregion 🔖Gumball
+
+fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> String {
+    let instances: Vec<Value> = objects
         .iter()
         .filter(|object| object.visible)
         .map(|object| {
@@ -540,13 +670,12 @@ fn world_instances_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) ->
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_meshes_json(document: &CadPlayDocument) -> String {
-    let urls = collect_mesh_urls(document);
+fn world_meshes_json(objects: &[CadObject]) -> String {
+    let urls = collect_mesh_urls(objects);
     if !urls.is_empty() {
         return semio_framework_plugin::world3d_meshes_json_from_urls(&urls);
     }
-    let mut kinds: Vec<String> = document
-        .objects
+    let mut kinds: Vec<String> = objects
         .iter()
         .map(|object| typology_mesh_kind(&object.typology).to_string())
         .collect::<HashSet<_>>()
@@ -558,50 +687,59 @@ fn world_meshes_json(document: &CadPlayDocument) -> String {
     let meshes: Vec<Value> = kinds
         .iter()
         .map(|kind| {
-            let typology = document
-                .objects
-                .iter()
-                .find(|object| typology_mesh_kind(&object.typology) == kind.as_str())
-                .map(|object| object.typology.as_str())
-                .unwrap_or("spatial.shape.box");
-            let data = typology_brep_mesh(typology);
+            let representative = objects.iter().find(|object| typology_mesh_kind(&object.typology) == kind.as_str());
+            let typology = representative.map(|object| object.typology.as_str()).unwrap_or("spatial.shape.box");
+            let extent = representative.and_then(|object| object.extent);
+            let data = typology_brep_mesh(typology, extent);
             json!({ "id": kind, "data": data })
         })
         .collect();
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_selection_json(runtime: &CadPlayRuntime) -> String {
-    world3d_selection_json(
+fn world_selection_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) -> String {
+    let mut value: Value = serde_json::from_str(&world3d_selection_json(
         &runtime.selection_method,
         &runtime.selected_object_ids,
         runtime.hovered_object_id.as_deref(),
-    )
+    ))
+    .unwrap_or_else(|_| json!({}));
+    if let Some(object) = value.as_object_mut() {
+        object.insert("transformTool".into(), json!(runtime.transform_tool));
+        object.insert("gumballActive".into(), json!(gumball_active(runtime)));
+        if let Some(target) = gumball_target_for(document, &runtime.selected_object_ids) {
+            object.insert("gumballTarget".into(), json!(target));
+        }
+    }
+    value.to_string()
 }
 
 fn export_mesh_from_envelope(envelope: &CadPlayEnvelope) -> MeshData {
-    let typology = envelope
-        .document
-        .objects
-        .iter()
-        .find(|object| envelope.runtime.selected_object_ids.contains(&object.id))
-        .map(|object| object.typology.as_str())
-        .unwrap_or("spatial.shape.box");
-    typology_brep_mesh(typology)
+    let selected = cad_all_objects(&envelope.document)
+        .find(|object| envelope.runtime.selected_object_ids.contains(&object.id));
+    let typology = selected.map(|object| object.typology.as_str()).unwrap_or("spatial.shape.box");
+    let extent = selected.and_then(|object| object.extent);
+    typology_brep_mesh(typology, extent)
 }
 
-fn apply_cad_node_op(document: &CadPlayDocument, op: &CadOp) -> CadPlayDocument {
-    let scene = CadScene {
-        schema: CAD_DOCUMENT_SCHEMA.into(),
-        id: document.id.clone(),
-        nodes: document.nodes.clone(),
-    };
-    let diff = op.diff(&scene);
-    let next_scene = diff.apply(&scene);
-    let mut next = document.clone();
-    next.nodes = next_scene.nodes;
-    next
+//#region 🔖NodeHistory
+/// @emoji 🗄️ Reconstructs the node-history VCS store from the persisted envelope state.
+fn cad_history_store(envelope: &CadPlayEnvelope) -> CadStore {
+    let mut store = CadStore::new(envelope.history.clone());
+    store.set_state(envelope.history.clone(), envelope.applied_edit_ids.clone(), envelope.redo_edit_ids.clone());
+    store
 }
+
+/// @emoji 💾 Persists the store's materialized nodes + history + undo/redo stacks back onto the envelope.
+fn sync_cad_history(envelope: &mut CadPlayEnvelope, store: &CadStore) {
+    if let Ok(scene) = store.projection() {
+        envelope.document.nodes = scene.nodes;
+    }
+    envelope.history = store.envelope().clone();
+    envelope.applied_edit_ids = store.applied_edit_ids().to_vec();
+    envelope.redo_edit_ids = store.redo_edit_ids().to_vec();
+}
+//#endregion 🔖NodeHistory
 //#endregion 🔖Document
 
 //#region 🔖Panels
@@ -630,20 +768,26 @@ fn tree_item_with_command(
     }
 }
 
+fn pane_hierarchy_section(label: &str, id_suffix: &str, objects: &[CadObject]) -> UiTreeSectionNode {
+    UiTreeSectionNode {
+        id: format!("cad-play-hierarchy.{id_suffix}"),
+        label: Some(label.into()),
+        default_open: Some(true),
+        items: objects
+            .iter()
+            .map(|object| {
+                tree_item_with_command(
+                    format!("cad-object:{id_suffix}:{}", object.id),
+                    object.label.clone(),
+                    Some("box"),
+                    cad_cmd("setSelection", Some(json!({ "objectIds": [object.id] }))),
+                )
+            })
+            .collect(),
+    }
+}
+
 fn build_hierarchy_tree(envelope: &CadPlayEnvelope) -> UiNode {
-    let object_items: Vec<UiTreeItemNode> = envelope
-        .document
-        .objects
-        .iter()
-        .map(|object| {
-            tree_item_with_command(
-                format!("cad-object:{}", object.id),
-                object.label.clone(),
-                Some("box"),
-                cad_cmd("setSelection", Some(json!({ "objectIds": [object.id] }))),
-            )
-        })
-        .collect();
     let node_items: Vec<UiTreeItemNode> = envelope
         .document
         .nodes
@@ -659,12 +803,10 @@ fn build_hierarchy_tree(envelope: &CadPlayEnvelope) -> UiNode {
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![
-            UiTreeSectionNode {
-                id: "cad-play-hierarchy.objects".into(),
-                label: Some("Objects".into()),
-                default_open: Some(true),
-                items: object_items,
-            },
+            pane_hierarchy_section("Shape", "shape", &envelope.document.objects),
+            pane_hierarchy_section("Building", "building", &envelope.document.building_objects),
+            pane_hierarchy_section("Energy", "energy", &envelope.document.energy_objects),
+            pane_hierarchy_section("Structure Classic", "structure-classic", &envelope.document.structure_classic_objects),
             UiTreeSectionNode {
                 id: "cad-play-hierarchy.nodes".into(),
                 label: Some("Nodes".into()),
@@ -705,7 +847,7 @@ fn build_catalogue_tree() -> UiNode {
 
 fn build_properties_panel(envelope: &CadPlayEnvelope) -> UiNode {
     if let Some(object_id) = envelope.runtime.selected_object_ids.first() {
-        if let Some(object) = envelope.document.objects.iter().find(|entry| &entry.id == object_id) {
+        if let Some(object) = cad_all_objects(&envelope.document).find(|entry| &entry.id == object_id) {
             return ui_inspector_groups_to_tree(&[object_inspector_group(object)]);
         }
     }
@@ -779,6 +921,49 @@ fn node_inspector_group(node: &CadNode) -> UiInspectorFieldGroup {
         ],
     }
 }
+
+/// @emoji 🕹️ Visible gumball engagement: move/rotate/scale toggle buttons + selection status.
+fn cad_window_engagement(envelope: &CadPlayEnvelope) -> WindowEngagement {
+    let transform = envelope.runtime.transform_tool.clone();
+    let selected_count = envelope.runtime.selected_object_ids.len();
+    WindowEngagement {
+        session_active: Some(true),
+        options: Some(vec![
+            WindowEngagementOption {
+                id: "cad.opt.move".into(),
+                label: Some("Move".into()),
+                icon_id: Some("move".into()),
+                pressed: Some(transform == "move"),
+                disabled: None,
+                command: Some(cad_cmd("setTransformTool", Some(json!({ "tool": "move" })))),
+            },
+            WindowEngagementOption {
+                id: "cad.opt.rotate".into(),
+                label: Some("Rotate".into()),
+                icon_id: Some("rotate-cw".into()),
+                pressed: Some(transform == "rotate"),
+                disabled: None,
+                command: Some(cad_cmd("setTransformTool", Some(json!({ "tool": "rotate" })))),
+            },
+            WindowEngagementOption {
+                id: "cad.opt.scale".into(),
+                label: Some("Scale".into()),
+                icon_id: Some("maximize-2".into()),
+                pressed: Some(transform == "scale"),
+                disabled: None,
+                command: Some(cad_cmd("setTransformTool", Some(json!({ "tool": "scale" })))),
+            },
+        ]),
+        input: None,
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus {
+            id: "cad-status".into(),
+            text: format!("{selected_count} selected"),
+        }]),
+        possible_engagements: None,
+    }
+}
 //#endregion 🔖Panels
 
 //#region 🔖CadApp
@@ -815,21 +1000,28 @@ impl PluginApp for CadApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
                 envelope = if example_id.is_empty() || example_id == "empty" {
-                    CadPlayEnvelope {
-                        document: CadPlayDocument {
-                            schema: "cad.document".into(),
-                            id: "cad".into(),
-                            camera: CadCamera {
-                                position: default_camera_position(),
-                                target: default_camera_target(),
-                                zoom: 1.0,
-                                fov: default_fov(),
-                            },
-                            objects: Vec::new(),
-                            nodes: Vec::new(),
-                            active_tool: Some("selectDirect".into()),
+                    let document = CadPlayDocument {
+                        schema: "cad.document".into(),
+                        id: "cad".into(),
+                        camera: CadCamera {
+                            position: default_camera_position(),
+                            target: default_camera_target(),
+                            zoom: 1.0,
+                            fov: default_fov(),
                         },
+                        objects: Vec::new(),
+                        nodes: Vec::new(),
+                        active_tool: Some("selectDirect".into()),
+                        building_objects: Vec::new(),
+                        energy_objects: Vec::new(),
+                        structure_classic_objects: Vec::new(),
+                    };
+                    CadPlayEnvelope {
+                        history: seed_cad_history(&document),
+                        document,
                         runtime: CadPlayRuntime::default(),
+                        applied_edit_ids: Vec::new(),
+                        redo_edit_ids: Vec::new(),
                     }
                 } else if example_id == "default" {
                     default_envelope()
@@ -872,6 +1064,12 @@ impl PluginApp for CadApp {
                     }
                 }
             }
+            "setTransformTool" => {
+                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
+                    envelope.runtime.transform_tool = tool.into();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "translateSelection" => {
                 if apply_cad_translate(&mut envelope, args) {
                     return vec![set_document_op(&envelope)];
@@ -907,6 +1105,7 @@ impl PluginApp for CadApp {
                         .iter()
                         .find(|(entry, _)| *entry == typology)
                         .map(|(_, url)| url.to_string()),
+                    extent: None,
                 });
                 envelope.runtime.selected_object_ids = vec![id];
                 return vec![set_document_op(&envelope)];
@@ -915,7 +1114,7 @@ impl PluginApp for CadApp {
                 let object_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).unwrap_or("");
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let value = args.and_then(|value| value.get("value")).cloned();
-                for object in &mut envelope.document.objects {
+                for object in cad_pane_lists_mut(&mut envelope.document).into_iter().flatten() {
                     if object.id != object_id {
                         continue;
                     }
@@ -931,30 +1130,45 @@ impl PluginApp for CadApp {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("solid");
                 let id = next_cad_id("node");
                 let label = format!("Node {}", envelope.document.nodes.len() + 1);
-                envelope.document = apply_cad_node_op(
-                    &envelope.document,
-                    &CadOp::AddNode {
-                        node: CadNode {
-                            id: id.clone(),
-                            label,
-                            kind: kind.into(),
-                        },
-                    },
-                );
-                envelope.runtime.selected_node_ids = vec![id];
-                return vec![set_document_op(&envelope)];
+                let mut store = cad_history_store(&envelope);
+                let node = CadNode { id: id.clone(), label, kind: kind.into() };
+                if store
+                    .dispatch(DocumentVcsCommand::Apply { operations: vec![CadOp::AddNode { node }], description: None })
+                    .is_ok()
+                {
+                    sync_cad_history(&mut envelope, &store);
+                    envelope.runtime.selected_node_ids = vec![id];
+                    return vec![set_document_op(&envelope)];
+                }
             }
             "renameNode" => {
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).unwrap_or("");
                 let label = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
                 if !node_id.is_empty() && !label.is_empty() {
-                    envelope.document = apply_cad_node_op(
-                        &envelope.document,
-                        &CadOp::RenameNode {
-                            node_id: node_id.into(),
-                            label: label.into(),
-                        },
-                    );
+                    let mut store = cad_history_store(&envelope);
+                    if store
+                        .dispatch(DocumentVcsCommand::Apply {
+                            operations: vec![CadOp::RenameNode { node_id: node_id.into(), label: label.into() }],
+                            description: None,
+                        })
+                        .is_ok()
+                    {
+                        sync_cad_history(&mut envelope, &store);
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "undo" => {
+                let mut store = cad_history_store(&envelope);
+                if store.dispatch(DocumentVcsCommand::Undo).is_ok() {
+                    sync_cad_history(&mut envelope, &store);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "redo" => {
+                let mut store = cad_history_store(&envelope);
+                if store.dispatch(DocumentVcsCommand::Redo).is_ok() {
+                    sync_cad_history(&mut envelope, &store);
                     return vec![set_document_op(&envelope)];
                 }
             }
@@ -993,14 +1207,44 @@ impl PluginApp for CadApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            CAD_PLAY_BODY_COMPOSITE => build_world_3d_scene(
-                CAD_PLAY_SURFACE_COMPOSITE,
+            CAD_PLAY_BODY_SHAPE => build_world_3d_scene(
+                CAD_PLAY_SURFACE_SHAPE,
                 CAD_PLAY_APP_ID,
                 world3d_scene(
                     camera_json(&envelope.document.camera),
-                    world_meshes_json(&envelope.document),
-                    world_instances_json(&envelope.document, &envelope.runtime),
-                    world_selection_json(&envelope.runtime),
+                    world_meshes_json(&envelope.document.objects),
+                    world_instances_json(&envelope.document.objects, &envelope.runtime),
+                    world_selection_json(&envelope.document, &envelope.runtime),
+                ),
+            ),
+            CAD_PLAY_BODY_BUILDING => build_world_3d_scene(
+                CAD_PLAY_SURFACE_BUILDING,
+                CAD_PLAY_APP_ID,
+                world3d_scene(
+                    camera_json(&envelope.document.camera),
+                    world_meshes_json(&envelope.document.building_objects),
+                    world_instances_json(&envelope.document.building_objects, &envelope.runtime),
+                    world_selection_json(&envelope.document, &envelope.runtime),
+                ),
+            ),
+            CAD_PLAY_BODY_ENERGY => build_world_3d_scene(
+                CAD_PLAY_SURFACE_ENERGY,
+                CAD_PLAY_APP_ID,
+                world3d_scene(
+                    camera_json(&envelope.document.camera),
+                    world_meshes_json(&envelope.document.energy_objects),
+                    world_instances_json(&envelope.document.energy_objects, &envelope.runtime),
+                    world_selection_json(&envelope.document, &envelope.runtime),
+                ),
+            ),
+            CAD_PLAY_BODY_STRUCTURE_CLASSIC => build_world_3d_scene(
+                CAD_PLAY_SURFACE_STRUCTURE_CLASSIC,
+                CAD_PLAY_APP_ID,
+                world3d_scene(
+                    camera_json(&envelope.document.camera),
+                    world_meshes_json(&envelope.document.structure_classic_objects),
+                    world_instances_json(&envelope.document.structure_classic_objects, &envelope.runtime),
+                    world_selection_json(&envelope.document, &envelope.runtime),
                 ),
             ),
             CAD_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
@@ -1009,23 +1253,78 @@ impl PluginApp for CadApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+
+    fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        let envelope = parse_envelope(document_json);
+        let engagement = cad_window_engagement(&envelope);
+        HashMap::from([
+            (CAD_PLAY_WINDOW_SHAPE.to_string(), engagement.clone()),
+            (CAD_PLAY_WINDOW_BUILDING.to_string(), engagement.clone()),
+            (CAD_PLAY_WINDOW_ENERGY.to_string(), engagement.clone()),
+            (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(), engagement),
+        ])
+    }
 }
 //#endregion 🔖CadApp
 
 //#region 🔖Manifest
+/// @emoji 🪟 One quadrant of the quad layout: a stack holding a single window kind.
+fn cad_window_stack(window_kind_id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
+    WindowLayoutChild::Stack(WindowLayoutStackNode {
+        kind: "stack".into(),
+        size,
+        active_window_kind_id: None,
+        children: vec![WindowLayoutWindowNode {
+            kind: "window".into(),
+            window_kind_id: window_kind_id.into(),
+            title: Some(title.into()),
+            instance_id: None,
+            template_id: None,
+        }],
+    })
+}
+
+/// @emoji 🪟 Quad play layout: shape/building left column, energy/structure classic right column.
+fn cad_quad_layout() -> WindowLayout {
+    WindowLayout {
+        root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+            kind: "row".into(),
+            size: None,
+            children: vec![
+                WindowLayoutChild::Axis(WindowLayoutAxisNode {
+                    kind: "column".into(),
+                    size: Some(0.5),
+                    children: vec![
+                        cad_window_stack(CAD_PLAY_WINDOW_SHAPE, "Shape", Some(0.5)),
+                        cad_window_stack(CAD_PLAY_WINDOW_BUILDING, "Building", Some(0.5)),
+                    ],
+                }),
+                WindowLayoutChild::Axis(WindowLayoutAxisNode {
+                    kind: "column".into(),
+                    size: Some(0.5),
+                    children: vec![
+                        cad_window_stack(CAD_PLAY_WINDOW_ENERGY, "Energy", Some(0.5)),
+                        cad_window_stack(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, "Structure Classic", Some(0.5)),
+                    ],
+                }),
+            ],
+        }),
+    }
+}
+
 fn create_cad_app() -> App {
     App::from_builder(
         App::builder(CAD_PLAY_APP_ID, "CAD").hierarchy(["semio", "cad"])
             .icon_id("box")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(CAD_PLAY_WINDOW_COMPOSITE, "Model", CAD_PLAY_BODY_COMPOSITE)
-            .default_layout(create_default_layout(
-                &[CAD_PLAY_WINDOW_COMPOSITE.into()],
-                "row",
-                Some(&[100.0]),
-                Some(&["Model".into()]),
-            ))
+            .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE)
+            .window_kind(CAD_PLAY_WINDOW_BUILDING, "Building", CAD_PLAY_BODY_BUILDING)
+            .window_kind(CAD_PLAY_WINDOW_ENERGY, "Energy", CAD_PLAY_BODY_ENERGY)
+            .window_kind(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, "Structure Classic", CAD_PLAY_BODY_STRUCTURE_CLASSIC)
+            .default_layout(cad_quad_layout())
+            .keybinding("mod+z", "undo")
+            .keybinding("mod+shift+z", "redo")
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
                 FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
@@ -1096,21 +1395,37 @@ mod tests {
     #[test]
     fn forest_example_uses_mesh_urls_and_origins() {
         let envelope = forest_play_envelope();
-        let json = world_instances_json(&envelope.document, &envelope.runtime);
+        let json = world_instances_json(&envelope.document.building_objects, &envelope.runtime);
         assert!(json.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
         assert!(json.contains("4.05") || json.contains("8.10"));
-        let meshes = world_meshes_json(&envelope.document);
+        let meshes = world_meshes_json(&envelope.document.building_objects);
         assert!(meshes.contains("hexagonal-cut-concrete-forest-left.glb"));
-        assert!(envelope.document.objects.len() > 5);
+        assert!(envelope.document.building_objects.len() > 5);
     }
 
     #[test]
-    fn renders_world_scene() {
+    fn quad_panes_each_populate_distinct_objects() {
+        let envelope = forest_play_envelope();
+        assert!(!envelope.document.objects.is_empty(), "shape pane");
+        assert!(!envelope.document.building_objects.is_empty(), "building pane");
+        assert!(!envelope.document.energy_objects.is_empty(), "energy pane");
+        assert!(!envelope.document.structure_classic_objects.is_empty(), "structure classic pane");
+    }
+
+    #[test]
+    fn renders_world_scene_for_each_pane() {
         let app = CadApp;
-        let document = app.initial_document_json();
-        let node = app.render(CAD_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("world-3d"));
+        let document = serde_json::to_string(&forest_play_envelope()).unwrap();
+        for body_key in [
+            CAD_PLAY_BODY_SHAPE,
+            CAD_PLAY_BODY_BUILDING,
+            CAD_PLAY_BODY_ENERGY,
+            CAD_PLAY_BODY_STRUCTURE_CLASSIC,
+        ] {
+            let node = app.render(body_key, &document, &ViewState::default());
+            let json = serde_json::to_string(&node).unwrap();
+            assert!(json.contains("world-3d"), "body {body_key} should render a world-3d scene");
+        }
     }
 
     #[test]
@@ -1145,6 +1460,107 @@ mod tests {
     fn cad_document_schema_matches_domain() {
         let scene = empty_cad_projection();
         assert_eq!(scene.schema, CAD_DOCUMENT_SCHEMA);
+    }
+
+    #[test]
+    fn gumball_fields_present_when_selection_active() {
+        let mut app = CadApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "setSelection",
+            Some(&json!({ "objectIds": ["object-box-1"] })),
+            &document,
+            &ViewState::default(),
+        );
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        let selection = world_selection_json(&envelope.document, &envelope.runtime);
+        assert!(selection.contains("\"transformTool\":\"move\""));
+        assert!(selection.contains("\"gumballActive\":true"));
+        assert!(selection.contains("\"gumballTarget\""));
+    }
+
+    #[test]
+    fn gumball_inactive_without_selection() {
+        let app = CadApp;
+        let document = app.initial_document_json();
+        let envelope = parse_envelope(&document);
+        let selection = world_selection_json(&envelope.document, &envelope.runtime);
+        assert!(selection.contains("\"gumballActive\":false"));
+        assert!(!selection.contains("\"gumballTarget\""));
+    }
+
+    #[test]
+    fn set_transform_tool_updates_runtime_and_engagement() {
+        let mut app = CadApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "setTransformTool",
+            Some(&json!({ "tool": "rotate" })),
+            &document,
+            &ViewState::default(),
+        );
+        let envelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.transform_tool, "rotate");
+        let engagements = app.window_engagements(&serde_json::to_string(&envelope).unwrap(), &ViewState::default());
+        let shape_engagement = engagements.get(CAD_PLAY_WINDOW_SHAPE).expect("shape engagement");
+        let rotate_option = shape_engagement
+            .options
+            .as_ref()
+            .and_then(|options| options.iter().find(|option| option.id == "cad.opt.rotate"))
+            .expect("rotate option");
+        assert_eq!(rotate_option.pressed, Some(true));
+    }
+
+    #[test]
+    fn window_engagements_registered_for_all_four_panes() {
+        let app = CadApp;
+        let document = app.initial_document_json();
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        for window_kind in [
+            CAD_PLAY_WINDOW_SHAPE,
+            CAD_PLAY_WINDOW_BUILDING,
+            CAD_PLAY_WINDOW_ENERGY,
+            CAD_PLAY_WINDOW_STRUCTURE_CLASSIC,
+        ] {
+            assert!(engagements.contains_key(window_kind), "missing engagement for {window_kind}");
+        }
+    }
+
+    #[test]
+    fn undo_redo_round_trips_added_node() {
+        let mut app = CadApp;
+        let document = app.initial_document_json();
+        let before_count = parse_envelope(&document).document.nodes.len();
+
+        let add_ops = app.handle_command("addNode", Some(&json!({ "kind": "solid" })), &document, &ViewState::default());
+        let after_add = apply_ops(&parse_envelope(&document), &add_ops);
+        assert_eq!(after_add.document.nodes.len(), before_count + 1);
+        let after_add_json = serde_json::to_string(&after_add).unwrap();
+
+        let undo_ops = app.handle_command("undo", None, &after_add_json, &ViewState::default());
+        assert!(!undo_ops.is_empty(), "undo should produce an op");
+        let after_undo = apply_ops(&after_add, &undo_ops);
+        assert_eq!(after_undo.document.nodes.len(), before_count);
+        let after_undo_json = serde_json::to_string(&after_undo).unwrap();
+
+        let redo_ops = app.handle_command("redo", None, &after_undo_json, &ViewState::default());
+        assert!(!redo_ops.is_empty(), "redo should produce an op");
+        let after_redo = apply_ops(&after_undo, &redo_ops);
+        assert_eq!(after_redo.document.nodes.len(), before_count + 1);
+    }
+
+    #[test]
+    fn typology_extent_derives_from_authored_geometry() {
+        let envelope = forest_play_envelope();
+        let column = envelope
+            .document
+            .building_objects
+            .iter()
+            .find(|object| object.typology == "building.building.column")
+            .expect("column object");
+        let extent = column.extent.expect("column extent derived from geometry");
+        assert!(extent[2] > 0.05, "authored column height should be measurable");
+        assert_ne!(extent, CAD_DEFAULT_TYPOLOGY_EXTENT, "should differ from the universal fallback");
     }
 
     fn apply_ops(envelope: &CadPlayEnvelope, ops: &[String]) -> CadPlayEnvelope {

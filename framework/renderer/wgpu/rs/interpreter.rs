@@ -1,6 +1,6 @@
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::render_component_scene;
+use crate::scenes::{render_component_scene, NodeGraphSurface};
 use semio_framework_core::{CommandDescriptor, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use ui_wgpu::{
     gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect, SelectItem,
@@ -51,9 +51,12 @@ pub fn render_ui_node(
     ctx: &mut FrameworkWidgetContext<'_>,
     gpu: &mut ui_wgpu::GpuContext,
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
+    node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
 ) {
     match node {
-        UiNode::ComponentScene(scene) => render_component_scene(scene, bounds, ctx, gpu, world3d_states),
+        UiNode::ComponentScene(scene) => {
+            render_component_scene(scene, bounds, ctx, gpu, world3d_states, node_graph_states)
+        }
         UiNode::Stack(stack) => {
             let gap = gap_for_token(ctx.theme, stack.gap.as_deref());
             let padding = padding_for_token(ctx.theme, stack.padding.as_deref());
@@ -72,7 +75,7 @@ pub fn render_ui_node(
                 layout_horizontal(bounds, gap, padding, &sizes)
             };
             for (child, rect) in stack.children.iter().zip(rects.iter()) {
-                render_ui_node(child, *rect, ctx, gpu, world3d_states);
+                render_ui_node(child, *rect, ctx, gpu, world3d_states, node_graph_states);
             }
         }
         other => render_widget(&ui_node_to_widget(other), bounds, ctx),

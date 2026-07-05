@@ -24,6 +24,7 @@ import {
 	GraphParamOverlays,
 	GraphStepperOverlays,
 	paintDagLabelOverlays,
+	parseDagNodeIdArray,
 	parseDagSelectionUnionBoundsScreen,
 	SelectionAlignChrome,
 	alignModeToDag,
@@ -271,7 +272,12 @@ function WasmGraphSurface({
 		const rect = container.getBoundingClientRect();
 		const dpr = globalThis.devicePixelRatio || 1;
 		try {
-			paintDagLabelOverlays(session.labelOverlayPaintStateJson(), labelCanvas, rect.width, rect.height, dpr);
+			paintDagLabelOverlays(session.labelOverlayPaintStateJson(), labelCanvas, rect.width, rect.height, dpr, {
+				hoveredId: session.hoveredNodeId() ?? null,
+				selectedIds: parseDagNodeIdArray(session.selectedNodeIdsJson()),
+				preselect: { ids: [], removedIds: [] },
+				dimmedIds: [],
+			});
 		} catch {
 			/* gpu not ready */
 		}

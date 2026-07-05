@@ -34,6 +34,22 @@ impl Rgba {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GlassTier {
+    Panel,
+    Toolbar,
+    Menu,
+    WindowOptions,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct GlassStyle {
+    pub tint: Rgba,
+    pub alpha: f32,
+    pub blur_px: f32,
+    pub saturate: f32,
+}
+
 #[derive(Clone, Copy, Debug)]
 pub struct Theme {
     pub background: Rgba,
@@ -51,13 +67,14 @@ pub struct Theme {
     pub separator: Rgba,
     pub selected: Rgba,
     pub canvas_clear: Rgba,
+    pub temporary: Rgba,
     pub gap_standard: f32,
     pub padding_standard: f32,
     pub navbar_height: f32,
     pub panel_header_height: f32,
     pub control_height: f32,
     pub control_height_small: f32,
-    pub glass_panel_alpha: f32,
+    pub glass_saturate: f32,
     pub font_size_body: f32,
     pub font_size_small: f32,
     pub font_size_emphasized: f32,
@@ -65,7 +82,6 @@ pub struct Theme {
     pub panel_inset: f32,
     pub panel_min_width: f32,
     pub panel_max_width: f32,
-    pub overlay_bg: Rgba,
     pub overlay_shadow: Rgba,
     pub focus_ring: Rgba,
     pub row_hover: Rgba,
@@ -107,13 +123,14 @@ fn from_chrome(chrome: &ChromeTheme) -> Theme {
         separator: Rgba::from_chrome(&chrome.border_normal),
         selected: Rgba::from_chrome(&chrome.active_base),
         canvas_clear: Rgba::from_chrome(&chrome.canvas),
+        temporary: Rgba::from_chrome(&chrome.temporary),
         gap_standard: chrome_px(chrome_metrics::GAP_STANDARD_UI_SPACING),
         padding_standard: chrome_px(chrome_metrics::PADDING_STANDARD_UI_SPACING),
         navbar_height: chrome_px(chrome_metrics::NAVBAR_HEIGHT_UI_SPACING),
         panel_header_height: chrome_px(chrome_metrics::PANEL_HEADER_HEIGHT_UI_SPACING),
         control_height: chrome_px(chrome_metrics::CONTROL_HEIGHT_UI_SPACING),
         control_height_small: chrome_px(5.0),
-        glass_panel_alpha: opacities::GLASS_PANEL_ALPHA as f32,
+        glass_saturate: chrome_metrics::GLASS_SATURATE as f32,
         font_size_body: typography::TEXT_SM_PX as f32,
         font_size_small: typography::TEXT_XS_PX as f32,
         font_size_emphasized: typography::TEXT_BASE_PX as f32,
@@ -121,7 +138,6 @@ fn from_chrome(chrome: &ChromeTheme) -> Theme {
         panel_inset: chrome_px(chrome_metrics::PANEL_INSET_UI_SPACING),
         panel_min_width: panel_width(dom::LAYOUT_PANEL_MIN_UI_SPACING),
         panel_max_width: panel_width(dom::LAYOUT_PANEL_MAX_UI_SPACING),
-        overlay_bg: Rgba::from_chrome(&chrome.overlay_bg),
         overlay_shadow: Rgba::new(0.0, 0.0, 0.0, 0.0),
         focus_ring: Rgba::from_chrome(&chrome.accent).with_alpha(0.6),
         row_hover: Rgba::from_chrome(&chrome.hover_interactive_fill),
@@ -149,19 +165,37 @@ impl Theme {
         }
     }
 
-    pub fn glass_panel_fill(&self) -> Rgba {
-        let a = self.glass_panel_alpha;
-        let [pr, pg, pb, _] = ui_styling::color::linear_to_rgba8(self.panel.r, self.panel.g, self.panel.b, self.panel.a);
-        let [cr, cg, cb, _] = ui_styling::color::linear_to_rgba8(
-            self.canvas_clear.r,
-            self.canvas_clear.g,
-            self.canvas_clear.b,
-            self.canvas_clear.a,
-        );
-        let mix = |panel: u8, canvas: u8| -> u8 {
-            (f32::from(panel) * a + f32::from(canvas) * (1.0 - a)).round().clamp(0.0, 255.0) as u8
-        };
-        Rgba::from_srgb8(mix(pr, cr), mix(pg, cg), mix(pb, cb), 255)
+    pub fn glass(&self, tier: GlassTier) -> GlassStyle {
+        match tier {
+            GlassTier::Panel => GlassStyle {
+                tint: self.panel,
+                alpha: opacities::GLASS_PANEL_ALPHA as f32,
+                blur_px: chrome_metrics::GLASS_PANEL_BLUR_PX as f32,
+                saturate: self.glass_saturate,
+            },
+            GlassTier::Toolbar => GlassStyle {
+                tint: self.panel,
+                alpha: 0.3,
+                blur_px: chrome_metrics::GLASS_BLUR_PX as f32,
+                saturate: self.glass_saturate,
+            },
+            GlassTier::Menu => GlassStyle {
+                tint: self.temporary,
+                alpha: opacities::GLASS_MENU_ALPHA as f32,
+                blur_px: chrome_metrics::GLASS_BLUR_PX as f32,
+                saturate: self.glass_saturate,
+            },
+            GlassTier::WindowOptions => GlassStyle {
+                tint: self.panel,
+                alpha: opacities::GLASS_WINDOW_OPTIONS_ALPHA as f32,
+                blur_px: chrome_metrics::GLASS_WINDOW_OPTIONS_BLUR_PX as f32,
+                saturate: self.glass_saturate,
+            },
+        }
+    }
+
+    pub fn glass_mip_level(blur_px: f32, max_mip: u32) -> f32 {
+        (blur_px / 4.0).log2().max(0.0).min(max_mip as f32)
     }
 }
 
@@ -169,7 +203,7 @@ pub type ThemedRect = Rect;
 
 #[cfg(test)]
 mod tests {
-    use super::{Rgba, Theme};
+    use super::{GlassTier, Theme};
     use ui_styling::color::linear_to_rgba8;
 
     #[test]
@@ -187,11 +221,32 @@ mod tests {
     }
 
     #[test]
-    fn glass_panel_fill_matches_react_color_mix_over_canvas() {
+    fn glass_panel_tier_matches_react_tokens() {
         let theme = Theme::light();
-        let fill = theme.glass_panel_fill();
-        let [r, g, b, _] = linear_to_rgba8(fill.r, fill.g, fill.b, fill.a);
-        assert_eq!([r, g, b], [217, 215, 202]);
+        let glass = theme.glass(GlassTier::Panel);
+        let [r, g, b, _] = linear_to_rgba8(glass.tint.r, glass.tint.g, glass.tint.b, glass.tint.a);
+        assert_eq!([r, g, b], [201, 200, 189]);
+        assert!((glass.alpha - 0.58).abs() < f32::EPSILON);
+        assert!((glass.blur_px - 40.0).abs() < f32::EPSILON);
+        assert!((glass.saturate - 1.45).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn glass_menu_tier_uses_temporary_tint() {
+        let theme = Theme::light();
+        let glass = theme.glass(GlassTier::Menu);
+        let [r, g, b, _] = linear_to_rgba8(glass.tint.r, glass.tint.g, glass.tint.b, glass.tint.a);
+        assert_eq!([r, g, b], [151, 155, 148]);
+        assert!((glass.alpha - 0.36).abs() < f32::EPSILON);
+        assert!((glass.blur_px - 24.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn glass_window_options_tier_matches_react_tokens() {
+        let theme = Theme::light();
+        let glass = theme.glass(GlassTier::WindowOptions);
+        assert!((glass.alpha - 0.22).abs() < f32::EPSILON);
+        assert!((glass.blur_px - 14.0).abs() < f32::EPSILON);
     }
 
     #[test]

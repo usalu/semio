@@ -241,10 +241,8 @@ impl DockState {
     ) -> Vec<(DockPath, Rect, String)> {
         let mut out = Vec::new();
         if let Some(path) = &self.maximized_stack {
-            if let (Some(node), Some(rect)) = (
-                node_at(&self.root, path),
-                solve_node_bounds(&self.root, bounds, path, &[]),
-            ) {
+            if let Some(node) = node_at(&self.root, path) {
+                let rect = bounds;
                 if let DockNode::Stack { windows, active } = node {
                     out.push((
                         path.clone(),
@@ -280,9 +278,8 @@ impl DockState {
         let mut out = Vec::new();
         if self.maximized_stack.is_some() {
             if let Some(path) = &self.maximized_stack {
-                if let Some(rect) = solve_node_bounds(&self.root, bounds, path, &[]) {
-                    out.push((path.clone(), stack_tab_bar_rect(rect, theme)));
-                }
+                let rect = bounds;
+                out.push((path.clone(), stack_tab_bar_rect(rect, theme)));
             }
             return out;
         }
@@ -444,10 +441,8 @@ impl DockState {
     ) {
         ctx.draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.canvas_clear);
         if let Some(path) = &self.maximized_stack {
-            if let (Some(node), Some(rect)) = (
-                node_at(&self.root, path),
-                solve_node_bounds(&self.root, bounds, path, &[]),
-            ) {
+            if let Some(node) = node_at(&self.root, path) {
+                let rect = bounds;
                 if let DockNode::Stack { .. } = node {
                     render_stack(self, ctx, path, node, rect, true, &mut |_, _| {});
                     return;
@@ -455,6 +450,22 @@ impl DockState {
             }
         }
         render_node(self, ctx, &self.root, bounds, &empty_path(), &mut |_, _| {}, None);
+    }
+
+    pub fn register_resize_hits(&self, ctx: &mut DockRenderContext<'_>, bounds: Rect) {
+        if self.maximized_stack.is_some() {
+            return;
+        }
+        walk_resize_hits(self, ctx, &self.root, bounds, &empty_path(), None);
+    }
+
+    pub fn split_axis_extent(&self, path: &DockPath, canvas: Rect) -> Option<f32> {
+        let bounds = solve_node_bounds(&self.root, canvas, path, &empty_path())?;
+        match node_at(&self.root, path)? {
+            DockNode::Row(_) => Some(bounds.w.max(1.0)),
+            DockNode::Column(_) => Some(bounds.h.max(1.0)),
+            DockNode::Stack { .. } => None,
+        }
     }
 }
 //#endregion DockLayout
@@ -695,6 +706,49 @@ pub fn compute_dock_drop_zone(
     None
 }
 
+/// @emoji 📐 Half-panel rectangle for split drop preview inside a stack body.
+pub fn split_drop_preview_in_body(body: Rect, side: DockSide) -> Rect {
+    let half_w = body.w * 0.5;
+    let half_h = body.h * 0.5;
+    match side {
+        DockSide::Left => Rect::new(body.x, body.y, half_w, body.h),
+        DockSide::Right => Rect::new(body.x + body.w - half_w, body.y, half_w, body.h),
+        DockSide::Top => Rect::new(body.x, body.y, body.w, half_h),
+        DockSide::Bottom => Rect::new(body.x, body.y + body.h - half_h, body.w, half_h),
+    }
+}
+
+/// @emoji 🎯 Resolves the on-canvas indicator rect for an active dock drop zone.
+pub fn drop_zone_indicator_rect(
+    zone: &DockDropZone,
+    tab_bars: &[(DockPath, Rect, Vec<f32>)],
+    bodies: &[(DockPath, Rect, String)],
+    canvas: Rect,
+    gap: f32,
+) -> Option<Rect> {
+    match zone {
+        DockDropZone::Tab { stack_path, index } => {
+            let (_, tab_bar, widths) = tab_bars.iter().find(|(path, _, _)| path == stack_path)?;
+            let mut x = tab_bar.x + gap;
+            for width in widths.iter().take(*index) {
+                x += width + gap;
+            }
+            let preview_w = widths.get(*index).copied().unwrap_or(88.0).clamp(48.0, 120.0);
+            Some(Rect::new(
+                x,
+                tab_bar.y + gap * 0.5,
+                preview_w,
+                tab_bar.h - gap,
+            ))
+        }
+        DockDropZone::Split { stack_path, side } => {
+            let (_, body, _) = bodies.iter().find(|(path, _, _)| path == stack_path)?;
+            Some(split_drop_preview_in_body(*body, *side))
+        }
+        DockDropZone::RootSplit { side } => Some(split_drop_preview_in_body(canvas, *side)),
+    }
+}
+
 fn stack_tab_bar_rect(bounds: Rect, theme: &Theme) -> Rect {
     Rect::new(bounds.x, bounds.y, bounds.w, theme.control_height)
 }
@@ -926,6 +980,9 @@ fn render_node(
     }
 }
 
+const SPLIT_VIS_PX: f32 = 6.0;
+const SPLIT_HIT_MIN_PX: f32 = 20.0;
+
 fn render_axis(
     state: &DockState,
     ctx: &mut DockRenderContext<'_>,
@@ -937,7 +994,6 @@ fn render_axis(
     outer_split: Option<(DockPath, usize, bool)>,
 ) {
     let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
-    let split_w = 6.0;
     if horizontal {
         let mut x = bounds.x;
         for (index, (child, size)) in children.iter().enumerate() {
@@ -955,15 +1011,6 @@ fn render_axis(
                 Some((path.to_vec(), index, true)),
             );
             x += w;
-            if index + 1 < children.len() {
-                let handle = Rect::new(x - split_w * 0.5, bounds.y, split_w, bounds.h);
-                register_split_hit(ctx, path, index, handle, DragAxis::Horizontal);
-                if let Some((parent_path, parent_index, parent_horizontal)) = &outer_split {
-                    if *parent_horizontal != horizontal {
-                        register_join_corner_hits(ctx, path, index, parent_path, *parent_index, handle, horizontal);
-                    }
-                }
-            }
         }
     } else {
         let mut y = bounds.y;
@@ -982,8 +1029,98 @@ fn render_axis(
                 Some((path.to_vec(), index, false)),
             );
             y += h;
+        }
+    }
+    let _ = outer_split;
+}
+
+fn walk_resize_hits(
+    state: &DockState,
+    ctx: &mut DockRenderContext<'_>,
+    node: &DockNode,
+    bounds: Rect,
+    path: &[usize],
+    outer_split: Option<(DockPath, usize, bool)>,
+) {
+    match node {
+        DockNode::Row(children) => walk_resize_axis(
+            state,
+            ctx,
+            children,
+            bounds,
+            path,
+            true,
+            outer_split,
+        ),
+        DockNode::Column(children) => walk_resize_axis(
+            state,
+            ctx,
+            children,
+            bounds,
+            path,
+            false,
+            outer_split,
+        ),
+        DockNode::Stack { .. } => {}
+    }
+}
+
+fn walk_resize_axis(
+    state: &DockState,
+    ctx: &mut DockRenderContext<'_>,
+    children: &[(DockNode, f32)],
+    bounds: Rect,
+    path: &[usize],
+    horizontal: bool,
+    outer_split: Option<(DockPath, usize, bool)>,
+) {
+    let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
+    if horizontal {
+        let mut x = bounds.x;
+        for (index, (child, size)) in children.iter().enumerate() {
+            let w = bounds.w * (*size / total);
+            let child_rect = Rect::new(x, bounds.y, w, bounds.h);
+            let mut child_path = path.to_vec();
+            child_path.push(index);
+            walk_resize_hits(
+                state,
+                ctx,
+                child,
+                child_rect,
+                &child_path,
+                Some((path.to_vec(), index, true)),
+            );
+            x += w;
             if index + 1 < children.len() {
-                let handle = Rect::new(bounds.x, y - split_w * 0.5, bounds.w, split_w);
+                let hit_w = SPLIT_HIT_MIN_PX.max(SPLIT_VIS_PX);
+                let handle = Rect::new(x - hit_w * 0.5, bounds.y, hit_w, bounds.h);
+                register_split_hit(ctx, path, index, handle, DragAxis::Horizontal);
+                if let Some((parent_path, parent_index, parent_horizontal)) = &outer_split {
+                    if *parent_horizontal != horizontal {
+                        register_join_corner_hits(ctx, path, index, parent_path, *parent_index, handle, horizontal);
+                    }
+                }
+            }
+        }
+    } else {
+        let mut y = bounds.y;
+        for (index, (child, size)) in children.iter().enumerate() {
+            let h = bounds.h * (*size / total);
+            let child_rect = Rect::new(bounds.x, y, bounds.w, h);
+            let mut child_path = path.to_vec();
+            child_path.push(index);
+            walk_resize_hits(
+                state,
+                ctx,
+                child,
+                child_rect,
+                &child_path,
+                Some((path.to_vec(), index, false)),
+            );
+            y += h;
+            if index + 1 < children.len() {
+                let hit_h = SPLIT_HIT_MIN_PX.max(SPLIT_VIS_PX);
+                let handle = Rect::new(bounds.x, y - hit_h * 0.5, bounds.w, hit_h);
                 register_split_hit(ctx, path, index, handle, DragAxis::Vertical);
                 if let Some((parent_path, parent_index, parent_horizontal)) = &outer_split {
                     if *parent_horizontal != horizontal {
@@ -1028,7 +1165,7 @@ fn register_join_corner_hits(
                 path_str(parent_path),
                 parent_index
             )),
-            kind: HitKind::ScrollRegion,
+            kind: HitKind::DockJoinCorner,
             drag_axis: Some(DragAxis::Both),
             drag_data: None,
         });
@@ -1046,7 +1183,7 @@ fn register_split_hit(
         rect,
         event: None,
         control_id: Some(format!("dock.split.{}.{index}", path_str(path))),
-        kind: HitKind::ScrollRegion,
+        kind: HitKind::DockSplit,
         drag_axis: Some(axis),
         drag_data: None,
     });
@@ -1071,8 +1208,11 @@ fn render_stack(
     let tab_h = theme.control_height;
     let stroke = theme.stroke_hairline;
     let globally_active = state.active_stack.as_ref().map(|p| p.as_slice()) == Some(path);
+    let stack_hovered = bounds.contains(ctx.input.pointer_x, ctx.input.pointer_y);
     let border = if globally_active {
         theme.accent
+    } else if stack_hovered {
+        theme.border_emphasized
     } else {
         theme.border_normal
     };
@@ -1527,6 +1667,71 @@ mod tests {
     }
 
     #[test]
+    fn split_axis_extent_uses_row_width_not_canvas_max() {
+        let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
+        dock.root = DockNode::Column(vec![
+            (
+                DockNode::Row(vec![
+                    (stack_with("a"), 0.5),
+                    (stack_with("b"), 0.5),
+                ]),
+                0.5,
+            ),
+            (stack_with("c"), 0.5),
+        ]);
+        let canvas = Rect::new(0.0, 0.0, 1000.0, 800.0);
+        let row_extent = dock.split_axis_extent(&[], canvas).unwrap();
+        assert!((row_extent - 1000.0).abs() < 0.1);
+        let col_extent = dock.split_axis_extent(&[], canvas);
+        assert!((col_extent.unwrap() - 800.0).abs() < 0.1);
+        let nested_extent = dock.split_axis_extent(&[0], canvas).unwrap();
+        assert!((nested_extent - 1000.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn resize_hits_win_over_later_scroll_region() {
+        let dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
+        dock.root = even_layout(&["a".into(), "b".into()]);
+        let canvas = Rect::new(0.0, 0.0, 400.0, 300.0);
+        let theme = Theme::default();
+        let mut atlas = FontAtlas::default();
+        let mut input = InputState::<()>::default();
+        let mut draw = DrawList::default();
+        let labels = HashMap::from([
+            ("a".into(), "A".into()),
+            ("b".into(), "B".into()),
+        ]);
+        let mut ctx = DockRenderContext {
+            draw: &mut draw,
+            atlas: &mut atlas,
+            icons: None,
+            input: &mut input,
+            theme: &theme,
+            window_labels: &labels,
+        };
+        input.register_hit(HitTarget {
+            rect: canvas,
+            event: None,
+            control_id: Some("content.scroll".into()),
+            kind: HitKind::ScrollRegion,
+            drag_axis: None,
+            drag_data: None,
+        });
+        dock.register_resize_hits(&mut ctx, canvas);
+        let hit = input.hit_at(200.0, 150.0).expect("split hit");
+        assert_eq!(hit.kind, HitKind::DockSplit);
+        assert_eq!(hit.drag_axis, Some(DragAxis::Horizontal));
+        assert!(hit.rect.w >= 20.0);
+    }
+
+    fn stack_with(id: &str) -> DockNode {
+        DockNode::Stack {
+            windows: vec![id.into()],
+            active: id.into(),
+        }
+    }
+
+    #[test]
     fn even_layout_single_window() {
         let node = even_layout(&["main".into()]);
         assert!(matches!(node, DockNode::Stack { .. }));
@@ -1588,6 +1793,33 @@ mod tests {
         } else {
             panic!("expected stack");
         }
+    }
+
+    #[test]
+    fn maximized_stack_uses_full_canvas_bounds() {
+        let mut dock = DockState::from_app(&sample_app(&["a", "b", "c"], None), Some("a"));
+        dock.root = even_layout(&["a".into(), "b".into(), "c".into()]);
+        dock.toggle_maximize(&[1]);
+        let canvas = Rect::new(0.0, 0.0, 900.0, 600.0);
+        let theme = Theme::default();
+        let mut atlas = FontAtlas::default();
+        let bodies = dock.stack_body_rects(canvas, &theme, &HashMap::new(), &mut atlas);
+        assert_eq!(bodies.len(), 1);
+        let (_, body, _) = &bodies[0];
+        assert!((body.w - canvas.w).abs() < 1.0);
+        assert!((body.h - (canvas.h - theme.control_height)).abs() < 2.0);
+    }
+
+    #[test]
+    fn split_drop_preview_covers_half_panel() {
+        let body = Rect::new(10.0, 20.0, 400.0, 300.0);
+        let left = split_drop_preview_in_body(body, DockSide::Left);
+        assert_eq!(left.x, 10.0);
+        assert_eq!(left.w, 200.0);
+        assert_eq!(left.h, 300.0);
+        let right = split_drop_preview_in_body(body, DockSide::Right);
+        assert_eq!(right.x, 210.0);
+        assert_eq!(right.w, 200.0);
     }
 }
 //#endregion DockTests

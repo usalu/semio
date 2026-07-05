@@ -4678,7 +4678,7 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, bottomPanel, leftSidePa
       ) : (
         <div className="flex flex-1 min-h-0 relative">
           {leftSidePanel ? <SidePanel {...leftSidePanel} position="left" /> : null}
-          <div className="flex flex-col flex-1 min-w-0 relative">
+          <div className="flex flex-col flex-1 min-w-0 relative z-0">
             <div className="flex flex-1 min-h-0 relative">
               <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
               {rightSidePanel ? <SidePanel {...rightSidePanel} position="right" /> : null}
@@ -15495,6 +15495,7 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
           "relative flex w-full min-w-0 flex-col overflow-hidden",
           fill ? "h-full min-h-0" : "h-auto max-h-full self-start",
           bgClass,
+          getLevelZClass("window"),
           className,
         )}
       >

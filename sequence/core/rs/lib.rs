@@ -606,6 +606,21 @@ impl SequenceHost {
         self.rebuild_dag();
     }
 
+    /// 🌳 Recomputes visible step positions using the shared layered DAG tree layout, then rebuilds the DAG view.
+    pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), String> {
+        self.dag.reorganize(opts)?;
+        let positions: HashMap<String, (f64, f64)> =
+            self.dag.fixture.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
+        for step in self.fixture.steps.iter_mut() {
+            if let Some(&(x, y)) = positions.get(&step.id) {
+                step.x = x;
+                step.y = y;
+            }
+        }
+        self.rebuild_dag();
+        Ok(())
+    }
+
     pub fn run(&self) -> RunResult {
         Executor::new(&self.registry).run(&self.build_path(), &Dictionary::new())
     }

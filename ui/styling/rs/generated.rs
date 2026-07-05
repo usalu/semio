@@ -102,6 +102,8 @@ pub mod opacities {
     pub const SELECTION_PREVIEW_STROKE_ALPHA: u8 = 180;
     pub const HANDLE_FILL_TRANSPARENT: f64 = 0.0;
     pub const GLASS_PANEL_ALPHA: f64 = 0.58;
+    pub const GLASS_MENU_ALPHA: f64 = 0.36;
+    pub const GLASS_WINDOW_OPTIONS_ALPHA: f64 = 0.22;
 }
 
 pub mod metrics {
@@ -243,6 +245,10 @@ pub mod metrics {
         pub const GAP_STANDARD_UI_SPACING: f64 = 1.0;
         pub const PADDING_STANDARD_UI_SPACING: f64 = 1.0;
         pub const PANEL_INSET_UI_SPACING: f64 = 1.0;
+        pub const GLASS_BLUR_PX: f64 = 24.0;
+        pub const GLASS_PANEL_BLUR_PX: f64 = 40.0;
+        pub const GLASS_WINDOW_OPTIONS_BLUR_PX: f64 = 14.0;
+        pub const GLASS_SATURATE: f64 = 1.45;
     }
     pub mod typography {
         pub const TEXT2XS_PX: f64 = 9.6;

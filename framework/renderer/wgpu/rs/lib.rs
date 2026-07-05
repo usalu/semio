@@ -9,17 +9,18 @@ pub mod shell;
 
 use plugin_bridge::{filter_plugins, parse_plugin_entries};
 use infinite_world::{
-    apply_glb_bytes, collect_pending_glb_fetches, fetch_url_bytes, handle_world3d_paint_commands,
-    handle_world3d_pointer_button,
-    handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel,
+    apply_glb_bytes, apply_world_command_preview, collect_pending_glb_fetches, fetch_url_bytes,
+    handle_world3d_paint_commands, handle_world3d_pointer_button, handle_world3d_pointer_drag,
+    handle_world3d_pointer_move, handle_world3d_wheel,
 };
 use semio_framework_core::CommandDescriptor;
 use shell::ShellState;
 use std::cell::RefCell;
 use std::rc::Rc;
 use ui_wgpu::{
-    attach_dom_listeners, fetch_font_bytes, schedule_frame, DrawList, FontAtlas, GpuContext,
-    IconAtlas, InputState, KeyAction, PointerCallbacks, PointerModifiers, Theme,
+    apply_canvas_cursor, attach_dom_listeners, fetch_font_bytes, resolve_semio_cursor, schedule_frame,
+    CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, PointerCallbacks,
+    PointerModifiers, SemioCursor, Theme,
 };
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::spawn_local;
@@ -40,6 +41,14 @@ fn resolve_theme(theme_id: &str) -> Theme {
     }
 }
 
+fn theme_is_dark(theme_id: &str) -> bool {
+    match theme_id {
+        "light" => false,
+        "dark" => true,
+        _ => prefers_dark_scheme(),
+    }
+}
+
 struct AppRuntime {
     gpu: GpuContext,
     atlas: FontAtlas,
@@ -49,6 +58,9 @@ struct AppRuntime {
     overlay: DrawList,
     input: InputState<CommandDescriptor>,
     theme: Theme,
+    canvas: web_sys::HtmlCanvasElement,
+    theme_dark: bool,
+    last_cursor: Option<(SemioCursor, bool)>,
     last_pointer_x: f32,
     last_pointer_y: f32,
     pointer_down: bool,
@@ -62,6 +74,7 @@ struct AppRuntime {
 impl AppRuntime {
     fn frame(&mut self) {
         self.theme = resolve_theme(&self.shell.theme_id);
+        self.theme_dark = theme_is_dark(&self.shell.theme_id);
         self.input.update_hover(self.last_pointer_x, self.last_pointer_y);
         self.input.clear_frame();
         self.draw.clear();
@@ -71,12 +84,37 @@ impl AppRuntime {
         if wheel_delta.abs() > 0.0 {
             let x = self.last_pointer_x;
             let y = self.last_pointer_y;
+            let ctrl = self.modifiers.ctrl;
             self.shell
                 .handle_pointer_wheel(x, y, wheel_delta, &self.input);
             for state in self.shell.world3d_states.values_mut() {
                 if state.bounds.contains(x, y) {
                     handle_world3d_wheel(state, wheel_delta);
                 }
+            }
+            let mut graph_commands = Vec::new();
+            for (surface_id, surface) in &self.shell.node_graph_states {
+                if surface.bounds.contains(x, y) {
+                    graph_commands.extend(engine_canvas::node_graph_wheel(
+                        surface_id,
+                        &surface.controller_id,
+                        surface.bounds,
+                        x,
+                        y,
+                        wheel_delta,
+                        ctrl,
+                    ));
+                }
+            }
+            if !graph_commands.is_empty() {
+                let runtime = self.self_weak.clone();
+                spawn_local(async move {
+                    if let Some(runtime) = runtime.upgrade() {
+                        if let Ok(mut app) = runtime.try_borrow_mut() {
+                            app.dispatch_commands(graph_commands).await;
+                        }
+                    }
+                });
             }
         }
         ICON_ATLAS_RUNTIME.with(|cell| {
@@ -103,6 +141,25 @@ impl AppRuntime {
         if let Err(err) = self.gpu.render_frame(&self.draw, Some(&self.overlay)) {
             web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] render frame: {err}")));
         }
+        let hit = self
+            .input
+            .hit_at(self.last_pointer_x, self.last_pointer_y);
+        let cursor = resolve_semio_cursor(
+            hit,
+            CursorDragState {
+                tree_drag: self.shell.tree_drag.is_some(),
+                dock_drag: self.shell.dock_drag.is_some(),
+                pointer_drag_active: self.input.drag.active,
+                pointer_drag_axis: self.input.drag.axis,
+                pointer_drag_kind: self.input.drag.kind,
+            },
+        );
+        apply_canvas_cursor(
+            &self.canvas,
+            cursor,
+            self.theme_dark,
+            &mut self.last_cursor,
+        );
         if !self.asset_poll_pending {
             self.asset_poll_pending = true;
             let runtime = self.self_weak.clone();
@@ -170,8 +227,13 @@ impl AppRuntime {
         }
     }
 
-    async fn dispatch_world3d_commands(&mut self, commands: Vec<CommandDescriptor>) {
+    async fn dispatch_commands(&mut self, commands: Vec<CommandDescriptor>) {
         for command in commands {
+            for state in self.shell.world3d_states.values_mut() {
+                if state.controller_id == command.controller_id {
+                    apply_world_command_preview(state, &command);
+                }
+            }
             if let Err(err) = self.shell.dispatch_command(command).await {
                 web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] command failed: {err}")));
             }
@@ -212,8 +274,41 @@ impl AppRuntime {
             }
         }
         if !world_commands.is_empty() {
-            self.dispatch_world3d_commands(world_commands).await;
+            self.dispatch_commands(world_commands).await;
             return;
+        }
+        let mut graph_commands = Vec::new();
+        for (surface_id, surface) in &self.shell.node_graph_states {
+            if !surface.bounds.contains(x, y) {
+                continue;
+            }
+            if down {
+                graph_commands.extend(engine_canvas::node_graph_pointer_down(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                    button,
+                    modifiers.shift,
+                    modifiers.ctrl,
+                    modifiers.alt,
+                ));
+            } else {
+                graph_commands.extend(engine_canvas::node_graph_pointer_up(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                    modifiers.shift,
+                    modifiers.ctrl,
+                    modifiers.alt,
+                ));
+            }
+        }
+        if !graph_commands.is_empty() {
+            self.dispatch_commands(graph_commands).await;
         }
         if let Err(err) = self
             .shell
@@ -269,8 +364,26 @@ impl AppRuntime {
             }
             world_commands.extend(handle_world3d_paint_commands(state, x, y, down, button));
         }
+        let mut graph_commands = Vec::new();
+        for (surface_id, surface) in &self.shell.node_graph_states {
+            if surface.bounds.contains(x, y) {
+                graph_commands.extend(engine_canvas::node_graph_pointer_move(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                    modifiers.shift,
+                    modifiers.ctrl,
+                    modifiers.alt,
+                ));
+            }
+        }
+        if !graph_commands.is_empty() {
+            self.dispatch_commands(graph_commands).await;
+        }
         if !world_commands.is_empty() {
-            self.dispatch_world3d_commands(world_commands).await;
+            self.dispatch_commands(world_commands).await;
         }
     }
 
@@ -340,6 +453,9 @@ pub async fn semio_renderer_boot(
         overlay: DrawList::default(),
         input: InputState::default(),
         theme: Theme::default(),
+        canvas: canvas.clone(),
+        theme_dark: theme_is_dark("system"),
+        last_cursor: None,
         last_pointer_x: 0.0,
         last_pointer_y: 0.0,
         pointer_down: false,

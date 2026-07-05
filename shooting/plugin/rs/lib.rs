@@ -32,9 +32,6 @@ const SHOOTING_EXAMPLE_DEFAULT_ID: &str = "base-icon";
 
 const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 
-const ICON_PLACEHOLDER_PNG_BASE64: &str =
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
-
 const DEFAULT_EXAMPLE_JSON: &str = include_str!("../../example/base-icon.shooting.json");
 
 static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
@@ -709,15 +706,53 @@ fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) 
     )
 }
 
-fn render_icon_scene(fixture: &ShootingFixture) -> UiNode {
+fn escape_svg_text(value: &str) -> String {
+    value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+}
+
+/// 🖼️ Renders the active shot as an SVG emblem — shot shape as the clip, the emblem override
+/// or asset name as the payload — instead of a generic title card.
+fn shooting_scene_svg(fixture: &ShootingFixture) -> (String, u32, u32) {
     let shot = active_shot(fixture);
+    let asset = active_asset(fixture);
     let (width, height) = shot.map(|entry| (entry.width, entry.height)).unwrap_or((256, 256));
-    let pixels_base64 = fixture
+    let shape = shot.map(|entry| entry.shape.as_str()).unwrap_or("rectangle");
+    let background = if fixture.scene.background.is_empty() { "#0f172a" } else { fixture.scene.background.as_str() };
+    let clip = if shape == "ellipse" {
+        format!(
+            "<ellipse cx=\"{cx}\" cy=\"{cy}\" rx=\"{rx}\" ry=\"{ry}\" fill=\"{background}\"/>",
+            cx = width as f64 / 2.0,
+            cy = height as f64 / 2.0,
+            rx = width as f64 / 2.0,
+            ry = height as f64 / 2.0,
+        )
+    } else {
+        format!("<rect width=\"100%\" height=\"100%\" fill=\"{background}\"/>")
+    };
+    let emblem = fixture
         .scene
         .emblem_base64
-        .clone()
-        .filter(|value| !value.is_empty())
-        .unwrap_or_else(|| ICON_PLACEHOLDER_PNG_BASE64.into());
+        .as_ref()
+        .filter(|data| !data.is_empty())
+        .map(|data| {
+            format!(
+                "<image href=\"data:image/png;base64,{data}\" x=\"0\" y=\"0\" width=\"{width}\" height=\"{height}\" preserveAspectRatio=\"xMidYMid meet\"/>"
+            )
+        })
+        .unwrap_or_default();
+    let label = asset.map(|entry| entry.name.as_str()).unwrap_or("Untitled");
+    let font_size = (height as f64 * 0.09).max(10.0);
+    let text = format!(
+        "<text x=\"50%\" y=\"{y}\" font-size=\"{font_size}\" fill=\"white\" text-anchor=\"middle\" font-family=\"sans-serif\">{label}</text>",
+        y = height as f64 * 0.92,
+        label = escape_svg_text(label),
+    );
+    semio_framework_os::wrap_svg(width, height, &format!("{clip}{emblem}{text}"))
+}
+
+fn render_icon_scene(fixture: &ShootingFixture) -> UiNode {
+    let (svg, width, height) = shooting_scene_svg(fixture);
+    let pixels_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).unwrap_or_default();
     build_raster_scene(
         SHOOTING_PLAY_SURFACE_ICON,
         SHOOTING_PLAY_APP_ID,
@@ -1094,7 +1129,11 @@ fn create_shooting_app() -> App {
 }
 
 fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    semio_framework_os::title_card_svg(value, "Shooting", 512, 512)
+    let fixture: ShootingFixture = serde_json::from_value(
+        value.get("fixture").cloned().unwrap_or_else(|| value.clone()),
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(shooting_scene_svg(&fixture))
 }
 
 fn register_shooting_exports() {
@@ -1133,10 +1172,30 @@ mod tests {
         let node = app.render(SHOOTING_PLAY_BODY_ICON, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("raster"));
-        assert!(
-            json.contains(ICON_PLACEHOLDER_PNG_BASE64),
-            "icon preview uses placeholder raster until SVG shot render is ported"
-        );
+        let payload: Value = serde_json::from_str(&json).unwrap();
+        let pixels_base64 = payload["raster"]["pixelsBase64"].as_str().unwrap_or_default();
+        assert!(!pixels_base64.is_empty(), "icon renders a real rasterized emblem, not an empty placeholder");
+    }
+
+    #[test]
+    fn scene_svg_embeds_active_asset_name_and_shot_shape() {
+        let envelope = default_envelope();
+        let (svg, width, height) = shooting_scene_svg(&envelope.fixture);
+        let shot = active_shot(&envelope.fixture).expect("default fixture shot");
+        let asset = active_asset(&envelope.fixture).expect("default fixture asset");
+        assert_eq!((width, height), (shot.width, shot.height));
+        assert!(svg.contains(&asset.name), "svg emblem includes active asset name");
+        assert!(if shot.shape == "ellipse" { svg.contains("<ellipse") } else { svg.contains("<rect") });
+    }
+
+    #[test]
+    fn export_svg_uses_scene_render_not_title_card() {
+        let envelope = default_envelope();
+        let document = json!({ "fixture": envelope.fixture });
+        let (svg, _width, _height) = shooting_document_json_to_svg(&document).expect("export svg");
+        let asset = active_asset(&envelope.fixture).expect("default fixture asset");
+        assert!(svg.contains(&asset.name));
+        assert!(!svg.contains("Shooting"), "export renders the real scene, not the generic title card");
     }
 
     #[test]

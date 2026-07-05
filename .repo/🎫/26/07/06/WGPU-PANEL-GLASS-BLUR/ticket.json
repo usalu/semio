@@ -1,0 +1,20 @@
+{
+  "title": "Wgpu Panel Glass Blur",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Restore real frosted-glass panels in the wgpu renderer (side panel, context menus/dropdowns, window measures/engagement rails) via GPU backdrop-blur + saturate + tint composite.",
+  "summary": "Restored real frosted-glass panels in the wgpu renderer via GPU backdrop-blur + saturate + tint composite. Added glass menu/window-options alpha and blur/saturate metrics to tokens.json and regenerated styling artifacts. Replaced opaque glass_panel_fill/overlay_bg fills with per-tier GlassStyle (Panel/Menu/WindowOptions) and DrawList::push_glass. Implemented offscreen mip-chained scene_color_texture, blur downsample chain, scene blit, and glass composite passes in ui/wgpu draw/gpu pipeline. Migrated side panel, context menus/dropdowns/palette, window measures/engagement rails, and select popups to push_glass. cargo test -p ui_wgpu -p ui_styling passed; wasm rebuild succeeded.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1830"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "71b084a2",
+    "local": "wgpu_panel_glass_blur_71b084a2.plan.md"
+  },
+  "sessions": [
+    "⚪6954e722a85046f1a25413e48694a6bc",
+    "⚪ea94852dacfe4fa9bca6971d51bef1a2"
+  ]
+}

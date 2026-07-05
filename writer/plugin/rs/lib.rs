@@ -3,8 +3,7 @@
 mod grammar;
 
 use grammar::tokenize_language;
-use trinity_jack::{complete, lint, semantic_tokens, Diagnostic};
-use trinity_ram::{empty_trinity_graph_fixture, Graph};
+use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
 use semio_framework_plugin::{
     build_text_editor_scene, ui_declarative_sections_to_tree, ui_text, App,
     CommandDescriptor, PluginApp, PluginBundle, TextEditorScene, UiNode, UiSectionNode,
@@ -480,8 +479,26 @@ fn jack_occurrences_json(text: &str, cursor: usize) -> Option<String> {
     )
 }
 
+/// 🪞 Canonical jack format when possible, else a whitespace-only normalization for other languages.
+fn format_writer_text(text: &str, language_id: &str) -> String {
+    if language_id == "jack" {
+        if let Ok(formatted) = jack_format(text) {
+            return formatted;
+        }
+    }
+    let mut normalized: String = text
+        .lines()
+        .map(|line| line.trim_end())
+        .collect::<Vec<_>>()
+        .join("\n");
+    if !text.is_empty() && !normalized.ends_with('\n') {
+        normalized.push('\n');
+    }
+    normalized
+}
+
 fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
-    let graph = Graph::load_json(r#"{"nodes":[],"edges":[]}"#).ok()?;
+    let graph = example_graph();
     let items: Vec<Value> = complete(&graph, text, cursor)
         .into_iter()
         .map(|item| json!({ "label": item.label, "detail": item.detail }))
@@ -502,7 +519,7 @@ fn render_main_scene(document: &WriterDocument, runtime: &WriterPlayRuntime) -> 
         serde_json::to_string(&tokens).ok()
     };
     let diagnostics_json = if document.language_id == "jack" {
-        let graph = Graph::load_json(r#"{"nodes":[],"edges":[]}"#).expect("empty jack graph");
+        let graph = example_graph();
         let diagnostics: Vec<serde_json::Value> = lint(&graph, &document.text)
             .into_iter()
             .map(|diag: Diagnostic| {
@@ -631,6 +648,11 @@ impl PluginApp for WriterApp {
                 }
             }
             "formatDocument" => {
+                let formatted = format_writer_text(&play.document.text, &play.document.language_id);
+                if formatted != play.document.text {
+                    push_undo_writer(&mut play);
+                    play.document.text = formatted;
+                }
                 play.runtime.format_signal += 1;
                 play.runtime.revision += 1;
                 return vec![set_document_op(&play)];
@@ -865,6 +887,39 @@ mod tests {
         let node = app.render(WRITER_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("jack"));
+    }
+
+    #[test]
+    fn format_document_reformats_jack_query() {
+        let mut app = WriterApp;
+        let document = serde_json::to_string(&WriterPlayEnvelope {
+            document: WriterDocument {
+                schema: WRITER_DOCUMENT_SCHEMA.into(),
+                id: "jack".into(),
+                language_id: "jack".into(),
+                uri: "writer://jack".into(),
+                text: "MATCH (a:Piece)   WHERE a.name='core' RETURN a.name".into(),
+                camera: default_camera(),
+            },
+            runtime: WriterPlayRuntime::default(),
+            undo_stack: Vec::new(),
+            redo_stack: Vec::new(),
+        })
+        .unwrap();
+        let ops = app.handle_command("formatDocument", None, &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let envelope: WriterPlayEnvelope = serde_json::from_str(
+            &serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string(),
+        )
+        .unwrap();
+        assert!(envelope.document.text.contains('\n'));
+        assert_eq!(envelope.runtime.format_signal, 1);
+    }
+
+    #[test]
+    fn jack_completions_use_example_fixture() {
+        let json = jack_completions_json("RETURN a.", 9).unwrap_or_default();
+        assert!(!json.is_empty());
     }
 
     #[test]

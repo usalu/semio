@@ -104,6 +104,9 @@ struct TileCanvasLayer {
     y: f64,
     width: f64,
     height: f64,
+    /// 🖼️ Image src for `kind: "image"` layers, rendered by both the React and wgpu canvas-2d hosts.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    data_url: Option<String>,
 }
 
 fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
@@ -115,18 +118,21 @@ fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) 
     )
 }
 
+/// 🖼️ Renders the actual source figure (image) as the backdrop layer, with crop tiles drawn on top of it.
 fn deck_to_canvas_layers(deck: &PresentationDeck, selected: &[String]) -> String {
     const SCALE: f64 = 1000.0;
     let mut layers = Vec::new();
     let (sx, sy, sw, sh) = frame_to_canvas(&deck.source.frame, SCALE);
+    let has_image_src = !deck.source.src.trim().is_empty() && deck.source.kind != "pdf";
     layers.push(TileCanvasLayer {
         id: "source-frame".into(),
-        kind: "source".into(),
+        kind: if has_image_src { "image".into() } else { "source".into() },
         name: deck.source.src.clone(),
         x: sx,
         y: sy,
         width: sw,
         height: sh,
+        data_url: has_image_src.then(|| deck.source.src.clone()),
     });
     for tile in &deck.tiles {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
@@ -139,6 +145,7 @@ fn deck_to_canvas_layers(deck: &PresentationDeck, selected: &[String]) -> String
             y,
             width,
             height,
+            data_url: None,
         });
     }
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
@@ -798,6 +805,31 @@ mod tests {
     fn deck_schema_is_presentation() {
         let envelope = default_envelope();
         assert_eq!(envelope.deck.schema, PRESENTATION_DOCUMENT_SCHEMA);
+    }
+
+    #[test]
+    fn source_frame_renders_as_actual_image_layer_behind_tiles() {
+        let mut app = PresentationPlayApp;
+        let mut document = app.initial_document_json();
+        for op in app.handle_command("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
+            if let Ok(value) = serde_json::from_str::<Value>(&op) {
+                if value.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
+                    document = serde_json::to_string(&value.get("document").unwrap()).unwrap();
+                }
+            }
+        }
+        let envelope = parse_envelope(&document);
+        let layers_json = deck_to_canvas_layers(&envelope.deck, &envelope.runtime.selected_ids);
+        let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
+        assert!(!envelope.deck.source.src.trim().is_empty());
+        let source_layer = layers.first().expect("source layer is first (renders behind tiles)");
+        assert_eq!(source_layer.get("id").and_then(|v| v.as_str()), Some("source-frame"));
+        assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("image"));
+        assert_eq!(source_layer.get("dataUrl").and_then(|v| v.as_str()), Some(envelope.deck.source.src.as_str()));
+        for tile_layer in &layers[1..] {
+            assert_ne!(tile_layer.get("kind").and_then(|v| v.as_str()), Some("image"));
+            assert!(tile_layer.get("dataUrl").is_none() || tile_layer.get("dataUrl") == Some(&Value::Null));
+        }
     }
 
     #[test]

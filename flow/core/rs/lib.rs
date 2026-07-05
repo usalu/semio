@@ -1310,6 +1310,11 @@ pub fn flow_operator_catalogue_json() -> String {
         .collect();
     serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into())
 }
+
+/// 🧠 Serializes operator catalogue entries for neuron port layout seeding.
+pub fn flow_neuron_kind_infos_json() -> String {
+    serde_json::to_string(&flow_registry().operator_catalogue()).unwrap_or_else(|_| "[]".into())
+}
 // #endregion 🔖Catalogue
 
 // #region 🔖ModuleRegistry
@@ -2922,6 +2927,14 @@ impl FlowHost {
 
     pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
         self.dag.set_canvas_theme_from_json(json)
+    }
+
+    pub fn set_canvas_theme_dark(&mut self, dark: bool) {
+        self.dag.canvas_theme = dag::CanvasThemePalette::from_board_theme(if dark {
+            &ui_styling::BOARD_DARK
+        } else {
+            &ui_styling::BOARD_LIGHT
+        });
     }
 
     pub fn paint_scene(&self, scene: &mut cavas::Scene, width: u32, height: u32, dpr: f64) {

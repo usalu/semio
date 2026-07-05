@@ -3,18 +3,29 @@ import type { NodeGraphScene } from "../types.ts";
 //#region DagOverlayTypes
 export type DagLabelOverlayRow = {
 	readonly id: string;
+	readonly kind?: "port" | "node" | string;
 	readonly text: string;
+	readonly layout: "horizontal" | "vertical";
+	readonly align?: "left" | "center" | "right";
 	readonly x: number;
 	readonly y: number;
-	readonly width: number;
-	readonly height: number;
-	readonly vertical?: boolean;
-	readonly align?: "left" | "center" | "right";
+	readonly nodeW: number;
+	readonly nodeH: number;
+	readonly fontScreenPx?: number;
+	readonly maxScreenH?: number;
 	readonly ghost?: boolean;
-	readonly dimmed?: boolean;
-	readonly selected?: boolean;
-	readonly hovered?: boolean;
-	readonly preselect?: boolean;
+};
+
+export type DagPreselectSnapshot = {
+	readonly ids: readonly string[];
+	readonly removedIds: readonly string[];
+};
+
+export type DagLabelOverlayInteraction = {
+	readonly hoveredId: string | null;
+	readonly selectedIds: readonly string[];
+	readonly preselect: DagPreselectSnapshot;
+	readonly dimmedIds?: readonly string[];
 };
 
 export type DagMarqueeOverlay = {
@@ -92,13 +103,116 @@ export function screenToWorld(camera: DagCameraState, width: number, height: num
 //#endregion DagOverlayGeometry
 
 //#region DagOverlayPaint
-export function parseDagLabelRows(stateJson: string): DagLabelOverlayRow[] {
+const DAG_LABEL_SCREEN_PX = 11;
+const DAG_LABEL_FONT_FAMILY = "ui-sans-serif, system-ui, sans-serif";
+
+export function parseDagNodeIdArray(json: string): string[] {
 	try {
-		const parsed = JSON.parse(stateJson) as { readonly labels?: DagLabelOverlayRow[]; readonly rows?: DagLabelOverlayRow[] };
-		return parsed.labels ?? parsed.rows ?? [];
+		const parsed = JSON.parse(json) as unknown;
+		return Array.isArray(parsed) ? parsed.filter((value): value is string => typeof value === "string") : [];
 	} catch {
 		return [];
 	}
+}
+
+export function parseDagPreselectJson(json: string): DagPreselectSnapshot {
+	try {
+		const parsed = JSON.parse(json) as { ids?: unknown; removedIds?: unknown };
+		const ids = Array.isArray(parsed.ids) ? parsed.ids.filter((value): value is string => typeof value === "string") : [];
+		const removedIds = Array.isArray(parsed.removedIds) ? parsed.removedIds.filter((value): value is string => typeof value === "string") : [];
+		return { ids, removedIds };
+	} catch {
+		return { ids: [], removedIds: [] };
+	}
+}
+
+export function dagElementInteractionChrome(
+	selectionIds: Iterable<string>,
+	preselection: DagPreselectSnapshot,
+): { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> } {
+	if (!preselection.ids.length && !preselection.removedIds.length) {
+		return { selectedIds: new Set(selectionIds), highlightedIds: new Set() };
+	}
+	return { selectedIds: new Set(preselection.ids), highlightedIds: new Set(preselection.removedIds) };
+}
+
+export function parseDagLabelRows(stateJson: string): DagLabelOverlayRow[] {
+	try {
+		const parsed = JSON.parse(stateJson) as {
+			readonly labels?: readonly Record<string, unknown>[];
+			readonly rows?: readonly Record<string, unknown>[];
+		};
+		const raw = parsed.labels ?? parsed.rows ?? [];
+		return raw
+			.map((row) => {
+				const text = typeof row.text === "string" ? row.text.trim() : "";
+				if (!text) return null;
+				const align = row.align === "left" || row.align === "right" || row.align === "center" ? row.align : undefined;
+				return {
+					id: String(row.id ?? ""),
+					kind: typeof row.kind === "string" ? row.kind : undefined,
+					text,
+					layout: row.layout === "vertical" ? "vertical" : "horizontal",
+					align,
+					x: Number(row.x ?? 0),
+					y: Number(row.y ?? 0),
+					nodeW: Number(row.nodeW ?? row.width ?? 0),
+					nodeH: Number(row.nodeH ?? row.height ?? 0),
+					fontScreenPx: typeof row.fontScreenPx === "number" ? row.fontScreenPx : undefined,
+					maxScreenH: typeof row.maxScreenH === "number" ? row.maxScreenH : undefined,
+					ghost: row.ghost === true,
+				} satisfies DagLabelOverlayRow;
+			})
+			.filter((row): row is DagLabelOverlayRow => row !== null);
+	} catch {
+		return [];
+	}
+}
+
+function dagClampLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targetPx: number, maxW: number, maxH: number): number {
+	let px = Math.max(4, Math.round(targetPx));
+	ctx.font = `${px}px ${DAG_LABEL_FONT_FAMILY}`;
+	if (ctx.measureText(text).width <= maxW && px * 1.2 <= maxH) {
+		return px;
+	}
+	let low = 4;
+	let high = px;
+	let best = 4;
+	while (low <= high) {
+		const mid = Math.floor((low + high) / 2);
+		ctx.font = `${mid}px ${DAG_LABEL_FONT_FAMILY}`;
+		const w = ctx.measureText(text).width;
+		const h = mid * 1.2;
+		if (w <= maxW && h <= maxH) {
+			best = mid;
+			low = mid + 1;
+		} else {
+			high = mid - 1;
+		}
+	}
+	return best;
+}
+
+function dagClampPortLabelFontPx(ctx: CanvasRenderingContext2D, text: string, targetPx: number, maxW: number, maxH: number): number {
+	let px = Math.max(8, Math.round(targetPx));
+	ctx.font = `${px}px ${DAG_LABEL_FONT_FAMILY}`;
+	if (ctx.measureText(text).width <= maxW && px * 1.25 <= maxH) {
+		return px;
+	}
+	let low = 8;
+	let high = px;
+	let best = 8;
+	while (low <= high) {
+		const mid = Math.floor((low + high) / 2);
+		ctx.font = `${mid}px ${DAG_LABEL_FONT_FAMILY}`;
+		if (ctx.measureText(text).width <= maxW) {
+			best = mid;
+			low = mid + 1;
+		} else {
+			high = mid - 1;
+		}
+	}
+	return best;
 }
 
 export function parseDagParamEditors(stateJson: string): readonly DagParamEditorRow[] {
@@ -127,11 +241,18 @@ export function parseDagOverlayCamera(stateJson: string): DagCameraState {
 		return { x: 0, y: 0, zoom: 1 };
 	}
 }
-export function dagOverlayLabelFill(row: DagLabelOverlayRow): string {
-	if (row.ghost) return "var(--color-secondary)";
-	if (row.dimmed) return "var(--color-border)";
-	if (row.selected || row.hovered) return "var(--color-foreground)";
-	if (row.preselect) return "var(--color-secondary)";
+export function dagOverlayLabelFill(
+	nodeId: string,
+	ghost: boolean,
+	hoveredId: string | null,
+	chrome: { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> },
+	dimmedIds: readonly string[] = [],
+): string {
+	if (ghost) return "var(--color-secondary)";
+	if (dimmedIds.includes(nodeId)) return "var(--color-border)";
+	if (chrome.selectedIds.has(nodeId)) return "var(--color-foreground)";
+	if (chrome.highlightedIds.has(nodeId)) return "var(--color-secondary)";
+	if (hoveredId === nodeId) return "var(--color-foreground)";
 	return "var(--color-muted-foreground)";
 }
 
@@ -141,38 +262,71 @@ export function paintDagLabelOverlays(
 	logicalW: number,
 	logicalH: number,
 	dpr: number,
+	interaction: DagLabelOverlayInteraction,
 ): void {
+	let state: { readonly camera?: DagCameraState; readonly width?: number; readonly height?: number; readonly labels?: readonly DagLabelOverlayRow[] };
+	try {
+		state = JSON.parse(stateJson) as typeof state;
+	} catch {
+		return;
+	}
 	const ctx = canvas.getContext("2d");
 	if (!ctx) return;
-	canvas.width = Math.round(logicalW * dpr);
-	canvas.height = Math.round(logicalH * dpr);
+	const pixelW = Math.max(1, Math.round(logicalW * dpr));
+	const pixelH = Math.max(1, Math.round(logicalH * dpr));
+	if (canvas.width !== pixelW || canvas.height !== pixelH) {
+		canvas.width = pixelW;
+		canvas.height = pixelH;
+	}
 	canvas.style.width = `${logicalW}px`;
 	canvas.style.height = `${logicalH}px`;
 	ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 	ctx.clearRect(0, 0, logicalW, logicalH);
-	let rows: DagLabelOverlayRow[] = [];
-	try {
-		rows = parseDagLabelRows(stateJson);
-	} catch {
-		rows = [];
-	}
-	ctx.textBaseline = "middle";
+	const zoom = Math.max(0.05, Number(state.camera?.zoom) || 1);
+	const camera = {
+		x: Number(state.camera?.x) || 0,
+		y: Number(state.camera?.y) || 0,
+		zoom,
+	};
+	const viewportW = Number(state.width) || logicalW;
+	const viewportH = Number(state.height) || logicalH;
+	const chrome = dagElementInteractionChrome(interaction.selectedIds, interaction.preselect);
+	const dimmedIds = interaction.dimmedIds ?? [];
+	const rows = state.labels ?? parseDagLabelRows(stateJson);
+	const inset = 0.88;
 	for (const row of rows) {
-		const fontPx = Math.max(8, Math.min(row.height * 0.75, 14));
-		ctx.font = `${fontPx}px var(--font-sans, system-ui)`;
-		ctx.fillStyle = dagOverlayLabelFill(row);
-		if (row.vertical) {
+		const anchor = worldToScreen(camera, viewportW, viewportH, row.x, row.y);
+		const isPort = row.kind === "port" || row.align === "left" || row.align === "right";
+		const maxW = Math.max(4, Number(row.nodeW) * zoom * inset);
+		const maxH = Math.max(
+			4,
+			isPort && Number.isFinite(Number(row.maxScreenH)) && Number(row.maxScreenH) > 0
+				? Number(row.maxScreenH)
+				: Number(row.nodeH) * zoom * inset,
+		);
+		const fontScreenPx = Number(row.fontScreenPx);
+		const targetPx = Number.isFinite(fontScreenPx) && fontScreenPx > 0 ? fontScreenPx : DAG_LABEL_SCREEN_PX;
+		const fontPx = isPort
+			? dagClampPortLabelFontPx(ctx, row.text, targetPx, maxW, maxH)
+			: dagClampLabelFontPx(ctx, row.text, targetPx, maxW, maxH);
+		ctx.font = `${fontPx}px ${DAG_LABEL_FONT_FAMILY}`;
+		ctx.fillStyle = dagOverlayLabelFill(row.id, row.ghost === true, interaction.hoveredId, chrome, dimmedIds);
+		ctx.globalAlpha = row.ghost ? 0.85 : dimmedIds.includes(row.id) ? 0.5 : 1;
+		if (row.layout === "vertical") {
 			ctx.save();
-			ctx.translate(row.x + row.width / 2, row.y + row.height / 2);
+			ctx.translate(anchor.x, anchor.y);
 			ctx.rotate(-Math.PI / 2);
-			ctx.textAlign = row.align === "right" ? "right" : row.align === "center" ? "center" : "left";
-			ctx.fillText(row.text, -row.height / 2 + 4, 0);
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+			ctx.fillText(row.text, 0, 0);
 			ctx.restore();
 		} else {
-			ctx.textAlign = row.align === "right" ? "right" : row.align === "center" ? "center" : "left";
-			const tx = row.align === "right" ? row.x + row.width - 4 : row.align === "center" ? row.x + row.width / 2 : row.x + 4;
-			ctx.fillText(row.text, tx, row.y + row.height / 2);
+			const align = row.align === "left" || row.align === "right" ? row.align : "center";
+			ctx.textAlign = align;
+			ctx.textBaseline = "middle";
+			ctx.fillText(row.text, anchor.x, anchor.y);
 		}
+		ctx.globalAlpha = 1;
 	}
 }
 

@@ -27,6 +27,12 @@ Brought the wgpu renderer to pre-migration feature parity for lowpoly and framew
 - Paint-on-mesh: `paintAt` via ray-UV hit, stroke begin/end
 - Paint texture baked to vertex colors for approximate mesh display
 
+## Follow-up (2026-07-06) — Empty 3D preview fix
+
+- **Root cause:** `upload_world_passes` in `ui/wgpu/rs/draw.rs` used `?` on `world_lines.upload()`. `GrowBuffer::upload` returns `None` for empty data, so mesh-only scenes (no line overlays) aborted the entire 3D pass.
+- **Fix:** Upload instances and lines independently; return `None` only when both are empty.
+- **Verified:** `cargo test -p ui_wgpu mesh_instances_without_lines`; `bun ./framework/renderer/wgpu/script.ts wasm` succeeded.
+
 ## Verification
 
 - `cargo test -p kernel_3d_scene -p infinite_world -p lowpoly-plugin --lib` — 22 lowpoly tests passed
@@ -35,6 +41,7 @@ Brought the wgpu renderer to pre-migration feature parity for lowpoly and framew
 
 ## Files touched
 
+- `ui/wgpu/rs/draw.rs`
 - `framework/renderer/wgpu/rs/plugin_bridge.rs`
 - `framework/renderer/wgpu/rs/shell.rs`
 - `framework/renderer/wgpu/rs/scenes.rs`
