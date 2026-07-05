@@ -503,14 +503,7 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
                     icon_id: Some(app.app_id.clone()),
                     selected: None,
                     default_open: None,
-                    command: Some(s_play_cmd(
-                        "spawnApp",
-                        Some(json!({
-                            "programId": app.program_id,
-                            "appId": app.app_id,
-                            "pluginId": app.plugin_id,
-                        })),
-                    )),
+                    command: None,
                     draggable: Some(true),
                     drag_data: Some(drag_data),
                     items: None,
@@ -1748,6 +1741,22 @@ impl SStudioApp {
                     }
                 }
             }
+            "unbindParameterField" => {
+                let instance_id = args
+                    .and_then(|value| value.get("instanceId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                let field_path = args
+                    .and_then(|value| value.get("fieldPath"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                if !instance_id.is_empty() && !field_path.is_empty() {
+                    let _ = store.dispatch_apply(vec![OsOp::UnbindParameterField {
+                        instance_id: instance_id.into(),
+                        field_path: field_path.into(),
+                    }]);
+                }
+            }
             "openStudio" => {
                 if let Some(studio_id) = args
                     .and_then(|value| value.get("studioId"))
@@ -1833,14 +1842,7 @@ impl SStudioApp {
                         None,
                         MediaGraphPosition { x: 80.0, y: 80.0 },
                     ) {
-                        runtime.active_instance_id = Some(instance_id.clone());
-                        ops.push(json!({
-                            "op": "spawnPluginInstance",
-                            "programId": program_id,
-                            "appId": app_id,
-                            "osInstanceId": instance_id,
-                        })
-                        .to_string());
+                        runtime.active_instance_id = Some(instance_id);
                     }
                 }
             }
@@ -2508,6 +2510,42 @@ mod tests {
             .expect("shooting node");
         assert_eq!(puzzle_node.outputs.len(), 2);
         assert_eq!(shooting_node.inputs.len(), 1);
+    }
+
+    #[test]
+    fn unbind_parameter_field_removes_binding() {
+        let mut envelope = initial_studio_envelope();
+        let projection = projection_from_document(&envelope.document);
+        let instance = projection.app_instances.first().expect("instance");
+        let parameter = projection.parameters.first().expect("parameter");
+        let parameter_id = parameter_entity_id(parameter);
+        SStudioApp::handle_studio_command(
+            &mut envelope,
+            "bindParameterField",
+            Some(&json!({
+                "instanceId": instance.id,
+                "fieldPath": "label",
+                "parameterId": parameter_id,
+            })),
+        );
+        let bound = projection_from_document(&envelope.document)
+            .parameter_bindings
+            .iter()
+            .any(|row| row.instance_id == instance.id && row.field_path == "label");
+        assert!(bound);
+        SStudioApp::handle_studio_command(
+            &mut envelope,
+            "unbindParameterField",
+            Some(&json!({
+                "instanceId": instance.id,
+                "fieldPath": "label",
+            })),
+        );
+        let still_bound = projection_from_document(&envelope.document)
+            .parameter_bindings
+            .iter()
+            .any(|row| row.instance_id == instance.id && row.field_path == "label");
+        assert!(!still_bound);
     }
 
     #[test]

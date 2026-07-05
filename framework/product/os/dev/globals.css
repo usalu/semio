@@ -1,10 +1,4 @@
-@import "../../../../ui/react/globals.css";
+@import "../../../../ui/js/react/globals.css";
 @source "../core";
-@source "../renderer/react";
-@source "../../playground/core";
-@source "../../playground/renderer/react";
-@source "../../platform/renderer/react";
 @source "../../../../s/core";
-@source "../../../../s/react";
-@source "../../../../ui/react";
-@source "../../../../**/react";
+@source "../../../../ui/js/react";

@@ -1,12 +1,16 @@
 //! 🧊 Puzzle 3D plugin — 3D puzzle assembly play app bundled as a hot-swappable WASM component.
 
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, App, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode,
-    UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, World3dScene,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    build_world_3d_scene, create_default_layout, export_mesh_glb_bytes, export_mesh_obj,
+    merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+    ui_stack_vertical, ui_text, world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json, App,
+    CommandDescriptor, MeshData, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup,
+    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
+use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -23,6 +27,8 @@ const PUZZLE3D_PLAY_BODY_INSPECTOR: &str = "puzzle.3d.play.inspector";
 const PUZZLE3D_PLAY_WINDOW_MAIN: &str = "puzzle3d-main";
 const PUZZLE3D_FIXTURE_SCHEMA: &str = "puzzle.3d.fixture";
 const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
+
+const PUZZLE3D_MESH_KIND: &str = "box";
 
 const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../example/concrete-forest.3d.json");
 //#endregion 🔖Constants
@@ -41,6 +47,10 @@ struct Puzzle3dCamera {
 
 fn one_f64() -> f64 {
     1.0
+}
+
+fn default_selection_method() -> String {
+    "rectangle".into()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -95,6 +105,10 @@ struct Puzzle3dRuntime {
     selection: Puzzle3dSelection,
     #[serde(default)]
     active_tool: String,
+    #[serde(default = "default_selection_method")]
+    selection_method: String,
+    #[serde(default)]
+    hovered_object_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -161,25 +175,44 @@ fn camera_json(camera: &Puzzle3dCamera) -> String {
     .to_string()
 }
 
-fn world_instances_json(fixture: &Puzzle3dFixture, selection: &Puzzle3dSelection) -> String {
+fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
+    let selection = &runtime.selection;
     let instances: Vec<Value> = fixture
         .objects
         .iter()
         .enumerate()
         .map(|(index, object)| {
             let selected = selection.object_ids.contains(&object.id);
+            let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str());
             json!({
                 "id": object.id,
-                "x": object.origin.first().copied().unwrap_or(index as f64),
-                "y": object.origin.get(1).copied().unwrap_or(0.0),
-                "z": object.origin.get(2).copied().unwrap_or(0.0),
-                "scale": 1.0,
+                "meshId": PUZZLE3D_MESH_KIND,
+                "position": [
+                    object.origin.first().copied().unwrap_or(index as f64),
+                    object.origin.get(1).copied().unwrap_or(0.0),
+                    object.origin.get(2).copied().unwrap_or(0.0),
+                ],
+                "scale": [1.0, 1.0, 1.0],
                 "label": object.object_kind.clone().unwrap_or_else(|| object.id.clone()),
                 "color": if selected { "#f59e0b" } else { "#94a3b8" },
+                "selected": selected,
+                "hovered": hovered,
             })
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+fn world_meshes_json() -> String {
+    world3d_meshes_json_from_kinds(&[PUZZLE3D_MESH_KIND.into()])
+}
+
+fn world_selection_json(runtime: &Puzzle3dRuntime) -> String {
+    world3d_selection_json(
+        &runtime.selection_method,
+        &runtime.selection.object_ids,
+        runtime.hovered_object_id.as_deref(),
+    )
 }
 
 fn next_object_id() -> String {
@@ -429,6 +462,31 @@ impl PluginApp for Puzzle3dPlayApp {
                     }
                 }
             }
+            "worldSelect" => {
+                let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
+                let ids: Vec<String> = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                envelope.runtime.selection.object_ids =
+                    merge_world_selection_ids(&envelope.runtime.selection.object_ids, &ids, merge);
+                return vec![set_document_op(&envelope)];
+            }
+            "worldHover" => {
+                envelope.runtime.hovered_object_id = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "setSelectionMethod" => {
+                let method = args
+                    .and_then(|value| value.get("method"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("rectangle");
+                envelope.runtime.selection_method = method.into();
+                return vec![set_document_op(&envelope)];
+            }
             "worldPointerDown" => return Vec::new(),
             _ => {}
         }
@@ -441,12 +499,12 @@ impl PluginApp for Puzzle3dPlayApp {
             PUZZLE3D_PLAY_BODY_COMPOSITE => build_world_3d_scene(
                 PUZZLE3D_PLAY_SURFACE_VIEWPORT,
                 PUZZLE3D_PLAY_APP_ID,
-                World3dScene {
-                    camera_json: camera_json(&envelope.fixture.camera),
-                    meshes_json: "[]".into(),
-                    instances_json: world_instances_json(&envelope.fixture, &envelope.runtime.selection),
-                    selection_json: serde_json::to_string(&envelope.runtime.selection).unwrap_or_else(|_| "[]".into()),
-                },
+                world3d_scene(
+                    camera_json(&envelope.fixture.camera),
+                    world_meshes_json(),
+                    world_instances_json(&envelope.fixture, &envelope.runtime),
+                    world_selection_json(&envelope.runtime),
+                ),
             ),
             PUZZLE3D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
             PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(),
@@ -499,7 +557,29 @@ fn create_puzzle3d_app() -> App {
 }
 
 fn bundle() -> PluginBundle {
+    register_puzzle3d_exports();
     PluginBundle::new("puzzle3d", "Puzzle 3D", "0.1.0").register_app(create_puzzle3d_app(), || Box::new(Puzzle3dPlayApp))
+}
+
+fn register_puzzle3d_exports() {
+    register_os_media_export_handler("3d.puzzle", OsMediaExportFormat::Obj, |_doc| {
+        let mesh = mesh_from_kind(PUZZLE3D_MESH_KIND);
+        let (data, mime_type) = export_mesh_obj(&mesh, "puzzle");
+        Ok(OsMediaExportResult {
+            data,
+            mime_type,
+            file_name: "puzzle.obj".into(),
+        })
+    });
+    register_os_media_export_handler("3d.puzzle", OsMediaExportFormat::Glb, |_doc| {
+        let mesh = mesh_from_kind(PUZZLE3D_MESH_KIND);
+        let (bytes, mime_type) = export_mesh_glb_bytes(&mesh);
+        Ok(OsMediaExportResult {
+            data: base64::engine::general_purpose::STANDARD.encode(bytes),
+            mime_type,
+            file_name: "puzzle.glb".into(),
+        })
+    });
 }
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));

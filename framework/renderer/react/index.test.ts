@@ -131,6 +131,23 @@ describe("framework renderer hosts", () => {
 		expect(markup).toContain("semio-world-3d-empty");
 	});
 
+	it("accepts extended world 3d scene fields", () => {
+		const node: UiNode = {
+			type: "componentScene",
+			surfaceId: "lowpoly.play.main",
+			controllerId: "lowpoly-play",
+			componentKind: "world-3d",
+			world3d: {
+				cameraJson: "{}",
+				meshesJson: "[]",
+				instancesJson: "[]",
+				selectionJson: "{}",
+			},
+		};
+		expect(node.world3d?.meshesJson).toBe("[]");
+		expect(node.world3d?.selectionJson).toBe("{}");
+	});
+
 	it("renders text editor host", () => {
 		const markup = renderToStaticMarkup(
 			createElement(TextEditorHost, {

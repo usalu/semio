@@ -9,7 +9,7 @@ export default defineConfig({
 	root,
 	resolve: {
 		alias: [
-			{ find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "ui/react/index.tsx") },
+			{ find: "@semio-tech/ui-react", replacement: resolve(repoRoot, "ui/js/react/index.tsx") },
 			{ find: "@semio-tech/ui-asset", replacement: resolve(repoRoot, "ui/asset/js/index.ts") },
 			{ find: "@semio-tech/ui-styling", replacement: resolve(repoRoot, "ui/styling/js/index.ts") },
 			{ find: "@semio-tech/framework-core", replacement: resolve(repoRoot, "framework/core/js/index.ts") },

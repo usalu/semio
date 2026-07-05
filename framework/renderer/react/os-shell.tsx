@@ -598,6 +598,9 @@ export function FrameworkOsShell({
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [findOpen, setFindOpen] = useState(false);
 	const importStudioInputRef = useRef<HTMLInputElement>(null);
+	const refreshGenerationRef = useRef(0);
+	const openStudioIdRef = useRef<string | null>(null);
+	const sessionRef = useRef<ActiveSession | null>(null);
 	const [uiTheme, setUiTheme] = useState<ElementsSurfaceTheme>(() => readStoredUiChromeTheme());
 	const [uiCompact, setUiCompact] = useState(() => readStoredUiChromeCompact());
 	const [uiExpertise, setUiExpertise] = useState(() => readStoredUiChromeExpertise());
@@ -614,6 +617,10 @@ export function FrameworkOsShell({
 	}, [pluginFilter, plugins, studioMode]);
 
 	const panel = session ? parsePanelState(session.viewState) : null;
+
+	useEffect(() => {
+		sessionRef.current = session;
+	}, [session]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -679,6 +686,7 @@ export function FrameworkOsShell({
 
 	const refreshUi = useCallback(
 		async (nextSession: ActiveSession) => {
+			const generation = ++refreshGenerationRef.current;
 			const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
 			if (!plugin) return;
 			const windowCount = nextSession.app.windowKinds.length;
@@ -688,6 +696,7 @@ export function FrameworkOsShell({
 				),
 				...nextSession.app.panelTabs.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey, nextSession.viewState)),
 			]);
+			if (generation !== refreshGenerationRef.current) return;
 			const windowNodes = rendered.slice(0, windowCount);
 			const panelNodes = rendered.slice(windowCount);
 			setWindowUiByKind(
@@ -751,6 +760,13 @@ export function FrameworkOsShell({
 			const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s");
 			const app = sPlugin?.manifest.apps.find((candidate) => candidate.id === appId);
 			if (!sPlugin || !app) return null;
+			if (session?.pluginId === sPlugin.handle.pluginId && session.app.id === appId) {
+				if (!viewState) return session;
+				const nextSession: ActiveSession = { ...session, viewState };
+				setSession(nextSession);
+				await refreshUi(nextSession);
+				return nextSession;
+			}
 			const instanceId = await sPlugin.handle.createApp(app.id);
 			const programs = buildStudioPrograms(loadedPlugins);
 			const nextViewState: ViewState = viewState ?? {
@@ -762,11 +778,50 @@ export function FrameworkOsShell({
 			setSession(nextSession);
 			setShellLayout(convertFrameworkLayoutToModeLayout(app.defaultLayout, app.windowKinds.map((kind) => kind.id)));
 			setActiveWindowId(findDefaultActiveWindowKindId(app.defaultLayout, app.windowKinds) ?? app.windowKinds[0]?.id ?? null);
+			if (appId === S_HOME_APP_ID) openStudioIdRef.current = null;
 			await refreshUi(nextSession);
 			return nextSession;
 		},
-		[loadedPlugins, refreshUi],
+		[loadedPlugins, refreshUi, session],
 	);
+
+	const applyShellUri = useCallback(
+		async (uri: string, preservedViewState?: ViewState) => {
+			const currentSession = sessionRef.current;
+			if (!studioMode || !currentSession || loadedPlugins.length === 0) return;
+			const path = uri.split("?")[0] ?? "/";
+			const studioMatch = /^\/studios\/([^/]+)$/.exec(path);
+			const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.handle;
+			if (!sPlugin) return;
+			if (!studioMatch) {
+				openStudioIdRef.current = null;
+				if (currentSession.app.id !== S_HOME_APP_ID) await switchToSApp(S_HOME_APP_ID, preservedViewState);
+				return;
+			}
+			const studioId = studioMatch[1]!;
+			const studioSession =
+				currentSession.app.id === S_PLAY_APP_ID
+					? currentSession
+					: await switchToSApp(S_PLAY_APP_ID, preservedViewState);
+			if (!studioSession) return;
+			if (openStudioIdRef.current === studioId) return;
+			openStudioIdRef.current = studioId;
+			await sPlugin.handleCommand(
+				studioSession.instanceId,
+				JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, command: "openStudio", args: { studioId } }),
+				studioSession.viewState,
+			);
+			await refreshUi(studioSession);
+		},
+		[loadedPlugins, refreshUi, studioMode, switchToSApp],
+	);
+
+	useEffect(() => {
+		if (!studioMode || loadedPlugins.length === 0) return;
+		void applyShellUri(shellUri).catch((uriError) => {
+			console.error("[DEBUG] shell uri apply failed", uriError);
+		});
+	}, [applyShellUri, loadedPlugins.length, shellUri, studioMode]);
 
 	const syncSpawnedPluginDocument = useCallback(
 		async (
@@ -841,51 +896,16 @@ export function FrameworkOsShell({
 					osInstanceId?: string;
 					label?: string;
 					documentJson?: string;
-					document?: unknown;
 					filename?: string;
 					mimeType?: string;
 					data?: string;
 				};
-				if (op.op === "setDocument" && op.document != null) {
-					const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId)?.handle;
-					if (plugin) {
-						await plugin.handleCommand(
-							baseSession.instanceId,
-							JSON.stringify({ controllerId: baseSession.app.controllerId, command: "setDocument", args: { document: op.document } }),
-							nextViewState,
-						);
-					}
-				}
 				if (op.op === "setPanel" && op.panel) {
 					nextViewState = { ...nextViewState, panelJson: panelJsonFromState(op.panel) };
 				}
 				if (op.op === "navigate" && typeof op.uri === "string") {
 					navigateHistory(op.uri);
-					if (op.uri === "/" || op.uri === "") {
-						await switchToSApp(S_HOME_APP_ID, nextViewState);
-						return;
-					}
-					if (op.uri.startsWith("/studios/")) {
-						const studioId = op.uri.split("/")[2];
-						const studioSession = await switchToSApp(S_PLAY_APP_ID, nextViewState);
-						if (studioId && studioSession) {
-							const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.handle;
-							if (plugin) {
-								const openOps = await plugin.handleCommand(
-									studioSession.instanceId,
-									JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, command: "openStudio", args: { studioId } }),
-									studioSession.viewState,
-								);
-								const documentOps = openOps.filter((row) => {
-									const parsed = JSON.parse(row) as { op?: string };
-									return parsed.op !== "navigate";
-								});
-								if (documentOps.length > 0) await processPluginOps(documentOps, studioSession);
-								else await refreshUi(studioSession);
-							}
-						}
-						return;
-					}
+					continue;
 				}
 				if (op.op === "downloadMediaExport" && op.filename && op.mimeType && op.data) {
 					downloadMediaExport(op.filename, op.mimeType, op.data);
@@ -908,14 +928,14 @@ export function FrameworkOsShell({
 			const nextSession = { ...baseSession, viewState: nextViewState };
 			setSession((current) => {
 				if (!current) return nextSession;
-				if (current.pluginId === nextSession.pluginId && current.instanceId === nextSession.instanceId) {
-					return { ...current, viewState: nextViewState };
-				}
-				return nextSession;
+				if (current.instanceId !== nextSession.instanceId) return current;
+				return { ...current, viewState: nextViewState };
 			});
-			await refreshUi(nextSession);
+			if (session?.instanceId === nextSession.instanceId || baseSession.instanceId === nextSession.instanceId) {
+				await refreshUi(nextSession);
+			}
 		},
-		[ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshUi, session?.pluginId, switchToSApp],
+		[ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshUi, session?.instanceId],
 	);
 
 	const spawnProgram = useCallback(
@@ -1217,17 +1237,8 @@ export function FrameworkOsShell({
 	const navigateFromBreadcrumb = useCallback(
 		(href: string) => {
 			navigateHistory(href);
-			if (href === "/" || href === "") void switchToSApp(S_HOME_APP_ID);
-			else if (href.startsWith("/studios/")) {
-				const studioId = href.split("/")[2];
-				void switchToSApp(S_PLAY_APP_ID).then((studioSession) => {
-					if (studioId && studioSession) {
-						onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "openStudio", args: { studioId } });
-					}
-				});
-			}
 		},
-		[navigateHistory, onCommand, switchToSApp],
+		[navigateHistory],
 	);
 
 	const navbarItems = useMemo((): NavbarItem[] => {

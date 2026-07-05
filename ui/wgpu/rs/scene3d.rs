@@ -127,6 +127,13 @@ impl Mat4 {
         Vec3::new(x / w, y / w, z / w)
     }
 
+    pub fn transform_direction(self, dir: Vec3) -> Vec3 {
+        let x = dir.x * self.cols[0][0] + dir.y * self.cols[1][0] + dir.z * self.cols[2][0];
+        let y = dir.x * self.cols[0][1] + dir.y * self.cols[1][1] + dir.z * self.cols[2][1];
+        let z = dir.x * self.cols[0][2] + dir.y * self.cols[1][2] + dir.z * self.cols[2][2];
+        Vec3::new(x, y, z).normalize()
+    }
+
     pub fn inverse(self) -> Self {
         let m = self.cols;
         let mut inv = [[0.0f32; 4]; 4];
@@ -373,6 +380,7 @@ impl Instance3d {
 #[derive(Clone, Debug)]
 pub struct SceneDraw3d {
     pub mesh_key: String,
+    pub mesh_version: u64,
     pub instances: Vec<Instance3d>,
 }
 
@@ -385,23 +393,156 @@ pub struct ScenePass3d {
 }
 //#endregion ScenePass
 
+//#region Culling
+#[derive(Clone, Copy, Debug)]
+pub struct FrustumPlane {
+    pub normal: Vec3,
+    pub distance: f32,
+}
+
+pub fn frustum_planes(view_proj: Mat4) -> [FrustumPlane; 6] {
+    let m = view_proj.cols;
+    let rows = [
+        [
+            m[0][0] + m[3][0],
+            m[0][1] + m[3][1],
+            m[0][2] + m[3][2],
+            m[0][3] + m[3][3],
+        ],
+        [
+            m[0][0] - m[3][0],
+            m[0][1] - m[3][1],
+            m[0][2] - m[3][2],
+            m[0][3] - m[3][3],
+        ],
+        [
+            m[0][0] + m[1][0],
+            m[0][1] + m[1][1],
+            m[0][2] + m[1][2],
+            m[0][3] + m[1][3],
+        ],
+        [
+            m[0][0] - m[1][0],
+            m[0][1] - m[1][1],
+            m[0][2] - m[1][2],
+            m[0][3] - m[1][3],
+        ],
+        [
+            m[0][0] + m[2][0],
+            m[0][1] + m[2][1],
+            m[0][2] + m[2][2],
+            m[0][3] + m[2][3],
+        ],
+        [
+            m[0][0] - m[2][0],
+            m[0][1] - m[2][1],
+            m[0][2] - m[2][2],
+            m[0][3] - m[2][3],
+        ],
+    ];
+    let mut planes = [FrustumPlane {
+        normal: Vec3::ZERO,
+        distance: 0.0,
+    }; 6];
+    for (index, row) in rows.into_iter().enumerate() {
+        let normal = Vec3::new(row[0], row[1], row[2]);
+        let length = normal.length();
+        if length > 1e-8 {
+            planes[index] = FrustumPlane {
+                normal: normal.scale(1.0 / length),
+                distance: row[3] / length,
+            };
+        }
+    }
+    planes
+}
+
+pub fn transform_aabb(model: Mat4, min: [f32; 3], max: [f32; 3]) -> ([f32; 3], [f32; 3]) {
+    let corners = [
+        [min[0], min[1], min[2]],
+        [max[0], min[1], min[2]],
+        [min[0], max[1], min[2]],
+        [max[0], max[1], min[2]],
+        [min[0], min[1], max[2]],
+        [max[0], min[1], max[2]],
+        [min[0], max[1], max[2]],
+        [max[0], max[1], max[2]],
+    ];
+    let mut out_min = [f32::INFINITY; 3];
+    let mut out_max = [f32::NEG_INFINITY; 3];
+    for corner in corners {
+        let world = model.transform_point(Vec3::from_array(corner)).to_array();
+        for axis in 0..3 {
+            out_min[axis] = out_min[axis].min(world[axis]);
+            out_max[axis] = out_max[axis].max(world[axis]);
+        }
+    }
+    (out_min, out_max)
+}
+
+pub fn aabb_intersects_frustum(planes: &[FrustumPlane; 6], min: [f32; 3], max: [f32; 3]) -> bool {
+    for plane in planes {
+        let positive = Vec3::new(
+            if plane.normal.x >= 0.0 { max[0] } else { min[0] },
+            if plane.normal.y >= 0.0 { max[1] } else { min[1] },
+            if plane.normal.z >= 0.0 { max[2] } else { min[2] },
+        );
+        if plane.normal.dot(positive) + plane.distance < 0.0 {
+            return false;
+        }
+    }
+    true
+}
+//#endregion Culling
+
 //#region Picking
+pub fn ray_aabb_slab(origin: Vec3, dir: Vec3, min: [f32; 3], max: [f32; 3]) -> Option<f32> {
+    let mut t_min = f32::NEG_INFINITY;
+    let mut t_max = f32::INFINITY;
+    let axes = [origin.x, origin.y, origin.z];
+    let dirs = [dir.x, dir.y, dir.z];
+    let bounds = [(min[0], max[0]), (min[1], max[1]), (min[2], max[2])];
+    for axis in 0..3 {
+        if dirs[axis].abs() < 1e-8 {
+            if axes[axis] < bounds[axis].0 || axes[axis] > bounds[axis].1 {
+                return None;
+            }
+            continue;
+        }
+        let inv = 1.0 / dirs[axis];
+        let mut t0 = (bounds[axis].0 - axes[axis]) * inv;
+        let mut t1 = (bounds[axis].1 - axes[axis]) * inv;
+        if t0 > t1 {
+            std::mem::swap(&mut t0, &mut t1);
+        }
+        t_min = t_min.max(t0);
+        t_max = t_max.min(t1);
+        if t_max < t_min {
+            return None;
+        }
+    }
+    if t_max < 0.0 {
+        return None;
+    }
+    Some(if t_min >= 0.0 { t_min } else { t_max })
+}
+
 pub fn ray_pick_instance(
     origin: Vec3,
     dir: Vec3,
     mesh: &Mesh3d,
     instance: &Instance3d,
 ) -> Option<f32> {
-    let inv = instance.model.inverse();
-    let local_origin = inv.transform_point(origin);
-    let local_far = inv.transform_point(origin.add(dir));
-    let local_dir = local_far.sub(local_origin).normalize();
+    let (world_min, world_max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
+    if ray_aabb_slab(origin, dir, world_min, world_max).is_none() {
+        return None;
+    }
     let mut best = None;
     for tri in mesh.indices.chunks_exact(3) {
-        let a = vertex(mesh, tri[0]);
-        let b = vertex(mesh, tri[1]);
-        let c = vertex(mesh, tri[2]);
-        if let Some(t) = ray_triangle(local_origin, local_dir, a, b, c) {
+        let a = instance.model.transform_point(vertex(mesh, tri[0]));
+        let b = instance.model.transform_point(vertex(mesh, tri[1]));
+        let c = instance.model.transform_point(vertex(mesh, tri[2]));
+        if let Some(t) = ray_triangle(origin, dir, a, b, c) {
             best = Some(best.map_or(t, |prev: f32| prev.min(t)));
         }
     }
@@ -416,28 +557,24 @@ fn vertex(mesh: &Mesh3d, index: u32) -> Vec3 {
 fn ray_triangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Option<f32> {
     let edge1 = b.sub(a);
     let edge2 = c.sub(a);
-    let pvec = dir.cross(edge2);
-    let det = edge1.dot(pvec);
+    let h = dir.cross(edge2);
+    let det = edge1.dot(h);
     if det.abs() < 1e-8 {
         return None;
     }
-    let inv_det = 1.0 / det;
-    let tvec = origin.sub(a);
-    let u = tvec.dot(pvec) * inv_det;
+    let f = 1.0 / det;
+    let s = origin.sub(a);
+    let u = f * s.dot(h);
     if !(0.0..=1.0).contains(&u) {
         return None;
     }
-    let qvec = tvec.cross(edge1);
-    let v = dir.dot(qvec) * inv_det;
+    let q = s.cross(edge1);
+    let v = f * dir.dot(q);
     if v < 0.0 || u + v > 1.0 {
         return None;
     }
-    let t = edge2.dot(qvec) * inv_det;
-    if t > 1e-4 {
-        Some(t)
-    } else {
-        None
-    }
+    let t = f * edge2.dot(q);
+    if t > 1e-4 { Some(t) } else { None }
 }
 
 pub fn project_point(view_proj: Mat4, point: Vec3, width: f32, height: f32) -> Option<[f32; 2]> {
@@ -479,6 +616,73 @@ pub fn rect_contains(rect: [f32; 4], point: [f32; 2]) -> bool {
     point[0] >= min_x && point[0] <= max_x && point[1] >= min_y && point[1] <= max_y
 }
 
+pub fn projected_aabb_bounds(
+    view_proj: Mat4,
+    model: Mat4,
+    min: [f32; 3],
+    max: [f32; 3],
+    width: f32,
+    height: f32,
+) -> Option<[f32; 4]> {
+    let corners = [
+        [min[0], min[1], min[2]],
+        [max[0], min[1], min[2]],
+        [min[0], max[1], min[2]],
+        [max[0], max[1], min[2]],
+        [min[0], min[1], max[2]],
+        [max[0], min[1], max[2]],
+        [min[0], max[1], max[2]],
+        [max[0], max[1], max[2]],
+    ];
+    let mut min_x = f32::INFINITY;
+    let mut min_y = f32::INFINITY;
+    let mut max_x = f32::NEG_INFINITY;
+    let mut max_y = f32::NEG_INFINITY;
+    let mut visible = false;
+    for corner in corners {
+        let world = model.transform_point(Vec3::from_array(corner));
+        if let Some(screen) = project_point(view_proj, world, width, height) {
+            visible = true;
+            min_x = min_x.min(screen[0]);
+            min_y = min_y.min(screen[1]);
+            max_x = max_x.max(screen[0]);
+            max_y = max_y.max(screen[1]);
+        }
+    }
+    visible.then_some([min_x, min_y, max_x, max_y])
+}
+
+fn aabb_overlaps_marquee(
+    projected: [f32; 4],
+    polygon: &[[f32; 2]],
+    rectangle: bool,
+) -> bool {
+    if rectangle {
+        let marquee = [polygon[0][0], polygon[0][1], polygon[1][0], polygon[1][1]];
+        let marquee_min_x = marquee[0].min(marquee[2]);
+        let marquee_max_x = marquee[0].max(marquee[2]);
+        let marquee_min_y = marquee[1].min(marquee[3]);
+        let marquee_max_y = marquee[1].max(marquee[3]);
+        return projected[2] >= marquee_min_x
+            && projected[0] <= marquee_max_x
+            && projected[3] >= marquee_min_y
+            && projected[1] <= marquee_max_y;
+    }
+    let corners = [
+        [projected[0], projected[1]],
+        [projected[2], projected[1]],
+        [projected[2], projected[3]],
+        [projected[0], projected[3]],
+    ];
+    corners.iter().any(|corner| point_in_polygon(*corner, polygon))
+        || polygon.iter().any(|point| {
+            point[0] >= projected[0]
+                && point[0] <= projected[2]
+                && point[1] >= projected[1]
+                && point[1] <= projected[3]
+        })
+}
+
 pub fn screen_select_instances(
     mesh_lookup: &std::collections::HashMap<String, Mesh3d>,
     draws: &[SceneDraw3d],
@@ -494,6 +698,19 @@ pub fn screen_select_instances(
             continue;
         };
         for instance in &draw.instances {
+            let Some(projected) = projected_aabb_bounds(
+                view_proj,
+                instance.model,
+                mesh.aabb_min,
+                mesh.aabb_max,
+                width,
+                height,
+            ) else {
+                continue;
+            };
+            if !aabb_overlaps_marquee(projected, polygon, rectangle) {
+                continue;
+            }
             let mut covered = false;
             for tri in mesh.indices.chunks_exact(3) {
                 let mut projected = Vec::new();
@@ -537,12 +754,9 @@ mod tests {
 
     fn test_box_mesh() -> Mesh3d {
         Mesh3d::from_buffers(
-            vec![
-                -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
-                0.5, 0.5, -0.5, -0.5, 0.5, -0.5,
-            ],
-            vec![0.0; 24],
-            vec![0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7],
+            vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0],
+            vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
+            vec![0, 1, 2],
         )
     }
 
@@ -562,6 +776,18 @@ mod tests {
     }
 
     #[test]
+    fn ray_hits_triangle_direct() {
+        let hit = ray_triangle(
+            Vec3::new(0.0, 0.0, -5.0),
+            Vec3::new(0.0, 0.0, 1.0),
+            Vec3::new(-1.0, -1.0, 0.0),
+            Vec3::new(1.0, -1.0, 0.0),
+            Vec3::new(0.0, 1.0, 0.0),
+        );
+        assert!(hit.is_some());
+    }
+
+    #[test]
     fn ray_hits_box() {
         let mesh = test_box_mesh();
         let instance = Instance3d {
@@ -571,7 +797,66 @@ mod tests {
             selected: false,
             hovered: false,
         };
-        let hit = ray_pick_instance(Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 1.0, 0.0), &mesh, &instance);
+        let hit = ray_pick_instance(Vec3::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0), &mesh, &instance);
         assert!(hit.is_some());
+    }
+
+    #[test]
+    fn ray_aabb_misses_offset_box() {
+        let mesh = test_box_mesh();
+        let instance = Instance3d {
+            id: "box".into(),
+            model: Mat4::translation(Vec3::new(100.0, 0.0, 0.0)),
+            color: [1.0, 1.0, 1.0, 1.0],
+            selected: false,
+            hovered: false,
+        };
+        let hit = ray_pick_instance(Vec3::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0), &mesh, &instance);
+        assert!(hit.is_none());
+    }
+
+    #[test]
+    fn frustum_contains_origin_box() {
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let planes = frustum_planes(view_proj);
+        assert!(aabb_intersects_frustum(&planes, [-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]));
+    }
+
+    #[test]
+    fn projected_aabb_skips_far_instance() {
+        let mesh = test_box_mesh();
+        let draws = vec![SceneDraw3d {
+            mesh_key: "box".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "far".into(),
+                model: Mat4::translation(Vec3::new(0.0, 0.0, -500.0)),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        }];
+        let mut lookup = std::collections::HashMap::new();
+        lookup.insert("box".into(), mesh);
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let ids = screen_select_instances(
+            &lookup,
+            &draws,
+            view_proj,
+            200.0,
+            200.0,
+            &[[0.0, 0.0], [200.0, 0.0], [200.0, 200.0], [0.0, 200.0]],
+            true,
+        );
+        assert!(ids.is_empty());
+    }
+
+    #[test]
+    fn world_globals_slot_alignment() {
+        use crate::draw::WORLD_GLOBALS_SLOT_SIZE;
+        assert!(WORLD_GLOBALS_SLOT_SIZE >= 80);
+        assert_eq!(WORLD_GLOBALS_SLOT_SIZE % 256, 0);
     }
 }

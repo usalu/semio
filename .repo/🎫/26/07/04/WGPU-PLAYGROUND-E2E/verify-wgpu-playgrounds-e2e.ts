@@ -99,21 +99,25 @@ async function smokePlugin(
 
 let devProc: Subprocess | null = null;
 const logLines: string[] = [];
+const useRunningServer = process.env.SKIP_DEV === "1";
 
 try {
-	devProc = spawn({
-		cmd: [bunExe, "nx", "run", "@semio-tech/framework-os-dev:dev"],
-		cwd: repoRoot,
-		stdout: "pipe",
-		stderr: "pipe",
-		env: {
-			...process.env,
-			S_OS_PORT: port,
-			SEMIO_RENDERER: "wgpu",
-			SEMIO_PLUGIN: "s",
-		},
-	});
-	await waitForDev(baseUrl);
+	if (!useRunningServer) {
+		devProc = spawn({
+			cmd: [bunExe, "nx", "run", "@semio-tech/framework-os-dev:dev"],
+			cwd: repoRoot,
+			stdout: "pipe",
+			stderr: "pipe",
+			env: {
+				...process.env,
+				SKIP_PLUGIN_BUILD: process.env.SKIP_PLUGIN_BUILD ?? "1",
+				S_OS_PORT: port,
+				SEMIO_RENDERER: "wgpu",
+				SEMIO_PLUGIN: "s",
+			},
+		});
+		await waitForDev(baseUrl);
+	}
 
 	const browser = await chromium.launch({
 		headless: true,

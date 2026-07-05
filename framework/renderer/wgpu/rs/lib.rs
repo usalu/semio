@@ -32,6 +32,7 @@ struct AppRuntime {
     modifiers: PointerModifiers,
     wheel_delta: f32,
     asset_poll_pending: bool,
+    self_weak: std::rc::Weak<RefCell<AppRuntime>>,
 }
 
 impl AppRuntime {
@@ -62,14 +63,31 @@ impl AppRuntime {
         }
         if !self.asset_poll_pending {
             self.asset_poll_pending = true;
-            let runtime = self as *mut AppRuntime;
+            let runtime = self.self_weak.clone();
             spawn_local(async move {
-                unsafe {
-                    if let Some(app) = runtime.as_mut() {
-                        app.shell.poll_world3d_assets().await;
-                        app.asset_poll_pending = false;
+                let Some(runtime) = runtime.upgrade() else {
+                    return;
+                };
+                let pending = {
+                    let Ok(app) = runtime.try_borrow() else {
+                        return;
+                    };
+                    world3d::collect_pending_glb_fetches(&app.shell.world3d_states)
+                };
+                let mut fetched = Vec::new();
+                for item in pending {
+                    if let Some(bytes) = world3d::fetch_url_bytes(&item.url).await {
+                        fetched.push((item.surface_id, item.url, bytes));
                     }
                 }
+                if let Ok(mut app) = runtime.try_borrow_mut() {
+                    for (surface_id, url, bytes) in fetched {
+                        if let Some(state) = app.shell.world3d_states.get_mut(&surface_id) {
+                            world3d::apply_glb_bytes(state, &url, &bytes);
+                        }
+                    }
+                    app.asset_poll_pending = false;
+                };
             });
         }
     }
@@ -235,7 +253,9 @@ pub async fn semio_renderer_boot(
         modifiers: PointerModifiers::default(),
         wheel_delta: 0.0,
         asset_poll_pending: false,
+        self_weak: std::rc::Weak::new(),
     }));
+    runtime.borrow_mut().self_weak = Rc::downgrade(&runtime);
 
     start_frame_loop(runtime.clone());
 

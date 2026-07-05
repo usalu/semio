@@ -11,7 +11,7 @@ pub mod text;
 pub mod theme;
 pub mod widgets;
 
-pub use draw::{DrawList, MeshGpuStore, ear_clip_polygon};
+pub use draw::{mesh_content_version, DrawList, MeshGpuStore, ear_clip_polygon};
 pub use geometry::Rect;
 pub use gpu::GpuContext;
 #[cfg(target_arch = "wasm32")]
@@ -21,8 +21,9 @@ pub use input::{DragState, HitKind, HitTarget, InputState, PointerModifiers};
 pub use input::{PointerCallbacks, attach_dom_listeners};
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 pub use scene3d::{
-    Camera3d, Instance3d, Mat4, Mesh3d, OrbitController, SceneDraw3d, ScenePass3d, Vec3,
-    point_in_polygon, project_point, ray_pick_instance, rect_contains, screen_select_instances,
+    aabb_intersects_frustum, Camera3d, frustum_planes, Instance3d, Mat4, Mesh3d, OrbitController,
+    SceneDraw3d, ScenePass3d, Vec3, point_in_polygon, project_point, ray_pick_instance,
+    rect_contains, screen_select_instances, transform_aabb,
 };
 pub use text::{fetch_font_bytes, FontAtlas};
 pub use theme::{Rgba, Theme};

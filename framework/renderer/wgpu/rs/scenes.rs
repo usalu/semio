@@ -3,11 +3,11 @@
 use crate::interpreter::FrameworkWidgetContext;
 use crate::world3d::{render_world_3d, World3dState};
 use base64::Engine;
-use semio_framework_core::{CommandDescriptor, UiComponentSceneNode};
+use semio_framework_core::UiComponentSceneNode;
 use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
-use ui_wgpu::{draw_text, ear_clip_polygon, HitKind, HitTarget, Rect, Rgba};
+use ui_wgpu::{draw_text, Rect, Rgba};
 
 pub fn render_component_scene(
     scene: &UiComponentSceneNode,

@@ -556,9 +556,29 @@ pub struct Canvas2dScene {
 #[serde(rename_all = "camelCase")]
 pub struct World3dScene {
     pub camera_json: String,
+    #[serde(default = "world3d_default_meshes_json")]
     pub meshes_json: String,
     pub instances_json: String,
+    #[serde(default = "world3d_default_selection_json")]
     pub selection_json: String,
+}
+
+pub fn world3d_default_selection_json() -> String {
+    r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#.into()
+}
+
+pub fn world3d_default_meshes_json() -> String {
+    "[]".into()
+}
+
+pub fn world3d_camera_json(position: [f64; 3], target: [f64; 3], fov: f64) -> String {
+    serde_json::json!({
+        "position": position,
+        "target": target,
+        "up": [0.0, 0.0, 1.0],
+        "fov": fov,
+    })
+    .to_string()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

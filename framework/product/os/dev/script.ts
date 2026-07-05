@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, watch } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, watch } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -56,20 +56,36 @@ async function buildPlugin(target: (typeof PLUGIN_BUILD_TARGETS)[number]): Promi
 	console.log(`[DEBUG] built plugin ${target.pluginId} -> ${outDir}`);
 }
 
+async function buildPlugins(filterPlugin?: string): Promise<void> {
+	ensureWasmTarget();
+	mkdirSync(pluginOutRoot, { recursive: true });
+	const stalePublicPlugins = join(repoRoot, "framework/product/os/dev/public/plugin-modules");
+	if (existsSync(stalePublicPlugins)) {
+		rmSync(stalePublicPlugins, { recursive: true, force: true });
+	}
+	const targets = filterPlugin
+		? PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin)
+		: PLUGIN_BUILD_TARGETS;
+	for (const target of targets) {
+		await buildPlugin(target);
+	}
+}
+
 class PluginBuildScript extends BundleScript {
-	async run(_segments: string[]): Promise<void> {
-		ensureWasmTarget();
-		mkdirSync(pluginOutRoot, { recursive: true });
-		for (const target of PLUGIN_BUILD_TARGETS) {
-			await buildPlugin(target);
-		}
+	async run(segments: string[]): Promise<void> {
+		const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
+		await buildPlugins(filterPlugin || undefined);
 	}
 }
 
 class PluginWatchScript extends BundleScript {
-	async run(_segments: string[]): Promise<void> {
-		await new PluginBuildScript(this.root).run([]);
-		for (const target of PLUGIN_BUILD_TARGETS) {
+	async run(segments: string[]): Promise<void> {
+		const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
+		await buildPlugins(filterPlugin || undefined);
+		const targets = filterPlugin
+			? PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin)
+			: PLUGIN_BUILD_TARGETS;
+		for (const target of targets) {
 			const watchRoot = join(repoRoot, target.cratePath);
 			watch(watchRoot, { recursive: true }, () => {
 				void buildPlugin(target).catch((error) => {
@@ -83,7 +99,10 @@ class PluginWatchScript extends BundleScript {
 
 class DevScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
-		await new PluginBuildScript(this.root).run([]);
+		if (process.env.SKIP_PLUGIN_BUILD !== "1") {
+			const filterPlugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+			await buildPlugins(filterPlugin);
+		}
 		const renderer = process.env.SEMIO_RENDERER ?? "wgpu";
 		if (renderer === "wgpu") {
 			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
@@ -124,10 +143,37 @@ class TestScript extends BundleScript {
 	}
 }
 
+class VerifyScript extends BundleScript {
+	async run(_segments: string[]): Promise<void> {
+		const port = process.env.S_OS_PORT ?? "6070";
+		const studioUrl = process.env.S_STUDIO_URL ?? `http://127.0.0.1:${port}/`;
+		const e2eScript = join(
+			repoRoot,
+			".repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs",
+		);
+		if (!existsSync(e2eScript)) throw new Error(`missing e2e script: ${e2eScript}`);
+		const sPluginTests = spawnSync("cargo", ["test", "-p", "s-plugin"], { cwd: repoRoot, stdio: "inherit" });
+		if (sPluginTests.status !== 0) throw new Error("s-plugin tests failed");
+		const rendererTests = spawnSync("bunx", ["vitest", "run"], {
+			cwd: join(repoRoot, "framework/renderer/react"),
+			stdio: "inherit",
+		});
+		if (rendererTests.status !== 0) throw new Error("framework-renderer-react tests failed");
+		const e2e = spawnSync("node", [e2eScript], {
+			cwd: repoRoot,
+			stdio: "inherit",
+			env: { ...process.env, S_STUDIO_URL: studioUrl },
+		});
+		if (e2e.status !== 0) throw new Error("s studio e2e verification failed");
+		console.log(`[DEBUG] s studio verify passed (${studioUrl})`);
+	}
+}
+
 const router = new ScriptRouter(import.meta.dir)
 	.register("dev", DevScript)
 	.register("build", BuildScript)
 	.register("test", TestScript)
+	.register("verify", VerifyScript)
 	.register("plugin", class extends BundleScript {
 		async run(segments: string[]): Promise<void> {
 			const sub = segments[0];

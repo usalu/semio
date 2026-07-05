@@ -2,13 +2,18 @@
 
 use flow_core::{dag::DagFixture, FlowFixture, FlowHost, Widget};
 use semio_framework_plugin::{
-    build_node_graph_scene, build_world_3d_scene, create_default_layout, ui_inspector_groups_to_tree,
+    build_node_graph_scene, build_world_3d_scene, create_default_layout, export_mesh_glb_bytes,
+    export_mesh_obj, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, World3dScene, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    world3d_default_camera, world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json,
+    CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, UiControlNode, UiFieldNode,
+    UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
+use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::LazyLock;
@@ -25,6 +30,8 @@ const PROCEDURAL_3D_PLAY_BODY_CATALOGUE: &str = "procedural.play.catalogue";
 const PROCEDURAL_3D_PLAY_BODY_INSPECTION: &str = "procedural.play.inspection";
 const PROCEDURAL_3D_PLAY_WINDOW_MAIN: &str = "procedural-main";
 const PROCEDURAL_3D_PLAY_WINDOW_PREVIEW: &str = "procedural-preview";
+
+const PROCEDURAL_MESH_KIND: &str = "box";
 
 const WIDGET_CATALOG: &[(&str, &str, &str)] = &[
     ("neuron", "Neuron", "cpu"),
@@ -44,10 +51,18 @@ struct Procedural3dRuntime {
     lod_mode: String,
     #[serde(default = "default_show_mode")]
     show_mode: String,
+    #[serde(default = "default_selection_method")]
+    selection_method: String,
+    #[serde(default)]
+    hovered_node_id: Option<String>,
 }
 
 fn default_show_mode() -> String {
     "solid".into()
+}
+
+fn default_selection_method() -> String {
+    "rectangle".into()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -143,7 +158,7 @@ fn widget_id(widget: &Widget) -> &str {
     }
 }
 
-fn preview_instances_json(host: &FlowHost) -> String {
+fn preview_instances_json(host: &FlowHost, runtime: &Procedural3dRuntime) -> String {
     let instances: Vec<Value> = host
         .dag
         .fixture
@@ -151,17 +166,36 @@ fn preview_instances_json(host: &FlowHost) -> String {
         .iter()
         .enumerate()
         .map(|(index, node)| {
+            let selected = runtime.selected_node_ids.contains(&node.id);
+            let hovered = runtime.hovered_node_id.as_deref() == Some(node.id.as_str());
             json!({
                 "id": node.id,
-                "x": node.x * 0.01,
-                "y": node.y * 0.01,
-                "z": index as f64 * 0.5,
-                "scale": 1.0,
+                "meshId": PROCEDURAL_MESH_KIND,
+                "position": [node.x * 0.01, node.y * 0.01, index as f64 * 0.5],
+                "scale": [1.0, 1.0, 1.0],
                 "label": node.name,
+                "selected": selected,
+                "hovered": hovered,
             })
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+fn preview_meshes_json() -> String {
+    world3d_meshes_json_from_kinds(&[PROCEDURAL_MESH_KIND.into()])
+}
+
+fn preview_selection_json(runtime: &Procedural3dRuntime) -> String {
+    world3d_selection_json(
+        &runtime.selection_method,
+        &runtime.selected_node_ids,
+        runtime.hovered_node_id.as_deref(),
+    )
+}
+
+fn export_mesh_from_envelope(_envelope: &Procedural3dEnvelope) -> semio_framework_plugin::MeshData {
+    mesh_from_kind(PROCEDURAL_MESH_KIND)
 }
 //#endregion 🔖Document
 
@@ -384,6 +418,31 @@ impl PluginApp for Procedural3dPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
+            "worldSelect" => {
+                let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
+                let ids: Vec<String> = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                envelope.runtime.selected_node_ids =
+                    merge_world_selection_ids(&envelope.runtime.selected_node_ids, &ids, merge);
+                return vec![set_document_op(&envelope)];
+            }
+            "worldHover" => {
+                envelope.runtime.hovered_node_id = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "setSelectionMethod" => {
+                let method = args
+                    .and_then(|value| value.get("method"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("rectangle");
+                envelope.runtime.selection_method = method.into();
+                return vec![set_document_op(&envelope)];
+            }
             "worldPointerDown" | "graphPointerDown" => return Vec::new(),
             _ => {}
         }
@@ -411,12 +470,12 @@ impl PluginApp for Procedural3dPlayApp {
             PROCEDURAL_3D_PLAY_BODY_PREVIEW => build_world_3d_scene(
                 PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
                 PROCEDURAL_3D_PLAY_APP_ID,
-                World3dScene {
-                    camera_json: r#"{"x":6.0,"y":-6.0,"z":4.0,"fov":45}"#.into(),
-                    meshes_json: "[]".into(),
-                    instances_json: preview_instances_json(&host),
-                    selection_json: "[]".into(),
-                },
+                world3d_scene(
+                    world3d_default_camera(),
+                    preview_meshes_json(),
+                    preview_instances_json(&host, &envelope.runtime),
+                    preview_selection_json(&envelope.runtime),
+                ),
             ),
             PROCEDURAL_3D_PLAY_BODY_HIERARCHY => {
                 build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_node_ids)
@@ -481,8 +540,32 @@ fn create_procedural3d_app() -> App {
 }
 
 fn bundle() -> PluginBundle {
+    register_procedural3d_exports();
     PluginBundle::new("procedural3d", "Procedural 3D", "0.1.0")
         .register_app(create_procedural3d_app(), || Box::new(Procedural3dPlayApp))
+}
+
+fn register_procedural3d_exports() {
+    register_os_media_export_handler("3d.procedural", OsMediaExportFormat::Obj, |doc| {
+        let envelope: Procedural3dEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+        let mesh = export_mesh_from_envelope(&envelope);
+        let (data, mime_type) = export_mesh_obj(&mesh, "procedural");
+        Ok(OsMediaExportResult {
+            data,
+            mime_type,
+            file_name: "procedural.obj".into(),
+        })
+    });
+    register_os_media_export_handler("3d.procedural", OsMediaExportFormat::Glb, |doc| {
+        let envelope: Procedural3dEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+        let mesh = export_mesh_from_envelope(&envelope);
+        let (bytes, mime_type) = export_mesh_glb_bytes(&mesh);
+        Ok(OsMediaExportResult {
+            data: base64::engine::general_purpose::STANDARD.encode(bytes),
+            mime_type,
+            file_name: "procedural.glb".into(),
+        })
+    });
 }
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));

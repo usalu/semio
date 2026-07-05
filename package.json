@@ -5,7 +5,7 @@
   "description": "🧩 Design-Information-Modeling for Kit-of-Parts 🏘️",
   "workspaces": [
     "ui/asset",
-    "ui/react",
+    "ui/js/react",
     "ui/styling/js",
     "framework/core",
     "framework/renderer/react",

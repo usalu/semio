@@ -3,12 +3,12 @@
 use crate::interpreter::FrameworkWidgetContext;
 use semio_framework_core::{mesh_from_glb, mesh_from_kind, CommandDescriptor, MeshData, UiComponentSceneNode};
 use serde::Deserialize;
-use serde_json::{json, Value};
+use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use ui_wgpu::{
-    draw_text, Camera3d, HitKind, HitTarget, Instance3d, Mat4, Mesh3d, OrbitController, Rect, Rgba,
-    SceneDraw3d, ScenePass3d, Vec3, point_in_polygon, project_point, ray_pick_instance,
-    rect_contains, screen_select_instances,
+    draw_text, mesh_content_version, Camera3d, HitKind, HitTarget, Instance3d, Mesh3d,
+    OrbitController, Rect, Rgba, SceneDraw3d, ScenePass3d, Vec3, aabb_intersects_frustum,
+    frustum_planes, ray_pick_instance, screen_select_instances, transform_aabb,
 };
 
 //#region SceneRecords
@@ -66,12 +66,17 @@ pub struct World3dState {
     pub bounds: Rect,
     pub orbit: OrbitController,
     pub meshes: HashMap<String, Mesh3d>,
+    pub mesh_versions: HashMap<String, u64>,
     pub draws: Vec<SceneDraw3d>,
     pub selection_method: String,
     pub local_hover_id: Option<String>,
     pub pending_glb_urls: HashSet<String>,
     pub marquee_points: Vec<[f32; 2]>,
     pub marquee_active: bool,
+    scene_camera_json: Option<String>,
+    scene_meshes_json: Option<String>,
+    scene_instances_json: Option<String>,
+    scene_selection_json: Option<String>,
 }
 
 impl World3dState {
@@ -82,23 +87,53 @@ impl World3dState {
             bounds: Rect::default(),
             orbit: OrbitController::default(),
             meshes: HashMap::new(),
+            mesh_versions: HashMap::new(),
             draws: Vec::new(),
             selection_method: "rectangle".into(),
             local_hover_id: None,
             pending_glb_urls: HashSet::new(),
             marquee_points: Vec::new(),
             marquee_active: false,
+            scene_camera_json: None,
+            scene_meshes_json: None,
+            scene_instances_json: None,
+            scene_selection_json: None,
         }
     }
 }
 //#endregion World3dState
 
+fn store_mesh(state: &mut World3dState, id: String, mesh: Mesh3d) {
+    let version = mesh_content_version(&mesh.positions, &mesh.normals, &mesh.indices);
+    state.mesh_versions.insert(id.clone(), version);
+    state.meshes.insert(id, mesh);
+}
+
 pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
     state.bounds = bounds;
     let Some(world) = &scene.world_3d else {
         state.draws.clear();
+        state.scene_camera_json = None;
+        state.scene_meshes_json = None;
+        state.scene_instances_json = None;
+        state.scene_selection_json = None;
         return;
     };
+    let unchanged = state.scene_camera_json.as_deref() == Some(world.camera_json.as_str())
+        && state.scene_meshes_json.as_deref() == Some(world.meshes_json.as_str())
+        && state.scene_instances_json.as_deref() == Some(world.instances_json.as_str())
+        && state.scene_selection_json.as_deref() == Some(world.selection_json.as_str());
+    if unchanged {
+        #[cfg(target_arch = "wasm32")]
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(
+            "[DEBUG] world3d sync skipped (scene unchanged)",
+        ));
+        return;
+    }
+    state.scene_camera_json = Some(world.camera_json.clone());
+    state.scene_meshes_json = Some(world.meshes_json.clone());
+    state.scene_instances_json = Some(world.instances_json.clone());
+    state.scene_selection_json = Some(world.selection_json.clone());
     let camera: WorldCameraRecord = serde_json::from_str(&world.camera_json).unwrap_or_default();
     if let (Some(position), Some(target)) = (camera.position, camera.target) {
         state.orbit = OrbitController::from_camera(&Camera3d {
@@ -130,11 +165,11 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         serde_json::from_str(&world.meshes_json).unwrap_or_default();
     for mesh in meshes {
         if let Some(data) = mesh.data {
-            state.meshes.insert(mesh.id.clone(), Mesh3d::from_buffers(
-                data.positions,
-                data.normals,
-                data.indices,
-            ));
+            store_mesh(
+                state,
+                mesh.id.clone(),
+                Mesh3d::from_buffers(data.positions, data.normals, data.indices),
+            );
         } else if let Some(url) = mesh.url {
             state.pending_glb_urls.insert(url);
         }
@@ -153,11 +188,12 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
             .mesh_id
             .unwrap_or_else(|| "box".into());
         if !state.meshes.contains_key(&mesh_id) {
-            state.meshes.insert(mesh_id.clone(), Mesh3d::from_buffers(
-                mesh_from_kind(&mesh_id).positions,
-                mesh_from_kind(&mesh_id).normals,
-                mesh_from_kind(&mesh_id).indices,
-            ));
+            let primitive = mesh_from_kind(&mesh_id);
+            store_mesh(
+                state,
+                mesh_id.clone(),
+                Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices),
+            );
         }
         let position = instance.position.unwrap_or([
             instance.x.unwrap_or(index as f64),
@@ -192,7 +228,11 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     }
     state.draws = grouped
         .into_iter()
-        .map(|(mesh_key, instances)| SceneDraw3d { mesh_key, instances })
+        .map(|(mesh_key, instances)| SceneDraw3d {
+            mesh_key: mesh_key.clone(),
+            mesh_version: *state.mesh_versions.get(&mesh_key).unwrap_or(&0),
+            instances,
+        })
         .collect();
 }
 
@@ -211,14 +251,53 @@ pub fn render_world_3d(
     let camera = state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let view_proj = camera.view_proj(aspect);
-    for (mesh_key, mesh) in &state.meshes {
-        gpu.ensure_mesh(mesh_key, &mesh.positions, &mesh.normals, &mesh.indices);
+    let planes = frustum_planes(view_proj);
+    let mut culled_draws = Vec::new();
+    let mut culled_count = 0u32;
+    for draw in &state.draws {
+        let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
+            continue;
+        };
+        let mesh_version = *state.mesh_versions.get(&draw.mesh_key).unwrap_or(&0);
+        gpu.ensure_mesh(
+            &draw.mesh_key,
+            mesh_version,
+            &mesh.positions,
+            &mesh.normals,
+            &mesh.indices,
+        );
+        let instances: Vec<Instance3d> = draw
+            .instances
+            .iter()
+            .filter(|instance| {
+                let (min, max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
+                let visible = aabb_intersects_frustum(&planes, min, max);
+                if !visible {
+                    culled_count += 1;
+                }
+                visible
+            })
+            .cloned()
+            .collect();
+        if !instances.is_empty() {
+            culled_draws.push(SceneDraw3d {
+                mesh_key: draw.mesh_key.clone(),
+                mesh_version,
+                instances,
+            });
+        }
+    }
+    if culled_count > 0 {
+        #[cfg(target_arch = "wasm32")]
+        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
+            "[DEBUG] world3d culled {culled_count} instances",
+        )));
     }
     ctx.draw.push_scene_pass(ScenePass3d {
         viewport: [inner.x, inner.y, inner.w, inner.h],
         view_proj: view_proj.to_cols_array(),
         light_dir: [0.4, 0.6, 0.8],
-        draws: state.draws.clone(),
+        draws: culled_draws,
     });
     if state.marquee_active && state.marquee_points.len() >= 2 {
         let accent = theme.accent;
@@ -355,11 +434,11 @@ pub fn handle_world3d_wheel(state: &mut World3dState, delta: f32) {
 
 pub fn ingest_glb_mesh(state: &mut World3dState, url: &str, mesh: MeshData, mesh_id: String) {
     state.pending_glb_urls.remove(url);
-    state.meshes.insert(mesh_id, Mesh3d::from_buffers(
-        mesh.positions,
-        mesh.normals,
-        mesh.indices,
-    ));
+    store_mesh(
+        state,
+        mesh_id,
+        Mesh3d::from_buffers(mesh.positions, mesh.normals, mesh.indices),
+    );
 }
 
 fn pick_hover_command(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> Option<CommandDescriptor> {
@@ -481,42 +560,66 @@ fn parse_color(value: &str) -> [f32; 4] {
     [0.58, 0.64, 0.72, 1.0]
 }
 
+#[derive(Clone, Debug)]
+pub struct PendingGlbFetch {
+    pub surface_id: String,
+    pub url: String,
+}
+
+pub fn collect_pending_glb_fetches(states: &HashMap<String, World3dState>) -> Vec<PendingGlbFetch> {
+    let mut pending = Vec::new();
+    for (surface_id, state) in states {
+        for url in &state.pending_glb_urls {
+            let mesh_id = format!("url:{url}");
+            if state.meshes.contains_key(&mesh_id) {
+                continue;
+            }
+            pending.push(PendingGlbFetch {
+                surface_id: surface_id.clone(),
+                url: url.clone(),
+            });
+        }
+    }
+    pending
+}
+
+pub fn apply_glb_bytes(state: &mut World3dState, url: &str, bytes: &[u8]) {
+    let mesh_id = format!("url:{url}");
+    if state.meshes.contains_key(&mesh_id) {
+        state.pending_glb_urls.remove(url);
+        return;
+    }
+    if let Ok(mesh) = mesh_from_glb(bytes) {
+        ingest_glb_mesh(state, url, mesh, mesh_id);
+    }
+}
+
 #[cfg(target_arch = "wasm32")]
-pub async fn fetch_pending_glb_meshes(states: &mut HashMap<String, World3dState>) {
+pub async fn fetch_url_bytes(url: &str) -> Option<Vec<u8>> {
     use wasm_bindgen::JsCast;
     use wasm_bindgen_futures::JsFuture;
     use web_sys::{Request, RequestInit, RequestMode, Response};
 
-    for state in states.values_mut() {
-        let urls: Vec<String> = state.pending_glb_urls.iter().cloned().collect();
-        for url in urls {
-            let mesh_id = format!("url:{}", url);
-            if state.meshes.contains_key(&mesh_id) {
-                state.pending_glb_urls.remove(&url);
-                continue;
-            }
-            let Ok(window) = web_sys::window().ok_or("no window") else {
-                continue;
-            };
-            let opts = RequestInit::new();
-            opts.set_method("GET");
-            opts.set_mode(RequestMode::Cors);
-            let Ok(request) = Request::new_with_str_and_init(&url, &opts) else {
-                continue;
-            };
-            let Ok(response_value) = JsFuture::from(window.fetch_with_request(&request)).await else {
-                continue;
-            };
-            let Ok(response) = response_value.dyn_into::<Response>() else {
-                continue;
-            };
-            let Ok(buffer) = JsFuture::from(response.array_buffer().unwrap()).await else {
-                continue;
-            };
-            let bytes = js_sys::Uint8Array::new(&buffer).to_vec();
-            if let Ok(mesh) = mesh_from_glb(&bytes) {
-                ingest_glb_mesh(state, &url, mesh, mesh_id);
-            }
+    let window = web_sys::window()?;
+    let opts = RequestInit::new();
+    opts.set_method("GET");
+    opts.set_mode(RequestMode::Cors);
+    let request = Request::new_with_str_and_init(url, &opts).ok()?;
+    let response_value = JsFuture::from(window.fetch_with_request(&request)).await.ok()?;
+    let response = response_value.dyn_into::<Response>().ok()?;
+    let buffer = JsFuture::from(response.array_buffer().ok()?).await.ok()?;
+    Some(js_sys::Uint8Array::new(&buffer).to_vec())
+}
+
+#[cfg(target_arch = "wasm32")]
+pub async fn fetch_pending_glb_meshes(states: &mut HashMap<String, World3dState>) {
+    let pending = collect_pending_glb_fetches(states);
+    for item in pending {
+        let Some(bytes) = fetch_url_bytes(&item.url).await else {
+            continue;
+        };
+        if let Some(state) = states.get_mut(&item.surface_id) {
+            apply_glb_bytes(state, &item.url, &bytes);
         }
     }
 }

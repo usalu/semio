@@ -1,17 +1,23 @@
 //! 🔺 Lowpoly plugin — mesh editing play app bundled as a hot-swappable WASM component.
 
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, ui_inspector_groups_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, CommandDescriptor,
-    PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiToggleNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, World3dScene, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    build_world_3d_scene, create_default_layout, default_world3d_selection, export_mesh_glb_bytes,
+    export_mesh_obj, merge_world_selection_ids, mesh_from_kind, mesh_kind_from_json, MeshData,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
+    world3d_default_camera, world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json,
+    CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup,
+    UiNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
+use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
+use std::collections::HashSet;
 
 //#region 🔖Constants
 const LOWPOLY_PLAY_APP_ID: &str = "lowpoly-play";
@@ -141,10 +147,24 @@ struct LowpolyFixture {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LowpolyPlayRuntime {
-    #[serde(default)]
+    #[serde(default = "default_transform_tool")]
     transform_tool: String,
     #[serde(default)]
     active_paint_layer: u32,
+    #[serde(default = "default_selection_method")]
+    selection_method: String,
+    #[serde(default)]
+    selected_object_ids: Vec<String>,
+    #[serde(default)]
+    hovered_object_id: Option<String>,
+}
+
+fn default_selection_method() -> String {
+    "rectangle".into()
+}
+
+fn default_transform_tool() -> String {
+    "translate".into()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -201,30 +221,62 @@ fn active_object<'a>(fixture: &'a LowpolyFixture) -> Option<&'a LowpolyObject> {
         .or_else(|| fixture.objects.first())
 }
 
-fn world_instances_json(fixture: &LowpolyFixture) -> String {
+fn world_meshes_json(fixture: &LowpolyFixture) -> String {
+    let kinds: Vec<String> = fixture
+        .objects
+        .iter()
+        .map(|object| mesh_kind_from_json(&object.mesh_json))
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
+    world3d_meshes_json_from_kinds(&kinds)
+}
+
+fn world_instances_json(fixture: &LowpolyFixture, runtime: &LowpolyPlayRuntime) -> String {
     let instances: Vec<Value> = fixture
         .objects
         .iter()
-        .enumerate()
-        .map(|(index, object)| {
-            let active = object.id == fixture.active_object_id
-                || (fixture.active_object_id.is_empty() && index == 0);
+        .map(|object| {
+            let mesh_id = mesh_kind_from_json(&object.mesh_json);
+            let selected = runtime.selected_object_ids.iter().any(|id| id == &object.id)
+                || object.id == fixture.active_object_id;
+            let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str());
             json!({
                 "id": object.id,
-                "x": object.transform.position[0] as f64,
-                "y": object.transform.position[1] as f64,
-                "z": object.transform.position[2] as f64,
-                "scale": object.transform.scale[0] as f64,
+                "meshId": mesh_id,
+                "position": [
+                    object.transform.position[0] as f64,
+                    object.transform.position[1] as f64,
+                    object.transform.position[2] as f64,
+                ],
+                "rotation": [0.0, 0.0, 0.0, 1.0],
+                "scale": [
+                    object.transform.scale[0] as f64,
+                    object.transform.scale[1] as f64,
+                    object.transform.scale[2] as f64,
+                ],
                 "label": object.name,
-                "color": if active { "#60a5fa" } else { "#94a3b8" },
+                "color": if selected { "#60a5fa" } else { "#94a3b8" },
+                "selected": selected,
+                "hovered": hovered,
             })
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn default_camera_json() -> String {
-    r#"{"x":4.0,"y":-4.0,"z":3.0,"fov":45}"#.into()
+fn world_selection_json(runtime: &LowpolyPlayRuntime) -> String {
+    world3d_selection_json(
+        &runtime.selection_method,
+        &runtime.selected_object_ids,
+        runtime.hovered_object_id.as_deref(),
+    )
+}
+
+fn active_object_mesh(envelope: &LowpolyPlayEnvelope) -> MeshData {
+    active_object(&envelope.fixture)
+        .map(|object| mesh_from_kind(&mesh_kind_from_json(&object.mesh_json)))
+        .unwrap_or_else(|| mesh_from_kind("box"))
 }
 //#endregion 🔖Document
 
@@ -527,6 +579,34 @@ impl PluginApp for LowpolyPlayApp {
                     );
                 }
             }
+            "worldSelect" => {
+                let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
+                let ids: Vec<String> = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                envelope.runtime.selected_object_ids =
+                    merge_world_selection_ids(&envelope.runtime.selected_object_ids, &ids, merge);
+                if let Some(first) = envelope.runtime.selected_object_ids.first() {
+                    envelope.fixture.active_object_id = first.clone();
+                }
+                return vec![set_document_op(&envelope)];
+            }
+            "worldHover" => {
+                envelope.runtime.hovered_object_id = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "setSelectionMethod" => {
+                let method = args
+                    .and_then(|value| value.get("method"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("rectangle");
+                envelope.runtime.selection_method = method.into();
+                return vec![set_document_op(&envelope)];
+            }
             "extrude" | "inset" | "bevel" | "subdivide" | "triangulate" | "mirror" | "worldPointerDown" => {
                 return Vec::new();
             }
@@ -541,12 +621,12 @@ impl PluginApp for LowpolyPlayApp {
             LOWPOLY_PLAY_BODY_MAIN => build_world_3d_scene(
                 LOWPOLY_PLAY_SURFACE_MAIN,
                 LOWPOLY_PLAY_APP_ID,
-                World3dScene {
-                    camera_json: default_camera_json(),
-                    meshes_json: "[]".into(),
-                    instances_json: world_instances_json(&envelope.fixture),
-                    selection_json: "[]".into(),
-                },
+                world3d_scene(
+                    world3d_default_camera(),
+                    world_meshes_json(&envelope.fixture),
+                    world_instances_json(&envelope.fixture, &envelope.runtime),
+                    world_selection_json(&envelope.runtime),
+                ),
             ),
             LOWPOLY_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
             LOWPOLY_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
@@ -597,7 +677,31 @@ fn create_lowpoly_app() -> App {
 }
 
 fn bundle() -> PluginBundle {
+    register_lowpoly_exports();
     PluginBundle::new("lowpoly", "Lowpoly", "0.1.0").register_app(create_lowpoly_app(), || Box::new(LowpolyPlayApp))
+}
+
+fn register_lowpoly_exports() {
+    register_os_media_export_handler("3d.lowpoly", OsMediaExportFormat::Obj, |doc| {
+        let envelope: LowpolyPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+        let mesh = active_object_mesh(&envelope);
+        let (data, mime_type) = export_mesh_obj(&mesh, "lowpoly");
+        Ok(OsMediaExportResult {
+            data,
+            mime_type,
+            file_name: "lowpoly.obj".into(),
+        })
+    });
+    register_os_media_export_handler("3d.lowpoly", OsMediaExportFormat::Glb, |doc| {
+        let envelope: LowpolyPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+        let mesh = active_object_mesh(&envelope);
+        let (bytes, mime_type) = export_mesh_glb_bytes(&mesh);
+        Ok(OsMediaExportResult {
+            data: base64::engine::general_purpose::STANDARD.encode(bytes),
+            mime_type,
+            file_name: "lowpoly.glb".into(),
+        })
+    });
 }
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));

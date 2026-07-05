@@ -2,16 +2,19 @@
 
 use cad_document::{empty_cad_projection, CadNode, CadOp, CadScene, CAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, ui_inspector_groups_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, CommandDescriptor, PluginApp,
-    PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode,
-    UiTreeNode, UiTreeSectionNode, ViewState, World3dScene, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    build_world_3d_scene, create_default_layout, export_mesh_glb_bytes, export_mesh_obj,
+    merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
+    ui_stack_vertical, ui_text, world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json, App,
+    CommandDescriptor, MeshData, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup,
+    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
+use base64::Engine;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
 use vcs::{Operation, OperationDiff};
@@ -67,6 +70,18 @@ fn one_f64() -> f64 {
     1.0
 }
 
+fn default_selection_method() -> String {
+    "rectangle".into()
+}
+
+fn typology_mesh_kind(typology: &str) -> &'static str {
+    match typology {
+        "building.building.column" => "cylinder",
+        "spatial.shape.box" => "box",
+        _ => "box",
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CadObject {
@@ -99,6 +114,10 @@ struct CadPlayRuntime {
     selected_object_ids: Vec<String>,
     #[serde(default)]
     selected_node_ids: Vec<String>,
+    #[serde(default = "default_selection_method")]
+    selection_method: String,
+    #[serde(default)]
+    hovered_object_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -188,19 +207,52 @@ fn world_instances_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) ->
         .enumerate()
         .filter(|(_, object)| object.visible)
         .map(|(index, object)| {
+            let mesh_id = typology_mesh_kind(&object.typology);
             let selected = runtime.selected_object_ids.contains(&object.id);
+            let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str());
             json!({
                 "id": object.id,
-                "x": index as f64 * 1.5,
-                "y": 0.0,
-                "z": 0.0,
-                "scale": 1.0,
+                "meshId": mesh_id,
+                "position": [index as f64 * 1.5, 0.0, 0.0],
+                "scale": [1.0, 1.0, 1.0],
                 "label": object.label,
                 "color": if selected { "#3b82f6" } else { "#64748b" },
+                "selected": selected,
+                "hovered": hovered,
             })
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+fn world_meshes_json(document: &CadPlayDocument) -> String {
+    let kinds: Vec<String> = document
+        .objects
+        .iter()
+        .map(|object| typology_mesh_kind(&object.typology).to_string())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
+    world3d_meshes_json_from_kinds(&kinds)
+}
+
+fn world_selection_json(runtime: &CadPlayRuntime) -> String {
+    world3d_selection_json(
+        &runtime.selection_method,
+        &runtime.selected_object_ids,
+        runtime.hovered_object_id.as_deref(),
+    )
+}
+
+fn export_mesh_from_envelope(envelope: &CadPlayEnvelope) -> MeshData {
+    let kind = envelope
+        .document
+        .objects
+        .iter()
+        .find(|object| envelope.runtime.selected_object_ids.contains(&object.id))
+        .map(|object| typology_mesh_kind(&object.typology))
+        .unwrap_or("box");
+    mesh_from_kind(kind)
 }
 
 fn apply_cad_node_op(document: &CadPlayDocument, op: &CadOp) -> CadPlayDocument {
@@ -515,6 +567,32 @@ impl PluginApp for CadApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
+            "worldSelect" => {
+                let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
+                let ids: Vec<String> = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                envelope.runtime.selected_object_ids =
+                    merge_world_selection_ids(&envelope.runtime.selected_object_ids, &ids, merge);
+                envelope.runtime.selected_node_ids.clear();
+                return vec![set_document_op(&envelope)];
+            }
+            "worldHover" => {
+                envelope.runtime.hovered_object_id = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "setSelectionMethod" => {
+                let method = args
+                    .and_then(|value| value.get("method"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("rectangle");
+                envelope.runtime.selection_method = method.into();
+                return vec![set_document_op(&envelope)];
+            }
             "worldPointerDown" => return Vec::new(),
             _ => {}
         }
@@ -527,12 +605,12 @@ impl PluginApp for CadApp {
             CAD_PLAY_BODY_COMPOSITE => build_world_3d_scene(
                 CAD_PLAY_SURFACE_COMPOSITE,
                 CAD_PLAY_APP_ID,
-                World3dScene {
-                    camera_json: camera_json(&envelope.document.camera),
-                    meshes_json: "[]".into(),
-                    instances_json: world_instances_json(&envelope.document, &envelope.runtime),
-                    selection_json: "[]".into(),
-                },
+                world3d_scene(
+                    camera_json(&envelope.document.camera),
+                    world_meshes_json(&envelope.document),
+                    world_instances_json(&envelope.document, &envelope.runtime),
+                    world_selection_json(&envelope.runtime),
+                ),
             ),
             CAD_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
             CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
@@ -581,7 +659,31 @@ fn create_cad_app() -> App {
 }
 
 fn bundle() -> PluginBundle {
+    register_cad_exports();
     PluginBundle::new("cad", "CAD", "0.1.0").register_app(create_cad_app(), || Box::new(CadApp))
+}
+
+fn register_cad_exports() {
+    register_os_media_export_handler("3d.cad", OsMediaExportFormat::Obj, |doc| {
+        let envelope: CadPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+        let mesh = export_mesh_from_envelope(&envelope);
+        let (data, mime_type) = export_mesh_obj(&mesh, "cad");
+        Ok(OsMediaExportResult {
+            data,
+            mime_type,
+            file_name: "cad.obj".into(),
+        })
+    });
+    register_os_media_export_handler("3d.cad", OsMediaExportFormat::Glb, |doc| {
+        let envelope: CadPlayEnvelope = serde_json::from_value(doc.clone()).map_err(|err| err.to_string())?;
+        let mesh = export_mesh_from_envelope(&envelope);
+        let (bytes, mime_type) = export_mesh_glb_bytes(&mesh);
+        Ok(OsMediaExportResult {
+            data: base64::engine::general_purpose::STANDARD.encode(bytes),
+            mime_type,
+            file_name: "cad.glb".into(),
+        })
+    });
 }
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));

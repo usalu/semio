@@ -203,7 +203,7 @@ export function UIFind({
 		[onOpenChange, triggerFindItem],
 	);
 
-	if (!findContext || findItems.length === 0) return null;
+	if (!findContext) return null;
 
 	return (
 		<CommandDialog title="Find" description="Find in active window" open={open} onOpenChange={onOpenChange} shouldFilter={false}>

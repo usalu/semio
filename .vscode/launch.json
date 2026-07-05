@@ -986,6 +986,44 @@
       }
     },
     {
+      "name": "🛠️dev🖥️s⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6070",
+        "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.2
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6070)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🧪verify🖥️s⚛️studio",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:verify",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6070",
+        "S_STUDIO_URL": "http://127.0.0.1:6070/",
+        "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.3
+      }
+    },
+    {
       "name": "🛠️dev🦀os-plugins",
       "type": "node-terminal",
       "request": "launch",

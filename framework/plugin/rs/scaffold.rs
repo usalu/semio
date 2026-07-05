@@ -2,9 +2,10 @@
 
 use crate::{
     build_canvas_2d_scene, build_node_graph_scene, build_raster_scene, build_table_scene,
-    build_text_editor_scene, build_world_3d_scene, ui_stack_vertical, ui_text, App, Canvas2dScene,
-    NodeGraphScene, PluginApp, RasterScene, TableScene, TextEditorScene, UiNode, ViewState,
-    World3dScene, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    build_text_editor_scene, build_world_3d_scene, default_world3d_selection, ui_stack_vertical,
+    ui_text, world3d_default_meshes_json, App, Canvas2dScene, NodeGraphScene, PluginApp,
+    RasterScene, TableScene, TextEditorScene, UiNode, ViewState, World3dScene,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::Value;
@@ -245,12 +246,12 @@ impl PluginApp for StandardPluginApp {
                     meshes_json: document
                         .get("meshes")
                         .map(|value| value.to_string())
-                        .unwrap_or_else(|| "[]".into()),
+                        .unwrap_or_else(world3d_default_meshes_json),
                     instances_json: world_instances_json(&document, document_json),
                     selection_json: document
                         .get("selection")
                         .map(|value| value.to_string())
-                        .unwrap_or_else(|| "[]".into()),
+                        .unwrap_or_else(default_world3d_selection),
                 },
             ),
             SceneKind::NodeGraph => {

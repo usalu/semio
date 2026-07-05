@@ -7,28 +7,28 @@ todos:
     status: completed
   - id: protocol
     content: Extend World3dScene (meshes, instances, selection) in core rs, TS types, WIT
-    status: in_progress
+    status: completed
   - id: toolkit-3d
     content: "ui_wgpu scene3d: camera/orbit, Mesh3d, instanced depth-tested 3D pipeline, MeshStore, picking + lasso math"
-    status: pending
+    status: completed
   - id: input
     content: "Extend ui_wgpu input: wheel, buttons, modifiers, drag tracking"
-    status: pending
+    status: completed
   - id: wgpu-host
     content: "Rewrite wgpu render_world_3d with World3dState: orbit, hover, pick, marquee, async GLB loading"
-    status: pending
+    status: completed
   - id: export
     content: Handle downloadMediaExport op in wgpu shell (Blob download)
-    status: pending
+    status: completed
   - id: plugins
     content: "Update lowpoly, procedural3d, puzzle3d, puzzle5d, cad, shooting plugins: real meshes, selection commands, obj/glb export handlers"
-    status: pending
+    status: completed
   - id: react-parity
     content: "Update React World3dHost to new protocol: meshes, GLB, raycast select/hover, lasso marquee"
-    status: pending
+    status: completed
   - id: verify
     content: Cargo tests, wasm build, browser verification for wgpu and react renderers
-    status: pending
+    status: completed
 isProject: false
 ---
 

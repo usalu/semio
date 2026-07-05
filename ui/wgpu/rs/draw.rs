@@ -261,6 +261,19 @@ pub struct MeshGpuStore {
     meshes: std::collections::HashMap<String, GpuMeshBuffers>,
 }
 
+pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32]) -> u64 {
+    let mut hash = 0xcbf29ce484222325u64;
+    for value in positions.iter().chain(normals.iter()) {
+        hash ^= value.to_bits() as u64;
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    for value in indices {
+        hash ^= *value as u64;
+        hash = hash.wrapping_mul(0x100000001b3);
+    }
+    hash
+}
+
 impl Default for MeshGpuStore {
     fn default() -> Self {
         Self {
@@ -274,17 +287,29 @@ impl MeshGpuStore {
         self.meshes.get(key)
     }
 
+    pub fn lookup_key(mesh_key: &str, version: u64) -> String {
+        format!("{mesh_key}:{version}")
+    }
+
+    pub fn get_versioned(&self, mesh_key: &str, version: u64) -> Option<&GpuMeshBuffers> {
+        self.get(&Self::lookup_key(mesh_key, version))
+    }
+
     pub fn ensure_mesh(
         &mut self,
         device: &wgpu::Device,
         key: &str,
+        version: u64,
         positions: &[f32],
         normals: &[f32],
         indices: &[u32],
     ) {
-        if self.meshes.contains_key(key) {
+        let store_key = format!("{key}:{version}");
+        if self.meshes.contains_key(&store_key) {
             return;
         }
+        let prefix = format!("{key}:");
+        self.meshes.retain(|existing, _| !existing.starts_with(&prefix) || existing == &store_key);
         let mut vertices = Vec::with_capacity(positions.len() / 3);
         for index in 0..positions.len() / 3 {
             vertices.push(World3dVertex {
@@ -311,13 +336,165 @@ impl MeshGpuStore {
             usage: wgpu::BufferUsages::INDEX,
         });
         self.meshes.insert(
-            key.to_string(),
+            store_key,
             GpuMeshBuffers {
                 vertex_buffer,
                 index_buffer,
                 index_count: indices.len() as u32,
             },
         );
+    }
+}
+
+pub const WORLD_GLOBALS_SLOT_SIZE: u64 = 256;
+
+pub struct GrowBuffer {
+    buffer: Option<wgpu::Buffer>,
+    capacity: usize,
+}
+
+impl Default for GrowBuffer {
+    fn default() -> Self {
+        Self {
+            buffer: None,
+            capacity: 0,
+        }
+    }
+}
+
+impl GrowBuffer {
+    pub fn slice(&self) -> Option<wgpu::BufferSlice<'_>> {
+        self.buffer.as_ref().map(|buffer| buffer.slice(..))
+    }
+
+    pub fn upload<T: Pod>(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        data: &[T],
+        usage: wgpu::BufferUsages,
+        label: &str,
+    ) -> Option<wgpu::BufferSlice<'_>> {
+        if data.is_empty() {
+            return None;
+        }
+        let bytes = bytemuck::cast_slice(data);
+        let required = bytes.len();
+        if self.capacity < required {
+            self.capacity = required.next_power_of_two().max(256);
+            self.buffer = Some(device.create_buffer(&wgpu::BufferDescriptor {
+                label: Some(label),
+                size: self.capacity as u64,
+                usage,
+                mapped_at_creation: false,
+            }));
+        }
+        let buffer = self.buffer.as_ref()?;
+        queue.write_buffer(buffer, 0, bytes);
+        Some(buffer.slice(..))
+    }
+}
+
+pub struct FrameBuffers {
+    pub world_instances: GrowBuffer,
+    pub ui_instances: GrowBuffer,
+    pub vector_vertices: GrowBuffer,
+}
+
+impl Default for FrameBuffers {
+    fn default() -> Self {
+        Self {
+            world_instances: GrowBuffer::default(),
+            ui_instances: GrowBuffer::default(),
+            vector_vertices: GrowBuffer::default(),
+        }
+    }
+}
+
+struct WorldDrawRange {
+    mesh_key: String,
+    mesh_version: u64,
+    instance_offset: u32,
+    instance_count: u32,
+}
+
+struct PreparedWorldPass {
+    globals: World3dGlobals,
+    viewport: [f32; 4],
+    draws: Vec<WorldDrawRange>,
+}
+
+struct WorldGlobalsRing {
+    buffer: wgpu::Buffer,
+    bind_group: wgpu::BindGroup,
+    slot_stride: u32,
+    capacity_slots: u32,
+}
+
+impl WorldGlobalsRing {
+    fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, initial_slots: u32) -> Self {
+        let slot_stride = WORLD_GLOBALS_SLOT_SIZE as u32;
+        let capacity_slots = initial_slots.max(1);
+        let buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("world3d_globals_ring"),
+            size: slot_stride as u64 * capacity_slots as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("world3d_bind_group"),
+            layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                    buffer: &buffer,
+                    offset: 0,
+                    size: std::num::NonZeroU64::new(mem::size_of::<World3dGlobals>() as u64),
+                }),
+            }],
+        });
+        Self {
+            buffer,
+            bind_group,
+            slot_stride,
+            capacity_slots,
+        }
+    }
+
+    fn ensure_slots(&mut self, device: &wgpu::Device, layout: &wgpu::BindGroupLayout, slots: u32) {
+        if slots <= self.capacity_slots {
+            return;
+        }
+        self.capacity_slots = slots.next_power_of_two().max(4);
+        self.buffer = device.create_buffer(&wgpu::BufferDescriptor {
+            label: Some("world3d_globals_ring"),
+            size: self.slot_stride as u64 * self.capacity_slots as u64,
+            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+        self.bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("world3d_bind_group"),
+            layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                    buffer: &self.buffer,
+                    offset: 0,
+                    size: std::num::NonZeroU64::new(mem::size_of::<World3dGlobals>() as u64),
+                }),
+            }],
+        });
+    }
+
+    fn write_passes(&self, queue: &wgpu::Queue, passes: &[World3dGlobals]) {
+        for (index, globals) in passes.iter().enumerate() {
+            let offset = (index as u64) * self.slot_stride as u64;
+            queue.write_buffer(&self.buffer, offset, bytemuck::bytes_of(globals));
+        }
+    }
+
+    fn offset_for_slot(&self, slot: u32) -> u32 {
+        slot * self.slot_stride
     }
 }
 
@@ -329,18 +506,12 @@ pub(crate) struct UiPipelines {
     ui_pipeline: wgpu::RenderPipeline,
     vector_pipeline: wgpu::RenderPipeline,
     world_pipeline: wgpu::RenderPipeline,
-    globals_bind_group_layout: wgpu::BindGroupLayout,
-    world_bind_group_layout: wgpu::BindGroupLayout,
-    glyph_bind_group_layout: wgpu::BindGroupLayout,
     quad_vertex_buffer: wgpu::Buffer,
     globals_buffer: wgpu::Buffer,
-    world_globals_buffer: wgpu::Buffer,
-    world_bind_group: wgpu::BindGroup,
+    world_globals_ring: WorldGlobalsRing,
+    world_bind_group_layout: wgpu::BindGroupLayout,
     glyph_texture: wgpu::Texture,
-    glyph_view: wgpu::TextureView,
-    glyph_sampler: wgpu::Sampler,
     glyph_bind_group: wgpu::BindGroup,
-    surface_format: wgpu::TextureFormat,
 }
 
 impl UiPipelines {
@@ -378,6 +549,7 @@ impl UiPipelines {
         });
 
         let glyph_bind_group_layout = globals_bind_group_layout.clone();
+        let _ = glyph_bind_group_layout;
 
         let ui_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("ui_shader"),
@@ -436,7 +608,6 @@ impl UiPipelines {
                 wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&glyph_sampler) },
             ],
         });
-
         let ui_pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("ui_pipeline_layout"),
             bind_group_layouts: &[&globals_bind_group_layout],
@@ -533,29 +704,14 @@ impl UiPipelines {
                 visibility: wgpu::ShaderStages::VERTEX | wgpu::ShaderStages::FRAGMENT,
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
-                    has_dynamic_offset: false,
-                    min_binding_size: None,
+                    has_dynamic_offset: true,
+                    min_binding_size: std::num::NonZeroU64::new(mem::size_of::<World3dGlobals>() as u64),
                 },
                 count: None,
             }],
         });
 
-        let world_globals_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-            label: Some("world3d_globals"),
-            contents: bytemuck::bytes_of(&World3dGlobals {
-                view_proj: [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                light_dir: [0.4, 0.6, 0.8, 0.0],
-            }),
-            usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-        });
-        let world_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("world3d_bind_group"),
-            layout: &world_bind_group_layout,
-            entries: &[wgpu::BindGroupEntry {
-                binding: 0,
-                resource: world_globals_buffer.as_entire_binding(),
-            }],
-        });
+        let world_globals_ring = WorldGlobalsRing::new(device, &world_bind_group_layout, 8);
 
         let depth_state = Some(wgpu::DepthStencilState {
             format: wgpu::TextureFormat::Depth24Plus,
@@ -633,18 +789,12 @@ impl UiPipelines {
             ui_pipeline,
             vector_pipeline,
             world_pipeline,
-            globals_bind_group_layout,
-            world_bind_group_layout,
-            glyph_bind_group_layout,
             quad_vertex_buffer,
             globals_buffer,
-            world_globals_buffer,
-            world_bind_group,
+            world_globals_ring,
+            world_bind_group_layout,
             glyph_texture,
-            glyph_view,
-            glyph_sampler,
             glyph_bind_group,
-            surface_format: format,
         }
     }
 
@@ -652,37 +802,34 @@ impl UiPipelines {
         wgpu::TextureFormat::Depth24Plus
     }
 
-    pub fn update_world_globals(&self, queue: &wgpu::Queue, globals: &World3dGlobals) {
-        queue.write_buffer(&self.world_globals_buffer, 0, bytemuck::bytes_of(globals));
-    }
-
-    pub fn render_world_passes<'a>(
-        &'a self,
-        device: &wgpu::Device,
-        queue: &wgpu::Queue,
-        pass: &mut wgpu::RenderPass<'a>,
-        draw: &DrawList,
-        mesh_store: &MeshGpuStore,
-        screen_w: f32,
-        screen_h: f32,
-    ) {
-        if draw.scene_passes.is_empty() {
-            return;
-        }
-        pass.set_pipeline(&self.world_pipeline);
-        pass.set_bind_group(0, &self.world_bind_group, &[]);
+    fn prepare_world_passes(draw: &DrawList) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>) {
+        let mut prepared = Vec::new();
+        let mut all_instances = Vec::new();
         for scene in &draw.scene_passes {
-            let viewport = scene.viewport;
-            pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
-            pass.set_scissor_rect(
-                viewport[0] as u32,
-                viewport[1] as u32,
-                viewport[2] as u32,
-                viewport[3] as u32,
-            );
-            self.update_world_globals(
-                queue,
-                &World3dGlobals {
+            let mut pass_draws = Vec::new();
+            for draw_call in &scene.draws {
+                if draw_call.instances.is_empty() {
+                    continue;
+                }
+                let instance_offset = all_instances.len() as u32;
+                let instance_count = draw_call.instances.len() as u32;
+                for instance in &draw_call.instances {
+                    all_instances.push(World3dGpuInstance::from_instance(
+                        instance.model.to_cols_array(),
+                        instance.color,
+                        instance.selected,
+                        instance.hovered,
+                    ));
+                }
+                pass_draws.push(WorldDrawRange {
+                    mesh_key: draw_call.mesh_key.clone(),
+                    mesh_version: draw_call.mesh_version,
+                    instance_offset,
+                    instance_count,
+                });
+            }
+            prepared.push(PreparedWorldPass {
+                globals: World3dGlobals {
                     view_proj: scene.view_proj,
                     light_dir: [
                         scene.light_dir[0],
@@ -691,35 +838,79 @@ impl UiPipelines {
                         0.0,
                     ],
                 },
+                viewport: scene.viewport,
+                draws: pass_draws,
+            });
+        }
+        (prepared, all_instances)
+    }
+
+    fn upload_world_passes(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        draw: &DrawList,
+        frame_buffers: &mut FrameBuffers,
+    ) -> Option<Vec<PreparedWorldPass>> {
+        if draw.scene_passes.is_empty() {
+            return None;
+        }
+        let (prepared, all_instances) = Self::prepare_world_passes(draw);
+        self.world_globals_ring.ensure_slots(
+            device,
+            &self.world_bind_group_layout,
+            prepared.len() as u32,
+        );
+        let globals: Vec<World3dGlobals> = prepared.iter().map(|pass| pass.globals).collect();
+        self.world_globals_ring.write_passes(queue, &globals);
+        frame_buffers.world_instances.upload(
+            device,
+            queue,
+            &all_instances,
+            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            "world3d_instances",
+        )?;
+        Some(prepared)
+    }
+
+    fn draw_world_passes<'a>(
+        &'a self,
+        pass: &mut wgpu::RenderPass<'a>,
+        mesh_store: &MeshGpuStore,
+        prepared: &[PreparedWorldPass],
+        instance_buffer: wgpu::BufferSlice<'a>,
+        screen_w: f32,
+        screen_h: f32,
+    ) {
+        let instance_stride = mem::size_of::<World3dGpuInstance>() as u64;
+        pass.set_pipeline(&self.world_pipeline);
+        for (slot, scene) in prepared.iter().enumerate() {
+            let viewport = scene.viewport;
+            pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
+            pass.set_scissor_rect(
+                viewport[0] as u32,
+                viewport[1] as u32,
+                viewport[2] as u32,
+                viewport[3] as u32,
+            );
+            pass.set_bind_group(
+                0,
+                &self.world_globals_ring.bind_group,
+                &[self.world_globals_ring.offset_for_slot(slot as u32)],
             );
             for draw_call in &scene.draws {
-                let Some(mesh) = mesh_store.get(&draw_call.mesh_key) else {
+                let store_key = MeshGpuStore::lookup_key(&draw_call.mesh_key, draw_call.mesh_version);
+                let Some(mesh) = mesh_store.get(&store_key) else {
                     continue;
                 };
-                if draw_call.instances.is_empty() {
-                    continue;
-                }
-                let gpu_instances: Vec<World3dGpuInstance> = draw_call
-                    .instances
-                    .iter()
-                    .map(|instance| {
-                        World3dGpuInstance::from_instance(
-                            instance.model.to_cols_array(),
-                            instance.color,
-                            instance.selected,
-                            instance.hovered,
-                        )
-                    })
-                    .collect();
-                let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    label: Some("world3d_instances"),
-                    contents: bytemuck::cast_slice(&gpu_instances),
-                    usage: wgpu::BufferUsages::VERTEX,
-                });
+                let byte_offset = draw_call.instance_offset as u64 * instance_stride;
                 pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-                pass.set_vertex_buffer(1, instance_buffer.slice(..));
+                pass.set_vertex_buffer(
+                    1,
+                    instance_buffer.slice(byte_offset..byte_offset + draw_call.instance_count as u64 * instance_stride),
+                );
                 pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-                pass.draw_indexed(0..mesh.index_count, 0, 0..gpu_instances.len() as u32);
+                pass.draw_indexed(0..mesh.index_count, 0, 0..draw_call.instance_count);
             }
         }
         pass.set_viewport(0.0, 0.0, screen_w, screen_h, 0.0, 1.0);
@@ -756,7 +947,7 @@ impl UiPipelines {
     }
 
     pub fn render<'a>(
-        &'a self,
+        &'a mut self,
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         encoder: &mut wgpu::CommandEncoder,
@@ -764,10 +955,39 @@ impl UiPipelines {
         depth_view: Option<&'a wgpu::TextureView>,
         draw: &DrawList,
         mesh_store: &MeshGpuStore,
+        frame_buffers: &mut FrameBuffers,
         width: f32,
         height: f32,
     ) {
         self.update_globals(queue, width, height);
+        let world_prepared = if depth_view.is_some() {
+            self.upload_world_passes(device, queue, draw, frame_buffers)
+        } else {
+            None
+        };
+        let ui_buffer = if draw.ui_instances.is_empty() {
+            None
+        } else {
+            frame_buffers.ui_instances.upload(
+                device,
+                queue,
+                &draw.ui_instances,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "ui_instances",
+            )
+        };
+        let vector_buffer = if draw.vector_vertices.is_empty() {
+            None
+        } else {
+            frame_buffers.vector_vertices.upload(
+                device,
+                queue,
+                &draw.vector_vertices,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "vector_vertices",
+            )
+        };
+        let world_instance_buffer = frame_buffers.world_instances.slice();
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("ui_pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -796,8 +1016,8 @@ impl UiPipelines {
             occlusion_query_set: None,
         });
 
-        if depth_view.is_some() {
-            self.render_world_passes(device, queue, &mut pass, draw, mesh_store, width, height);
+        if let (Some(prepared), Some(instance_buffer)) = (world_prepared, world_instance_buffer) {
+            self.draw_world_passes(&mut pass, mesh_store, &prepared, instance_buffer, width, height);
         }
 
         pass.set_pipeline(&self.ui_pipeline);
@@ -807,25 +1027,15 @@ impl UiPipelines {
             pass.set_scissor_rect(scissor.x, scissor.y, scissor.w, scissor.h);
         }
 
-        if !draw.ui_instances.is_empty() {
-            let instance_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("ui_instances"),
-                contents: bytemuck::cast_slice(&draw.ui_instances),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
+        if let Some(instance_buffer) = ui_buffer {
             pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
-            pass.set_vertex_buffer(1, instance_buffer.slice(..));
+            pass.set_vertex_buffer(1, instance_buffer);
             pass.draw(0..6, 0..draw.ui_instances.len() as u32);
         }
 
-        if !draw.vector_vertices.is_empty() {
+        if let Some(vector_buffer) = vector_buffer {
             pass.set_pipeline(&self.vector_pipeline);
-            let vector_buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("vector_vertices"),
-                contents: bytemuck::cast_slice(&draw.vector_vertices),
-                usage: wgpu::BufferUsages::VERTEX,
-            });
-            pass.set_vertex_buffer(0, vector_buffer.slice(..));
+            pass.set_vertex_buffer(0, vector_buffer);
             pass.draw(0..draw.vector_vertices.len() as u32, 0..1);
         }
     }
@@ -833,12 +1043,25 @@ impl UiPipelines {
 
 #[cfg(test)]
 mod tests {
-    use super::ear_clip_polygon;
+    use super::{ear_clip_polygon, mesh_content_version, WORLD_GLOBALS_SLOT_SIZE};
 
     #[test]
     fn ear_clip_produces_triangles() {
         let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
         let tris = ear_clip_polygon(&square);
         assert!(tris.len() >= 3);
+    }
+
+    #[test]
+    fn world_globals_slot_size_is_aligned() {
+        assert!(WORLD_GLOBALS_SLOT_SIZE >= 80);
+        assert_eq!(WORLD_GLOBALS_SLOT_SIZE % 256, 0);
+    }
+
+    #[test]
+    fn mesh_content_version_changes_with_indices() {
+        let v0 = mesh_content_version(&[0.0, 0.0, 0.0], &[0.0, 1.0, 0.0], &[0, 1, 2]);
+        let v1 = mesh_content_version(&[0.0, 0.0, 0.0], &[0.0, 1.0, 0.0], &[0, 2, 1]);
+        assert_ne!(v0, v1);
     }
 }

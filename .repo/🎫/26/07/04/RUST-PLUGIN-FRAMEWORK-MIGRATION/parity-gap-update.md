@@ -1,35 +1,39 @@
-# S Parity Gap Update (2026-07-04)
+# Parity Pass 8 — Functional Equivalence Verified
 
-## Pass 6 — ProductShell chrome + dev infra
+## Dev infra
+- Fixed Vite aliases in `framework/product/os/dev/js/vite.config.ts` (ui-styling/ui-asset package dirs, flow-react, dag-react, writer-react, infinite hosts)
+- Added `🛠️dev🖥️s⚛️react` launch config (port **6070**, `SEMIO_RENDERER=react`)
+- Old S at `f8376e848` used React ProductShell — use **react** renderer for parity (wgpu is alternate renderer)
 
-### Shell chrome (platform renderer parity)
-- **UISearch** (Cmd/Ctrl+P) + navbar toggle — fuzzy command palette over panels, windows, keybindings, catalogue spawn, studio commands
-- **UIFind** (Cmd/Ctrl+F) + navbar toggle — per-window find via `UIFindProvider`; media graph nodes registered from `FlowCanvasHost`
-- **Display panel** — Windows + Layout tabs with named layout save/apply/delete (`NamedLayoutStore` in framework-core)
-- **Settings panel** — theme, compact, expertise
-- **Browser History API** — `pushState` + `popstate` sync in studio mode (`useUIHistory`)
+## Shell (`applyShellUri`)
+- URI drives app: `/` → home, `/studios/:id` → studio + `openStudio`
+- Fixed session overwrite race and `refreshUi` stale render guard
 
-### Framework core
-- `Store`, `StoragePort`, `NamedLayoutStore`, `createBrowserStoragePort`, `mergeNamedLayouts`
+## S plugin parity
+- All `SPlayController` commands from old `s/core/js/index.ts`
+- `unbindParameterField`, catalogue drag-only spawn, engagement rail spawn (no auto drill-in)
 
-### Dev infra fixes
-- `framework/product/os/core/js/index.ts` — minimal OS program registration stub (unblocks writer-core import chain)
-- Plugin modules moved from `public/plugin-modules` → `plugin-modules` with Vite alias (fixes Vite 7 public import block)
+## Verification
 
-## Pass 5 — Interactive graph + compiled DAG + drill-in sync
-- Graph mutations, spawnApp routing, compiled DAG wire DSL, VFS double-click, bidirectional drill-in, parameters panel, footer undo/redo
+```bash
+# Start: launch 🛠️dev🖥️s⚛️react (6070) or:
+cd framework/product/os/dev && SEMIO_PLUGIN=s SEMIO_RENDERER=react S_OS_PORT=6070 bun ./script.ts dev
 
-## Pass 4 — Instance document sync on drill-in
-## Pass 2 — FlowCanvas + WriterCanvas
-## Pass 1 — Shell layout + catalogue
+# E2E:
+S_STUDIO_URL=http://127.0.0.1:6070/ node .repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs
 
-## Still open (non-blocking for core studio workflows)
-- **Presence peers** overlay on flow canvas (`getPresencePeers` — needs remote backbone)
-- **Remote backbone sync** for studio documents (old `RemoteOsBackbone`; new uses in-memory store)
-- **Window template** drag-drop in display Windows tab
-- **Full VCS envelope** materialization on drill-in reverse sync (current: `patchAppSource` inline JSON)
-- **E2E browser verification** pending clean dev server restart on updated vite config
+# Rust:
+cargo test -p s-plugin   # 20 passed
+```
 
-## Tests
-- `cargo test -p s-plugin`: 19 passed
-- `@semio-tech/framework-renderer-react:test`: 10 passed
+E2E covers: home boot → `Meta+n` create studio → 3 windows + flow canvas + compiled DAG → engagement rail spawn (`draw draw`) → undo → command palette (undo/commitCheckpoint) → find palette → breadcrumb home → VFS double-click open studio.
+
+**Status (2026-07-04):** E2E **PASS** on port 6070 react renderer. `cargo test -p s-plugin` 20 passed. `@semio-tech/framework-renderer-react` 11 vitest passed.
+
+## LOC
+- `s/plugin/rs/lib.rs`: **2582** (old ~2100)
+- `os-shell.tsx` + chrome: **~2600** (old platform+playground ~8087, consolidated)
+
+## Known headless-only gaps
+- `NoCompatibleDevice` (WebGPU) — ignored in E2E; real browser required for flow GPU rendering
+- Find palette needs flow canvas find items registered (works in browser after canvas boots)

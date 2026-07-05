@@ -18,6 +18,14 @@ export default defineConfig({
 	publicDir: path.join(playDir, "public"),
 	resolve: {
 		alias: {
+			"@semio-tech/ui-react": path.resolve(repoRoot, "ui/js/react/index.tsx"),
+			"@semio-tech/ui-asset": path.resolve(repoRoot, "ui/asset"),
+			"@semio-tech/ui-styling": path.resolve(repoRoot, "ui/styling/js"),
+			"@semio-tech/flow-react": path.resolve(repoRoot, "flow/react/index.tsx"),
+			"@semio-tech/dag-react": path.resolve(repoRoot, "mathematical/graph/port/directed/dag/react/index.tsx"),
+			"@semio-tech/writer-react": path.resolve(repoRoot, "writer/react/index.tsx"),
+			"@semio-tech/infinite-cavas-react-renderer": path.resolve(repoRoot, "infinite/cavas/react-renderer/index.tsx"),
+			"@semio-tech/infinite-world-r3f": path.resolve(repoRoot, "infinite/world/r3f/index.tsx"),
 			"@semio-tech/framework-renderer-react": path.resolve(repoRoot, "framework/renderer/react/index.tsx"),
 			"@semio-tech/framework-renderer-wgpu": path.resolve(repoRoot, "framework/renderer/wgpu/index.ts"),
 			"@semio-tech/framework-core": path.resolve(repoRoot, "framework/core/js/index.ts"),
@@ -26,6 +34,7 @@ export default defineConfig({
 			"/plugin-modules": pluginModulesDir,
 			"/renderer-modules": rendererModulesDir,
 		},
+		dedupe: ["react", "react-dom", "three", "@react-three/fiber", "@react-three/drei"],
 	},
 	server: {
 		port: Number(process.env.S_OS_PORT ?? 6066),

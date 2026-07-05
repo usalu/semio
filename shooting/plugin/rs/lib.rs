@@ -1,12 +1,13 @@
 //! 📸 Shooting plugin — icon studio with model + preview windows bundled as a hot-swappable WASM component.
 
 use semio_framework_plugin::{
-    build_raster_scene, build_world_3d_scene, create_default_layout, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, CommandDescriptor, PluginApp,
-    PluginBundle, RasterScene, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode,
-    UiTreeNode, UiTreeSectionNode, ViewState, World3dScene,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    build_raster_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
+    ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
+    ui_text, world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json, App, CommandDescriptor,
+    PluginApp, PluginBundle, RasterScene, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode,
+    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -27,6 +28,8 @@ const SHOOTING_PLAY_WINDOW_MODEL: &str = "shooting-model";
 const SHOOTING_PLAY_WINDOW_ICON: &str = "shooting-icon";
 const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
 const SHOOTING_EXAMPLE_DEFAULT_ID: &str = "base-icon";
+
+const SHOOTING_MESH_KIND: &str = "box";
 
 const DEFAULT_EXAMPLE_JSON: &str = include_str!("../../example/base-icon.shooting.json");
 
@@ -61,6 +64,10 @@ fn default_fov() -> f64 {
 
 fn one_f64() -> f64 {
     1.0
+}
+
+fn default_selection_method() -> String {
+    "rectangle".into()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -130,6 +137,10 @@ struct ShootingPlayRuntime {
     selected_shot_ids: Vec<String>,
     #[serde(default)]
     selected_asset_ids: Vec<String>,
+    #[serde(default = "default_selection_method")]
+    selection_method: String,
+    #[serde(default)]
+    hovered_asset_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -311,7 +322,7 @@ fn camera_json(camera: &ShootingCamera) -> String {
     .to_string()
 }
 
-fn world_instances_json(fixture: &ShootingFixture) -> String {
+fn world_instances_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) -> String {
     let instances: Vec<Value> = fixture
         .assets
         .iter()
@@ -319,18 +330,33 @@ fn world_instances_json(fixture: &ShootingFixture) -> String {
         .map(|(index, asset)| {
             let active = fixture.active_asset_id == asset.id
                 || (fixture.active_asset_id.is_empty() && index == 0);
+            let selected = runtime.selected_asset_ids.contains(&asset.id) || active;
+            let hovered = runtime.hovered_asset_id.as_deref() == Some(asset.id.as_str());
             json!({
                 "id": asset.id,
-                "x": if active { 0.0 } else { index as f64 * 2.0 },
-                "y": 0.0,
-                "z": 0.0,
-                "scale": if active { 1.2 } else { 0.8 },
+                "meshId": SHOOTING_MESH_KIND,
+                "position": [if active { 0.0 } else { index as f64 * 2.0 }, 0.0, 0.0],
+                "scale": [if active { 1.2 } else { 0.8 }, if active { 1.2 } else { 0.8 }, if active { 1.2 } else { 0.8 }],
                 "label": asset.name,
-                "color": if active { "#9aa0ab" } else { "#6b7280" },
+                "color": if selected { "#9aa0ab" } else { "#6b7280" },
+                "selected": selected,
+                "hovered": hovered,
             })
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+fn world_meshes_json() -> String {
+    world3d_meshes_json_from_kinds(&[SHOOTING_MESH_KIND.into()])
+}
+
+fn world_selection_json(runtime: &ShootingPlayRuntime) -> String {
+    world3d_selection_json(
+        &runtime.selection_method,
+        &runtime.selected_asset_ids,
+        runtime.hovered_asset_id.as_deref(),
+    )
 }
 //#endregion 🔖FixtureOps
 
@@ -588,16 +614,16 @@ fn asset_inspector_group(asset: &ShootingAsset) -> UiInspectorFieldGroup {
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_model_scene(fixture: &ShootingFixture) -> UiNode {
+fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) -> UiNode {
     build_world_3d_scene(
         SHOOTING_PLAY_SURFACE_MODEL,
         SHOOTING_PLAY_APP_ID,
-        World3dScene {
-            camera_json: camera_json(&fixture.camera),
-            meshes_json: "[]".into(),
-            instances_json: world_instances_json(fixture),
-            selection_json: "[]".into(),
-        },
+        world3d_scene(
+            camera_json(&fixture.camera),
+            world_meshes_json(),
+            world_instances_json(fixture, runtime),
+            world_selection_json(runtime),
+        ),
     )
 }
 
@@ -841,6 +867,31 @@ impl PluginApp for ShootingPlayApp {
                     }
                 }
             }
+            "worldSelect" => {
+                let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
+                let ids: Vec<String> = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                envelope.runtime.selected_asset_ids =
+                    merge_world_selection_ids(&envelope.runtime.selected_asset_ids, &ids, merge);
+                return vec![set_document_op(&envelope)];
+            }
+            "worldHover" => {
+                envelope.runtime.hovered_asset_id = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "setSelectionMethod" => {
+                let method = args
+                    .and_then(|value| value.get("method"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("rectangle");
+                envelope.runtime.selection_method = method.into();
+                return vec![set_document_op(&envelope)];
+            }
             "worldPointerDown" => return Vec::new(),
             _ => {}
         }
@@ -850,7 +901,7 @@ impl PluginApp for ShootingPlayApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            SHOOTING_PLAY_BODY_MODEL => render_model_scene(&envelope.fixture),
+            SHOOTING_PLAY_BODY_MODEL => render_model_scene(&envelope.fixture, &envelope.runtime),
             SHOOTING_PLAY_BODY_ICON => render_icon_scene(&envelope.fixture),
             SHOOTING_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
             SHOOTING_PLAY_BODY_CATALOGUE => build_catalogue_tree(),

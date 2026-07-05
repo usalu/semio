@@ -26,6 +26,14 @@
 				"forwardAllArgs": true
 			}
 		},
+		"verify": {
+			"executor": "nx:run-commands",
+			"options": {
+				"cwd": "framework/product/os/dev",
+				"command": "bun ./script.ts verify",
+				"forwardAllArgs": true
+			}
+		},
 		"plugin": {
 			"executor": "nx:run-commands",
 			"options": {

@@ -1,10 +1,11 @@
 //! 👯 Puzzle 5D plugin — 2D/3D coupled puzzle play app bundled as a hot-swappable WASM component.
 
 use semio_framework_plugin::{
-    build_canvas_2d_scene, build_world_3d_scene, create_default_layout, ui_inspector_groups_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor,
-    PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode,
-    UiTreeNode, UiTreeSectionNode, ViewState, World3dScene, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    build_canvas_2d_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
+    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
+    world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json, App, Canvas2dScene,
+    CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode,
+    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -27,6 +28,8 @@ const PUZZLE5D_PLAY_WINDOW_2D: &str = "puzzle5d-2d";
 const PUZZLE5D_PLAY_WINDOW_3D: &str = "puzzle5d-3d";
 const PUZZLE5D_SCHEMA: &str = "puzzle.5d";
 const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
+
+const PUZZLE5D_MESH_KIND: &str = "box";
 
 const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../example/concrete-forest.5d.json");
 //#endregion 🔖Constants
@@ -56,6 +59,10 @@ struct Puzzle5dCamera3d {
 
 fn one_f64() -> f64 {
     1.0
+}
+
+fn default_selection_method() -> String {
+    "rectangle".into()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -109,6 +116,10 @@ struct Puzzle5dSelection {
 struct Puzzle5dRuntime {
     #[serde(default)]
     selection: Puzzle5dSelection,
+    #[serde(default = "default_selection_method")]
+    selection_method: String,
+    #[serde(default)]
+    hovered_part_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -195,25 +206,39 @@ fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
     .to_string()
 }
 
-fn world_instances_json(document: &Puzzle5dDocument, selection: &Puzzle5dSelection) -> String {
+fn world_instances_json(document: &Puzzle5dDocument, runtime: &Puzzle5dRuntime) -> String {
     let instances: Vec<Value> = document
         .parts
         .iter()
         .enumerate()
         .map(|(index, part)| {
-            let selected = selection.part_ids.contains(&part.id);
+            let selected = runtime.selection.part_ids.contains(&part.id);
+            let hovered = runtime.hovered_part_id.as_deref() == Some(part.id.as_str());
             json!({
                 "id": part.id,
-                "x": index as f64 * 1.2,
-                "y": 0.0,
-                "z": 0.0,
-                "scale": 1.0,
+                "meshId": PUZZLE5D_MESH_KIND,
+                "position": [index as f64 * 1.2, 0.0, 0.0],
+                "scale": [1.0, 1.0, 1.0],
                 "label": part.part_kind,
                 "color": if selected { "#8b5cf6" } else { "#94a3b8" },
+                "selected": selected,
+                "hovered": hovered,
             })
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+fn world_meshes_json() -> String {
+    world3d_meshes_json_from_kinds(&[PUZZLE5D_MESH_KIND.into()])
+}
+
+fn world_selection_json(runtime: &Puzzle5dRuntime) -> String {
+    world3d_selection_json(
+        &runtime.selection_method,
+        &runtime.selection.part_ids,
+        runtime.hovered_part_id.as_deref(),
+    )
 }
 
 fn next_part_id() -> String {
@@ -439,6 +464,31 @@ impl PluginApp for Puzzle5dPlayApp {
                     }
                 }
             }
+            "worldSelect" => {
+                let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
+                let ids: Vec<String> = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                envelope.runtime.selection.part_ids =
+                    merge_world_selection_ids(&envelope.runtime.selection.part_ids, &ids, merge);
+                return vec![set_document_op(&envelope)];
+            }
+            "worldHover" => {
+                envelope.runtime.hovered_part_id = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "setSelectionMethod" => {
+                let method = args
+                    .and_then(|value| value.get("method"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("rectangle");
+                envelope.runtime.selection_method = method.into();
+                return vec![set_document_op(&envelope)];
+            }
             "worldPointerDown" | "canvasPointerDown" => return Vec::new(),
             _ => {}
         }
@@ -461,12 +511,12 @@ impl PluginApp for Puzzle5dPlayApp {
             PUZZLE5D_PLAY_BODY_3D => build_world_3d_scene(
                 PUZZLE5D_PLAY_SURFACE_3D,
                 PUZZLE5D_PLAY_APP_ID,
-                World3dScene {
-                    camera_json: camera3d_json(&envelope.document.camera3d),
-                    meshes_json: "[]".into(),
-                    instances_json: world_instances_json(&envelope.document, &envelope.runtime.selection),
-                    selection_json: serde_json::to_string(&envelope.runtime.selection).unwrap_or_else(|_| "[]".into()),
-                },
+                world3d_scene(
+                    camera3d_json(&envelope.document.camera3d),
+                    world_meshes_json(),
+                    world_instances_json(&envelope.document, &envelope.runtime),
+                    world_selection_json(&envelope.runtime),
+                ),
             ),
             PUZZLE5D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
             PUZZLE5D_PLAY_BODY_KINDS => build_kinds_tree(),

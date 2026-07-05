@@ -1,6 +1,6 @@
 //! 🖥️ WebGPU device, surface, and frame loop.
 
-use crate::draw::{DrawList, MeshGpuStore, UiPipelines};
+use crate::draw::{DrawList, FrameBuffers, MeshGpuStore, UiPipelines};
 use crate::text::FontAtlas;
 use wgpu::Surface;
 
@@ -10,6 +10,7 @@ pub struct GpuContext {
     surface: Surface<'static>,
     config: wgpu::SurfaceConfiguration,
     pipelines: UiPipelines,
+    frame_buffers: FrameBuffers,
     depth_texture: Option<wgpu::Texture>,
     depth_view: Option<wgpu::TextureView>,
     mesh_store: MeshGpuStore,
@@ -40,7 +41,7 @@ impl GpuContext {
             .request_device(&wgpu::DeviceDescriptor {
                 label: Some("ui_wgpu"),
                 required_features: wgpu::Features::empty(),
-                required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
+                required_limits: wgpu::Limits::default().using_resolution(adapter.limits()),
                 memory_hints: Default::default(),
                 trace: wgpu::Trace::Off,
                 experimental_features: Default::default(),
@@ -74,6 +75,7 @@ impl GpuContext {
             surface,
             config,
             pipelines,
+            frame_buffers: FrameBuffers::default(),
             depth_texture: None,
             depth_view: None,
             mesh_store: MeshGpuStore::default(),
@@ -124,9 +126,9 @@ impl GpuContext {
         &mut self.mesh_store
     }
 
-    pub fn ensure_mesh(&mut self, key: &str, positions: &[f32], normals: &[f32], indices: &[u32]) {
+    pub fn ensure_mesh(&mut self, key: &str, version: u64, positions: &[f32], normals: &[f32], indices: &[u32]) {
         self.mesh_store
-            .ensure_mesh(&self.device, key, positions, normals, indices);
+            .ensure_mesh(&self.device, key, version, positions, normals, indices);
     }
 
     pub fn render_frame(&mut self, draw: &DrawList) -> Result<(), String> {
@@ -147,6 +149,7 @@ impl GpuContext {
             depth_view,
             draw,
             &self.mesh_store,
+            &mut self.frame_buffers,
             self.width as f32,
             self.height as f32,
         );
