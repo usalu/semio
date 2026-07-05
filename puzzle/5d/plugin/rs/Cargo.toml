@@ -13,6 +13,7 @@ path = "lib.rs"
 
 [dependencies]
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
+puzzle_5d = { path = "../../rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

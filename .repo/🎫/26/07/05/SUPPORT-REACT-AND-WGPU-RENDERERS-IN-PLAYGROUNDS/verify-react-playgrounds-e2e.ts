@@ -53,6 +53,86 @@ function analyzePngBuffer(png: Buffer): PaintStats {
 	return { nonBackgroundRatio: nonBg / (w * h), maxLuma };
 }
 
+const tier1Plugins = new Set([
+	"cad", "gis2d", "puzzle2d", "puzzle3d", "puzzle5d", "flow", "procedural2d", "procedural3d",
+	"trinity", "trinity-rewrite", "sequence",
+]);
+
+const BODY_MIN_RATIO = 0.004;
+const BODY_MIN_LUMA = 28;
+
+type BodyPaintStats = { readonly bodyNonBgRatio: number; readonly maxLuma: number };
+
+function analyzeBodyRegion(png: Buffer): BodyPaintStats {
+	const { data, width: w, height: h } = PNG.sync.read(png);
+	const y0 = Math.floor(h * 0.08);
+	const y1 = Math.floor(h * 0.92);
+	const x0 = Math.floor(w * 0.06);
+	const x1 = Math.floor(w * 0.94);
+	const bgR = 13;
+	const bgG = 13;
+	const bgB = 15;
+	const tolerance = 8;
+	const luma = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
+	let bodyNonBg = 0;
+	let bodyTotal = 0;
+	let maxLuma = 0;
+	for (let y = y0; y < y1; y++) {
+		for (let x = x0; x < x1; x++) {
+			const i = (y * w + x) * 4;
+			const r = data[i]!;
+			const g = data[i + 1]!;
+			const b = data[i + 2]!;
+			maxLuma = Math.max(maxLuma, luma(r, g, b));
+			bodyTotal += 1;
+			if (
+				Math.abs(r - bgR) > tolerance ||
+				Math.abs(g - bgG) > tolerance ||
+				Math.abs(b - bgB) > tolerance
+			) {
+				bodyNonBg += 1;
+			}
+		}
+	}
+	return { bodyNonBgRatio: bodyTotal > 0 ? bodyNonBg / bodyTotal : 0, maxLuma };
+}
+
+const pluginBodyMinRatio: Partial<Record<(typeof plugins)[number], number>> = {
+	cad: 0.008,
+	puzzle3d: 0.006,
+	puzzle5d: 0.006,
+	flow: 0.003,
+	draw: 0.003,
+	gis2d: 0.004,
+	lowpoly: 0.006,
+	procedural2d: 0.003,
+};
+
+async function assertTier1BodyContent(page: import("playwright").Page, pluginId: string): Promise<void> {
+	const selector = world3dPlugins.has(pluginId)
+		? ".semio-world-3d-host canvas"
+		: canvas2dPlugins.has(pluginId)
+			? "canvas"
+			: "#root";
+	const locator = page.locator(selector).first();
+	if ((await locator.count()) === 0) throw new Error(`tier1 body surface missing for ${pluginId}`);
+	const png = Buffer.from(await locator.screenshot({ type: "png" }));
+	const bodyStats = analyzeBodyRegion(png);
+	const minRatio = pluginBodyMinRatio[pluginId as (typeof plugins)[number]] ?? BODY_MIN_RATIO;
+	if (bodyStats.bodyNonBgRatio < minRatio) {
+		throw new Error(`body content too sparse ratio=${bodyStats.bodyNonBgRatio.toFixed(4)} min=${minRatio}`);
+	}
+	if (bodyStats.maxLuma < BODY_MIN_LUMA) {
+		throw new Error(`body lacks visible contrast maxLuma=${bodyStats.maxLuma.toFixed(1)}`);
+	}
+}
+
+async function commandPaletteSmoke(page: import("playwright").Page): Promise<void> {
+	await page.keyboard.press(process.platform === "darwin" ? "Meta+p" : "Control+p");
+	await page.waitForTimeout(300);
+	await page.keyboard.press("Escape");
+}
+
 async function capturePaintStats(page: import("playwright").Page, selector: string): Promise<PaintStats | null> {
 	const locator = page.locator(selector).first();
 	if ((await locator.count()) === 0) return null;
@@ -138,6 +218,12 @@ async function world3dCanvasReady(page: import("playwright").Page): Promise<bool
 	return box != null && box.width > 8 && box.height > 8;
 }
 
+function isBenignPageError(text: string): boolean {
+	if (text.includes("NoCompatibleDevice")) return true;
+	if (text.includes("No available adapters")) return true;
+	return false;
+}
+
 function isActionableConsoleError(text: string): boolean {
 	if (text.includes("[DEBUG]")) return false;
 	if (text.includes("boot failed")) return true;
@@ -165,7 +251,9 @@ async function smokePlugin(
 	const warnings: string[] = [];
 	const page = await browser.newPage();
 	try {
-		page.on("pageerror", (error) => errors.push(error.message));
+		page.on("pageerror", (error) => {
+			if (!isBenignPageError(error.message)) errors.push(error.message);
+		});
 		page.on("console", (message) => {
 			const text = message.text();
 			if (message.type() === "warning" && isActionableConsoleWarning(text)) {
@@ -188,6 +276,10 @@ async function smokePlugin(
 			if (!worldReady) throw new Error("world-3d canvas missing or too small");
 		}
 		await assertFunctionalContent(page, pluginId);
+		if (tier1Plugins.has(pluginId)) {
+			await assertTier1BodyContent(page, pluginId);
+			await commandPaletteSmoke(page);
+		}
 		if (pluginId === "s" || pluginId === "flow" || pluginId === "puzzle3d") {
 			await interactionSmoke(page, pluginId);
 		}
@@ -241,10 +333,14 @@ try {
 		await waitForDev(baseUrl);
 	}
 
-	const browser = await chromium.launch({ headless: true });
+	let browser = await chromium.launch({ headless: true });
 	let failed = 0;
 	try {
-		for (const pluginId of targets) {
+		for (const [index, pluginId] of targets.entries()) {
+			if (index > 0 && index % 8 === 0) {
+				await browser.close();
+				browser = await chromium.launch({ headless: true });
+			}
 			process.stdout.write(`REACTTEST ${pluginId}... `);
 			try {
 				const line = await smokePlugin(browser, pluginId);

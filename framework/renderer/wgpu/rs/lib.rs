@@ -239,7 +239,7 @@ impl AppRuntime {
         if down && (button == 2 || button == 1) {
             for state in self.shell.world3d_states.values_mut() {
                 if state.bounds.inset(8.0).contains(x, y) {
-                    world3d::handle_world3d_pointer_drag(state, drag_dx, drag_dy, button, modifiers.shift);
+                    world3d::handle_world3d_pointer_drag(state, x, y, drag_dx, drag_dy, button, modifiers.shift);
                 }
             }
         }

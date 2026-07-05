@@ -337,6 +337,7 @@ fn torus_point(major: f32, minor: f32, phi: f32, theta: f32) -> [f32; 3] {
 
 pub fn mesh_from_kind(kind: &str) -> MeshData {
     match kind {
+        "vortex-marker" => mesh_ico_sphere(0.12, 1),
         "sphere" | "uvSphere" => mesh_uv_sphere(0.5, 16, 12),
         "icoSphere" => mesh_ico_sphere(0.5, 1),
         "plane" => mesh_plane(1.0, 1.0),
@@ -345,6 +346,20 @@ pub fn mesh_from_kind(kind: &str) -> MeshData {
         "torus" => mesh_torus(0.5, 0.15, 16, 12),
         _ => mesh_box(1.0, 1.0, 1.0),
     }
+}
+
+/** @emoji 🔩 Builds mesh data from indexed brep tessellation buffers. */
+pub fn mesh_from_indexed(positions: &[f32], normals: &[f32], indices: &[u32]) -> MeshData {
+    let mut mesh = MeshData {
+        positions: positions.to_vec(),
+        normals: normals.to_vec(),
+        indices: indices.to_vec(),
+        ..MeshData::default()
+    };
+    if mesh.normals.is_empty() && !mesh.positions.is_empty() {
+        mesh.compute_normals();
+    }
+    mesh
 }
 //#endregion Primitives
 

@@ -15,6 +15,7 @@ path = "lib.rs"
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
 procedural_2d = { path = "../../rs" }
 flow_core = { path = "../../../../flow/core/rs" }
+flow_module_draw = { path = "../../../../flow/module/draw/rs", default-features = false }
 vcs = { path = "../../../../vcs/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

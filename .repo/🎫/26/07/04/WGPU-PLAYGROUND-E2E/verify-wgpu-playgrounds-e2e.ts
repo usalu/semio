@@ -103,6 +103,76 @@ async function canvasPaintStats(page: import("playwright").Page): Promise<PaintS
 	return analyzePngBuffer(Buffer.from(png));
 }
 
+const BODY_MIN_RATIO = 0.004;
+const BODY_MIN_LUMA = 28;
+
+type BodyPaintStats = { readonly bodyNonBgRatio: number; readonly maxLuma: number };
+
+function analyzeBodyRegion(png: Buffer): BodyPaintStats {
+	const { data, width: w, height: h } = PNG.sync.read(png);
+	const y0 = Math.floor(h * 0.08);
+	const y1 = Math.floor(h * 0.92);
+	const x0 = Math.floor(w * 0.06);
+	const x1 = Math.floor(w * 0.94);
+	const bgR = 13;
+	const bgG = 13;
+	const bgB = 15;
+	const tolerance = 8;
+	const luma = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
+	let bodyNonBg = 0;
+	let bodyTotal = 0;
+	let maxLuma = 0;
+	for (let y = y0; y < y1; y++) {
+		for (let x = x0; x < x1; x++) {
+			const i = (y * w + x) * 4;
+			const r = data[i]!;
+			const g = data[i + 1]!;
+			const b = data[i + 2]!;
+			maxLuma = Math.max(maxLuma, luma(r, g, b));
+			bodyTotal += 1;
+			if (
+				Math.abs(r - bgR) > tolerance ||
+				Math.abs(g - bgG) > tolerance ||
+				Math.abs(b - bgB) > tolerance
+			) {
+				bodyNonBg += 1;
+			}
+		}
+	}
+	return {
+		bodyNonBgRatio: bodyTotal > 0 ? bodyNonBg / bodyTotal : 0,
+		maxLuma,
+	};
+}
+
+const pluginBodyMinRatio: Partial<Record<(typeof plugins)[number], number>> = {
+	cad: 0.008,
+	puzzle3d: 0.006,
+	puzzle5d: 0.006,
+	flow: 0.003,
+	draw: 0.003,
+	gis2d: 0.004,
+	lowpoly: 0.006,
+};
+
+async function assertBodyContent(page: import("playwright").Page, pluginId: string): Promise<void> {
+	const png = Buffer.from(await page.locator("#semio-wgpu-canvas").screenshot({ type: "png" }));
+	const bodyStats = analyzeBodyRegion(png);
+	const minRatio = pluginBodyMinRatio[pluginId as (typeof plugins)[number]] ?? BODY_MIN_RATIO;
+	if (bodyStats.bodyNonBgRatio < minRatio) {
+		throw new Error(`body content too sparse ratio=${bodyStats.bodyNonBgRatio.toFixed(4)} min=${minRatio}`);
+	}
+	if (bodyStats.maxLuma < BODY_MIN_LUMA) {
+		throw new Error(`body lacks visible contrast maxLuma=${bodyStats.maxLuma.toFixed(1)}`);
+	}
+}
+
+async function commandPaletteSmoke(page: import("playwright").Page): Promise<void> {
+	await page.keyboard.press(process.platform === "darwin" ? "Meta+p" : "Control+p");
+	await page.waitForTimeout(300);
+	await page.keyboard.press("Escape");
+}
+
 async function canvasHasVisibleContent(page: import("playwright").Page): Promise<boolean> {
 	const stats = await canvasPaintStats(page);
 	if (stats.nonBackgroundRatio < 0.01) return false;
@@ -110,6 +180,18 @@ async function canvasHasVisibleContent(page: import("playwright").Page): Promise
 	if (stats.footerChromeRatio < CHROME_PIXEL_MIN_RATIO || stats.footerMaxLuma < CHROME_MAX_LUMA_MIN) return false;
 	return true;
 }
+
+async function capturePaintStats(page: import("playwright").Page, selector: string): Promise<PaintStats | null> {
+	const locator = page.locator(selector);
+	if ((await locator.count()) === 0) return null;
+	const png = await locator.screenshot({ type: "png" });
+	return analyzePngBuffer(Buffer.from(png));
+}
+
+const tier1Plugins = new Set([
+	"cad", "gis2d", "puzzle2d", "puzzle3d", "puzzle5d", "flow", "procedural2d", "procedural3d",
+	"trinity", "trinity-rewrite", "sequence",
+]);
 
 async function waitForWgpuBoot(page: import("playwright").Page): Promise<void> {
 	await new Promise<void>((resolve, reject) => {
@@ -165,6 +247,10 @@ async function smokePlugin(
 					? `canvas paint check failed ratio=${stats.nonBackgroundRatio.toFixed(4)} navbarChrome=${stats.navbarChromeRatio.toFixed(4)} footerChrome=${stats.footerChromeRatio.toFixed(4)} navbarMaxL=${stats.navbarMaxLuma.toFixed(1)} footerMaxL=${stats.footerMaxLuma.toFixed(1)}`
 					: "canvas screenshot has no visible content",
 			);
+		}
+		if (tier1Plugins.has(pluginId)) {
+			await assertBodyContent(page, pluginId);
+			await commandPaletteSmoke(page);
 		}
 		if (pluginId === "s" || pluginId === "flow") {
 			await interactionSmoke(page, pluginId);

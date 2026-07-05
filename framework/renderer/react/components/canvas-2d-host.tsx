@@ -11,6 +11,10 @@ type CanvasLayerRecord = {
 	readonly y?: number;
 	readonly width?: number;
 	readonly height?: number;
+	readonly x0?: number;
+	readonly y0?: number;
+	readonly x1?: number;
+	readonly y1?: number;
 	readonly base?: { readonly name?: string; readonly x?: number; readonly y?: number; readonly width?: number; readonly height?: number };
 };
 
@@ -79,6 +83,20 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 		for (const [index, layer] of layers.entries()) {
 			const bounds = layerBounds(layer);
 			const label = layerLabel(layer);
+			const hue = (index * 47) % 360;
+			if (layer.kind === "line" || layer.x0 != null) {
+				const x0 = layer.x0 ?? layer.x ?? 0;
+				const y0 = layer.y0 ?? layer.y ?? 0;
+				const x1 = layer.x1 ?? (layer.x ?? 0) + (layer.width ?? 0);
+				const y1 = layer.y1 ?? (layer.y ?? 0) + (layer.height ?? 0);
+				ctx.strokeStyle = `hsla(${hue}, 70%, 60%, 0.9)`;
+				ctx.lineWidth = Math.max(1 / zoom, 1);
+				ctx.beginPath();
+				ctx.moveTo(x0, y0);
+				ctx.lineTo(x1, y1);
+				ctx.stroke();
+				continue;
+			}
 			if (bounds) {
 				ctx.strokeStyle = "rgba(148, 163, 184, 0.8)";
 				ctx.lineWidth = 1 / zoom;

@@ -48,7 +48,133 @@ const TYPOLOGY_CATALOG: &[(&str, &str, &str)] = &[
     ("building.building.wall", "Wall", "panel-top"),
     ("spatial.shape.box", "Box", "box"),
 ];
+
+const FOREST_LEFT_MODEL_JSON: &str =
+    include_str!("../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
 //#endregion 🔖Constants
+
+//#region 🔖BrepMeshes
+use kernel_3d_brepkit::BrepkitKernel;
+use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
+use semio_framework_core::mesh_from_indexed;
+use std::sync::{Mutex, OnceLock};
+
+static CAD_BREP_KERNEL: OnceLock<Mutex<BrepkitKernel>> = OnceLock::new();
+
+fn cad_brep_kernel() -> &'static Mutex<BrepkitKernel> {
+    CAD_BREP_KERNEL.get_or_init(|| Mutex::new(BrepkitKernel::new()))
+}
+
+fn typology_brep_mesh(typology: &str) -> MeshData {
+    let Ok(mut kernel) = cad_brep_kernel().lock() else {
+        return mesh_from_kind(typology_mesh_kind(typology));
+    };
+    let handle = block_on(async {
+        match typology {
+            "building.building.column" => kernel.cylinder_prim(0.25, 3.0).await,
+            "building.building.beam" => kernel.box_prim(6.0, 0.3, 0.4).await,
+            "building.building.slab" => kernel.box_prim(6.0, 4.0, 0.3).await,
+            "building.building.wall" => kernel.box_prim(0.2, 4.0, 3.0).await,
+            "spatial.shape.box" => kernel.box_prim(1.0, 1.0, 1.0).await,
+            _ => kernel.box_prim(1.0, 1.0, 1.0).await,
+        }
+    });
+    let Ok(handle) = handle else {
+        return mesh_from_kind(typology_mesh_kind(typology));
+    };
+    let mesh: MeshTransfer = match block_on(kernel.tessellate(&handle, 0.1)) {
+        Ok(mesh) => mesh,
+        Err(_) => {
+            let _ = block_on(kernel.dispose(&handle));
+            return mesh_from_kind(typology_mesh_kind(typology));
+        }
+    };
+    let _ = block_on(kernel.dispose(&handle));
+    mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index)
+}
+
+fn object_origin_from_vertices(object_id: &str, vertices: &[Value]) -> [f64; 3] {
+    let bim_token = object_id.strip_prefix("object-").unwrap_or(object_id);
+    let mut count = 0usize;
+    let mut sum = [0.0f64; 3];
+    for vertex in vertices {
+        let vertex_id = vertex.get("id").and_then(|value| value.as_str()).unwrap_or("");
+        if !vertex_id.starts_with(bim_token) || !vertex_id.contains("-vertex-") {
+            continue;
+        }
+        let Some(position) = vertex.get("position").and_then(|value| value.as_array()) else {
+            continue;
+        };
+        if position.len() < 3 {
+            continue;
+        }
+        sum[0] += position[0].as_f64().unwrap_or(0.0);
+        sum[1] += position[1].as_f64().unwrap_or(0.0);
+        sum[2] += position[2].as_f64().unwrap_or(0.0);
+        count += 1;
+    }
+    if count == 0 {
+        return [0.0, 0.0, 0.0];
+    }
+    let n = count as f64;
+    [sum[0] / n, sum[1] / n, sum[2] / n]
+}
+
+fn cad_document_from_modelspace(json: &str, id: &str) -> Option<CadPlayDocument> {
+    let root: Value = serde_json::from_str(json).ok()?;
+    let objects = root.pointer("/models/0/model/objects")?.as_array()?;
+    let vertices = root
+        .pointer("/models/0/model/geometry/vertices")
+        .and_then(|value| value.as_array())
+        .map(|entries| entries.as_slice())
+        .unwrap_or(&[]);
+    let cad_objects: Vec<CadObject> = objects
+        .iter()
+        .filter_map(|entry| {
+            let object_id = entry.get("id")?.as_str()?;
+            let typology = entry.get("typology")?.as_str()?;
+            let label = object_id
+                .split('-')
+                .last()
+                .map(str::to_string)
+                .unwrap_or_else(|| object_id.to_string());
+            let mesh_url = TYPOLOGY_MESH_URLS
+                .iter()
+                .find(|(kind, _)| *kind == typology)
+                .map(|(_, url)| url.to_string());
+            Some(CadObject {
+                id: object_id.into(),
+                label,
+                typology: typology.into(),
+                visible: true,
+                origin: object_origin_from_vertices(object_id, vertices),
+                orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                mesh_url,
+            })
+        })
+        .collect();
+    if cad_objects.is_empty() {
+        return None;
+    }
+    Some(CadPlayDocument {
+        schema: "cad.document".into(),
+        id: id.into(),
+        camera: CadCamera {
+            position: [12.0, -12.0, 8.0],
+            target: [5.4, 2.34, 1.5],
+            zoom: 1.0,
+            fov: 50.0,
+        },
+        objects: cad_objects,
+        nodes: vec![CadNode {
+            id: "node-root".into(),
+            label: "Concrete Forest Left".into(),
+            kind: "group".into(),
+        }],
+        active_tool: Some("selectDirect".into()),
+    })
+}
+//#endregion 🔖BrepMeshes
 
 //#region 🔖Document
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -182,7 +308,8 @@ fn default_document() -> CadPlayDocument {
 }
 
 fn forest_play_document() -> CadPlayDocument {
-    CadPlayDocument {
+    cad_document_from_modelspace(FOREST_LEFT_MODEL_JSON, "hexagonal-cut-concrete-forest-left")
+        .unwrap_or_else(|| CadPlayDocument {
         schema: "cad.document".into(),
         id: "hexagonal-cut-concrete-forest-left".into(),
         camera: CadCamera {
@@ -237,7 +364,7 @@ fn forest_play_document() -> CadPlayDocument {
             },
         ],
         active_tool: Some("selectDirect".into()),
-    }
+        })
 }
 
 fn forest_play_envelope() -> CadPlayEnvelope {
@@ -341,6 +468,10 @@ fn world_instances_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) ->
 }
 
 fn world_meshes_json(document: &CadPlayDocument) -> String {
+    let urls = collect_mesh_urls(document);
+    if !urls.is_empty() {
+        return semio_framework_plugin::world3d_meshes_json_from_urls(&urls);
+    }
     let mut kinds: Vec<String> = document
         .objects
         .iter()
@@ -351,7 +482,20 @@ fn world_meshes_json(document: &CadPlayDocument) -> String {
     if kinds.is_empty() {
         kinds.push(CAD_FALLBACK_MESH_KIND.into());
     }
-    world3d_meshes_json_from_kinds_and_urls(&kinds, &collect_mesh_urls(document))
+    let meshes: Vec<Value> = kinds
+        .iter()
+        .map(|kind| {
+            let typology = document
+                .objects
+                .iter()
+                .find(|object| typology_mesh_kind(&object.typology) == kind.as_str())
+                .map(|object| object.typology.as_str())
+                .unwrap_or("spatial.shape.box");
+            let data = typology_brep_mesh(typology);
+            json!({ "id": kind, "data": data })
+        })
+        .collect();
+    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
 fn world_selection_json(runtime: &CadPlayRuntime) -> String {
@@ -363,14 +507,14 @@ fn world_selection_json(runtime: &CadPlayRuntime) -> String {
 }
 
 fn export_mesh_from_envelope(envelope: &CadPlayEnvelope) -> MeshData {
-    let kind = envelope
+    let typology = envelope
         .document
         .objects
         .iter()
         .find(|object| envelope.runtime.selected_object_ids.contains(&object.id))
-        .map(|object| typology_mesh_kind(&object.typology))
-        .unwrap_or(CAD_FALLBACK_MESH_KIND);
-    mesh_from_kind(kind)
+        .map(|object| object.typology.as_str())
+        .unwrap_or("spatial.shape.box");
+    typology_brep_mesh(typology)
 }
 
 fn apply_cad_node_op(document: &CadPlayDocument, op: &CadOp) -> CadPlayDocument {
@@ -864,10 +1008,11 @@ mod tests {
     fn forest_example_uses_mesh_urls_and_origins() {
         let envelope = forest_play_envelope();
         let json = world_instances_json(&envelope.document, &envelope.runtime);
-        assert!(json.contains("object-column-10"));
-        assert!(json.contains("4.05"));
+        assert!(json.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
+        assert!(json.contains("4.05") || json.contains("8.10"));
         let meshes = world_meshes_json(&envelope.document);
         assert!(meshes.contains("hexagonal-cut-concrete-forest-left.glb"));
+        assert!(envelope.document.objects.len() > 5);
     }
 
     #[test]

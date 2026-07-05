@@ -1,6 +1,7 @@
 //! 🎲 Procedural 2D plugin — procedural flow play app bundled as a hot-swappable WASM component.
 
 use flow_core::{FlowFixture, FlowHost, Widget};
+use flow_module_draw::render_scene_json;
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp,
@@ -116,6 +117,87 @@ fn widget_id(widget: &Widget) -> &str {
     }
 }
 
+fn collect_drawing_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+    match value {
+        Value::Object(map) => {
+            if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
+                if handle.starts_with("drawing-") {
+                    handles.push(handle.into());
+                }
+            }
+            for entry in map.values() {
+                collect_drawing_handles_from_eval(entry, handles);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                collect_drawing_handles_from_eval(item, handles);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn affine_transform_array(value: &Value) -> [f64; 6] {
+    if let Some(matrix) = value.as_array() {
+        let mut out = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        for (index, entry) in matrix.iter().take(6).enumerate() {
+            out[index] = entry.as_f64().unwrap_or(if index == 0 || index == 3 { 1.0 } else { 0.0 });
+        }
+        return out;
+    }
+    if let Some(matrix) = value.get("0").and_then(|entry| entry.as_array()) {
+        let wrapped = Value::Array(matrix.clone());
+        return affine_transform_array(&wrapped);
+    }
+    [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+}
+
+fn path_segments_from_node(node: &Value) -> Vec<Value> {
+    if let Some(segments) = node.get("segments").and_then(|entry| entry.as_array()) {
+        return segments.clone();
+    }
+    for key in ["path", "shape", "line", "polyline", "rect", "ellipse", "circle", "polygon"] {
+        if let Some(inner) = node.get(key) {
+            if let Some(segments) = inner.get("segments").and_then(|entry| entry.as_array()) {
+                return segments.clone();
+            }
+        }
+    }
+    Vec::new()
+}
+
+fn scene_layers_from_drawing_handle(handle: &str, prefix: &str) -> Vec<Value> {
+    let scene_json = render_scene_json(handle);
+    let Ok(scene) = serde_json::from_str::<Value>(&scene_json) else {
+        return Vec::new();
+    };
+    if scene.get("error").is_some() {
+        return Vec::new();
+    }
+    let Some(nodes) = scene.get("nodes").and_then(|entry| entry.as_array()) else {
+        return Vec::new();
+    };
+    nodes
+        .iter()
+        .enumerate()
+        .map(|(index, node)| {
+            let node_body = node.get("node").unwrap_or(node);
+            json!({
+                "id": format!("{prefix}-{handle}-{index}"),
+                "transform": affine_transform_array(node.get("transform").unwrap_or(&Value::Null)),
+                "segments": path_segments_from_node(node_body),
+                "fill": node.get("fill").cloned().unwrap_or(Value::Null),
+                "stroke": node.get("stroke").cloned().unwrap_or(Value::Null),
+                "opacity": node.get("opacity").and_then(|entry| entry.as_f64()).unwrap_or(1.0),
+                "blendMode": "normal",
+                "visible": true,
+                "needsKernel": false,
+            })
+        })
+        .collect()
+}
+
 fn eval_preview_layers(play: &Procedural2dPlayEnvelope, preview: bool) -> String {
     let mut host = host_from_envelope(play);
     let eval_json = if play.runtime.eval_outputs_json.is_empty() {
@@ -124,43 +206,38 @@ fn eval_preview_layers(play: &Procedural2dPlayEnvelope, preview: bool) -> String
         host.apply_eval_outputs_json(&play.runtime.eval_outputs_json);
         play.runtime.eval_outputs_json.clone()
     };
-    let offset = if preview { 240.0 } else { 0.0 };
-    let mode = play.runtime.show_mode.as_str();
-    let mut layers = vec![json!({
-        "id": if preview { "procedural2d-preview.flow" } else { "procedural2d-main.flow" },
-        "kind": "rect",
-        "name": format!("Mode: {mode}"),
-        "x": offset,
-        "y": 0.0,
-        "width": 180.0,
-        "height": 72.0,
-    })];
+    let prefix = if preview { "procedural2d-preview" } else { "procedural2d-main" };
+    let mut layers = Vec::new();
     if let Ok(outputs) = serde_json::from_str::<Value>(&eval_json) {
-        if let Some(preview_value) = outputs.get("preview").or_else(|| outputs.get("outputs")) {
-            layers.push(json!({
-                "id": if preview { "procedural2d-preview.eval" } else { "procedural2d-main.eval" },
-                "kind": "text",
-                "name": "Eval",
-                "x": offset + 24.0,
-                "y": 96.0,
-                "width": 220.0,
-                "height": 120.0,
-                "text": preview_value.to_string().chars().take(120).collect::<String>(),
-            }));
+        let mut handles = Vec::new();
+        collect_drawing_handles_from_eval(&outputs, &mut handles);
+        handles.sort();
+        handles.dedup();
+        for handle in handles {
+            layers.extend(scene_layers_from_drawing_handle(&handle, prefix));
         }
     }
-    for widget in &play.fixture.widgets {
-        let id = widget_id(widget).to_string();
-        if play.runtime.selected_ids.is_empty() || play.runtime.selected_ids.iter().any(|selected| selected == &id) {
-            layers.push(json!({
-                "id": format!("widget-{id}"),
-                "kind": "node",
-                "name": id,
-                "x": offset + 48.0,
-                "y": 240.0,
-                "width": 96.0,
-                "height": 48.0,
-            }));
+    if play.runtime.show_mode == "wire" {
+        let offset = if preview { 240.0 } else { 0.0 };
+        for widget in &play.fixture.widgets {
+            let id = widget_id(widget).to_string();
+            if play.runtime.selected_ids.is_empty() || play.runtime.selected_ids.iter().any(|selected| selected == &id) {
+                let (x, y) = play
+                    .fixture
+                    .layout
+                    .get(&id)
+                    .map(|layout| (layout.x, layout.y))
+                    .unwrap_or((offset + 48.0, 240.0));
+                layers.push(json!({
+                    "id": format!("widget-{id}"),
+                    "kind": "node",
+                    "name": id,
+                    "x": x,
+                    "y": y,
+                    "width": 96.0,
+                    "height": 48.0,
+                }));
+            }
         }
     }
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())

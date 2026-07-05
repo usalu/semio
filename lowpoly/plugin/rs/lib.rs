@@ -14,11 +14,13 @@ use semio_framework_plugin::{
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene,
     world3d_selection_json, App, Canvas2dScene, CommandDescriptor, MeshData, PluginApp, PluginBundle,
     tool_button, tool_collection, tool_separator, tool_toggle, ToolNode, UiControlNode, UiFieldNode,
-    UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
+    WindowEngagementOption, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
     FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
@@ -616,7 +618,7 @@ fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -
                         let mut actions = None;
                         if mode == "face" {
                             actions = Some(vec![semio_framework_plugin::UiTreeItemAction {
-                                icon_id: "flip-horizontal".into(),
+                                icon_id: "flip-vertical".into(),
                                 label: Some("Flip normal".into()),
                                 command: lowpoly_cmd(
                                     "flipFaces",
@@ -846,6 +848,112 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
 //#endregion 🔖Panels
 
 //#region 🔖Tools
+fn format_selection_targets_label(targets: &LowpolySelectionTargets) -> String {
+    let mut parts = Vec::new();
+    if targets.mesh {
+        parts.push("mesh");
+    }
+    if targets.vertex {
+        parts.push("vertex");
+    }
+    if targets.edge {
+        parts.push("edge");
+    }
+    if targets.face {
+        parts.push("face");
+    }
+    if parts.is_empty() {
+        "none".into()
+    } else {
+        parts.join("+")
+    }
+}
+
+fn lowpoly_window_engagement() -> WindowEngagement {
+    let envelope = default_envelope();
+    let transform = envelope.runtime.transform_tool.clone();
+    let selected_count = envelope.fixture.selection.ids.len();
+    WindowEngagement {
+        session_active: Some(true),
+        options: Some(vec![
+            WindowEngagementOption {
+                id: "lowpoly.opt.move".into(),
+                label: Some("Move".into()),
+                icon_id: Some("move".into()),
+                pressed: Some(transform == "move"),
+                disabled: None,
+                command: Some(lowpoly_cmd("setTransformTool", Some(json!({ "tool": "move" })))),
+            },
+            WindowEngagementOption {
+                id: "lowpoly.opt.rotate".into(),
+                label: Some("Rotate".into()),
+                icon_id: Some("rotate-cw".into()),
+                pressed: Some(transform == "rotate"),
+                disabled: None,
+                command: Some(lowpoly_cmd("setTransformTool", Some(json!({ "tool": "rotate" })))),
+            },
+            WindowEngagementOption {
+                id: "lowpoly.opt.scale".into(),
+                label: Some("Scale".into()),
+                icon_id: Some("maximize-2".into()),
+                pressed: Some(transform == "scale"),
+                disabled: None,
+                command: Some(lowpoly_cmd("setTransformTool", Some(json!({ "tool": "scale" })))),
+            },
+            WindowEngagementOption {
+                id: "lowpoly.opt.snap".into(),
+                label: Some("Snap".into()),
+                icon_id: Some("magnet".into()),
+                pressed: None,
+                disabled: None,
+                command: Some(lowpoly_cmd("snap", None)),
+            },
+            WindowEngagementOption {
+                id: "lowpoly.opt.smooth".into(),
+                label: Some("Smooth".into()),
+                icon_id: Some("sun".into()),
+                pressed: None,
+                disabled: None,
+                command: Some(lowpoly_cmd("toggleSmooth", None)),
+            },
+        ]),
+        input: Some(WindowEngagementInput {
+            id: Some("lowpoly-engagement".into()),
+            value: Some(String::new()),
+            placeholder: Some("extrude, inset, mirror, decimate".into()),
+            disabled: None,
+            on_change: None,
+            on_submit: Some(lowpoly_cmd("engagementSubmit", None)),
+            on_repeat_last: None,
+            on_abort: None,
+        }),
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus {
+            id: "lowpoly-status".into(),
+            text: format!(
+                "{} · {} · {selected_count} selected",
+                format_selection_targets_label(&envelope.fixture.selection.targets),
+                transform,
+            ),
+        }]),
+        possible_engagements: Some(vec![
+            WindowEngagementPossible {
+                id: "lowpoly.eng.extrude".into(),
+                label: "Extrude".into(),
+                detail: None,
+                command: Some(lowpoly_cmd("extrude", None)),
+            },
+            WindowEngagementPossible {
+                id: "lowpoly.eng.triangulate".into(),
+                label: "Triangulate".into(),
+                detail: None,
+                command: Some(lowpoly_cmd("triangulate", None)),
+            },
+        ]),
+    }
+}
+
 fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
     let targets = &envelope.fixture.selection.targets;
     let transform = &envelope.runtime.transform_tool;
@@ -853,28 +961,33 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
         tool_collection(
             "lowpoly-tools-selection",
             "mouse-pointer",
+            "Selection",
             vec![
                 tool_toggle(
                     "lowpoly-tools-selection-mesh",
                     "box",
+                    "Mesh",
                     targets.mesh,
                     lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "mesh" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-selection-vertex",
                     "circle",
+                    "Vertex",
                     targets.vertex,
                     lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "vertex" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-selection-edge",
                     "minus",
+                    "Edge",
                     targets.edge,
                     lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "edge" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-selection-face",
                     "square",
+                    "Face",
                     targets.face,
                     lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "face" }))),
                 ),
@@ -884,39 +997,64 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
         tool_collection(
             "lowpoly-tools-transform",
             "move",
+            "Transform",
             vec![
                 tool_toggle(
                     "lowpoly-tools-transform-move",
                     "move",
+                    "Move",
                     transform == "move",
                     lowpoly_cmd("setTransformTool", Some(json!({ "tool": "move" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-transform-rotate",
                     "rotate-cw",
+                    "Rotate",
                     transform == "rotate",
                     lowpoly_cmd("setTransformTool", Some(json!({ "tool": "rotate" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-transform-scale",
-                    "maximize",
+                    "maximize-2",
+                    "Scale",
                     transform == "scale",
                     lowpoly_cmd("setTransformTool", Some(json!({ "tool": "scale" }))),
                 ),
             ],
         ),
-        tool_separator("lowpoly-tools-sep-edit"),
-        tool_button("lowpoly-tools-extrude", "arrow-up-from-line", lowpoly_cmd("extrude", None)),
-        tool_button("lowpoly-tools-inset", "shrink", lowpoly_cmd("inset", None)),
-        tool_button("lowpoly-tools-flip", "flip-horizontal", lowpoly_cmd("flipFaces", None)),
-        tool_button("lowpoly-tools-bevel", "git-commit-horizontal", lowpoly_cmd("bevel", None)),
-        tool_button("lowpoly-tools-loop-cut", "grip-lines", lowpoly_cmd("loopCut", None)),
-        tool_button("lowpoly-tools-merge", "merge", lowpoly_cmd("merge", None)),
-        tool_button("lowpoly-tools-dissolve", "eraser", lowpoly_cmd("dissolve", None)),
-        tool_button("lowpoly-tools-subdivide", "grid-2x2", lowpoly_cmd("subdivide", None)),
-        tool_button("lowpoly-tools-triangulate", "triangle", lowpoly_cmd("triangulate", None)),
-        tool_button("lowpoly-tools-mirror", "flip-vertical", lowpoly_cmd("mirror", None)),
-        tool_button("lowpoly-tools-decimate", "filter", lowpoly_cmd("decimate", None)),
+        tool_collection(
+            "lowpoly-tools-edit",
+            "pen-tool",
+            "Edit",
+            vec![
+                tool_button("lowpoly-tools-extrude", "box", "Extrude", lowpoly_cmd("extrude", None)),
+                tool_button("lowpoly-tools-inset", "square", "Inset", lowpoly_cmd("inset", None)),
+                tool_button(
+                    "lowpoly-tools-flip",
+                    "flip-vertical",
+                    "Flip Normals",
+                    lowpoly_cmd("flipFaces", None),
+                ),
+                tool_button("lowpoly-tools-bevel", "git-branch", "Bevel", lowpoly_cmd("bevel", None)),
+                tool_button("lowpoly-tools-loop-cut", "git-commit", "Loop Cut", lowpoly_cmd("loopCut", None)),
+                tool_button("lowpoly-tools-merge", "git-merge", "Merge", lowpoly_cmd("merge", None)),
+                tool_button("lowpoly-tools-dissolve", "eraser", "Dissolve", lowpoly_cmd("dissolve", None)),
+                tool_button("lowpoly-tools-subdivide", "grid-3x3", "Subdivide", lowpoly_cmd("subdivide", None)),
+                tool_button(
+                    "lowpoly-tools-triangulate",
+                    "triangle",
+                    "Triangulate",
+                    lowpoly_cmd("triangulate", None),
+                ),
+                tool_button(
+                    "lowpoly-tools-mirror",
+                    "flip-horizontal",
+                    "Mirror",
+                    lowpoly_cmd("mirror", None),
+                ),
+                tool_button("lowpoly-tools-decimate", "minimize-2", "Decimate", lowpoly_cmd("decimate", None)),
+            ],
+        ),
     ]
 }
 
@@ -926,40 +1064,67 @@ fn paint_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
         tool_collection(
             "lowpoly-paint-tools",
             "paintbrush",
+            "Paint",
             vec![
                 tool_toggle(
                     "lowpoly-paint-brush",
                     "paintbrush",
+                    "Brush",
                     paint_tool == "brush",
                     lowpoly_cmd("setPaintTool", Some(json!({ "tool": "brush" }))),
                 ),
                 tool_toggle(
                     "lowpoly-paint-eraser",
                     "eraser",
+                    "Eraser",
                     paint_tool == "eraser",
                     lowpoly_cmd("setPaintTool", Some(json!({ "tool": "eraser" }))),
                 ),
                 tool_toggle(
                     "lowpoly-paint-fill",
                     "paint-bucket",
+                    "Fill",
                     paint_tool == "fill",
                     lowpoly_cmd("setPaintTool", Some(json!({ "tool": "fill" }))),
                 ),
                 tool_toggle(
                     "lowpoly-paint-eyedropper",
                     "pipette",
+                    "Eyedropper",
                     paint_tool == "eyedropper",
                     lowpoly_cmd("setPaintTool", Some(json!({ "tool": "eyedropper" }))),
                 ),
             ],
         ),
-        tool_separator("lowpoly-paint-sep-uv"),
-        tool_button("lowpoly-paint-unwrap", "unfold", lowpoly_cmd("unwrapActive", None)),
-        tool_button("lowpoly-paint-mark-seam", "scissors", lowpoly_cmd("markUvSeam", Some(json!({ "seam": true })))),
-        tool_button("lowpoly-paint-clear-seam", "eraser", lowpoly_cmd("clearSeam", None)),
-        tool_separator("lowpoly-paint-sep-history"),
-        tool_button("lowpoly-paint-undo", "undo", lowpoly_cmd("paintUndo", None)),
-        tool_button("lowpoly-paint-redo", "redo", lowpoly_cmd("paintRedo", None)),
+        tool_collection(
+            "lowpoly-paint-uv",
+            "grid-3x3",
+            "UV",
+            vec![
+                tool_button("lowpoly-paint-unwrap", "grid-3x3", "Unwrap", lowpoly_cmd("unwrapActive", None)),
+                tool_button(
+                    "lowpoly-paint-mark-seam",
+                    "scissors",
+                    "Mark Seam",
+                    lowpoly_cmd("markUvSeam", Some(json!({ "seam": true }))),
+                ),
+                tool_button(
+                    "lowpoly-paint-clear-seam",
+                    "unlink",
+                    "Clear Seam",
+                    lowpoly_cmd("clearSeam", None),
+                ),
+            ],
+        ),
+        tool_collection(
+            "lowpoly-paint-history",
+            "undo",
+            "History",
+            vec![
+                tool_button("lowpoly-paint-undo", "undo", "Undo", lowpoly_cmd("paintUndo", None)),
+                tool_button("lowpoly-paint-redo", "redo", "Redo", lowpoly_cmd("paintRedo", None)),
+            ],
+        ),
     ]
 }
 //#endregion 🔖Tools
@@ -1436,6 +1601,18 @@ impl PluginApp for LowpolyPlayApp {
                     doc.sync_meshes_to_fixture()
                 });
             }
+            "engagementSubmit" => {
+                let value = args
+                    .and_then(|value| value.get("value"))
+                    .and_then(|value| value.as_str())
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty())
+                    .map(str::to_lowercase);
+                if let Some(command) = value {
+                    return self.handle_command(&command, None, document_json, _view_state);
+                }
+                return Vec::new();
+            }
             "snap" => {
                 let grid = tool_param_f32(&envelope.runtime.tool_params, "snapGrid", 0.25);
                 return self.mutate_mesh(envelope, move |doc, _| {
@@ -1702,14 +1879,15 @@ impl PluginApp for LowpolyPlayApp {
 //#region 🔖Manifest
 fn create_lowpoly_app() -> App {
     let default_example = serde_json::to_string(&default_envelope()).expect("lowpoly default example");
+    let engagement = lowpoly_window_engagement();
     App::from_builder(
         App::builder(LOWPOLY_PLAY_APP_ID, "Lowpoly")
             .icon_id("box")
             .mode("edit", "Edit")
             .mode("paint", "Paint")
             .default_mode_id("edit")
-            .window_kind(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN)
-            .window_kind(LOWPOLY_PLAY_WINDOW_UV, "UV", LOWPOLY_PLAY_BODY_UV)
+            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, engagement.clone())
+            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_UV, "UV", LOWPOLY_PLAY_BODY_UV, engagement)
             .default_layout(create_default_layout(
                 &[LOWPOLY_PLAY_WINDOW_MAIN.into()],
                 "row",
@@ -1914,7 +2092,9 @@ mod tests {
         let app = LowpolyPlayApp::default();
         let tools = app.tools(&app.initial_document_json(), &ViewState::default());
         let json = serde_json::to_string(&tools).unwrap();
+        assert!(json.contains("lowpoly-tools-edit"));
         assert!(json.contains("lowpoly-tools-extrude"));
+        assert!(json.contains("\"label\":\"Extrude\""));
     }
 
     #[test]
@@ -1925,7 +2105,9 @@ mod tests {
         let tools = app.tools(&app.initial_document_json(), &view);
         let json = serde_json::to_string(&tools).unwrap();
         assert!(json.contains("lowpoly-paint-brush"));
-        assert!(json.contains("lowpoly-paint-undo"));
+        assert!(json.contains("lowpoly-paint-uv"));
+        assert!(json.contains("lowpoly-paint-history"));
+        assert!(json.contains("\"label\":\"Brush\""));
     }
 
     #[test]

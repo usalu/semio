@@ -13,8 +13,9 @@ use semio_framework_plugin::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::LazyLock;
-use trinity_jack::{run_json, QueryResult, QueryResultKind};
-use trinity_ram::{Graph, GraphFixture, Node, PortDirection, PropertyValue};
+use trinity_jack::{execute, parse, run_json, QueryResult, QueryResultKind};
+use trinity_ram::{Graph, GraphFixture, Node, PortDirection, PropertyValue, create_trinity_graph_envelope, dispatch_trinity_graph_ops, TrinityGraphEnvelope, TrinityGraphStore};
+use vcs::DocumentVcsCommand;
 
 //#region 🔖Constants
 const TRINITY_JACK_PLAY_APP_ID: &str = "trinity-jack-play";
@@ -59,10 +60,6 @@ struct TrinityJackRuntime {
     results_engagement_input: String,
     #[serde(default)]
     reorganize_epoch: u64,
-    #[serde(default)]
-    undo_stack: Vec<String>,
-    #[serde(default)]
-    redo_stack: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -70,12 +67,15 @@ struct TrinityJackRuntime {
 struct TrinityJackEnvelope {
     fixture_json: String,
     #[serde(default)]
+    graph_vcs: Option<TrinityGraphEnvelope>,
+    #[serde(default)]
     runtime: TrinityJackRuntime,
 }
 
 fn default_envelope() -> TrinityJackEnvelope {
     TrinityJackEnvelope {
         fixture_json: NAKAGIN_FIXTURE_JSON.into(),
+        graph_vcs: None,
         runtime: TrinityJackRuntime {
             active_fixture_id: "nakagin".into(),
             jack_query: TRINITY_JACK_DEFAULT_QUERY.into(),
@@ -137,6 +137,25 @@ fn property_value_to_string(value: &PropertyValue) -> String {
     }
 }
 
+fn graph_store_from_envelope(envelope: &TrinityJackEnvelope) -> TrinityGraphStore {
+    if let Some(vcs) = &envelope.graph_vcs {
+        return TrinityGraphStore::new(vcs.clone());
+    }
+    let fixture = GraphFixture::from_json(&envelope.fixture_json)
+        .or_else(|_| GraphFixture::from_json(NAKAGIN_FIXTURE_JSON))
+        .unwrap_or_else(|_| trinity_ram::empty_trinity_graph_fixture());
+    TrinityGraphStore::new(create_trinity_graph_envelope("trinity-jack", fixture))
+}
+
+fn sync_envelope_from_store(envelope: &mut TrinityJackEnvelope, store: &TrinityGraphStore) {
+    envelope.graph_vcs = Some(store.envelope().clone());
+    if let Ok(fixture) = store.projection() {
+        if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
+            envelope.fixture_json = json;
+        }
+    }
+}
+
 fn run_jack_on_fixture(fixture_json: &str, query: &str) -> (String, String) {
     let mut graph = load_graph(fixture_json);
     match run_json(&mut graph, query) {
@@ -149,6 +168,19 @@ fn run_jack_on_fixture(fixture_json: &str, query: &str) -> (String, String) {
             fixture_json.into(),
         ),
     }
+}
+
+fn run_jack_with_vcs(envelope: &mut TrinityJackEnvelope, query: &str) -> Result<(), String> {
+    let mut store = graph_store_from_envelope(envelope);
+    let graph = load_graph(&envelope.fixture_json);
+    let parsed = parse(query)?;
+    let (result, ops) = execute(&graph, &parsed)?;
+    envelope.runtime.jack_result_json = serde_json::to_string(&result).map_err(|e| e.to_string())?;
+    if !ops.is_empty() {
+        dispatch_trinity_graph_ops(&mut store, ops)?;
+        sync_envelope_from_store(envelope, &store);
+    }
+    Ok(())
 }
 
 fn force_layout_fixture_json(fixture_json: &str) -> Option<String> {
@@ -689,11 +721,14 @@ impl PluginApp for TrinityJackPlayApp {
                     .and_then(|v| v.get("query"))
                     .and_then(|v| v.as_str())
                     .filter(|value| !value.trim().is_empty())
-                    .unwrap_or(envelope.runtime.jack_query.as_str());
-                let (result_json, fixture_json) = run_jack_on_fixture(&envelope.fixture_json, query);
-                envelope.runtime.jack_query = query.into();
-                envelope.runtime.jack_result_json = result_json;
-                envelope.fixture_json = fixture_json;
+                    .map(str::to_string)
+                    .unwrap_or_else(|| envelope.runtime.jack_query.clone());
+                envelope.runtime.jack_query = query.clone();
+                if run_jack_with_vcs(&mut envelope, &query).is_err() {
+                    let (result_json, fixture_json) = run_jack_on_fixture(&envelope.fixture_json, &query);
+                    envelope.runtime.jack_result_json = result_json;
+                    envelope.fixture_json = fixture_json;
+                }
                 envelope.runtime.results_engagement_input.clear();
                 return vec![set_document_op(&envelope)];
             }
@@ -746,31 +781,67 @@ impl PluginApp for TrinityJackPlayApp {
             }
             "reorganize" => {
                 if let Some(next_json) = force_layout_fixture_json(&envelope.fixture_json) {
-                    envelope.runtime.undo_stack.push(envelope.fixture_json.clone());
-                    envelope.fixture_json = next_json;
-                    envelope.runtime.redo_stack.clear();
+                    if let (Ok(before), Ok(after)) = (
+                        GraphFixture::from_json(&envelope.fixture_json),
+                        GraphFixture::from_json(&next_json),
+                    ) {
+                        let ops: Vec<trinity_ram::TrinityGraphOp> = after
+                            .nodes
+                            .iter()
+                            .filter_map(|node| {
+                                let prev = before.nodes.iter().find(|entry| entry.id == node.id)?;
+                                if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
+                                    Some(trinity_ram::TrinityGraphOp::Reposition {
+                                        id: node.id.clone(),
+                                        x: node.x,
+                                        y: node.y,
+                                    })
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
+                        if !ops.is_empty() {
+                            let mut store = graph_store_from_envelope(&envelope);
+                            if dispatch_trinity_graph_ops(&mut store, ops).is_ok() {
+                                sync_envelope_from_store(&mut envelope, &store);
+                            }
+                        } else {
+                            envelope.fixture_json = next_json;
+                        }
+                    } else {
+                        envelope.fixture_json = next_json;
+                    }
                 }
                 envelope.runtime.reorganize_epoch += 1;
                 return vec![set_document_op(&envelope)];
             }
             "undo" => {
-                if let Some(previous) = envelope.runtime.undo_stack.pop() {
-                    envelope.runtime.redo_stack.push(envelope.fixture_json.clone());
-                    envelope.fixture_json = previous;
+                let mut store = graph_store_from_envelope(&envelope);
+                if store.dispatch(DocumentVcsCommand::Undo).is_ok() {
+                    sync_envelope_from_store(&mut envelope, &store);
                     return vec![set_document_op(&envelope)];
                 }
             }
             "redo" => {
-                if let Some(next) = envelope.runtime.redo_stack.pop() {
-                    envelope.runtime.undo_stack.push(envelope.fixture_json.clone());
-                    envelope.fixture_json = next;
+                let mut store = graph_store_from_envelope(&envelope);
+                if store.dispatch(DocumentVcsCommand::Redo).is_ok() {
+                    sync_envelope_from_store(&mut envelope, &store);
                     return vec![set_document_op(&envelope)];
                 }
             }
             "commitCheckpoint" => {
-                envelope.runtime.undo_stack.push(envelope.fixture_json.clone());
-                envelope.runtime.redo_stack.clear();
-                return vec![set_document_op(&envelope)];
+                let mut store = graph_store_from_envelope(&envelope);
+                if store
+                    .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                        message: args.and_then(|v| v.get("message")).and_then(|v| v.as_str()).map(str::to_string),
+                        authors: Vec::new(),
+                    })
+                    .is_ok()
+                {
+                    sync_envelope_from_store(&mut envelope, &store);
+                    return vec![set_document_op(&envelope)];
+                }
             }
             "editorEngagementInput" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
@@ -888,7 +959,10 @@ fn create_trinity_jack_app() -> App {
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
                 "details",
                 TRINITY_JACK_PLAY_BODY_INSPECTION,
-            ),
+            )
+            .keybinding("mod+z", "undo")
+            .keybinding("mod+shift+z", "redo")
+            .keybinding("mod+alt+s", "commitCheckpoint"),
     )
     .example("nakagin", "Nakagin", serde_json::to_string(&default_envelope()).unwrap())
     .program("trinity", "Trinity", "graph")

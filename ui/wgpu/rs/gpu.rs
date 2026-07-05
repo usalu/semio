@@ -192,6 +192,10 @@ impl GpuContext {
         );
     }
 
+    pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
+        self.ensure_raster_texture(key, pixels, width, height);
+    }
+
     pub fn width(&self) -> u32 {
         self.width
     }

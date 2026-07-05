@@ -22,15 +22,16 @@ pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, 
 pub use input::{PointerCallbacks, attach_dom_listeners};
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 pub use scene3d::{
-    aabb_intersects_frustum, Camera3d, frustum_planes, Instance3d, Mat4, Mesh3d, OrbitController,
-    SceneDraw3d, ScenePass3d, Vec3, point_in_polygon, project_point, ray_pick_instance,
-    rect_contains, screen_select_instances, transform_aabb,
+    aabb_intersects_frustum, Camera3d, frustum_planes, Instance3d, LineDraw3d, LineVertex3d, Mat4,
+    Mesh3d, OrbitController, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, Vec3,
+    point_in_polygon, project_point, ray_aabb_slab, ray_pick_instance, rect_contains,
+    screen_select_instances, transform_aabb,
 };
 pub use text::{fetch_font_bytes, FontAtlas};
 pub use theme::{Rgba, Theme};
 pub use chrome::{item_bg, item_text, measure_action_item, push_control_border, push_icon, ICON_TINY};
 pub use widgets::{
     draw_icon, draw_text, draw_text_wrapped, measure_widget, render_scroll_region, render_widget,
-    wrap_text, ControlNode, KeyValueEntry, SelectItem, TreeItem, TreeItemAction, TreeSection, WidgetContext,
-    WidgetNode,
+    wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta,
+    TreeItem, TreeItemAction, TreeSection, Vec3Meta, WidgetContext, WidgetInteractionMaps, WidgetNode,
 };

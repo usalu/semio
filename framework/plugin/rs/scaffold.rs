@@ -252,6 +252,12 @@ impl PluginApp for StandardPluginApp {
                         .get("selection")
                         .map(|value| value.to_string())
                         .unwrap_or_else(default_world3d_selection),
+                    vortices_json: None,
+                    attractions_json: None,
+                    target_volumes_json: None,
+                    references_json: None,
+                    brush_preview_json: None,
+                    interaction_json: None,
                 },
             ),
             SceneKind::NodeGraph => {

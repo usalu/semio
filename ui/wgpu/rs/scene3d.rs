@@ -392,11 +392,39 @@ pub struct ScenePass3d {
     pub view_proj: [f32; 16],
     pub light_dir: [f32; 3],
     pub draws: Vec<SceneDraw3d>,
+    pub line_draws: Vec<LineDraw3d>,
+    pub translucent_draws: Vec<SceneDraw3d>,
+    pub textured_draws: Vec<TexturedDraw3d>,
     pub layer_index: usize,
     pub ui_watermark: usize,
     pub vector_watermark: usize,
 }
 //#endregion ScenePass
+
+//#region LineDraw
+#[derive(Clone, Copy, Debug)]
+pub struct LineVertex3d {
+    pub position: [f32; 3],
+    pub color: [f32; 4],
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct LineDraw3d {
+    pub vertices: Vec<LineVertex3d>,
+}
+
+#[derive(Clone, Debug)]
+pub struct TexturedInstance3d {
+    pub texture_key: String,
+    pub model: Mat4,
+    pub tint: [f32; 4],
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct TexturedDraw3d {
+    pub instances: Vec<TexturedInstance3d>,
+}
+//#endregion LineDraw
 
 //#region Culling
 #[derive(Clone, Copy, Debug)]

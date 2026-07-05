@@ -2,10 +2,9 @@
 
 use crate::scenes::render_component_scene;
 use semio_framework_core::{CommandDescriptor, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
-use std::collections::HashMap;
 use ui_wgpu::{
     ControlNode, KeyValueEntry, Rect, SelectItem, Theme, TreeItem, TreeItemAction, TreeSection, WidgetContext,
-    WidgetNode, measure_widget, render_widget,
+    WidgetInteractionMaps, WidgetNode, measure_widget, render_widget,
 };
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, CommandDescriptor>;
@@ -45,31 +44,36 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
         UiNode::Separator(_) => WidgetNode::Separator,
         UiNode::Button(button) => WidgetNode::Button {
             id: button.id.clone(),
+            icon_id: Some(button.icon_id.clone()),
             label: button.label.clone(),
             event: Some(button.command.clone()),
         },
         UiNode::Input(input) => WidgetNode::Input {
             id: input.id.clone(),
+            input_kind: input.input_kind.clone(),
             value: input.value.clone(),
             placeholder: input.placeholder.clone(),
+            commit: input.commit.clone(),
+            on_change: Some(input.on_change.clone()),
         },
         UiNode::Select(select) => WidgetNode::Select {
             id: select.id.clone(),
             value: select.value.clone(),
             items: select.items.iter().map(|i| SelectItem { value: i.value.clone(), label: i.label.clone() }).collect(),
             placeholder: select.placeholder.clone(),
-            event: Some(select.on_change.clone()),
+            on_change: Some(select.on_change.clone()),
         },
         UiNode::Toggle(toggle) => WidgetNode::Toggle {
             id: toggle.id.clone(),
+            icon_id: toggle.icon_id.clone(),
             pressed: toggle.pressed,
             text: toggle.text.clone(),
-            event: Some(toggle.on_change.clone()),
+            on_change: Some(toggle.on_change.clone()),
         },
         UiNode::Vec3(vec3) => WidgetNode::Vec3 {
             id: vec3.id.clone(),
             value: vec3.value,
-            event: Some(vec3.on_change.clone()),
+            on_change: Some(vec3.on_change.clone()),
         },
         UiNode::KeyValue(kv) => WidgetNode::KeyValue {
             entries: kv.entries.iter().map(|e| KeyValueEntry { label: e.label.clone(), value: e.value.clone() }).collect(),
@@ -79,22 +83,29 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
             value: slider.value,
             min: slider.min,
             max: slider.max,
-            event: Some(slider.on_change.clone()),
+            step: slider.step,
+            on_change: Some(slider.on_change.clone()),
         },
         UiNode::NumberStepper(stepper) => WidgetNode::NumberStepper {
             id: stepper.id.clone(),
             value: stepper.value,
-            event: Some(stepper.on_absolute.clone()),
+            step: stepper.step,
+            uniform: stepper.uniform,
+            on_absolute: Some(stepper.on_absolute.clone()),
+            on_delta: Some(stepper.on_delta.clone()),
         },
         UiNode::Ring(ring) => WidgetNode::Ring {
             id: ring.id.clone(),
             t: ring.t,
-            event: Some(ring.on_change.clone()),
+            disabled: ring.disabled.unwrap_or(false),
+            on_change: Some(ring.on_change.clone()),
         },
         UiNode::IconSelect(icon) => WidgetNode::IconSelect {
             id: icon.id.clone(),
             value: icon.value.clone(),
-            event: Some(icon.on_change.clone()),
+            uniform: icon.uniform,
+            classifier_kind: icon.classifier_kind.clone(),
+            on_change: Some(icon.on_change.clone()),
         },
         UiNode::Field(field) => WidgetNode::Field {
             id: field.id.clone(),
@@ -104,6 +115,7 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
         UiNode::Section(section) => WidgetNode::Section {
             id: section.id.clone(),
             label: section.label.clone(),
+            default_open: section.default_open.unwrap_or(true),
             children: section.children.iter().map(ui_node_to_widget).collect(),
         },
         UiNode::Tree(tree) => WidgetNode::Tree {
@@ -123,31 +135,36 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<CommandDescriptor> 
     match control {
         UiControlNode::Button(n) => ControlNode::Button {
             id: n.id.clone(),
+            icon_id: Some(n.icon_id.clone()),
             label: n.label.clone(),
             event: Some(n.command.clone()),
         },
         UiControlNode::Input(n) => ControlNode::Input {
             id: n.id.clone(),
+            input_kind: n.input_kind.clone(),
             value: n.value.clone(),
             placeholder: n.placeholder.clone(),
+            commit: n.commit.clone(),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::Select(n) => ControlNode::Select {
             id: n.id.clone(),
             value: n.value.clone(),
             items: n.items.iter().map(|i| SelectItem { value: i.value.clone(), label: i.label.clone() }).collect(),
             placeholder: n.placeholder.clone(),
-            event: Some(n.on_change.clone()),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::Toggle(n) => ControlNode::Toggle {
             id: n.id.clone(),
+            icon_id: n.icon_id.clone(),
             pressed: n.pressed,
             text: n.text.clone(),
-            event: Some(n.on_change.clone()),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::Vec3(n) => ControlNode::Vec3 {
             id: n.id.clone(),
             value: n.value,
-            event: Some(n.on_change.clone()),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::KeyValue(n) => ControlNode::KeyValue {
             entries: n.entries.iter().map(|e| KeyValueEntry { label: e.label.clone(), value: e.value.clone() }).collect(),
@@ -157,22 +174,29 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<CommandDescriptor> 
             value: n.value,
             min: n.min,
             max: n.max,
-            event: Some(n.on_change.clone()),
+            step: n.step,
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::NumberStepper(n) => ControlNode::NumberStepper {
             id: n.id.clone(),
             value: n.value,
-            event: Some(n.on_absolute.clone()),
+            step: n.step,
+            uniform: n.uniform,
+            on_absolute: Some(n.on_absolute.clone()),
+            on_delta: Some(n.on_delta.clone()),
         },
         UiControlNode::Ring(n) => ControlNode::Ring {
             id: n.id.clone(),
             t: n.t,
-            event: Some(n.on_change.clone()),
+            disabled: n.disabled.unwrap_or(false),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::IconSelect(n) => ControlNode::IconSelect {
             id: n.id.clone(),
             value: n.value.clone(),
-            event: Some(n.on_change.clone()),
+            uniform: n.uniform,
+            classifier_kind: n.classifier_kind.clone(),
+            on_change: Some(n.on_change.clone()),
         },
     }
 }
@@ -231,31 +255,36 @@ fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<CommandDescript
     match control {
         UiControlNode::Button(n) => WidgetNode::Button {
             id: n.id.clone(),
+            icon_id: Some(n.icon_id.clone()),
             label: n.label.clone(),
             event: Some(n.command.clone()),
         },
         UiControlNode::Input(n) => WidgetNode::Input {
             id: n.id.clone(),
+            input_kind: n.input_kind.clone(),
             value: n.value.clone(),
             placeholder: n.placeholder.clone(),
+            commit: n.commit.clone(),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::Select(n) => WidgetNode::Select {
             id: n.id.clone(),
             value: n.value.clone(),
             items: n.items.iter().map(|i| SelectItem { value: i.value.clone(), label: i.label.clone() }).collect(),
             placeholder: n.placeholder.clone(),
-            event: Some(n.on_change.clone()),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::Toggle(n) => WidgetNode::Toggle {
             id: n.id.clone(),
+            icon_id: n.icon_id.clone(),
             pressed: n.pressed,
             text: n.text.clone(),
-            event: Some(n.on_change.clone()),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::Vec3(n) => WidgetNode::Vec3 {
             id: n.id.clone(),
             value: n.value,
-            event: Some(n.on_change.clone()),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::KeyValue(n) => WidgetNode::KeyValue {
             entries: n.entries.iter().map(|e| KeyValueEntry { label: e.label.clone(), value: e.value.clone() }).collect(),
@@ -265,22 +294,29 @@ fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<CommandDescript
             value: n.value,
             min: n.min,
             max: n.max,
-            event: Some(n.on_change.clone()),
+            step: n.step,
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::NumberStepper(n) => WidgetNode::NumberStepper {
             id: n.id.clone(),
             value: n.value,
-            event: Some(n.on_absolute.clone()),
+            step: n.step,
+            uniform: n.uniform,
+            on_absolute: Some(n.on_absolute.clone()),
+            on_delta: Some(n.on_delta.clone()),
         },
         UiControlNode::Ring(n) => WidgetNode::Ring {
             id: n.id.clone(),
             t: n.t,
-            event: Some(n.on_change.clone()),
+            disabled: n.disabled.unwrap_or(false),
+            on_change: Some(n.on_change.clone()),
         },
         UiControlNode::IconSelect(n) => WidgetNode::IconSelect {
             id: n.id.clone(),
             value: n.value.clone(),
-            event: Some(n.on_change.clone()),
+            uniform: n.uniform,
+            classifier_kind: n.classifier_kind.clone(),
+            on_change: Some(n.on_change.clone()),
         },
     }
 }
@@ -295,9 +331,7 @@ pub fn framework_widget_context<'a>(
     scroll_offsets: &'a mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'a mut std::collections::HashMap<String, bool>,
     open_selects: &'a mut std::collections::HashMap<String, bool>,
-    tree_hover_commands: Option<&'a mut HashMap<String, CommandDescriptor>>,
-    tree_unhover_commands: Option<&'a mut HashMap<String, CommandDescriptor>>,
-    tree_selection_change: Option<&'a mut Option<CommandDescriptor>>,
+    interaction_maps: Option<&'a mut WidgetInteractionMaps<CommandDescriptor>>,
 ) -> FrameworkWidgetContext<'a> {
     WidgetContext {
         draw,
@@ -309,8 +343,6 @@ pub fn framework_widget_context<'a>(
         scroll_offsets,
         collapsed_sections,
         open_selects,
-        tree_hover_commands,
-        tree_unhover_commands,
-        tree_selection_change,
+        interaction_maps,
     }
 }

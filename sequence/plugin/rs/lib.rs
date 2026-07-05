@@ -6,7 +6,7 @@ use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, App, CommandDescriptor, NodeGraphScene,
     PluginApp, PluginBundle, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
-    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    UiNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -223,6 +223,70 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         is_hidden: None,
     }
 }
+fn is_control_kind(kind: &str) -> bool {
+    matches!(kind, "control.if" | "control.while" | "control.repeat")
+}
+
+fn control_slots(kind: &str) -> &'static [&'static str] {
+    match kind {
+        "control.if" => &["then", "else"],
+        "control.while" | "control.repeat" => &["body"],
+        _ => &[],
+    }
+}
+
+fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTreeItemNode {
+    let mut item = tree_item_with_command(
+        format!("sequence-play-hierarchy.step.{}", step.id),
+        format!("{} ({})", step.id, step.kind),
+        Some(step.kind.clone()),
+        sequence_cmd("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
+    );
+    if is_control_kind(&step.kind) {
+        item.control = Some(UiControlNode::Toggle(UiToggleNode {
+            id: format!("sequence-play-hierarchy.collapse.{}", step.id),
+            icon_id: if step.collapsed { "chevron-right" } else { "chevron-down" }.into(),
+            pressed: !step.collapsed,
+            text: None,
+            on_change: sequence_cmd("setStepCollapsed", Some(json!({ "id": step.id }))),
+        }));
+        let slot_items: Vec<UiTreeItemNode> = control_slots(&step.kind)
+            .iter()
+            .map(|slot_name| {
+                let nested: Vec<UiTreeItemNode> = fixture
+                    .steps
+                    .iter()
+                    .filter(|entry| {
+                        entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)
+                    })
+                    .map(|entry| build_step_tree_item(entry, fixture))
+                    .collect();
+                UiTreeItemNode {
+                    id: format!("sequence-play-hierarchy.slot.{}.{}", step.id, slot_name),
+                    label: (*slot_name).into(),
+                    description: Some(format!("{} slot", step.id)),
+                    icon_id: Some("folder".into()),
+                    selected: None,
+                    default_open: Some(true),
+                    command: None,
+                    hover_command: None,
+                    unhover_command: None,
+                    actions: None,
+                    draggable: None,
+                    drag_data: None,
+                    items: if nested.is_empty() { None } else { Some(nested) },
+                    control: None,
+                    is_hidden: if step.collapsed { Some(true) } else { None },
+                }
+            })
+            .collect();
+        if !slot_items.is_empty() {
+            item.items = Some(slot_items);
+        }
+        item.default_open = Some(!step.collapsed);
+    }
+    item
+}
 //#endregion 🔖TreeHelpers
 
 //#region 🔖Panels
@@ -230,14 +294,8 @@ fn build_hierarchy_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
     let step_items: Vec<UiTreeItemNode> = fixture
         .steps
         .iter()
-        .map(|step| {
-            tree_item_with_command(
-                format!("sequence-play-hierarchy.step.{}", step.id),
-                format!("{} ({})", step.id, step.kind),
-                Some(step.kind.clone()),
-                sequence_cmd("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
-            )
-        })
+        .filter(|step| step.slot.is_none())
+        .map(|step| build_step_tree_item(step, fixture))
         .collect();
     let edge_items: Vec<UiTreeItemNode> = fixture
         .edges
@@ -291,7 +349,7 @@ fn build_hierarchy_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
+fn build_catalogue_tree(fixture: &SequenceFixture) -> UiNode {
     let actions = [
         ("state.set", "Set state"),
         ("log.print", "Print log"),
@@ -299,22 +357,40 @@ fn build_catalogue_tree() -> UiNode {
         ("control.while", "While"),
         ("math.add", "Add"),
     ];
+    let mut items: Vec<UiTreeItemNode> = actions
+        .iter()
+        .map(|(kind, label)| {
+            tree_item_with_command(
+                format!("sequence-play-catalogue.action.{kind}"),
+                *label,
+                Some((*kind).into()),
+                sequence_cmd("addStep", Some(json!({ "kind": kind }))),
+            )
+        })
+        .collect();
+    for owner in fixture.steps.iter().filter(|step| is_control_kind(&step.kind)) {
+        for slot_name in control_slots(&owner.kind) {
+            items.push(tree_item_with_command(
+                format!("sequence-play-catalogue.slot.{}.{}", owner.id, slot_name),
+                format!("Add to {} → {slot_name}", owner.id),
+                Some(format!("{slot_name} @ {}", owner.id)),
+                sequence_cmd(
+                    "addStepToSlot",
+                    Some(json!({
+                        "kind": "log.print",
+                        "owner": owner.id,
+                        "slotName": slot_name,
+                    })),
+                ),
+            ));
+        }
+    }
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "sequence-play-catalogue.actions".into(),
             label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
             default_open: Some(true),
-            items: actions
-                .iter()
-                .map(|(kind, label)| {
-                    tree_item_with_command(
-                        format!("sequence-play-catalogue.action.{kind}"),
-                        *label,
-                        Some((*kind).into()),
-                        sequence_cmd("addStep", Some(json!({ "kind": kind }))),
-                    )
-                })
-                .collect(),
+            items,
         }],
         selected_ids: Some(vec![]),
         highlighted_ids: None,
@@ -355,18 +431,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
     if step_ids.len() == 1 {
         fields.insert(
             0,
-            UiNode::Field(UiFieldNode {
-                id: "sequence-play-inspector.id".into(),
-                label: "Id".into(),
-                child: UiControlNode::Input(UiInputNode {
-                    id: "sequence-play-inspector.id.input".into(),
-                    input_kind: "text".into(),
-                    value: step_ids[0].clone(),
-                    placeholder: None,
-                    commit: None,
-                    on_change: sequence_cmd("setStepParams", Some(json!({ "id": step_ids[0], "field": "id" }))),
-                }),
-            }),
+            ui_inspector_readonly_field("sequence-play-inspector.id", "Id", step_ids[0].clone()),
         );
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
@@ -380,7 +445,8 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
 
 //#region 🔖Render
 fn render_main_graph(envelope: &SequencePlayEnvelope) -> UiNode {
-    let host = host_from_envelope(envelope);
+    let mut host = host_from_envelope(envelope);
+    host.layout_expanded_slots();
     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
     let viewport_json = serde_json::to_string(&envelope.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
     build_node_graph_scene(
@@ -550,8 +616,14 @@ impl PluginApp for SequencePlayApp {
             }
             "setStepCollapsed" => {
                 let step_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
-                let collapsed = args.and_then(|value| value.get("collapsed")).and_then(|value| value.as_bool()).unwrap_or(true);
                 if let Some(step_id) = step_id {
+                    let collapsed = envelope
+                        .fixture
+                        .steps
+                        .iter()
+                        .find(|step| step.id == step_id)
+                        .map(|step| !step.collapsed)
+                        .unwrap_or(true);
                     push_undo(&mut envelope);
                     if host.set_step_collapsed(step_id, collapsed) {
                         envelope.fixture = host.fixture;
@@ -601,7 +673,7 @@ impl PluginApp for SequencePlayApp {
             SEQUENCE_PLAY_BODY_SCRIPT => render_script(&envelope),
             SEQUENCE_PLAY_BODY_COMPILED => render_compiled_dag(&envelope),
             SEQUENCE_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_step_ids),
-            SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
+            SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope.fixture),
             SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_step_ids),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }

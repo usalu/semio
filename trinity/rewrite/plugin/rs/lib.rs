@@ -14,7 +14,7 @@ use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::sync::LazyLock;
 use trinity_ram::{Graph, GraphFixture, Node, PortDirection, PropertyValue};
-use trinity_rewrite::{apply_rule, build_rule_query, rule_query_json, Lhs, ParameterKind, ParameterSpec, Rhs, Rule};
+use trinity_rewrite::{apply_rule, build_rule_query, rule_query_json, Lhs, ParameterKind, ParameterSpec, Rhs, Rule, PatternJson};
 
 //#region 🔖Constants
 const TRINITY_REWRITE_PLAY_APP_ID: &str = "trinity-rewrite-play";
@@ -219,6 +219,122 @@ fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, val
         }
     }
     Graph::from_fixture(fixture).ok()?.fixture_json().ok()
+}
+
+fn pattern_graph_fixture(patterns: &[PatternJson], title: &str) -> GraphFixture {
+    let mut nodes = Vec::new();
+    let mut edges = Vec::new();
+    for (index, pattern) in patterns.iter().enumerate() {
+        let left_id = format!("lhs-{}-{}", pattern.left_var, index);
+        nodes.push(Node {
+            id: left_id.clone(),
+            name: format!("{}:{}", pattern.left_var, pattern.left_kind),
+            kind: pattern.left_kind.clone(),
+            x: (index as f64) * 220.0,
+            y: 0.0,
+            width: 120.0,
+            height: 56.0,
+            ports: vec![],
+            properties: Default::default(),
+        });
+        if let (Some(right_var), Some(right_kind)) = (&pattern.right_var, &pattern.right_kind) {
+            let right_id = format!("rhs-{}-{}", right_var, index);
+            nodes.push(Node {
+                id: right_id.clone(),
+                name: format!("{right_var}:{right_kind}"),
+                kind: right_kind.clone(),
+                x: (index as f64) * 220.0 + 180.0,
+                y: 0.0,
+                width: 120.0,
+                height: 56.0,
+                ports: vec![],
+                properties: Default::default(),
+            });
+            let edge_id = format!("edge-{index}");
+            let edge_kind = pattern.edge_kind.clone().unwrap_or_else(|| "Connection".into());
+            edges.push(trinity_ram::Edge {
+                id: edge_id,
+                kind: edge_kind,
+                source: format!("{left_id}:out"),
+                target: format!("{right_id}:in"),
+                properties: Default::default(),
+            });
+        }
+    }
+    GraphFixture {
+        schema: GraphFixture::SCHEMA.into(),
+        name: title.into(),
+        manifest_id: Some("nakagin".into()),
+        manifest: trinity_ram::Manifest::nakagin_default(),
+        camera: trinity_ram::Camera { x: 0.0, y: 0.0, zoom: 1.0 },
+        nodes,
+        edges,
+        root_node_id: None,
+    }
+}
+
+fn lhs_graph_fixture_json(lhs_json: &str) -> String {
+    let Ok(lhs) = serde_json::from_str::<Lhs>(lhs_json) else {
+        return NAKAGIN_FIXTURE_JSON.into();
+    };
+    Graph::from_fixture(pattern_graph_fixture(&[lhs.pattern], "lhs"))
+        .ok()
+        .and_then(|graph| graph.fixture_json().ok())
+        .unwrap_or_else(|| NAKAGIN_FIXTURE_JSON.into())
+}
+
+fn rhs_graph_fixture_json(rhs_json: &str) -> String {
+    let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
+        return NAKAGIN_FIXTURE_JSON.into();
+    };
+    let mut patterns = rhs.create.clone();
+    patterns.extend(rhs.merge.clone());
+    if patterns.is_empty() {
+        patterns.push(PatternJson {
+            left_var: "result".into(),
+            left_kind: "Piece".into(),
+            edge_var: None,
+            edge_kind: None,
+            right_var: None,
+            right_kind: None,
+        });
+    }
+    Graph::from_fixture(pattern_graph_fixture(&patterns, "rhs"))
+        .ok()
+        .and_then(|graph| graph.fixture_json().ok())
+        .unwrap_or_else(|| NAKAGIN_FIXTURE_JSON.into())
+}
+
+fn node_id_for_var(fixture_json: &str, var: &str) -> Option<String> {
+    if var.is_empty() {
+        return None;
+    }
+    let fixture = GraphFixture::from_json(fixture_json).ok()?;
+    fixture
+        .nodes
+        .iter()
+        .find(|node| {
+            node.name.starts_with(&format!("{var}:"))
+                || node.name == var
+                || var_from_node_name(&node.name).as_deref() == Some(var)
+        })
+        .map(|node| node.id.clone())
+}
+
+fn graph_hover_json(fixture_json: &str, hover_var: &str, hover_node_id: &str) -> Option<String> {
+    let node_id = if !hover_node_id.is_empty() {
+        Some(hover_node_id.to_string())
+    } else {
+        node_id_for_var(fixture_json, hover_var)
+    }?;
+    Some(json!({ "nodeId": node_id }).to_string())
+}
+
+fn graph_selection_json(fixture_json: &str, select_var: &str, selected_ids: &[String]) -> Option<String> {
+    if !selected_ids.is_empty() {
+        return serde_json::to_string(selected_ids).ok();
+    }
+    node_id_for_var(fixture_json, select_var).map(|id| serde_json::to_string(&vec![id]).unwrap_or_else(|_| "[]".into()))
 }
 
 fn var_from_node_name(name: &str) -> Option<String> {
@@ -531,14 +647,29 @@ impl ParameterKindLabel for ParameterSpec {
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_fixture_graph(surface_id: &str, fixture_json: &str) -> UiNode {
-    let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::from_json(NAKAGIN_FIXTURE_JSON).unwrap());
+fn render_rule_graph(
+    surface_id: &str,
+    fixture_json: &str,
+    envelope: &TrinityRewriteEnvelope,
+    hover_node_id: &str,
+) -> UiNode {
+    let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::from_json(fixture_json).unwrap_or_else(|_| GraphFixture::from_json(NAKAGIN_FIXTURE_JSON).unwrap()));
     let (nodes_json, edges_json, viewport_json) = fixture_to_media_graph(&fixture);
+    let hover_json = graph_hover_json(fixture_json, &envelope.runtime.active_hover_var, hover_node_id);
+    let selection_json = graph_selection_json(fixture_json, &envelope.runtime.active_select_var, &envelope.runtime.selected_node_ids);
     build_node_graph_scene(
         surface_id,
         TRINITY_REWRITE_PLAY_CONTROLLER_ID,
-        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
+        NodeGraphScene {
+            hover_json,
+            selection_json,
+            ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
+        },
     )
+}
+
+fn render_fixture_graph(surface_id: &str, fixture_json: &str, envelope: &TrinityRewriteEnvelope) -> UiNode {
+    render_rule_graph(surface_id, fixture_json, envelope, "")
 }
 
 fn render_text_editor(surface_id: &str, buffer: &str, language: &str) -> UiNode {
@@ -780,14 +911,24 @@ impl PluginApp for TrinityRewritePlayApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            TRINITY_REWRITE_PLAY_BODY_BEFORE => render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_BEFORE, &envelope.before_fixture_json),
-            TRINITY_REWRITE_PLAY_BODY_AFTER => render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_AFTER, &envelope.after_fixture_json),
-            TRINITY_REWRITE_PLAY_BODY_LHS => {
-                render_text_editor(TRINITY_REWRITE_PLAY_SURFACE_LHS, &envelope.lhs_json, "json")
+            TRINITY_REWRITE_PLAY_BODY_BEFORE => {
+                render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_BEFORE, &envelope.before_fixture_json, &envelope)
             }
-            TRINITY_REWRITE_PLAY_BODY_RHS => {
-                render_text_editor(TRINITY_REWRITE_PLAY_SURFACE_RHS, &envelope.rhs_json, "json")
+            TRINITY_REWRITE_PLAY_BODY_AFTER => {
+                render_fixture_graph(TRINITY_REWRITE_PLAY_SURFACE_AFTER, &envelope.after_fixture_json, &envelope)
             }
+            TRINITY_REWRITE_PLAY_BODY_LHS => render_rule_graph(
+                TRINITY_REWRITE_PLAY_SURFACE_LHS,
+                &lhs_graph_fixture_json(&envelope.lhs_json),
+                &envelope,
+                &envelope.runtime.lhs_graph_hover_id,
+            ),
+            TRINITY_REWRITE_PLAY_BODY_RHS => render_rule_graph(
+                TRINITY_REWRITE_PLAY_SURFACE_RHS,
+                &rhs_graph_fixture_json(&envelope.rhs_json),
+                &envelope,
+                &envelope.runtime.rhs_graph_hover_id,
+            ),
             TRINITY_REWRITE_PLAY_BODY_JACK => {
                 render_text_editor(TRINITY_REWRITE_PLAY_SURFACE_JACK, &compiled_jack_query(&envelope), "jack")
             }
@@ -928,13 +1069,15 @@ mod tests {
     }
 
     #[test]
-    fn renders_lhs_rhs_editors() {
+    fn renders_lhs_rhs_graphs() {
         let app = TrinityRewritePlayApp;
         let document = app.initial_document_json();
         let lhs = app.render(TRINITY_REWRITE_PLAY_BODY_LHS, &document, &ViewState::default());
-        let json = serde_json::to_string(&lhs).unwrap();
-        assert!(json.contains("text-editor"));
-        assert!(json.contains("leftVar"));
+        let rhs = app.render(TRINITY_REWRITE_PLAY_BODY_RHS, &document, &ViewState::default());
+        let lhs_json = serde_json::to_string(&lhs).unwrap();
+        let rhs_json = serde_json::to_string(&rhs).unwrap();
+        assert!(lhs_json.contains("node-graph"));
+        assert!(rhs_json.contains("node-graph"));
     }
 }
 //#endregion 🧪Tests

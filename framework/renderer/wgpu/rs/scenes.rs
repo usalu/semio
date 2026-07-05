@@ -86,6 +86,8 @@ struct SceneSurfaceState {
     hover_row_id: Option<String>,
     raster_digest: Option<u64>,
     pending_raster: Option<PendingRasterUpload>,
+    vfs_expanded_ids: HashSet<String>,
+    vfs_selection_anchor: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -766,12 +768,32 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
 //#region Canvas2d
 #[derive(Deserialize)]
 struct CanvasLayer {
+    #[serde(default)]
+    kind: String,
+    #[serde(default)]
     id: String,
+    #[serde(default)]
     name: String,
+    #[serde(default)]
     x: f64,
+    #[serde(default)]
     y: f64,
+    #[serde(default)]
     width: f64,
+    #[serde(default)]
     height: f64,
+    #[serde(default)]
+    x0: Option<f64>,
+    #[serde(default)]
+    y0: Option<f64>,
+    #[serde(default)]
+    x1: Option<f64>,
+    #[serde(default)]
+    y1: Option<f64>,
+    #[serde(default)]
+    source: Option<String>,
+    #[serde(default)]
+    target: Option<String>,
 }
 
 fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
@@ -793,16 +815,35 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         viewport = local.viewport;
     }
     for (index, layer) in layers.iter().enumerate() {
+        let hue = (index * 47 % 360) as f32;
+        let stroke = Rgba::new(0.25 + hue / 720.0, 0.45, 0.65, 0.9);
+        if layer.kind == "line" || layer.x0.is_some() {
+            let x0 = layer.x0.unwrap_or(layer.x) as f32;
+            let y0 = layer.y0.unwrap_or(layer.y) as f32;
+            let x1 = layer.x1.unwrap_or(layer.x + layer.width) as f32;
+            let y1 = layer.y1.unwrap_or(layer.y + layer.height) as f32;
+            let (sx0, sy0) = viewport.world_to_screen(x0, y0, inner);
+            let (sx1, sy1) = viewport.world_to_screen(x1, y1, inner);
+            ctx.draw
+                .push_line(sx0, sy0, sx1, sy1, stroke, (2.0 * viewport.zoom).max(1.0));
+            continue;
+        }
         let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
         let w = layer.width as f32 * viewport.zoom;
         let h = layer.height as f32 * viewport.zoom;
-        let hue = (index * 47 % 360) as f32;
         ctx.draw.push_rounded(
             [sx, sy, w.max(8.0), h.max(8.0)],
             Rgba::new(0.25 + hue / 720.0, 0.35, 0.55, 0.8),
             4.0,
         );
-        draw_text(ctx, &layer.name, sx + 4.0, sy + 14.0, theme.font_size_small, theme.text);
+        let label = if layer.name.is_empty() {
+            layer.id.as_str()
+        } else {
+            layer.name.as_str()
+        };
+        if !label.is_empty() {
+            draw_text(ctx, label, sx + 4.0, sy + 14.0, theme.font_size_small, theme.text);
+        }
     }
     ctx.input.register_hit(HitTarget {
         rect: inner,

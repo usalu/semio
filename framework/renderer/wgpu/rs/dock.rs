@@ -748,8 +748,6 @@ fn dock_text(
         &mut collapsed,
         &mut selects,
         None,
-        None,
-        None,
     );
     draw_text(&mut widget_ctx, text, x, y, size, color);
 }

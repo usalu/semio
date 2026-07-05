@@ -175,3 +175,82 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     return vec4<f32>(color, in.color.a);
 }
 "#;
+
+pub const WORLD3D_LINES_SHADER: &str = r#"
+struct Globals {
+    view_proj: mat4x4<f32>,
+    light_dir: vec4<f32>,
+}
+
+@group(0) @binding(0) var<uniform> globals: Globals;
+
+struct VertexInput {
+    @location(0) position: vec3<f32>,
+    @location(1) color: vec4<f32>,
+}
+
+struct VertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    @location(0) color: vec4<f32>,
+}
+
+@vertex
+fn vs_main(vertex: VertexInput) -> VertexOutput {
+    var out: VertexOutput;
+    out.clip_position = globals.view_proj * vec4<f32>(vertex.position, 1.0);
+    out.color = vertex.color;
+    return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    return in.color;
+}
+"#;
+
+pub const WORLD3D_TEXTURED_SHADER: &str = r#"
+struct Globals {
+    view_proj: mat4x4<f32>,
+    light_dir: vec4<f32>,
+}
+
+@group(0) @binding(0) var<uniform> globals: Globals;
+@group(1) @binding(0) var tex: texture_2d<f32>;
+@group(1) @binding(1) var tex_sampler: sampler;
+
+struct VertexInput {
+    @location(0) position: vec3<f32>,
+    @location(1) uv: vec2<f32>,
+}
+
+struct InstanceInput {
+    @location(3) model0: vec4<f32>,
+    @location(4) model1: vec4<f32>,
+    @location(5) model2: vec4<f32>,
+    @location(6) model3: vec4<f32>,
+    @location(7) tint: vec4<f32>,
+}
+
+struct VertexOutput {
+    @builtin(position) clip_position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+    @location(1) tint: vec4<f32>,
+}
+
+@vertex
+fn vs_main(vertex: VertexInput, instance: InstanceInput) -> VertexOutput {
+    var out: VertexOutput;
+    let model = mat4x4<f32>(instance.model0, instance.model1, instance.model2, instance.model3);
+    let world_pos = model * vec4<f32>(vertex.position, 1.0);
+    out.clip_position = globals.view_proj * world_pos;
+    out.uv = vertex.uv;
+    out.tint = instance.tint;
+    return out;
+}
+
+@fragment
+fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    let sampled = textureSample(tex, tex_sampler, in.uv);
+    return vec4<f32>(sampled.rgb * in.tint.rgb, sampled.a * in.tint.a);
+}
+"#;

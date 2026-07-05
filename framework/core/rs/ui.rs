@@ -622,6 +622,18 @@ pub struct World3dScene {
     pub instances_json: String,
     #[serde(default = "world3d_default_selection_json")]
     pub selection_json: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vortices_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub attractions_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_volumes_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub references_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub brush_preview_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interaction_json: Option<String>,
 }
 
 pub fn world3d_default_selection_json() -> String {

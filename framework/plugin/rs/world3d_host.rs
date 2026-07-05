@@ -61,9 +61,7 @@ pub fn world3d_meshes_json_from_kinds_and_urls(kinds: &[String], urls: &[String]
         if meshes.iter().any(|entry| entry.get("id").and_then(|v| v.as_str()) == Some(id.as_str())) {
             continue;
         }
-        let fallback_kind = kinds.first().map(String::as_str).unwrap_or("box");
-        let data = mesh_from_kind(fallback_kind);
-        meshes.push(json!({ "id": id, "data": data }));
+        meshes.push(json!({ "id": id, "url": url }));
     }
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
@@ -98,11 +96,43 @@ pub fn world3d_scene(
     instances_json: String,
     selection_json: String,
 ) -> World3dScene {
+    world3d_scene_extended(
+        camera_json,
+        meshes_json,
+        instances_json,
+        selection_json,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+}
+
+pub fn world3d_scene_extended(
+    camera_json: String,
+    meshes_json: String,
+    instances_json: String,
+    selection_json: String,
+    vortices_json: Option<String>,
+    attractions_json: Option<String>,
+    target_volumes_json: Option<String>,
+    references_json: Option<String>,
+    brush_preview_json: Option<String>,
+    interaction_json: Option<String>,
+) -> World3dScene {
     World3dScene {
         camera_json,
         meshes_json,
         instances_json,
         selection_json,
+        vortices_json,
+        attractions_json,
+        target_volumes_json,
+        references_json,
+        brush_preview_json,
+        interaction_json,
     }
 }
 

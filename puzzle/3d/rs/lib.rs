@@ -194,15 +194,15 @@ pub struct BrushCompatibleCandidate {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct BrushPreviewState {
-    target_vortex_full_id: String,
-    object_kind_id: String,
-    source_vortex_index: usize,
-    mesh_url: String,
-    origin: Vec3,
-    orientation: Quat,
+pub struct BrushPreviewState {
+    pub target_vortex_full_id: String,
+    pub object_kind_id: String,
+    pub source_vortex_index: usize,
+    pub mesh_url: String,
+    pub origin: Vec3,
+    pub orientation: Quat,
     #[serde(skip_serializing_if = "Option::is_none")]
-    scale: Option<serde_json::Value>,
+    pub scale: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1153,6 +1153,56 @@ impl Puzzle3dEngine {
         self.brush_collision_free(target_full_id, &compatible, scene.overlap_budget)
     }
 
+    pub fn brush_preview_json(&self, target_full_id: &str, candidate_index: usize) -> Option<String> {
+        let scene = self.scene.as_ref()?;
+        let result = self
+            .brush_cache
+            .get(target_full_id)
+            .cloned()
+            .unwrap_or_else(|| self.compute_brush_cache_entry(target_full_id));
+        if result.free.is_empty() {
+            return None;
+        }
+        let candidate = &result.free[candidate_index % result.free.len()];
+        let catalogs = scene
+            .kind_catalogs
+            .as_ref()
+            .cloned()
+            .unwrap_or(KindCatalogBundle {
+                objects: vec![],
+                vortices: vec![],
+                cables: vec![],
+            });
+        let target_obj = scene.fixture.objects.iter().find_map(|object| {
+            object.vortices.iter().enumerate().find_map(|(index, vortex)| {
+                let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+                if full_id == target_full_id {
+                    Some((object, index))
+                } else {
+                    None
+                }
+            })
+        })?;
+        let (host, vortex_index) = target_obj;
+        let (position, direction) = vortex_world_from_object(host, vortex_index)?;
+        let target_ctx = AttractionVortexContext {
+            object_id: host.id.clone(),
+            object_kind: host.object_kind.clone(),
+            vortex_kind: host.vortices[vortex_index].vortex_kind.clone(),
+        };
+        let preview = brush_preview_from_candidate(
+            target_full_id,
+            candidate,
+            &target_ctx,
+            position,
+            direction,
+            host.orientation,
+            &catalogs,
+            &scene.fixture,
+        )?;
+        serde_json::to_string(&preview).ok()
+    }
+
     fn precompute_step(&mut self, budget: u32) -> bool {
         let mut remaining = budget as usize;
         while remaining > 0 {
@@ -1395,6 +1445,10 @@ impl Puzzle3dPrecomputeSession {
         serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
     }
 
+    pub fn brush_preview_json(&self, vortex_full_id: &str, candidate_index: usize) -> Option<String> {
+        self.engine.brush_preview_json(vortex_full_id, candidate_index)
+    }
+
     pub fn fill_progress(&self) -> String {
         let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
@@ -1552,6 +1606,10 @@ impl Puzzle3dPrecomputeSession {
         }
         let result = self.engine.compute_brush_cache_entry(vortex_full_id);
         serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
+    }
+
+    pub fn brush_preview_json(&self, vortex_full_id: &str, candidate_index: usize) -> Option<String> {
+        self.engine.brush_preview_json(vortex_full_id, candidate_index)
     }
 
     pub fn fill_progress(&self) -> String {

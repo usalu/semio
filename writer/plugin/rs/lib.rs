@@ -3,7 +3,7 @@
 mod grammar;
 
 use grammar::tokenize_language;
-use trinity_jack::{lint, semantic_tokens, Diagnostic};
+use trinity_jack::{complete, lint, semantic_tokens, Diagnostic};
 use trinity_ram::{empty_trinity_graph_fixture, Graph};
 use semio_framework_plugin::{
     build_text_editor_scene, ui_declarative_sections_to_tree, ui_text, App,
@@ -438,6 +438,58 @@ fn render_inspection_panel(document: &WriterDocument) -> UiNode {
 }
 //#endregion 🔖Panels
 
+//#region 🔖JackEditor
+fn identifier_bounds_at(text: &str, offset: usize) -> Option<(usize, usize)> {
+    let bytes = text.as_bytes();
+    let mut index = offset.min(bytes.len());
+    while index > 0 && (bytes[index - 1] as char).is_ascii_alphanumeric() || bytes[index - 1] == b'_' {
+        index -= 1;
+    }
+    let start = index;
+    while index < bytes.len() && (bytes[index] as char).is_ascii_alphanumeric() || bytes[index] == b'_' {
+        index += 1;
+    }
+    if start == index {
+        return None;
+    }
+    Some((start, index))
+}
+
+fn jack_occurrences_json(text: &str, cursor: usize) -> Option<String> {
+    let (start, end) = identifier_bounds_at(text, cursor)?;
+    let needle = &text[start..end];
+    if needle.is_empty() {
+        return None;
+    }
+    let mut ranges = Vec::new();
+    let mut scan = 0usize;
+    while let Some(found) = text[scan..].find(needle) {
+        let at = scan + found;
+        let next_end = at + needle.len();
+        if identifier_bounds_at(text, at) == Some((at, next_end)) {
+            ranges.push(json!({ "start": at, "end": next_end }));
+        }
+        scan = at + needle.len();
+    }
+    Some(
+        json!({
+            "selection": serde_json::to_string(&ranges).unwrap_or_else(|_| "[]".into()),
+            "hover": serde_json::to_string(&ranges).unwrap_or_else(|_| "[]".into()),
+        })
+        .to_string(),
+    )
+}
+
+fn jack_completions_json(text: &str, cursor: usize) -> Option<String> {
+    let graph = Graph::load_json(r#"{"nodes":[],"edges":[]}"#).ok()?;
+    let items: Vec<Value> = complete(&graph, text, cursor)
+        .into_iter()
+        .map(|item| json!({ "label": item.label, "detail": item.detail }))
+        .collect();
+    serde_json::to_string(&items).ok()
+}
+//#endregion 🔖JackEditor
+
 //#region 🔖Scene
 fn render_main_scene(document: &WriterDocument, runtime: &WriterPlayRuntime) -> UiNode {
     let selection_json = runtime.editor_selection.as_ref().map(|selection| {
@@ -473,6 +525,15 @@ fn render_main_scene(document: &WriterDocument, runtime: &WriterPlayRuntime) -> 
     } else {
         None
     };
+    let cursor = runtime.editor_selection.as_ref().map(|selection| selection.end).unwrap_or(0);
+    let occurrences_json = (document.language_id == "jack").then(|| jack_occurrences_json(&document.text, cursor)).flatten();
+    let completions_json = if document.language_id == "jack" {
+        jack_completions_json(&document.text, cursor)
+    } else if runtime.format_signal > 0 {
+        Some(json!([{ "label": "format", "detail": format!("pass #{}", runtime.format_signal) }]).to_string())
+    } else {
+        None
+    };
     build_text_editor_scene(
         WRITER_PLAY_SURFACE_ID,
         WRITER_PLAY_CONTROLLER_ID,
@@ -482,11 +543,8 @@ fn render_main_scene(document: &WriterDocument, runtime: &WriterPlayRuntime) -> 
             selection_json,
             tokens_json,
             diagnostics_json,
-            completions_json: if runtime.format_signal > 0 {
-                Some(json!([{ "label": "format", "detail": format!("pass #{}", runtime.format_signal) }]).to_string())
-            } else {
-                None
-            },
+            completions_json,
+            occurrences_json,
             overlays_json: runtime
                 .editor_settings
                 .show_line_numbers
@@ -576,6 +634,28 @@ impl PluginApp for WriterApp {
                 play.runtime.format_signal += 1;
                 play.runtime.revision += 1;
                 return vec![set_document_op(&play)];
+            }
+            "requestCompletions" => {
+                play.runtime.revision += 1;
+                return vec![set_document_op(&play)];
+            }
+            "commitRename" => {
+                if let (Some(start), Some(end), Some(text)) = (
+                    args.and_then(|value| value.get("start")).and_then(|value| value.as_u64()),
+                    args.and_then(|value| value.get("end")).and_then(|value| value.as_u64()),
+                    args.and_then(|value| value.get("text")).and_then(|value| value.as_str()),
+                ) {
+                    let start = start as usize;
+                    let end = end as usize;
+                    push_undo_writer(&mut play);
+                    let mut next = play.document.text.clone();
+                    if start <= end && end <= next.len() {
+                        next.replace_range(start..end, text);
+                        play.document.text = next;
+                        play.runtime.revision += 1;
+                        return vec![set_document_op(&play)];
+                    }
+                }
             }
             "lintDocument" => {
                 play.runtime.lint_signal += 1;

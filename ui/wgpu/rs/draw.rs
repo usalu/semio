@@ -1,7 +1,7 @@
 //! 🖌️ Draw list and GPU pipeline for UI quads, vector geometry, and 3D scene passes.
 
 use crate::scene3d::ScenePass3d;
-use crate::shaders::{UI_SHADER, VECTOR_SHADER, WORLD3D_SHADER};
+use crate::shaders::{UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
 use crate::theme::Rgba;
 use bytemuck::{Pod, Zeroable};
 use std::mem;
@@ -504,6 +504,7 @@ impl GrowBuffer {
 
 pub struct FrameBuffers {
     pub world_instances: GrowBuffer,
+    pub world_lines: GrowBuffer,
     pub ui_instances: GrowBuffer,
     pub vector_vertices: GrowBuffer,
 }
@@ -512,10 +513,18 @@ impl Default for FrameBuffers {
     fn default() -> Self {
         Self {
             world_instances: GrowBuffer::default(),
+            world_lines: GrowBuffer::default(),
             ui_instances: GrowBuffer::default(),
             vector_vertices: GrowBuffer::default(),
         }
     }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct WorldLineGpuVertex {
+    position: [f32; 3],
+    color: [f32; 4],
 }
 
 struct WorldDrawRange {
@@ -529,6 +538,9 @@ struct PreparedWorldPass {
     globals: World3dGlobals,
     viewport: [f32; 4],
     draws: Vec<WorldDrawRange>,
+    translucent_draws: Vec<WorldDrawRange>,
+    line_start: u32,
+    line_count: u32,
 }
 
 struct WorldGlobalsRing {
@@ -746,6 +758,8 @@ pub(crate) struct UiPipelines {
     ui_pipeline: wgpu::RenderPipeline,
     vector_pipeline: wgpu::RenderPipeline,
     world_pipeline: wgpu::RenderPipeline,
+    world_pipeline_translucent: wgpu::RenderPipeline,
+    world_line_pipeline: wgpu::RenderPipeline,
     quad_vertex_buffer: wgpu::Buffer,
     globals_buffer: wgpu::Buffer,
     world_globals_ring: WorldGlobalsRing,
@@ -868,6 +882,10 @@ impl UiPipelines {
         let world_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("world3d_shader"),
             source: wgpu::ShaderSource::Wgsl(WORLD3D_SHADER.into()),
+        });
+        let world_lines_shader = device.create_shader_module(wgpu::ShaderModuleDescriptor {
+            label: Some("world3d_lines_shader"),
+            source: wgpu::ShaderSource::Wgsl(WORLD3D_LINES_SHADER.into()),
         });
 
         let depth_state = Some(wgpu::DepthStencilState {
@@ -1115,12 +1133,121 @@ impl UiPipelines {
             multiview: None,
             cache: None,
         });
+        let translucent_depth_state = Some(wgpu::DepthStencilState {
+            format: wgpu::TextureFormat::Depth24Plus,
+            depth_write_enabled: false,
+            depth_compare: wgpu::CompareFunction::Less,
+            stencil: wgpu::StencilState::default(),
+            bias: wgpu::DepthBiasState::default(),
+        });
+        let world_pipeline_translucent = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_pipeline_translucent"),
+            layout: Some(&world_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &world_shader,
+                entry_point: Some("vs_main"),
+                buffers: &[
+                    wgpu::VertexBufferLayout {
+                        array_stride: mem::size_of::<World3dVertex>() as wgpu::BufferAddress,
+                        step_mode: wgpu::VertexStepMode::Vertex,
+                        attributes: &[
+                            wgpu::VertexAttribute {
+                                offset: 0,
+                                shader_location: 0,
+                                format: wgpu::VertexFormat::Float32x3,
+                            },
+                            wgpu::VertexAttribute {
+                                offset: 12,
+                                shader_location: 1,
+                                format: wgpu::VertexFormat::Float32x3,
+                            },
+                        ],
+                    },
+                    wgpu::VertexBufferLayout {
+                        array_stride: mem::size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
+                        step_mode: wgpu::VertexStepMode::Instance,
+                        attributes: &[
+                            wgpu::VertexAttribute { offset: 0, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 16, shader_location: 4, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 32, shader_location: 5, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 48, shader_location: 6, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 64, shader_location: 7, format: wgpu::VertexFormat::Float32x4 },
+                            wgpu::VertexAttribute { offset: 80, shader_location: 8, format: wgpu::VertexFormat::Float32x4 },
+                        ],
+                    },
+                ],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState {
+                cull_mode: Some(wgpu::Face::Back),
+                ..Default::default()
+            },
+            depth_stencil: translucent_depth_state.clone(),
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
+        let world_line_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("world3d_line_pipeline"),
+            layout: Some(&world_pipeline_layout),
+            vertex: wgpu::VertexState {
+                module: &world_lines_shader,
+                entry_point: Some("vs_main"),
+                buffers: &[wgpu::VertexBufferLayout {
+                    array_stride: mem::size_of::<WorldLineGpuVertex>() as wgpu::BufferAddress,
+                    step_mode: wgpu::VertexStepMode::Vertex,
+                    attributes: &[
+                        wgpu::VertexAttribute {
+                            offset: 0,
+                            shader_location: 0,
+                            format: wgpu::VertexFormat::Float32x3,
+                        },
+                        wgpu::VertexAttribute {
+                            offset: 12,
+                            shader_location: 1,
+                            format: wgpu::VertexFormat::Float32x4,
+                        },
+                    ],
+                }],
+                compilation_options: Default::default(),
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &world_lines_shader,
+                entry_point: Some("fs_main"),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format,
+                    blend: Some(wgpu::BlendState::ALPHA_BLENDING),
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+                compilation_options: Default::default(),
+            }),
+            primitive: wgpu::PrimitiveState {
+                topology: wgpu::PrimitiveTopology::LineList,
+                ..Default::default()
+            },
+            depth_stencil: translucent_depth_state.clone(),
+            multisample: wgpu::MultisampleState::default(),
+            multiview: None,
+            cache: None,
+        });
 
         let _ = queue;
         Self {
             ui_pipeline,
             vector_pipeline,
             world_pipeline,
+            world_pipeline_translucent,
+            world_line_pipeline,
             quad_vertex_buffer,
             globals_buffer,
             world_globals_ring,
@@ -1162,9 +1289,12 @@ impl UiPipelines {
         wgpu::TextureFormat::Depth24Plus
     }
 
-    fn prepare_world_passes(draw: &DrawList) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>) {
+    fn prepare_world_passes(
+        draw: &DrawList,
+    ) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>, Vec<WorldLineGpuVertex>) {
         let mut prepared = Vec::new();
         let mut all_instances = Vec::new();
+        let mut all_lines = Vec::new();
         for scene in &draw.scene_passes {
             let mut pass_draws = Vec::new();
             for draw_call in &scene.draws {
@@ -1188,6 +1318,38 @@ impl UiPipelines {
                     instance_count,
                 });
             }
+            let mut translucent_draws = Vec::new();
+            for draw_call in &scene.translucent_draws {
+                if draw_call.instances.is_empty() {
+                    continue;
+                }
+                let instance_offset = all_instances.len() as u32;
+                let instance_count = draw_call.instances.len() as u32;
+                for instance in &draw_call.instances {
+                    all_instances.push(World3dGpuInstance::from_instance(
+                        instance.model.to_cols_array(),
+                        instance.color,
+                        instance.selected,
+                        instance.hovered,
+                    ));
+                }
+                translucent_draws.push(WorldDrawRange {
+                    mesh_key: draw_call.mesh_key.clone(),
+                    mesh_version: draw_call.mesh_version,
+                    instance_offset,
+                    instance_count,
+                });
+            }
+            let line_start = all_lines.len() as u32;
+            for line_draw in &scene.line_draws {
+                for vertex in &line_draw.vertices {
+                    all_lines.push(WorldLineGpuVertex {
+                        position: vertex.position,
+                        color: vertex.color,
+                    });
+                }
+            }
+            let line_count = all_lines.len() as u32 - line_start;
             prepared.push(PreparedWorldPass {
                 globals: World3dGlobals {
                     view_proj: scene.view_proj,
@@ -1200,9 +1362,12 @@ impl UiPipelines {
                 },
                 viewport: scene.viewport,
                 draws: pass_draws,
+                translucent_draws,
+                line_start,
+                line_count,
             });
         }
-        (prepared, all_instances)
+        (prepared, all_instances, all_lines)
     }
 
     fn upload_world_passes(
@@ -1215,7 +1380,7 @@ impl UiPipelines {
         if draw.scene_passes.is_empty() {
             return None;
         }
-        let (prepared, all_instances) = Self::prepare_world_passes(draw);
+        let (prepared, all_instances, all_lines) = Self::prepare_world_passes(draw);
         self.world_globals_ring.ensure_slots(
             device,
             &self.world_bind_group_layout,
@@ -1230,6 +1395,13 @@ impl UiPipelines {
             wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             "world3d_instances",
         )?;
+        frame_buffers.world_lines.upload(
+            device,
+            queue,
+            &all_lines,
+            wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            "world3d_lines",
+        )?;
         Some(prepared)
     }
 
@@ -1240,6 +1412,7 @@ impl UiPipelines {
         prepared: &PreparedWorldPass,
         slot: u32,
         instance_buffer: wgpu::BufferSlice<'a>,
+        line_buffer: Option<wgpu::BufferSlice<'a>>,
         screen_w: f32,
         screen_h: f32,
     ) {
@@ -1259,21 +1432,59 @@ impl UiPipelines {
             &[self.world_globals_ring.offset_for_slot(slot)],
         );
         for draw_call in &prepared.draws {
-            let store_key = MeshGpuStore::lookup_key(&draw_call.mesh_key, draw_call.mesh_version);
-            let Some(mesh) = mesh_store.get(&store_key) else {
-                continue;
-            };
-            let byte_offset = draw_call.instance_offset as u64 * instance_stride;
-            pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-            pass.set_vertex_buffer(
-                1,
-                instance_buffer.slice(byte_offset..byte_offset + draw_call.instance_count as u64 * instance_stride),
+            Self::draw_world_range(pass, mesh_store, draw_call, instance_buffer.clone(), instance_stride);
+        }
+        if prepared.line_count > 0 {
+            if let Some(line_buffer) = line_buffer {
+                pass.set_pipeline(&self.world_line_pipeline);
+                pass.set_bind_group(
+                    0,
+                    &self.world_globals_ring.bind_group,
+                    &[self.world_globals_ring.offset_for_slot(slot)],
+                );
+                let line_stride = mem::size_of::<WorldLineGpuVertex>() as u64;
+                let byte_offset = prepared.line_start as u64 * line_stride;
+                pass.set_vertex_buffer(
+                    0,
+                    line_buffer.slice(byte_offset..byte_offset + prepared.line_count as u64 * line_stride),
+                );
+                pass.draw(0..prepared.line_count, 0..1);
+            }
+        }
+        if !prepared.translucent_draws.is_empty() {
+            pass.set_pipeline(&self.world_pipeline_translucent);
+            pass.set_bind_group(
+                0,
+                &self.world_globals_ring.bind_group,
+                &[self.world_globals_ring.offset_for_slot(slot)],
             );
-            pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-            pass.draw_indexed(0..mesh.index_count, 0, 0..draw_call.instance_count);
+            for draw_call in &prepared.translucent_draws {
+                Self::draw_world_range(pass, mesh_store, draw_call, instance_buffer.clone(), instance_stride);
+            }
         }
         pass.set_viewport(0.0, 0.0, screen_w, screen_h, 0.0, 1.0);
         pass.set_scissor_rect(0, 0, screen_w as u32, screen_h as u32);
+    }
+
+    fn draw_world_range<'a>(
+        pass: &mut wgpu::RenderPass<'a>,
+        mesh_store: &MeshGpuStore,
+        draw_call: &WorldDrawRange,
+        instance_buffer: wgpu::BufferSlice<'a>,
+        instance_stride: u64,
+    ) {
+        let store_key = MeshGpuStore::lookup_key(&draw_call.mesh_key, draw_call.mesh_version);
+        let Some(mesh) = mesh_store.get(&store_key) else {
+            return;
+        };
+        let byte_offset = draw_call.instance_offset as u64 * instance_stride;
+        pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+        pass.set_vertex_buffer(
+            1,
+            instance_buffer.slice(byte_offset..byte_offset + draw_call.instance_count as u64 * instance_stride),
+        );
+        pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+        pass.draw_indexed(0..mesh.index_count, 0, 0..draw_call.instance_count);
     }
 
     fn draw_ui_instances<'a>(
@@ -1317,6 +1528,7 @@ impl UiPipelines {
         vector_buffer: Option<&wgpu::BufferSlice<'a>>,
         world_prepared: Option<&[PreparedWorldPass]>,
         instance_buffer: Option<wgpu::BufferSlice<'a>>,
+        line_buffer: Option<wgpu::BufferSlice<'a>>,
         mesh_store: &MeshGpuStore,
         width: f32,
         height: f32,
@@ -1379,6 +1591,7 @@ impl UiPipelines {
                                 scene,
                                 pass_index as u32,
                                 instance_buffer.clone(),
+                                line_buffer.clone(),
                                 width,
                                 height,
                             );
@@ -1501,6 +1714,7 @@ impl UiPipelines {
             )
         };
         let instance_buffer = frame_buffers.world_instances.slice();
+        let line_buffer = frame_buffers.world_lines.slice();
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("ui_pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -1536,6 +1750,7 @@ impl UiPipelines {
             vector_buffer.as_ref(),
             world_prepared.as_deref(),
             instance_buffer,
+            line_buffer,
             mesh_store,
             width,
             height,

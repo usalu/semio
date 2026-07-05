@@ -16,40 +16,40 @@ todos:
     status: completed
   - id: phase0-verify
     content: Rebuild WASM and verify puzzle3d/puzzle5d/lowpoly e2e show real geometry
-    status: in_progress
+    status: completed
   - id: phase1-schema
     content: Add references field + vortex radius to Puzzle3dFixture; extend World3dScene with vortices/attractions/targetVolumes/references JSON
-    status: pending
+    status: completed
   - id: phase1-plugin-wiring
     content: Build and wire world_vortices_json/world_attractions_json/world_target_volumes_json/world_references_json in puzzle3d plugin
-    status: pending
+    status: completed
   - id: phase2-line-pipeline
     content: Add WORLD3D_LINES_SHADER + pipeline for attraction lines and target-volume wireframes
-    status: pending
+    status: completed
   - id: phase2-vortex-markers
     content: Add vortex marker mesh/instances reusing world pipeline
-    status: pending
+    status: completed
   - id: phase2-brush-preview-pipeline
     content: Add translucent world pipeline variant for brush placement ghost preview
-    status: pending
+    status: completed
   - id: phase2-reference-planes
     content: Add textured 3D quad pipeline + image texture loading for reference planes
-    status: pending
+    status: completed
   - id: phase3-render-wiring
     content: Parse and render vortices/attractions/target-volumes/references in world3d.rs render_world_3d
-    status: pending
+    status: completed
   - id: phase3-vortex-picking
     content: Add vortex hit-testing for brush hover/click
-    status: pending
+    status: completed
   - id: phase3-brush-flow
     content: Wire brush candidate preview + placement command flow end-to-end
-    status: pending
+    status: completed
   - id: phase3-relocate-connect
     content: Implement MVP object translate-drag with proximity/indirect connect
-    status: pending
+    status: completed
   - id: final-verify
     content: Full e2e + manual browser verification of all restored features against concrete-forest example
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -1,9 +1,10 @@
 //! 👯 Puzzle 5D plugin — 2D/3D coupled puzzle play app bundled as a hot-swappable WASM component.
 
+use puzzle_5d::{BrushPlacePayload, Puzzle5dPrecomputeSession};
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
-    world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json,
+    world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json,
     App, Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup,
     UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
@@ -32,6 +33,9 @@ const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
 const PUZZLE5D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
 
 const PUZZLE5D_FALLBACK_MESH_KIND: &str = "box";
+const PUZZLE5D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle5d.tool.brush";
+const PUZZLE5D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle5d.tool.select";
+const PUZZLE5D_ENGAGEMENT_TOOL_FILL: &str = "puzzle5d.tool.fill";
 
 const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../example/concrete-forest.5d.json");
 const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../example/nakagin-capsule-tower.5d.json");
@@ -66,6 +70,52 @@ fn one_f64() -> f64 {
 
 fn default_selection_method() -> String {
     "rectangle".into()
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle5dGrip2d {
+    #[serde(default)]
+    angle: f64,
+    #[serde(default, rename = "gripKind")]
+    grip_kind: String,
+    #[serde(default)]
+    radius: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle5dGrip3d {
+    #[serde(default)]
+    position: [f64; 3],
+    #[serde(default)]
+    direction: Option<[f64; 3]>,
+    #[serde(default)]
+    radius: f64,
+    #[serde(default)]
+    label: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle5dGrip {
+    id: String,
+    #[serde(default, rename = "gripKind")]
+    grip_kind: String,
+    #[serde(default, rename = "2d")]
+    grip_2d: Puzzle5dGrip2d,
+    #[serde(default, rename = "3d")]
+    grip_3d: Puzzle5dGrip3d,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle5dFastener {
+    id: String,
+    attracting: String,
+    attracted: String,
+    #[serde(default, rename = "fastenerKind")]
+    fastener_kind: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -106,6 +156,8 @@ struct Puzzle5dPart {
     part_2d: Puzzle5dPart2d,
     #[serde(default, rename = "3d")]
     part_3d: Puzzle5dPart3d,
+    #[serde(default)]
+    grips: Vec<Puzzle5dGrip>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -120,8 +172,12 @@ struct Puzzle5dDocument {
     camera3d: Puzzle5dCamera3d,
     #[serde(default)]
     parts: Vec<Puzzle5dPart>,
+    #[serde(default)]
+    fasteners: Vec<Puzzle5dFastener>,
     #[serde(default, rename = "kindCatalogs")]
     kind_catalogs: Option<Value>,
+    #[serde(default, rename = "kindCompatibility")]
+    kind_compatibility: Option<Value>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -144,10 +200,18 @@ struct Puzzle5dRuntime {
     active_tool: String,
     #[serde(default)]
     fill_count: u32,
+    #[serde(default)]
+    brush_candidate_index: usize,
+    #[serde(default = "default_overlap_budget")]
+    overlap_budget: f64,
 }
 
 fn default_active_tool() -> String {
     "select".into()
+}
+
+fn default_overlap_budget() -> f64 {
+    0.02
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -167,7 +231,9 @@ fn empty_document() -> Puzzle5dDocument {
         camera2d: Puzzle5dCamera2d::default(),
         camera3d: Puzzle5dCamera3d::default(),
         parts: Vec::new(),
+        fasteners: Vec::new(),
         kind_catalogs: None,
+        kind_compatibility: None,
     }
 }
 
@@ -311,7 +377,173 @@ fn world_instances_json(document: &Puzzle5dDocument, runtime: &Puzzle5dRuntime) 
 }
 
 fn world_meshes_json(document: &Puzzle5dDocument) -> String {
-    world3d_meshes_json_from_kinds_and_urls(&[PUZZLE5D_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(document))
+    world3d_meshes_json_from_urls(&collect_mesh_urls(document))
+}
+
+fn puzzle5d_grip_full_id(part_id: &str, grip_id: &str) -> String {
+    if grip_id.contains(':') {
+        grip_id.to_string()
+    } else {
+        format!("{part_id}:{grip_id}")
+    }
+}
+
+fn scene_config_json(envelope: &Puzzle5dEnvelope) -> String {
+    let objects: Vec<Value> = envelope
+        .document
+        .parts
+        .iter()
+        .map(|part| {
+            json!({
+                "id": part.id,
+                "objectKind": part.part_kind,
+                "meshUrl": resolve_part_mesh_url(part, envelope.document.kind_catalogs.as_ref()),
+                "origin": part.part_3d.origin,
+                "orientation": part.part_3d.orientation,
+                "scale": part.part_3d.scale,
+                "vortices": part.grips.iter().map(|grip| json!({
+                    "id": grip.id,
+                    "vortexKind": if grip.grip_kind.is_empty() { grip.grip_2d.grip_kind.clone() } else { grip.grip_kind.clone() },
+                    "position": grip.grip_3d.position,
+                    "direction": grip.grip_3d.direction,
+                })).collect::<Vec<_>>(),
+            })
+        })
+        .collect();
+    let attractions: Vec<Value> = envelope
+        .document
+        .fasteners
+        .iter()
+        .map(|fastener| {
+            json!({
+                "id": fastener.id,
+                "attracting": fastener.attracting,
+                "attracted": fastener.attracted,
+            })
+        })
+        .collect();
+    let kind_catalogs = envelope.document.kind_catalogs.as_ref().map(|catalogs| {
+        json!({
+            "objects": catalogs.get("parts").cloned().unwrap_or(Value::Array(vec![])),
+            "vortices": catalogs.get("grips").cloned().unwrap_or(Value::Array(vec![])),
+            "cables": catalogs.get("ropes").cloned().unwrap_or(Value::Array(vec![])),
+        })
+    });
+    json!({
+        "fixture": {
+            "objects": objects,
+            "attractions": attractions,
+            "targetVolumes": [],
+        },
+        "kindCatalogs": kind_catalogs,
+        "kindCompatibility": envelope.document.kind_compatibility.clone().unwrap_or(json!([])),
+        "overlapBudget": envelope.runtime.overlap_budget,
+        "seed": 1,
+        "hostRules": {},
+        "weights": { "objectWeights": {}, "vortexWeights": {} },
+    })
+    .to_string()
+}
+
+fn drive_precompute(session: &mut Puzzle5dPrecomputeSession, envelope: &Puzzle5dEnvelope) {
+    let _ = session.set_scene(&scene_config_json(envelope));
+    let _ = session.precompute_step(8);
+}
+
+fn fixture_from_engine_json(envelope: &Puzzle5dEnvelope, fixture_json: &str) -> Option<Puzzle5dEnvelope> {
+    let parsed: Value = serde_json::from_str(fixture_json).ok()?;
+    let mut next = envelope.clone();
+    let objects = parsed.get("objects")?.as_array()?;
+    next.document.parts = objects
+        .iter()
+        .filter_map(|object| {
+            let id = object.get("id")?.as_str()?;
+            let part_kind = object
+                .get("objectKind")
+                .and_then(|value| value.as_str())
+                .unwrap_or("Part")
+                .to_string();
+            let grips: Vec<Puzzle5dGrip> = object
+                .get("vortices")
+                .and_then(|value| value.as_array())
+                .into_iter()
+                .flatten()
+                .filter_map(|grip| {
+                    Some(Puzzle5dGrip {
+                        id: grip.get("id")?.as_str()?.to_string(),
+                        grip_kind: grip
+                            .get("vortexKind")
+                            .and_then(|value| value.as_str())
+                            .unwrap_or("grip")
+                            .to_string(),
+                        grip_2d: Puzzle5dGrip2d::default(),
+                        grip_3d: Puzzle5dGrip3d {
+                            position: serde_json::from_value(grip.get("position")?.clone()).ok()?,
+                            direction: grip.get("direction").and_then(|value| serde_json::from_value(value.clone()).ok()),
+                            radius: grip.get("radius").and_then(|value| value.as_f64()).unwrap_or(0.36),
+                            label: grip.get("label").and_then(|value| value.as_str()).map(str::to_string),
+                        },
+                    })
+                })
+                .collect();
+            Some(Puzzle5dPart {
+                id: id.to_string(),
+                part_kind,
+                part_2d: Puzzle5dPart2d::default(),
+                part_3d: Puzzle5dPart3d {
+                    origin: serde_json::from_value(object.get("origin")?.clone()).ok()?,
+                    mesh_url: object.get("meshUrl").and_then(|value| value.as_str()).map(str::to_string),
+                    orientation: object
+                        .get("orientation")
+                        .and_then(|value| serde_json::from_value(value.clone()).ok()),
+                    scale: object.get("scale").cloned(),
+                },
+                grips,
+            })
+        })
+        .collect();
+    next.document.fasteners = parsed
+        .get("attractions")
+        .and_then(|value| value.as_array())
+        .into_iter()
+        .flatten()
+        .filter_map(|fastener| {
+            Some(Puzzle5dFastener {
+                id: fastener
+                    .get("id")
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("fastener")
+                    .to_string(),
+                attracting: fastener.get("attracting")?.as_str()?.to_string(),
+                attracted: fastener.get("attracted")?.as_str()?.to_string(),
+                fastener_kind: fastener.get("fastenerKind").and_then(|value| value.as_str()).map(str::to_string),
+            })
+        })
+        .collect();
+    Some(next)
+}
+
+fn world_brush_preview_json(session: &Puzzle5dPrecomputeSession, runtime: &Puzzle5dRuntime, document: &Puzzle5dDocument) -> Option<String> {
+    if runtime.active_tool != "brush" {
+        return None;
+    }
+    let grip_id = runtime
+        .hovered_part_id
+        .as_deref()
+        .or_else(|| runtime.selection.part_ids.first().map(String::as_str))?;
+    let part = document.parts.iter().find(|part| part.id == grip_id)?;
+    let grip = part.grips.first()?;
+    let full_id = puzzle5d_grip_full_id(&part.id, &grip.id);
+    session.brush_preview_json(&full_id, runtime.brush_candidate_index)
+}
+
+fn world_interaction_json(runtime: &Puzzle5dRuntime) -> String {
+    json!({
+        "activeTool": runtime.active_tool,
+        "brushCandidateIndex": runtime.brush_candidate_index,
+        "fillCount": runtime.fill_count,
+    })
+    .to_string()
 }
 
 fn world_selection_json(runtime: &Puzzle5dRuntime) -> String {
@@ -468,7 +700,17 @@ fn build_inspector_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
 //#endregion 🔖Panels
 
 //#region 🔖Puzzle5dPlayApp
-struct Puzzle5dPlayApp;
+struct Puzzle5dPlayApp {
+    precompute: Puzzle5dPrecomputeSession,
+}
+
+impl Default for Puzzle5dPlayApp {
+    fn default() -> Self {
+        Self {
+            precompute: Puzzle5dPrecomputeSession::new(),
+        }
+    }
+}
 
 impl PluginApp for Puzzle5dPlayApp {
     fn app_id(&self) -> &str {
@@ -524,52 +766,122 @@ impl PluginApp for Puzzle5dPlayApp {
             }
             "setActiveTool" => {
                 let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("select");
-                if tool == "select" || tool == "brush" || tool == "fill" {
-                    envelope.runtime.active_tool = tool.into();
-                    return vec![set_document_op(&envelope)];
-                }
-            }
-            "addBrushPart" => {
-                let part_kind = args
-                    .and_then(|value| value.get("partKind"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("");
-                if part_kind.is_empty() {
-                    return Vec::new();
-                }
-                let id = next_part_id();
-                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
-                envelope.document.parts.push(Puzzle5dPart {
-                    id: id.clone(),
-                    part_kind: part_kind.into(),
-                    part_2d: Puzzle5dPart2d {
-                        x,
-                        y,
-                        shape: "circle".into(),
-                        radius: 20.0,
-                        text: part_kind.into(),
-                    },
-                    part_3d: Puzzle5dPart3d {
-                        origin: [0.0, 0.0, 0.0],
-                        mesh_url,
-                        orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                        scale: None,
-                    },
-                });
-                envelope.runtime.selection.part_ids = vec![id];
-                envelope.runtime.active_tool = "brush".into();
+                envelope.runtime.active_tool = tool.into();
                 return vec![set_document_op(&envelope)];
             }
+            "engagementPossibleSelect" => {
+                let possible_id = args
+                    .and_then(|value| value.get("possibleId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                envelope.runtime.active_tool = match possible_id {
+                    PUZZLE5D_ENGAGEMENT_TOOL_BRUSH => "brush",
+                    PUZZLE5D_ENGAGEMENT_TOOL_FILL => "fill",
+                    _ => "select",
+                }
+                .into();
+                return vec![set_document_op(&envelope)];
+            }
+            "addBrushPart" => {
+                drive_precompute(&mut self.precompute, &envelope);
+                if let Some(payload_value) = args {
+                    let mut payload = payload_value.clone();
+                    if let Some(obj) = payload.as_object_mut() {
+                        if let Some(part_kind) = obj.remove("partKind") {
+                            obj.insert("objectKindId".to_string(), part_kind);
+                        }
+                        if let Some(grip_id) = envelope
+                            .runtime
+                            .hovered_part_id
+                            .as_ref()
+                            .and_then(|part_id| {
+                                envelope
+                                    .document
+                                    .parts
+                                    .iter()
+                                    .find(|part| &part.id == part_id)
+                                    .and_then(|part| part.grips.first())
+                                    .map(|grip| puzzle5d_grip_full_id(part_id, &grip.id))
+                            })
+                        {
+                            obj.insert("targetVortexFullId".to_string(), json!(grip_id));
+                        }
+                    }
+                    if let Ok(brush_payload) = serde_json::from_value::<BrushPlacePayload>(payload) {
+                        if let Ok(fixture_json) = self
+                            .precompute
+                            .apply_brush_placement_rust(&serde_json::to_string(&brush_payload).unwrap_or_default())
+                        {
+                            if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
+                                envelope = next;
+                                return vec![set_document_op(&envelope)];
+                            }
+                        }
+                    }
+                }
+                return Vec::new();
+            }
             "setFillCount" => {
+                drive_precompute(&mut self.precompute, &envelope);
                 let count = args
                     .and_then(|value| value.get("count"))
                     .and_then(|value| value.as_u64())
                     .unwrap_or(0) as u32;
                 envelope.runtime.fill_count = count;
                 envelope.runtime.active_tool = "fill".into();
+                if count > 0 {
+                    if let Ok(fixture_json) = self.precompute.apply_fill_count_rust(count) {
+                        if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
+                            envelope = next;
+                        }
+                    }
+                }
                 return vec![set_document_op(&envelope)];
+            }
+            "cycleBrushCandidate" => {
+                drive_precompute(&mut self.precompute, &envelope);
+                let grip_full_id = envelope
+                    .runtime
+                    .hovered_part_id
+                    .as_deref()
+                    .or_else(|| envelope.runtime.selection.part_ids.first().map(String::as_str))
+                    .and_then(|part_id| {
+                        envelope
+                            .document
+                            .parts
+                            .iter()
+                            .find(|part| part.id == part_id)
+                            .and_then(|part| part.grips.first())
+                            .map(|grip| puzzle5d_grip_full_id(part_id, &grip.id))
+                    })
+                    .unwrap_or_default();
+                if !grip_full_id.is_empty() {
+                    let raw = self.precompute.brush_candidates(&grip_full_id);
+                    let result: Value = serde_json::from_str(&raw).unwrap_or(Value::Null);
+                    let free = result
+                        .get("free")
+                        .and_then(|value| value.as_array())
+                        .map(|values| values.len())
+                        .unwrap_or(0);
+                    if free > 0 {
+                        envelope.runtime.brush_candidate_index = (envelope.runtime.brush_candidate_index + 1) % free;
+                    }
+                } else {
+                    envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
+                }
+                return vec![set_document_op(&envelope)];
+            }
+            "registerBrushMesh" => {
+                if let (Some(url), Some(positions), Some(indices)) = (
+                    args.and_then(|v| v.get("url")).and_then(|v| v.as_str()),
+                    args.and_then(|v| v.get("positions")).and_then(|v| v.as_array()),
+                    args.and_then(|v| v.get("indices")).and_then(|v| v.as_array()),
+                ) {
+                    let positions: Vec<f32> = positions.iter().filter_map(|v| v.as_f64().map(|n| n as f32)).collect();
+                    let indices: Vec<u32> = indices.iter().filter_map(|v| v.as_u64().map(|n| n as u32)).collect();
+                    self.precompute.register_mesh(url, &positions, &indices);
+                }
+                return Vec::new();
             }
             "addPartKind" => {
                 let part_kind = args
@@ -594,6 +906,7 @@ impl PluginApp for Puzzle5dPlayApp {
                         orientation: Some([0.0, 0.0, 0.0, 1.0]),
                         scale: None,
                     },
+                    grips: Vec::new(),
                 });
                 envelope.runtime.selection.part_ids = vec![id];
                 return vec![set_document_op(&envelope)];
@@ -674,16 +987,25 @@ impl PluginApp for Puzzle5dPlayApp {
                     layers_json: canvas_layers_json(&envelope.document, &envelope.runtime.selection),
                 },
             ),
-            PUZZLE5D_PLAY_BODY_3D => build_world_3d_scene(
-                PUZZLE5D_PLAY_SURFACE_3D,
-                PUZZLE5D_PLAY_APP_ID,
-                world3d_scene(
-                    camera3d_json(&envelope.document.camera3d),
-                    world_meshes_json(&envelope.document),
-                    world_instances_json(&envelope.document, &envelope.runtime),
-                    world_selection_json(&envelope.runtime),
-                ),
-            ),
+            PUZZLE5D_PLAY_BODY_3D => {
+                let brush_preview = world_brush_preview_json(&self.precompute, &envelope.runtime, &envelope.document);
+                build_world_3d_scene(
+                    PUZZLE5D_PLAY_SURFACE_3D,
+                    PUZZLE5D_PLAY_APP_ID,
+                    world3d_scene_extended(
+                        camera3d_json(&envelope.document.camera3d),
+                        world_meshes_json(&envelope.document),
+                        world_instances_json(&envelope.document, &envelope.runtime),
+                        world_selection_json(&envelope.runtime),
+                        None,
+                        None,
+                        None,
+                        None,
+                        brush_preview,
+                        Some(world_interaction_json(&envelope.runtime)),
+                    ),
+                )
+            }
             PUZZLE5D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
             PUZZLE5D_PLAY_BODY_KINDS => build_kinds_tree(),
             PUZZLE5D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope),
@@ -741,7 +1063,7 @@ fn create_puzzle5d_app() -> App {
 }
 
 fn bundle() -> PluginBundle {
-    PluginBundle::new("puzzle5d", "Puzzle 5D", "0.1.0").register_app(create_puzzle5d_app(), || Box::new(Puzzle5dPlayApp))
+    PluginBundle::new("puzzle5d", "Puzzle 5D", "0.1.0").register_app(create_puzzle5d_app(), || Box::new(Puzzle5dPlayApp::default()))
 }
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
@@ -757,7 +1079,7 @@ mod tests {
 
     #[test]
     fn renders_canvas_2d_scene() {
-        let app = Puzzle5dPlayApp;
+        let app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let node = app.render(PUZZLE5D_PLAY_BODY_2D, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -766,7 +1088,7 @@ mod tests {
 
     #[test]
     fn renders_world_3d_scene() {
-        let app = Puzzle5dPlayApp;
+        let app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let node = app.render(PUZZLE5D_PLAY_BODY_3D, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -775,7 +1097,7 @@ mod tests {
 
     #[test]
     fn concrete_forest_uses_real_mesh_urls() {
-        let app = Puzzle5dPlayApp;
+        let app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let node = app.render(PUZZLE5D_PLAY_BODY_3D, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -784,7 +1106,7 @@ mod tests {
 
     #[test]
     fn set_active_tool_updates_runtime() {
-        let mut app = Puzzle5dPlayApp;
+        let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let ops = app.handle_command("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
         let envelope: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
@@ -793,7 +1115,7 @@ mod tests {
 
     #[test]
     fn add_brush_part_appends_part() {
-        let mut app = Puzzle5dPlayApp;
+        let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let ops = app.handle_command(
             "addBrushPart",
@@ -814,7 +1136,7 @@ mod tests {
 
     #[test]
     fn add_part_kind_appends_part() {
-        let mut app = Puzzle5dPlayApp;
+        let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let ops = app.handle_command(
             "addPartKind",

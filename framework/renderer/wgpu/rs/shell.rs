@@ -5,7 +5,8 @@ use crate::interpreter::{framework_widget_context, render_ui_node};
 use crate::scenes::{clear_graph_node_context, resolve_graph_context_command};
 use crate::world3d::{
     fetch_pending_glb_meshes, handle_world3d_pointer_button, handle_world3d_pointer_drag,
-    handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
+    handle_world3d_pointer_move, handle_world3d_wheel, fetch_pending_reference_images,
+    World3dState,
 };
 use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
 use semio_framework_core::{
@@ -21,7 +22,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use ui_wgpu::{
     draw_text, DrawList, DragAxis, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Rect,
-    Rgba, Theme, TreeDragState, TreeDropPosition,
+    Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps,
 };
 
 const S_HOME_APP_ID: &str = "home";
@@ -212,9 +213,7 @@ pub struct ShellState {
     pub expertise: String,
     pub tree_drag: Option<TreeDragState>,
     pub tree_hovered_id: Option<String>,
-    pub tree_hover_commands: HashMap<String, CommandDescriptor>,
-    pub tree_unhover_commands: HashMap<String, CommandDescriptor>,
-    pub tree_selection_change: Option<CommandDescriptor>,
+    pub widget_maps: WidgetInteractionMaps<CommandDescriptor>,
     pub pending_tree_drag: Option<(String, HashMap<String, String>)>,
     pub tree_drag_origin: (f32, f32),
     pub deferred_commands: Vec<CommandDescriptor>,
@@ -278,9 +277,7 @@ impl ShellState {
             expertise: "standard".into(),
             tree_drag: None,
             tree_hovered_id: None,
-            tree_hover_commands: HashMap::new(),
-            tree_unhover_commands: HashMap::new(),
-            tree_selection_change: None,
+            widget_maps: WidgetInteractionMaps::default(),
             pending_tree_drag: None,
             tree_drag_origin: (0.0, 0.0),
             deferred_commands: Vec::new(),
@@ -782,6 +779,7 @@ impl ShellState {
                 }
             }
             if input.drag.active {
+                self.dispatch_widget_drag_values(input).await?;
                 input.end_drag();
             }
             return Ok(());
@@ -824,6 +822,15 @@ impl ShellState {
             if self.handle_shell_hit(&hit).await? {
                 return Ok(());
             }
+            if hit.kind == HitKind::Slider {
+                if let Some(id) = hit.control_id.clone() {
+                    input.begin_drag(x, y, button, Some(id), hit.drag_axis);
+                    return Ok(());
+                }
+            }
+            if hit.kind == HitKind::Select || hit.kind == HitKind::Toggle || hit.kind == HitKind::DropdownItem {
+                return Ok(());
+            }
             if let Some(drag_data) = hit.drag_data.clone() {
                 if hit.control_id.as_deref().is_some_and(|id| id.starts_with("tree.label.")) {
                     if let Some(item_id) = hit.control_id.as_deref().and_then(|id| id.strip_prefix("tree.label.")) {
@@ -837,7 +844,13 @@ impl ShellState {
                 self.dispatch_command(command).await?;
             } else if hit.kind == HitKind::Input {
                 if let Some(id) = &hit.control_id {
-                    input.focused_id = Some(id.clone());
+                    let seed = self
+                        .widget_maps
+                        .input_metas
+                        .get(id)
+                        .map(|meta| meta.value.as_str())
+                        .unwrap_or("");
+                    input.focus_input(id, seed);
                 }
             }
         }
@@ -971,7 +984,7 @@ impl ShellState {
         if (drag_dx.abs() > 0.0 || drag_dy.abs() > 0.0) && down {
             for state in self.world3d_states.values_mut() {
                 if state.bounds.inset(8.0).contains(x, y) {
-                    handle_world3d_pointer_drag(state, drag_dx, drag_dy, button, shift);
+                    handle_world3d_pointer_drag(state, x, y, drag_dx, drag_dy, button, shift);
                 }
             }
         }
@@ -994,6 +1007,7 @@ impl ShellState {
 
     pub async fn poll_world3d_assets(&mut self) {
         fetch_pending_glb_meshes(&mut self.world3d_states).await;
+        fetch_pending_reference_images(&mut self.world3d_states).await;
     }
 
     async fn handle_shell_hit(&mut self, hit: &HitTarget<CommandDescriptor>) -> Result<bool, String> {
@@ -1259,21 +1273,76 @@ impl ShellState {
                 self.overlay_state = OverlayState::None;
                 return Ok(true);
             }
-            id if id.starts_with("tree.chevron.") => {
-                let item_id = id.trim_start_matches("tree.chevron.");
-                let key = format!("tree.{item_id}");
-                if let Some(collapsed) = self.collapsed_sections.get_mut(&key) {
-                    *collapsed = !*collapsed;
-                }
-                return Ok(true);
-            }
             id if id.starts_with("section.chevron.") => {
                 let section_id = id.trim_start_matches("section.chevron.");
                 let key = format!("section.{section_id}");
-                if let Some(collapsed) = self.collapsed_sections.get_mut(&key) {
-                    *collapsed = !*collapsed;
-                }
+                let collapsed = self.collapsed_sections.get(&key).copied().unwrap_or(false);
+                self.collapsed_sections.insert(key, !collapsed);
                 return Ok(true);
+            }
+            id if id.starts_with("tree.chevron.") => {
+                let item_id = id.trim_start_matches("tree.chevron.");
+                let key = format!("tree.{item_id}");
+                let collapsed = self.collapsed_sections.get(&key).copied().unwrap_or(false);
+                self.collapsed_sections.insert(key, !collapsed);
+                return Ok(true);
+            }
+            id if self.widget_maps.select_metas.contains_key(id) => {
+                let opening = !self.open_selects.get(id).copied().unwrap_or(false);
+                for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
+                    self.open_selects.insert(key, false);
+                }
+                self.open_selects.insert(id.to_string(), opening);
+                return Ok(true);
+            }
+            id if id.contains(".item.") => {
+                if let Some((select_id, value)) = id.rsplit_once(".item.") {
+                    if let Some(cmd) = self.widget_maps.select_metas.get(select_id).cloned() {
+                        self.open_selects.insert(select_id.to_string(), false);
+                        self.dispatch_command(CommandDescriptor {
+                            controller_id: cmd.controller_id,
+                            command: cmd.command,
+                            args: Some(serde_json::json!({ "value": value })),
+                        })
+                        .await?;
+                        return Ok(true);
+                    }
+                }
+            }
+            id if self.widget_maps.toggle_metas.contains_key(id) => {
+                if let Some((pressed, cmd)) = self.widget_maps.toggle_metas.get(id).cloned() {
+                    self.dispatch_command(CommandDescriptor {
+                        controller_id: cmd.controller_id,
+                        command: cmd.command,
+                        args: Some(serde_json::json!({ "pressed": !pressed })),
+                    })
+                    .await?;
+                    return Ok(true);
+                }
+            }
+            id if id.ends_with(".minus") => {
+                let base = id.trim_end_matches(".minus");
+                if let Some(meta) = self.widget_maps.stepper_metas.get(base).cloned() {
+                    self.dispatch_command(CommandDescriptor {
+                        controller_id: meta.on_delta.controller_id,
+                        command: meta.on_delta.command,
+                        args: Some(serde_json::json!({ "delta": -meta.step })),
+                    })
+                    .await?;
+                    return Ok(true);
+                }
+            }
+            id if id.ends_with(".plus") => {
+                let base = id.trim_end_matches(".plus");
+                if let Some(meta) = self.widget_maps.stepper_metas.get(base).cloned() {
+                    self.dispatch_command(CommandDescriptor {
+                        controller_id: meta.on_delta.controller_id,
+                        command: meta.on_delta.command,
+                        args: Some(serde_json::json!({ "delta": meta.step })),
+                    })
+                    .await?;
+                    return Ok(true);
+                }
             }
             id if id.starts_with("tree.label.") => {
                 let item_id = id.trim_start_matches("tree.label.");
@@ -1309,12 +1378,12 @@ impl ShellState {
             return;
         }
         if let Some(prev) = self.tree_hovered_id.take() {
-            if let Some(cmd) = self.tree_unhover_commands.get(&prev) {
+            if let Some(cmd) = self.widget_maps.tree_unhover_commands.get(&prev) {
                 self.deferred_commands.push(cmd.clone());
             }
         }
         if let Some(id) = hovered {
-            if let Some(cmd) = self.tree_hover_commands.get(id) {
+            if let Some(cmd) = self.widget_maps.tree_hover_commands.get(id) {
                 self.deferred_commands.push(cmd.clone());
             }
             self.tree_hovered_id = Some(id.to_string());
@@ -1322,7 +1391,7 @@ impl ShellState {
     }
 
     fn queue_tree_selection(&mut self, item_id: &str) {
-        let Some(cmd) = self.tree_selection_change.clone() else {
+        let Some(cmd) = self.widget_maps.tree_selection_change.clone() else {
             return;
         };
         self.deferred_commands.push(CommandDescriptor {
@@ -1341,6 +1410,81 @@ impl ShellState {
         let commands = std::mem::take(&mut self.deferred_commands);
         for command in commands {
             self.dispatch_command(command).await?;
+        }
+        Ok(())
+    }
+
+    async fn dispatch_widget_drag_values(&mut self, input: &InputState<CommandDescriptor>) -> Result<(), String> {
+        let Some(id) = input.drag.target_id.as_deref() else {
+            return Ok(());
+        };
+        if let Some(value) = self.widget_maps.slider_live_values.get(id).copied() {
+            if let Some(meta) = self.widget_maps.slider_metas.get(id).cloned() {
+                self.dispatch_command(CommandDescriptor {
+                    controller_id: meta.on_change.controller_id,
+                    command: meta.on_change.command,
+                    args: Some(serde_json::json!({ "value": value })),
+                })
+                .await?;
+            }
+        } else if let Some(value) = self.widget_maps.ring_live_values.get(id).copied() {
+            if let Some(meta) = self.widget_maps.ring_metas.get(id).cloned() {
+                self.dispatch_command(CommandDescriptor {
+                    controller_id: meta.on_change.controller_id,
+                    command: meta.on_change.command,
+                    args: Some(serde_json::json!({ "value": value })),
+                })
+                .await?;
+            }
+        }
+        Ok(())
+    }
+
+    async fn commit_focused_input(&mut self, input: &mut InputState<CommandDescriptor>) -> Result<(), String> {
+        let Some(id) = input.focused_id.clone() else {
+            return Ok(());
+        };
+        if let Some((vec3_id, axis)) = id.rsplit_once('.') {
+            if let Ok(axis_index) = axis.parse::<usize>() {
+                if axis_index < 3 {
+                    if let Some(meta) = self.widget_maps.vec3_metas.get(vec3_id).cloned() {
+                        let parsed = input.text_buffer.parse::<f64>().unwrap_or(0.0);
+                        let mut value = meta.value;
+                        value[axis_index] = parsed;
+                        self.dispatch_command(CommandDescriptor {
+                            controller_id: meta.on_change.controller_id,
+                            command: meta.on_change.command,
+                            args: Some(serde_json::json!({ "value": value })),
+                        })
+                        .await?;
+                        input.blur_input();
+                        return Ok(());
+                    }
+                }
+            }
+        }
+        if id.ends_with(".input") {
+            let base = id.trim_end_matches(".input");
+            if let Some(meta) = self.widget_maps.stepper_metas.get(base).cloned() {
+                let parsed = input.text_buffer.parse::<f64>().unwrap_or(meta.value);
+                self.dispatch_command(CommandDescriptor {
+                    controller_id: meta.on_absolute.controller_id,
+                    command: meta.on_absolute.command,
+                    args: Some(serde_json::json!({ "value": parsed })),
+                })
+                .await?;
+                input.blur_input();
+                return Ok(());
+            }
+        }
+        if let Some(meta) = self.widget_maps.input_metas.get(&id).cloned() {
+            self.dispatch_command(CommandDescriptor {
+                controller_id: meta.on_change.controller_id,
+                command: meta.on_change.command,
+                args: Some(serde_json::json!({ "value": input.text_buffer })),
+            })
+            .await?;
+            input.blur_input();
         }
         Ok(())
     }
@@ -1430,9 +1574,15 @@ impl ShellState {
         let on_overlay = hit.is_some_and(|h| {
             matches!(
                 h.kind,
-                HitKind::ContextMenu | HitKind::DropdownItem | HitKind::NavbarItem
+                HitKind::ContextMenu | HitKind::DropdownItem | HitKind::NavbarItem | HitKind::Select
             )
         });
+        if self.open_selects.values().any(|open| *open) && !on_overlay {
+            for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
+                self.open_selects.insert(key, false);
+            }
+            return true;
+        }
         if self.context_menu.is_some() && !on_overlay {
             self.context_menu = None;
             return true;
@@ -1778,6 +1928,15 @@ impl ShellState {
             self.activate_find_item(self.find_selected).await?;
             return Ok(());
         }
+        if input.focused_id.is_some() {
+            match action {
+                ui_wgpu::KeyAction::Enter | ui_wgpu::KeyAction::Escape => {
+                    self.commit_focused_input(input).await?;
+                    return Ok(());
+                }
+                _ => {}
+            }
+        }
         self.handle_keyboard(action, modifiers, input);
         Ok(())
     }
@@ -1814,8 +1973,6 @@ fn chrome_text(
         &mut scroll,
         &mut collapsed,
         &mut selects,
-        None,
-        None,
         None,
     );
     draw_text(&mut ctx, text, x, y, size, color);
@@ -2004,9 +2161,7 @@ impl ShellState {
         FIND_ITEM_SINK.with(|cell| cell.borrow_mut().clear());
         CONTEXT_MENU_SINK.with(|cell| cell.borrow_mut().clear());
         clear_graph_node_context();
-        self.tree_hover_commands.clear();
-        self.tree_unhover_commands.clear();
-        self.tree_selection_change = None;
+        self.widget_maps.clear_frame();
         let mut overlay_slot = Some(overlay);
         self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, gpu);
         self.find_items = take_find_items();
@@ -2036,8 +2191,6 @@ impl ShellState {
                 scroll_offsets,
                 collapsed_sections,
                 open_selects,
-                None,
-                None,
                 None,
             );
             draw_text(
@@ -2616,9 +2769,7 @@ impl ShellState {
             let scroll_offsets = &mut self.scroll_offsets;
             let collapsed_sections = &mut self.collapsed_sections;
             let open_selects = &mut self.open_selects;
-            let tree_hover_commands = &mut self.tree_hover_commands;
-            let tree_unhover_commands = &mut self.tree_unhover_commands;
-            let tree_selection_change = &mut self.tree_selection_change;
+            let widget_maps = &mut self.widget_maps;
             let mut ctx = framework_widget_context(
                 draw,
                 overlay,
@@ -2629,9 +2780,7 @@ impl ShellState {
                 scroll_offsets,
                 collapsed_sections,
                 open_selects,
-                Some(tree_hover_commands),
-                Some(tree_unhover_commands),
-                Some(tree_selection_change),
+                Some(widget_maps),
             );
             render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states);
         }
@@ -2909,9 +3058,7 @@ impl ShellState {
         let scroll_offsets = &mut self.scroll_offsets;
         let collapsed_sections = &mut self.collapsed_sections;
         let open_selects = &mut self.open_selects;
-        let tree_hover_commands = &mut self.tree_hover_commands;
-        let tree_unhover_commands = &mut self.tree_unhover_commands;
-        let tree_selection_change = &mut self.tree_selection_change;
+        let widget_maps = &mut self.widget_maps;
         let mut ctx = framework_widget_context(
             draw,
             overlay,
@@ -2922,9 +3069,7 @@ impl ShellState {
             scroll_offsets,
             collapsed_sections,
             open_selects,
-            Some(tree_hover_commands),
-            Some(tree_unhover_commands),
-            Some(tree_selection_change),
+            Some(widget_maps),
         );
         render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states);
         draw.pop_scissor();
@@ -3416,7 +3561,7 @@ impl ShellState {
                         })
                         .collect(),
                     placeholder: None,
-                    event: Some(on_change.clone()),
+                    on_change: Some(on_change.clone()),
                 };
                 let rect = Rect::new(bounds.x, y + 16.0, bounds.w, theme.control_height);
                 let scroll_offsets = &mut self.scroll_offsets;
@@ -3425,7 +3570,7 @@ impl ShellState {
                 let mut ctx = framework_widget_context(
                     draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme,
                     scroll_offsets, collapsed_sections, open_selects,
-                    None, None, None,
+                    None,
                 );
                 render_widget(&node, rect, &mut ctx);
             }
@@ -3435,7 +3580,7 @@ impl ShellState {
                 value,
                 min,
                 max,
-                step: _,
+                step,
                 on_change,
             } => {
                 if let Some(label) = label {
@@ -3446,7 +3591,8 @@ impl ShellState {
                     value: *value,
                     min: *min,
                     max: *max,
-                    event: Some(on_change.clone()),
+                    step: *step,
+                    on_change: Some(on_change.clone()),
                 };
                 let rect = Rect::new(bounds.x, y + 16.0, bounds.w, theme.control_height);
                 let scroll_offsets = &mut self.scroll_offsets;
@@ -3455,13 +3601,13 @@ impl ShellState {
                 let mut ctx = framework_widget_context(
                     draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme,
                     scroll_offsets, collapsed_sections, open_selects,
-                    None, None, None,
+                    None,
                 );
                 render_widget(&node, rect, &mut ctx);
             }
             WindowMeasure::Toggle {
                 id,
-                icon_id: _,
+                icon_id,
                 label,
                 pressed,
                 text,
@@ -3469,9 +3615,10 @@ impl ShellState {
             } => {
                 let node = WidgetNode::Toggle {
                     id: id.clone(),
+                    icon_id: icon_id.clone().unwrap_or_default(),
                     pressed: *pressed,
                     text: text.clone().or(label.clone()),
-                    event: Some(on_change.clone()),
+                    on_change: Some(on_change.clone()),
                 };
                 let rect = Rect::new(bounds.x, y, bounds.w, theme.control_height);
                 let scroll_offsets = &mut self.scroll_offsets;
@@ -3480,7 +3627,7 @@ impl ShellState {
                 let mut ctx = framework_widget_context(
                     draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme,
                     scroll_offsets, collapsed_sections, open_selects,
-                    None, None, None,
+                    None,
                 );
                 render_widget(&node, rect, &mut ctx);
             }
@@ -3676,8 +3823,8 @@ impl ShellState {
         let mut ctx = framework_widget_context(
             draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme,
             scroll_offsets, collapsed_sections, open_selects,
-            None, None, None,
-        );
+                    None,
+                );
         ui_wgpu::widgets::render_widget(&node, bounds, &mut ctx);
     }
 
@@ -3695,20 +3842,24 @@ impl ShellState {
     ) {
         use ui_wgpu::widgets::{render_widget, WidgetNode};
         let node = match control {
-            WindowEngagementControl::Slider { id, value, min, max, on_change, .. } => {
+            WindowEngagementControl::Slider { id, value, min, max, step, on_change, .. } => {
                 WidgetNode::Slider {
                     id: id.clone().unwrap_or_else(|| "engagement-slider".into()),
                     value: *value,
                     min: *min,
                     max: *max,
-                    event: on_change.clone(),
+                    step: step.unwrap_or(0.01),
+                    on_change: on_change.clone(),
                 }
             }
-            WindowEngagementControl::Stepper { id, value, on_change, .. } => {
+            WindowEngagementControl::Stepper { id, value, step, on_change, .. } => {
                 WidgetNode::NumberStepper {
                     id: id.clone().unwrap_or_else(|| "engagement-stepper".into()),
                     value: *value,
-                    event: on_change.clone(),
+                    step: step.unwrap_or(1.0),
+                    uniform: false,
+                    on_absolute: on_change.clone(),
+                    on_delta: on_change.clone(),
                 }
             }
             WindowEngagementControl::Select { id, value, items, on_change, .. } => {
@@ -3723,7 +3874,7 @@ impl ShellState {
                         })
                         .collect(),
                     placeholder: None,
-                    event: on_change.clone(),
+                    on_change: on_change.clone(),
                 }
             }
             WindowEngagementControl::Ring { id, value, on_select, .. } => {
@@ -3733,7 +3884,8 @@ impl ShellState {
                         .as_ref()
                         .and_then(|v| v.parse::<f64>().ok())
                         .unwrap_or(0.5),
-                    event: on_select.clone(),
+                    disabled: false,
+                    on_change: on_select.clone(),
                 }
             }
             WindowEngagementControl::ToggleGroup { id, value, options, on_select, .. } => {
@@ -3743,9 +3895,10 @@ impl ShellState {
                     .unwrap_or_else(|| "toggle".into());
                 WidgetNode::Toggle {
                     id: id.clone().unwrap_or_else(|| "engagement-toggle".into()),
+                    icon_id: options.first().map(|o| o.icon_id.clone()).unwrap_or_default(),
                     pressed: false,
                     text: Some(label),
-                    event: on_select.clone(),
+                    on_change: on_select.clone(),
                 }
             }
         };
@@ -3755,8 +3908,8 @@ impl ShellState {
         let mut ctx = framework_widget_context(
             draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme,
             scroll_offsets, collapsed_sections, open_selects,
-            None, None, None,
-        );
+                    None,
+                );
         render_widget(&node, bounds, &mut ctx);
     }
 

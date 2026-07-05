@@ -22,8 +22,8 @@ pub use layout::{
     FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
 };
 pub use mesh::{
-    mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_kind, mesh_ico_sphere, mesh_plane,
-    mesh_to_glb, mesh_to_obj, mesh_torus, mesh_uv_sphere, MeshData,
+    mesh_box, mesh_cone, mesh_cylinder, mesh_from_glb, mesh_from_indexed, mesh_from_kind, mesh_ico_sphere,
+    mesh_plane, mesh_to_glb, mesh_to_obj, mesh_torus, mesh_uv_sphere, MeshData,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use tools::{tool_button, tool_collection, tool_separator, tool_toggle, ToolNode};

@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./pkg/framework_graph.js"
+    ".": "./pkg/framework_graph.js",
+    "./pkg/framework_graph.js": "./pkg/framework_graph.js"
   },
   "bundleKind": "library"
 }

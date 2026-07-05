@@ -4,8 +4,8 @@ use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, export_mesh_glb_bytes, export_mesh_obj,
     merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls,
-    world3d_scene, world3d_selection_json, App, CommandDescriptor, MeshData, PluginApp, PluginBundle,
-    UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, CommandDescriptor, MeshData,
+    PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -68,6 +68,33 @@ struct Puzzle3dVortex {
     position: [f64; 3],
     #[serde(default)]
     direction: Option<[f64; 3]>,
+    #[serde(default)]
+    radius: Option<f64>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle3dReferenceSource {
+    #[serde(default)]
+    url: String,
+    #[serde(default, rename = "mediaKind")]
+    media_kind: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle3dReference {
+    id: String,
+    #[serde(default)]
+    source: Puzzle3dReferenceSource,
+    #[serde(default)]
+    origin: [f64; 3],
+    #[serde(default, rename = "widthWorld")]
+    width_world: f64,
+    #[serde(default)]
+    locked: bool,
+    #[serde(default)]
+    hidden: bool,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -135,6 +162,8 @@ struct Puzzle3dFixture {
     attractions: Vec<Puzzle3dAttraction>,
     #[serde(default, rename = "targetVolumes")]
     target_volumes: Vec<Puzzle3dTargetVolume>,
+    #[serde(default)]
+    references: Vec<Puzzle3dReference>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -196,6 +225,7 @@ fn empty_fixture() -> Puzzle3dFixture {
         objects: Vec::new(),
         attractions: Vec::new(),
         target_volumes: Vec::new(),
+        references: Vec::new(),
     }
 }
 
@@ -323,7 +353,198 @@ fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) ->
 }
 
 fn world_meshes_json(fixture: &Puzzle3dFixture) -> String {
-    world3d_meshes_json_from_kinds_and_urls(&[PUZZLE3D_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(fixture))
+    let urls = collect_mesh_urls(fixture);
+    let kinds = vec![PUZZLE3D_FALLBACK_MESH_KIND.into(), "vortex-marker".into()];
+    if urls.is_empty() {
+        return world3d_meshes_json_from_kinds_and_urls(&kinds, &[]);
+    }
+    let mut meshes_json = world3d_meshes_json_from_kinds_and_urls(&kinds, &urls);
+    if !meshes_json.contains(PUZZLE3D_FALLBACK_MESH_KIND) {
+        let fallback = world3d_meshes_json_from_kinds_and_urls(&[PUZZLE3D_FALLBACK_MESH_KIND.into()], &[]);
+        let mut merged: Vec<Value> = serde_json::from_str(&meshes_json).unwrap_or_default();
+        let fallback_meshes: Vec<Value> = serde_json::from_str(&fallback).unwrap_or_default();
+        merged.extend(fallback_meshes);
+        meshes_json = serde_json::to_string(&merged).unwrap_or(meshes_json);
+    }
+    meshes_json
+}
+
+fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
+    let [x, y, z, w] = quat;
+    let vx = vector[0];
+    let vy = vector[1];
+    let vz = vector[2];
+    let ix = w * vx + y * vz - z * vy;
+    let iy = w * vy + z * vx - x * vz;
+    let iz = w * vz + x * vy - y * vx;
+    let iw = -x * vx - y * vy - z * vz;
+    [
+        ix * w + iw * -x + iy * -z - iz * -y,
+        iy * w + iw * -y + iz * -x - ix * -z,
+        iz * w + iw * -z + ix * -y - iy * -x,
+    ]
+}
+
+fn world_vortex_position(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [f64; 3] {
+    let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+    let rotated = quat_rotate_vector(orientation, vortex.position);
+    [
+        object.origin.first().copied().unwrap_or(0.0) + rotated[0],
+        object.origin.get(1).copied().unwrap_or(0.0) + rotated[1],
+        object.origin.get(2).copied().unwrap_or(0.0) + rotated[2],
+    ]
+}
+
+fn world_vortex_direction(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [f64; 3] {
+    let direction = vortex.direction.unwrap_or([0.0, 0.0, -1.0]);
+    quat_rotate_vector(object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), direction)
+}
+
+fn vortex_color(meta: &Puzzle3dFixtureMeta, vortex_kind: Option<&str>) -> String {
+    let Some(kind_id) = vortex_kind else {
+        return "#38bdf8".into();
+    };
+    let Some(catalogs) = meta.kind_catalogs.as_ref() else {
+        return "#38bdf8".into();
+    };
+    let Some(entries) = catalogs.get("vortices").and_then(|value| value.as_array()) else {
+        return "#38bdf8".into();
+    };
+    for entry in entries {
+        if entry.get("id").and_then(|value| value.as_str()) == Some(kind_id) {
+            return entry
+                .get("color")
+                .and_then(|value| value.as_str())
+                .unwrap_or("#38bdf8")
+                .to_string();
+        }
+    }
+    "#38bdf8".into()
+}
+
+fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
+    if vortex_id.contains(':') {
+        vortex_id.to_string()
+    } else {
+        format!("{object_id}:{vortex_id}")
+    }
+}
+
+fn resolve_vortex_world_position(fixture: &Puzzle3dFixture, full_id: &str) -> Option<[f64; 3]> {
+    for object in &fixture.objects {
+        for vortex in &object.vortices {
+            if puzzle3d_vortex_full_id(&object.id, &vortex.id) == full_id {
+                return Some(world_vortex_position(object, vortex));
+            }
+        }
+    }
+    None
+}
+
+fn world_vortices_json(fixture: &Puzzle3dFixture) -> String {
+    let mut records = Vec::new();
+    for object in &fixture.objects {
+        for vortex in &object.vortices {
+            let position = world_vortex_position(object, vortex);
+            let direction = world_vortex_direction(object, vortex);
+            records.push(json!({
+                "fullId": puzzle3d_vortex_full_id(&object.id, &vortex.id),
+                "objectId": object.id,
+                "vortexKind": vortex.vortex_kind,
+                "position": position,
+                "direction": direction,
+                "radius": vortex.radius.unwrap_or(0.36),
+                "color": vortex_color(&fixture.meta, vortex.vortex_kind.as_deref()),
+            }));
+        }
+    }
+    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+}
+
+fn world_attractions_json(fixture: &Puzzle3dFixture) -> String {
+    let records: Vec<Value> = fixture
+        .attractions
+        .iter()
+        .filter_map(|attraction| {
+            let from = resolve_vortex_world_position(fixture, &attraction.attracting)?;
+            let to = resolve_vortex_world_position(fixture, &attraction.attracted)?;
+            Some(json!({
+                "id": attraction.id,
+                "from": from,
+                "to": to,
+                "color": "#60a5fa",
+            }))
+        })
+        .collect();
+    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+}
+
+fn target_volume_scale_json(volume: &Puzzle3dTargetVolume) -> [f64; 3] {
+    match &volume.scale {
+        Some(Value::Array(values)) if values.len() >= 3 => [
+            values[0].as_f64().unwrap_or(1.0),
+            values[1].as_f64().unwrap_or(1.0),
+            values[2].as_f64().unwrap_or(1.0),
+        ],
+        _ => [1.0, 1.0, 1.0],
+    }
+}
+
+fn world_target_volumes_json(fixture: &Puzzle3dFixture) -> String {
+    let records: Vec<Value> = fixture
+        .target_volumes
+        .iter()
+        .map(|volume| {
+            json!({
+                "id": volume.id,
+                "origin": volume.origin,
+                "orientation": volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
+                "scale": target_volume_scale_json(volume),
+                "color": "#f472b6",
+            })
+        })
+        .collect();
+    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+}
+
+fn world_references_json(fixture: &Puzzle3dFixture) -> String {
+    let records: Vec<Value> = fixture
+        .references
+        .iter()
+        .map(|reference| {
+            json!({
+                "id": reference.id,
+                "url": reference.source.url,
+                "origin": reference.origin,
+                "widthWorld": if reference.width_world > 0.0 { reference.width_world } else { 1.0 },
+                "locked": reference.locked,
+                "hidden": reference.hidden,
+            })
+        })
+        .collect();
+    serde_json::to_string(&records).unwrap_or_else(|_| "[]".into())
+}
+
+fn world_interaction_json(runtime: &Puzzle3dRuntime) -> String {
+    json!({
+        "activeTool": runtime.active_tool,
+        "brushCandidateIndex": runtime.brush_candidate_index,
+        "hoveredVortexFullId": runtime.selection.vortex_ids.first().cloned(),
+    })
+    .to_string()
+}
+
+fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, runtime: &Puzzle3dRuntime) -> Option<String> {
+    if runtime.active_tool != "brush" {
+        return None;
+    }
+    let vortex_id = runtime.selection.vortex_ids.first()?;
+    session.brush_preview_json(vortex_id, runtime.brush_candidate_index)
+}
+
+fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dEnvelope) {
+    sync_precompute_session(session, envelope);
+    let _ = session.precompute_step(8);
 }
 
 fn scene_config_json(envelope: &Puzzle3dEnvelope) -> String {
@@ -668,6 +889,84 @@ impl PluginApp for Puzzle3dPlayApp {
                     .map(str::to_string);
                 return vec![set_document_op(&envelope)];
             }
+            "worldVortexHover" => {
+                envelope.runtime.selection.vortex_ids = args
+                    .and_then(|value| value.get("fullId"))
+                    .and_then(|value| value.as_str())
+                    .map(|full_id| vec![full_id.to_string()])
+                    .unwrap_or_default();
+                return vec![set_document_op(&envelope)];
+            }
+            "worldVortexSelect" => {
+                if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
+                    envelope.runtime.selection.vortex_ids = vec![full_id.to_string()];
+                    envelope.runtime.selection.object_ids.clear();
+                    drive_precompute(&mut self.precompute, &envelope);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "worldRelocate" => {
+                let object_id = args
+                    .and_then(|value| value.get("objectId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                let position = args
+                    .and_then(|value| value.get("position"))
+                    .and_then(|value| value.as_array())
+                    .map(|values| {
+                        [
+                            values.first().and_then(|v| v.as_f64()).unwrap_or(0.0),
+                            values.get(1).and_then(|v| v.as_f64()).unwrap_or(0.0),
+                            values.get(2).and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        ]
+                    });
+                if let (Some(object), Some(position)) = (
+                    envelope.fixture.objects.iter_mut().find(|object| object.id == object_id),
+                    position,
+                ) {
+                    object.origin = position;
+                    let proximity_radius = 0.75;
+                    let mut source_vortex: Option<(String, [f64; 3])> = None;
+                    for vortex in &object.vortices {
+                        let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+                        source_vortex = Some((full_id, world_vortex_position(object, vortex)));
+                        break;
+                    }
+                    if let Some((source_id, source_pos)) = source_vortex {
+                        for other in &envelope.fixture.objects {
+                            if other.id == object_id {
+                                continue;
+                            }
+                            for vortex in &other.vortices {
+                                let target_id = puzzle3d_vortex_full_id(&other.id, &vortex.id);
+                                if target_id == source_id {
+                                    continue;
+                                }
+                                let target_pos = world_vortex_position(other, vortex);
+                                let dx = source_pos[0] - target_pos[0];
+                                let dy = source_pos[1] - target_pos[1];
+                                let dz = source_pos[2] - target_pos[2];
+                                let distance = (dx * dx + dy * dy + dz * dz).sqrt();
+                                if distance <= proximity_radius {
+                                    let attraction_id = format!("attraction-{}", PUZZLE3D_ID_COUNTER.fetch_add(1, Ordering::Relaxed));
+                                    if !envelope.fixture.attractions.iter().any(|entry| {
+                                        entry.attracting == source_id && entry.attracted == target_id
+                                            || entry.attracting == target_id && entry.attracted == source_id
+                                    }) {
+                                        envelope.fixture.attractions.push(Puzzle3dAttraction {
+                                            id: attraction_id,
+                                            attracting: source_id.clone(),
+                                            attracted: target_id,
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    sync_precompute_session(&mut self.precompute, &envelope);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "setSelectionMethod" => {
                 let method = args
                     .and_then(|value| value.get("method"))
@@ -690,7 +989,7 @@ impl PluginApp for Puzzle3dPlayApp {
                 return vec![set_document_op(&envelope)];
             }
             "addBrushObject" => {
-                sync_precompute_session(&mut self.precompute, &envelope);
+                drive_precompute(&mut self.precompute, &envelope);
                 if let Some(payload_value) = args {
                     if let Ok(payload) = serde_json::from_value::<BrushPlacePayload>(payload_value.clone()) {
                         if let Ok(fixture_json) =
@@ -705,7 +1004,7 @@ impl PluginApp for Puzzle3dPlayApp {
                 }
             }
             "setFillCount" => {
-                sync_precompute_session(&mut self.precompute, &envelope);
+                drive_precompute(&mut self.precompute, &envelope);
                 let count = args
                     .and_then(|value| value.get("count"))
                     .and_then(|value| value.as_u64())
@@ -739,7 +1038,23 @@ impl PluginApp for Puzzle3dPlayApp {
                 return vec![set_document_op(&envelope)];
             }
             "cycleBrushCandidate" => {
-                envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
+                drive_precompute(&mut self.precompute, &envelope);
+                let vortex_id = envelope
+                    .runtime
+                    .hovered_object_id
+                    .as_deref()
+                    .or_else(|| envelope.runtime.selection.object_ids.first().map(String::as_str))
+                    .unwrap_or("");
+                if !vortex_id.is_empty() {
+                    let raw = self.precompute.brush_candidates(vortex_id);
+                    let candidates: Vec<Value> = serde_json::from_str(&raw).unwrap_or_default();
+                    if !candidates.is_empty() {
+                        envelope.runtime.brush_candidate_index =
+                            (envelope.runtime.brush_candidate_index + 1) % candidates.len().max(1);
+                    }
+                } else {
+                    envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
+                }
                 return vec![set_document_op(&envelope)];
             }
             "registerBrushMesh" => {
@@ -763,16 +1078,25 @@ impl PluginApp for Puzzle3dPlayApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            PUZZLE3D_PLAY_BODY_COMPOSITE => build_world_3d_scene(
-                PUZZLE3D_PLAY_SURFACE_VIEWPORT,
-                PUZZLE3D_PLAY_APP_ID,
-                world3d_scene(
-                    camera_json(&envelope.fixture.camera),
-                    world_meshes_json(&envelope.fixture),
-                    world_instances_json(&envelope.fixture, &envelope.runtime),
-                    world_selection_json(&envelope.runtime),
-                ),
-            ),
+            PUZZLE3D_PLAY_BODY_COMPOSITE => {
+                let brush_preview = world_brush_preview_json(&self.precompute, &envelope.runtime);
+                build_world_3d_scene(
+                    PUZZLE3D_PLAY_SURFACE_VIEWPORT,
+                    PUZZLE3D_PLAY_APP_ID,
+                    world3d_scene_extended(
+                        camera_json(&envelope.fixture.camera),
+                        world_meshes_json(&envelope.fixture),
+                        world_instances_json(&envelope.fixture, &envelope.runtime),
+                        world_selection_json(&envelope.runtime),
+                        Some(world_vortices_json(&envelope.fixture)),
+                        Some(world_attractions_json(&envelope.fixture)),
+                        Some(world_target_volumes_json(&envelope.fixture)),
+                        Some(world_references_json(&envelope.fixture)),
+                        brush_preview,
+                        Some(world_interaction_json(&envelope.runtime)),
+                    ),
+                )
+            }
             PUZZLE3D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
             PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(),
             PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope),

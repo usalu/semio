@@ -1,11 +1,14 @@
 //! 🧩 Puzzle 2D plugin — declarative puzzle 2d play app bundled as a hot-swappable WASM component.
 
-use puzzle_2d::Puzzle2dExtension;
+use puzzle_2d::{
+    handle_position_on_circle, handle_position_on_rectangle, puzzle_board_host, puzzle_2d_lod_scale_json, BoardHost,
+    Point, Puzzle2dExtension,
+};
 use semio_framework_plugin::{
-    build_canvas_2d_scene, create_default_layout, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    build_canvas_2d_scene, create_default_layout, layout::WindowEngagementStatus, ui_inspector_readonly_field,
+    ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiNode, UiTreeItemNode,
+    UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementOption,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -26,18 +29,53 @@ const PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID: &str = "concrete-forest";
 const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = "nakagin-capsule-tower";
 const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../example/concrete-forest.2d.json");
 const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../example/nakagin-capsule-tower.2d.json");
+const PUZZLE2D_ENGAGEMENT_TOOL_SELECT: &str = "puzzle2d.tool.select";
+const PUZZLE2D_ENGAGEMENT_TOOL_BRUSH: &str = "puzzle2d.tool.brush";
+const PUZZLE2D_ENGAGEMENT_TOOL_FILL: &str = "puzzle2d.tool.fill";
+const BOARD_DEFAULT_WIDTH: u32 = 1024;
+const BOARD_DEFAULT_HEIGHT: u32 = 768;
 
 static NODE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
 //#region 🔖Envelope
+fn default_active_tool() -> String {
+    "select".into()
+}
+
+fn default_selection_method() -> String {
+    "rectangle".into()
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_grid_factor() -> f64 {
+    1.0
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Puzzle2dPlayRuntime {
     #[serde(default)]
     selected_ids: Vec<String>,
-    #[serde(default)]
+    #[serde(default = "default_active_tool")]
     active_tool: String,
+    #[serde(default = "default_true")]
+    automatic_lod: bool,
+    #[serde(default)]
+    lod_mode: String,
+    #[serde(default)]
+    brush_candidate_index: usize,
+    #[serde(default)]
+    fill_count: u32,
+    #[serde(default = "default_selection_method")]
+    selection_method: String,
+    #[serde(default)]
+    grid_snap_enabled: bool,
+    #[serde(default = "default_grid_factor")]
+    grid_factor: f64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -223,6 +261,234 @@ fn puzzle_extension_id() -> &'static str {
 }
 //#endregion 🔖Envelope
 
+//#region 🔖BoardHost
+fn sync_host_from_envelope(host: &mut BoardHost, envelope: &Puzzle2dPlayEnvelope) {
+    host.set_size(BOARD_DEFAULT_WIDTH, BOARD_DEFAULT_HEIGHT, 1.0);
+    let _ = host.parse_fixture_v1(&envelope.fixture);
+    host.set_selection_ids(&envelope.runtime.selected_ids);
+    host.set_active_tool(&envelope.runtime.active_tool);
+    host.set_automatic_lod(envelope.runtime.automatic_lod);
+    if !envelope.runtime.automatic_lod && !envelope.runtime.lod_mode.is_empty() {
+        host.set_forced_draw_lod_label(&envelope.runtime.lod_mode);
+    }
+    host.set_grid_snap_enabled(envelope.runtime.grid_snap_enabled);
+    let _ = host.set_grid_factor(envelope.runtime.grid_factor);
+    host.set_selection_options(
+        &envelope.runtime.selection_method,
+        "replace",
+        true,
+        true,
+        true,
+    );
+    if let Some(catalogs) = envelope.fixture.get("meta").and_then(|value| value.get("kindCatalogs")) {
+        if let Ok(json) = serde_json::to_string(catalogs) {
+            let _ = host.set_board_kind_catalogs_from_json(&json);
+        }
+    }
+    if let Some(compat) = envelope
+        .fixture
+        .get("meta")
+        .and_then(|value| value.get("kindCompatibility"))
+        .or_else(|| envelope.fixture.get("kindCompatibility"))
+    {
+        if let Ok(json) = serde_json::to_string(compat) {
+            let _ = host.set_handle_link_compat_from_json(&json);
+        }
+    }
+}
+
+fn apply_host_events(host: &mut BoardHost, envelope: &mut Puzzle2dPlayEnvelope) {
+    let events_raw = host.drain_events_json();
+    let Ok(events) = serde_json::from_str::<Vec<Value>>(&events_raw) else {
+        return;
+    };
+    for event in events {
+        let Some(name) = event.get("name").and_then(|value| value.as_str()) else {
+            continue;
+        };
+        let payload = event.get("payload").cloned().unwrap_or(Value::Null);
+        match name {
+            "camera" => {
+                if let Some(obj) = envelope.fixture.as_object_mut() {
+                    obj.insert("camera".into(), payload);
+                }
+            }
+            "select" => {
+                if let Some(ids) = payload.get("ids").and_then(|value| serde_json::from_value(value.clone()).ok()) {
+                    envelope.runtime.selected_ids = ids;
+                }
+            }
+            "nodeDragEnd" => {
+                if let Some(moves) = payload.get("moves").and_then(|value| value.as_array()) {
+                    for entry in moves {
+                        let Some(id) = entry.get("id").and_then(|value| value.as_str()) else {
+                            continue;
+                        };
+                        if let Some(x) = entry.get("x").and_then(|value| value.as_f64()) {
+                            patch_inspector_nodes(&mut envelope.fixture, &[id.to_string()], "x", &json!(x));
+                        }
+                        if let Some(y) = entry.get("y").and_then(|value| value.as_f64()) {
+                            patch_inspector_nodes(&mut envelope.fixture, &[id.to_string()], "y", &json!(y));
+                        }
+                    }
+                }
+            }
+            "nodeMove" => {
+                let Some(id) = payload.get("id").and_then(|value| value.as_str()) else {
+                    continue;
+                };
+                if let Some(x) = payload.get("x").and_then(|value| value.as_f64()) {
+                    patch_inspector_nodes(&mut envelope.fixture, &[id.to_string()], "x", &json!(x));
+                }
+                if let Some(y) = payload.get("y").and_then(|value| value.as_f64()) {
+                    patch_inspector_nodes(&mut envelope.fixture, &[id.to_string()], "y", &json!(y));
+                }
+            }
+            "brushPlace" => {
+                apply_brush_place_payload(&mut envelope.fixture, &payload);
+            }
+            "edgeCreate" => {
+                if let Some(edges) = envelope.fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
+                    edges.push(payload);
+                }
+            }
+            "nodeDelete" => {
+                if let Some(id) = payload.get("id").and_then(|value| value.as_str()) {
+                    envelope.runtime.selected_ids = vec![id.to_string()];
+                    delete_selection_from_fixture(&mut envelope.fixture, &envelope.runtime.selected_ids);
+                    envelope.runtime.selected_ids.clear();
+                }
+            }
+            "edgeDelete" => {
+                if let Some(id) = payload.get("id").and_then(|value| value.as_str()) {
+                    if let Some(edges) = envelope.fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
+                        edges.retain(|edge| edge.get("id").and_then(|value| value.as_str()) != Some(id));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    envelope.runtime.selected_ids = host.selection.iter().cloned().collect();
+    let (camera_x, camera_y, zoom) = fixture_camera(&envelope.fixture);
+    if (host.camera.x - camera_x).abs() > 1e-9
+        || (host.camera.y - camera_y).abs() > 1e-9
+        || (host.camera.zoom - zoom).abs() > 1e-9
+    {
+        set_fixture_camera(
+            &mut envelope.fixture,
+            &json!({ "x": host.camera.x, "y": host.camera.y, "zoom": host.camera.zoom }),
+        );
+    }
+}
+
+fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
+    let node_id = payload
+        .get("nodeId")
+        .and_then(|value| value.as_str())
+        .map(str::to_string)
+        .unwrap_or_else(|| new_node_id("node"));
+    let edge_id = payload
+        .get("edgeId")
+        .and_then(|value| value.as_str())
+        .map(str::to_string)
+        .unwrap_or_else(|| new_node_id("edge"));
+    let node_kind = payload
+        .get("nodeKind")
+        .and_then(|value| value.as_str())
+        .unwrap_or("node");
+    let x = payload.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let y = payload.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let shape = payload.get("shape").and_then(|value| value.as_str()).unwrap_or("circle");
+    let mut node = json!({
+        "id": node_id,
+        "nodeKind": node_kind,
+        "shape": shape,
+        "x": x,
+        "y": y,
+        "text": node_kind,
+        "handles": payload.get("handles").cloned().unwrap_or_else(|| json!([])),
+    });
+    if shape == "rectangle" {
+        node["width"] = json!(payload.get("width").and_then(|value| value.as_f64()).unwrap_or(48.0));
+        node["height"] = json!(payload.get("height").and_then(|value| value.as_f64()).unwrap_or(48.0));
+    } else {
+        node["radius"] = json!(payload.get("radius").and_then(|value| value.as_f64()).unwrap_or(24.0));
+    }
+    if let Some(icon) = payload.get("iconKind") {
+        node["iconKind"] = icon.clone();
+    }
+    if let Some(nodes) = fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
+        nodes.push(node);
+    }
+    let source = payload
+        .get("sourceHandleId")
+        .and_then(|value| value.as_str())
+        .unwrap_or("");
+    if !source.is_empty() {
+        if let Some(edges) = fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
+            edges.push(json!({
+                "id": edge_id,
+                "edgeKind": "link",
+                "source": source,
+                "target": format!("{node_id}:v{}", payload.get("targetHandleIndex").and_then(|value| value.as_u64()).unwrap_or(0)),
+            }));
+        }
+    }
+}
+
+fn puzzle2d_engagement(envelope: &Puzzle2dPlayEnvelope, host: &BoardHost) -> WindowEngagement {
+    let overlay: Value = serde_json::from_str(&host.overlay_paint_state_json()).unwrap_or(Value::Null);
+    let lod = overlay
+        .get("lod")
+        .and_then(|value| value.as_str())
+        .unwrap_or(if envelope.runtime.automatic_lod {
+            "auto"
+        } else {
+            envelope.runtime.lod_mode.as_str()
+        });
+    let node_count = fixture_nodes(&envelope.fixture).len();
+    let edge_count = fixture_edges(&envelope.fixture).len();
+    WindowEngagement {
+        session_active: Some(envelope.runtime.active_tool != "select"),
+        input: None,
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus {
+            id: "puzzle2d-board-status".into(),
+            text: format!("{node_count} nodes · {edge_count} edges · LOD {lod}"),
+        }]),
+        options: Some(vec![
+            WindowEngagementOption {
+                id: PUZZLE2D_ENGAGEMENT_TOOL_SELECT.into(),
+                label: Some("Select".into()),
+                icon_id: Some("cursor".into()),
+                pressed: Some(envelope.runtime.active_tool == "select"),
+                disabled: None,
+                command: Some(puzzle2d_cmd("engagementPossibleSelect", Some(json!({ "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_SELECT })))),
+            },
+            WindowEngagementOption {
+                id: PUZZLE2D_ENGAGEMENT_TOOL_BRUSH.into(),
+                label: Some("Brush".into()),
+                icon_id: Some("brush".into()),
+                pressed: Some(envelope.runtime.active_tool == "brush"),
+                disabled: None,
+                command: Some(puzzle2d_cmd("engagementPossibleSelect", Some(json!({ "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_BRUSH })))),
+            },
+            WindowEngagementOption {
+                id: PUZZLE2D_ENGAGEMENT_TOOL_FILL.into(),
+                label: Some("Fill".into()),
+                icon_id: Some("fill".into()),
+                pressed: Some(envelope.runtime.fill_count > 0 || envelope.runtime.active_tool == "fill"),
+                disabled: None,
+                command: Some(puzzle2d_cmd("engagementPossibleSelect", Some(json!({ "possibleId": PUZZLE2D_ENGAGEMENT_TOOL_FILL })))),
+            },
+        ]),
+        possible_engagements: None,
+    }
+}
+//#endregion 🔖BoardHost
+
 //#region 🔖Canvas
 fn fixture_wires(fixture: &Value) -> &[Value] {
     fixture
@@ -245,16 +511,124 @@ fn fixture_handles(fixture: &Value) -> Vec<Value> {
         .collect()
 }
 
-fn canvas_layers_json(fixture: &Value) -> String {
-    let mut layers: Vec<Value> = Vec::new();
-    layers.extend(fixture_nodes(fixture).iter().cloned());
-    layers.extend(fixture_edges(fixture).iter().cloned());
-    layers.extend(fixture_wires(fixture).iter().cloned());
-    layers.extend(fixture_handles(fixture));
+fn fixture_endpoint_xy(fixture: &Value, endpoint_id: &str) -> Option<(f64, f64)> {
+    if let Some((node_id, handle_id)) = endpoint_id.split_once(':') {
+        let node = fixture_nodes(fixture)
+            .iter()
+            .find(|node| node.get("id").and_then(|value| value.as_str()) == Some(node_id))?;
+        let cx = node.get("x").and_then(|value| value.as_f64())?;
+        let cy = node.get("y").and_then(|value| value.as_f64())?;
+        let handle = node
+            .get("handles")
+            .and_then(|value| value.as_array())
+            .into_iter()
+            .flatten()
+            .find(|handle| handle.get("id").and_then(|value| value.as_str()) == Some(handle_id))?;
+        let angle = handle.get("angle").and_then(|value| value.as_f64()).unwrap_or(0.0);
+        let point = if node.get("shape").and_then(|value| value.as_str()) == Some("rectangle") {
+            let width = node.get("width").and_then(|value| value.as_f64()).unwrap_or(48.0);
+            let height = node.get("height").and_then(|value| value.as_f64()).unwrap_or(48.0);
+            handle_position_on_rectangle(Point::new(cx, cy), width, height, angle)
+        } else {
+            let radius = node.get("radius").and_then(|value| value.as_f64()).unwrap_or(24.0);
+            handle_position_on_circle(Point::new(cx, cy), radius, angle)
+        };
+        return Some((point.x, point.y));
+    }
+    let node = fixture_nodes(fixture)
+        .iter()
+        .find(|node| node.get("id").and_then(|value| value.as_str()) == Some(endpoint_id))?;
+    Some((
+        node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0),
+        node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0),
+    ))
+}
+
+fn edge_line_layer(edge: &Value, fixture: &Value) -> Option<Value> {
+    let source = edge.get("source").and_then(|value| value.as_str())?;
+    let target = edge.get("target").and_then(|value| value.as_str())?;
+    let (x0, y0) = fixture_endpoint_xy(fixture, source)?;
+    let (x1, y1) = fixture_endpoint_xy(fixture, target)?;
+    let id = edge
+        .get("id")
+        .and_then(|value| value.as_str())
+        .unwrap_or("edge")
+        .to_string();
+    Some(json!({
+        "id": id,
+        "kind": "line",
+        "name": edge_label(edge, fixture),
+        "x0": x0,
+        "y0": y0,
+        "x1": x1,
+        "y1": y1,
+        "source": source,
+        "target": target,
+    }))
+}
+
+fn node_canvas_layer(node: &Value, selected: &HashSet<&str>) -> Value {
+    let id = node.get("id").and_then(|value| value.as_str()).unwrap_or("node");
+    let label = node_label(node);
+    let x = node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let y = node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let shape = node.get("shape").and_then(|value| value.as_str()).unwrap_or("circle");
+    let (width, height) = if shape == "rectangle" {
+        (
+            node.get("width").and_then(|value| value.as_f64()).unwrap_or(48.0),
+            node.get("height").and_then(|value| value.as_f64()).unwrap_or(48.0),
+        )
+    } else {
+        let diameter = node.get("radius").and_then(|value| value.as_f64()).unwrap_or(24.0) * 2.0;
+        (diameter, diameter)
+    };
+    json!({
+        "id": id,
+        "kind": shape,
+        "name": label,
+        "x": x - width * 0.5,
+        "y": y - height * 0.5,
+        "width": width,
+        "height": height,
+        "selected": selected.contains(id),
+    })
+}
+
+fn canvas_layers_json(fixture: &Value, selected: &[String]) -> String {
+    let selected: HashSet<&str> = selected.iter().map(String::as_str).collect();
+    let mut layers: Vec<Value> = fixture_nodes(fixture)
+        .iter()
+        .map(|node| node_canvas_layer(node, &selected))
+        .collect();
+    for edge in fixture_edges(fixture) {
+        if let Some(layer) = edge_line_layer(edge, fixture) {
+            layers.push(layer);
+        }
+    }
+    for wire in fixture_wires(fixture) {
+        if let Some(layer) = edge_line_layer(wire, fixture) {
+            layers.push(layer);
+        }
+    }
+    for handle in fixture_handles(fixture) {
+        let id = handle.get("id").and_then(|value| value.as_str()).unwrap_or("handle");
+        let radius = handle.get("radius").and_then(|value| value.as_f64()).unwrap_or(6.0) * 2.0;
+        if let Some((x, y)) = fixture_endpoint_xy(fixture, id) {
+            layers.push(json!({
+                "id": id,
+                "kind": "circle",
+                "name": handle.get("handleKind").and_then(|value| value.as_str()).unwrap_or("handle"),
+                "x": x - radius * 0.5,
+                "y": y - radius * 0.5,
+                "width": radius,
+                "height": radius,
+            }));
+        }
+    }
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 
-fn render_canvas(fixture: &Value) -> UiNode {
+fn render_canvas(fixture: &Value, selected: &[String]) -> UiNode {
     let (camera_x, camera_y, zoom) = fixture_camera(fixture);
     build_canvas_2d_scene(
         PUZZLE2D_PLAY_SURFACE_ID,
@@ -263,7 +637,7 @@ fn render_canvas(fixture: &Value) -> UiNode {
             camera_x,
             camera_y,
             zoom,
-            layers_json: canvas_layers_json(fixture),
+            layers_json: canvas_layers_json(fixture, selected),
         },
     )
 }
@@ -630,7 +1004,17 @@ fn render_properties_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
 //#endregion 🔖InspectorPanel
 
 //#region 🔖Puzzle2dPlayApp
-struct Puzzle2dPlayApp;
+struct Puzzle2dPlayApp {
+    host: BoardHost,
+}
+
+impl Default for Puzzle2dPlayApp {
+    fn default() -> Self {
+        Self {
+            host: puzzle_board_host(),
+        }
+    }
+}
 
 impl PluginApp for Puzzle2dPlayApp {
     fn app_id(&self) -> &str {
@@ -649,32 +1033,45 @@ impl PluginApp for Puzzle2dPlayApp {
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        match command {
+        sync_host_from_envelope(&mut self.host, &envelope);
+        let ops = match command {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value(next.clone()) {
                         return vec![set_document_op(&parsed)];
                     }
                 }
+                Vec::new()
             }
             "setSelection" | "hierarchySelect" => {
                 envelope.runtime.selected_ids = selection_ids(args);
-                return vec![set_document_op(&envelope)];
+                self.host.set_selection_ids(&envelope.runtime.selected_ids);
+                vec![set_document_op(&envelope)]
             }
             "addNode" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
                 add_node_to_fixture(&mut envelope.fixture, kind);
-                return vec![set_document_op(&envelope)];
+                vec![set_document_op(&envelope)]
             }
             "deleteSelection" => {
+                self.host.delete_selection();
                 delete_selection_from_fixture(&mut envelope.fixture, &envelope.runtime.selected_ids);
                 envelope.runtime.selected_ids.clear();
-                return vec![set_document_op(&envelope)];
+                vec![set_document_op(&envelope)]
             }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
+                    if let (Some(x), Some(y), Some(zoom)) = (
+                        camera.get("x").and_then(|value| value.as_f64()),
+                        camera.get("y").and_then(|value| value.as_f64()),
+                        camera.get("zoom").and_then(|value| value.as_f64()),
+                    ) {
+                        self.host.set_camera(x, y, zoom);
+                    }
                     set_fixture_camera(&mut envelope.fixture, camera);
-                    return vec![set_document_op(&envelope)];
+                    vec![set_document_op(&envelope)]
+                } else {
+                    Vec::new()
                 }
             }
             "setActiveExample" => {
@@ -691,14 +1088,182 @@ impl PluginApp for Puzzle2dPlayApp {
                 } else {
                     default_empty_fixture()
                 };
-                envelope.runtime.selected_ids.clear();
-                return vec![set_document_op(&envelope)];
+                envelope.runtime = Puzzle2dPlayRuntime::default();
+                vec![set_document_op(&envelope)]
             }
             "setActiveTool" => {
                 if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
                     envelope.runtime.active_tool = tool.into();
-                    return vec![set_document_op(&envelope)];
+                    self.host.set_active_tool(tool);
+                    vec![set_document_op(&envelope)]
+                } else {
+                    Vec::new()
                 }
+            }
+            "engagementPossibleSelect" => {
+                let possible_id = args
+                    .and_then(|value| value.get("possibleId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                envelope.runtime.active_tool = match possible_id {
+                    PUZZLE2D_ENGAGEMENT_TOOL_BRUSH => "brush",
+                    PUZZLE2D_ENGAGEMENT_TOOL_FILL => "fill",
+                    _ => "select",
+                }
+                .into();
+                self.host.set_active_tool(&envelope.runtime.active_tool);
+                vec![set_document_op(&envelope)]
+            }
+            "setLodMode" => {
+                if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    envelope.runtime.automatic_lod = false;
+                    envelope.runtime.lod_mode = mode.into();
+                    self.host.set_automatic_lod(false);
+                    self.host.set_forced_draw_lod_label(mode);
+                    vec![set_document_op(&envelope)]
+                } else {
+                    Vec::new()
+                }
+            }
+            "setAutomaticLod" => {
+                let enabled = args
+                    .and_then(|value| value.get("enabled"))
+                    .and_then(|value| value.as_bool())
+                    .unwrap_or(true);
+                envelope.runtime.automatic_lod = enabled;
+                self.host.set_automatic_lod(enabled);
+                vec![set_document_op(&envelope)]
+            }
+            "setGridSnapEnabled" => {
+                let enabled = args
+                    .and_then(|value| value.get("enabled"))
+                    .and_then(|value| value.as_bool())
+                    .unwrap_or(false);
+                envelope.runtime.grid_snap_enabled = enabled;
+                self.host.set_grid_snap_enabled(enabled);
+                vec![set_document_op(&envelope)]
+            }
+            "setGridFactor" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
+                    envelope.runtime.grid_factor = value;
+                    let _ = self.host.set_grid_factor(value);
+                    vec![set_document_op(&envelope)]
+                } else {
+                    Vec::new()
+                }
+            }
+            "setSelectionMethod" => {
+                let method = args
+                    .and_then(|value| value.get("method"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("rectangle");
+                envelope.runtime.selection_method = method.into();
+                self.host.set_selection_options(method, "replace", true, true, true);
+                vec![set_document_op(&envelope)]
+            }
+            "setBrushKindWeights" => {
+                if let Some(weights) = args.and_then(|value| value.get("weights")) {
+                    if let Ok(json) = serde_json::to_string(weights) {
+                        self.host.set_brush_kind_weights(&json);
+                    }
+                }
+                vec![set_document_op(&envelope)]
+            }
+            "setBrushNodeSize" => {
+                if let Some(size) = args.and_then(|value| value.get("size")).and_then(|value| value.as_f64()) {
+                    self.host.set_brush_node_size(size);
+                }
+                Vec::new()
+            }
+            "setSuggestionOffset" => {
+                if let Some(distance) = args.and_then(|value| value.get("distance")).and_then(|value| value.as_f64()) {
+                    self.host.set_suggestion_offset(distance);
+                }
+                Vec::new()
+            }
+            "brushCycleCandidate" => {
+                let forward = args
+                    .and_then(|value| value.get("forward"))
+                    .and_then(|value| value.as_bool())
+                    .unwrap_or(true);
+                self.host.brush_cycle_candidate(forward);
+                envelope.runtime.brush_candidate_index = envelope.runtime.brush_candidate_index.saturating_add(1);
+                vec![set_document_op(&envelope)]
+            }
+            "brushSetCandidateIndex" => {
+                if let Some(index) = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()) {
+                    self.host.brush_set_candidate_index(index as usize);
+                    envelope.runtime.brush_candidate_index = index as usize;
+                    vec![set_document_op(&envelope)]
+                } else {
+                    Vec::new()
+                }
+            }
+            "brushOpenSlot" => {
+                if let Some(handle_id) = args.and_then(|value| value.get("handleId")).and_then(|value| value.as_str()) {
+                    self.host.brush_open_slot(handle_id);
+                }
+                Vec::new()
+            }
+            "brushCommitSlot" => {
+                self.host.brush_commit_slot();
+                apply_host_events(&mut self.host, &mut envelope);
+                vec![set_document_op(&envelope)]
+            }
+            "brushCancelSlot" => {
+                self.host.brush_cancel_slot();
+                Vec::new()
+            }
+            "setFillCount" => {
+                let count = args
+                    .and_then(|value| value.get("count"))
+                    .and_then(|value| value.as_u64())
+                    .unwrap_or(0) as u32;
+                envelope.runtime.fill_count = count;
+                envelope.runtime.active_tool = "fill".into();
+                self.host.set_active_tool("brush");
+                self.host.brush_fill_session_begin(count, 1);
+                let step = self.host.brush_fill_session_step(count.max(1));
+                if let Ok(progress) = serde_json::from_str::<Value>(&step) {
+                    if let Some(placements) = progress.get("placements").and_then(|value| value.as_array()) {
+                        for placement in placements {
+                            apply_brush_place_payload(&mut envelope.fixture, placement);
+                        }
+                    }
+                }
+                vec![set_document_op(&envelope)]
+            }
+            "brushFillSessionBegin" => {
+                let max_count = args
+                    .and_then(|value| value.get("maxCount"))
+                    .and_then(|value| value.as_u64())
+                    .unwrap_or(0) as u32;
+                let seed = args
+                    .and_then(|value| value.get("seed"))
+                    .and_then(|value| value.as_u64())
+                    .unwrap_or(1) as u32;
+                self.host.brush_fill_session_begin(max_count, u64::from(seed));
+                Vec::new()
+            }
+            "brushFillSessionStep" => {
+                let budget = args
+                    .and_then(|value| value.get("chunkBudget"))
+                    .and_then(|value| value.as_u64())
+                    .unwrap_or(8) as u32;
+                let step = self.host.brush_fill_session_step(budget);
+                if let Ok(progress) = serde_json::from_str::<Value>(&step) {
+                    if let Some(placements) = progress.get("placements").and_then(|value| value.as_array()) {
+                        for placement in placements {
+                            apply_brush_place_payload(&mut envelope.fixture, placement);
+                        }
+                    }
+                }
+                vec![set_document_op(&envelope)]
+            }
+            "brushFillSessionClear" => {
+                self.host.brush_fill_session_clear();
+                envelope.runtime.fill_count = 0;
+                vec![set_document_op(&envelope)]
             }
             "patchInspectorNodes" => {
                 let ids: Vec<String> = args
@@ -709,59 +1274,124 @@ impl PluginApp for Puzzle2dPlayApp {
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 if !field.is_empty() {
                     patch_inspector_nodes(&mut envelope.fixture, &ids, field, &value);
-                    return vec![set_document_op(&envelope)];
+                    vec![set_document_op(&envelope)]
+                } else {
+                    Vec::new()
                 }
             }
             "forceLayout" | "reorganize" => {
                 force_layout_fixture(&mut envelope.fixture);
-                return vec![set_document_op(&envelope)];
+                vec![set_document_op(&envelope)]
+            }
+            "redrawHandles" => {
+                if let Ok(next) = puzzle_2d::apply_edge_handle_snap_to_fixture_v1_json(&envelope.fixture.to_string()) {
+                    if let Ok(parsed) = serde_json::from_str(&next) {
+                        envelope.fixture = parsed;
+                    }
+                }
+                vec![set_document_op(&envelope)]
             }
             "selectAll" => {
                 let ids: Vec<String> = fixture_nodes(&envelope.fixture)
                     .iter()
                     .filter_map(|node| node.get("id").and_then(|value| value.as_str()).map(str::to_string))
                     .collect();
-                envelope.runtime.selected_ids = ids;
-                return vec![set_document_op(&envelope)];
+                envelope.runtime.selected_ids = ids.clone();
+                self.host.set_selection_ids(&ids);
+                vec![set_document_op(&envelope)]
             }
             "clearSelection" => {
                 envelope.runtime.selected_ids.clear();
-                return vec![set_document_op(&envelope)];
+                self.host.set_selection_ids(&[]);
+                vec![set_document_op(&envelope)]
             }
             "focusSelection" => {
                 if envelope.runtime.selected_ids.is_empty() {
-                    return Vec::new();
-                }
-                let mut min_x = f64::INFINITY;
-                let mut min_y = f64::INFINITY;
-                let mut max_x = f64::NEG_INFINITY;
-                let mut max_y = f64::NEG_INFINITY;
-                for node in fixture_nodes(&envelope.fixture) {
-                    let Some(id) = node.get("id").and_then(|value| value.as_str()) else {
-                        continue;
-                    };
-                    if !envelope.runtime.selected_ids.iter().any(|selected| selected == id) {
-                        continue;
+                    Vec::new()
+                } else {
+                    let mut min_x = f64::INFINITY;
+                    let mut min_y = f64::INFINITY;
+                    let mut max_x = f64::NEG_INFINITY;
+                    let mut max_y = f64::NEG_INFINITY;
+                    for node in fixture_nodes(&envelope.fixture) {
+                        let Some(id) = node.get("id").and_then(|value| value.as_str()) else {
+                            continue;
+                        };
+                        if !envelope.runtime.selected_ids.iter().any(|selected| selected == id) {
+                            continue;
+                        }
+                        let x = node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
+                        let y = node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
+                        let radius = node.get("radius").and_then(|value| value.as_f64()).unwrap_or(24.0);
+                        min_x = min_x.min(x - radius);
+                        min_y = min_y.min(y - radius);
+                        max_x = max_x.max(x + radius);
+                        max_y = max_y.max(y + radius);
                     }
-                    let x = node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
-                    let y = node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
-                    let radius = node.get("radius").and_then(|value| value.as_f64()).unwrap_or(24.0);
-                    min_x = min_x.min(x - radius);
-                    min_y = min_y.min(y - radius);
-                    max_x = max_x.max(x + radius);
-                    max_y = max_y.max(y + radius);
-                }
-                if min_x.is_finite() {
-                    let camera = json!({
-                        "x": (min_x + max_x) * 0.5,
-                        "y": (min_y + max_y) * 0.5,
-                        "zoom": 1.0,
-                    });
-                    set_fixture_camera(&mut envelope.fixture, &camera);
-                    return vec![set_document_op(&envelope)];
+                    if min_x.is_finite() {
+                        let camera = json!({
+                            "x": (min_x + max_x) * 0.5,
+                            "y": (min_y + max_y) * 0.5,
+                            "zoom": 1.0,
+                        });
+                        set_fixture_camera(&mut envelope.fixture, &camera);
+                        if let (Some(x), Some(y), Some(zoom)) = (
+                            camera.get("x").and_then(|value| value.as_f64()),
+                            camera.get("y").and_then(|value| value.as_f64()),
+                            camera.get("zoom").and_then(|value| value.as_f64()),
+                        ) {
+                            self.host.set_camera(x, y, zoom);
+                        }
+                        vec![set_document_op(&envelope)]
+                    } else {
+                        Vec::new()
+                    }
                 }
             }
-            _ => {}
+            "canvasPointerDown" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let button = args.and_then(|value| value.get("button")).and_then(|value| value.as_u64()).unwrap_or(0) as u8;
+                let extend = args.and_then(|value| value.get("extend")).and_then(|value| value.as_bool()).unwrap_or(false);
+                self.host.pointer_down_screen(x, y, button, extend, false);
+                apply_host_events(&mut self.host, &mut envelope);
+                vec![set_document_op(&envelope)]
+            }
+            "canvasPointerMove" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
+                let alt = args.and_then(|value| value.get("alt")).and_then(|value| value.as_bool()).unwrap_or(false);
+                self.host.pointer_move_screen(x, y, shift, false, alt);
+                apply_host_events(&mut self.host, &mut envelope);
+                vec![set_document_op(&envelope)]
+            }
+            "canvasPointerUp" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let shift = args.and_then(|value| value.get("shift")).and_then(|value| value.as_bool()).unwrap_or(false);
+                let alt = args.and_then(|value| value.get("alt")).and_then(|value| value.as_bool()).unwrap_or(false);
+                self.host.pointer_up_screen(x, y, shift, false, alt);
+                apply_host_events(&mut self.host, &mut envelope);
+                vec![set_document_op(&envelope)]
+            }
+            "canvasWheel" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(512.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(384.0);
+                let delta = args.and_then(|value| value.get("deltaY")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                self.host.wheel_screen(x, y, delta);
+                apply_host_events(&mut self.host, &mut envelope);
+                vec![set_document_op(&envelope)]
+            }
+            "lodScaleJson" => {
+                let _ = puzzle_2d_lod_scale_json();
+                Vec::new()
+            }
+            _ => Vec::new(),
+        };
+        apply_host_events(&mut self.host, &mut envelope);
+        if !ops.is_empty() {
+            return ops;
         }
         Vec::new()
     }
@@ -769,7 +1399,7 @@ impl PluginApp for Puzzle2dPlayApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            PUZZLE2D_PLAY_BODY_COMPOSITE => render_canvas(&envelope.fixture),
+            PUZZLE2D_PLAY_BODY_COMPOSITE => render_canvas(&envelope.fixture, &envelope.runtime.selected_ids),
             PUZZLE2D_PLAY_BODY_LAYERS => render_hierarchy_panel(&envelope),
             PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture),
             PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope),
@@ -781,12 +1411,16 @@ impl PluginApp for Puzzle2dPlayApp {
 
 //#region 🔖AppFactory
 fn create_puzzle2d_app() -> App {
+    let mut host = puzzle_board_host();
+    let envelope = default_envelope();
+    sync_host_from_envelope(&mut host, &envelope);
+    let engagement = puzzle2d_engagement(&envelope, &host);
     App::from_builder(
         App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D")
             .icon_id("puzzle2d")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind("puzzle2d-composite", "Canvas", PUZZLE2D_PLAY_BODY_COMPOSITE)
+            .window_kind_with_engagement("puzzle2d-composite", "Canvas", PUZZLE2D_PLAY_BODY_COMPOSITE, engagement)
             .panel_tab("framework.panel.hierarchy", FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, "workbench", PUZZLE2D_PLAY_BODY_LAYERS)
             .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "workbench", PUZZLE2D_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "details", PUZZLE2D_PLAY_BODY_PROPERTIES)
@@ -820,7 +1454,7 @@ fn create_puzzle2d_app() -> App {
 }
 
 fn puzzle2d_bundle() -> PluginBundle {
-    PluginBundle::new("puzzle2d", "Puzzle 2D", "0.1.0").register_app(create_puzzle2d_app(), || Box::new(Puzzle2dPlayApp))
+    PluginBundle::new("puzzle2d", "Puzzle 2D", "0.1.0").register_app(create_puzzle2d_app(), || Box::new(Puzzle2dPlayApp::default()))
 }
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(puzzle2d_bundle()));
@@ -836,7 +1470,7 @@ mod tests {
 
     #[test]
     fn renders_canvas_scene() {
-        let app = Puzzle2dPlayApp;
+        let app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
         let node = app.render(PUZZLE2D_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -845,7 +1479,7 @@ mod tests {
 
     #[test]
     fn hierarchy_panel_lists_nodes_section() {
-        let app = Puzzle2dPlayApp;
+        let app = Puzzle2dPlayApp::default();
         let envelope = Puzzle2dPlayEnvelope {
             fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(),
             runtime: Puzzle2dPlayRuntime::default(),
@@ -859,7 +1493,7 @@ mod tests {
 
     #[test]
     fn add_node_command_appends_node() {
-        let mut app = Puzzle2dPlayApp;
+        let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
         let ops = app.handle_command("addNode", Some(&json!({ "kind": "node" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);

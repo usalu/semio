@@ -758,6 +758,9 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "cad_document",
+ "kernel_3d_brepkit",
+ "kernel_3d_engine",
+ "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -4981,6 +4984,7 @@ name = "procedural2d-plugin"
 version = "0.1.0"
 dependencies = [
  "flow_core",
+ "flow_module_draw",
  "procedural_2d",
  "semio-framework-plugin",
  "serde",
@@ -4995,6 +4999,10 @@ version = "0.1.0"
 dependencies = [
  "base64",
  "flow_core",
+ "flow_module_brep",
+ "kernel_3d_brepkit",
+ "kernel_3d_engine",
+ "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -5089,6 +5097,7 @@ dependencies = [
 name = "puzzle5d-plugin"
 version = "0.1.0"
 dependencies = [
+ "puzzle_5d",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -5139,6 +5148,7 @@ dependencies = [
 name = "puzzle_5d"
 version = "0.1.0"
 dependencies = [
+ "puzzle_3d",
  "serde",
  "serde_json",
  "vcs",
@@ -5928,6 +5938,7 @@ name = "semio-framework-renderer-wgpu"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "image",
  "js-sys",
  "semio-framework-core",
  "serde",
@@ -7135,6 +7146,7 @@ dependencies = [
  "serde_json",
  "trinity_jack",
  "trinity_ram",
+ "vcs",
  "wasm-bindgen",
 ]
 

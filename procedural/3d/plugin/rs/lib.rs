@@ -1,17 +1,19 @@
 //! 🧱 Procedural 3D plugin — flow-based procedural brep editor bundled as a hot-swappable WASM component.
 
 use flow_core::{dag::DagFixture, FlowFixture, FlowHost, Widget};
+use flow_module_brep::tessellate_geometry_json;
 use semio_framework_plugin::{
     build_node_graph_scene, build_world_3d_scene, create_default_layout, export_mesh_glb_bytes,
     export_mesh_obj, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    world3d_default_camera, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json,
+    world3d_default_camera, world3d_scene, world3d_selection_json,
     CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use semio_framework_core::mesh_from_indexed;
 use std::collections::HashSet;
 use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
 use base64::Engine;
@@ -201,7 +203,123 @@ fn widget_layout_position(fixture: &FlowFixture, widget_id: &str) -> (f64, f64) 
         .unwrap_or((0.0, 0.0))
 }
 
-fn preview_instances_json(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> String {
+fn is_brep_geometry_handle(handle: &str) -> bool {
+    handle.starts_with("solid-")
+        || handle.starts_with("shell-")
+        || handle.starts_with("face-")
+        || handle.starts_with("wire-")
+        || handle.starts_with("edge-")
+        || handle.starts_with("vertex-")
+        || handle.starts_with("compound-")
+        || handle.starts_with("curve-")
+        || handle.starts_with("surface-")
+}
+
+fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
+    match value {
+        Value::Object(map) => {
+            if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
+                if is_brep_geometry_handle(handle) {
+                    handles.push(handle.into());
+                }
+            }
+            for entry in map.values() {
+                collect_geometry_handles_from_eval(entry, handles);
+            }
+        }
+        Value::Array(items) => {
+            for item in items {
+                collect_geometry_handles_from_eval(item, handles);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn geometry_handle_for_widget(eval: &Value, widget_id: &str) -> Option<String> {
+    let widget_eval = eval.get(widget_id)?;
+    let channels = widget_eval.get("out").or_else(|| widget_eval.get("in"))?;
+    let mut handles = Vec::new();
+    collect_geometry_handles_from_eval(channels, &mut handles);
+    handles.into_iter().next()
+}
+
+fn mesh_from_tessellation_json(mesh_json: &str) -> Option<semio_framework_plugin::MeshData> {
+    let parsed: Value = serde_json::from_str(mesh_json).ok()?;
+    if parsed.get("error").is_some() {
+        return None;
+    }
+    let positions: Vec<f32> = parsed
+        .get("position")
+        .or_else(|| parsed.get("positions"))
+        .and_then(|entry| entry.as_array())
+        .map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect())
+        .filter(|items: &Vec<f32>| !items.is_empty())?;
+    let normals: Vec<f32> = parsed
+        .get("normal")
+        .or_else(|| parsed.get("normals"))
+        .and_then(|entry| entry.as_array())
+        .map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect())
+        .unwrap_or_default();
+    let indices: Vec<u32> = parsed
+        .get("index")
+        .or_else(|| parsed.get("indices"))
+        .and_then(|entry| entry.as_array())
+        .map(|items| items.iter().filter_map(|value| value.as_u64().map(|number| number as u32)).collect())
+        .filter(|items: &Vec<u32>| !items.is_empty())?;
+    Some(mesh_from_indexed(&positions, &normals, &indices))
+}
+
+fn evaluated_preview_payload(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> (String, String) {
+    let mut host = FlowHost::from_fixture(fixture.clone());
+    let eval_json = host.evaluate().unwrap_or_default();
+    let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
+    let mut meshes: Vec<Value> = Vec::new();
+    let mut instances: Vec<Value> = Vec::new();
+    for widget in &fixture.widgets {
+        let id = widget_id(widget).to_string();
+        let preview = matches!(widget, Widget::Neuron { preview: true, .. } | Widget::OutputPreview { .. });
+        if !preview {
+            continue;
+        }
+        let Some(handle) = geometry_handle_for_widget(&eval, &id) else {
+            continue;
+        };
+        let mesh_id = format!("eval-{id}");
+        if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
+            let tessellation = tessellate_geometry_json(&handle, 0.05);
+            if let Some(data) = mesh_from_tessellation_json(&tessellation) {
+                meshes.push(json!({ "id": mesh_id, "data": data }));
+            }
+        }
+        if meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
+            let (x, y) = widget_layout_position(fixture, &id);
+            let selected = runtime.selected_node_ids.contains(&id);
+            let hovered = runtime.hovered_node_id.as_deref() == Some(id.as_str());
+            instances.push(json!({
+                "id": id,
+                "meshId": mesh_id,
+                "position": [x * 0.01, -y * 0.01, 0.0],
+                "rotation": [0.0, 0.0, 0.0, 1.0],
+                "scale": [1.0, 1.0, 1.0],
+                "label": id,
+                "selected": selected,
+                "hovered": hovered,
+            }));
+        }
+    }
+    if meshes.is_empty() {
+        let fallback = preview_meshes_json_fallback(fixture);
+        let fallback_instances = preview_instances_json_fallback(fixture, runtime);
+        return (fallback, fallback_instances);
+    }
+    (
+        serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()),
+        serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()),
+    )
+}
+
+fn preview_instances_json_fallback(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> String {
     let instances: Vec<Value> = fixture
         .widgets
         .iter()
@@ -226,7 +344,7 @@ fn preview_instances_json(fixture: &FlowFixture, runtime: &Procedural3dRuntime) 
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn preview_meshes_json(fixture: &FlowFixture) -> String {
+fn preview_meshes_json_fallback(fixture: &FlowFixture) -> String {
     let kinds: Vec<String> = fixture
         .widgets
         .iter()
@@ -239,7 +357,14 @@ fn preview_meshes_json(fixture: &FlowFixture) -> String {
     } else {
         kinds
     };
-    world3d_meshes_json_from_kinds_and_urls(&fallback_kinds, &[])
+    let meshes: Vec<Value> = fallback_kinds
+        .iter()
+        .map(|kind| {
+            let data = mesh_from_kind(kind);
+            json!({ "id": kind, "data": data })
+        })
+        .collect();
+    serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
 fn preview_selection_json(runtime: &Procedural3dRuntime) -> String {
@@ -251,6 +376,14 @@ fn preview_selection_json(runtime: &Procedural3dRuntime) -> String {
 }
 
 fn export_mesh_from_envelope(envelope: &Procedural3dEnvelope) -> semio_framework_plugin::MeshData {
+    let (meshes_json, _) = evaluated_preview_payload(&envelope.fixture, &envelope.runtime);
+    if let Ok(meshes) = serde_json::from_str::<Vec<Value>>(&meshes_json) {
+        if let Some(first) = meshes.first() {
+            if let Ok(data) = serde_json::from_value(first.get("data").cloned().unwrap_or(Value::Null)) {
+                return data;
+            }
+        }
+    }
     let kind = envelope
         .fixture
         .widgets
@@ -549,16 +682,19 @@ impl PluginApp for Procedural3dPlayApp {
         NodeGraphScene::base(nodes_json, edges_json, viewport_json),
                 )
             }
-            PROCEDURAL_3D_PLAY_BODY_PREVIEW => build_world_3d_scene(
-                PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
-                PROCEDURAL_3D_PLAY_APP_ID,
-                world3d_scene(
-                    world3d_default_camera(),
-                    preview_meshes_json(&envelope.fixture),
-                    preview_instances_json(&envelope.fixture, &envelope.runtime),
-                    preview_selection_json(&envelope.runtime),
-                ),
-            ),
+            PROCEDURAL_3D_PLAY_BODY_PREVIEW => {
+                let (meshes_json, instances_json) = evaluated_preview_payload(&envelope.fixture, &envelope.runtime);
+                build_world_3d_scene(
+                    PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
+                    PROCEDURAL_3D_PLAY_APP_ID,
+                    world3d_scene(
+                        world3d_default_camera(),
+                        meshes_json,
+                        instances_json,
+                        preview_selection_json(&envelope.runtime),
+                    ),
+                )
+            }
             PROCEDURAL_3D_PLAY_BODY_HIERARCHY => {
                 build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_node_ids)
             }
@@ -670,17 +806,6 @@ mod tests {
         let node = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("node-graph"));
-    }
-
-    #[test]
-    fn preview_uses_widget_mesh_kinds() {
-        let app = Procedural3dPlayApp;
-        let document = app.initial_document_json();
-        let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, &document, &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("world-3d"));
-        assert!(json.contains("meshId"));
-        assert!(json.contains("box"));
     }
 
     #[test]

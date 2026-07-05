@@ -96,12 +96,16 @@ fn default_envelope() -> Gis2dPlayEnvelope {
     let mut runtime = Gis2dPlayRuntime::default();
     runtime.layer_visibility = default_layer_visibility();
     runtime.map_fixture_json = REUSE_MAP_EXAMPLE_JSON.into();
-    Gis2dPlayEnvelope {
+    let mut play = Gis2dPlayEnvelope {
         envelope: create_document_vcs_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None),
         applied_edit_ids: Vec::new(),
         redo_edit_ids: Vec::new(),
         runtime,
-    }
+    };
+    let mut host = map_host_from_play(&play);
+    host.fit_world_camera();
+    play.runtime.camera_json = host.camera_json();
+    play
 }
 
 fn map_host_from_play(play: &Gis2dPlayEnvelope) -> MapHost {
@@ -119,8 +123,31 @@ fn map_host_from_play(play: &Gis2dPlayEnvelope) -> MapHost {
 }
 
 fn map_canvas_layers(play: &Gis2dPlayEnvelope) -> String {
-    let host = map_host_from_play(play);
+    let mut host = map_host_from_play(play);
+    host.prepare_visible_tiles();
     let mut layers: Vec<GisMapCanvasLayer> = Vec::new();
+    if layer_visible(&play.runtime, "raster") {
+        let tiles: Vec<Value> = serde_json::from_str(&host.visible_tiles_json()).unwrap_or_default();
+        for tile in tiles {
+            let (Some(z), Some(x), Some(y)) = (
+                tile.get("z").and_then(|value| value.as_u64()).map(|value| value as u32),
+                tile.get("x").and_then(|value| value.as_u64()).map(|value| value as u32),
+                tile.get("y").and_then(|value| value.as_u64()).map(|value| value as u32),
+            ) else {
+                continue;
+            };
+            let rect = projection::tile_world_rect(z, x, y);
+            layers.push(GisMapCanvasLayer {
+                id: format!("tile-{z}-{x}-{y}"),
+                kind: "tile".into(),
+                name: format!("{z}/{x}/{y}"),
+                x: rect.x0(),
+                y: rect.y0(),
+                width: rect.width(),
+                height: rect.height(),
+            });
+        }
+    }
     for position in host.positions.values() {
         if !layer_visible(&play.runtime, "positions") {
             continue;
@@ -487,6 +514,11 @@ impl PluginApp for Gis2dPlayApp {
                     REUSE_MAP_EXAMPLE_JSON.into()
                 };
                 play.runtime.selected_ids.clear();
+                let mut host = map_host_from_play(&play);
+                if !example_id.is_empty() && example_id != "empty" {
+                    host.fit_world_camera();
+                    play.runtime.camera_json = host.camera_json();
+                }
                 return vec![set_document_op(&play)];
             }
             "fitWorld" => {
@@ -519,13 +551,38 @@ impl PluginApp for Gis2dPlayApp {
             }
             "canvasWheel" => {
                 let delta = args.and_then(|value| value.get("deltaY")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let sx = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(400.0);
+                let sy = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(300.0);
                 let mut host = map_host_from_play(&play);
-                let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
-                host.camera.zoom = (host.camera.zoom * factor).clamp(0.1, 8.0);
+                host.wheel_screen(sx, sy, delta);
                 play.runtime.camera_json = host.camera_json();
                 return vec![set_document_op(&play)];
             }
-            "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => {}
+            "canvasPointerDown" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let button = args.and_then(|value| value.get("button")).and_then(|value| value.as_u64()).unwrap_or(0) as u8;
+                let mut host = map_host_from_play(&play);
+                host.pointer_down_screen(x, y, button);
+                play.runtime.camera_json = host.camera_json();
+                return vec![set_document_op(&play)];
+            }
+            "canvasPointerMove" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let mut host = map_host_from_play(&play);
+                host.pointer_move_screen(x, y);
+                play.runtime.camera_json = host.camera_json();
+                return vec![set_document_op(&play)];
+            }
+            "canvasPointerUp" => {
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let mut host = map_host_from_play(&play);
+                host.pointer_up_screen(x, y);
+                play.runtime.camera_json = host.camera_json();
+                return vec![set_document_op(&play)];
+            }
             _ => {}
         }
         Vec::new()

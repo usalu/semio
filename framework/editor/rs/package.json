@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": "./pkg/framework_editor.js"
+    ".": "./pkg/framework_editor.js",
+    "./pkg/framework_editor.js": "./pkg/framework_editor.js"
   },
   "bundleKind": "library"
 }

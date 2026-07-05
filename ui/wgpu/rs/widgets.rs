@@ -9,6 +9,98 @@ use crate::text::FontAtlas;
 use crate::theme::{Rgba, Theme};
 use std::collections::HashMap;
 
+#[derive(Clone, Debug)]
+pub struct InputMeta<E> {
+    pub on_change: E,
+    pub commit: Option<String>,
+    pub value: String,
+}
+
+#[derive(Clone, Debug)]
+pub struct SliderMeta<E> {
+    pub on_change: E,
+    pub min: f64,
+    pub max: f64,
+    pub step: f64,
+    pub value: f64,
+    pub bounds_x: f32,
+    pub bounds_w: f32,
+}
+
+#[derive(Clone, Debug)]
+pub struct StepperMeta<E> {
+    pub on_absolute: E,
+    pub on_delta: E,
+    pub step: f64,
+    pub value: f64,
+}
+
+#[derive(Clone, Debug)]
+pub struct RingMeta<E> {
+    pub on_change: E,
+    pub disabled: bool,
+    pub center_x: f32,
+    pub center_y: f32,
+    pub radius: f32,
+}
+
+#[derive(Clone, Debug)]
+pub struct Vec3Meta<E> {
+    pub on_change: E,
+    pub value: [f64; 3],
+}
+
+pub struct WidgetInteractionMaps<E> {
+    pub input_metas: HashMap<String, InputMeta<E>>,
+    pub select_metas: HashMap<String, E>,
+    pub toggle_metas: HashMap<String, (bool, E)>,
+    pub slider_metas: HashMap<String, SliderMeta<E>>,
+    pub stepper_metas: HashMap<String, StepperMeta<E>>,
+    pub ring_metas: HashMap<String, RingMeta<E>>,
+    pub vec3_metas: HashMap<String, Vec3Meta<E>>,
+    pub slider_live_values: HashMap<String, f64>,
+    pub ring_live_values: HashMap<String, f64>,
+    pub tree_hover_commands: HashMap<String, E>,
+    pub tree_unhover_commands: HashMap<String, E>,
+    pub tree_selection_change: Option<E>,
+}
+
+impl<E> Default for WidgetInteractionMaps<E> {
+    fn default() -> Self {
+        Self {
+            input_metas: HashMap::new(),
+            select_metas: HashMap::new(),
+            toggle_metas: HashMap::new(),
+            slider_metas: HashMap::new(),
+            stepper_metas: HashMap::new(),
+            ring_metas: HashMap::new(),
+            vec3_metas: HashMap::new(),
+            slider_live_values: HashMap::new(),
+            ring_live_values: HashMap::new(),
+            tree_hover_commands: HashMap::new(),
+            tree_unhover_commands: HashMap::new(),
+            tree_selection_change: None,
+        }
+    }
+}
+
+impl<E> WidgetInteractionMaps<E> {
+    pub fn clear_frame(&mut self) {
+        self.input_metas.clear();
+        self.select_metas.clear();
+        self.toggle_metas.clear();
+        self.slider_metas.clear();
+        self.stepper_metas.clear();
+        self.ring_metas.clear();
+        self.vec3_metas.clear();
+        self.slider_live_values.clear();
+        self.ring_live_values.clear();
+        self.tree_hover_commands.clear();
+        self.tree_unhover_commands.clear();
+        self.tree_selection_change = None;
+    }
+}
+
 pub struct WidgetContext<'a, E> {
     pub draw: &'a mut DrawList,
     pub overlay: Option<&'a mut DrawList>,
@@ -19,9 +111,7 @@ pub struct WidgetContext<'a, E> {
     pub scroll_offsets: &'a mut HashMap<String, f32>,
     pub collapsed_sections: &'a mut HashMap<String, bool>,
     pub open_selects: &'a mut HashMap<String, bool>,
-    pub tree_hover_commands: Option<&'a mut HashMap<String, E>>,
-    pub tree_unhover_commands: Option<&'a mut HashMap<String, E>>,
-    pub tree_selection_change: Option<&'a mut Option<E>>,
+    pub interaction_maps: Option<&'a mut WidgetInteractionMaps<E>>,
 }
 
 #[derive(Clone, Debug)]
@@ -74,16 +164,36 @@ pub struct TreeSection<E> {
 
 #[derive(Clone, Debug)]
 pub enum ControlNode<E> {
-    Button { id: Option<String>, label: String, event: Option<E> },
-    Input { id: String, value: String, placeholder: Option<String> },
-    Select { id: String, value: String, items: Vec<SelectItem>, placeholder: Option<String>, event: Option<E> },
-    Toggle { id: String, pressed: bool, text: Option<String>, event: Option<E> },
-    Vec3 { id: String, value: Option<[f64; 3]>, event: Option<E> },
+    Button { id: Option<String>, icon_id: Option<String>, label: String, event: Option<E> },
+    Input {
+        id: String,
+        input_kind: String,
+        value: String,
+        placeholder: Option<String>,
+        commit: Option<String>,
+        on_change: Option<E>,
+    },
+    Select {
+        id: String,
+        value: String,
+        items: Vec<SelectItem>,
+        placeholder: Option<String>,
+        on_change: Option<E>,
+    },
+    Toggle { id: String, icon_id: String, pressed: bool, text: Option<String>, on_change: Option<E> },
+    Vec3 { id: String, value: Option<[f64; 3]>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
-    Slider { id: String, value: f64, min: f64, max: f64, event: Option<E> },
-    NumberStepper { id: String, value: f64, event: Option<E> },
-    Ring { id: String, t: f64, event: Option<E> },
-    IconSelect { id: String, value: String, event: Option<E> },
+    Slider { id: String, value: f64, min: f64, max: f64, step: f64, on_change: Option<E> },
+    NumberStepper {
+        id: String,
+        value: f64,
+        step: f64,
+        uniform: bool,
+        on_absolute: Option<E>,
+        on_delta: Option<E>,
+    },
+    Ring { id: String, t: f64, disabled: bool, on_change: Option<E> },
+    IconSelect { id: String, value: String, uniform: bool, classifier_kind: String, on_change: Option<E> },
 }
 
 #[derive(Clone, Debug)]
@@ -96,18 +206,38 @@ pub enum WidgetNode<E> {
     },
     Text { value: String, emphasize: bool },
     Separator,
-    Button { id: Option<String>, label: String, event: Option<E> },
-    Input { id: String, value: String, placeholder: Option<String> },
-    Select { id: String, value: String, items: Vec<SelectItem>, placeholder: Option<String>, event: Option<E> },
-    Toggle { id: String, pressed: bool, text: Option<String>, event: Option<E> },
-    Vec3 { id: String, value: Option<[f64; 3]>, event: Option<E> },
+    Button { id: Option<String>, icon_id: Option<String>, label: String, event: Option<E> },
+    Input {
+        id: String,
+        input_kind: String,
+        value: String,
+        placeholder: Option<String>,
+        commit: Option<String>,
+        on_change: Option<E>,
+    },
+    Select {
+        id: String,
+        value: String,
+        items: Vec<SelectItem>,
+        placeholder: Option<String>,
+        on_change: Option<E>,
+    },
+    Toggle { id: String, icon_id: String, pressed: bool, text: Option<String>, on_change: Option<E> },
+    Vec3 { id: String, value: Option<[f64; 3]>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
-    Slider { id: String, value: f64, min: f64, max: f64, event: Option<E> },
-    NumberStepper { id: String, value: f64, event: Option<E> },
-    Ring { id: String, t: f64, event: Option<E> },
-    IconSelect { id: String, value: String, event: Option<E> },
+    Slider { id: String, value: f64, min: f64, max: f64, step: f64, on_change: Option<E> },
+    NumberStepper {
+        id: String,
+        value: f64,
+        step: f64,
+        uniform: bool,
+        on_absolute: Option<E>,
+        on_delta: Option<E>,
+    },
+    Ring { id: String, t: f64, disabled: bool, on_change: Option<E> },
+    IconSelect { id: String, value: String, uniform: bool, classifier_kind: String, on_change: Option<E> },
     Field { id: String, label: String, child: ControlNode<E> },
-    Section { id: String, label: Option<String>, children: Vec<WidgetNode<E>> },
+    Section { id: String, label: Option<String>, default_open: bool, children: Vec<WidgetNode<E>> },
     Tree {
         sections: Vec<TreeSection<E>>,
         selected_ids: Vec<String>,
@@ -155,38 +285,59 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
         }
         WidgetNode::Text { value, emphasize } => {
             let size = if *emphasize { theme.font_size_emphasized } else { theme.font_size_body };
-            atlas.measure_text(value, size)
+            let (w, _) = atlas.measure_text(value, size);
+            let lines = wrap_text(atlas, value, w.max(120.0), size);
+            (w.max(120.0), lines.len() as f32 * size * 1.35)
         }
-        WidgetNode::Separator => (theme.control_height, 1.0),
+        WidgetNode::Separator => (theme.control_height.max(1.0), 1.0 + theme.gap_standard),
         WidgetNode::Button { .. } | WidgetNode::Input { .. } | WidgetNode::Select { .. }
         | WidgetNode::Toggle { .. } | WidgetNode::Slider { .. } | WidgetNode::NumberStepper { .. }
         | WidgetNode::IconSelect { .. } => (theme.control_height, theme.control_height),
         WidgetNode::Vec3 { .. } => (theme.control_height, theme.control_height * 3.0 + theme.gap_standard * 2.0),
-        WidgetNode::KeyValue { entries } => (theme.control_height, entries.len() as f32 * 22.0),
-        WidgetNode::Ring { .. } => (80.0, 80.0),
-        WidgetNode::Field { child, .. } => {
-            let (_, ch) = measure_control(theme, child);
-            (ch + 18.0, ch + 18.0)
+        WidgetNode::KeyValue { entries } => {
+            let label_w = entries
+                .iter()
+                .map(|e| atlas.measure_text(&e.label, theme.font_size_small).0)
+                .fold(0.0f32, f32::max);
+            (label_w + theme.gap_standard * 2.0 + 80.0, entries.len() as f32 * theme.control_height)
         }
-        WidgetNode::Section { children, .. } => {
+        WidgetNode::Ring { .. } => (80.0, 80.0),
+        WidgetNode::Field { label, child, .. } => {
+            let label_h = theme.font_size_small;
+            let gap = gap_for_token(theme, Some("standard"));
+            let (cw, ch) = measure_control(atlas, theme, child);
+            (cw.max(atlas.measure_text(label, theme.font_size_small).0), label_h + gap + ch)
+        }
+        WidgetNode::Section { children, label, .. } => {
             let mut height = PANEL_HEADER;
+            let mut max_w = 0.0f32;
+            if label.is_some() {
+                max_w = max_w.max(160.0);
+            }
             for child in children {
-                let (_, h) = measure_widget(atlas, theme, child);
+                let (w, h) = measure_widget(atlas, theme, child);
+                max_w = max_w.max(w);
                 height += h + theme.gap_standard;
             }
-            (200.0, height)
+            (max_w.max(120.0), height)
         }
-        WidgetNode::Tree { sections, .. } => (200.0, measure_tree_sections(sections)),
+        WidgetNode::Tree { sections, .. } => (measure_tree_sections_width(sections, atlas, theme), measure_tree_sections(sections)),
     }
 }
 
-fn measure_control<E>(theme: &Theme, control: &ControlNode<E>) -> (f32, f32) {
+fn measure_control<E>(atlas: &mut FontAtlas, theme: &Theme, control: &ControlNode<E>) -> (f32, f32) {
     match control {
         ControlNode::Button { .. } | ControlNode::Input { .. } | ControlNode::Select { .. }
         | ControlNode::Toggle { .. } | ControlNode::Slider { .. } | ControlNode::NumberStepper { .. }
         | ControlNode::IconSelect { .. } => (theme.control_height, theme.control_height),
-        ControlNode::Vec3 { .. } => (theme.control_height, theme.control_height * 3.0),
-        ControlNode::KeyValue { entries } => (theme.control_height, entries.len() as f32 * 22.0),
+        ControlNode::Vec3 { .. } => (theme.control_height, theme.control_height * 3.0 + theme.gap_standard * 2.0),
+        ControlNode::KeyValue { entries } => {
+            let label_w = entries
+                .iter()
+                .map(|e| atlas.measure_text(&e.label, theme.font_size_small).0)
+                .fold(0.0f32, f32::max);
+            (label_w + theme.gap_standard * 2.0 + 80.0, entries.len() as f32 * theme.control_height)
+        }
         ControlNode::Ring { .. } => (80.0, 80.0),
     }
 }
@@ -220,46 +371,73 @@ pub fn render_widget<E: Clone>(
         WidgetNode::Text { value, emphasize } => {
             let size = if *emphasize { ctx.theme.font_size_emphasized } else { ctx.theme.font_size_body };
             let color = if *emphasize { ctx.theme.text } else { ctx.theme.text_muted };
-            draw_text(ctx, value, bounds.x, bounds.y + size, size, color);
+            draw_text_wrapped(ctx, value, bounds.x, bounds.y, bounds.w.max(1.0), size, color);
         }
         WidgetNode::Separator => {
             let y = bounds.y + bounds.h * 0.5;
             ctx.draw.push_line(bounds.x, y, bounds.x + bounds.w, y, ctx.theme.separator, 1.0);
         }
-        WidgetNode::Button { id, label, event } => render_button(id.clone(), label, event.clone(), bounds, ctx),
-        WidgetNode::Input { id, value, placeholder } => render_input(id, value, placeholder.as_deref(), bounds, ctx),
-        WidgetNode::Select { id, value, items, placeholder, event } => {
-            render_select(id, value, items, placeholder.as_deref(), event.clone(), bounds, ctx)
+        WidgetNode::Button { id, icon_id, label, event } => {
+            render_button(id.clone(), icon_id.as_deref(), label, event.clone(), bounds, ctx)
         }
-        WidgetNode::Toggle { id, pressed, text, event } => {
-            render_toggle(id, *pressed, text.as_deref(), event.clone(), bounds, ctx)
+        WidgetNode::Input { id, value, placeholder, commit, on_change, .. } => {
+            register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
+            render_input(id, value, placeholder.as_deref(), bounds, ctx);
         }
-        WidgetNode::Vec3 { id, value, event } => render_vec3(id, *value, event.clone(), bounds, ctx),
+        WidgetNode::Select { id, value, items, placeholder, on_change } => {
+            register_select_meta(ctx, id, on_change.clone());
+            render_select(id, value, items, placeholder.as_deref(), bounds, ctx);
+        }
+        WidgetNode::Toggle { id, icon_id, pressed, text, on_change } => {
+            register_toggle_meta(ctx, id, *pressed, on_change.clone());
+            render_toggle(id, icon_id, *pressed, text.as_deref(), bounds, ctx);
+        }
+        WidgetNode::Vec3 { id, value, on_change } => render_vec3(id, *value, on_change.clone(), bounds, ctx),
         WidgetNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
-        WidgetNode::Slider { id, value, min, max, event } => {
-            render_slider(id, *value, *min, *max, event.clone(), bounds, ctx)
+        WidgetNode::Slider { id, value, min, max, step, on_change } => {
+            render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx)
         }
-        WidgetNode::NumberStepper { id, value, event } => {
-            render_number_stepper(id, *value, event.clone(), bounds, ctx)
+        WidgetNode::NumberStepper { id, value, step, uniform, on_absolute, on_delta } => {
+            render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx)
         }
-        WidgetNode::Ring { id, t, event } => render_ring(id, *t, event.clone(), bounds, ctx),
-        WidgetNode::IconSelect { id, value, event } => render_icon_select(id, value, event.clone(), bounds, ctx),
+        WidgetNode::Ring { id, t, disabled, on_change } => {
+            render_ring(id, *t, *disabled, on_change.clone(), bounds, ctx)
+        }
+        WidgetNode::IconSelect { id, value, uniform, classifier_kind, on_change } => {
+            render_icon_select(id, value, *uniform, classifier_kind, on_change.clone(), bounds, ctx)
+        }
         WidgetNode::Field { label, child, .. } => {
-            draw_text(ctx, label, bounds.x, bounds.y + ctx.theme.font_size_small, ctx.theme.font_size_small, ctx.theme.text_muted);
-            let child_bounds = Rect::new(bounds.x, bounds.y + 18.0, bounds.w, bounds.h - 18.0);
+            let label_h = ctx.theme.font_size_small;
+            let gap = gap_for_token(ctx.theme, Some("standard"));
+            draw_text(ctx, label, bounds.x, bounds.y + label_h, ctx.theme.font_size_small, ctx.theme.text_muted);
+            let child_bounds = Rect::new(bounds.x, bounds.y + label_h + gap, bounds.w, bounds.h - label_h - gap);
             render_control(child, child_bounds, ctx);
         }
-        WidgetNode::Section { label, children, id } => {
-            let collapsed = *ctx.collapsed_sections.get(id).unwrap_or(&false);
-            if let Some(label) = label {
+        WidgetNode::Section { label, children, id, default_open } => {
+            let section_key = format!("section.{id}");
+            if !ctx.collapsed_sections.contains_key(&section_key) {
+                ctx.collapsed_sections.insert(section_key.clone(), !default_open);
+            }
+            let collapsed = tree_row_collapsed(ctx.collapsed_sections, &section_key, *default_open);
+            if label.is_some() {
                 let header = Rect::new(bounds.x, bounds.y, bounds.w, PANEL_HEADER);
-                let chevron = if collapsed { "▸" } else { "▾" };
-                draw_text(ctx, chevron, bounds.x, bounds.y + ctx.theme.font_size_body, ctx.theme.font_size_body, ctx.theme.text_muted);
-                draw_text(ctx, label, bounds.x + 14.0, bounds.y + ctx.theme.font_size_body, ctx.theme.font_size_body, ctx.theme.text);
+                let chevron_rect = Rect::new(bounds.x, bounds.y, TREE_TOGGLE_WIDTH, PANEL_HEADER);
+                let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
+                tree_draw_chevron(ctx, chevron, chevron_rect);
+                if let Some(label) = label {
+                    draw_text(
+                        ctx,
+                        label,
+                        bounds.x + TREE_TOGGLE_WIDTH + ctx.theme.gap_standard,
+                        bounds.y + (PANEL_HEADER + ctx.theme.font_size_body) * 0.5 - 2.0,
+                        ctx.theme.font_size_body,
+                        ctx.theme.text,
+                    );
+                }
                 ctx.input.register_hit(HitTarget {
                     rect: header,
                     event: None,
-                    control_id: Some(format!("section.{id}")),
+                    control_id: Some(format!("section.chevron.{id}")),
                     kind: HitKind::Generic,
                     drag_axis: None,
                     drag_data: None,
@@ -281,8 +459,8 @@ pub fn render_widget<E: Clone>(
             highlighted_ids,
             selection_change,
         } => {
-            if let Some(slot) = ctx.tree_selection_change.as_deref_mut() {
-                *slot = selection_change.clone();
+            if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
+                maps.tree_selection_change = selection_change.clone();
             }
             let scroll_id = format!("tree:{:.0}:{:.0}", bounds.x, bounds.y);
             let content_h = measure_tree_sections_state(sections, ctx.collapsed_sections);
@@ -295,29 +473,70 @@ pub fn render_widget<E: Clone>(
 
 fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     match control {
-        ControlNode::Button { id, label, event } => render_button(id.clone(), label, event.clone(), bounds, ctx),
-        ControlNode::Input { id, value, placeholder } => render_input(id, value, placeholder.as_deref(), bounds, ctx),
-        ControlNode::Select { id, value, items, placeholder, event } => {
-            render_select(id, value, items, placeholder.as_deref(), event.clone(), bounds, ctx)
+        ControlNode::Button { id, icon_id, label, event } => {
+            render_button(id.clone(), icon_id.as_deref(), label, event.clone(), bounds, ctx)
         }
-        ControlNode::Toggle { id, pressed, text, event } => {
-            render_toggle(id, *pressed, text.as_deref(), event.clone(), bounds, ctx)
+        ControlNode::Input { id, value, placeholder, commit, on_change, .. } => {
+            register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
+            render_input(id, value, placeholder.as_deref(), bounds, ctx);
         }
-        ControlNode::Vec3 { id, value, event } => render_vec3(id, *value, event.clone(), bounds, ctx),
+        ControlNode::Select { id, value, items, placeholder, on_change } => {
+            register_select_meta(ctx, id, on_change.clone());
+            render_select(id, value, items, placeholder.as_deref(), bounds, ctx);
+        }
+        ControlNode::Toggle { id, icon_id, pressed, text, on_change } => {
+            register_toggle_meta(ctx, id, *pressed, on_change.clone());
+            render_toggle(id, icon_id, *pressed, text.as_deref(), bounds, ctx);
+        }
+        ControlNode::Vec3 { id, value, on_change } => render_vec3(id, *value, on_change.clone(), bounds, ctx),
         ControlNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
-        ControlNode::Slider { id, value, min, max, event } => {
-            render_slider(id, *value, *min, *max, event.clone(), bounds, ctx)
+        ControlNode::Slider { id, value, min, max, step, on_change } => {
+            render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx)
         }
-        ControlNode::NumberStepper { id, value, event } => {
-            render_number_stepper(id, *value, event.clone(), bounds, ctx)
+        ControlNode::NumberStepper { id, value, step, uniform, on_absolute, on_delta } => {
+            render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx)
         }
-        ControlNode::Ring { id, t, event } => render_ring(id, *t, event.clone(), bounds, ctx),
-        ControlNode::IconSelect { id, value, event } => render_icon_select(id, value, event.clone(), bounds, ctx),
+        ControlNode::Ring { id, t, disabled, on_change } => render_ring(id, *t, *disabled, on_change.clone(), bounds, ctx),
+        ControlNode::IconSelect { id, value, uniform, classifier_kind, on_change } => {
+            render_icon_select(id, value, *uniform, classifier_kind, on_change.clone(), bounds, ctx)
+        }
+    }
+}
+
+fn register_input_meta<E: Clone>(
+    ctx: &mut WidgetContext<'_, E>,
+    id: &str,
+    value: &str,
+    commit: Option<String>,
+    on_change: Option<E>,
+) {
+    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
+        maps.input_metas.insert(
+            id.to_string(),
+            InputMeta {
+                on_change,
+                commit,
+                value: value.to_string(),
+            },
+        );
+    }
+}
+
+fn register_select_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, on_change: Option<E>) {
+    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
+        maps.select_metas.insert(id.to_string(), on_change);
+    }
+}
+
+fn register_toggle_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, pressed: bool, on_change: Option<E>) {
+    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
+        maps.toggle_metas.insert(id.to_string(), (pressed, on_change));
     }
 }
 
 fn render_button<E: Clone>(
     id: Option<String>,
+    icon_id: Option<&str>,
     label: &str,
     event: Option<E>,
     bounds: Rect,
@@ -328,9 +547,10 @@ fn render_button<E: Clone>(
     let bg = item_bg(ctx.theme, false, hovered);
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);
     let mut text_x = bounds.x + ctx.theme.padding_standard;
+    let icon_key = icon_id.filter(|id| !id.is_empty()).unwrap_or(label);
     if let Some(icons) = ctx.icons {
-        if icons.icon_uv(label).is_some() {
-            push_icon(ctx.draw, icons, label, text_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY);
+        if icons.icon_uv(icon_key).is_some() {
+            push_icon(ctx.draw, icons, icon_key, text_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY);
             text_x += ICON_TINY + ctx.theme.gap_standard;
         }
     }
@@ -394,7 +614,6 @@ fn render_select<E: Clone>(
     value: &str,
     items: &[SelectItem],
     placeholder: Option<&str>,
-    event: Option<E>,
     bounds: Rect,
     ctx: &mut WidgetContext<'_, E>,
 ) {
@@ -428,15 +647,6 @@ fn render_select<E: Clone>(
             bounds.y + (bounds.h - ICON_TINY) * 0.5,
             ICON_TINY,
         );
-    } else {
-        draw_text(
-            ctx,
-            "▾",
-            bounds.x + bounds.w - 16.0,
-            bounds.y + (bounds.h + ctx.theme.font_size_small) * 0.5,
-            ctx.theme.font_size_small,
-            ctx.theme.text_muted,
-        );
     }
     ctx.input.register_hit(HitTarget {
         rect: bounds,
@@ -450,18 +660,19 @@ fn render_select<E: Clone>(
         let item_h = ctx.theme.control_height;
         let menu_h = items.len() as f32 * item_h + 4.0;
         let menu = Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);
-        ctx.draw.push_rounded([menu.x, menu.y, menu.w, menu.h], ctx.theme.overlay_bg, ctx.theme.border_radius);
+        let overlay = ctx.overlay.as_deref_mut().unwrap_or(ctx.draw);
+        overlay.push_rounded([menu.x, menu.y, menu.w, menu.h], ctx.theme.overlay_bg, ctx.theme.border_radius);
         for (index, item) in items.iter().enumerate() {
             let row = Rect::new(menu.x + 2.0, menu.y + 2.0 + index as f32 * item_h, menu.w - 4.0, item_h);
             let row_hovered = ctx.input.hit_at(ctx.input.pointer_x, ctx.input.pointer_y)
                 .and_then(|h| h.control_id.as_deref()) == Some(&format!("{id}.item.{}", item.value));
             if row_hovered || item.value == value {
-                ctx.draw.push_rounded([row.x, row.y, row.w, row.h], ctx.theme.row_hover, ctx.theme.border_radius);
+                overlay.push_rounded([row.x, row.y, row.w, row.h], ctx.theme.row_hover, ctx.theme.border_radius);
             }
-            draw_text(ctx, &item.label, row.x + 8.0, row.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
+            draw_text_on(overlay, ctx.atlas, &item.label, row.x + 8.0, row.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
             ctx.input.register_hit(HitTarget {
                 rect: row,
-                event: event.clone(),
+                event: None,
                 control_id: Some(format!("{id}.item.{}", item.value)),
                 kind: HitKind::DropdownItem,
                 drag_axis: None,
@@ -473,9 +684,9 @@ fn render_select<E: Clone>(
 
 fn render_toggle<E: Clone>(
     id: &str,
+    icon_id: &str,
     pressed: bool,
     text: Option<&str>,
-    event: Option<E>,
     bounds: Rect,
     ctx: &mut WidgetContext<'_, E>,
 ) {
@@ -483,6 +694,12 @@ fn render_toggle<E: Clone>(
     let bg = item_bg(ctx.theme, pressed, hovered);
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);
     let mut content_x = bounds.x + ctx.theme.padding_standard;
+    if let Some(icons) = ctx.icons {
+        if icons.icon_uv(icon_id).is_some() {
+            push_icon(ctx.draw, icons, icon_id, content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY);
+            content_x += ICON_TINY + ctx.theme.gap_standard;
+        }
+    }
     if let Some(text) = text {
         draw_text(
             ctx,
@@ -495,7 +712,7 @@ fn render_toggle<E: Clone>(
     }
     ctx.input.register_hit(HitTarget {
         rect: bounds,
-        event,
+        event: None,
         control_id: Some(id.to_string()),
         kind: HitKind::Toggle,
         drag_axis: None,
@@ -503,39 +720,50 @@ fn render_toggle<E: Clone>(
     });
 }
 
-fn render_vec3<E: Clone>(id: &str, value: Option<[f64; 3]>, event: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+fn render_vec3<E: Clone>(id: &str, value: Option<[f64; 3]>, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let values = value.unwrap_or([0.0, 0.0, 0.0]);
-    let labels = ["X", "Y", "Z"];
-    for (index, label) in labels.iter().enumerate() {
-        let y = bounds.y + index as f32 * (ctx.theme.control_height + 4.0);
-        let row = Rect::new(bounds.x, y, bounds.w, ctx.theme.control_height);
-        ctx.draw.push_rounded([row.x, row.y, row.w, row.h], ctx.theme.input_bg, ctx.theme.border_radius);
-        let text = format!("{label}: {:.3}", values[index]);
-        draw_text(ctx, &text, row.x + 8.0, row.y + 18.0, ctx.theme.font_size_small, ctx.theme.text);
+    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change.clone()) {
+        maps.vec3_metas.insert(id.to_string(), Vec3Meta { on_change, value: values });
     }
-    ctx.input.register_hit(HitTarget {
-        rect: bounds,
-        event,
-        control_id: Some(id.to_string()),
-        kind: HitKind::Generic,
-        drag_axis: None,
-        drag_data: None,
-    });
+    let gap = ctx.theme.gap_standard;
+    let seg_w = (bounds.w - gap * 2.0) / 3.0;
+    let labels = ["X", "Y", "Z"];
+    for (index, axis) in labels.iter().enumerate() {
+        let x = bounds.x + index as f32 * (seg_w + gap);
+        let row = Rect::new(x, bounds.y, seg_w, bounds.h);
+        let input_id = format!("{id}.{index}");
+        let text = format!("{:.3}", values[index]);
+        register_input_meta(ctx, &input_id, &text, None, None);
+        render_input(&input_id, &text, Some(axis), row, ctx);
+    }
 }
 
 fn render_key_value<E>(entries: &[KeyValueEntry], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+    let label_w = entries
+        .iter()
+        .map(|e| measure_text_width(ctx, &e.label, ctx.theme.font_size_small))
+        .fold(0.0f32, f32::max);
+    let value_x = bounds.x + label_w + ctx.theme.gap_standard * 2.0;
+    let row_h = ctx.theme.control_height;
     for (index, entry) in entries.iter().enumerate() {
-        let y = bounds.y + index as f32 * 22.0;
-        draw_text(ctx, &entry.label, bounds.x, y + ctx.theme.font_size_small, ctx.theme.font_size_small, ctx.theme.text_muted);
+        let y = bounds.y + index as f32 * row_h;
+        draw_text(ctx, &entry.label, bounds.x, y + (row_h + ctx.theme.font_size_small) * 0.5 - 1.0, ctx.theme.font_size_small, ctx.theme.text_muted);
         draw_text(
             ctx,
             &entry.value,
-            bounds.x + bounds.w * 0.4,
-            y + ctx.theme.font_size_small,
+            value_x,
+            y + (row_h + ctx.theme.font_size_small) * 0.5 - 1.0,
             ctx.theme.font_size_small,
             ctx.theme.text,
         );
     }
+}
+
+fn quantize_step(value: f64, step: f64, min: f64) -> f64 {
+    if step <= 0.0 {
+        return value;
+    }
+    min + ((value - min) / step).round() * step
 }
 
 fn render_slider<E: Clone>(
@@ -543,7 +771,8 @@ fn render_slider<E: Clone>(
     value: f64,
     min: f64,
     max: f64,
-    event: Option<E>,
+    step: f64,
+    on_change: Option<E>,
     bounds: Rect,
     ctx: &mut WidgetContext<'_, E>,
 ) {
@@ -555,11 +784,29 @@ fn render_slider<E: Clone>(
         let dx = ctx.input.drag.current_x - ctx.input.drag.start_x;
         t = (t as f32 + dx / bounds.w.max(1.0)).clamp(0.0, 1.0) as f64;
     }
-    let knob_x = bounds.x + bounds.w * t as f32;
+    let live = quantize_step(min + t * range, step, min).clamp(min, max);
+    if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
+        if let Some(on_change) = on_change.clone() {
+            maps.slider_metas.insert(
+                id.to_string(),
+                SliderMeta {
+                    on_change,
+                    min,
+                    max,
+                    step,
+                    value,
+                    bounds_x: bounds.x,
+                    bounds_w: bounds.w,
+                },
+            );
+        }
+        maps.slider_live_values.insert(id.to_string(), live);
+    }
+    let knob_x = bounds.x + bounds.w * ((live - min) / range).clamp(0.0, 1.0) as f32;
     ctx.draw.push_rounded([knob_x - 6.0, track_y - 6.0, 12.0, 12.0], ctx.theme.accent, 6.0);
     ctx.input.register_hit(HitTarget {
         rect: bounds,
-        event,
+        event: None,
         control_id: Some(id.to_string()),
         kind: HitKind::Slider,
         drag_axis: Some(DragAxis::Horizontal),
@@ -567,35 +814,66 @@ fn render_slider<E: Clone>(
     });
 }
 
-fn render_number_stepper<E: Clone>(id: &str, value: f64, event: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+fn render_number_stepper<E: Clone>(
+    id: &str,
+    value: f64,
+    step: f64,
+    uniform: bool,
+    on_absolute: Option<E>,
+    on_delta: Option<E>,
+    bounds: Rect,
+    ctx: &mut WidgetContext<'_, E>,
+) {
     let seg = bounds.w / 3.0;
     let minus = Rect::new(bounds.x, bounds.y, seg, bounds.h);
     let center = Rect::new(bounds.x + seg, bounds.y, seg, bounds.h);
     let plus = Rect::new(bounds.x + seg * 2.0, bounds.y, seg, bounds.h);
-    ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.input_bg, ctx.theme.border_radius);
+    let hair = ctx.theme.stroke_hairline;
+    push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.input_bg);
+    ctx.draw.push_solid([bounds.x + seg, bounds.y, hair, bounds.h], ctx.theme.border_normal);
+    ctx.draw.push_solid([bounds.x + seg * 2.0, bounds.y, hair, bounds.h], ctx.theme.border_normal);
+    let minus_hovered = ctx.input.hovered_id.as_deref() == Some(&format!("{id}.minus"));
+    let plus_hovered = ctx.input.hovered_id.as_deref() == Some(&format!("{id}.plus"));
+    if minus_hovered {
+        ctx.draw.push_solid([minus.x, minus.y, minus.w, minus.h], ctx.theme.button_hover);
+    }
+    if plus_hovered {
+        ctx.draw.push_solid([plus.x, plus.y, plus.w, plus.h], ctx.theme.button_hover);
+    }
     draw_text(ctx, "−", minus.x + seg * 0.5 - 4.0, minus.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
-    let text = format!("{value:.3}");
-    draw_text(ctx, &text, center.x + 8.0, center.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
+    let text = if uniform {
+        format!("{value:.3}")
+    } else {
+        format!("{value:.3}")
+    };
+    let input_id = format!("{id}.input");
+    register_input_meta(ctx, &input_id, &text, None, on_absolute.clone());
+    render_input(&input_id, &text, None, center, ctx);
     draw_text(ctx, "+", plus.x + seg * 0.5 - 4.0, plus.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
+    if let (Some(maps), Some(on_absolute), Some(on_delta)) =
+        (ctx.interaction_maps.as_deref_mut(), on_absolute.clone(), on_delta.clone())
+    {
+        maps.stepper_metas.insert(
+            id.to_string(),
+            StepperMeta {
+                on_absolute,
+                on_delta,
+                step,
+                value,
+            },
+        );
+    }
     ctx.input.register_hit(HitTarget {
         rect: minus,
-        event: event.clone(),
+        event: None,
         control_id: Some(format!("{id}.minus")),
         kind: HitKind::Generic,
         drag_axis: None,
         drag_data: None,
     });
     ctx.input.register_hit(HitTarget {
-        rect: center,
-        event: None,
-        control_id: Some(format!("{id}.input")),
-        kind: HitKind::Input,
-        drag_axis: None,
-        drag_data: None,
-    });
-    ctx.input.register_hit(HitTarget {
         rect: plus,
-        event,
+        event: None,
         control_id: Some(format!("{id}.plus")),
         kind: HitKind::Generic,
         drag_axis: None,
@@ -603,7 +881,14 @@ fn render_number_stepper<E: Clone>(id: &str, value: f64, event: Option<E>, bound
     });
 }
 
-fn render_ring<E: Clone>(id: &str, t: f64, event: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
+fn render_ring<E: Clone>(
+    id: &str,
+    t: f64,
+    disabled: bool,
+    on_change: Option<E>,
+    bounds: Rect,
+    ctx: &mut WidgetContext<'_, E>,
+) {
     let cx = bounds.x + bounds.w * 0.5;
     let cy = bounds.y + bounds.h * 0.5;
     let radius = bounds.w.min(bounds.h) * 0.4;
@@ -620,43 +905,153 @@ fn render_ring<E: Clone>(id: &str, t: f64, event: Option<E>, bounds: Rect, ctx: 
         );
     }
     let mut knob_t = t;
-    if ctx.input.drag.active && ctx.input.drag.target_id.as_deref() == Some(id) {
+    if !disabled && ctx.input.drag.active && ctx.input.drag.target_id.as_deref() == Some(id) {
         let dx = ctx.input.drag.current_x - cx;
         let dy = ctx.input.drag.current_y - cy;
         knob_t = (dy.atan2(dx) as f64 / std::f64::consts::TAU).rem_euclid(1.0);
     }
+    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change.clone()) {
+        maps.ring_metas.insert(
+            id.to_string(),
+            RingMeta {
+                on_change,
+                disabled,
+                center_x: cx,
+                center_y: cy,
+                radius,
+            },
+        );
+        maps.ring_live_values.insert(id.to_string(), knob_t);
+    }
     let knob_angle = std::f32::consts::TAU * knob_t as f32;
     let kx = cx + knob_angle.cos() * radius;
     let ky = cy + knob_angle.sin() * radius;
-    ctx.draw.push_rounded([kx - 6.0, ky - 6.0, 12.0, 12.0], ctx.theme.accent, 6.0);
-    ctx.input.register_hit(HitTarget {
-        rect: bounds,
-        event,
-        control_id: Some(id.to_string()),
-        kind: HitKind::Slider,
-        drag_axis: Some(DragAxis::Ring),
-        drag_data: None,
-    });
+    let accent = if disabled { ctx.theme.text_muted } else { ctx.theme.accent };
+    ctx.draw.push_rounded([kx - 6.0, ky - 6.0, 12.0, 12.0], accent, 6.0);
+    if !disabled {
+        ctx.input.register_hit(HitTarget {
+            rect: bounds,
+            event: None,
+            control_id: Some(id.to_string()),
+            kind: HitKind::Slider,
+            drag_axis: Some(DragAxis::Ring),
+            drag_data: None,
+        });
+    }
 }
 
-fn render_icon_select<E: Clone>(id: &str, value: &str, event: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
-    ctx.draw.push_rounded([bounds.x, bounds.y, bounds.w, bounds.h], ctx.theme.button, ctx.theme.border_radius);
-    draw_text(
-        ctx,
-        value,
-        bounds.x + 8.0,
-        bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0,
-        ctx.theme.font_size_body,
-        ctx.theme.text,
-    );
+fn render_icon_select<E: Clone>(
+    id: &str,
+    value: &str,
+    _uniform: bool,
+    _classifier_kind: &str,
+    on_change: Option<E>,
+    bounds: Rect,
+    ctx: &mut WidgetContext<'_, E>,
+) {
+    push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.button);
+    let mut content_x = bounds.x + ctx.theme.padding_standard;
+    if let Some(icons) = ctx.icons {
+        if icons.icon_uv(value).is_some() {
+            push_icon(ctx.draw, icons, value, content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY);
+            content_x += ICON_TINY + ctx.theme.gap_standard;
+        } else {
+            draw_text(
+                ctx,
+                value,
+                content_x,
+                bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0,
+                ctx.theme.font_size_body,
+                ctx.theme.text,
+            );
+        }
+    } else {
+        draw_text(
+            ctx,
+            value,
+            content_x,
+            bounds.y + (bounds.h + ctx.theme.font_size_body) * 0.5 - 2.0,
+            ctx.theme.font_size_body,
+            ctx.theme.text,
+        );
+    }
     ctx.input.register_hit(HitTarget {
         rect: bounds,
-        event,
+        event: on_change,
         control_id: Some(id.to_string()),
         kind: HitKind::Generic,
         drag_axis: None,
         drag_data: None,
     });
+}
+
+fn measure_tree_sections_width<E>(sections: &[TreeSection<E>], atlas: &mut FontAtlas, theme: &Theme) -> f32 {
+    let collapsed = HashMap::new();
+    measure_tree_sections_width_state(sections, atlas, theme, &collapsed, 0)
+}
+
+fn measure_tree_sections_width_state<E>(
+    sections: &[TreeSection<E>],
+    atlas: &mut FontAtlas,
+    theme: &Theme,
+    collapsed: &HashMap<String, bool>,
+    depth: u32,
+) -> f32 {
+    let mut max_w = 0.0f32;
+    for section in sections {
+        let section_key = format!("section.{}", section.id);
+        let section_collapsed = collapsed.get(&section_key).copied().unwrap_or(!section.default_open);
+        if let Some(label) = &section.label {
+            let w = atlas.measure_text(label, theme.font_size_small).0
+                + tree_gutter_width(0)
+                + TREE_ICON_SIZE
+                + theme.gap_standard * 2.0;
+            max_w = max_w.max(w);
+        }
+        if !section_collapsed {
+            for item in &section.items {
+                max_w = max_w.max(measure_tree_item_width(item, atlas, theme, collapsed, depth));
+            }
+        }
+    }
+    max_w.max(120.0)
+}
+
+fn measure_tree_item_width<E>(
+    item: &TreeItem<E>,
+    atlas: &mut FontAtlas,
+    theme: &Theme,
+    collapsed: &HashMap<String, bool>,
+    depth: u32,
+) -> f32 {
+    if item.is_hidden {
+        return 0.0;
+    }
+    let mut w = tree_gutter_width(depth)
+        + TREE_ICON_SIZE
+        + theme.gap_standard
+        + atlas.measure_text(&item.label, theme.font_size_body).0
+        + theme.gap_standard;
+    if let Some(description) = &item.description {
+        w += atlas.measure_text(description, theme.font_size_small).0 + theme.gap_standard;
+    }
+    for action in &item.actions {
+        w += TREE_ICON_SIZE + theme.padding_standard;
+        if let Some(label) = &action.label {
+            w += atlas.measure_text(label, theme.font_size_small).0 + theme.gap_standard;
+        }
+    }
+    if item.control.is_some() {
+        w += 120.0 + theme.gap_standard;
+    }
+    let key = format!("tree.{}", item.id);
+    let item_collapsed = collapsed.get(&key).copied().unwrap_or(!item.default_open);
+    if !item_collapsed {
+        for child in &item.children {
+            w = w.max(measure_tree_item_width(child, atlas, theme, collapsed, depth + 1));
+        }
+    }
+    w
 }
 
 fn measure_tree_sections<E>(sections: &[TreeSection<E>]) -> f32 {
@@ -681,6 +1076,9 @@ fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collapsed: &HashM
 }
 
 fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
+    if item.is_hidden {
+        return 0.0;
+    }
     let mut height = TREE_ROW_HEIGHT;
     let key = format!("tree.{}", item.id);
     let item_collapsed = collapsed.get(&key).copied().unwrap_or(!item.default_open);
@@ -787,7 +1185,7 @@ fn render_tree_item<E: Clone>(
     is_last_at_level: &[bool],
 ) -> f32 {
     if item.is_hidden {
-        return TREE_ROW_HEIGHT;
+        return 0.0;
     }
     let key = format!("tree.{}", item.id);
     if !ctx.collapsed_sections.contains_key(&key) {
@@ -865,11 +1263,28 @@ fn render_tree_item<E: Clone>(
         if action.reveal_on_hover && !hovered {
             continue;
         }
-        let action_w = TREE_ICON_SIZE + ctx.theme.padding_standard;
+        let label_w = action
+            .label
+            .as_ref()
+            .map(|label| measure_text_width(ctx, label, ctx.theme.font_size_small) + ctx.theme.gap_standard)
+            .unwrap_or(0.0);
+        let action_w = TREE_ICON_SIZE + ctx.theme.padding_standard + label_w;
         actions_x -= action_w;
-        let action_rect = Rect::new(actions_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5 - 2.0, TREE_ICON_SIZE + 4.0, TREE_ICON_SIZE + 4.0);
+        let action_rect = Rect::new(actions_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5 - 2.0, action_w, TREE_ICON_SIZE + 4.0);
         if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(&action.icon_id)) {
             draw_icon(ctx, uv, action_rect.x + 2.0, action_rect.y + 2.0, TREE_ICON_SIZE, ctx.theme.text);
+        }
+        if hovered {
+            if let Some(label) = &action.label {
+                draw_text(
+                    ctx,
+                    label,
+                    action_rect.x + TREE_ICON_SIZE + 4.0,
+                    action_rect.y + (TREE_ICON_SIZE + ctx.theme.font_size_small) * 0.5,
+                    ctx.theme.font_size_small,
+                    ctx.theme.text_muted,
+                );
+            }
         }
         ctx.input.register_hit(HitTarget {
             rect: action_rect,
@@ -880,6 +1295,16 @@ fn render_tree_item<E: Clone>(
             drag_data: None,
         });
     }
+    if let Some(hover) = &item.hover_event {
+        if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
+            maps.tree_hover_commands.insert(item.id.clone(), hover.clone());
+        }
+    }
+    if let Some(unhover) = &item.unhover_event {
+        if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
+            maps.tree_unhover_commands.insert(item.id.clone(), unhover.clone());
+        }
+    }
     if let Some(control) = &item.control {
         let control_w = 120.0;
         let control_rect = Rect::new(
@@ -889,16 +1314,6 @@ fn render_tree_item<E: Clone>(
             ctx.theme.control_height,
         );
         render_widget(control, control_rect, ctx);
-    }
-    if let Some(hover) = &item.hover_event {
-        if let Some(map) = ctx.tree_hover_commands.as_deref_mut() {
-            map.insert(item.id.clone(), hover.clone());
-        }
-    }
-    if let Some(unhover) = &item.unhover_event {
-        if let Some(map) = ctx.tree_unhover_commands.as_deref_mut() {
-            map.insert(item.id.clone(), unhover.clone());
-        }
     }
     let label_rect = Rect::new(label_x, content.y, content.x + content.w - label_x - ctx.theme.gap_standard, content.h);
     ctx.input.register_hit(HitTarget {
@@ -1042,6 +1457,36 @@ pub fn wrap_text(atlas: &mut FontAtlas, text: &str, max_width: f32, size: f32) -
         lines.push(String::new());
     }
     lines
+}
+
+pub fn draw_text_on(
+    draw: &mut DrawList,
+    atlas: &mut FontAtlas,
+    text: &str,
+    x: f32,
+    y: f32,
+    size: f32,
+    color: Rgba,
+) {
+    let scale = size / 16.0;
+    let atlas_w = atlas.width as f32;
+    let atlas_h = atlas.height as f32;
+    let mut cursor_x = x;
+    for ch in text.chars() {
+        let glyph = atlas.ensure_glyph(ch);
+        let gw = glyph.width as f32 * scale;
+        let gh = glyph.height as f32 * scale;
+        let gx = cursor_x + glyph.bearing_x * scale;
+        let gy = y - gh - glyph.bearing_y * scale;
+        let uv_rect = [
+            glyph.atlas_x as f32 / atlas_w,
+            glyph.atlas_y as f32 / atlas_h,
+            (glyph.atlas_x + glyph.width) as f32 / atlas_w,
+            (glyph.atlas_y + glyph.height) as f32 / atlas_h,
+        ];
+        draw.push_glyph([gx, gy, gw.max(1.0), gh.max(1.0)], color, uv_rect);
+        cursor_x += glyph.advance * scale;
+    }
 }
 
 pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {

@@ -25,7 +25,7 @@ todos:
     status: completed
   - id: verify-parity
     content: Rebuild wasm, run cargo tests, run E2E for a tree-bearing plugin, and screenshot-diff against the React shell to confirm font/icon/label/tree parity
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

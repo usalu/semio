@@ -1,4 +1,52 @@
-//! 👯 Puzzle 5d document VCS on `vcs`.
+//! 👯 Puzzle 5d brush/fill precompute and document VCS on `vcs`.
+
+//#region 🔖BrushEngine
+pub use puzzle_3d::BrushPlacePayload;
+
+pub struct Puzzle5dPrecomputeSession {
+    inner: puzzle_3d::Puzzle3dPrecomputeSession,
+}
+
+impl Puzzle5dPrecomputeSession {
+    pub fn new() -> Self {
+        Self {
+            inner: puzzle_3d::Puzzle3dPrecomputeSession::new(),
+        }
+    }
+
+    pub fn set_scene(&mut self, json: &str) -> Result<(), String> {
+        self.inner.set_scene(json).map_err(|e| e.to_string())
+    }
+
+    pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
+        self.inner.register_mesh(url, positions, indices);
+    }
+
+    pub fn precompute_step(&mut self, budget: u32) -> bool {
+        self.inner.precompute_step(budget)
+    }
+
+    pub fn brush_candidates(&self, grip_full_id: &str) -> String {
+        self.inner.brush_candidates(grip_full_id)
+    }
+
+    pub fn brush_preview_json(&self, grip_full_id: &str, candidate_index: usize) -> Option<String> {
+        self.inner.brush_preview_json(grip_full_id, candidate_index)
+    }
+
+    pub fn fill_progress(&self) -> String {
+        self.inner.fill_progress()
+    }
+
+    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, String> {
+        self.inner.apply_brush_placement_rust(payload_json)
+    }
+
+    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, String> {
+        self.inner.apply_fill_count_rust(count)
+    }
+}
+//#endregion 🔖BrushEngine
 
 use vcs::{
     create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,

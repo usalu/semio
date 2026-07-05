@@ -1,6 +1,6 @@
 //! 🌊 Flow plugin — declarative flow play app bundled as a hot-swappable WASM component.
 
-use flow_core::{dag::DagFixture, FlowFixture, FlowHost, Widget};
+use flow_core::{dag::DagFixture, CameraJson, FlowFixture, FlowHost, Widget};
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field,
@@ -330,7 +330,76 @@ fn build_hierarchy_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
+fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
+    let host = host_from_envelope(envelope);
+    let sections: Vec<Value> = host
+        .catalogue_json()
+        .ok()
+        .and_then(|raw| serde_json::from_str(&raw).ok())
+        .unwrap_or_default();
+    let tree_sections: Vec<UiTreeSectionNode> = sections
+        .iter()
+        .filter_map(|section| {
+            let id = section.get("id")?.as_str()?.to_string();
+            let title = section
+                .get("title")
+                .and_then(|value| value.as_str())
+                .unwrap_or(&id)
+                .to_string();
+            let items: Vec<UiTreeItemNode> = section
+                .get("items")
+                .and_then(|value| value.as_array())
+                .map(|entries| {
+                    entries
+                        .iter()
+                        .filter_map(|entry| {
+                            let kind = entry.get("kind")?.as_str()?;
+                            let label = entry
+                                .get("name")
+                                .or_else(|| entry.get("abbreviation"))
+                                .and_then(|value| value.as_str())
+                                .unwrap_or(kind);
+                            let command = if kind == "neuron" {
+                                flow_cmd(
+                                    "addWidget",
+                                    Some(json!({
+                                        "kind": "neuron",
+                                        "neuronKind": entry.get("neuronKind").and_then(|value| value.as_str()).unwrap_or(kind),
+                                    })),
+                                )
+                            } else {
+                                flow_cmd("addWidget", Some(json!({ "kind": kind })))
+                            };
+                            Some(tree_item_with_command(
+                                format!("flow-play-catalogue.{id}.{kind}.{label}"),
+                                label,
+                                Some(kind.to_string()),
+                                command,
+                            ))
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+            Some(UiTreeSectionNode {
+                id: format!("flow-play-catalogue.{id}"),
+                label: Some(title),
+                default_open: Some(true),
+                items,
+            })
+        })
+        .collect();
+    if tree_sections.is_empty() {
+        return build_catalogue_tree_fallback();
+    }
+    UiNode::Tree(UiTreeNode {
+        sections: tree_sections,
+        selected_ids: Some(vec![]),
+        highlighted_ids: None,
+        selection_change: None,
+    })
+}
+
+fn build_catalogue_tree_fallback() -> UiNode {
     let sources = [("inputSlider", "Slider"), ("inputStepper", "Stepper"), ("inputNote", "Note")];
     let components = [("math.add", "Add"), ("logic.and", "And"), ("text.concat", "Concat")];
     let sinks = [("outputPreview", "Preview"), ("outputExport", "Export")];
@@ -528,7 +597,22 @@ fn render_compiled_dag(envelope: &FlowPlayEnvelope) -> UiNode {
 //#endregion 🔖Render
 
 //#region 🔖FlowPlayApp
-struct FlowPlayApp;
+struct FlowPlayApp {
+    host: Option<FlowHost>,
+}
+
+impl FlowPlayApp {
+    fn host_for(&mut self, envelope: &FlowPlayEnvelope) -> &mut FlowHost {
+        let replace = self
+            .host
+            .as_ref()
+            .map_or(true, |host| host.fixture != envelope.fixture);
+        if replace {
+            self.host = Some(FlowHost::from_fixture(envelope.fixture.clone()));
+        }
+        self.host.as_mut().expect("flow host")
+    }
+}
 
 impl PluginApp for FlowPlayApp {
     fn app_id(&self) -> &str {
@@ -547,7 +631,7 @@ impl PluginApp for FlowPlayApp {
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut envelope = parse_envelope(document_json);
-        let mut host = host_from_envelope(&envelope);
+        let host = self.host_for(&envelope);
         match command {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
@@ -560,7 +644,7 @@ impl PluginApp for FlowPlayApp {
                 let ids = args
                     .and_then(|value| value.get("nodeIds"))
                     .and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok())
-                    .or_else(|| selection_ids(args));
+                    .unwrap_or_else(|| selection_ids(args));
                 envelope.runtime.selected_node_ids = ids;
                 return vec![set_document_op(&envelope)];
             }
@@ -569,34 +653,42 @@ impl PluginApp for FlowPlayApp {
                 return vec![set_document_op(&envelope)];
             }
             "moveMediaNode" => {
+                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str());
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
                     if host.move_widget(node_id, x, y).is_ok() {
-                        envelope.fixture = host.fixture;
+                        envelope.fixture = host.fixture.clone();
                         return vec![set_document_op(&envelope)];
                     }
                 }
             }
             "undo" => {
-                if let Some(previous) = envelope.runtime.undo_fixtures.pop() {
-                    envelope.runtime.redo_fixtures.push(envelope.fixture.clone());
-                    envelope.fixture = previous;
+                if host.undo() {
+                    envelope.fixture = host.fixture.clone();
+                    if let Ok(eval_json) = host.evaluate() {
+                        envelope.runtime.last_eval_json = eval_json;
+                    }
                     return vec![set_document_op(&envelope)];
                 }
             }
             "redo" => {
-                if let Some(next) = envelope.runtime.redo_fixtures.pop() {
-                    envelope.runtime.undo_fixtures.push(envelope.fixture.clone());
-                    envelope.fixture = next;
+                if host.redo() {
+                    envelope.fixture = host.fixture.clone();
+                    if let Ok(eval_json) = host.evaluate() {
+                        envelope.runtime.last_eval_json = eval_json;
+                    }
                     return vec![set_document_op(&envelope)];
                 }
             }
             "evaluate" => {
+                host.clear_computing_widget_ids();
                 if let Ok(eval_json) = host.evaluate() {
-                    envelope.fixture = host.fixture;
-                    envelope.runtime.last_eval_json = eval_json;
+                    envelope.fixture = host.fixture.clone();
+                    envelope.runtime.last_eval_json = eval_json.clone();
+                    host.apply_eval_outputs_json(&eval_json);
+                    host.clear_computing_widget_ids();
                     return vec![set_document_op(&envelope)];
                 }
             }
@@ -612,20 +704,20 @@ impl PluginApp for FlowPlayApp {
                         if let Ok(eval_json) = host.evaluate() {
                             envelope.runtime.last_eval_json = eval_json;
                         }
-                        envelope.fixture = host.fixture;
+                        envelope.fixture = host.fixture.clone();
                         return vec![set_document_op(&envelope)];
                     }
                 }
             }
             "deleteSelection" => {
                 snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
-                sync_host_selection(&mut host, &envelope.runtime.selected_node_ids);
+                sync_host_selection(host, &envelope.runtime.selected_node_ids);
                 if host.delete_selection().is_ok() {
                     envelope.runtime.selected_node_ids.clear();
                     if let Ok(eval_json) = host.evaluate() {
                         envelope.runtime.last_eval_json = eval_json;
                     }
-                    envelope.fixture = host.fixture;
+                    envelope.fixture = host.fixture.clone();
                     return vec![set_document_op(&envelope)];
                 }
             }
@@ -640,7 +732,7 @@ impl PluginApp for FlowPlayApp {
                         if let Ok(eval_json) = host.evaluate() {
                             envelope.runtime.last_eval_json = eval_json;
                         }
-                        envelope.fixture = host.fixture;
+                        envelope.fixture = host.fixture.clone();
                         return vec![set_document_op(&envelope)];
                     }
                 }
@@ -656,7 +748,7 @@ impl PluginApp for FlowPlayApp {
                         if let Ok(eval_json) = host.evaluate() {
                             envelope.runtime.last_eval_json = eval_json;
                         }
-                        envelope.fixture = host.fixture;
+                        envelope.fixture = host.fixture.clone();
                         return vec![set_document_op(&envelope)];
                     }
                 }
@@ -678,14 +770,14 @@ impl PluginApp for FlowPlayApp {
                     if let Ok(eval_json) = host.evaluate() {
                         envelope.runtime.last_eval_json = eval_json;
                     }
-                    envelope.fixture = host.fixture;
+                    envelope.fixture = host.fixture.clone();
                     return vec![set_document_op(&envelope)];
                 }
             }
             "reorganize" => {
                 snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
-                    envelope.fixture = host.fixture;
+                    envelope.fixture = host.fixture.clone();
                     return vec![set_document_op(&envelope)];
                 }
             }
@@ -719,7 +811,7 @@ impl PluginApp for FlowPlayApp {
                 if let Ok(eval_json) = host.evaluate() {
                     envelope.runtime.last_eval_json = eval_json;
                 }
-                envelope.fixture = host.fixture;
+                envelope.fixture = host.fixture.clone();
                 return vec![set_document_op(&envelope)];
             }
             "renameFlowWidget" => {
@@ -755,7 +847,7 @@ impl PluginApp for FlowPlayApp {
                         }
                         envelope.runtime.selected_node_ids = vec![trimmed.into()];
                         host.replace_fixture(envelope.fixture.clone());
-                        envelope.fixture = host.fixture;
+                        envelope.fixture = host.fixture.clone();
                         return vec![set_document_op(&envelope)];
                     }
                 }
@@ -765,7 +857,7 @@ impl PluginApp for FlowPlayApp {
             }
             "nodeGraphViewport" => {
                 if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
-                    if let Ok(camera) = serde_json::from_str::<flow_core::dag::DagCamera>(viewport_json) {
+                    if let Ok(camera) = serde_json::from_str::<CameraJson>(viewport_json) {
                         envelope.fixture.camera = camera;
                         return vec![set_document_op(&envelope)];
                     }
@@ -780,7 +872,7 @@ impl PluginApp for FlowPlayApp {
                 if ops.is_empty() && command == "spotlightCommit" {
                     if let Ok(eval_json) = host.evaluate() {
                         envelope.runtime.last_eval_json = eval_json;
-                        envelope.fixture = host.fixture;
+                        envelope.fixture = host.fixture.clone();
                         return vec![set_document_op(&envelope)];
                     }
                 }
@@ -800,7 +892,7 @@ impl PluginApp for FlowPlayApp {
                         }
                         "deleteSelection" => {
                             snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
-                            sync_host_selection(&mut host, &envelope.runtime.selected_node_ids);
+                            sync_host_selection(host, &envelope.runtime.selected_node_ids);
                             if host.delete_selection().is_ok() {
                                 envelope.runtime.selected_node_ids.clear();
                                 changed = true;
@@ -825,7 +917,7 @@ impl PluginApp for FlowPlayApp {
                     if let Ok(eval_json) = host.evaluate() {
                         envelope.runtime.last_eval_json = eval_json;
                     }
-                    envelope.fixture = host.fixture;
+                    envelope.fixture = host.fixture.clone();
                     return vec![set_document_op(&envelope)];
                 }
             }
@@ -840,7 +932,7 @@ impl PluginApp for FlowPlayApp {
             FLOW_PLAY_BODY_MAIN => render_main_graph(&envelope),
             FLOW_PLAY_BODY_COMPILED => render_compiled_dag(&envelope),
             FLOW_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
-            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
+            FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope),
             FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
@@ -900,7 +992,7 @@ fn create_flow_app() -> App {
 }
 
 fn bundle() -> PluginBundle {
-    PluginBundle::new("flow", "Flow", "0.1.0").register_app(create_flow_app(), || Box::new(FlowPlayApp))
+    PluginBundle::new("flow", "Flow", "0.1.0").register_app(create_flow_app(), || Box::new(FlowPlayApp { host: None }))
 }
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
@@ -914,7 +1006,7 @@ mod tests {
 
     #[test]
     fn renders_node_graph_scene() {
-        let app = FlowPlayApp;
+        let app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
         let node = app.render(FLOW_PLAY_BODY_MAIN, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -923,7 +1015,7 @@ mod tests {
 
     #[test]
     fn renders_compiled_wire_editor() {
-        let app = FlowPlayApp;
+        let app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
         let node = app.render(FLOW_PLAY_BODY_COMPILED, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -938,7 +1030,7 @@ mod tests {
 
     #[test]
     fn hierarchy_lists_widgets() {
-        let app = FlowPlayApp;
+        let app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
         let node = app.render(FLOW_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -947,7 +1039,7 @@ mod tests {
 
     #[test]
     fn evaluate_updates_preview_state() {
-        let mut app = FlowPlayApp;
+        let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
         let ops = app.handle_command("evaluate", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
@@ -957,7 +1049,7 @@ mod tests {
 
     #[test]
     fn undo_restores_fixture_after_add_widget() {
-        let mut app = FlowPlayApp;
+        let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
         let before: FlowPlayEnvelope = serde_json::from_str(&document).unwrap();
         let count_before = before.fixture.widgets.len();
