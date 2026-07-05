@@ -352,6 +352,38 @@ impl GraphHost {
         let ny = wy - (wy - cam.y) * (new_zoom / cam.zoom);
         self.dag.set_camera(nx, ny, new_zoom);
     }
+
+    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt);
+    }
+
+    pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        self.dag.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
+    }
+
+    pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
+    }
+
+    pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
+        self.dag.pick_targets_at_screen_json(sx, sy)
+    }
+
+    pub fn set_hover(&mut self, node_id: Option<&str>) {
+        self.dag.set_hover(node_id);
+    }
+
+    pub fn set_hover_channel(&mut self, node_id: Option<&str>, port_id: Option<&str>) {
+        self.dag.set_hover_channel(node_id, port_id);
+    }
+
+    pub fn align_selection(&mut self, mode: &str) -> Result<(), String> {
+        self.dag.align_selection(mode)
+    }
+
+    pub fn fixture_json(&self) -> Result<String, String> {
+        self.dag.fixture_json()
+    }
 }
 //#endregion 🔖GraphHost
 
@@ -562,6 +594,37 @@ mod wasm_session {
         #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
         pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
             self.state.borrow().host.dag.pick_targets_at_screen_json(sx, sy)
+        }
+
+        #[wasm_bindgen(js_name = setHover)]
+        pub fn set_hover(&self, widget_id: Option<String>) {
+            self.state.borrow_mut().host.set_hover(widget_id.as_deref());
+        }
+
+        #[wasm_bindgen(js_name = setHoverChannel)]
+        pub fn set_hover_channel(&self, widget_id: Option<String>, port: Option<String>) {
+            self.state
+                .borrow_mut()
+                .host
+                .set_hover_channel(widget_id.as_deref(), port.as_deref());
+        }
+
+        #[wasm_bindgen(js_name = alignSelection)]
+        pub fn align_selection(&self, mode: &str) -> Result<(), JsValue> {
+            self.state
+                .borrow_mut()
+                .host
+                .align_selection(mode)
+                .map_err(|e| JsValue::from_str(&e))
+        }
+
+        #[wasm_bindgen(js_name = fixtureJson)]
+        pub fn fixture_json(&self) -> Result<String, JsValue> {
+            self.state
+                .borrow()
+                .host
+                .fixture_json()
+                .map_err(|e| JsValue::from_str(&e))
         }
 
         #[wasm_bindgen(js_name = takePendingOpenInstanceId)]

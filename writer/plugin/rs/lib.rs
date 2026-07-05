@@ -788,7 +788,7 @@ impl PluginApp for WriterApp {
 //#region 🔖Manifest
 fn create_writer_app() -> App {
     App::from_builder(
-        App::builder(WRITER_PLAY_APP_ID, "Writer")
+        App::builder(WRITER_PLAY_APP_ID, "Writer").hierarchy(["semio", "writer"])
             .icon_id("writer")
             .mode("edit", "Edit")
             .default_mode_id("edit")

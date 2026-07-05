@@ -12,6 +12,7 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
+semio-framework-os = { path = "../../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
 gis_2d = { path = "../../rs" }
 vcs = { path = "../../../../vcs/rs" }

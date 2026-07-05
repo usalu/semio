@@ -83,6 +83,15 @@ function WasmEditorSurface({
 	}, [dispatch]);
 
 	const [wasmSession, setWasmSession] = useState<FrameworkEditorSession | null>(null);
+	const [renameDraft, setRenameDraft] = useState<{ readonly start: number; readonly end: number; readonly text: string } | null>(null);
+	const completions = useMemo((): readonly { readonly label: string; readonly detail?: string }[] => {
+		if (!scene.completionsJson) return [];
+		try {
+			return JSON.parse(scene.completionsJson) as { readonly label: string; readonly detail?: string }[];
+		} catch {
+			return [];
+		}
+	}, [scene.completionsJson]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -147,6 +156,15 @@ function WasmEditorSurface({
 					if (!session) return;
 					const rect = event.currentTarget.getBoundingClientRect();
 					session.pointerMoveScreen(event.clientX - rect.left, event.clientY - rect.top, event.buttons);
+					try {
+						const hover = JSON.parse(session.hoverTokenRangeJson()) as { readonly start?: number; readonly end?: number } | null;
+						if (hover?.start != null && hover.end != null) {
+							session.setHoverRange(hover.start, hover.end);
+							dispatch(textEditorCommands.hover, { start: hover.start, end: hover.end });
+						}
+					} catch {
+						/* hover range unavailable */
+					}
 					session.renderFrame();
 				}}
 				onPointerUp={(event) => {
@@ -160,6 +178,54 @@ function WasmEditorSurface({
 					sessionRef.current?.renderFrame();
 				}}
 			/>
+			{renameDraft ? (
+				<input
+					className="pointer-events-auto absolute left-3 top-3 z-50 min-w-[12rem] rounded border border-border bg-panel px-2 py-1 font-mono text-xs text-foreground shadow-md"
+					value={renameDraft.text}
+					autoFocus
+					onChange={(event) => setRenameDraft({ ...renameDraft, text: event.target.value })}
+					onKeyDown={(event) => {
+						if (event.key === "Escape") {
+							event.preventDefault();
+							setRenameDraft(null);
+							return;
+						}
+						if (event.key === "Enter") {
+							event.preventDefault();
+							dispatch(textEditorCommands.commitRename, {
+								start: renameDraft.start,
+								end: renameDraft.end,
+								text: renameDraft.text,
+							});
+							setRenameDraft(null);
+						}
+					}}
+					onBlur={() => setRenameDraft(null)}
+				/>
+			) : null}
+			{completions.length > 0 ? (
+				<div className="pointer-events-auto absolute left-3 top-3 z-50 max-h-48 overflow-auto rounded border border-border bg-panel p-1 shadow-md">
+					{completions.map((item) => (
+						<button
+							key={item.label}
+							type="button"
+							className="block w-full rounded px-2 py-1 text-left font-mono text-[11px] hover:bg-active-base"
+							onPointerDown={(event) => event.stopPropagation()}
+							onClick={() => {
+								const session = sessionRef.current;
+								if (!session) return;
+								session.replaceSelection(item.label);
+								dispatch(textEditorCommands.edit, { text: session.text() });
+								session.renderFrame();
+								emitSelection();
+							}}
+						>
+							<span className="text-foreground">{item.label}</span>
+							{item.detail ? <span className="ml-2 text-muted-foreground">{item.detail}</span> : null}
+						</button>
+					))}
+				</div>
+			) : null}
 			<textarea
 				className="absolute inset-0 resize-none bg-transparent font-mono text-xs text-transparent caret-foreground opacity-0"
 				value={scene.buffer}
@@ -169,6 +235,19 @@ function WasmEditorSurface({
 					if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
 						event.preventDefault();
 						dispatch("submit", {});
+					}
+					if (event.key === " " && (event.metaKey || event.ctrlKey)) {
+						event.preventDefault();
+						dispatch(textEditorCommands.requestCompletions, {});
+					}
+					if (event.key === "F2" && session) {
+						event.preventDefault();
+						const start = Math.min(session.anchor(), session.caret());
+						const end = Math.max(session.anchor(), session.caret());
+						const selected = session.selectionText();
+						if (selected.length > 0) {
+							setRenameDraft({ start, end, text: selected });
+						}
 					}
 					if (event.key === "a" && (event.metaKey || event.ctrlKey)) {
 						event.preventDefault();

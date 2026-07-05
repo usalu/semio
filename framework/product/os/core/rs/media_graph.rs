@@ -522,7 +522,7 @@ pub struct OsMediaExportResult {
     pub file_name: String,
 }
 
-type OsMediaExportHandler = fn(&Value) -> Result<OsMediaExportResult, String>;
+type OsMediaExportHandler = Box<dyn Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync>;
 
 fn export_handlers() -> &'static Mutex<HashMap<String, OsMediaExportHandler>> {
     static HANDLERS: OnceLock<Mutex<HashMap<String, OsMediaExportHandler>>> = OnceLock::new();
@@ -537,12 +537,12 @@ fn os_media_export_key(resource_kind: &str, format: &OsMediaExportFormat) -> Str
 pub fn register_os_media_export_handler(
     resource_kind: &str,
     format: OsMediaExportFormat,
-    handler: OsMediaExportHandler,
+    handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static,
 ) {
     export_handlers()
         .lock()
         .expect("lock")
-        .insert(os_media_export_key(resource_kind, &format), handler);
+        .insert(os_media_export_key(resource_kind, &format), Box::new(handler));
 }
 
 pub fn required_os_media_export_formats(dimension: &str) -> Vec<OsMediaExportFormat> {
@@ -930,8 +930,19 @@ mod tests {
     }
 
     #[test]
-    fn export_coverage_reports_missing_handlers() {
-        assert!(assert_os_media_export_coverage().is_err());
+    fn export_coverage_accepts_registered_handlers() {
+        for descriptor in crate::registry::list_os_resource_descriptors() {
+            for format in required_os_media_export_formats(&descriptor.dimension) {
+                register_os_media_export_handler(&descriptor.kind, format, |_| {
+                    Ok(OsMediaExportResult {
+                        data: "export".into(),
+                        mime_type: "application/octet-stream".into(),
+                        file_name: "export.bin".into(),
+                    })
+                });
+            }
+        }
+        assert!(assert_os_media_export_coverage().is_ok());
     }
 
     #[test]
@@ -948,6 +959,7 @@ mod tests {
             apps: vec![OsPlatformAppInput {
                 id: "draw".into(),
                 label: "Draw".into(),
+                hierarchy: vec!["semio".into(), "draw".into()],
                 controller_id: "draw-play".into(),
                 modes: vec![],
                 default_mode_id: None,

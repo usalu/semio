@@ -189,9 +189,93 @@ fn apply_rewrite_to_fixture(before_json: &str, envelope: &TrinityRewriteEnvelope
 }
 
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("ids"))
+    args.and_then(|value| value.get("nodeIds"))
         .and_then(|value| serde_json::from_value(value.clone()).ok())
+        .or_else(|| {
+            args.and_then(|value| value.get("ids"))
+                .and_then(|value| serde_json::from_value(value.clone()).ok())
+        })
+        .or_else(|| {
+            args.and_then(|value| value.get("nodeId"))
+                .and_then(|value| value.as_str())
+                .map(|id| vec![id.to_string()])
+        })
         .unwrap_or_default()
+}
+
+fn sync_select_var_from_node(envelope: &mut TrinityRewriteEnvelope, fixture_json: &str, node_id: &str) {
+    if let Some(fixture) = parse_fixture_json(fixture_json) {
+        if let Some(node) = fixture.nodes.iter().find(|node| node.id == node_id) {
+            if let Some(var) = var_from_node_name(&node.name) {
+                envelope.runtime.active_select_var = var;
+            }
+        }
+    }
+}
+
+fn sync_hover_var_from_node(envelope: &mut TrinityRewriteEnvelope, fixture_json: &str, node_id: &str) {
+    if let Some(fixture) = parse_fixture_json(fixture_json) {
+        if let Some(node) = fixture.nodes.iter().find(|node| node.id == node_id) {
+            if let Some(var) = var_from_node_name(&node.name) {
+                envelope.runtime.active_hover_var = var;
+            }
+        }
+    }
+    envelope.runtime.hover_epoch += 1;
+}
+
+fn apply_rewrite_node_graph_edit_ops(envelope: &mut TrinityRewriteEnvelope, ops: &[Value]) -> bool {
+    let mut changed = false;
+    for op in ops {
+        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+            "setFixture" => {
+                if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
+                    if parse_fixture_json(fixture_json).is_some() {
+                        let before_ids: std::collections::HashSet<String> = parse_fixture_json(&envelope.before_fixture_json)
+                            .map(|fixture| fixture.nodes.into_iter().map(|node| node.id).collect())
+                            .unwrap_or_default();
+                        let matches_before = parse_fixture_json(fixture_json)
+                            .map(|fixture| {
+                                !fixture.nodes.is_empty()
+                                    && fixture.nodes.iter().all(|node| before_ids.contains(&node.id))
+                            })
+                            .unwrap_or(false);
+                        if matches_before {
+                            envelope.before_fixture_json = fixture_json.into();
+                        } else {
+                            envelope.after_fixture_json = fixture_json.into();
+                        }
+                        envelope.after_fixture_json =
+                            apply_rewrite_to_fixture(&envelope.before_fixture_json, envelope);
+                        changed = true;
+                    }
+                }
+            }
+            "deleteSelection" => {
+                if !envelope.runtime.selected_node_ids.is_empty() {
+                    push_undo(envelope);
+                    let ids = envelope.runtime.selected_node_ids.clone();
+                    if let Some(mut fixture) = parse_fixture_json(&envelope.before_fixture_json) {
+                        fixture.nodes.retain(|node| !ids.contains(&node.id));
+                        fixture.edges.retain(|edge| {
+                            let from = edge.source.split(':').next().unwrap_or(&edge.source);
+                            let to = edge.target.split(':').next().unwrap_or(&edge.target);
+                            !ids.iter().any(|id| id == from || id == to)
+                        });
+                        if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
+                            envelope.before_fixture_json = json;
+                            envelope.after_fixture_json =
+                                apply_rewrite_to_fixture(&envelope.before_fixture_json, envelope);
+                            envelope.runtime.selected_node_ids.clear();
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    changed
 }
 
 fn snapshot_envelope_json(envelope: &TrinityRewriteEnvelope) -> String {
@@ -709,9 +793,67 @@ impl PluginApp for TrinityRewritePlayApp {
                     }
                 }
             }
-            "setSelection" => {
+            "setSelection" | "selectNode" | "nodeGraphSelect" => {
                 envelope.runtime.selected_node_ids = selection_ids(args);
+                if let Some(node_id) = envelope.runtime.selected_node_ids.first().cloned() {
+                    let before_json = envelope.before_fixture_json.clone();
+                    let after_json = envelope.after_fixture_json.clone();
+                    sync_select_var_from_node(&mut envelope, &before_json, &node_id);
+                    if envelope.runtime.active_select_var.is_empty() {
+                        sync_select_var_from_node(&mut envelope, &after_json, &node_id);
+                    }
+                    envelope.runtime.select_epoch += 1;
+                }
                 return vec![set_document_op(&envelope)];
+            }
+            "nodeGraphHover" => {
+                let node_id = args
+                    .and_then(|value| value.get("hoverJson"))
+                    .and_then(|value| {
+                        if value.is_null() {
+                            None
+                        } else if let Some(text) = value.as_str() {
+                            serde_json::from_str::<Value>(text)
+                                .ok()
+                                .and_then(|parsed| parsed.get("nodeId").and_then(|id| id.as_str().map(str::to_string)))
+                        } else {
+                            value.get("nodeId").and_then(|id| id.as_str().map(str::to_string))
+                        }
+                    });
+                if let Some(node_id) = node_id {
+                    let before_json = envelope.before_fixture_json.clone();
+                    let after_json = envelope.after_fixture_json.clone();
+                    sync_hover_var_from_node(&mut envelope, &before_json, &node_id);
+                    if envelope.runtime.active_hover_var.is_empty() {
+                        sync_hover_var_from_node(&mut envelope, &after_json, &node_id);
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "nodeGraphViewport" => {
+                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
+                    if let Ok(camera) = serde_json::from_str::<trinity_ram::Camera>(viewport_json) {
+                        if let Some(mut fixture) = parse_fixture_json(&envelope.before_fixture_json) {
+                            fixture.camera = camera;
+                            if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
+                                envelope.before_fixture_json = json;
+                                envelope.after_fixture_json =
+                                    apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
+                                return vec![set_document_op(&envelope)];
+                            }
+                        }
+                    }
+                }
+            }
+            "nodeGraphEdit" => {
+                let ops = args
+                    .and_then(|value| value.get("ops"))
+                    .and_then(|value| value.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                if apply_rewrite_node_graph_edit_ops(&mut envelope, &ops) {
+                    return vec![set_document_op(&envelope)];
+                }
             }
             "setLhsJson" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
@@ -947,6 +1089,7 @@ fn rewrite_window_stack(id: &str, title: &str, size: Option<f64>) -> WindowLayou
     WindowLayoutChild::Stack(WindowLayoutStackNode {
         kind: "stack".into(),
         size,
+        active_window_kind_id: None,
         children: vec![WindowLayoutWindowNode {
             kind: "window".into(),
             window_kind_id: id.into(),
@@ -988,7 +1131,7 @@ fn rewrite_layout() -> WindowLayout {
 
 fn create_rewrite_app() -> App {
     App::from_builder(
-        App::builder(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite")
+        App::builder(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite").hierarchy(["semio", "trinity", "rewrite"])
             .icon_id("trinity-rewrite")
             .mode("explore", "Explore")
             .default_mode_id("explore")

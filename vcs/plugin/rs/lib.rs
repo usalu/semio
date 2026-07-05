@@ -681,7 +681,7 @@ impl PluginApp for VcsPlayApp {
 //#region 🔖AppFactory
 fn create_vcs_app() -> App {
     App::from_builder(
-        App::builder(VCS_PLAY_APP_ID, "VCS")
+        App::builder(VCS_PLAY_APP_ID, "VCS").hierarchy(["semio", "vcs"])
             .icon_id("git-branch")
             .mode("edit", "Edit")
             .default_mode_id("edit")

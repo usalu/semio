@@ -4,7 +4,7 @@
   "name": "Demo Studio",
   "vcs": {
     "initialProjection": {
-      "programs": ["draw", "writer", "raster", "compose.sketchpad"],
+      "programs": ["draw", "writer", "raster", "note"],
       "activeProgramId": null,
       "activeAlternativeId": null,
       "parameters": [
@@ -77,13 +77,13 @@
           }
         },
         {
-          "id": "app-sketchpad-1",
-          "programId": "compose.sketchpad",
-          "appId": "home",
-          "label": "Sketchpad Home",
-          "yields": "kit.compose",
+          "id": "app-note-2",
+          "programId": "note",
+          "appId": "document",
+          "label": "Note Board",
+          "yields": "2d.note",
           "sourceDocument": {
-            "format": "compose.kit"
+            "format": "note.document"
           }
         }
       ],
@@ -134,14 +134,14 @@
             "outputs": [{ "id": "app-raster-1:out:out", "resourceKind": "2d.raster", "direction": "out" }]
           },
           {
-            "id": "node-app-sketchpad-1",
-            "instanceId": "app-sketchpad-1",
+            "id": "node-app-note-2",
+            "instanceId": "app-note-2",
             "x": 220,
             "y": 220,
             "width": 160,
             "height": 72,
-            "inputs": [{ "id": "app-sketchpad-1:out:in", "resourceKind": "kit.compose", "direction": "in" }],
-            "outputs": [{ "id": "app-sketchpad-1:out:out", "resourceKind": "kit.compose", "direction": "out" }]
+            "inputs": [{ "id": "app-note-2:out:in", "resourceKind": "2d.note", "direction": "in" }],
+            "outputs": [{ "id": "app-note-2:out:out", "resourceKind": "2d.note", "direction": "out" }]
           }
         ],
         "edges": [

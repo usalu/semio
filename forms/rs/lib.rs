@@ -25,18 +25,95 @@ pub struct FormQuestion {
     pub label: String,
     pub kind: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub required: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub placeholder: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub default: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub step: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub options: Option<Vec<FormQuestionOption>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fields: Option<Vec<FormVectorField>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub schema: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub src: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub accept: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fixture_slug: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub params: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub condition: Option<FormExpr>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FormVectorField {
+    pub key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub value: Option<f64>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FormQuestionOption {
-    pub id: String,
+    #[serde(alias = "id")]
+    pub value: String,
     pub label: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum FormExpr {
+    Const { value: serde_json::Value },
+    Var { name: String },
+    Eq { left: Box<FormExpr>, right: Box<FormExpr> },
+    And { items: Vec<FormExpr> },
+    Or { items: Vec<FormExpr> },
+    Truthy { expr: Box<FormExpr> },
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FormValidationError {
+    pub question_id: String,
+    pub message: String,
+}
+
+pub const FORM_BUILTIN_KINDS: &[&str] = &[
+    "text",
+    "longText",
+    "number",
+    "slider",
+    "boolean",
+    "single",
+    "multi",
+    "date",
+    "color",
+    "vector",
+    "note",
+    "image",
+    "file",
+];
+
+pub fn is_extension_question_kind(kind: &str) -> bool {
+    !FORM_BUILTIN_KINDS.contains(&kind)
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -68,6 +145,144 @@ pub fn empty_forms_projection() -> FormSpec {
     }
 }
 //#endregion 🔖Domain
+
+//#region 🔖Runtime
+pub fn flatten_form_questions(spec: &FormSpec) -> Vec<&FormQuestion> {
+    spec.steps.iter().flat_map(|step| step.questions.iter()).collect()
+}
+
+pub fn find_question_location<'a>(spec: &'a FormSpec, question_id: &str) -> Option<(&'a FormStep, usize, &'a FormQuestion)> {
+    for step in &spec.steps {
+        if let Some(index) = step.questions.iter().position(|question| question.id == question_id) {
+            return Some((step, index, &step.questions[index]));
+        }
+    }
+    None
+}
+
+pub fn eval_form_expr(expr: &FormExpr, values: &serde_json::Map<String, serde_json::Value>) -> serde_json::Value {
+    match expr {
+        FormExpr::Const { value } => value.clone(),
+        FormExpr::Var { name } => values.get(name).cloned().unwrap_or(serde_json::Value::Null),
+        FormExpr::Eq { left, right } => {
+            serde_json::Value::Bool(eval_form_expr(left, values) == eval_form_expr(right, values))
+        }
+        FormExpr::And { items } => serde_json::Value::Bool(items.iter().all(|item| eval_form_expr(item, values).as_bool().unwrap_or(false))),
+        FormExpr::Or { items } => serde_json::Value::Bool(items.iter().any(|item| eval_form_expr(item, values).as_bool().unwrap_or(false))),
+        FormExpr::Truthy { expr } => serde_json::Value::Bool(eval_form_expr(expr, values).as_bool().unwrap_or(false)),
+    }
+}
+
+pub fn is_question_visible(question: &FormQuestion, values: &serde_json::Map<String, serde_json::Value>) -> bool {
+    question
+        .condition
+        .as_ref()
+        .map(|expr| eval_form_expr(expr, values).as_bool().unwrap_or(false))
+        .unwrap_or(true)
+}
+
+pub fn default_value_for_question(question: &FormQuestion) -> serde_json::Value {
+    match question.kind.as_str() {
+        "text" | "longText" => question.default.clone().unwrap_or(serde_json::Value::String(String::new())),
+        "number" | "slider" => question
+            .default
+            .clone()
+            .or_else(|| question.min.map(|value| serde_json::json!(value)))
+            .unwrap_or(serde_json::json!(0)),
+        "boolean" => question.default.clone().unwrap_or(serde_json::json!(false)),
+        "single" => question
+            .default
+            .clone()
+            .or_else(|| {
+                question
+                    .options
+                    .as_ref()
+                    .and_then(|options| options.first())
+                    .map(|option| serde_json::Value::String(option.value.clone()))
+            })
+            .unwrap_or(serde_json::Value::String(String::new())),
+        "multi" => question.default.clone().unwrap_or(serde_json::json!([])),
+        "date" | "color" => question.default.clone().unwrap_or(serde_json::Value::String(String::new())),
+        "vector" => {
+            let values: Vec<f64> = question
+                .fields
+                .as_ref()
+                .map(|fields| fields.iter().map(|field| field.value.unwrap_or(0.0)).collect())
+                .unwrap_or_default();
+            serde_json::json!(values)
+        }
+        "note" | "image" | "file" => serde_json::Value::Null,
+        _ if is_extension_question_kind(&question.kind) => question
+            .params
+            .clone()
+            .filter(|value| value.is_object() && !value.as_object().is_none_or(|obj| obj.is_empty()))
+            .unwrap_or_else(|| serde_json::json!({})),
+        _ => serde_json::Value::Null,
+    }
+}
+
+pub fn visible_questions<'a>(step: &'a FormStep, values: &serde_json::Map<String, serde_json::Value>) -> Vec<&'a FormQuestion> {
+    step.questions
+        .iter()
+        .filter(|question| is_question_visible(question, values))
+        .collect()
+}
+
+pub fn step_errors(step: &FormStep, values: &serde_json::Map<String, serde_json::Value>) -> Vec<FormValidationError> {
+    let mut errors = Vec::new();
+    for question in visible_questions(step, values) {
+        if question.kind == "note" || question.kind == "image" {
+            continue;
+        }
+        if !question.required.unwrap_or(false) {
+            continue;
+        }
+        let value = values.get(&question.id);
+        if is_extension_question_kind(&question.kind) {
+            let empty = value.is_none_or(|value| {
+                !value.is_object() || value.as_object().is_none_or(|obj| obj.is_empty())
+            });
+            if empty {
+                errors.push(FormValidationError {
+                    question_id: question.id.clone(),
+                    message: format!("{} is required", question.label),
+                });
+            }
+            continue;
+        }
+        let missing = match value {
+            None | Some(serde_json::Value::Null) => true,
+            Some(serde_json::Value::String(text)) => text.is_empty(),
+            Some(serde_json::Value::Array(items)) => items.is_empty(),
+            _ => false,
+        };
+        if missing {
+            errors.push(FormValidationError {
+                question_id: question.id.clone(),
+                message: format!("{} is required", question.label),
+            });
+        }
+    }
+    errors
+}
+
+pub fn can_advance(step: &FormStep, values: &serde_json::Map<String, serde_json::Value>) -> bool {
+    step_errors(step, values).is_empty()
+}
+
+pub fn initial_try_values(spec: &FormSpec, overrides: &serde_json::Map<String, serde_json::Value>) -> serde_json::Map<String, serde_json::Value> {
+    let mut values = serde_json::Map::new();
+    for question in flatten_form_questions(spec) {
+        values.insert(question.id.clone(), default_value_for_question(question));
+    }
+    for (key, value) in overrides {
+        if values.contains_key(key) {
+            values.insert(key.clone(), value.clone());
+        }
+    }
+    values
+}
+//#endregion 🔖Runtime
 
 //#region 🔖Ops
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -504,6 +719,87 @@ mod tests {
             .expect("apply");
         assert_eq!(store.projection().expect("projection").steps.len(), 2);
         let _ = backwards;
+    }
+
+    #[test]
+    fn question_fields_roundtrip() {
+        let json = r#"{
+            "id":"q1",
+            "label":"Team size",
+            "kind":"slider",
+            "required":true,
+            "min":1,
+            "max":50,
+            "step":1,
+            "unit":"people",
+            "condition":{"kind":"truthy","expr":{"kind":"var","name":"show-team-size"}}
+        }"#;
+        let question: FormQuestion = serde_json::from_str(json).expect("question json");
+        assert_eq!(question.min, Some(1.0));
+        assert_eq!(question.unit.as_deref(), Some("people"));
+        assert!(question.required.unwrap_or(false));
+    }
+
+    #[test]
+    fn conditional_visibility_filters_questions() {
+        let step = FormStep {
+            id: "s".into(),
+            title: "Step".into(),
+            description: None,
+            questions: vec![
+                FormQuestion {
+                    id: "show".into(),
+                    label: "Show".into(),
+                    kind: "boolean".into(),
+                    description: None,
+                    required: None,
+                    placeholder: None,
+                    default: Some(serde_json::json!(false)),
+                    min: None,
+                    max: None,
+                    step: None,
+                    unit: None,
+                    text: None,
+                    options: None,
+                    fields: None,
+                    schema: None,
+                    src: None,
+                    accept: None,
+                    fixture_slug: None,
+                    params: None,
+                    condition: None,
+                },
+                FormQuestion {
+                    id: "team-size".into(),
+                    label: "Team size".into(),
+                    kind: "slider".into(),
+                    description: None,
+                    required: None,
+                    placeholder: None,
+                    default: Some(serde_json::json!(5)),
+                    min: Some(1.0),
+                    max: Some(50.0),
+                    step: Some(1.0),
+                    unit: None,
+                    text: None,
+                    options: None,
+                    fields: None,
+                    schema: None,
+                    src: None,
+                    accept: None,
+                    fixture_slug: None,
+                    params: None,
+                    condition: Some(FormExpr::Truthy {
+                        expr: Box::new(FormExpr::Var { name: "show".into() }),
+                    }),
+                },
+            ],
+        };
+        let mut values = serde_json::Map::new();
+        values.insert("show".into(), serde_json::json!(false));
+        assert_eq!(visible_questions(&step, &values).len(), 1);
+        values.insert("show".into(), serde_json::json!(true));
+        assert_eq!(visible_questions(&step, &values).len(), 2);
     }
 }
 //#endregion 🧪Tests

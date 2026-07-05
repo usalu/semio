@@ -98,9 +98,27 @@ function analyzePngBuffer(png: Buffer): PaintStats {
 	};
 }
 
+async function screenshotCanvas(
+	page: import("playwright").Page,
+	opts?: { path?: string },
+): Promise<Buffer> {
+	const canvas = page.locator("#semio-wgpu-canvas");
+	const box = await canvas.boundingBox();
+	if (!box) throw new Error("canvas missing for screenshot");
+	const png = await page.screenshot({
+		type: "png",
+		clip: { x: box.x, y: box.y, width: box.width, height: box.height },
+		animations: "disabled",
+		timeout: 60_000,
+	});
+	const buffer = Buffer.from(png);
+	if (opts?.path) await Bun.write(opts.path, buffer);
+	return buffer;
+}
+
 async function canvasPaintStats(page: import("playwright").Page): Promise<PaintStats> {
-	const png = await page.locator("#semio-wgpu-canvas").screenshot({ type: "png" });
-	return analyzePngBuffer(Buffer.from(png));
+	const png = await screenshotCanvas(page);
+	return analyzePngBuffer(png);
 }
 
 const BODY_MIN_RATIO = 0.004;
@@ -156,7 +174,7 @@ const pluginBodyMinRatio: Partial<Record<(typeof plugins)[number], number>> = {
 };
 
 async function assertBodyContent(page: import("playwright").Page, pluginId: string): Promise<void> {
-	const png = Buffer.from(await page.locator("#semio-wgpu-canvas").screenshot({ type: "png" }));
+	const png = await screenshotCanvas(page);
 	const bodyStats = analyzeBodyRegion(png);
 	const minRatio = pluginBodyMinRatio[pluginId as (typeof plugins)[number]] ?? BODY_MIN_RATIO;
 	if (bodyStats.bodyNonBgRatio < minRatio) {
@@ -190,8 +208,10 @@ async function capturePaintStats(page: import("playwright").Page, selector: stri
 
 const tier1Plugins = new Set([
 	"cad", "gis2d", "puzzle2d", "puzzle3d", "puzzle5d", "flow", "procedural2d", "procedural3d",
-	"trinity", "trinity-rewrite", "sequence",
+	"trinity", "trinity-rewrite", "sequence", "shooting", "lowpoly", "forms",
 ]);
+
+const generateModePlugins = new Set(["flow", "procedural2d", "procedural3d"] as const);
 
 async function waitForWgpuBoot(page: import("playwright").Page): Promise<void> {
 	await new Promise<void>((resolve, reject) => {
@@ -252,19 +272,61 @@ async function smokePlugin(
 			await assertBodyContent(page, pluginId);
 			await commandPaletteSmoke(page);
 		}
+		if (pluginId === "forms") {
+			await formsParitySmoke(page);
+		}
 		if (pluginId === "s" || pluginId === "flow") {
 			await interactionSmoke(page, pluginId);
 		}
 		if (pluginId === "s" || pluginId === "draw" || pluginId === "flow") {
 			await chromeParitySmoke(page, pluginId);
+			if (pluginId === "flow") {
+				await assertChromeColorParity(page);
+			}
 		}
 		if (warnings.length > 0) throw new Error(`console warnings: ${warnings.join(" | ")}`);
 		if (errors.length > 0) throw new Error(errors.join(" | "));
 		const shotPath = join(import.meta.dir, `screenshot-${pluginId}.png`);
-		await page.locator("#semio-wgpu-canvas").screenshot({ path: shotPath });
+		await screenshotCanvas(page, { path: shotPath });
+		if (generateModePlugins.has(pluginId as (typeof plugins)[number])) {
+			await generateModeSmoke(page, pluginId);
+		}
 		return `ok canvas painted plugin=${pluginId}`;
 	} finally {
 		await page.close();
+	}
+}
+
+async function assertChromeColorParity(page: import("playwright").Page): Promise<void> {
+	const png = await screenshotCanvas(page);
+	const { data, width: w, height: h } = PNG.sync.read(png);
+	const px = (x: number, y: number) => {
+		const i = (y * w + x) * 4;
+		return [data[i]!, data[i + 1]!, data[i + 2]!] as const;
+	};
+	const near = (got: readonly [number, number, number], want: readonly [number, number, number], tol = 12) =>
+		Math.abs(got[0] - want[0]) <= tol &&
+		Math.abs(got[1] - want[1]) <= tol &&
+		Math.abs(got[2] - want[2]) <= tol;
+	const navbar = px(Math.floor(w * 0.5), 11);
+	const canvas = px(Math.floor(w * 0.5), Math.floor(h * 0.5));
+	const panel = px(Math.floor(w * 0.12), Math.floor(h * 0.45));
+	const footer = px(Math.floor(w * 0.5), h - 12);
+	const border = px(Math.floor(w * 0.82), 8);
+	if (!near(navbar, [235, 232, 217])) {
+		throw new Error(`navbar color mismatch got=#${navbar.map((v) => v.toString(16).padStart(2, "0")).join("")}`);
+	}
+	if (!near(canvas, [240, 236, 221])) {
+		throw new Error(`canvas color mismatch got=#${canvas.map((v) => v.toString(16).padStart(2, "0")).join("")}`);
+	}
+	if (!near(panel, [217, 215, 202], 4)) {
+		throw new Error(`panel glass color mismatch got=#${panel.map((v) => v.toString(16).padStart(2, "0")).join("")}`);
+	}
+	if (!near(footer, [235, 232, 217])) {
+		throw new Error(`footer color mismatch got=#${footer.map((v) => v.toString(16).padStart(2, "0")).join("")}`);
+	}
+	if (!near(border, [123, 130, 125], 18)) {
+		throw new Error(`chrome border missing got=#${border.map((v) => v.toString(16).padStart(2, "0")).join("")}`);
 	}
 }
 
@@ -301,6 +363,35 @@ async function chromeParitySmoke(page: import("playwright").Page, pluginId: stri
 	if (!painted) throw new Error("window chrome rails broke canvas paint");
 }
 
+async function formsParitySmoke(page: import("playwright").Page): Promise<void> {
+	const canvas = page.locator("#semio-wgpu-canvas");
+	const box = await canvas.boundingBox();
+	if (!box) throw new Error("canvas missing for forms parity smoke");
+	const click = async (rx: number, ry: number) => {
+		await page.mouse.click(box.x + box.width * rx, box.y + box.height * ry);
+		await page.waitForTimeout(250);
+	};
+	await click(0.55, 0.5);
+	await click(0.82, 0.5);
+	await assertBodyContent(page, "forms");
+}
+
+async function generateModeSmoke(page: import("playwright").Page, pluginId: string): Promise<void> {
+	const canvas = page.locator("#semio-wgpu-canvas");
+	const box = await canvas.boundingBox();
+	if (!box) throw new Error(`canvas missing for generate mode smoke plugin=${pluginId}`);
+	const click = async (rx: number, ry: number) => {
+		await page.mouse.click(box.x + box.width * rx, box.y + box.height * ry);
+		await page.waitForTimeout(400);
+	};
+	await click(0.76, 0.04);
+	await page.waitForSelector("#semio-wgpu-canvas", { state: "visible", timeout: 30_000 });
+	await page.waitForTimeout(800);
+	await assertBodyContent(page, pluginId);
+	const painted = await canvasHasVisibleContent(page);
+	if (!painted) throw new Error(`generate mode empty after mode switch plugin=${pluginId}`);
+}
+
 async function interactionSmoke(page: import("playwright").Page, pluginId: string): Promise<void> {
 	const canvas = page.locator("#semio-wgpu-canvas");
 	const box = await canvas.boundingBox();
@@ -333,6 +424,8 @@ try {
 			env: {
 				...process.env,
 				SKIP_PLUGIN_BUILD: process.env.SKIP_PLUGIN_BUILD ?? "1",
+				SKIP_WGPU_BUILD: process.env.SKIP_WGPU_BUILD ?? "1",
+				SKIP_ENGINE_BUILD: process.env.SKIP_ENGINE_BUILD ?? "1",
 				S_OS_PORT: port,
 				SEMIO_RENDERER: "wgpu",
 				SEMIO_PLUGIN: "s",

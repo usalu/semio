@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import {
 	App,
@@ -28,6 +28,7 @@ import {
 	cn,
 	createEvenWindowLayout,
 	getLevelBgClass,
+	insertWindowAtDropZone,
 	interactiveActiveFillClass,
 	navbarFillItem,
 	shellChromeTitleClassName,
@@ -52,6 +53,8 @@ import {
 	type SidePanelTabConfig,
 	type TreePanelConfig,
 	type WindowLayoutNode,
+	type ModeCanvasDropTarget,
+	type WindowTemplateDropPayload,
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
 import { DEFAULT_PLUGIN_REGISTRY, loadPluginModule, type PluginWasmHandle } from "./plugin-runtime.ts";
@@ -109,6 +112,7 @@ type StudioProgramEntry = {
 	readonly programId: string;
 	readonly appId: string;
 	readonly label: string;
+	readonly hierarchy: readonly string[];
 	readonly yields: string;
 };
 
@@ -118,6 +122,7 @@ type SpawnedAppEntry = {
 	readonly instanceId: number;
 	readonly appId: string;
 	readonly label: string;
+	readonly hierarchy: readonly string[];
 };
 
 type StudioPanelState = {
@@ -142,6 +147,7 @@ const NAVBAR_NO_EXAMPLE_ID = "__no_example__";
 const FRAMEWORK_SHELL_CHROME_THEME = "system" as const;
 const DEFAULT_LEFT_PANEL_SIZE = 280;
 const DEFAULT_RIGHT_PANEL_SIZE = 320;
+const APP_HIERARCHY_SEPARATOR = " · ";
 
 type UIHistoryEntry = { readonly uri: string };
 type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: number };
@@ -233,9 +239,24 @@ function buildStudioPrograms(loaded: readonly LoadedPluginState[]): readonly Stu
 			programId: program.programId,
 			appId: program.appId,
 			label: program.label,
+			hierarchy: program.hierarchy,
 			yields: program.yields,
 		})),
 	);
+}
+
+export function appHierarchyLabel(hierarchy: readonly string[]): string {
+	return hierarchy.join(APP_HIERARCHY_SEPARATOR);
+}
+
+export function appWindowHierarchyLabel(app: AppDefinition, windowLabel: string): string {
+	const normalizedWindow = windowLabel.trim().toLowerCase();
+	const normalizedApp = app.label.trim().toLowerCase();
+	const hierarchy = [...app.hierarchy];
+	if (normalizedWindow && normalizedWindow !== normalizedApp && hierarchy.at(-1)?.toLowerCase() !== normalizedWindow) {
+		hierarchy.push(normalizedWindow);
+	}
+	return appHierarchyLabel(hierarchy);
 }
 
 function buildStudioPanelState(
@@ -561,6 +582,30 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
 }
 //#endregion Boot
 
+//#region ErrorBoundary
+class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode }, { readonly hasError: boolean; readonly message: string }> {
+	constructor(props: { readonly children: ReactNode }) {
+		super(props);
+		this.state = { hasError: false, message: "" };
+	}
+
+	static getDerivedStateFromError(error: Error) {
+		return { hasError: true, message: error.message };
+	}
+
+	render() {
+		if (this.state.hasError) {
+			return (
+				<p className="p-4 text-sm text-destructive" role="alert">
+					Render error: {this.state.message}
+				</p>
+			);
+		}
+		return this.props.children;
+	}
+}
+//#endregion ErrorBoundary
+
 //#region FrameworkOsShell
 export function FrameworkOsShell({
 	pluginFilter,
@@ -574,6 +619,9 @@ export function FrameworkOsShell({
 	const [loadedPlugins, setLoadedPlugins] = useState<readonly LoadedPluginState[]>([]);
 	const [session, setSession] = useState<ActiveSession | null>(null);
 	const [windowUiByKind, setWindowUiByKind] = useState<Readonly<Record<string, UiNode>>>({});
+	const [windowEngagementsByKind, setWindowEngagementsByKind] = useState<
+		Readonly<Record<string, WindowEngagement>>
+	>({});
 	const [panelUiByKey, setPanelUiByKey] = useState<Readonly<Record<string, UiNode>>>({});
 	const [activeToolNodes, setActiveToolNodes] = useState<readonly ToolNode[]>([]);
 	const [spawnedWindowUi, setSpawnedWindowUi] = useState<UiNode | null>(null);
@@ -591,6 +639,12 @@ export function FrameworkOsShell({
 	const [findOpen, setFindOpen] = useState(false);
 	const importStudioInputRef = useRef<HTMLInputElement>(null);
 	const refreshGenerationRef = useRef(0);
+	const layoutSeedKeyRef = useRef<string | null>(null);
+	const [mobileActiveTabId, setMobileActiveTabId] = useState<string | undefined>(undefined);
+	const [leftPanelTabId, setLeftPanelTabId] = useState<string | undefined>(undefined);
+	const [rightPanelTabId, setRightPanelTabId] = useState<string | undefined>(undefined);
+	const [extraWindowInstances, setExtraWindowInstances] = useState<readonly { readonly id: string; readonly windowKindId: string; readonly title: string }[]>([]);
+	const extraWindowCounterRef = useRef(0);
 	const openStudioIdRef = useRef<string | null>(null);
 	const sessionRef = useRef<ActiveSession | null>(null);
 	const [uiTheme, setUiTheme] = useState<ElementsSurfaceTheme>(() => readStoredUiChromeTheme());
@@ -609,10 +663,19 @@ export function FrameworkOsShell({
 	}, [pluginFilter, plugins, studioMode]);
 
 	const panel = session ? parsePanelState(session.viewState) : null;
+	const activeAppTitle = appHierarchyLabel(
+		panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId)?.hierarchy
+		?? session?.app.hierarchy
+		?? [],
+	);
 
 	useEffect(() => {
 		sessionRef.current = session;
 	}, [session]);
+
+	useEffect(() => {
+		if (activeAppTitle) document.title = activeAppTitle;
+	}, [activeAppTitle]);
 
 	useEffect(() => {
 		let cancelled = false;
@@ -688,27 +751,36 @@ export function FrameworkOsShell({
 				),
 				...nextSession.app.panelTabs.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey, nextSession.viewState)),
 				plugin.tools(nextSession.instanceId, nextSession.viewState),
+				plugin.windowEngagements(nextSession.instanceId, nextSession.viewState),
 			]);
 			if (generation !== refreshGenerationRef.current) return;
 			const windowNodes = rendered.slice(0, windowCount);
 			const panelNodes = rendered.slice(windowCount, windowCount + nextSession.app.panelTabs.length);
-			const dynamicTools = rendered[rendered.length - 1] as readonly ToolNode[];
+			const dynamicTools = rendered[windowCount + nextSession.app.panelTabs.length] as readonly ToolNode[];
+			const dynamicEngagements = rendered[rendered.length - 1] as Readonly<Record<string, WindowEngagement>>;
 			setWindowUiByKind(
 				Object.fromEntries(
 					nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]!]),
 				),
 			);
+			setWindowEngagementsByKind(dynamicEngagements);
 			setPanelUiByKey(Object.fromEntries(nextSession.app.panelTabs.map((tab, index) => [tab.id, panelNodes[index]!])));
 			const activeModeId = nextSession.viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
 			const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
 			setActiveToolNodes(dynamicTools.length > 0 ? dynamicTools : staticTools);
 			const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
-			setShellLayout(convertFrameworkLayoutToModeLayout(nextSession.app.defaultLayout, windowIds));
-			const defaultWindowId = findDefaultActiveWindowKindId(nextSession.app.defaultLayout, nextSession.app.windowKinds);
-			if (defaultWindowId) setActiveWindowId(defaultWindowId);
-			else if (!activeWindowId && windowIds[0]) setActiveWindowId(windowIds[0]);
+			const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
+			if (layoutSeedKeyRef.current !== layoutSeedKey) {
+				layoutSeedKeyRef.current = layoutSeedKey;
+				setExtraWindowInstances([]);
+				extraWindowCounterRef.current = 0;
+				setShellLayout(convertFrameworkLayoutToModeLayout(nextSession.app.defaultLayout, windowIds));
+				const defaultWindowId = findDefaultActiveWindowKindId(nextSession.app.defaultLayout, nextSession.app.windowKinds);
+				if (defaultWindowId) setActiveWindowId(defaultWindowId);
+				else if (windowIds[0]) setActiveWindowId(windowIds[0]);
+			}
 		},
-		[activeWindowId, loadedPlugins],
+		[loadedPlugins],
 	);
 
 	useEffect(() => {
@@ -870,7 +942,14 @@ export function FrameworkOsShell({
 					currentPanel.programs,
 					[
 						...currentPanel.spawnedApps,
-						{ id: spawnedId, pluginId: program.pluginId, instanceId, appId: program.appId, label: label ?? program.label },
+						{
+							id: spawnedId,
+							pluginId: program.pluginId,
+							instanceId,
+							appId: program.appId,
+							label: label ?? program.label,
+							hierarchy: program.hierarchy,
+						},
 					],
 					currentPanel.activePanelTab,
 					spawnedId,
@@ -915,11 +994,8 @@ export function FrameworkOsShell({
 				}
 				if (op.op === "openPluginInstance" && op.programId && op.appId) {
 					const currentPanel = parsePanelState(nextViewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
-					const program = currentPanel.programs.find((entry) => entry.programId === op.programId)
-						?? { pluginId: "", programId: op.programId, appId: op.appId, label: op.label ?? op.programId, yields: "" };
-					if (program.pluginId) {
-						await ensureSpawnedPlugin(program, op.label, op.osInstanceId, op.documentJson);
-					}
+					const program = currentPanel.programs.find((entry) => entry.programId === op.programId && entry.appId === op.appId);
+					if (program) await ensureSpawnedPlugin(program, op.label, op.osInstanceId, op.documentJson);
 				}
 			}
 			const nextSession = { ...baseSession, viewState: nextViewState };
@@ -947,7 +1023,14 @@ export function FrameworkOsShell({
 					currentPanel.programs,
 					[
 						...currentPanel.spawnedApps,
-						{ id: spawnedId, pluginId: program.pluginId, instanceId, appId: program.appId, label: program.label },
+						{
+							id: spawnedId,
+							pluginId: program.pluginId,
+							instanceId,
+							appId: program.appId,
+							label: program.label,
+							hierarchy: program.hierarchy,
+						},
 					],
 					currentPanel.activePanelTab,
 					spawnedId,
@@ -1088,9 +1171,36 @@ export function FrameworkOsShell({
 		(layout: WindowLayout) => {
 			if (!session) return;
 			const windowIds = session.app.windowKinds.map((kind) => kind.id);
+			setExtraWindowInstances([]);
+			extraWindowCounterRef.current = 0;
 			setShellLayout(convertFrameworkLayoutToModeLayout(layout, windowIds));
 			const defaultWindowId = findDefaultActiveWindowKindId(layout, session.app.windowKinds);
 			if (defaultWindowId) setActiveWindowId(defaultWindowId);
+		},
+		[session],
+	);
+
+	const handleTemplateDrop = useCallback(
+		(payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
+			if (!session) return;
+			const kind = session.app.windowKinds.find((entry) => entry.id === payload.windowKindId);
+			if (!kind) return;
+			extraWindowCounterRef.current += 1;
+			const instanceId = `${payload.windowKindId}-${extraWindowCounterRef.current}`;
+			setExtraWindowInstances((current) => [
+				...current,
+				{ id: instanceId, windowKindId: payload.windowKindId, title: kind.label },
+			]);
+			setShellLayout((current) => {
+				const base =
+					current ??
+					convertFrameworkLayoutToModeLayout(
+						session.app.defaultLayout,
+						session.app.windowKinds.map((entry) => entry.id),
+					);
+				return insertWindowAtDropZone(base, instanceId, target);
+			});
+			setActiveWindowId(instanceId);
 		},
 		[session],
 	);
@@ -1109,6 +1219,10 @@ export function FrameworkOsShell({
 	const settingsHostRef = useRef<SettingsHostApi | null>(null);
 	const settingsHost: SettingsHostApi = useMemo(
 		() => ({
+			appId: session?.app.id,
+			appLabel: session ? appHierarchyLabel(session.app.hierarchy) : undefined,
+			controllerId: session?.app.controllerId,
+			pluginId: session?.pluginId,
 			compact: uiCompact,
 			setCompact: setUiCompact,
 			expertise: uiExpertise,
@@ -1116,7 +1230,7 @@ export function FrameworkOsShell({
 			theme: uiTheme,
 			setTheme: setUiTheme,
 		}),
-		[uiCompact, uiExpertise, uiTheme],
+		[session, uiCompact, uiExpertise, uiTheme],
 	);
 	settingsHostRef.current = settingsHost;
 
@@ -1136,18 +1250,27 @@ export function FrameworkOsShell({
 				.split(",")
 				.map((key) => key.trim().toLowerCase())
 				.filter(Boolean);
+		const isEditableTarget = (target: EventTarget | null) => {
+			if (!(target instanceof HTMLElement)) return false;
+			const tag = target.tagName;
+			if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+			if (target.isContentEditable) return true;
+			return target.closest("[contenteditable='true'], [role='textbox']") != null;
+		};
 		const matches = (event: KeyboardEvent, binding: string) => {
 			const parts = binding.split("+").map((part) => part.trim());
 			const key = parts[parts.length - 1] ?? "";
-			const needsCtrl = parts.includes("ctrl") || parts.includes("meta");
+			const needsCtrl = parts.includes("ctrl") || parts.includes("meta") || parts.includes("mod");
 			const needsShift = parts.includes("shift");
 			const needsAlt = parts.includes("alt");
-			if (needsCtrl && !(event.ctrlKey || event.metaKey)) return false;
-			if (needsShift && !event.shiftKey) return false;
-			if (needsAlt && !event.altKey) return false;
+			const hasCtrl = event.ctrlKey || event.metaKey;
+			if (needsCtrl !== hasCtrl) return false;
+			if (needsShift !== event.shiftKey) return false;
+			if (needsAlt !== event.altKey) return false;
 			return event.key.toLowerCase() === key;
 		};
 		const onKeyDown = (event: KeyboardEvent) => {
+			if (isEditableTarget(event.target)) return;
 			for (const binding of session.app.keybindings) {
 				for (const chord of parseKeys(binding.keys)) {
 					if (!matches(event, chord)) continue;
@@ -1225,6 +1348,31 @@ export function FrameworkOsShell({
 		if (panel?.activePanelTab && detailsRightTabs.some((tab) => tab.id === panel.activePanelTab)) return panel.activePanelTab;
 		return detailsRightTabs[0]?.id ?? activePanelTabId;
 	}, [activePanelTabId, activeRightPanelKind, detailsRightTabs, panel?.activePanelTab, settingsRightTabs]);
+
+	useEffect(() => {
+		setLeftPanelTabId(undefined);
+	}, [activeLeftPanelKind]);
+
+	useEffect(() => {
+		setRightPanelTabId(undefined);
+	}, [activeRightPanelKind]);
+
+	const mobilePanelTabs = useMemo(() => [...leftPanelTabs, ...rightPanelTabs], [leftPanelTabs, rightPanelTabs]);
+
+	const mobilePanel = useMemo(() => {
+		if (mobilePanelTabs.length === 0) return undefined;
+		return {
+			visible: leftPanelVisible || rightPanelVisible,
+			tabs: mobilePanelTabs,
+			activeTabId: mobileActiveTabId ?? mobilePanelTabs[0]?.id,
+			onActiveTabChange: (tabId: string) => {
+				setMobileActiveTabId(tabId);
+				if (studioMode && session?.app.id === S_PLAY_APP_ID) {
+					onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId } });
+				}
+			},
+		};
+	}, [leftPanelVisible, mobileActiveTabId, mobilePanelTabs, onCommand, rightPanelVisible, session, studioMode]);
 
 	const workbenchIcon = useMemo(() => {
 		const TabIcon = workbenchLeftTabs[0]?.icon;
@@ -1321,7 +1469,9 @@ export function FrameworkOsShell({
 				content: (
 					<div className="flex items-center gap-single">
 						<SemioLogo className="size-workbench shrink-0" />
-						<span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>{session.app.label}</span>
+						<span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
+							{appHierarchyLabel(session.app.hierarchy)}
+						</span>
 					</div>
 				),
 			},
@@ -1408,7 +1558,7 @@ export function FrameworkOsShell({
 			for (const program of panel.programs) {
 				items.push({
 					id: `spawn.${program.programId}`,
-					label: `Spawn ${program.label}`,
+					label: `Spawn ${appHierarchyLabel(program.hierarchy)}`,
 					category: "Catalogue",
 					onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "spawnApp", args: { programId: program.programId } }),
 				});
@@ -1449,37 +1599,14 @@ export function FrameworkOsShell({
 
 	const footerItems = useMemo((): FooterItem[] => {
 		if (!session) return [];
-		const items: FooterItem[] = [
+		return [
 			{
 				id: "framework.footer.app",
-				text: session.app.label,
+				text: appHierarchyLabel(session.app.hierarchy),
 				icon: <Icon icon={session.app.iconId && session.app.iconId in ICONS ? (session.app.iconId as IconName) : "app-window"} size="small" />,
 			},
 		];
-		if (studioMode && session.app.controllerId === S_PLAY_CONTROLLER_ID) {
-			items.push(
-				{
-					id: "framework.footer.undo",
-					text: "Undo",
-					icon: <Icon icon="undo-2" size="small" />,
-					onClick: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "undo" }),
-				},
-				{
-					id: "framework.footer.redo",
-					text: "Redo",
-					icon: <Icon icon="redo-2" size="small" />,
-					onClick: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "redo" }),
-				},
-				{
-					id: "framework.footer.checkpoint",
-					text: "Checkpoint",
-					icon: <Icon icon="git-commit-horizontal" size="small" />,
-					onClick: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "commitCheckpoint" }),
-				},
-			);
-		}
-		return items;
-	}, [onCommand, session, studioMode]);
+	}, [session]);
 
 	const footerToolbar = useMemo(() => {
 		if (!activeToolNodes.length) return undefined;
@@ -1494,7 +1621,7 @@ export function FrameworkOsShell({
 				return [
 					{
 						id: spawned.id,
-						title: spawned.label,
+						title: appHierarchyLabel(spawned.hierarchy),
 						fill: true,
 						showControls: true,
 						children: (
@@ -1507,25 +1634,47 @@ export function FrameworkOsShell({
 			}
 		}
 		if (Object.keys(windowUiByKind).length === 0) return [];
-		return session.app.windowKinds.map((kind) => ({
+		const baseWindows = session.app.windowKinds.map((kind) => ({
 			id: kind.id,
-			title: kind.label,
+			title: appWindowHierarchyLabel(session.app, kind.label),
 			fill: true,
 			showControls: true,
 			measures: windowMeasuresOverlay(kind.measures, onCommand),
-			engagement: windowEngagementToSpec(kind.engagement, onCommand),
+			engagement: windowEngagementToSpec(windowEngagementsByKind[kind.id] ?? kind.engagement, onCommand),
 			children: (
 				<ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
 					{interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onCommand })}
 				</ChromeAwareWindowScrollSurface>
 			),
 		}));
-	}, [onCommand, panel, session, spawnedWindowUi, studioMode, windowUiByKind]);
+		const extraWindows = extraWindowInstances.flatMap((instance) => {
+			const kind = session.app.windowKinds.find((entry) => entry.id === instance.windowKindId);
+			if (!kind) return [];
+			return [
+				{
+					id: instance.id,
+					title: instance.title,
+					fill: true,
+					showControls: true,
+					measures: windowMeasuresOverlay(kind.measures, onCommand),
+					engagement: windowEngagementToSpec(windowEngagementsByKind[kind.id] ?? kind.engagement, onCommand),
+					children: (
+						<ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
+							{interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onCommand })}
+						</ChromeAwareWindowScrollSurface>
+					),
+				},
+			];
+		});
+		return [...baseWindows, ...extraWindows];
+	}, [extraWindowInstances, onCommand, panel, session, spawnedWindowUi, studioMode, windowEngagementsByKind, windowUiByKind]);
 
 	const canvas = useMemo(() => {
 		if (!session) return <p className="p-4 text-sm text-muted-foreground">Loading plugins…</p>;
 		if (error) return <p className="p-4 text-sm text-destructive" role="alert">{error}</p>;
-		const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: session.app.label }];
+		const modes = session.app.modes.length > 0
+			? session.app.modes
+			: [{ id: session.app.id, label: appHierarchyLabel(session.app.hierarchy) }];
 		const studioHomeBar =
 			studioMode && session.app.id === S_PLAY_APP_ID && !panel?.activeSpawnedId ? (
 				<button
@@ -1547,7 +1696,7 @@ export function FrameworkOsShell({
 					← Back to Media Graph
 				</button>
 				<span>·</span>
-				<span>{focusedSpawned.label}</span>
+				<span>{appHierarchyLabel(focusedSpawned.hierarchy)}</span>
 			</div>
 		) : null;
 		return (
@@ -1584,11 +1733,13 @@ export function FrameworkOsShell({
 							activeWindowId={activeWindowId}
 							onActiveWindowChange={setActiveWindowId}
 							onLayoutChange={setShellLayout}
+							onTemplateDrop={handleTemplateDrop}
 							onWindowClose={(windowId) => {
 								if (studioMode && panel?.spawnedApps.some((entry) => entry.id === windowId)) {
 									const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
 									updateStudioPanel(buildStudioPanelState(panel.programs, nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
 								}
+								setExtraWindowInstances((current) => current.filter((entry) => entry.id !== windowId));
 								setShellLayout((current) => current ?? convertFrameworkLayoutToModeLayout(session.app.defaultLayout, modeWindows.map((window) => window.id)));
 							}}
 						/>
@@ -1596,7 +1747,7 @@ export function FrameworkOsShell({
 				</div>
 			</div>
 		);
-	}, [activeWindowId, error, modeWindows, onCommand, panel, session, shellLayout, studioMode, updateStudioPanel]);
+	}, [activeWindowId, error, handleTemplateDrop, modeWindows, onCommand, panel, session, shellLayout, studioMode, updateStudioPanel]);
 
 	return (
 		<UIFindProvider>
@@ -1604,6 +1755,7 @@ export function FrameworkOsShell({
 				<div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
 					<Layout
 						mobile={mobile}
+						mobilePanel={mobilePanel}
 						navbar={<Navbar items={navbarItems} showFullscreenToggle />}
 						footer={<Footer items={footerItems} toolbar={footerToolbar} />}
 						leftSidePanel={
@@ -1614,8 +1766,9 @@ export function FrameworkOsShell({
 										size: leftPanelSize,
 										onSizeChange: setLeftPanelSize,
 										tabs: leftPanelTabs,
-										activeTabId: activeLeftPanelTabId,
+										activeTabId: leftPanelTabId ?? activeLeftPanelTabId,
 										onActiveTabChange: (tabId) => {
+											setLeftPanelTabId(tabId);
 											if (studioMode && session?.app.id === S_PLAY_APP_ID) {
 												onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId } });
 											}
@@ -1631,8 +1784,9 @@ export function FrameworkOsShell({
 										size: rightPanelSize,
 										onSizeChange: setRightPanelSize,
 										tabs: rightPanelTabs,
-										activeTabId: activeRightPanelTabId,
+										activeTabId: rightPanelTabId ?? activeRightPanelTabId,
 										onActiveTabChange: (tabId) => {
+											setRightPanelTabId(tabId);
 											if (studioMode && session?.app.id === S_PLAY_APP_ID) {
 												onCommand({ controllerId: session.app.controllerId, command: "setActivePanelTab", args: { tabId } });
 											}
@@ -1640,7 +1794,7 @@ export function FrameworkOsShell({
 									}
 								: undefined
 						}
-						canvas={canvas}
+						canvas={<ShellRenderErrorBoundary>{canvas}</ShellRenderErrorBoundary>}
 					/>
 				</div>
 				<UISearch items={searchItems} open={searchOpen} onOpenChange={setSearchOpen} />

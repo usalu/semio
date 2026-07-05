@@ -1278,6 +1278,38 @@ fn titleize_module(module: &str) -> String {
         Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
     }
 }
+
+/// 📚 Serializes module-grouped operator catalogue sections for host catalogue seeding.
+pub fn flow_operator_catalogue_json() -> String {
+    use std::collections::BTreeMap;
+    let operators = flow_registry().operator_catalogue();
+    let mut by_module: BTreeMap<String, Vec<neural::OperatorInfo>> = BTreeMap::new();
+    for info in operators {
+        by_module.entry(info.module.clone()).or_default().push(info);
+    }
+    let sections: Vec<CatalogueSection> = by_module
+        .into_iter()
+        .map(|(module, items)| CatalogueSection {
+            id: module.clone(),
+            title: titleize_module(&module),
+            groups: vec![],
+            items: items
+                .into_iter()
+                .map(|info| CatalogueItem {
+                    kind: "neuron".into(),
+                    neuronKind: Some(info.id),
+                    action: None,
+                    format: None,
+                    name: info.name,
+                    abbreviation: info.abbreviation,
+                    icon: info.icon,
+                    summary: info.summary,
+                })
+                .collect(),
+        })
+        .collect();
+    serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into())
+}
 // #endregion 🔖Catalogue
 
 // #region 🔖ModuleRegistry
@@ -1330,7 +1362,7 @@ impl EvalBridge {
 
 #[cfg(not(target_arch = "wasm32"))]
 struct EvalBridge {
-    cb: Box<dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError>>,
+    cb: Box<dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Send>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1747,7 +1779,16 @@ impl FlowHost {
     }
 
     /// 📥 Replaces fixture content while keeping catalogue, operator metadata, and eval bridge.
-    pub fn replace_fixture(&mut self, mut fixture: FlowFixture) {
+    pub fn replace_fixture(&mut self, fixture: FlowFixture) {
+        self.apply_fixture(fixture, true);
+    }
+
+    /// 📥 Replaces fixture content without clearing undo/redo history.
+    pub fn set_fixture_preserving_history(&mut self, fixture: FlowFixture) {
+        self.apply_fixture(fixture, false);
+    }
+
+    fn apply_fixture(&mut self, mut fixture: FlowFixture, reset_history: bool) {
         dedupe_fixture_widgets(&mut fixture);
         self.fixture = fixture;
         self.outputs.clear();
@@ -1756,7 +1797,9 @@ impl FlowHost {
         self.last_tree_signature = None;
         self.pan_anchor = None;
         self.ghost_node = None;
-        self.history = FlowHistory::default();
+        if reset_history {
+            self.history = FlowHistory::default();
+        }
         self.rebuild_dag();
         self.touch_channel_eval();
     }
@@ -1788,7 +1831,7 @@ impl FlowHost {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn set_eval_bridge_fn(&mut self, cb: Box<dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError>>) {
+    pub fn set_eval_bridge_fn(&mut self, cb: Box<dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Send>) {
         self.eval_bridge = Some(EvalBridge { cb });
     }
 
@@ -3166,7 +3209,7 @@ impl FlowHost {
         a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout
     }
 
-    fn begin_change(&mut self) {
+    pub fn begin_change(&mut self) {
         if self.history.pending.is_none() {
             self.history.past.push(self.fixture.clone());
             self.history.future.clear();
@@ -4017,6 +4060,279 @@ mod flow_vcs_wasm {
         }
     }
 }
+
+// #region 🔖FormsBridge
+pub mod forms_bridge {
+    use super::{effective_stepper_fields, FlowFixture, Widget};
+    use forms::{
+        FormQuestion, FormQuestionOption, FormSpec, FormStep, FormVectorField, FORMS_DOCUMENT_SCHEMA,
+    };
+
+    fn humanize_widget_label(id: &str) -> String {
+        let mut words = Vec::new();
+        let mut current = String::new();
+        for ch in id.chars() {
+            if ch == '_' || ch == '-' || ch == ' ' {
+                if !current.is_empty() {
+                    words.push(current.clone());
+                    current.clear();
+                }
+                continue;
+            }
+            if ch.is_uppercase() && !current.is_empty() {
+                words.push(current.clone());
+                current.clear();
+            }
+            current.push(if ch.is_uppercase() { ch } else { ch.to_ascii_uppercase() });
+        }
+        if !current.is_empty() {
+            words.push(current);
+        }
+        if words.is_empty() {
+            return id.to_string();
+        }
+        words.join(" ")
+    }
+
+    fn variable_question_kind(schema: &str) -> &'static str {
+        match schema.trim().to_ascii_lowercase().as_str() {
+            "enum" | "single" | "select" | "choice" => "single",
+            _ => "text",
+        }
+    }
+
+    fn widget_to_form_question(widget: &Widget) -> Option<FormQuestion> {
+        match widget {
+            Widget::InputSlider { id, value, min, max, step, .. } => Some(FormQuestion {
+                id: id.clone(),
+                label: humanize_widget_label(id),
+                kind: "slider".into(),
+                description: None,
+                required: None,
+                placeholder: None,
+                default: Some(serde_json::json!(*value)),
+                min: Some(*min),
+                max: Some(*max),
+                step: Some(*step),
+                unit: None,
+                text: None,
+                options: None,
+                fields: None,
+                schema: None,
+                src: None,
+                accept: None,
+                fixture_slug: None,
+                params: None,
+                condition: None,
+            }),
+            Widget::InputStepper { id, schema, fields, step, .. } => {
+                let effective = effective_stepper_fields(schema, fields);
+                Some(FormQuestion {
+                    id: id.clone(),
+                    label: humanize_widget_label(id),
+                    kind: "vector".into(),
+                    description: None,
+                    required: None,
+                    placeholder: None,
+                    default: None,
+                    min: None,
+                    max: None,
+                    step: Some(*step),
+                    unit: None,
+                    text: None,
+                    options: None,
+                    fields: Some(
+                        effective
+                            .iter()
+                            .map(|field| FormVectorField {
+                                key: field.key.clone(),
+                                label: Some(humanize_widget_label(&field.key)),
+                                value: Some(field.value),
+                            })
+                            .collect(),
+                    ),
+                    schema: Some(schema.clone()),
+                    src: None,
+                    accept: None,
+                    fixture_slug: None,
+                    params: None,
+                    condition: None,
+                })
+            }
+            Widget::InputNote { id, text, .. } => Some(FormQuestion {
+                id: id.clone(),
+                label: humanize_widget_label(id),
+                kind: "note".into(),
+                description: None,
+                required: None,
+                placeholder: None,
+                default: None,
+                min: None,
+                max: None,
+                step: None,
+                unit: None,
+                text: Some(text.clone()),
+                options: None,
+                fields: None,
+                schema: None,
+                src: None,
+                accept: None,
+                fixture_slug: None,
+                params: None,
+                condition: None,
+            }),
+            Widget::InputImage { id, src, .. } => Some(FormQuestion {
+                id: id.clone(),
+                label: humanize_widget_label(id),
+                kind: "image".into(),
+                description: None,
+                required: None,
+                placeholder: None,
+                default: None,
+                min: None,
+                max: None,
+                step: None,
+                unit: None,
+                text: None,
+                options: None,
+                fields: None,
+                schema: None,
+                src: Some(src.clone()),
+                accept: None,
+                fixture_slug: None,
+                params: None,
+                condition: None,
+            }),
+            Widget::Variable { id, name, schema, .. } => {
+                let kind = variable_question_kind(schema);
+                let options = if kind == "single" {
+                    Some(vec![FormQuestionOption {
+                        value: schema.clone(),
+                        label: humanize_widget_label(schema),
+                    }])
+                } else {
+                    None
+                };
+                Some(FormQuestion {
+                    id: id.clone(),
+                    label: humanize_widget_label(name),
+                    kind: kind.into(),
+                    description: None,
+                    required: None,
+                    placeholder: None,
+                    default: Some(serde_json::Value::String(name.clone())),
+                    min: None,
+                    max: None,
+                    step: None,
+                    unit: None,
+                    text: None,
+                    options,
+                    fields: None,
+                    schema: Some(schema.clone()),
+                    src: None,
+                    accept: None,
+                    fixture_slug: None,
+                    params: None,
+                    condition: None,
+                })
+            }
+            _ => None,
+        }
+    }
+
+    pub fn flow_fixture_to_form_spec(fixture: &FlowFixture) -> FormSpec {
+        let questions: Vec<FormQuestion> = fixture
+            .widgets
+            .iter()
+            .filter_map(widget_to_form_question)
+            .collect();
+        FormSpec {
+            schema: FORMS_DOCUMENT_SCHEMA.into(),
+            id: "flow-generate".into(),
+            version: "1".into(),
+            title: Some("Generate".into()),
+            steps: vec![FormStep {
+                id: "inputs".into(),
+                title: "Inputs".into(),
+                description: None,
+                questions,
+            }],
+        }
+    }
+
+    fn patch_stepper_fields(widget: &mut serde_json::Value, value: &serde_json::Value) {
+        let Some(fields) = widget.get_mut("fields").and_then(|entry| entry.as_array_mut()) else {
+            return;
+        };
+        if let Some(map) = value.as_object() {
+            for field in fields.iter_mut() {
+                let Some(key) = field.get("key").and_then(|entry| entry.as_str()) else {
+                    continue;
+                };
+                if let Some(number) = map.get(key).and_then(|entry| entry.as_f64()) {
+                    field["value"] = serde_json::json!(number);
+                }
+            }
+            return;
+        }
+        if let Some(numbers) = value.as_array() {
+            for (index, field) in fields.iter_mut().enumerate() {
+                if let Some(number) = numbers.get(index).and_then(|entry| entry.as_f64()) {
+                    field["value"] = serde_json::json!(number);
+                }
+            }
+        }
+    }
+
+    pub fn apply_generation_values_to_fixture(
+        fixture_json: &str,
+        values: &serde_json::Map<String, serde_json::Value>,
+    ) -> String {
+        let mut root: serde_json::Value =
+            serde_json::from_str(fixture_json).unwrap_or(serde_json::json!({}));
+        let Some(widgets) = root.get_mut("widgets").and_then(|entry| entry.as_array_mut()) else {
+            return fixture_json.to_string();
+        };
+        for widget in widgets.iter_mut() {
+            let Some(id) = widget.get("id").and_then(|entry| entry.as_str()) else {
+                continue;
+            };
+            let Some(value) = values.get(id) else {
+                continue;
+            };
+            let kind = widget
+                .get("kind")
+                .and_then(|entry| entry.as_str())
+                .unwrap_or_default();
+            match kind {
+                "inputSlider" => {
+                    if let Some(number) = value.as_f64() {
+                        widget["value"] = serde_json::json!(number);
+                    }
+                }
+                "inputStepper" => patch_stepper_fields(widget, value),
+                "inputNote" => {
+                    if let Some(text) = value.as_str() {
+                        widget["text"] = serde_json::json!(text);
+                    }
+                }
+                "inputImage" => {
+                    if let Some(src) = value.as_str() {
+                        widget["src"] = serde_json::json!(src);
+                    }
+                }
+                "variable" => {
+                    if let Some(text) = value.as_str() {
+                        widget["name"] = serde_json::json!(text);
+                    }
+                }
+                _ => {}
+            }
+        }
+        serde_json::to_string(&root).unwrap_or_else(|_| fixture_json.to_string())
+    }
+}
+// #endregion 🔖FormsBridge
 
 #[cfg(test)]
 mod flow_vcs_tests {
@@ -5446,6 +5762,43 @@ mod tests {
         let text = host.compiled_wire_literal();
         assert!(text.contains("core.number"));
         assert!(text.contains("math.add"));
+    }
+
+    #[test]
+    fn flow_fixture_to_form_spec_maps_input_widgets() {
+        use crate::forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec};
+        let fixture = FlowFixture::default();
+        let spec = flow_fixture_to_form_spec(&fixture);
+        let kinds: Vec<&str> = spec.steps[0]
+            .questions
+            .iter()
+            .map(|question| question.kind.as_str())
+            .collect();
+        assert!(kinds.contains(&"slider"));
+    }
+
+    #[test]
+    fn apply_generation_values_to_fixture_patches_slider_value() {
+        use crate::forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec};
+        let fixture = FlowFixture::default();
+        let spec = flow_fixture_to_form_spec(&fixture);
+        let slider_id = spec.steps[0]
+            .questions
+            .iter()
+            .find(|question| question.kind == "slider")
+            .map(|question| question.id.clone())
+            .expect("slider question");
+        let fixture_json = serde_json::to_string(&fixture).expect("fixture json");
+        let mut values = serde_json::Map::new();
+        values.insert(slider_id.clone(), serde_json::json!(8.0));
+        let patched = apply_generation_values_to_fixture(&fixture_json, &values);
+        let reparsed: serde_json::Value = serde_json::from_str(&patched).expect("patched json");
+        let slider = reparsed
+            .get("widgets")
+            .and_then(|widgets| widgets.as_array())
+            .and_then(|widgets| widgets.iter().find(|widget| widget.get("id").and_then(|id| id.as_str()) == Some(slider_id.as_str())))
+            .expect("slider widget");
+        assert_eq!(slider.get("value").and_then(|value| value.as_f64()), Some(8.0));
     }
 }
 // #endregion 🔖Tests

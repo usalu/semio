@@ -39,6 +39,7 @@ pub struct KeybindingSpec {
 pub struct AppBuilder {
     id: String,
     label: String,
+    hierarchy: Vec<String>,
     icon_id: Option<String>,
     controller_id: String,
     modes: Vec<ModeSpec>,
@@ -57,6 +58,7 @@ impl AppBuilder {
             controller_id: id.clone(),
             id,
             label: label.into(),
+            hierarchy: Vec::new(),
             icon_id: None,
             modes: Vec::new(),
             default_mode_id: None,
@@ -70,6 +72,15 @@ impl AppBuilder {
 
     pub fn icon_id(mut self, icon_id: impl Into<String>) -> Self {
         self.icon_id = Some(icon_id.into());
+        self
+    }
+
+    pub fn hierarchy<I, S>(mut self, hierarchy: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: Into<String>,
+    {
+        self.hierarchy = hierarchy.into_iter().map(Into::into).collect();
         self
     }
 
@@ -161,12 +172,17 @@ impl AppBuilder {
     }
 
     pub fn build_definition(self) -> AppDefinition {
+        assert!(
+            !self.hierarchy.is_empty() && self.hierarchy.iter().all(|segment| !segment.trim().is_empty()),
+            "app hierarchy must contain non-empty segments"
+        );
         let default_mode_id = self
             .default_mode_id
             .or_else(|| self.modes.first().map(|mode| mode.id.clone()));
         AppDefinition {
             id: self.id,
             label: self.label,
+            hierarchy: self.hierarchy,
             icon_id: self.icon_id,
             controller_id: self.controller_id,
             modes: self
@@ -252,6 +268,7 @@ impl App {
             program_id: program_id.into(),
             app_id: self.definition.id.clone(),
             label: label.into(),
+            hierarchy: self.definition.hierarchy.clone(),
             yields: yields.into(),
         });
         self
@@ -265,6 +282,13 @@ pub trait PluginApp: Send {
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode;
     fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
         Vec::new()
+    }
+    fn window_engagements(
+        &self,
+        _document_json: &str,
+        _view_state: &ViewState,
+    ) -> std::collections::HashMap<String, semio_framework_core::layout::WindowEngagement> {
+        std::collections::HashMap::new()
     }
 }
 

@@ -1,65 +1,43 @@
-# Generalize Rich UI into Framework Engines
+# Wgpu Renderer Full Feature Parity
 
-Goal: `🎯r2602🎯runningsketchpad`
+## Summary
 
-## Completed
+Brought the wgpu renderer to pre-migration feature parity for lowpoly and framework-wide plugin chrome across all six world3d plugins.
 
-### Contract (`framework/core/rs/ui.rs`)
-- Extended `NodeGraphScene` with selection/hover/lod/catalogue/controls/clusters/computing/capabilities payloads
-- Extended `TextEditorScene` with occurrences/placeholders/extra-carets/selectable-spans/settings/camera
-- Added `node_graph_commands` and `text_editor_commands` modules
-- Mirrored in `framework/renderer/react/types.ts`
+### Phase 0 — Framework bridge (all plugins)
 
-### Engines
-- **`framework/editor/rs`**: `EditorHost`/`EditorSession` (relocated from writer/rs), `syncFromSceneJson`
-- **`framework/graph/rs`**: `GraphHost` wrapping `DagHost`, `GraphSession` wasm, scene payload sync
-- **`writer/rs`**: thin re-export + `document_vcs.rs`
+- `PluginBridgeEntry::tools()` and `window_engagements()` in `framework/renderer/wgpu/rs/plugin_bridge.rs`
+- `ShellState::refresh_ui` caches `active_tools` and `window_engagements`
+- Footer renders dynamic `ToolNode` tree with collection expand/collapse
+- Window engagement rail uses live `window_engagements` with static manifest fallback
+- `engagementInput` on_change wired; mode switch triggers `refresh_ui`
 
-### React hosts
-- `node-graph-host.tsx`: WASM graph surface + label/marquee/selection overlays + context menu + Diagram SSR fallback
-- `text-editor-host.tsx`: WASM editor surface + diagnostics + `textEdit`/`textSelect` commands
-- `graph-canvas-overlays.tsx`: dag label/marquee overlay utilities
+### Phase 1 — UV canvas (lowpoly)
 
-### WGPU
-- `scenes.rs`: selection/hover chrome from scene payload fields
-- Compiles on `wasm32-unknown-unknown`
+- `CanvasLayer` supports `dataUrl`, `points`, `seams`
+- Renders paint texture via raster quad, UV wireframe with dashed seams, checkerboard
+- Canvas-world pointer coords, `paintStrokeBegin`/`End`, wheel zoom
 
-### Plugins
-- **s**: emits selection/hover/context_menu; handles `nodeGraphSelect`/`nodeGraphHover`
-- **writer**: jack lint/semantic_tokens via `trinity_jack`; `textEdit`/`textSelect` commands
-- **flow**: capabilities/lod/context menu on node-graph scene
+### Phases 2–6 — World3d interaction (infinite/world)
 
-### Cleanup
-- Deleted `flow/worker.ts`, `flow/worker-client.ts`
-- Added workspace entries for `framework/editor/rs`, `framework/graph/rs`
+- `Mesh3d` extended with component pick arrays, UVs, baked paint vertex colors
+- `WorldSelectionRecord` parses granularity, componentIds, transformTool, interactionMode, gumballTarget
+- `worldPick` click + component marquee with live preview
+- Component wireframe/selection overlays via line draws
+- Paint-on-mesh: `paintAt` via ray-UV hit, stroke begin/end
+- Paint texture baked to vertex colors for approximate mesh display
 
-### Verify
-- `cargo test` framework_graph, framework_editor, writer-plugin, s-plugin
-- React renderer vitest: 11 passed
-- `bun install` clean
-- wgpu renderer `cargo check --target wasm32-unknown-unknown` OK
+## Verification
 
-## Lowpoly Editor Parity Restoration (2026-07-05)
+- `cargo test -p kernel_3d_scene -p infinite_world -p lowpoly-plugin --lib` — 22 lowpoly tests passed
+- `bun ./framework/renderer/wgpu/script.ts wasm` — succeeded
+- Wgpu E2E (`verify-wgpu-playgrounds-e2e.ts --plugin lowpoly`) — boot failed on port 7202 (stale dev server / manifest hierarchy errors for unrelated plugins); rerun with clean dev server
 
-Restored hierarchy tree, selection/hover, semantic theme colors, gumball centroid, picking overlays, and marquee selection to match the pre-migration TypeScript editor.
+## Files touched
 
-### Rust (`lowpoly/plugin/rs/lib.rs`)
-- `merge_selection_ids`, `toggleSelectionTarget`, `setHover`, `worldPick` merge modes
-- Nested Vertices/Edges/Faces hierarchy with selected/highlighted ids and face flip action
-- `gumballTarget` via `selection_transform_pivot`; fixed transform commands to preserve selection
-- Removed hardcoded instance colors; `selected`/`hovered` booleans only
-
-### Framework UI schema
-- `UiTreeItemNode`: `hover_command`, `unhover_command`, `actions` (`framework/core/rs/ui.rs`, `types.ts`, `ui-interpreter.tsx`)
-- Fixed struct literals in forms, note, raster, vcs, puzzle5d plugins
-
-### React renderer (`world-3d-host.tsx`)
-- Semantic colors via `resolveSemanticColorHex` with theme observer
-- Scene-level gumball at selection centroid; drag-end passes mode/ids
-- Per-component face/edge/vertex overlays; vertex pick id fix; marquee dispatch
-
-### Tests
-- `cargo test -p lowpoly-plugin`: 17 passed
-- `cargo test -p lowpoly_core`: 13 passed
-- `@semio-tech/framework-renderer-react:test`: 11 passed
-- React E2E lowpoly: 1/1 passed (`verify-react-playgrounds-e2e.ts --plugin lowpoly`)
+- `framework/renderer/wgpu/rs/plugin_bridge.rs`
+- `framework/renderer/wgpu/rs/shell.rs`
+- `framework/renderer/wgpu/rs/scenes.rs`
+- `framework/renderer/wgpu/rs/lib.rs`
+- `infinite/world/rs/lib.rs`
+- `kernel/3d/scene/rs/lib.rs`

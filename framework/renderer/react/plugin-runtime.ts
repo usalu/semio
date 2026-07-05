@@ -15,6 +15,10 @@ export type PluginWasmHandle = {
 	readonly handleCommand: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<string[]>;
 	readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
 	readonly tools: (instanceId: number, viewState: ViewState) => Promise<readonly ToolNode[]>;
+	readonly windowEngagements: (
+		instanceId: number,
+		viewState: ViewState,
+	) => Promise<Readonly<Record<string, import("./types.ts").WindowEngagement>>>;
 	readonly dispose: () => void;
 };
 
@@ -41,6 +45,10 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
 			(await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
 		tools: async (instanceId, viewState) =>
 			(await handle.tools(instanceId, viewState)) as unknown as ToolNode[],
+		windowEngagements: async (instanceId, viewState) =>
+			(await handle.windowEngagements(instanceId, viewState)) as unknown as Readonly<
+				Record<string, import("./types.ts").WindowEngagement>
+			>,
 		dispose: () => handle.dispose(),
 	};
 }

@@ -1,17 +1,20 @@
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
-use crate::dock::{parse_path, DockRenderContext, DockState};
+use crate::dock::{
+    compute_dock_drop_zone, dock_from_window_layout, parse_path, DockDragKind, DockDragPayload,
+    DockDragState, DockDropZone, DockRenderContext, DockState,
+};
 use crate::interpreter::{framework_widget_context, render_ui_node};
-use crate::scenes::{clear_graph_node_context, resolve_graph_context_command};
-use crate::world3d::{
-    fetch_pending_glb_meshes, handle_world3d_pointer_button, handle_world3d_pointer_drag,
-    handle_world3d_pointer_move, handle_world3d_wheel, fetch_pending_reference_images,
-    World3dState,
+use crate::scenes::{clear_graph_node_context, resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click};
+use infinite_world::{
+    fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_commands,
+    handle_world3d_pointer_button,
+    handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
 use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
 use semio_framework_core::{
-    AppDefinition, CommandDescriptor, ExampleDefinition, ModeDefinition, PanelTabDefinition,
-    UiNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, ViewState, WindowEngagement,
+    app_hierarchy_label, app_window_hierarchy_label, AppDefinition, CommandDescriptor, ExampleDefinition, ModeDefinition, PanelTabDefinition,
+    ToolNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, ViewState, WindowEngagement,
     WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
 };
 use semio_framework_core::layout::{
@@ -21,8 +24,9 @@ use semio_framework_core::layout::{
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use ui_wgpu::{
-    draw_text, DrawList, DragAxis, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Rect,
-    Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps,
+    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DrawList, DragAxis, FontAtlas, HitKind,
+    HitTarget, IconAtlas, InputState, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
+    WidgetInteractionMaps,
 };
 
 const S_HOME_APP_ID: &str = "home";
@@ -98,6 +102,7 @@ pub struct StudioProgramEntry {
     pub program_id: String,
     pub app_id: String,
     pub label: String,
+    pub hierarchy: Vec<String>,
     pub yields: String,
 }
 
@@ -109,6 +114,7 @@ pub struct SpawnedAppEntry {
     pub instance_id: u32,
     pub app_id: String,
     pub label: String,
+    pub hierarchy: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -216,7 +222,23 @@ pub struct ShellState {
     pub widget_maps: WidgetInteractionMaps<CommandDescriptor>,
     pub pending_tree_drag: Option<(String, HashMap<String, String>)>,
     pub tree_drag_origin: (f32, f32),
+    pub dock_drag: Option<DockDragState>,
+    pub pending_dock_drag: Option<(DockDragPayload, (f32, f32))>,
+    pub dock_drag_snapshot: Option<semio_framework_core::layout::WindowLayout>,
+    pub dock_canvas_bounds: Rect,
+    pub dock_drop_tab_bars: Vec<(Vec<usize>, Rect, Vec<f32>)>,
+    pub dock_drop_bodies: Vec<(Vec<usize>, Rect, String)>,
+    pub layout_override: Option<semio_framework_core::layout::WindowLayout>,
+    pub split_resize_origin: Vec<f32>,
+    pub split_resize_secondary_path: Option<Vec<usize>>,
+    pub split_resize_secondary_index: usize,
+    pub split_resize_secondary_axis_total: f32,
+    pub split_resize_secondary_origin: Vec<f32>,
+    pub measures_resize_window_id: Option<String>,
     pub deferred_commands: Vec<CommandDescriptor>,
+    pub active_tools: Vec<ToolNode>,
+    pub window_engagements: HashMap<String, WindowEngagement>,
+    pub tool_collection_expanded: HashMap<String, bool>,
 }
 //#endregion ShellTypes
 
@@ -280,7 +302,23 @@ impl ShellState {
             widget_maps: WidgetInteractionMaps::default(),
             pending_tree_drag: None,
             tree_drag_origin: (0.0, 0.0),
+            dock_drag: None,
+            pending_dock_drag: None,
+            dock_drag_snapshot: None,
+            dock_canvas_bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
+            dock_drop_tab_bars: Vec::new(),
+            dock_drop_bodies: Vec::new(),
+            layout_override: None,
+            split_resize_origin: Vec::new(),
+            split_resize_secondary_path: None,
+            split_resize_secondary_index: 0,
+            split_resize_secondary_axis_total: 1.0,
+            split_resize_secondary_origin: Vec::new(),
+            measures_resize_window_id: None,
             deferred_commands: Vec::new(),
+            active_tools: Vec::new(),
+            window_engagements: HashMap::new(),
+            tool_collection_expanded: HashMap::new(),
         }
     }
 
@@ -293,6 +331,7 @@ impl ShellState {
                     program_id: program.program_id.clone(),
                     app_id: program.app_id.clone(),
                     label: program.label.clone(),
+                    hierarchy: program.hierarchy.clone(),
                     yields: program.yields.clone(),
                 })
             })
@@ -417,11 +456,73 @@ impl ShellState {
 
     fn sync_dock(&mut self) {
         if let Some(session) = &self.session {
-            self.dock = DockState::from_app(&session.app, self.active_window_id.as_deref());
+            if let Some(layout) = self.layout_override.clone() {
+                self.dock.root = dock_from_window_layout(&layout.root);
+                self.dock.active_window_id = self
+                    .active_window_id
+                    .clone()
+                    .or_else(|| session.view_state.active_window_kind_id.clone());
+            } else {
+                self.dock = DockState::from_app(&session.app, self.active_window_id.as_deref());
+            }
             if let Some(id) = &self.active_window_id {
                 self.dock.sync_active_window(id);
             }
         }
+    }
+
+    fn persist_dock_layout(&mut self) {
+        self.layout_override = Some(self.dock.to_window_layout());
+        self.dock_drag_snapshot = None;
+    }
+
+    fn restore_dock_drag_snapshot(&mut self) {
+        if let Some(layout) = self.dock_drag_snapshot.take() {
+            self.layout_override = Some(layout);
+            self.sync_dock();
+        }
+    }
+
+    fn begin_pending_dock_drag(&mut self, payload: DockDragPayload, x: f32, y: f32) {
+        self.dock_drag_snapshot = Some(self.dock.to_window_layout());
+        self.pending_dock_drag = Some((payload, (x, y)));
+    }
+
+    fn promote_dock_drag(&mut self, x: f32, y: f32) {
+        let Some((payload, _)) = self.pending_dock_drag.take() else {
+            return;
+        };
+        self.dock.remove_window(&payload.window_id);
+        self.dock_drag = Some(DockDragState {
+            payload,
+            x,
+            y,
+            drop_zone: None,
+        });
+    }
+
+    fn dock_tab_bars_for_drop(
+        &self,
+        atlas: &mut FontAtlas,
+        theme: &Theme,
+        canvas: Rect,
+        labels: &HashMap<String, String>,
+    ) -> Vec<(Vec<usize>, Rect, Vec<f32>)> {
+        self.dock
+            .stack_tab_bar_rects(canvas, theme)
+            .into_iter()
+            .filter_map(|(path, rect)| {
+                let windows = self.dock.stack_windows_at_path(&path)?;
+                let widths: Vec<f32> = windows
+                    .iter()
+                    .map(|id| {
+                        let label = labels.get(id).map(String::as_str).unwrap_or(id);
+                        atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 2.0
+                    })
+                    .collect();
+                Some((path, rect, widths))
+            })
+            .collect()
     }
 
     pub async fn refresh_ui(&mut self) -> Result<(), String> {
@@ -449,6 +550,14 @@ impl ShellState {
                 .await?;
             self.panel_ui.insert(tab.id.clone(), node);
         }
+        self.active_tools = plugin
+            .tools(session.instance_id, &session.view_state)
+            .await
+            .unwrap_or_default();
+        self.window_engagements = plugin
+            .window_engagements(session.instance_id, &session.view_state)
+            .await
+            .unwrap_or_default();
         if self.studio_mode {
             if let Some(panel) = Self::panel_state_from_view(&session.view_state) {
                 if let Some(spawned) = panel
@@ -535,10 +644,16 @@ impl ShellState {
             .named_layouts
             .iter()
             .map(|layout| {
-                UiNode::Text(UiTextNode {
-                    value: format!("{} ({})", layout.label, layout.origin),
-                    emphasize: None,
-                    data_attributes: None,
+                UiNode::Button(UiButtonNode {
+                    id: Some(format!("shell.layout.{}", layout.id)),
+                    icon_id: layout.icon_id.clone().unwrap_or_else(|| "layout-grid".into()),
+                    label: format!("{} ({})", layout.label, layout.origin),
+                    command: CommandDescriptor {
+                        controller_id: session.app.controller_id.clone(),
+                        command: "noop".into(),
+                        args: None,
+                    },
+                    style: None,
                 })
             })
             .collect();
@@ -740,6 +855,7 @@ impl ShellState {
             instance_id,
             app_id: program.app_id.clone(),
             label: program.label.clone(),
+            hierarchy: program.hierarchy.clone(),
         });
         panel.active_spawned_id = Some(spawned_id);
         view_state.panel_json = Some(Self::panel_json(&panel));
@@ -766,6 +882,22 @@ impl ShellState {
         input.pointer_down = down;
         input.pointer_button = button;
         if !down {
+            if self.dock_drag.is_some() {
+                self.finish_dock_drag(x, y, input).await?;
+            } else if let Some((payload, _)) = self.pending_dock_drag.take() {
+                if let Some(hit) = input.hit_at(x, y) {
+                    if let Some(rest) = hit.control_id.as_deref().and_then(|id| id.strip_prefix("dock.tab.")) {
+                        if let Some((path_str_value, window_id)) = rest.split_once('.') {
+                            if window_id == payload.window_id {
+                                let path = parse_path(path_str_value);
+                                self.dock.set_stack_active(&path, window_id);
+                                self.active_window_id = Some(window_id.to_string());
+                            }
+                        }
+                    }
+                }
+                self.restore_dock_drag_snapshot();
+            }
             if self.tree_drag.is_some() {
                 self.finish_tree_drag(x, y, input).await?;
             } else if let Some((item_id, _)) = self.pending_tree_drag.take() {
@@ -779,8 +911,15 @@ impl ShellState {
                 }
             }
             if input.drag.active {
+                let drag_target = input.drag.target_id.clone();
                 self.dispatch_widget_drag_values(input).await?;
                 input.end_drag();
+                if drag_target
+                    .as_deref()
+                    .is_some_and(|id| id.starts_with("dock.split.") || id.starts_with("dock.corner."))
+                {
+                    self.persist_dock_layout();
+                }
             }
             return Ok(());
         }
@@ -795,6 +934,17 @@ impl ShellState {
         }
         if let Some(hit) = input.hit_at(x, y).cloned() {
             if hit.kind == HitKind::PanelResize {
+                if let Some(id) = hit.control_id.as_deref() {
+                    if let Some(window_id) = id.strip_prefix("shell.measures.resize.") {
+                        self.measures_resize_window_id = Some(window_id.to_string());
+                        self.measures_resize_origin_width = *self
+                            .measures_width
+                            .get(window_id)
+                            .unwrap_or(&DEFAULT_MEASURES_RAIL_WIDTH);
+                        input.begin_drag(x, y, button, hit.control_id.clone(), Some(DragAxis::Horizontal));
+                        return Ok(());
+                    }
+                }
                 let width = if hit.control_id.as_deref() == Some("panel.resize.left") {
                     self.left_panel_width
                 } else {
@@ -806,13 +956,33 @@ impl ShellState {
             }
             if hit.kind == HitKind::ScrollRegion {
                 if let Some(id) = hit.control_id.as_deref() {
+                    if let Some(rest) = id.strip_prefix("dock.corner.r/") {
+                        if let Some((row_part, col_part)) = rest.split_once("/c/") {
+                            if let Some((row_path_str, row_index_str)) = row_part.rsplit_once('/') {
+                                if let Some((col_path_str, col_index_str)) = col_part.rsplit_once('/') {
+                                    self.split_resize_path = Some(parse_path(row_path_str));
+                                    self.split_resize_index = row_index_str.parse().unwrap_or(0);
+                                    self.split_resize_secondary_path = Some(parse_path(col_path_str));
+                                    self.split_resize_secondary_index = col_index_str.parse().unwrap_or(0);
+                                    if let Some(path) = &self.split_resize_path {
+                                        self.split_resize_origin = self.dock.begin_split_drag(path);
+                                    }
+                                    if let Some(path) = &self.split_resize_secondary_path {
+                                        self.split_resize_secondary_origin = self.dock.begin_split_drag(path);
+                                    }
+                                    input.begin_drag(x, y, button, Some(id.to_string()), Some(DragAxis::Both));
+                                    return Ok(());
+                                }
+                            }
+                        }
+                    }
                     if let Some(rest) = id.strip_prefix("dock.split.") {
                         if let Some((path_str, index_str)) = rest.rsplit_once('.') {
                             let path = parse_path(path_str);
                             let index: usize = index_str.parse().unwrap_or(0);
                             self.split_resize_path = Some(path.clone());
                             self.split_resize_index = index;
-                            self.dock.begin_split_drag(&path);
+                            self.split_resize_origin = self.dock.begin_split_drag(&path);
                             input.begin_drag(x, y, button, Some(id.to_string()), hit.drag_axis);
                             return Ok(());
                         }
@@ -822,6 +992,73 @@ impl ShellState {
             if self.handle_shell_hit(&hit).await? {
                 return Ok(());
             }
+            if let Some(id) = hit.control_id.as_deref() {
+                if let Some(rest) = id.strip_prefix("dock.tab.") {
+                    if let Some((path_str_value, window_id)) = rest.split_once('.') {
+                        let path = parse_path(path_str_value);
+                        let tab_index = self.dock.tab_index(&path, window_id).unwrap_or(0);
+                        let ghost_label = self
+                            .session
+                            .as_ref()
+                            .and_then(|s| {
+                                s.app
+                                    .window_kinds
+                                    .iter()
+                                    .find(|k| k.id == window_id)
+                                    .map(|k| k.label.clone())
+                            })
+                            .unwrap_or_else(|| window_id.to_string());
+                        self.begin_pending_dock_drag(
+                            DockDragPayload {
+                                kind: DockDragKind::Tab,
+                                window_id: window_id.to_string(),
+                                source_path: path,
+                                tab_index,
+                                ghost_label,
+                            },
+                            x,
+                            y,
+                        );
+                        return Ok(());
+                    }
+                }
+                if let Some(path_str_value) = id.strip_prefix("dock.stack.") {
+                    let path = parse_path(path_str_value);
+                    let windows = self.dock.stack_windows_at_path(&path).unwrap_or_default();
+                    let active = windows
+                        .iter()
+                        .find(|wid| self.active_window_id.as_deref() == Some(wid.as_str()))
+                        .or_else(|| windows.first())
+                        .cloned()
+                        .unwrap_or_default();
+                    if !active.is_empty() {
+                        let tab_index = self.dock.tab_index(&path, &active).unwrap_or(0);
+                        let ghost_label = self
+                            .session
+                            .as_ref()
+                            .and_then(|s| {
+                                s.app
+                                    .window_kinds
+                                    .iter()
+                                    .find(|k| k.id == active)
+                                    .map(|k| k.label.clone())
+                            })
+                            .unwrap_or_else(|| active.clone());
+                        self.begin_pending_dock_drag(
+                            DockDragPayload {
+                                kind: DockDragKind::Stack,
+                                window_id: active,
+                                source_path: path,
+                                tab_index,
+                                ghost_label,
+                            },
+                            x,
+                            y,
+                        );
+                        return Ok(());
+                    }
+                }
+            }
             if hit.kind == HitKind::Slider {
                 if let Some(id) = hit.control_id.clone() {
                     input.begin_drag(x, y, button, Some(id), hit.drag_axis);
@@ -830,6 +1067,27 @@ impl ShellState {
             }
             if hit.kind == HitKind::Select || hit.kind == HitKind::Toggle || hit.kind == HitKind::DropdownItem {
                 return Ok(());
+            }
+            if let Some(id) = hit.control_id.as_deref() {
+                if id.contains(".vfs.") && !id.contains(".chevron.") {
+                    if let Some((surface_id, row_id)) = id.rsplit_once(".vfs.") {
+                        let additive = input.modifiers.meta || input.modifiers.ctrl;
+                        let shift = input.modifiers.shift;
+                        let ordered = vec![row_id.to_string()];
+                        let ids = vfs_selection_for_click(surface_id, row_id, &ordered, shift, additive);
+                        self.dispatch_command(CommandDescriptor {
+                            controller_id: self
+                                .session
+                                .as_ref()
+                                .map(|s| s.app.controller_id.clone())
+                                .unwrap_or_default(),
+                            command: "selectRows".into(),
+                            args: Some(serde_json::json!({ "surfaceId": surface_id, "ids": ids })),
+                        })
+                        .await?;
+                        return Ok(());
+                    }
+                }
             }
             if let Some(drag_data) = hit.drag_data.clone() {
                 if hit.control_id.as_deref().is_some_and(|id| id.starts_with("tree.label.")) {
@@ -910,12 +1168,47 @@ impl ShellState {
                 }
             }
         }
+        if let Some((payload, origin)) = &self.pending_dock_drag {
+            if down {
+                let dx = x - origin.0;
+                let dy = y - origin.1;
+                if self.dock_drag.is_none() && (dx * dx + dy * dy) > 25.0 {
+                    let payload = payload.clone();
+                    let origin = *origin;
+                    self.pending_dock_drag = None;
+                    self.dock.remove_window(&payload.window_id);
+                    self.dock_drag = Some(DockDragState {
+                        payload,
+                        x: origin.0,
+                        y: origin.1,
+                        drop_zone: None,
+                    });
+                }
+            }
+        }
+        if let Some(drag) = &mut self.dock_drag {
+            drag.x = x;
+            drag.y = y;
+            drag.drop_zone = compute_dock_drop_zone(
+                x,
+                y,
+                &self.dock_drop_tab_bars,
+                &self.dock_drop_bodies,
+                self.dock_canvas_bounds,
+            );
+        }
         if input.drag.active {
             input.update_drag(x, y);
             if let Some(id) = input.drag.target_id.as_deref() {
                 let dx = x - input.drag.start_x;
                 let dy = y - input.drag.start_y;
                 match id {
+                    id if id.starts_with("shell.measures.resize.") => {
+                        if let Some(window_id) = self.measures_resize_window_id.clone() {
+                            let next = (self.measures_resize_origin_width + dx).clamp(160.0, 640.0);
+                            self.measures_width.insert(window_id, next);
+                        }
+                    }
                     "panel.resize.left" => {
                         self.left_panel_width = (self.panel_resize_origin_width + dx)
                             .clamp(theme.panel_min_width, theme.panel_max_width);
@@ -924,6 +1217,26 @@ impl ShellState {
                         self.right_panel_width = (self.panel_resize_origin_width - dx)
                             .clamp(theme.panel_min_width, theme.panel_max_width);
                     }
+                    dock_id if dock_id.starts_with("dock.corner.") => {
+                        if let Some(path) = self.split_resize_path.clone() {
+                            self.dock.apply_split_drag_with_origin(
+                                &path,
+                                self.split_resize_index,
+                                dx,
+                                self.split_resize_axis_total,
+                                &self.split_resize_origin,
+                            );
+                        }
+                        if let Some(path) = self.split_resize_secondary_path.clone() {
+                            self.dock.apply_split_drag_with_origin(
+                                &path,
+                                self.split_resize_secondary_index,
+                                dy,
+                                self.split_resize_secondary_axis_total,
+                                &self.split_resize_secondary_origin,
+                            );
+                        }
+                    }
                     dock_id if dock_id.starts_with("dock.split.") => {
                         if let (Some(path), axis) = (&self.split_resize_path, input.drag.axis) {
                             let delta = match axis {
@@ -931,11 +1244,12 @@ impl ShellState {
                                 Some(DragAxis::Vertical) => dy,
                                 _ => dx,
                             };
-                            self.dock.apply_split_drag(
+                            self.dock.apply_split_drag_with_origin(
                                 path,
                                 self.split_resize_index,
                                 delta,
                                 self.split_resize_axis_total,
+                                &self.split_resize_origin,
                             );
                         }
                     }
@@ -943,6 +1257,42 @@ impl ShellState {
                 }
             }
         }
+    }
+
+    async fn finish_dock_drag(
+        &mut self,
+        x: f32,
+        y: f32,
+        input: &InputState<CommandDescriptor>,
+    ) -> Result<(), String> {
+        let Some(mut drag) = self.dock_drag.take() else {
+            return Ok(());
+        };
+        drag.x = x;
+        drag.y = y;
+        if drag.drop_zone.is_none() {
+            drag.drop_zone = compute_dock_drop_zone(
+                x,
+                y,
+                &self.dock_drop_tab_bars,
+                &self.dock_drop_bodies,
+                self.dock_canvas_bounds,
+            );
+        }
+        if let Some(zone) = drag.drop_zone {
+            if self.dock.apply_drop(&drag.payload, &zone) {
+                self.active_window_id = Some(drag.payload.window_id.clone());
+                self.dock.sync_active_window(&drag.payload.window_id);
+                self.persist_dock_layout();
+            } else {
+                self.restore_dock_drag_snapshot();
+            }
+        } else {
+            self.restore_dock_drag_snapshot();
+        }
+        self.dock_drag_snapshot = None;
+        let _ = input;
+        Ok(())
     }
 
     pub fn handle_pointer_wheel(
@@ -970,32 +1320,38 @@ impl ShellState {
         button: i16,
         shift: bool,
         ctrl: bool,
+        alt: bool,
+        meta: bool,
         wheel_delta: f32,
         drag_dx: f32,
         drag_dy: f32,
     ) -> Result<(), String> {
         if wheel_delta.abs() > 0.0 {
             for state in self.world3d_states.values_mut() {
-                if state.bounds.inset(8.0).contains(x, y) {
+                if state.bounds.contains(x, y) {
                     handle_world3d_wheel(state, wheel_delta);
                 }
             }
         }
         if (drag_dx.abs() > 0.0 || drag_dy.abs() > 0.0) && down {
+            let modifiers = PointerModifiers { shift, ctrl, alt, meta };
             for state in self.world3d_states.values_mut() {
-                if state.bounds.inset(8.0).contains(x, y) {
-                    handle_world3d_pointer_drag(state, x, y, drag_dx, drag_dy, button, shift);
+                if state.bounds.contains(x, y) {
+                    handle_world3d_pointer_drag(state, x, y, drag_dx, drag_dy, button, &modifiers);
                 }
             }
         }
         let mut commands = Vec::new();
+        let modifiers = PointerModifiers { shift, ctrl, alt, meta };
         for state in self.world3d_states.values_mut() {
-            if !state.bounds.inset(8.0).contains(x, y) {
+            if !state.bounds.contains(x, y) {
                 continue;
             }
-            if let Some(command) = handle_world3d_pointer_button(state, x, y, down, button, shift, ctrl) {
+            if let Some(command) = handle_world3d_pointer_button(state, x, y, down, button, &modifiers) {
                 commands.push(command);
-            } else if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
+            }
+            commands.extend(handle_world3d_paint_commands(state, x, y, down, button));
+            if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
                 commands.push(command);
             }
         }
@@ -1045,6 +1401,18 @@ impl ShellState {
                 if let Some(session) = self.session.as_mut() {
                     session.view_state.active_mode_id = Some(mode_id.to_string());
                 }
+                self.refresh_ui().await?;
+                return Ok(true);
+            }
+            id if id.starts_with("framework.tool.collection.") => {
+                let collection_id = id.trim_start_matches("framework.tool.collection.");
+                let expanded = self
+                    .tool_collection_expanded
+                    .get(collection_id)
+                    .copied()
+                    .unwrap_or(false);
+                self.tool_collection_expanded
+                    .insert(collection_id.to_string(), !expanded);
                 return Ok(true);
             }
             id if id.starts_with("shell.example.") => {
@@ -1175,23 +1543,31 @@ impl ShellState {
                 return Ok(true);
             }
             id if id.starts_with("dock.tab.") => {
-                let rest = id.trim_start_matches("dock.tab.");
-                if let Some((path_str, window_id)) = rest.split_once('.') {
-                    let path = parse_path(path_str);
-                    self.dock.set_stack_active(&path, window_id);
-                    self.active_window_id = Some(window_id.to_string());
-                }
                 return Ok(true);
             }
             id if id.starts_with("dock.focus.") => {
                 let path = parse_path(id.trim_start_matches("dock.focus."));
                 self.dock.toggle_maximize(&path);
+                self.persist_dock_layout();
                 return Ok(true);
             }
             id if id.starts_with("dock.close.") => {
                 let path = parse_path(id.trim_start_matches("dock.close."));
-                self.dock.close_active_in_stack(&path);
-                self.active_window_id = self.dock.active_window_id.clone();
+                if self.dock.close_active_in_stack(&path) {
+                    self.active_window_id = self.dock.active_window_id.clone();
+                    self.persist_dock_layout();
+                }
+                return Ok(true);
+            }
+            id if id.starts_with("shell.layout.") => {
+                let layout_id = id.trim_start_matches("shell.layout.");
+                if let Some(session) = &self.session {
+                    if let Some(named) = session.app.named_layouts.iter().find(|entry| entry.id == layout_id) {
+                        self.layout_override = Some(named.layout.clone());
+                        self.sync_dock();
+                        self.active_window_id = self.dock.active_window_id.clone();
+                    }
+                }
                 return Ok(true);
             }
             id if id.starts_with("shell.mode.") => {
@@ -1286,6 +1662,12 @@ impl ShellState {
                 let collapsed = self.collapsed_sections.get(&key).copied().unwrap_or(false);
                 self.collapsed_sections.insert(key, !collapsed);
                 return Ok(true);
+            }
+            id if id.contains(".vfs.chevron.") => {
+                if let Some((surface_id, row_id)) = id.rsplit_once(".vfs.chevron.") {
+                    toggle_vfs_row_expanded(surface_id, row_id);
+                    return Ok(true);
+                }
             }
             id if self.widget_maps.select_metas.contains_key(id) => {
                 let opening = !self.open_selects.get(id).copied().unwrap_or(false);
@@ -1790,6 +2172,13 @@ impl ShellState {
         modifiers: &ui_wgpu::PointerModifiers,
         input: &mut InputState<CommandDescriptor>,
     ) {
+        if action == ui_wgpu::KeyAction::Escape {
+            if self.dock_drag.take().is_some() || self.pending_dock_drag.take().is_some() {
+                self.restore_dock_drag_snapshot();
+                self.dock_drag_snapshot = None;
+                return;
+            }
+        }
         let meta = modifiers.meta || modifiers.ctrl;
         if meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("p")) {
             self.search_open = !self.search_open;
@@ -1978,23 +2367,18 @@ fn chrome_text(
     draw_text(&mut ctx, text, x, y, size, color);
 }
 
-fn chrome_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y: f32, size: f32) {
+fn chrome_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y: f32, size: f32, color: Rgba) {
     if let Some(uv) = icons.icon_uv(icon_id) {
-        draw.push_textured([x, y, size, size], uv, 1.0);
+        draw.push_textured([x, y, size, size], uv, color);
     }
 }
 
-fn chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme, bg: Rgba) {
-    let hair = theme.stroke_hairline;
-    draw.push_solid([rect.x, rect.y, rect.w, rect.h], bg);
-    draw.push_solid([rect.x, rect.y, rect.w, hair], theme.border_normal);
-    draw.push_solid([rect.x, rect.y + rect.h - hair, rect.w, hair], theme.border_normal);
-    draw.push_solid([rect.x, rect.y, hair, rect.h], theme.border_normal);
-    draw.push_solid([rect.x + rect.w - hair, rect.y, hair, rect.h], theme.border_normal);
+fn chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme) {
+    push_chrome_group_border(draw, rect, theme);
 }
 
 struct ChromeGroupItem<'a> {
-    id: &'a str,
+    control_id: &'a str,
     icon_id: Option<&'a str>,
     label: Option<&'a str>,
     active: bool,
@@ -2022,30 +2406,21 @@ fn render_chrome_group(
     if items.is_empty() {
         return;
     }
-    chrome_group_border(draw, rect, theme, theme.button);
     let hair = theme.stroke_hairline;
+    let inner_y = rect.y + hair;
+    let inner_h = (rect.h - hair * 2.0).max(0.0);
     let mut x = rect.x;
     for (index, item) in items.iter().enumerate() {
         let item_w = measure_chrome_group_item(atlas, theme, item);
-        let item_rect = Rect::new(x, rect.y, item_w, rect.h);
-        if index > 0 {
-            draw.push_solid([x, rect.y, hair, rect.h], theme.border_normal);
-        }
+        let item_rect = Rect::new(x, inner_y, item_w, inner_h);
         let hovered = item_rect.contains(input.pointer_x, input.pointer_y);
-        let bg = if item.active {
-            if hovered {
-                theme.accent_hover
-            } else {
-                theme.selected
-            }
-        } else if hovered {
-            theme.button_hover
-        } else {
-            theme.button
-        };
-        draw.push_solid([item_rect.x, item_rect.y, item_rect.w, item_rect.h], bg);
+        let bg = chrome_item_bg(theme, item.active, hovered);
+        if bg.a > 0.0 {
+            draw.push_solid([item_rect.x, item_rect.y, item_rect.w, item_rect.h], bg);
+        }
         let mut content_x = item_rect.x + theme.padding_standard;
         if let Some(icon_id) = item.icon_id {
+            let icon_color = chrome_item_text(theme, item.active, hovered);
             chrome_icon(
                 draw,
                 icons,
@@ -2053,15 +2428,11 @@ fn render_chrome_group(
                 content_x,
                 item_rect.y + (item_rect.h - CHROME_ICON_TINY) * 0.5,
                 CHROME_ICON_TINY,
+                icon_color,
             );
             content_x += CHROME_ICON_TINY + theme.gap_standard;
         }
         if let Some(label) = item.label {
-            let text_color = if item.active || hovered {
-                theme.active_foreground
-            } else {
-                theme.text
-            };
             chrome_text(
                 draw,
                 atlas,
@@ -2071,19 +2442,180 @@ fn render_chrome_group(
                 content_x,
                 item_rect.y + (item_rect.h + theme.font_size_small) * 0.5 - 1.0,
                 theme.font_size_small,
-                text_color,
+                chrome_item_text(theme, item.active, hovered),
             );
         }
         input.register_hit(HitTarget {
             rect: item_rect,
             event: None,
-            control_id: Some(item.id.into()),
+            control_id: Some(item.control_id.into()),
             kind: item.kind.clone(),
             drag_axis: None,
             drag_data: None,
         });
         x += item_w;
+        if index + 1 < items.len() {
+            draw.push_solid([x, inner_y, hair, inner_h], theme.border_normal);
+        }
     }
+    chrome_group_border(draw, rect, theme);
+}
+
+fn footer_tool_label<'a>(label: &'a Option<String>, text: &'a Option<String>, title: &'a Option<String>, id: &'a str) -> &'a str {
+    title
+        .as_deref()
+        .or(label.as_deref())
+        .or(text.as_deref())
+        .unwrap_or(id)
+}
+
+fn render_footer_tool_nodes(
+    draw: &mut DrawList,
+    atlas: &mut FontAtlas,
+    icons: &IconAtlas,
+    input: &mut InputState<CommandDescriptor>,
+    theme: &Theme,
+    mut x: f32,
+    btn_y: f32,
+    btn_h: f32,
+    tools: &[ToolNode],
+    collection_expanded: &HashMap<String, bool>,
+) -> f32 {
+    for tool in tools {
+        match tool {
+            ToolNode::Separator { .. } => {
+                draw.push_solid(
+                    [x + theme.gap_standard * 0.5, btn_y + 4.0, theme.stroke_hairline, btn_h - 8.0],
+                    theme.border_normal,
+                );
+                x += theme.gap_standard;
+            }
+            ToolNode::Button {
+                id,
+                icon_id,
+                label,
+                text,
+                title,
+                disabled,
+                on_press,
+                ..
+            } => {
+                if disabled.unwrap_or(false) {
+                    continue;
+                }
+                let label_text = footer_tool_label(label, text, title, id);
+                let item = ChromeGroupItem {
+                    control_id: "framework.tool.button",
+                    icon_id: Some(icon_id.as_str()),
+                    label: Some(label_text),
+                    active: false,
+                    kind: HitKind::Button,
+                };
+                let item_w = measure_chrome_group_item(atlas, theme, &item);
+                let rect = Rect::new(x, btn_y, item_w, btn_h);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item]);
+                input.register_hit(HitTarget {
+                    rect,
+                    event: Some(on_press.clone()),
+                    control_id: Some(format!("framework.tool.button.{id}")),
+                    kind: HitKind::Button,
+                    drag_axis: None,
+                    drag_data: None,
+                });
+                x += item_w + theme.gap_standard * 0.5;
+            }
+            ToolNode::Toggle {
+                id,
+                icon_id,
+                label,
+                text,
+                title,
+                pressed,
+                disabled,
+                on_change,
+                ..
+            } => {
+                if disabled.unwrap_or(false) {
+                    continue;
+                }
+                let label_text = footer_tool_label(label, text, title, id);
+                let item = ChromeGroupItem {
+                    control_id: "framework.tool.toggle",
+                    icon_id: Some(icon_id.as_str()),
+                    label: Some(label_text),
+                    active: pressed.unwrap_or(false),
+                    kind: HitKind::Button,
+                };
+                let item_w = measure_chrome_group_item(atlas, theme, &item);
+                let rect = Rect::new(x, btn_y, item_w, btn_h);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item]);
+                input.register_hit(HitTarget {
+                    rect,
+                    event: Some(on_change.clone()),
+                    control_id: Some(format!("framework.tool.toggle.{id}")),
+                    kind: HitKind::Button,
+                    drag_axis: None,
+                    drag_data: None,
+                });
+                x += item_w + theme.gap_standard * 0.5;
+            }
+            ToolNode::Collection {
+                id,
+                icon_id,
+                label,
+                text,
+                title,
+                disabled,
+                children,
+                ..
+            } => {
+                if disabled.unwrap_or(false) {
+                    continue;
+                }
+                let expanded = collection_expanded.get(id).copied().unwrap_or(false);
+                let label_text = footer_tool_label(label, text, title, id);
+                let item = ChromeGroupItem {
+                    control_id: "framework.tool.collection",
+                    icon_id: Some(icon_id.as_str()),
+                    label: Some(label_text),
+                    active: expanded,
+                    kind: HitKind::Button,
+                };
+                let item_w = measure_chrome_group_item(atlas, theme, &item);
+                let rect = Rect::new(x, btn_y, item_w, btn_h);
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item]);
+                input.register_hit(HitTarget {
+                    rect,
+                    event: None,
+                    control_id: Some(format!("framework.tool.collection.{id}")),
+                    kind: HitKind::Button,
+                    drag_axis: None,
+                    drag_data: None,
+                });
+                x += item_w + theme.gap_standard * 0.5;
+                if expanded {
+                    let leaves: Vec<ToolNode> = children
+                        .iter()
+                        .filter(|child| !matches!(child, ToolNode::Collection { .. }))
+                        .cloned()
+                        .collect();
+                    x = render_footer_tool_nodes(
+                        draw,
+                        atlas,
+                        icons,
+                        input,
+                        theme,
+                        x,
+                        btn_y,
+                        btn_h,
+                        &leaves,
+                        collection_expanded,
+                    );
+                }
+            }
+        }
+    }
+    x
 }
 
 fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
@@ -2387,25 +2919,26 @@ impl ShellState {
             x,
             btn_y + (btn_h - logo_size) * 0.5,
             logo_size,
+            theme.text,
         );
         x += logo_size + theme.gap_standard;
         let title = self
             .session
             .as_ref()
-            .map(|s| s.app.label.as_str())
-            .unwrap_or(if self.studio_mode { "S Studio" } else { "semio os" });
+            .map(|s| app_hierarchy_label(&s.app.hierarchy))
+            .unwrap_or_else(|| if self.studio_mode { "semio · s · studio".into() } else { "semio · os".into() });
         chrome_text(
             draw,
             atlas,
             input,
             theme,
-            title,
+            &title,
             x,
             btn_y + (btn_h + theme.font_size_body) * 0.5 - 2.0,
             theme.font_size_body,
             theme.text,
         );
-        x += atlas.measure_text(title, theme.font_size_body).0 + theme.gap_standard * 2.0;
+        x += atlas.measure_text(&title, theme.font_size_body).0 + theme.gap_standard * 2.0;
         let examples = self.active_plugin_examples();
         if !examples.is_empty() && !self.studio_mode {
             let active_label = examples
@@ -2425,7 +2958,7 @@ impl ShellState {
                 theme,
                 fixture_rect,
                 &[ChromeGroupItem {
-                    id: "playground.navbar.fixture",
+                    control_id: "playground.navbar.fixture",
                     icon_id: None,
                     label: Some(active_label),
                     active: self.overlay_state == OverlayState::Dropdown("example".to_string()),
@@ -2435,134 +2968,8 @@ impl ShellState {
             x += fixture_rect.w + theme.gap_standard;
         }
         let mut rx = width - theme.padding_standard;
-        if let Some(session) = &self.session {
-            if session.app.modes.len() > 1 {
-                let mode_items: Vec<ChromeGroupItem<'_>> = session
-                    .app
-                    .modes
-                    .iter()
-                    .rev()
-                    .map(|mode| {
-                        let active_mode = session
-                            .view_state
-                            .active_mode_id
-                            .as_deref()
-                            .or(session.app.default_mode_id.as_deref())
-                            .unwrap_or(&mode.id);
-                        ChromeGroupItem {
-                            id: "",
-                            icon_id: None,
-                            label: Some(mode.label.as_str()),
-                            active: active_mode == mode.id,
-                            kind: HitKind::NavbarItem,
-                        }
-                    })
-                    .collect();
-                let mode_w: f32 = mode_items
-                    .iter()
-                    .map(|item| measure_chrome_group_item(atlas, theme, item))
-                    .sum();
-                rx -= mode_w + theme.gap_standard;
-                let mode_rect = Rect::new(rx, btn_y, mode_w, btn_h);
-                let hair = theme.stroke_hairline;
-                chrome_group_border(draw, mode_rect, theme, theme.button);
-                let mut mode_x = mode_rect.x;
-                for (index, mode) in session.app.modes.iter().rev().enumerate() {
-                    let item = &mode_items[index];
-                    let item_w = measure_chrome_group_item(atlas, theme, item);
-                    let item_rect = Rect::new(mode_x, mode_rect.y, item_w, mode_rect.h);
-                    if index > 0 {
-                        draw.push_solid([mode_x, mode_rect.y, hair, mode_rect.h], theme.border_normal);
-                    }
-                    let hovered = item_rect.contains(input.pointer_x, input.pointer_y);
-                    let bg = if item.active {
-                        if hovered {
-                            theme.accent_hover
-                        } else {
-                            theme.selected
-                        }
-                    } else if hovered {
-                        theme.button_hover
-                    } else {
-                        theme.button
-                    };
-                    draw.push_solid([item_rect.x, item_rect.y, item_rect.w, item_rect.h], bg);
-                    let text_color = if item.active || hovered {
-                        theme.active_foreground
-                    } else {
-                        theme.text
-                    };
-                    chrome_text(
-                        draw,
-                        atlas,
-                        input,
-                        theme,
-                        &mode.label,
-                        item_rect.x + theme.padding_standard,
-                        item_rect.y + (btn_h + theme.font_size_small) * 0.5 - 1.0,
-                        theme.font_size_small,
-                        text_color,
-                    );
-                    input.register_hit(HitTarget {
-                        rect: item_rect,
-                        event: None,
-                        control_id: Some(format!("playground.navbar.modes.{}", mode.id)),
-                        kind: HitKind::NavbarItem,
-                        drag_axis: None,
-                    drag_data: None,
-                    });
-                    mode_x += item_w;
-                }
-            }
-        }
-        let mut toggle_items: Vec<ChromeGroupItem<'_>> = Vec::new();
-        if self.has_display_tabs() {
-            toggle_items.push(ChromeGroupItem {
-                id: "ui.panelToggle.display",
-                icon_id: Some(panel_toggle_icon_id("display", self.session.as_ref())),
-                label: Some("Display"),
-                active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display,
-                kind: HitKind::Toggle,
-            });
-        }
-        toggle_items.push(ChromeGroupItem {
-            id: "ui.panelToggle.workbench",
-            icon_id: Some(panel_toggle_icon_id("workbench", self.session.as_ref())),
-            label: Some("Workbench"),
-            active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
-            kind: HitKind::Toggle,
-        });
-        toggle_items.push(ChromeGroupItem {
-            id: "ui.panelToggle.details",
-            icon_id: Some(panel_toggle_icon_id("details", self.session.as_ref())),
-            label: Some("Details"),
-            active: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
-            kind: HitKind::Toggle,
-        });
-        toggle_items.push(ChromeGroupItem {
-            id: "ui.panelToggle.settings",
-            icon_id: Some(panel_toggle_icon_id("settings", self.session.as_ref())),
-            label: Some("Settings"),
-            active: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
-            kind: HitKind::Toggle,
-        });
-        let toggle_w: f32 = toggle_items
-            .iter()
-            .map(|item| measure_chrome_group_item(atlas, theme, item))
-            .sum();
-        rx -= toggle_w + theme.gap_standard;
-        render_chrome_group(
-            draw,
-            atlas,
-            icons,
-            input,
-            theme,
-            Rect::new(rx, btn_y, toggle_w, btn_h),
-            &toggle_items,
-        );
-        rx -= theme.gap_standard;
         let fullscreen_item = ChromeGroupItem {
-            id: "ui.fullscreen.toggle",
+            control_id: "ui.fullscreen.toggle",
             icon_id: Some("maximize-2"),
             label: Some("Fullscreen"),
             active: false,
@@ -2579,6 +2986,100 @@ impl ShellState {
             Rect::new(rx, btn_y, fullscreen_w, btn_h),
             &[fullscreen_item],
         );
+        rx -= theme.gap_standard;
+        let mut toggle_items: Vec<ChromeGroupItem<'_>> = Vec::new();
+        if self.has_display_tabs() {
+            toggle_items.push(ChromeGroupItem {
+                control_id: "ui.panelToggle.display",
+                icon_id: Some(panel_toggle_icon_id("display", self.session.as_ref())),
+                label: Some("Display"),
+                active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display,
+                kind: HitKind::Toggle,
+            });
+        }
+        toggle_items.push(ChromeGroupItem {
+            control_id: "ui.panelToggle.workbench",
+            icon_id: Some(panel_toggle_icon_id("workbench", self.session.as_ref())),
+            label: Some("Workbench"),
+            active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
+            kind: HitKind::Toggle,
+        });
+        toggle_items.push(ChromeGroupItem {
+            control_id: "ui.panelToggle.details",
+            icon_id: Some(panel_toggle_icon_id("details", self.session.as_ref())),
+            label: Some("Details"),
+            active: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
+            kind: HitKind::Toggle,
+        });
+        toggle_items.push(ChromeGroupItem {
+            control_id: "ui.panelToggle.settings",
+            icon_id: Some(panel_toggle_icon_id("settings", self.session.as_ref())),
+            label: Some("Settings"),
+            active: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
+            kind: HitKind::Toggle,
+        });
+        let toggle_w: f32 = toggle_items
+            .iter()
+            .map(|item| measure_chrome_group_item(atlas, theme, item))
+            .sum();
+        rx -= toggle_w;
+        render_chrome_group(
+            draw,
+            atlas,
+            icons,
+            input,
+            theme,
+            Rect::new(rx, btn_y, toggle_w, btn_h),
+            &toggle_items,
+        );
+        rx -= theme.gap_standard;
+        if let Some(session) = &self.session {
+            if session.app.modes.len() > 1 {
+                let mode_control_ids: Vec<String> = session
+                    .app
+                    .modes
+                    .iter()
+                    .rev()
+                    .map(|mode| format!("playground.navbar.modes.{}", mode.id))
+                    .collect();
+                let mode_items: Vec<ChromeGroupItem<'_>> = session
+                    .app
+                    .modes
+                    .iter()
+                    .rev()
+                    .zip(mode_control_ids.iter())
+                    .map(|(mode, control_id)| {
+                        let active_mode = session
+                            .view_state
+                            .active_mode_id
+                            .as_deref()
+                            .or(session.app.default_mode_id.as_deref())
+                            .unwrap_or(&mode.id);
+                        ChromeGroupItem {
+                            control_id: control_id.as_str(),
+                            icon_id: None,
+                            label: Some(mode.label.as_str()),
+                            active: active_mode == mode.id,
+                            kind: HitKind::NavbarItem,
+                        }
+                    })
+                    .collect();
+                let mode_w: f32 = mode_items
+                    .iter()
+                    .map(|item| measure_chrome_group_item(atlas, theme, item))
+                    .sum();
+                rx -= mode_w;
+                render_chrome_group(
+                    draw,
+                    atlas,
+                    icons,
+                    input,
+                    theme,
+                    Rect::new(rx, btn_y, mode_w, btn_h),
+                    &mode_items,
+                );
+            }
+        }
     }
 
     fn render_footer(
@@ -2608,31 +3109,32 @@ impl ShellState {
         let btn_h = theme.control_height;
         let btn_y = y + (theme.footer_height - btn_h) * 0.5;
         let x = theme.padding_standard;
+        let app_label = app_hierarchy_label(&session.app.hierarchy);
         let mut footer_items = vec![ChromeGroupItem {
-            id: "framework.footer.app",
+            control_id: "framework.footer.app",
             icon_id: Some(app_icon_id(&session.app, icons)),
-            label: Some(session.app.label.as_str()),
+            label: Some(app_label.as_str()),
             active: false,
             kind: HitKind::Button,
         }];
         if self.studio_mode && session.app.controller_id == S_PLAY_CONTROLLER_ID {
             footer_items.extend([
                 ChromeGroupItem {
-                    id: "framework.footer.undo",
+                    control_id: "framework.footer.undo",
                     icon_id: Some("rotate-ccw"),
                     label: Some("Undo"),
                     active: false,
                     kind: HitKind::Button,
                 },
                 ChromeGroupItem {
-                    id: "framework.footer.redo",
+                    control_id: "framework.footer.redo",
                     icon_id: Some("rotate-cw"),
                     label: Some("Redo"),
                     active: false,
                     kind: HitKind::Button,
                 },
                 ChromeGroupItem {
-                    id: "framework.footer.checkpoint",
+                    control_id: "framework.footer.checkpoint",
                     icon_id: Some("save"),
                     label: Some("Checkpoint"),
                     active: false,
@@ -2653,7 +3155,21 @@ impl ShellState {
             Rect::new(x, btn_y, group_w, btn_h),
             &footer_items,
         );
+        let mut tool_x = x + group_w + theme.gap_standard;
+        tool_x = render_footer_tool_nodes(
+            draw,
+            atlas,
+            icons,
+            input,
+            theme,
+            tool_x,
+            btn_y,
+            btn_h,
+            &self.active_tools,
+            &self.tool_collection_expanded,
+        );
         let _ = width;
+        let _ = tool_x;
     }
 
     fn render_floating_panel(
@@ -2678,7 +3194,7 @@ impl ShellState {
         };
         draw.push_rounded(
             [panel.x, panel.y, panel.w, panel.h],
-            theme.panel,
+            theme.glass_panel_fill(),
             theme.border_radius,
         );
         let hair = theme.stroke_hairline;
@@ -2712,7 +3228,7 @@ impl ShellState {
             draw.push_solid([rect.x, rect.y, rect.w, rect.h], bg);
             let icon_x = rect.x + theme.padding_standard;
             let icon_y = rect.y + (rect.h - CHROME_ICON_TINY) * 0.5;
-            chrome_icon(draw, icons, icon_id, icon_x, icon_y, CHROME_ICON_TINY);
+            chrome_icon(draw, icons, icon_id, icon_x, icon_y, CHROME_ICON_TINY, theme.text);
             chrome_text(
                 draw,
                 atlas,
@@ -2909,7 +3425,21 @@ impl ShellState {
             .app
             .window_kinds
             .iter()
-            .map(|kind| (kind.id.clone(), kind.label.clone()))
+            .map(|kind| {
+                (
+                    kind.id.clone(),
+                    app_window_hierarchy_label(&session.app, &kind.label),
+                )
+            })
+            .collect();
+        self.split_resize_axis_total = canvas.w.max(canvas.h);
+        self.dock_canvas_bounds = canvas;
+        self.dock_drop_tab_bars = self.dock_tab_bars_for_drop(atlas, theme, canvas, &window_labels);
+        self.dock_drop_bodies = self
+            .dock
+            .stack_body_rects(canvas, theme, &window_labels, atlas)
+            .into_iter()
+            .map(|(path, rect, active)| (path, rect, active))
             .collect();
         let mut dock_ctx = DockRenderContext {
             draw,
@@ -2919,9 +3449,8 @@ impl ShellState {
             theme,
             window_labels: &window_labels,
         };
-        self.split_resize_axis_total = canvas.w.max(canvas.h);
         self.dock.register_hits(&mut dock_ctx, canvas);
-        let placements = self.dock.stack_body_rects(canvas, theme);
+        let placements = self.dock.stack_body_rects(canvas, theme, &window_labels, atlas);
         let show_fallback = placements.is_empty();
         for (_, mut content, window_id) in placements {
             let window_kind = session
@@ -2968,11 +3497,26 @@ impl ShellState {
                 atlas,
                 input,
                 theme,
-                &session.app.label,
+                &app_hierarchy_label(&session.app.hierarchy),
                 canvas.x + 16.0,
                 canvas.y + 32.0,
                 theme.font_size_body,
                 theme.text_muted,
+            );
+        }
+        if let Some(drag) = &self.dock_drag {
+            let ghost = Rect::new(drag.x - 48.0, drag.y - 12.0, 120.0, theme.control_height);
+            draw.push_rounded([ghost.x, ghost.y, ghost.w, ghost.h], theme.panel, theme.border_radius);
+            chrome_text(
+                draw,
+                atlas,
+                input,
+                theme,
+                &drag.payload.ghost_label,
+                ghost.x + theme.padding_standard,
+                ghost.y + (ghost.h + theme.font_size_small) * 0.5 - 1.0,
+                theme.font_size_small,
+                theme.text,
             );
         }
     }
@@ -2993,7 +3537,7 @@ impl ShellState {
         let bar_h = theme.control_height;
         if self.spawned_ui.is_none() {
             let item = ChromeGroupItem {
-                id: "studio.canvas.home",
+                control_id: "studio.canvas.home",
                 icon_id: Some("home"),
                 label: Some("Home"),
                 active: false,
@@ -3012,9 +3556,12 @@ impl ShellState {
                 .as_ref()
                 .and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id))
             {
-                let label = format!("Back to Media Graph · {}", spawned.label);
+                let label = format!(
+                    "Back to Media Graph · {}",
+                    app_hierarchy_label(&spawned.hierarchy)
+                );
                 let item = ChromeGroupItem {
-                    id: "studio.canvas.back",
+                    control_id: "studio.canvas.back",
                     icon_id: Some("chevron-left"),
                     label: Some(&label),
                     active: false,
@@ -3389,7 +3936,7 @@ impl ShellState {
             .unwrap_or(&DEFAULT_MEASURES_RAIL_WIDTH);
         if folded {
             let item = ChromeGroupItem {
-                id: "",
+                control_id: "",
                 icon_id: Some("chevron-left"),
                 label: Some("Window Options"),
                 active: false,
@@ -3415,14 +3962,14 @@ impl ShellState {
         draw.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
         let focus_label = if expanded { "Unfocus" } else { "Focus" };
         let focus_item = ChromeGroupItem {
-            id: "",
+            control_id: "shell.measures.focus",
             icon_id: Some(if expanded { "minimize-2" } else { "maximize-2" }),
             label: Some(focus_label),
             active: false,
             kind: HitKind::Button,
         };
         let fold_item = ChromeGroupItem {
-            id: "",
+            control_id: "shell.measures.fold",
             icon_id: Some("chevron-right"),
             label: Some("Window Options"),
             active: false,
@@ -3482,6 +4029,17 @@ impl ShellState {
                 measure,
                 gpu,
             );
+        }
+        if !expanded {
+            let resize = Rect::new(rail.x + rail.w - 3.0, rail.y, 6.0, rail.h);
+            input.register_hit(HitTarget {
+                rect: resize,
+                event: None,
+                control_id: Some(format!("shell.measures.resize.{window_id}")),
+                kind: HitKind::PanelResize,
+                drag_axis: Some(DragAxis::Horizontal),
+                drag_data: None,
+            });
         }
         content.x += width + theme.gap_standard;
         content.w -= width + theme.gap_standard;
@@ -3591,7 +4149,7 @@ impl ShellState {
                     value: *value,
                     min: *min,
                     max: *max,
-                    step: *step,
+                    step: step.unwrap_or(0.01),
                     on_change: Some(on_change.clone()),
                 };
                 let rect = Rect::new(bounds.x, y + 16.0, bounds.w, theme.control_height);
@@ -3615,7 +4173,7 @@ impl ShellState {
             } => {
                 let node = WidgetNode::Toggle {
                     id: id.clone(),
-                    icon_id: icon_id.clone().unwrap_or_default(),
+                    icon_id: icon_id.clone(),
                     pressed: *pressed,
                     text: text.clone().or(label.clone()),
                     on_change: Some(on_change.clone()),
@@ -3647,13 +4205,18 @@ impl ShellState {
         kind: &semio_framework_core::WindowKindDefinition,
         gpu: &mut ui_wgpu::GpuContext,
     ) {
-        let Some(engagement) = &kind.engagement else {
+        let engagement = self
+            .window_engagements
+            .get(&kind.id)
+            .cloned()
+            .or_else(|| kind.engagement.clone());
+        let Some(engagement) = engagement else {
             return;
         };
         let expanded = self.engagement_expanded.get(window_id).copied().unwrap_or(false);
         if !expanded {
             let item = ChromeGroupItem {
-                id: "",
+                control_id: "shell.engagement.toggle",
                 icon_id: Some("chevron-right"),
                 label: Some("Command"),
                 active: false,
@@ -3688,7 +4251,7 @@ impl ShellState {
         let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
         draw.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
         let toggle_item = ChromeGroupItem {
-            id: "",
+            control_id: "shell.engagement.toggle",
             icon_id: Some("chevron-left"),
             label: Some("Command"),
             active: false,
@@ -3718,7 +4281,7 @@ impl ShellState {
                 let label = option.label.clone().unwrap_or_else(|| option.id.clone());
                 let pressed = option.pressed.unwrap_or(false);
                 let item = ChromeGroupItem {
-                    id: "",
+                    control_id: "shell.engagement.option",
                     icon_id: None,
                     label: Some(&label),
                     active: pressed,
@@ -3814,8 +4377,11 @@ impl ShellState {
             .unwrap_or_default();
         let node = ui_wgpu::widgets::WidgetNode::Input {
             id: id.clone(),
+            input_kind: "text".into(),
             value,
             placeholder: spec.placeholder.clone(),
+            commit: None,
+            on_change: spec.on_change.clone(),
         };
         let scroll_offsets = &mut self.scroll_offsets;
         let collapsed_sections = &mut self.collapsed_sections;
@@ -3895,7 +4461,7 @@ impl ShellState {
                     .unwrap_or_else(|| "toggle".into());
                 WidgetNode::Toggle {
                     id: id.clone().unwrap_or_else(|| "engagement-toggle".into()),
-                    icon_id: options.first().map(|o| o.icon_id.clone()).unwrap_or_default(),
+                    icon_id: String::new(),
                     pressed: false,
                     text: Some(label),
                     on_change: on_select.clone(),

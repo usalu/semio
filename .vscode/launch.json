@@ -25,8 +25,6 @@
         "order": 20
       }
     },
-    // #endregion
-    // #region 🖱️ Mouse
     {
       "name": "🖱️f3d",
       "type": "node-terminal",
@@ -69,10 +67,8 @@
         "uriFormat": "%s"
       }
     },
-    // #endregion
-    // #region 🛠️ Dev
     {
-      "name": "🛠️dev📐cad",
+      "name": "🛠️dev📐cad⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts dev cad",
@@ -112,7 +108,7 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧩concrete🌲forest",
+      "name": "🛠️dev📐cad🧩concrete🌲forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts dev cad fixture concrete",
@@ -385,7 +381,7 @@
       }
     },
     {
-      "name": "🛠️dev🌳dag",
+      "name": "🛠️dev🌳dag⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:dag",
@@ -425,7 +421,7 @@
       }
     },
     {
-      "name": "🛠️dev🌊flow",
+      "name": "🛠️dev🌊flow⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:flow",
@@ -465,7 +461,7 @@
       }
     },
     {
-      "name": "🛠️dev⚙️imperative",
+      "name": "🛠️dev⚙️imperative⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:imperative",
@@ -505,7 +501,7 @@
       }
     },
     {
-      "name": "🛠️dev📜sequence",
+      "name": "🛠️dev📜sequence⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:sequence",
@@ -545,7 +541,7 @@
       }
     },
     {
-      "name": "🛠️dev🔷lowpoly",
+      "name": "🛠️dev🔷lowpoly⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:lowpoly",
@@ -585,7 +581,7 @@
       }
     },
     {
-      "name": "🛠️dev📄layout",
+      "name": "🛠️dev📄layout⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:layout",
@@ -625,7 +621,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐gis📍2d",
+      "name": "🛠️dev🌐gis📍2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:gis:2d",
@@ -665,7 +661,7 @@
       }
     },
     {
-      "name": "🛠️dev📽️presentationplay",
+      "name": "🛠️dev📽️presentationplay⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:presentation",
@@ -705,7 +701,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🩻2d",
+      "name": "🛠️dev🔧procedural🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:2d",
@@ -745,7 +741,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d",
+      "name": "🛠️dev🔧procedural🏙️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:3d",
@@ -785,7 +781,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column",
+      "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:3d:hexagonal-column",
@@ -844,7 +840,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🩻2d",
+      "name": "🛠️dev🧩puzzle🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:2d",
@@ -884,7 +880,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d",
+      "name": "🛠️dev🧩puzzle🏙️3d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d",
@@ -924,7 +920,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d🎛️concrete🌲forest",
+      "name": "🛠️dev🧩puzzle🏙️3d🎛️concrete🌲forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d:concrete-forest",
@@ -964,7 +960,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d",
+      "name": "🛠️dev🧩puzzle👯5d⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d",
@@ -1004,7 +1000,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🎛️concrete🌲forest",
+      "name": "🛠️dev🧩puzzle👯5d🎛️concrete🌲forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d:concrete-forest",
@@ -1044,7 +1040,7 @@
       }
     },
     {
-      "name": "🛠️dev🧠reasoning🔗wires",
+      "name": "🛠️dev🧠reasoning🔗wires⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:reasoning:wires",
@@ -1104,7 +1100,7 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting",
+      "name": "🛠️dev📸shooting⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting",
@@ -1144,7 +1140,7 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting🎛️base",
+      "name": "🛠️dev📸shooting🎛️base⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting:base-icon",
@@ -1279,7 +1275,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity🃏jack",
+      "name": "🛠️dev🔺trinity🃏jack⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:jack",
@@ -1330,7 +1326,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity♻️rewrite",
+      "name": "🛠️dev🔺trinity♻️rewrite⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:rewrite",
@@ -1370,7 +1366,7 @@
       }
     },
     {
-      "name": "🛠️dev📋forms",
+      "name": "🛠️dev📋forms⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:forms",
@@ -1410,7 +1406,7 @@
       }
     },
     {
-      "name": "🛠️dev🖼️raster",
+      "name": "🛠️dev🖼️raster⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:raster",
@@ -1450,7 +1446,7 @@
       }
     },
     {
-      "name": "🛠️dev🗄️vcs🎛️play",
+      "name": "🛠️dev🗄️vcs🎛️play⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:vcs",
@@ -1490,48 +1486,6 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s🧊wgpu",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "S_OS_PORT": "6066",
-        "SEMIO_PLUGIN": "s",
-        "SEMIO_RENDERER": "wgpu"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 386
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6066)",
-        "uriFormat": "%s"
-      }
-    },
-    {
-      "name": "🛠️dev🖥️s🧊wgpu-alt",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:dev",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "S_OS_PORT": "6067",
-        "SEMIO_PLUGIN": "s",
-        "SEMIO_RENDERER": "wgpu"
-      },
-      "presentation": {
-        "group": "3_dev",
-        "order": 386.1
-      },
-      "serverReadyAction": {
-        "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6067)",
-        "uriFormat": "%s"
-      }
-    },
-    {
       "name": "🛠️dev🖥️s⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -1549,6 +1503,27 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6070)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🖥️s🧊wgpu",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-dev:dev",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6066",
+        "SEMIO_PLUGIN": "s",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 386
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6066)",
         "uriFormat": "%s"
       }
     },
@@ -1595,7 +1570,7 @@
       }
     },
     {
-      "name": "🛠️dev✏️draw",
+      "name": "🛠️dev✏️draw⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -1637,7 +1612,7 @@
       }
     },
     {
-      "name": "🛠️dev📝note",
+      "name": "🛠️dev📝note⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:note",
@@ -1677,7 +1652,7 @@
       }
     },
     {
-      "name": "🛠️dev✍️writer",
+      "name": "🛠️dev✍️writer⚛️react",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:writer",
@@ -1727,8 +1702,6 @@
         "order": 390
       }
     },
-    // #endregion
-    // #region 📦 Build
     {
       "name": "📦build📐cad🎛️concrete🌲forest",
       "type": "node-terminal",
@@ -2015,8 +1988,6 @@
         "order": 220
       }
     },
-    // #endregion
-    // #region ⬆️ Publish
     {
       "name": "⬆️publish🔬coda🖱️desktop",
       "type": "node-terminal",

@@ -150,7 +150,8 @@ STYLING_OPACITIES: Final[dict[str, float]] = {
     "disabledPanelMixAlpha": 128,
     "labelHaloAlpha": 200,
     "selectionPreviewStrokeAlpha": 180,
-    "handleFillTransparent": 0
+    "handleFillTransparent": 0,
+    "glassPanelAlpha": 0.58
 }
 STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
     "camera": {

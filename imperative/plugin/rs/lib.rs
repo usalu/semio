@@ -438,7 +438,7 @@ impl PluginApp for ImperativePlayApp {
 //#region 🔖Manifest
 fn create_imperative_app() -> App {
     App::from_builder(
-        App::builder(IMPERATIVE_PLAY_APP_ID, "Imperative")
+        App::builder(IMPERATIVE_PLAY_APP_ID, "Imperative").hierarchy(["semio", "imperative"])
             .icon_id("imperative")
             .mode("edit", "Edit")
             .default_mode_id("edit")

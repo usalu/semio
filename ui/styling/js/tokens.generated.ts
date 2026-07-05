@@ -151,7 +151,8 @@ export const STYLING_OPACITIES = {
   "disabledPanelMixAlpha": 128,
   "labelHaloAlpha": 200,
   "selectionPreviewStrokeAlpha": 180,
-  "handleFillTransparent": 0
+  "handleFillTransparent": 0,
+  "glassPanelAlpha": 0.58
 } as const;
 
 export const STYLING_METRICS = {

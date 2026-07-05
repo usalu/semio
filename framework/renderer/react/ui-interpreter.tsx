@@ -14,6 +14,7 @@ import {
 	Section,
 	Slider,
 	Stepper,
+	Textarea,
 	Toggle,
 	Tree,
 	VirtualFileSystem,
@@ -91,26 +92,58 @@ export function renderUiControl(control: UiControlNode, onCommand: UiInterpreter
 	switch (control.type) {
 		case "input": {
 			const commitOnBlur = control.commit === "blur";
+			const commitValue = (raw: string) => {
+				const value = control.inputKind === "number" ? Number(raw) : raw;
+				dispatchUiCommand(onCommand, control.onChange, { value });
+			};
+			if (control.inputKind === "longText") {
+				return (
+					<Textarea
+						id={control.id}
+						className="min-h-[4.5rem] w-full min-w-0"
+						value={control.value}
+						placeholder={control.placeholder}
+						onChange={commitOnBlur ? undefined : (event) => commitValue(event.target.value)}
+						onBlur={commitOnBlur ? (event) => commitValue(event.target.value) : undefined}
+					/>
+				);
+			}
+			const inputType =
+				control.inputKind === "number"
+					? "number"
+					: control.inputKind === "date"
+						? "date"
+						: control.inputKind === "color"
+							? "color"
+							: control.inputKind === "file"
+								? "file"
+								: "text";
 			return (
 				<Input
 					id={control.id}
-					type={control.inputKind === "number" ? "number" : "text"}
+					type={inputType}
 					className="h-medium w-full min-w-0"
-					value={control.value}
+					value={control.inputKind === "file" ? undefined : control.value}
 					placeholder={control.placeholder}
 					onChange={
 						commitOnBlur
 							? undefined
 							: (event) => {
-									const value = control.inputKind === "number" ? Number(event.target.value) : event.target.value;
-									dispatchUiCommand(onCommand, control.onChange, { value });
+									if (control.inputKind === "file") {
+										commitValue(event.target.files?.[0]?.name ?? "");
+										return;
+									}
+									commitValue(event.target.value);
 								}
 					}
 					onBlur={
 						commitOnBlur
 							? (event) => {
-									const value = control.inputKind === "number" ? Number(event.target.value) : event.target.value;
-									dispatchUiCommand(onCommand, control.onChange, { value });
+									if (control.inputKind === "file") {
+										commitValue(event.target.files?.[0]?.name ?? "");
+										return;
+									}
+									commitValue(event.target.value);
 								}
 							: undefined
 					}

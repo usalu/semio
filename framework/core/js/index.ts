@@ -643,6 +643,10 @@ export type PluginWasmHandle = {
 	readonly handleCommand: (instanceId: number, commandJson: string, viewState: PluginViewState) => Promise<string[]>;
 	readonly render: (instanceId: number, bodyKey: string, viewState: PluginViewState) => Promise<PluginUiNode>;
 	readonly tools: (instanceId: number, viewState: PluginViewState) => Promise<readonly Record<string, unknown>[]>;
+	readonly windowEngagements: (
+		instanceId: number,
+		viewState: PluginViewState,
+	) => Promise<Readonly<Record<string, Record<string, unknown>>>>;
 	readonly dispose: () => void;
 };
 
@@ -664,6 +668,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 		semio_plugin_handle_command?: (instanceId: number, commandJson: string, viewStateJson: string) => string;
 		semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
 		semio_plugin_tools?: (instanceId: number, viewStateJson: string) => string;
+		semio_plugin_window_engagements?: (instanceId: number, viewStateJson: string) => string;
 	};
 	if (module.default) await module.default();
 	if (!module.semio_plugin_manifest) {
@@ -697,6 +702,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 			if (!tools) return [];
 			return JSON.parse(tools(instanceId, JSON.stringify(viewState))) as Record<string, unknown>[];
 		},
+		async windowEngagements(instanceId: number, viewState: PluginViewState) {
+			const engagements = module.semio_plugin_window_engagements;
+			if (!engagements) return {};
+			return JSON.parse(engagements(instanceId, JSON.stringify(viewState))) as Record<string, Record<string, unknown>>;
+		},
 		dispose() {},
 	};
 }
@@ -716,6 +726,10 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
 			handle.render(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState).then((node) => JSON.stringify(node)),
 		tools: (instanceId: number, viewStateJson: string) =>
 			handle.tools(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((nodes) => JSON.stringify(nodes)),
+		windowEngagements: (instanceId: number, viewStateJson: string) =>
+			handle
+				.windowEngagements(instanceId, JSON.parse(viewStateJson) as PluginViewState)
+				.then((engagements) => JSON.stringify(engagements)),
 	};
 }
 //#endregion PluginRuntime

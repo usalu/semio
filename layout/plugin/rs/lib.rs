@@ -1040,7 +1040,7 @@ impl PluginApp for LayoutPlayApp {
 //#region 🔖AppFactory
 fn create_layout_app() -> App {
     App::from_builder(
-        App::builder(LAYOUT_PLAY_APP_ID, "Layout")
+        App::builder(LAYOUT_PLAY_APP_ID, "Layout").hierarchy(["semio", "layout"])
             .icon_id("layout")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1078,7 +1078,16 @@ fn create_layout_app() -> App {
     .program("layout", "Layout", "layout")
 }
 
+fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    semio_framework_os::pages_rects_svg(value, "Layout")
+}
+
+fn register_layout_exports() {
+    semio_framework_os::register_2d_svg_png_export_handlers("2d.layout", "layout", layout_document_json_to_svg);
+}
+
 fn bundle() -> PluginBundle {
+    register_layout_exports();
     PluginBundle::new("layout", "Layout", "0.1.0").register_app(create_layout_app(), || Box::new(LayoutPlayApp))
 }
 

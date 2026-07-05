@@ -1,8 +1,9 @@
 //! 🎬 Native component scene hosts for canvas-2d, tables, graphs, and 3D views.
 
+use crate::engine_canvas;
 use crate::interpreter::FrameworkWidgetContext;
 use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem};
-use crate::world3d::{render_world_3d, World3dState};
+use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
 use semio_framework_core::{CommandDescriptor, UiComponentSceneNode};
 use serde::Deserialize;
@@ -86,6 +87,9 @@ struct SceneSurfaceState {
     hover_row_id: Option<String>,
     raster_digest: Option<u64>,
     pending_raster: Option<PendingRasterUpload>,
+    pending_raster_uploads: Vec<PendingRasterUpload>,
+    canvas_image_digests: HashMap<String, u64>,
+    paint_stroke_active: bool,
     vfs_expanded_ids: HashSet<String>,
     vfs_selection_anchor: Option<String>,
 }
@@ -121,6 +125,69 @@ pub fn register_graph_node(node_id: &str, instance_id: Option<&str>) {
 /** @emoji 🕸️ Resolves a graph node instance id for context-menu commands. */
 pub fn graph_node_instance(node_id: &str) -> Option<String> {
     GRAPH_NODE_CTX.with(|cell| cell.borrow().get(node_id).cloned().flatten())
+}
+
+/** @emoji 📁 Toggles VFS row expand/collapse in scene-local state. */
+pub fn toggle_vfs_row_expanded(surface_id: &str, row_id: &str) {
+    mutate_scene_state(surface_id, |state| {
+        if state.vfs_expanded_ids.contains(row_id) {
+            state.vfs_expanded_ids.remove(row_id);
+        } else {
+            state.vfs_expanded_ids.insert(row_id.to_string());
+        }
+    });
+}
+
+/** @emoji 📁 Seeds default expanded VFS roots on first render. */
+pub fn seed_vfs_expanded(surface_id: &str, row_ids: &[String]) {
+    mutate_scene_state(surface_id, |state| {
+        if state.vfs_expanded_ids.is_empty() {
+            for id in row_ids {
+                state.vfs_expanded_ids.insert(id.clone());
+            }
+        }
+    });
+}
+
+/** @emoji 📁 Computes VFS multi-select ids for shift/meta click semantics. */
+pub fn vfs_selection_for_click(
+    surface_id: &str,
+    row_id: &str,
+    ordered_ids: &[String],
+    shift: bool,
+    additive: bool,
+) -> Vec<String> {
+    let mut state = scene_state(surface_id);
+    if shift {
+        let anchor = state.vfs_selection_anchor.clone().unwrap_or_else(|| row_id.to_string());
+        let a = ordered_ids.iter().position(|id| id == &anchor);
+        let b = ordered_ids.iter().position(|id| id == row_id);
+        if let (Some(a), Some(b)) = (a, b) {
+            let (start, end) = if a <= b { (a, b) } else { (b, a) };
+            let ids: Vec<String> = ordered_ids[start..=end].to_vec();
+            state.vfs_selection_anchor = Some(anchor);
+            mutate_scene_state(surface_id, |state| {
+                state.vfs_selection_anchor = Some(row_id.to_string());
+            });
+            return ids;
+        }
+    }
+    mutate_scene_state(surface_id, |state| {
+        state.vfs_selection_anchor = Some(row_id.to_string());
+    });
+    if additive {
+        let mut ids: Vec<String> = scene_state(surface_id)
+            .selected_ids
+            .into_iter()
+            .collect();
+        if ids.iter().any(|id| id == row_id) {
+            ids.retain(|id| id != row_id);
+        } else {
+            ids.push(row_id.to_string());
+        }
+        return ids;
+    }
+    vec![row_id.to_string()]
 }
 
 fn scene_state(surface_id: &str) -> SceneSurfaceState {
@@ -198,11 +265,34 @@ pub fn drain_pending_raster_uploads() -> Vec<PendingRasterUpload> {
             if let Some(pending) = state.pending_raster.take() {
                 uploads.push(pending);
             }
+            uploads.append(&mut state.pending_raster_uploads);
         }
     });
     uploads
 }
 //#endregion SceneRuntime
+
+fn canvas_world_pointer_json(
+    scene: &UiComponentSceneNode,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    extra: Value,
+) -> Value {
+    let state = scene_state(&scene.surface_id);
+    let (wx, wy) = state.viewport.screen_to_world(x, y, inner);
+    let mut payload = json!({
+        "surfaceId": scene.surface_id,
+        "x": wx,
+        "y": wy,
+    });
+    if let (Some(base), Some(patch)) = (payload.as_object_mut(), extra.as_object()) {
+        for (key, value) in patch {
+            base.insert(key.clone(), value.clone());
+        }
+    }
+    payload
+}
 
 //#region SceneInput
 pub fn handle_scene_wheel(
@@ -216,7 +306,7 @@ pub fn handle_scene_wheel(
     if !bounds.contains(x, y) {
         return Vec::new();
     }
-    let inner = bounds.inset(8.0);
+    let inner = bounds;
     if !inner.contains(x, y) {
         return Vec::new();
     }
@@ -226,43 +316,20 @@ pub fn handle_scene_wheel(
             set_scroll_offset(&scene.surface_id, "body", current + delta * 0.5);
             Vec::new()
         }
-        "text-editor" => {
-            let current = scroll_offset(&scene.surface_id, "editor");
-            set_scroll_offset(&scene.surface_id, "editor", current + delta * 0.5);
-            Vec::new()
-        }
+        "text-editor" => engine_canvas::text_editor_wheel(scene, delta),
         "virtualFileSystem" => {
             let current = scroll_offset(&scene.surface_id, "vfs");
             set_scroll_offset(&scene.surface_id, "vfs", current + delta * 0.5);
             Vec::new()
         }
         "canvas-2d" => {
-            if ctrl {
-                mutate_scene_state(&scene.surface_id, |state| {
-                    let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
-                    state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.1, 8.0);
-                });
-                Vec::new()
-            } else {
-                vec![scene_cmd(
-                    scene,
-                    "canvasWheel",
-                    json!({
-                        "surfaceId": scene.surface_id,
-                        "x": x,
-                        "y": y,
-                        "deltaY": delta,
-                    }),
-                )]
-            }
-        }
-        "node-graph" => {
             mutate_scene_state(&scene.surface_id, |state| {
                 let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
-                state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.1, 4.0);
+                state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.125, 8.0);
             });
             Vec::new()
         }
+        "node-graph" => engine_canvas::node_graph_wheel(scene, inner, x, y, delta, ctrl),
         _ => Vec::new(),
     }
 }
@@ -277,7 +344,7 @@ pub fn handle_scene_pointer_move(
     drag_dx: f32,
     drag_dy: f32,
 ) -> Vec<CommandDescriptor> {
-    let inner = bounds.inset(8.0);
+    let inner = bounds;
     if !inner.contains(x, y) {
         return Vec::new();
     }
@@ -312,8 +379,22 @@ pub fn handle_scene_pointer_move(
             commands.push(scene_cmd(
                 scene,
                 "canvasPointerMove",
-                json!({ "surfaceId": scene.surface_id, "x": x, "y": y }),
+                canvas_world_pointer_json(scene, inner, x, y, json!({})),
             ));
+        }
+        "node-graph" if down => {
+            commands.extend(engine_canvas::node_graph_pointer_move(
+                scene, inner, x, y, false, false, false,
+            ));
+        }
+        "text-editor" if down => {
+            commands.extend(engine_canvas::text_editor_pointer_move(scene, inner, x, y));
+        }
+        "node-graph" | "text-editor" if !down => {
+            commands.extend(match scene.component_kind.as_str() {
+                "node-graph" => engine_canvas::node_graph_pointer_move(scene, inner, x, y, false, false, false),
+                _ => engine_canvas::text_editor_pointer_move(scene, inner, x, y),
+            });
         }
         _ => {}
     }
@@ -329,7 +410,7 @@ pub fn handle_scene_pointer_button(
     button: i16,
     shift: bool,
 ) -> Vec<CommandDescriptor> {
-    let inner = bounds.inset(8.0);
+    let inner = bounds;
     if !inner.contains(x, y) {
         if !down {
             mutate_scene_state(&scene.surface_id, |state| {
@@ -346,16 +427,24 @@ pub fn handle_scene_pointer_button(
         });
         match scene.component_kind.as_str() {
             "canvas-2d" => {
+                if button == 0 {
+                    mutate_scene_state(&scene.surface_id, |state| {
+                        if !state.paint_stroke_active {
+                            state.paint_stroke_active = true;
+                        }
+                    });
+                    commands.push(scene_cmd(scene, "paintStrokeBegin", json!({ "surfaceId": scene.surface_id })));
+                }
                 commands.push(scene_cmd(
                     scene,
                     "canvasPointerDown",
-                    json!({
-                        "surfaceId": scene.surface_id,
-                        "x": x,
-                        "y": y,
-                        "button": button,
-                        "extend": shift,
-                    }),
+                    canvas_world_pointer_json(
+                        scene,
+                        inner,
+                        x,
+                        y,
+                        json!({ "button": button, "extend": shift }),
+                    ),
                 ));
                 if button == 1 || button == 2 {
                     mutate_scene_state(&scene.surface_id, |state| {
@@ -367,46 +456,12 @@ pub fn handle_scene_pointer_button(
                 }
             }
             "node-graph" => {
-                if button == 0 {
-                    if let Some(node_id) = hit_graph_node(scene, inner, x, y) {
-                        let vp = scene_state(&scene.surface_id).viewport;
-                        let (wx, wy) = vp.screen_to_world(x, y, inner);
-                        let node = find_graph_node(scene, &node_id);
-                        let (nx, ny) = node
-                            .as_ref()
-                            .map(|n| {
-                                scene_state(&scene.surface_id)
-                                    .node_positions
-                                    .get(&node_id)
-                                    .copied()
-                                    .unwrap_or((n.x.unwrap_or(0.0) as f32, n.y.unwrap_or(0.0) as f32))
-                            })
-                            .unwrap_or((wx, wy));
-                        mutate_scene_state(&scene.surface_id, |state| {
-                            state.drag = Some(SceneDrag {
-                                mode: SceneDragMode::MoveNode {
-                                    node_id,
-                                    grab_x: wx - nx,
-                                    grab_y: wy - ny,
-                                },
-                                button,
-                            });
-                        });
-                    }
-                } else if button == 1 || button == 2 {
-                    mutate_scene_state(&scene.surface_id, |state| {
-                        state.drag = Some(SceneDrag {
-                            mode: SceneDragMode::PanViewport,
-                            button,
-                        });
-                    });
-                }
+                commands.extend(engine_canvas::node_graph_pointer_down(
+                    scene, inner, x, y, button, shift, false, false,
+                ));
             }
             "text-editor" => {
-                mutate_scene_state(&scene.surface_id, |state| {
-                    let scroll = scroll_offset(&scene.surface_id, "editor");
-                    state.editor_cursor = cursor_from_click(scene, inner, x, y, scroll);
-                });
+                commands.extend(engine_canvas::text_editor_pointer_down(scene, inner, x, y, button));
             }
             _ => {}
         }
@@ -416,29 +471,22 @@ pub fn handle_scene_pointer_button(
                 commands.push(scene_cmd(
                     scene,
                     "canvasPointerUp",
-                    json!({ "surfaceId": scene.surface_id, "x": x, "y": y }),
+                    canvas_world_pointer_json(scene, inner, x, y, json!({})),
                 ));
+                mutate_scene_state(&scene.surface_id, |state| {
+                    if state.paint_stroke_active {
+                        state.paint_stroke_active = false;
+                    }
+                });
+                commands.push(scene_cmd(scene, "paintStrokeEnd", json!({ "surfaceId": scene.surface_id })));
             }
             "node-graph" => {
-                if let Some(node_id) = hit_graph_node(scene, inner, x, y) {
-                    if let Some(record) = find_graph_node(scene, &node_id) {
-                        if let Some(instance_id) = record.instance_id.as_deref() {
-                            commands.push(scene_cmd(
-                                scene,
-                                "selectInstance",
-                                json!({ "surfaceId": scene.surface_id, "instanceId": instance_id }),
-                            ));
-                        } else {
-                            commands.push(scene_cmd(
-                                scene,
-                                "selectNode",
-                                json!({ "surfaceId": scene.surface_id, "nodeId": node_id }),
-                            ));
-                        }
-                    }
-                } else {
-                    commands.push(scene_cmd(scene, "graphPointerDown", surface_args(scene)));
-                }
+                commands.extend(engine_canvas::node_graph_pointer_up(
+                    scene, inner, x, y, shift, false, false,
+                ));
+            }
+            "text-editor" => {
+                commands.extend(engine_canvas::text_editor_pointer_up(scene, inner, x, y));
             }
             _ => {}
         }
@@ -552,9 +600,9 @@ pub fn render_component_scene(
         "raster" => render_raster(scene, bounds, ctx, gpu),
         "table" => render_table(scene, bounds, ctx),
         "canvas-2d" => render_canvas_2d(scene, bounds, ctx),
-        "node-graph" => render_node_graph(scene, bounds, ctx),
+        "node-graph" => render_node_graph(scene, bounds, ctx, gpu),
         "virtualFileSystem" => render_vfs(scene, bounds, ctx),
-        "text-editor" => render_text_editor(scene, bounds, ctx),
+        "text-editor" => render_text_editor(scene, bounds, ctx, gpu),
         "world-3d" => {
             let state = world3d_states
                 .entry(scene.surface_id.clone())
@@ -604,7 +652,7 @@ fn render_raster(
     let Some(raster) = &scene.raster else {
         return render_placeholder("raster", bounds, ctx);
     };
-    let inner = bounds.inset(8.0);
+    let inner = bounds;
     ctx.draw
         .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(&raster.pixels_base64) else {
@@ -648,7 +696,7 @@ fn render_raster(
     let qx = inner.x + (inner.w - quad_w) * 0.5;
     let qy = inner.y + (inner.h - quad_h) * 0.5;
     ctx.draw
-        .push_textured([qx, qy, quad_w, quad_h], [0.0, 0.0, 1.0, 1.0], 1.0);
+        .push_raster_quad(&key, [qx, qy, quad_w, quad_h], [0.0, 0.0, 1.0, 1.0], 1.0);
     let quad = Rect::new(qx, qy, quad_w, quad_h);
     ctx.input.register_hit(HitTarget {
         rect: quad,
@@ -675,9 +723,10 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
     };
     let columns: Vec<TableColumn> = serde_json::from_str(&table.columns_json).unwrap_or_default();
     let rows: Vec<Value> = serde_json::from_str(&table.rows_json).unwrap_or_default();
-    let inner = bounds.inset(8.0);
-    let header_h = 24.0;
-    let row_h = 22.0;
+    let inner = bounds;
+    let header_h = theme.control_height * 1.33;
+    let row_h = theme.control_height;
+    let pad = theme.padding_standard;
     ctx.draw.push_solid([inner.x, inner.y, inner.w, header_h], theme.panel);
     let col_w = if columns.is_empty() {
         inner.w
@@ -686,9 +735,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
     };
     for (index, column) in columns.iter().enumerate() {
         let x = inner.x + index as f32 * col_w;
-        draw_text(ctx, &column.label, x + 6.0, inner.y + 16.0, theme.font_size_small, theme.text_muted);
-        ctx.draw
-            .push_line(x, inner.y, x, inner.y + inner.h, theme.separator, 1.0);
+        draw_text(ctx, &column.label, x + pad, inner.y + header_h * 0.65, theme.font_size_small, theme.text_muted);
     }
     ctx.draw.push_line(
         inner.x,
@@ -700,11 +747,27 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
     );
     let body = Rect::new(inner.x, inner.y + header_h, inner.w, inner.h - header_h);
     let scroll = scroll_offset(&scene.surface_id, "body");
+    ctx.input.register_hit(HitTarget {
+        rect: body,
+        event: None,
+        control_id: Some(scroll_key(&scene.surface_id, "body")),
+        kind: HitKind::ScrollRegion,
+        drag_axis: None,
+        drag_data: None,
+    });
     ctx.draw.push_scissor(body);
-    let hovered_row = ctx
-        .input
-        .hit_at(ctx.input.pointer_x, ctx.input.pointer_y)
-        .and_then(|hit| hit.control_id.clone());
+    let hovered_row = ctx.input.hovered_id.clone();
+    if rows.is_empty() {
+        let message = "No rows";
+        draw_text(
+            ctx,
+            message,
+            body.x + body.w * 0.5 - 40.0,
+            body.y + body.h * 0.5,
+            theme.font_size_small,
+            theme.text_muted,
+        );
+    }
     for (row_index, row) in rows.iter().enumerate() {
         let y = body.y + row_index as f32 * row_h - scroll;
         if y + row_h < body.y || y > body.y + body.h {
@@ -719,16 +782,18 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
         let control_id = format!("{}.row.{}", scene.surface_id, row_id);
         let row_rect = Rect::new(body.x, y, body.w, row_h);
         let hovered = hovered_row.as_deref() == Some(control_id.as_str());
-        let tint = if row_index % 2 == 1 {
-            Rgba::new(0.10, 0.10, 0.12, 0.65)
-        } else {
-            Rgba::new(0.08, 0.08, 0.10, 0.45)
-        };
-        ctx.draw.push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], tint);
         if hovered {
             ctx.draw
                 .push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.row_hover);
         }
+        ctx.draw.push_line(
+            row_rect.x,
+            row_rect.y + row_rect.h - theme.stroke_hairline,
+            row_rect.x + row_rect.w,
+            row_rect.y + row_rect.h - theme.stroke_hairline,
+            theme.separator,
+            1.0,
+        );
         for (col_index, column) in columns.iter().enumerate() {
             let x = body.x + col_index as f32 * col_w;
             let value = row
@@ -738,7 +803,14 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
                     other => other.to_string(),
                 })
                 .unwrap_or_else(|| "—".into());
-            draw_text(ctx, &value, x + 6.0, y + 15.0, theme.font_size_small, theme.text);
+            draw_text(
+                ctx,
+                &value,
+                x + pad,
+                y + row_h * 0.65,
+                theme.font_size_small,
+                if hovered { theme.active_foreground } else { theme.text },
+            );
         }
         ctx.input.register_hit(HitTarget {
             rect: row_rect,
@@ -750,18 +822,10 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
             control_id: Some(control_id),
             kind: HitKind::Generic,
             drag_axis: None,
-        drag_data: None,
+            drag_data: None,
         });
     }
     ctx.draw.pop_scissor();
-    ctx.input.register_hit(HitTarget {
-        rect: body,
-        event: None,
-        control_id: Some(scroll_key(&scene.surface_id, "body")),
-        kind: HitKind::ScrollRegion,
-        drag_axis: None,
-    drag_data: None,
-    });
 }
 //#endregion Table
 
@@ -794,6 +858,112 @@ struct CanvasLayer {
     source: Option<String>,
     #[serde(default)]
     target: Option<String>,
+    #[serde(default, rename = "dataUrl")]
+    data_url: Option<String>,
+    #[serde(default)]
+    points: Option<Vec<[f64; 2]>>,
+    #[serde(default)]
+    seams: Option<Vec<u8>>,
+}
+
+fn decode_canvas_image(data_url: &str) -> Option<(Vec<u8>, u32, u32)> {
+    let payload = data_url
+        .strip_prefix("data:image/png;base64,")
+        .or_else(|| data_url.strip_prefix("data:image/jpeg;base64,"))
+        .unwrap_or(data_url);
+    let bytes = base64::engine::general_purpose::STANDARD.decode(payload).ok()?;
+    let image = image::load_from_memory(&bytes).ok()?;
+    let rgba = image.to_rgba8();
+    let (width, height) = rgba.dimensions();
+    Some((rgba.into_raw(), width, height))
+}
+
+fn queue_canvas_image_upload(surface_id: &str, layer_id: &str, data_url: &str) -> Option<String> {
+    let (pixels, width, height) = decode_canvas_image(data_url)?;
+    let expected = (width as usize).saturating_mul(height as usize).saturating_mul(4);
+    if pixels.len() < expected {
+        return None;
+    }
+    let digest = digest_pixels(&pixels[..expected]);
+    let key = format!("canvas-image:{surface_id}:{layer_id}");
+    mutate_scene_state(surface_id, |state| {
+        let prior = state.canvas_image_digests.get(&key).copied();
+        if prior != Some(digest) {
+            state.canvas_image_digests.insert(key.clone(), digest);
+            state.pending_raster_uploads.push(PendingRasterUpload {
+                key: key.clone(),
+                pixels: pixels[..expected].to_vec(),
+                width,
+                height,
+            });
+        }
+    });
+    Some(key)
+}
+
+fn draw_checkerboard(
+    draw: &mut ui_wgpu::DrawList,
+    viewport: &Viewport,
+    inner: Rect,
+    theme: &ui_wgpu::Theme,
+    extent: f32,
+) {
+    let cell = 16.0;
+    let half = extent * 0.5;
+    let light = Rgba::new(0.85, 0.85, 0.85, 1.0);
+    let dark = Rgba::new(0.72, 0.72, 0.72, 1.0);
+    let mut row = 0;
+    let mut wy = -half;
+    while wy < half {
+        let mut col = 0;
+        let mut wx = -half;
+        while wx < half {
+            let color = if (row + col) % 2 == 0 { light } else { dark };
+            let (sx, sy) = viewport.world_to_screen(wx, wy, inner);
+            let (sx1, sy1) = viewport.world_to_screen(wx + cell, wy + cell, inner);
+            let w = (sx1 - sx).abs().max(1.0);
+            let h = (sy1 - sy).abs().max(1.0);
+            draw.push_solid([sx.min(sx1), sy.min(sy1), w, h], color);
+            wx += cell;
+            col += 1;
+        }
+        wy += cell;
+        row += 1;
+    }
+    let _ = theme;
+}
+
+fn draw_dashed_line(
+    draw: &mut ui_wgpu::DrawList,
+    x0: f32,
+    y0: f32,
+    x1: f32,
+    y1: f32,
+    color: Rgba,
+    width: f32,
+) {
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+    let len = (dx * dx + dy * dy).sqrt().max(0.001);
+    let ux = dx / len;
+    let uy = dy / len;
+    let dash = 4.0f32;
+    let gap = 4.0f32;
+    let mut traveled = 0.0f32;
+    let mut drawing = true;
+    while traveled < len {
+        let segment = if drawing { dash } else { gap };
+        let next = (traveled + segment).min(len);
+        if drawing {
+            let sx0 = x0 + ux * traveled;
+            let sy0 = y0 + uy * traveled;
+            let sx1 = x0 + ux * next;
+            let sy1 = y0 + uy * next;
+            draw.push_line(sx0, sy0, sx1, sy1, color, width);
+        }
+        traveled = next;
+        drawing = !drawing;
+    }
 }
 
 fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
@@ -802,7 +972,7 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         return render_placeholder("canvas-2d", bounds, ctx);
     };
     let layers: Vec<CanvasLayer> = serde_json::from_str(&canvas.layers_json).unwrap_or_default();
-    let inner = bounds.inset(8.0);
+    let inner = bounds;
     ctx.draw
         .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let mut viewport = Viewport {
@@ -814,7 +984,53 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     if local.viewport.zoom > 0.0 && scene.component_kind == "canvas-2d" {
         viewport = local.viewport;
     }
+    if local.viewport.zoom > 0.0 && scene.component_kind == "canvas-2d" {
+        viewport = local.viewport;
+    }
+    let has_polyline = layers.iter().any(|layer| layer.kind == "polyline");
+    if has_polyline {
+        draw_checkerboard(ctx.draw, &viewport, inner, ctx.theme, 1024.0);
+    }
     for (index, layer) in layers.iter().enumerate() {
+        if layer.kind == "image" {
+            if let Some(data_url) = &layer.data_url {
+                if let Some(key) = queue_canvas_image_upload(&scene.surface_id, &layer.id, data_url) {
+                    let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
+                    let w = layer.width as f32 * viewport.zoom;
+                    let h = layer.height as f32 * viewport.zoom;
+                    ctx.draw
+                        .push_raster_quad(&key, [sx, sy, w.max(1.0), h.max(1.0)], [0.0, 0.0, 1.0, 1.0], 1.0);
+                }
+            }
+            continue;
+        }
+        if layer.kind == "polyline" {
+            if let Some(points) = &layer.points {
+                let stroke = Rgba::new(0.2, 0.55, 0.95, 0.95);
+                let seam_stroke = Rgba::new(0.95, 0.45, 0.2, 0.95);
+                let width = (1.5 * viewport.zoom).max(1.0);
+                for (edge_index, chunk) in points.chunks(2).enumerate() {
+                    if chunk.len() < 2 {
+                        continue;
+                    }
+                    let (x0, y0) = viewport.world_to_screen(chunk[0][0] as f32, chunk[0][1] as f32, inner);
+                    let (x1, y1) = viewport.world_to_screen(chunk[1][0] as f32, chunk[1][1] as f32, inner);
+                    let is_seam = layer
+                        .seams
+                        .as_ref()
+                        .and_then(|seams| seams.get(edge_index))
+                        .copied()
+                        .unwrap_or(0)
+                        != 0;
+                    if is_seam {
+                        draw_dashed_line(ctx.draw, x0, y0, x1, y1, seam_stroke, width);
+                    } else {
+                        ctx.draw.push_line(x0, y0, x1, y1, stroke, width);
+                    }
+                }
+            }
+            continue;
+        }
         let hue = (index * 47 % 360) as f32;
         let stroke = Rgba::new(0.25 + hue / 720.0, 0.45, 0.65, 0.9);
         if layer.kind == "line" || layer.x0.is_some() {
@@ -1010,23 +1226,16 @@ fn push_bezier(
     }
 }
 
-fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let theme = ctx.theme;
+fn render_node_graph(
+    scene: &UiComponentSceneNode,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    gpu: &mut ui_wgpu::GpuContext,
+) {
     let Some(graph) = &scene.node_graph else {
         return render_placeholder("node-graph", bounds, ctx);
     };
     let nodes = parse_graph_nodes(&graph.nodes_json);
-    let selected_ids: HashSet<String> = graph
-        .selection_json
-        .as_deref()
-        .and_then(|json| serde_json::from_str::<Vec<String>>(json).ok())
-        .map(|ids| ids.into_iter().collect())
-        .unwrap_or_default();
-    let hovered_id = graph.hover_json.as_deref().and_then(|json| {
-        serde_json::from_str::<serde_json::Value>(json)
-            .ok()
-            .and_then(|value| value.get("nodeId").and_then(|id| id.as_str().map(str::to_string)))
-    });
     push_graph_context_menu(scene, graph);
     for node in &nodes {
         register_graph_node(&node.id, node.instance_id.as_deref());
@@ -1044,138 +1253,8 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
             node_id: node.id.clone(),
         });
     }
-    let edges = parse_graph_edges(&graph.edges_json);
-    let inner = bounds.inset(8.0);
-    ctx.draw
-        .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
-    let state = scene_state(&scene.surface_id);
-    let viewport = if state.viewport.zoom > 0.0 {
-        state.viewport
-    } else {
-        Viewport::from_json(&graph.viewport_json)
-    };
-    let node_map: HashMap<&str, &GraphNode> = nodes.iter().map(|n| (n.id.as_str(), n)).collect();
-    for edge in &edges {
-        let src_id = edge
-            .source
-            .as_deref()
-            .or(edge.source_node_id.as_deref());
-        let dst_id = edge
-            .target
-            .as_deref()
-            .or(edge.target_node_id.as_deref());
-        let (Some(src_id), Some(dst_id)) = (src_id, dst_id) else {
-            continue;
-        };
-        let (Some(src), Some(dst)) = (node_map.get(src_id), node_map.get(dst_id)) else {
-            continue;
-        };
-        let (sx, sy) = node_screen_pos(src, &state, &viewport, inner);
-        let (dx, dy) = node_screen_pos(dst, &state, &viewport, inner);
-        let sw = src.width.unwrap_or(180.0) as f32 * viewport.zoom;
-        let dw = dst.width.unwrap_or(180.0) as f32 * viewport.zoom;
-        push_bezier(
-            ctx,
-            sx + sw,
-            sy + 20.0 * viewport.zoom,
-            dx,
-            dy + 20.0 * viewport.zoom,
-            theme.accent,
-            2.0,
-        );
-    }
-    for node in &nodes {
-        let (nx, ny) = state
-            .node_positions
-            .get(&node.id)
-            .copied()
-            .unwrap_or((node.x.unwrap_or(0.0) as f32, node.y.unwrap_or(0.0) as f32));
-        let (sx, sy) = viewport.world_to_screen(nx, ny, inner);
-        let w = node.width.unwrap_or(180.0) as f32 * viewport.zoom;
-        let h = node.height.unwrap_or(72.0) as f32 * viewport.zoom;
-        let body = Rect::new(sx, sy, w, h);
-        let fill = if selected_ids.contains(&node.id) {
-            theme.accent
-        } else if hovered_id.as_deref() == Some(node.id.as_str()) {
-            theme.button_hover
-        } else {
-            theme.button
-        };
-        ctx.draw
-            .push_rounded([body.x, body.y, body.w, body.h], fill, theme.border_radius);
-        let label = node
-            .label
-            .as_deref()
-            .or(node.instance_id.as_deref())
-            .unwrap_or(&node.id);
-        draw_text(
-            ctx,
-            label,
-            body.x + 8.0,
-            body.y + 18.0,
-            theme.font_size_small,
-            theme.text,
-        );
-        let inputs = node.inputs.as_deref().unwrap_or(&[]);
-        let outputs = node.outputs.as_deref().unwrap_or(&[]);
-        let rows = inputs.len().max(outputs.len()).max(1);
-        for row in 0..rows {
-            let py = body.y + 28.0 + row as f32 * 18.0 * viewport.zoom;
-            if let Some(port) = inputs.get(row) {
-                let px = body.x + 4.0;
-                ctx.draw
-                    .push_rounded([px, py - 4.0, 8.0, 8.0], theme.text, 4.0);
-                let name = port.label.as_deref().unwrap_or(&port.id);
-                draw_text(ctx, name, px + 12.0, py + 4.0, theme.font_size_small, theme.text_muted);
-                ctx.input.register_hit(HitTarget {
-                    rect: Rect::new(px - 4.0, py - 6.0, 16.0, 16.0),
-                    event: None,
-                    control_id: Some(format!("{}.port.in.{}.{}", scene.surface_id, node.id, port.id)),
-                    kind: HitKind::Generic,
-                    drag_axis: None,
-                drag_data: None,
-                });
-            }
-            if let Some(port) = outputs.get(row) {
-                let px = body.x + body.w - 12.0;
-                ctx.draw
-                    .push_rounded([px, py - 4.0, 8.0, 8.0], theme.text, 4.0);
-                let name = port.label.as_deref().unwrap_or(&port.id);
-                draw_text(
-                    ctx,
-                    name,
-                    body.x + body.w - 80.0,
-                    py + 4.0,
-                    theme.font_size_small,
-                    theme.text_muted,
-                );
-                ctx.input.register_hit(HitTarget {
-                    rect: Rect::new(px - 4.0, py - 6.0, 16.0, 16.0),
-                    event: None,
-                    control_id: Some(format!("{}.port.out.{}.{}", scene.surface_id, node.id, port.id)),
-                    kind: HitKind::Generic,
-                    drag_axis: None,
-                drag_data: None,
-                });
-            }
-        }
-        ctx.input.register_hit(HitTarget {
-            rect: body,
-            event: None,
-            control_id: Some(format!("{}.node.{}", scene.surface_id, node.id)),
-            kind: HitKind::Generic,
-            drag_axis: Some(DragAxis::Both),
-        drag_data: None,
-        });
-    }
-    ctx.input.register_hit(HitTarget {
-        rect: inner,
-        event: None,
-        control_id: Some(format!("{}.pane", scene.surface_id)),
-        kind: HitKind::ScrollRegion,
-        drag_axis: Some(DragAxis::Both),
-    drag_data: None,
-    });
+    let inner = bounds;
+    engine_canvas::paint_node_graph(gpu, ctx, scene, inner);
 }
 
 fn node_screen_pos(node: &GraphNode, state: &SceneSurfaceState, viewport: &Viewport, inner: Rect) -> (f32, f32) {
@@ -1190,9 +1269,166 @@ fn node_screen_pos(node: &GraphNode, state: &SceneSurfaceState, viewport: &Viewp
 
 //#region VirtualFileSystem
 #[derive(Deserialize)]
+struct VfsDescriptorKind {
+    #[serde(default)]
+    presentation: String,
+}
+
+#[derive(Deserialize)]
+struct VfsFileNodeKind {
+    #[serde(default)]
+    icon: Option<String>,
+    #[serde(default)]
+    descriptors: Vec<VfsDescriptorColumn>,
+}
+
+#[derive(Deserialize)]
+struct VfsDescriptorColumn {
+    id: String,
+    #[serde(default)]
+    label: String,
+    #[serde(rename = "descriptorKindId", default)]
+    descriptor_kind_id: String,
+}
+
+#[derive(Deserialize)]
 struct VfsSchema {
     #[serde(rename = "descriptorColumnIds", default)]
     descriptor_column_ids: Vec<String>,
+    #[serde(rename = "descriptorKinds", default)]
+    descriptor_kinds: HashMap<String, VfsDescriptorKind>,
+    #[serde(rename = "fileNodeKinds", default)]
+    file_node_kinds: HashMap<String, VfsFileNodeKind>,
+}
+
+#[derive(Clone)]
+struct VfsVisibleRow {
+    row: Value,
+    level: u32,
+    has_children: bool,
+    expanded: bool,
+}
+
+fn vfs_children_by_parent(rows: &[Value]) -> HashMap<String, Vec<Value>> {
+    let mut map: HashMap<String, Vec<Value>> = HashMap::new();
+    for row in rows {
+        let parent = row
+            .get("parentId")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        map.entry(parent).or_default().push(row.clone());
+    }
+    map
+}
+
+fn build_vfs_visible_rows(rows: &[Value], expanded_ids: &HashSet<String>) -> Vec<VfsVisibleRow> {
+    let children_by_parent = vfs_children_by_parent(rows);
+    let mut visible = Vec::new();
+    fn visit(
+        node: &Value,
+        level: u32,
+        out: &mut Vec<VfsVisibleRow>,
+        children_by_parent: &HashMap<String, Vec<Value>>,
+        expanded_ids: &HashSet<String>,
+    ) {
+        let id = node.get("id").and_then(|v| v.as_str()).unwrap_or("").to_string();
+        let has_children = node.get("hasChildren").and_then(|v| v.as_bool()).unwrap_or_else(|| {
+            children_by_parent.get(&id).is_some_and(|c| !c.is_empty())
+        });
+        let expanded = has_children && expanded_ids.contains(&id);
+        out.push(VfsVisibleRow {
+            row: node.clone(),
+            level,
+            has_children,
+            expanded,
+        });
+        if !expanded {
+            return;
+        }
+        if let Some(children) = children_by_parent.get(&id) {
+            for child in children {
+                visit(child, level + 1, out, children_by_parent, expanded_ids);
+            }
+        }
+    }
+    let roots: Vec<Value> = rows
+        .iter()
+        .filter(|row| {
+            row.get("parentId")
+                .map(|v| v.is_null() || v.as_str() == Some(""))
+                .unwrap_or(true)
+        })
+        .cloned()
+        .collect();
+    for root in roots {
+        if root.get("hasChildren").and_then(|v| v.as_bool()).unwrap_or(false) {
+            let root_id = root.get("id").and_then(|v| v.as_str()).unwrap_or("");
+            if let Some(children) = children_by_parent.get(root_id) {
+                for child in children {
+                    visit(child, 0, &mut visible, &children_by_parent, expanded_ids);
+                }
+            }
+        } else {
+            visit(&root, 0, &mut visible, &children_by_parent, expanded_ids);
+        }
+    }
+    visible
+}
+
+fn vfs_glyph_icon(schema: &VfsSchema, row: &Value) -> &'static str {
+    let kind_id = row.get("fileNodeKindId").and_then(|v| v.as_str()).unwrap_or("file");
+    if schema.file_node_kinds.get(kind_id).and_then(|k| k.icon.as_deref()).is_some() {
+        return "folder";
+    }
+    match kind_id {
+        "root" | "studio" | "folder" => "folder",
+        "instance" => "box",
+        _ => "file-text",
+    }
+}
+
+fn vfs_descriptor_label(schema: &VfsSchema, column_id: &str) -> String {
+    for kind in schema.file_node_kinds.values() {
+        if let Some(col) = kind.descriptors.iter().find(|c| c.id == column_id) {
+            if !col.label.is_empty() {
+                return col.label.clone();
+            }
+        }
+    }
+    column_id.to_string()
+}
+
+fn vfs_descriptor_value(schema: &VfsSchema, row: &Value, column_id: &str) -> String {
+    let raw = row
+        .get("descriptorValues")
+        .and_then(|values| values.get(column_id))
+        .map(|v| match v {
+            Value::String(s) => s.clone(),
+            other => other.to_string(),
+        })
+        .unwrap_or_default();
+    let kind_id = schema
+        .file_node_kinds
+        .values()
+        .flat_map(|kind| kind.descriptors.iter())
+        .find(|col| col.id == column_id)
+        .map(|col| col.descriptor_kind_id.as_str())
+        .unwrap_or("text");
+    let presentation = schema
+        .descriptor_kinds
+        .get(kind_id)
+        .map(|k| k.presentation.as_str())
+        .unwrap_or("text");
+    if presentation == "time" {
+        if let Ok(ms) = raw.parse::<f64>() {
+            let secs = (ms / 1000.0) as i64;
+            let mins = secs / 60;
+            let hours = mins / 60;
+            return format!("{:02}:{:02}:{:02}", hours, mins % 60, secs % 60);
+        }
+    }
+    raw
 }
 
 fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
@@ -1202,8 +1438,16 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
     };
     let schema: VfsSchema = serde_json::from_str(&vfs.schema_json).unwrap_or(VfsSchema {
         descriptor_column_ids: vec![],
+        descriptor_kinds: HashMap::new(),
+        file_node_kinds: HashMap::new(),
     });
     let rows: Vec<Value> = serde_json::from_str(&vfs.rows_json).unwrap_or_default();
+    let root_expand_ids: Vec<String> = rows
+        .iter()
+        .filter(|row| row.get("hasChildren").and_then(|v| v.as_bool()).unwrap_or(false))
+        .filter_map(|row| row.get("id").and_then(|v| v.as_str()).map(str::to_string))
+        .collect();
+    seed_vfs_expanded(&scene.surface_id, &root_expand_ids);
     let selected: HashSet<String> = vfs
         .selected_row_ids_json
         .as_deref()
@@ -1211,33 +1455,60 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
         .unwrap_or_default()
         .into_iter()
         .collect();
-    let inner = bounds.inset(8.0);
-    let header_h = 24.0;
-    let row_h = 22.0;
-    let columns = if schema.descriptor_column_ids.is_empty() {
-        vec!["name".into()]
+    let state = scene_state(&scene.surface_id);
+    let expanded_ids = state.vfs_expanded_ids;
+    let visible_rows = build_vfs_visible_rows(&rows, &expanded_ids);
+    let inner = bounds;
+    let header_h = theme.control_height * 1.33;
+    let row_h = theme.control_height;
+    let pad = theme.padding_standard;
+    let name_col_w = inner.w * 0.32;
+    let descriptor_ids: Vec<String> = if schema.descriptor_column_ids.is_empty() {
+        vec![]
     } else {
         schema.descriptor_column_ids.clone()
     };
-    let col_w = inner.w / columns.len().max(1) as f32;
+    let descriptor_col_w = if descriptor_ids.is_empty() {
+        0.0
+    } else {
+        (inner.w - name_col_w) / descriptor_ids.len() as f32
+    };
     ctx.draw.push_solid([inner.x, inner.y, inner.w, header_h], theme.panel);
-    for (index, column) in columns.iter().enumerate() {
-        let x = inner.x + index as f32 * col_w;
-        draw_text(ctx, column, x + 6.0, inner.y + 16.0, theme.font_size_small, theme.text_muted);
+    draw_text(ctx, "Name", inner.x + pad, inner.y + header_h * 0.65, theme.font_size_small, theme.text_muted);
+    for (index, column_id) in descriptor_ids.iter().enumerate() {
+        let x = inner.x + name_col_w + index as f32 * descriptor_col_w;
+        draw_text(
+            ctx,
+            &vfs_descriptor_label(&schema, column_id),
+            x + pad,
+            inner.y + header_h * 0.65,
+            theme.font_size_small,
+            theme.text_muted,
+        );
     }
     let body = Rect::new(inner.x, inner.y + header_h, inner.w, inner.h - header_h);
     let scroll = scroll_offset(&scene.surface_id, "vfs");
+    ctx.input.register_hit(HitTarget {
+        rect: body,
+        event: None,
+        control_id: Some(scroll_key(&scene.surface_id, "vfs")),
+        kind: HitKind::ScrollRegion,
+        drag_axis: None,
+        drag_data: None,
+    });
     ctx.draw.push_scissor(body);
     let hovered_row = vfs
         .hovered_row_id
         .clone()
-        .or_else(|| {
-            ctx.input
-                .hit_at(ctx.input.pointer_x, ctx.input.pointer_y)
-                .and_then(|hit| hit.control_id.clone())
-        });
-    for (index, row) in rows.iter().enumerate() {
-        let y = body.y + index as f32 * row_h - scroll;
+        .or_else(|| ctx.input.hovered_id.clone());
+    if visible_rows.is_empty() {
+        let message = vfs.empty_message.as_deref().unwrap_or("No file system nodes");
+        draw_text(ctx, message, body.x + pad, body.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+    }
+    for entry in &visible_rows {
+        let row = &entry.row;
+        let row_index = visible_rows.iter().position(|v| v.row.get("id") == row.get("id")).unwrap_or(0);
+        let y = body.y + row_index as f32 * row_h - scroll;
         if y + row_h < body.y || y > body.y + body.h {
             continue;
         }
@@ -1249,68 +1520,98 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
         if selected_row {
             ctx.draw
                 .push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.selected);
-        } else if index % 2 == 1 {
-            ctx.draw.push_solid(
-                [row_rect.x, row_rect.y, row_rect.w, row_rect.h],
-                Rgba::new(0.10, 0.10, 0.12, 0.55),
-            );
-        }
-        if hovered {
+        } else if hovered {
             ctx.draw
                 .push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.row_hover);
         }
-        let level = row
-            .get("path")
-            .and_then(|v| v.as_str())
-            .map(|path| path.matches('/').count().saturating_sub(1) as u32)
-            .unwrap_or(0);
+        ctx.draw.push_line(
+            row_rect.x,
+            row_rect.y + row_rect.h - theme.stroke_hairline,
+            row_rect.x + row_rect.w,
+            row_rect.y + row_rect.h - theme.stroke_hairline,
+            theme.separator,
+            1.0,
+        );
+        let indent = entry.level as f32 * 14.0;
+        let mut name_x = body.x + pad + indent;
+        if entry.has_children {
+            let chevron_rect = Rect::new(name_x, y, 14.0, row_h);
+            let chevron = if entry.expanded { "chevron-down" } else { "chevron-right" };
+            if let Some(icons) = ctx.icons {
+                if let Some(uv) = icons.icon_uv(chevron) {
+                    ctx.draw.push_textured(
+                        [chevron_rect.x, y + (row_h - 14.0) * 0.5, 14.0, 14.0],
+                        uv,
+                        ctx.theme.text_element,
+                    );
+                }
+            }
+            ctx.input.register_hit(HitTarget {
+                rect: chevron_rect,
+                event: None,
+                control_id: Some(format!("{}.vfs.chevron.{}", scene.surface_id, row_id)),
+                kind: HitKind::Generic,
+                drag_axis: None,
+                drag_data: None,
+            });
+            name_x += 14.0;
+        }
+        let icon_id = vfs_glyph_icon(&schema, row);
+        if let Some(icons) = ctx.icons {
+            if let Some(uv) = icons.icon_uv(icon_id) {
+                ctx.draw.push_textured(
+                    [name_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0],
+                    uv,
+                    ctx.theme.text_element,
+                );
+            }
+        }
+        name_x += 18.0;
         let name = row.get("name").and_then(|v| v.as_str()).unwrap_or("—");
         draw_text(
             ctx,
             name,
-            body.x + level as f32 * 12.0 + 8.0,
-            y + 15.0,
+            name_x,
+            y + row_h * 0.65,
             theme.font_size_small,
-            theme.text,
+            if selected_row || hovered {
+                theme.active_foreground
+            } else {
+                theme.text
+            },
         );
-        for (col_index, column) in columns.iter().enumerate() {
-            if column == "name" {
-                continue;
-            }
-            let x = body.x + col_index as f32 * col_w;
-            let value = row
-                .get("descriptorValues")
-                .and_then(|values| values.get(column))
-                .and_then(|v| v.as_str())
-                .unwrap_or("");
-            draw_text(ctx, value, x + 6.0, y + 15.0, theme.font_size_small, theme.text_muted);
+        for (col_index, column_id) in descriptor_ids.iter().enumerate() {
+            let x = body.x + name_col_w + col_index as f32 * descriptor_col_w;
+            let value = vfs_descriptor_value(&schema, row, column_id);
+            draw_text(
+                ctx,
+                &value,
+                x + pad,
+                y + row_h * 0.65,
+                theme.font_size_small,
+                if selected_row { theme.active_foreground } else { theme.text_muted },
+            );
         }
+        let drag_data = if vfs.drag_drop_enabled.unwrap_or(false) {
+            let mut data = HashMap::new();
+            data.insert(
+                "application/x-semio-vfs-node".into(),
+                serde_json::to_string(row).unwrap_or_default(),
+            );
+            Some(data)
+        } else {
+            None
+        };
         ctx.input.register_hit(HitTarget {
             rect: row_rect,
-            event: Some(scene_cmd(
-                scene,
-                "selectRows",
-                json!({ "surfaceId": scene.surface_id, "ids": [row_id.clone()] }),
-            )),
+            event: None,
             control_id: Some(control_id),
             kind: HitKind::Generic,
             drag_axis: None,
-        drag_data: None,
+            drag_data,
         });
     }
-    if rows.is_empty() {
-        let message = vfs.empty_message.as_deref().unwrap_or("No rows");
-        draw_text(ctx, message, body.x + 8.0, body.y + 20.0, theme.font_size_small, theme.text_muted);
-    }
     ctx.draw.pop_scissor();
-    ctx.input.register_hit(HitTarget {
-        rect: body,
-        event: None,
-        control_id: Some(scroll_key(&scene.surface_id, "vfs")),
-        kind: HitKind::ScrollRegion,
-        drag_axis: None,
-    drag_data: None,
-    });
 }
 
 fn vfs_double_click_command(scene: &UiComponentSceneNode, row: &Value) -> Option<CommandDescriptor> {
@@ -1388,179 +1689,64 @@ fn cursor_from_click(
     lines.iter().take(line_index).map(|l| l.len() + 1).sum::<usize>() + cursor
 }
 
-fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let theme = ctx.theme;
+fn render_text_editor(
+    scene: &UiComponentSceneNode,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    gpu: &mut ui_wgpu::GpuContext,
+) {
     let Some(editor) = &scene.text_editor else {
         return render_placeholder("text-editor", bounds, ctx);
     };
-    #[derive(Deserialize)]
-    struct EditorToken {
-        class: String,
-        start: usize,
-        end: usize,
-    }
-    #[derive(Deserialize)]
-    struct EditorDiagnostic {
-        start: usize,
-        end: usize,
-        message: String,
-    }
-    let tokens: Vec<EditorToken> = editor
-        .tokens_json
-        .as_deref()
-        .and_then(|json| serde_json::from_str(json).ok())
-        .unwrap_or_default();
-    let diagnostics: Vec<EditorDiagnostic> = editor
-        .diagnostics_json
-        .as_deref()
-        .and_then(|json| serde_json::from_str(json).ok())
-        .unwrap_or_default();
-    let inner = bounds.inset(8.0);
-    ctx.draw
-        .push_solid([inner.x, inner.y, inner.w, inner.h], theme.input_bg);
+    let inner = bounds;
+    engine_canvas::paint_text_editor(gpu, ctx, scene, inner);
     let editor_id = format!("{}.editor", scene.surface_id);
-    let state = scene_state(&scene.surface_id);
-    let scroll = scroll_offset(&scene.surface_id, "editor");
     let focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());
-    let display = if focused {
-        ctx.input.text_buffer.clone()
-    } else {
-        editor.buffer.clone()
-    };
     if focused && ctx.input.text_buffer.is_empty() && !editor.buffer.is_empty() {
         ctx.input.focus_input(&editor_id, &editor.buffer);
     }
-    let lines: Vec<&str> = display.lines().collect();
-    let line_h = 18.0;
-    let mut line_start = 0usize;
-    ctx.draw.push_scissor(inner);
-    for (index, line) in lines.iter().enumerate() {
-        let y = inner.y + 12.0 + index as f32 * line_h - scroll;
-        if y + line_h < inner.y || y > inner.y + inner.h {
-            line_start += line.len() + 1;
-            continue;
-        }
-        let line_end = line_start + line.len();
-        let mut x = inner.x + 8.0;
-        let mut cursor = line_start;
-        let line_tokens: Vec<_> = tokens
-            .iter()
-            .filter(|token| token.end > line_start && token.start < line_end)
-            .collect();
-        if line_tokens.is_empty() {
-            draw_text(ctx, line, x, y + 14.0, theme.font_size_small, theme.text);
-        } else {
-            for token in line_tokens {
-                if token.start > cursor {
-                    let plain = &display[cursor..token.start.min(line_end)];
-                    draw_text(ctx, plain, x, y + 14.0, theme.font_size_small, theme.text);
-                    x += plain.chars().count() as f32 * 7.0;
-                }
-                let start = token.start.max(line_start);
-                let end = token.end.min(line_end);
-                if start >= end {
-                    continue;
-                }
-                let slice = &display[start..end];
-                let color = match token.class.as_str() {
-                    "keyword" => theme.accent,
-                    "string" => theme.selected,
-                    "number" => theme.accent_hover,
-                    "operator" => theme.text_muted,
-                    _ => theme.text,
-                };
-                draw_text(ctx, slice, x, y + 14.0, theme.font_size_small, color);
-                x += slice.chars().count() as f32 * 7.0;
-                cursor = end;
-            }
-            if cursor < line_end {
-                let tail = &display[cursor..line_end];
-                draw_text(ctx, tail, x, y + 14.0, theme.font_size_small, theme.text);
-            }
-        }
-        line_start = line_end + 1;
-    }
-    if !diagnostics.is_empty() {
-        let footer_y = inner.y + inner.h - 18.0;
-        let message = diagnostics
-            .first()
-            .map(|diag| diag.message.as_str())
-            .unwrap_or("");
-        draw_text(ctx, message, inner.x + 8.0, footer_y, theme.font_size_small, theme.text_muted);
-    }
     if focused {
-        let cursor = state.editor_cursor.min(display.len());
-        let (line_index, col) = line_col_at(&display, cursor);
-        let cx = inner.x + 8.0 + col as f32 * 7.0;
-        let cy = inner.y + 12.0 + line_index as f32 * line_h - scroll;
-        ctx.draw
-            .push_solid([cx, cy, 1.5, line_h - 4.0], theme.accent);
-    }
-    ctx.draw.pop_scissor();
-    if focused {
+        let modifiers = ctx.input.modifiers.clone();
         for key in ctx.input.drain_keys() {
             match key {
-                KeyAction::Char(ch) => {
-                    ctx.input.insert_char(ch.chars().next().unwrap_or(' '));
-                    mutate_scene_state(&scene.surface_id, |state| {
-                        state.editor_cursor = state.editor_cursor.saturating_add(1);
-                    });
+                KeyAction::Enter if modifiers.meta || modifiers.ctrl => {
+                    ctx.input.queue_event(scene_cmd(
+                        scene,
+                        "submit",
+                        json!({ "surfaceId": scene.surface_id, "document": editor.buffer }),
+                    ));
                 }
-                KeyAction::Backspace => {
-                    ctx.input.backspace();
-                    mutate_scene_state(&scene.surface_id, |state| {
-                        state.editor_cursor = state.editor_cursor.saturating_sub(1);
-                    });
+                KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("s") => {
+                    ctx.input.queue_event(scene_cmd(
+                        scene,
+                        "formatDocument",
+                        json!({ "surfaceId": scene.surface_id }),
+                    ));
                 }
                 KeyAction::Enter | KeyAction::Escape => {
                     ctx.input.queue_event(scene_cmd(
                         scene,
-                        "setDocument",
-                        json!({ "surfaceId": scene.surface_id, "document": ctx.input.text_buffer }),
+                        "textEdit",
+                        json!({ "surfaceId": scene.surface_id, "document": editor.buffer }),
                     ));
                     if matches!(key, KeyAction::Escape) {
                         ctx.input.blur_input();
                     }
                 }
-                KeyAction::ArrowLeft => {
-                    mutate_scene_state(&scene.surface_id, |state| {
-                        state.editor_cursor = state.editor_cursor.saturating_sub(1);
-                    });
-                }
-                KeyAction::ArrowRight => {
-                    mutate_scene_state(&scene.surface_id, |state| {
-                        state.editor_cursor = state.editor_cursor.saturating_add(1);
-                    });
+                KeyAction::Char(_) | KeyAction::Backspace | KeyAction::Delete => {
+                    for command in engine_canvas::text_editor_apply_key(scene, key, &modifiers) {
+                        ctx.input.queue_event(command);
+                    }
                 }
                 _ => {}
             }
         }
     }
-    ctx.input.register_hit(HitTarget {
-        rect: inner,
-        event: None,
-        control_id: Some(editor_id.clone()),
-        kind: HitKind::Input,
-        drag_axis: None,
-    drag_data: None,
-    });
-    ctx.input.register_hit(HitTarget {
-        rect: inner,
-        event: None,
-        control_id: Some(scroll_key(&scene.surface_id, "editor")),
-        kind: HitKind::ScrollRegion,
-        drag_axis: None,
-    drag_data: None,
-    });
     if ctx.input.pointer_down
         && inner.contains(ctx.input.pointer_x, ctx.input.pointer_y)
         && ctx.input.pointer_button == 0
     {
-        let cursor = cursor_from_click(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, scroll);
-        mutate_scene_state(&scene.surface_id, |state| {
-            state.editor_cursor = cursor;
-        });
-        ctx.input.focus_input(&editor_id, &display);
+        ctx.input.focus_input(&editor_id, &editor.buffer);
     }
 }
 

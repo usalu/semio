@@ -2,7 +2,7 @@
 
 use mathematical_graph_port_directed_dag::{
     dag_fixture_to_wire_literal, dag_node_kind_tag, fit_node_size, note_widget_size, preview_widget_size,
-    stepper_widget_height, stepper_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost,
+    stepper_widget_height, stepper_widget_width, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost,
     DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,
 };
 use semio_framework_plugin::{
@@ -599,13 +599,26 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_main_graph(fixture: &DagFixture) -> UiNode {
+fn render_main_graph(envelope: &DagPlayEnvelope) -> UiNode {
+    let fixture = &envelope.fixture;
     let (nodes_json, edges_json) = fixture_to_media_graph(fixture);
     let viewport_json = serde_json::to_string(&fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+    let selection_json = if envelope.runtime.selected_node_ids.is_empty() {
+        None
+    } else {
+        serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
+    };
     build_node_graph_scene(
         DAG_PLAY_SURFACE_MAIN,
         DAG_PLAY_APP_ID,
-        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
+        NodeGraphScene {
+            editable: Some(true),
+            selection_json,
+            context_menu_json: Some(
+                r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+            ),
+            ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
+        },
     )
 }
 
@@ -647,17 +660,21 @@ impl PluginApp for DagPlayApp {
                     }
                 }
             }
-            "setSelection" | "selectNode" => {
+            "setSelection" | "selectNode" | "nodeGraphSelect" => {
                 let ids = args
-                    .and_then(|value| value.get("ids").or_else(|| value.get("nodeId").map(|_| value.get("nodeId")).flatten()))
-                    .and_then(|value| {
-                        if value.is_array() {
-                            serde_json::from_value(value.clone()).ok()
-                        } else if let Some(id) = value.as_str() {
-                            Some(vec![id.to_string()])
-                        } else {
-                            None
-                        }
+                    .and_then(|value| value.get("nodeIds"))
+                    .and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok())
+                    .or_else(|| {
+                        args.and_then(|value| value.get("ids").or_else(|| value.get("nodeId").map(|_| value.get("nodeId")).flatten()))
+                            .and_then(|value| {
+                                if value.is_array() {
+                                    serde_json::from_value(value.clone()).ok()
+                                } else if let Some(id) = value.as_str() {
+                                    Some(vec![id.to_string()])
+                                } else {
+                                    None
+                                }
+                            })
                     })
                     .or_else(|| {
                         args.and_then(|value| value.get("nodeId"))
@@ -667,6 +684,82 @@ impl PluginApp for DagPlayApp {
                     .unwrap_or_default();
                 envelope.runtime.selected_node_ids = ids;
                 return vec![set_document_op(&envelope)];
+            }
+            "nodeGraphHover" => return Vec::new(),
+            "nodeGraphViewport" => {
+                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
+                    if let Ok(camera) = serde_json::from_str::<DagCamera>(viewport_json) {
+                        envelope.fixture.camera = camera;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "nodeGraphEdit" => {
+                let ops = args
+                    .and_then(|value| value.get("ops"))
+                    .and_then(|value| value.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                let mut changed = false;
+                for op in ops {
+                    match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                        "setFixture" => {
+                            if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
+                                if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
+                                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
+                                    envelope.fixture = fixture;
+                                    changed = true;
+                                }
+                            }
+                        }
+                        "deleteSelection" => {
+                            if !envelope.runtime.selected_node_ids.is_empty() {
+                                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
+                                let ids: Vec<String> = envelope.runtime.selected_node_ids.clone();
+                                envelope.fixture.nodes.retain(|node| !ids.contains(&node.id));
+                                envelope.fixture.edges.retain(|edge| {
+                                    let (from, _) = split_endpoint(&edge.source);
+                                    let (to, _) = split_endpoint(&edge.target);
+                                    !ids.iter().any(|id| id == from || id == to)
+                                });
+                                envelope.runtime.selected_node_ids.clear();
+                                changed = true;
+                            }
+                        }
+                        "connect" => {
+                            let from = op.get("sourceNodeId").and_then(|value| value.as_str());
+                            let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
+                            let to = op.get("targetNodeId").and_then(|value| value.as_str());
+                            let to_port = op.get("targetPortId").and_then(|value| value.as_str());
+                            if let (Some(from), Some(from_port), Some(to), Some(to_port)) =
+                                (from, from_port, to, to_port)
+                            {
+                                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
+                                if connect_ports(&mut envelope.fixture, from, from_port, to, to_port).is_ok() {
+                                    changed = true;
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                if changed {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "deleteSelection" => {
+                if !envelope.runtime.selected_node_ids.is_empty() {
+                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
+                    let ids: Vec<String> = envelope.runtime.selected_node_ids.clone();
+                    envelope.fixture.nodes.retain(|node| !ids.contains(&node.id));
+                    envelope.fixture.edges.retain(|edge| {
+                        let (from, _) = split_endpoint(&edge.source);
+                        let (to, _) = split_endpoint(&edge.target);
+                        !ids.iter().any(|id| id == from || id == to)
+                    });
+                    envelope.runtime.selected_node_ids.clear();
+                    return vec![set_document_op(&envelope)];
+                }
             }
             "graphPointerDown" => {
                 envelope.runtime.selected_node_ids.clear();
@@ -849,7 +942,7 @@ impl PluginApp for DagPlayApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            DAG_PLAY_BODY_MAIN => render_main_graph(&envelope.fixture),
+            DAG_PLAY_BODY_MAIN => render_main_graph(&envelope),
             DAG_PLAY_BODY_COMPILED => render_compiled_dag(&envelope.fixture),
             DAG_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
             DAG_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
@@ -863,7 +956,7 @@ impl PluginApp for DagPlayApp {
 //#region 🔖Manifest
 fn create_dag_app() -> App {
     App::from_builder(
-        App::builder(DAG_PLAY_APP_ID, "DAG")
+        App::builder(DAG_PLAY_APP_ID, "DAG").hierarchy(["semio", "mathematical", "graph", "port", "directed", "dag"])
             .icon_id("dag")
             .mode("edit", "Edit")
             .default_mode_id("edit")

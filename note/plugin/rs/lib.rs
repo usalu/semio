@@ -1322,10 +1322,120 @@ impl PluginApp for NoteApp {
 }
 //#endregion 🔖NoteApp
 
+//#region 🔖MediaExport
+fn escape_svg_text(value: &str) -> String {
+    value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+}
+
+fn note_document_bounds(document: &NoteDocument) -> (u32, u32) {
+    let mut max_x = 1024.0_f64;
+    let mut max_y = 1024.0_f64;
+    for block in flatten_blocks(&document.blocks) {
+        if !block_visible(block) {
+            continue;
+        }
+        let (x, y, width, height) = match block {
+            NoteBlockNode::Text { x, y, width, height, .. }
+            | NoteBlockNode::Image { x, y, width, height, .. }
+            | NoteBlockNode::Table { x, y, width, height, .. }
+            | NoteBlockNode::Math { x, y, width, height, .. }
+            | NoteBlockNode::Ink { x, y, width, height, .. }
+            | NoteBlockNode::Group { x, y, width, height, .. } => (*x, *y, *width, *height),
+        };
+        max_x = max_x.max(x + width);
+        max_y = max_y.max(y + height);
+    }
+    (max_x.max(1.0).round() as u32, max_y.max(1.0).round() as u32)
+}
+
+fn note_block_to_svg(block: &NoteBlockNode) -> String {
+    let (x, y, rotation, width, height) = match block {
+        NoteBlockNode::Text { x, y, rotation, width, height, .. }
+        | NoteBlockNode::Image { x, y, rotation, width, height, .. }
+        | NoteBlockNode::Table { x, y, rotation, width, height, .. }
+        | NoteBlockNode::Math { x, y, rotation, width, height, .. }
+        | NoteBlockNode::Ink { x, y, rotation, width, height, .. }
+        | NoteBlockNode::Group { x, y, rotation, width, height, .. } => (*x, *y, *rotation, *width, *height),
+    };
+    let transform = format!("translate({x} {y}) rotate({rotation})");
+    match block {
+        NoteBlockNode::Text {
+            paragraphs,
+            font_size,
+            font_weight,
+            ..
+        } => {
+            let text = paragraphs
+                .iter()
+                .map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str()).collect::<Vec<_>>().join(""))
+                .collect::<Vec<_>>()
+                .join("\n");
+            format!(
+                r#"<g transform="{transform}"><text x="0" y="{font_size}" font-size="{font_size}" font-weight="{font_weight}" fill="black">{}</text></g>"#,
+                escape_svg_text(&text)
+            )
+        }
+        NoteBlockNode::Image { .. } => format!(
+            "<g transform=\"{transform}\"><rect width=\"{width}\" height=\"{height}\" fill=\"#ddd\" stroke=\"#888\"/></g>"
+        ),
+        NoteBlockNode::Ink {
+            points,
+            stroke_width,
+            color,
+            ..
+        } => {
+            if points.len() < 2 {
+                return String::new();
+            }
+            let mut d = format!("M {} {}", points[0][0], points[0][1]);
+            for point in points.iter().skip(1) {
+                d.push_str(&format!(" L {} {}", point[0], point[1]));
+            }
+            let stroke = format!(
+                "rgba({},{},{},{})",
+                (color[0] * 255.0).round() as u8,
+                (color[1] * 255.0).round() as u8,
+                (color[2] * 255.0).round() as u8,
+                color[3]
+            );
+            format!(
+                r#"<g transform="{transform}"><path d="{d}" fill="none" stroke="{stroke}" stroke-width="{stroke_width}" stroke-linecap="round" stroke-linejoin="round"/></g>"#
+            )
+        }
+        _ => format!(
+            "<g transform=\"{transform}\"><rect width=\"{width}\" height=\"{height}\" fill=\"none\" stroke=\"#888\"/></g>"
+        ),
+    }
+}
+
+fn note_document_to_svg(document: &NoteDocument) -> (String, u32, u32) {
+    let (width, height) = note_document_bounds(document);
+    let body = flatten_blocks(&document.blocks)
+        .into_iter()
+        .filter(|block| block_visible(block))
+        .map(note_block_to_svg)
+        .collect::<Vec<_>>()
+        .join("");
+    let svg = format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">{body}</svg>"#
+    );
+    (svg, width, height)
+}
+
+fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    let document: NoteDocument = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+    Ok(note_document_to_svg(&document))
+}
+
+fn register_note_exports() {
+    semio_framework_os::register_2d_svg_png_export_handlers("2d.note", "note", note_document_json_to_svg);
+}
+//#endregion 🔖MediaExport
+
 //#region 🔖Manifest
 fn create_note_app() -> App {
     App::from_builder(
-        App::builder(NOTE_PLAY_APP_ID, "Note")
+        App::builder(NOTE_PLAY_APP_ID, "Note").hierarchy(["semio", "note"])
             .icon_id("note")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1369,6 +1479,7 @@ fn create_note_app() -> App {
 }
 
 fn note_bundle() -> PluginBundle {
+    register_note_exports();
     PluginBundle::new("note", "Note", "0.1.0").register_app(create_note_app(), || Box::new(NoteApp))
 }
 

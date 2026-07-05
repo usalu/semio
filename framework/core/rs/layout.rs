@@ -70,6 +70,8 @@ pub struct WindowLayoutStackNode {
     pub kind: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub size: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none", alias = "activeId")]
+    pub active_window_kind_id: Option<String>,
     pub children: Vec<WindowLayoutWindowNode>,
 }
 
@@ -135,6 +137,7 @@ pub fn create_stack_layout(window_kind_ids: &[String], titles: Option<&[String]>
         root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
             kind: kind_stack(),
             size: None,
+            active_window_kind_id: None,
             children: window_kind_ids
                 .iter()
                 .enumerate()
@@ -168,6 +171,7 @@ pub fn create_default_layout(
                     WindowLayoutChild::Stack(WindowLayoutStackNode {
                         kind: kind_stack(),
                         size: sizes.and_then(|rows| rows.get(index).copied()),
+                        active_window_kind_id: None,
                         children: vec![create_window_layout(
                             id.clone(),
                             titles

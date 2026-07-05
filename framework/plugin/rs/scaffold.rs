@@ -24,6 +24,7 @@ pub enum SceneKind {
 pub struct StandardApp {
     pub app_id: &'static str,
     pub label: &'static str,
+    pub hierarchy: &'static [&'static str],
     pub program_id: Option<&'static str>,
     pub yields: Option<&'static str>,
     pub surface_id: &'static str,
@@ -342,6 +343,7 @@ pub fn standard_app(spec: StandardApp) -> App {
     let properties_key = properties_body_key(spec.body_key);
     let app = App::from_builder(
         App::builder(spec.app_id, spec.label)
+            .hierarchy(spec.hierarchy.iter().copied())
             .icon_id(spec.app_id)
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -384,6 +386,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-canvas",
             label: "Canvas",
+            hierarchy: &["semio", "test", "canvas"],
             program_id: None,
             yields: None,
             surface_id: "test.canvas",
@@ -398,6 +401,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-graph",
             label: "Graph",
+            hierarchy: &["semio", "test", "graph"],
             program_id: None,
             yields: None,
             surface_id: "test.graph",
@@ -412,6 +416,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-world",
             label: "World",
+            hierarchy: &["semio", "test", "world"],
             program_id: None,
             yields: None,
             surface_id: "test.world",
@@ -426,6 +431,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-text",
             label: "Text",
+            hierarchy: &["semio", "test", "text"],
             program_id: None,
             yields: None,
             surface_id: "test.text",
@@ -440,6 +446,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-table",
             label: "Table",
+            hierarchy: &["semio", "test", "table"],
             program_id: None,
             yields: None,
             surface_id: "test.table",
@@ -454,6 +461,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-raster",
             label: "Raster",
+            hierarchy: &["semio", "test", "raster"],
             program_id: None,
             yields: None,
             surface_id: "test.raster",

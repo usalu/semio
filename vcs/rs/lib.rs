@@ -617,6 +617,58 @@ impl BackbonePort for MemoryBackbonePort {
     }
 }
 
+fn local_storage_backbone_key(uri: &str) -> String {
+    format!("semio:vcs:{uri}")
+}
+
+/// @emoji 💾 Browser `localStorage` backbone port with in-memory fallback for native tests.
+pub struct LocalStorageBackbonePort {
+    fallback: MemoryBackbonePort,
+}
+
+impl LocalStorageBackbonePort {
+    pub fn new() -> Self {
+        Self {
+            fallback: MemoryBackbonePort::new(),
+        }
+    }
+}
+
+impl Default for LocalStorageBackbonePort {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl BackbonePort for LocalStorageBackbonePort {
+    fn read(&self, uri: &str) -> Result<String, VcsError> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            if let Some(window) = web_sys::window() {
+                if let Ok(Some(storage)) = window.local_storage() {
+                    if let Ok(Some(value)) = storage.get_item(&local_storage_backbone_key(uri)) {
+                        return Ok(value);
+                    }
+                }
+            }
+        }
+        self.fallback.read(uri)
+    }
+
+    fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
+        self.fallback.write(uri, payload)?;
+        #[cfg(target_arch = "wasm32")]
+        {
+            if let Some(window) = web_sys::window() {
+                if let Ok(Some(storage)) = window.local_storage() {
+                    let _ = storage.set_item(&local_storage_backbone_key(uri), payload);
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
 pub struct DevJsonFileBackbone {
     uri: String,
     #[cfg(not(target_arch = "wasm32"))]

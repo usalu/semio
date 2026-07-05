@@ -1,6 +1,6 @@
 //! 🧩 Generic widget tree — layout, measurement, and drawing.
 
-use crate::chrome::{item_bg, item_text, push_control_border, push_icon, ICON_TINY};
+use crate::chrome::{chrome_item_bg, item_bg, item_text, push_control_border, push_icon, ICON_TINY};
 use crate::draw::{DrawList, IconAtlas};
 use crate::geometry::Rect;
 use crate::input::{DragAxis, HitKind, HitTarget, InputState};
@@ -550,7 +550,15 @@ fn render_button<E: Clone>(
     let icon_key = icon_id.filter(|id| !id.is_empty()).unwrap_or(label);
     if let Some(icons) = ctx.icons {
         if icons.icon_uv(icon_key).is_some() {
-            push_icon(ctx.draw, icons, icon_key, text_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY);
+            push_icon(
+                ctx.draw,
+                icons,
+                icon_key,
+                text_x,
+                bounds.y + (bounds.h - ICON_TINY) * 0.5,
+                ICON_TINY,
+                item_text(ctx.theme, false, hovered),
+            );
             text_x += ICON_TINY + ctx.theme.gap_standard;
         }
     }
@@ -646,6 +654,7 @@ fn render_select<E: Clone>(
             bounds.x + bounds.w - ctx.theme.padding_standard - ICON_TINY,
             bounds.y + (bounds.h - ICON_TINY) * 0.5,
             ICON_TINY,
+            ctx.theme.text_element,
         );
     }
     ctx.input.register_hit(HitTarget {
@@ -657,19 +666,30 @@ fn render_select<E: Clone>(
         drag_data: None,
     });
     if open {
-        let item_h = ctx.theme.control_height;
-        let menu_h = items.len() as f32 * item_h + 4.0;
-        let menu = Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);
-        let overlay = ctx.overlay.as_deref_mut().unwrap_or(ctx.draw);
-        overlay.push_rounded([menu.x, menu.y, menu.w, menu.h], ctx.theme.overlay_bg, ctx.theme.border_radius);
+        render_select_menu(id, value, items, bounds, ctx);
+    }
+}
+
+fn render_select_menu<E: Clone>(
+    id: &str,
+    value: &str,
+    items: &[SelectItem],
+    bounds: Rect,
+    ctx: &mut WidgetContext<'_, E>,
+) {
+    let item_h = ctx.theme.control_height;
+    let menu_h = items.len() as f32 * item_h + 4.0;
+    let menu = Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);
+    let mut render_rows = |draw: &mut DrawList| {
+        draw.push_rounded([menu.x, menu.y, menu.w, menu.h], ctx.theme.overlay_bg, ctx.theme.border_radius);
         for (index, item) in items.iter().enumerate() {
             let row = Rect::new(menu.x + 2.0, menu.y + 2.0 + index as f32 * item_h, menu.w - 4.0, item_h);
             let row_hovered = ctx.input.hit_at(ctx.input.pointer_x, ctx.input.pointer_y)
                 .and_then(|h| h.control_id.as_deref()) == Some(&format!("{id}.item.{}", item.value));
             if row_hovered || item.value == value {
-                overlay.push_rounded([row.x, row.y, row.w, row.h], ctx.theme.row_hover, ctx.theme.border_radius);
+                draw.push_rounded([row.x, row.y, row.w, row.h], ctx.theme.row_hover, ctx.theme.border_radius);
             }
-            draw_text_on(overlay, ctx.atlas, &item.label, row.x + 8.0, row.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
+            draw_text_on(draw, ctx.atlas, &item.label, row.x + 8.0, row.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
             ctx.input.register_hit(HitTarget {
                 rect: row,
                 event: None,
@@ -679,6 +699,11 @@ fn render_select<E: Clone>(
                 drag_data: None,
             });
         }
+    };
+    if let Some(overlay) = ctx.overlay.as_deref_mut() {
+        render_rows(overlay);
+    } else {
+        render_rows(ctx.draw);
     }
 }
 
@@ -696,7 +721,15 @@ fn render_toggle<E: Clone>(
     let mut content_x = bounds.x + ctx.theme.padding_standard;
     if let Some(icons) = ctx.icons {
         if icons.icon_uv(icon_id).is_some() {
-            push_icon(ctx.draw, icons, icon_id, content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY);
+            push_icon(
+                ctx.draw,
+                icons,
+                icon_id,
+                content_x,
+                bounds.y + (bounds.h - ICON_TINY) * 0.5,
+                ICON_TINY,
+                item_text(ctx.theme, pressed, hovered),
+            );
             content_x += ICON_TINY + ctx.theme.gap_standard;
         }
     }
@@ -949,11 +982,25 @@ fn render_icon_select<E: Clone>(
     bounds: Rect,
     ctx: &mut WidgetContext<'_, E>,
 ) {
-    push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, ctx.theme.button);
+    push_control_border(
+        ctx.draw,
+        bounds,
+        ctx.theme,
+        ctx.theme.border_normal,
+        chrome_item_bg(ctx.theme, false, ctx.input.hovered_id.as_deref() == Some(id)),
+    );
     let mut content_x = bounds.x + ctx.theme.padding_standard;
     if let Some(icons) = ctx.icons {
         if icons.icon_uv(value).is_some() {
-            push_icon(ctx.draw, icons, value, content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY);
+            push_icon(
+                ctx.draw,
+                icons,
+                value,
+                content_x,
+                bounds.y + (bounds.h - ICON_TINY) * 0.5,
+                ICON_TINY,
+                ctx.theme.text_element,
+            );
             content_x += ICON_TINY + ctx.theme.gap_standard;
         } else {
             draw_text(
@@ -1197,8 +1244,10 @@ fn render_tree_item<E: Clone>(
     let row = Rect::new(bounds.x, bounds.y, bounds.w, TREE_ROW_HEIGHT);
     let gutter = Rect::new(row.x, row.y, gutter_w, row.h);
     let content = Rect::new(row.x + gutter_w, row.y, row.w - gutter_w, row.h);
-    let hovered = ctx.input.hit_at(ctx.input.pointer_x, ctx.input.pointer_y)
-        .and_then(|h| h.control_id.as_deref())
+    let hovered = ctx
+        .input
+        .hovered_id
+        .as_deref()
         .is_some_and(|id| id.strip_prefix("tree.label.").is_some_and(|v| v == item.id));
     let selected = item.selected || selected_ids.iter().any(|id| id == &item.id);
     let highlighted = item.highlighted || highlighted_ids.iter().any(|id| id == &item.id);
@@ -1393,10 +1442,6 @@ pub fn render_scroll_region<E: Clone, F: FnOnce(Rect, &mut WidgetContext<'_, E>)
         .or_insert(0.0);
     *offset = offset.clamp(0.0, max_scroll);
     let scroll = *offset;
-    ctx.draw.push_scissor(bounds);
-    let content_bounds = Rect::new(bounds.x, bounds.y - scroll, bounds.w, content_height);
-    render_content(content_bounds, ctx);
-    ctx.draw.pop_scissor();
     ctx.input.register_hit(HitTarget {
         rect: bounds,
         event: None,
@@ -1405,10 +1450,14 @@ pub fn render_scroll_region<E: Clone, F: FnOnce(Rect, &mut WidgetContext<'_, E>)
         drag_axis: None,
         drag_data: None,
     });
+    ctx.draw.push_scissor(bounds);
+    let content_bounds = Rect::new(bounds.x, bounds.y - scroll, bounds.w, content_height);
+    render_content(content_bounds, ctx);
+    ctx.draw.pop_scissor();
 }
 
-pub fn draw_icon<E>(ctx: &mut WidgetContext<'_, E>, uv: [f32; 4], x: f32, y: f32, size: f32, _color: Rgba) {
-    ctx.draw.push_textured([x, y, size, size], uv, 1.0);
+pub fn draw_icon<E>(ctx: &mut WidgetContext<'_, E>, uv: [f32; 4], x: f32, y: f32, size: f32, color: Rgba) {
+    ctx.draw.push_textured([x, y, size, size], uv, color);
 }
 
 fn measure_text_width<E>(ctx: &mut WidgetContext<'_, E>, text: &str, size: f32) -> f32 {

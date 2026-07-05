@@ -604,7 +604,7 @@ impl PluginApp for Gis2dPlayApp {
 //#region 🔖AppFactory
 fn create_gis2d_app() -> App {
     App::from_builder(
-        App::builder(GIS2D_PLAY_APP_ID, "GIS 2D")
+        App::builder(GIS2D_PLAY_APP_ID, "GIS 2D").hierarchy(["semio", "gis", "2d"])
             .icon_id("gis2d")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -640,7 +640,16 @@ fn create_gis2d_app() -> App {
     .program("gis2d", "GIS 2D", "map")
 }
 
+fn gis2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    semio_framework_os::map_points_svg(value, "GIS 2D")
+}
+
+fn register_gis2d_exports() {
+    semio_framework_os::register_2d_svg_png_export_handlers("2d.map", "gis2d", gis2d_document_json_to_svg);
+}
+
 fn bundle() -> PluginBundle {
+    register_gis2d_exports();
     PluginBundle::new("gis2d", "GIS 2D", "0.1.0").register_app(create_gis2d_app(), || Box::new(Gis2dPlayApp))
 }
 

@@ -102,11 +102,13 @@ mod tests {
         platform.add_app(AppDefinition {
             id: "draw-play".into(),
             label: "Draw".into(),
+            hierarchy: vec!["semio".into(), "draw".into()],
             icon_id: None,
             controller_id: "draw-play".into(),
             modes: vec![ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
+                tools: Vec::new(),
             }],
             default_mode_id: Some("edit".into()),
             window_kinds: vec![WindowKindDefinition {

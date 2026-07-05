@@ -1,11 +1,13 @@
 import { useMemo, useSyncExternalStore, type ReactNode } from "react";
 import {
 	Button,
+	COMPOSE_WINDOW_TEMPLATE_MIME,
 	Icon,
 	Input,
 	type SidePanelTabConfig,
 	type TreeDataItem,
 	type TreePanelConfig,
+	windowTemplatePaletteTreeDragController,
 } from "@semio-tech/ui-react";
 import {
 	createNamedLayout,
@@ -78,12 +80,21 @@ function groupNamedLayoutsToTreeItems(
 
 function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
 	return {
+		dragAndDropController: windowTemplatePaletteTreeDragController(),
 		sections: host.windowKinds.length
 			? host.windowKinds.map((kind) => ({
 					id: `framework.display.windows.${kind.id}`,
 					label: kind.label,
 					defaultOpen: false,
-					items: [{ id: `framework.display.windows.${kind.id}.kind`, label: kind.label }],
+					items: [
+						{
+							id: `framework.display.windows.${kind.id}.kind`,
+							label: kind.label,
+							dragData: {
+								[COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }),
+							},
+						},
+					],
 				}))
 			: [{ id: "framework.display.windows.empty", items: [{ id: "empty", label: "—" }] }],
 	};
@@ -192,6 +203,10 @@ export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | 
 
 //#region SettingsPanel
 export type SettingsHostApi = {
+	readonly appId?: string;
+	readonly appLabel?: string;
+	readonly controllerId?: string;
+	readonly pluginId?: string;
 	readonly compact: boolean;
 	readonly setCompact: (compact: boolean) => void;
 	readonly expertise: string;
@@ -203,6 +218,27 @@ export type SettingsHostApi = {
 function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
 	return {
 		sections: [
+			...(host.appId || host.appLabel || host.controllerId || host.pluginId
+				? [
+						{
+							id: "framework.settings.app",
+							label: "App",
+							defaultOpen: true,
+							items: [
+								...(host.appLabel
+									? [{ id: "framework.settings.app.label", label: `Name: ${host.appLabel}` }]
+									: []),
+								...(host.appId ? [{ id: "framework.settings.app.id", label: `App id: ${host.appId}` }] : []),
+								...(host.controllerId
+									? [{ id: "framework.settings.app.controller", label: `Controller: ${host.controllerId}` }]
+									: []),
+								...(host.pluginId
+									? [{ id: "framework.settings.app.plugin", label: `Plugin: ${host.pluginId}` }]
+									: []),
+							],
+						},
+					]
+				: []),
 			{
 				id: "framework.settings.general",
 				label: "General",

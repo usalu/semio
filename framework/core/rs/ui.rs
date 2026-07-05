@@ -688,6 +688,8 @@ pub struct NodeGraphScene {
     pub capabilities_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fixture_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub presence_peers_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -821,6 +823,7 @@ impl NodeGraphScene {
             computing_json: None,
             capabilities_json: None,
             fixture_json: None,
+            presence_peers_json: None,
         }
     }
 }
@@ -1109,6 +1112,7 @@ pub struct PanelTabDefinition {
 pub struct AppDefinition {
     pub id: String,
     pub label: String,
+    pub hierarchy: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_id: Option<String>,
     pub controller_id: String,
@@ -1130,7 +1134,27 @@ pub struct ProgramDefinition {
     pub program_id: String,
     pub app_id: String,
     pub label: String,
+    pub hierarchy: Vec<String>,
     pub yields: String,
+}
+
+/// 🪜 Formats a canonical app hierarchy for chrome.
+pub fn app_hierarchy_label(hierarchy: &[String]) -> String {
+    hierarchy.join(" · ")
+}
+
+/// 🗂️ Formats a window tab within its canonical app hierarchy.
+pub fn app_window_hierarchy_label(app: &AppDefinition, window_label: &str) -> String {
+    let mut hierarchy = app.hierarchy.clone();
+    let normalized_window = window_label.trim().to_lowercase();
+    let normalized_app = app.label.trim().to_lowercase();
+    if !normalized_window.is_empty()
+        && normalized_window != normalized_app
+        && hierarchy.last().is_none_or(|segment| segment.to_lowercase() != normalized_window)
+    {
+        hierarchy.push(normalized_window);
+    }
+    app_hierarchy_label(&hierarchy)
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1163,5 +1187,18 @@ pub struct ViewState {
     pub selection_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub panel_json: Option<String>,
+}
+
+#[cfg(test)]
+mod app_hierarchy_tests {
+    use super::app_hierarchy_label;
+
+    #[test]
+    fn formats_app_hierarchy_for_chrome() {
+        assert_eq!(
+            app_hierarchy_label(&["semio".into(), "puzzle".into(), "3d".into()]),
+            "semio · puzzle · 3d"
+        );
+    }
 }
 //#endregion 🔖Manifest

@@ -22,6 +22,10 @@ import {
 	WorldCanvas,
 	WorldLayerStack,
 	WorldLodBridge,
+	WorldOrbitCameraViewRig,
+	WorldOrbitGated,
+	WorldOrbitViewSnapGateProvider,
+	type WorldCameraState,
 } from "@semio-tech/infinite-world-r3f";
 import {
 	UnifiedGumball,
@@ -76,6 +80,7 @@ type WorldInstanceRecord = {
 	readonly z?: number;
 	readonly selected?: boolean;
 	readonly hovered?: boolean;
+	readonly smoothShading?: boolean;
 };
 
 type WorldSelectionTargets = {
@@ -132,21 +137,18 @@ function useSemanticColors(): SemanticColors {
 	return colors;
 }
 
-function parseCamera(cameraJson: string): { readonly position: [number, number, number]; readonly fov: number } {
+function parseCameraState(cameraJson: string): WorldCameraState & { readonly fov: number } {
 	try {
-		const parsed = JSON.parse(cameraJson) as WorldCameraRecord;
-		if (parsed.position) {
-			return {
-				position: [parsed.position[0], parsed.position[1], parsed.position[2]],
-				fov: parsed.fov ?? 45,
-			};
-		}
-		return {
-			position: [parsed.x ?? 4, parsed.y ?? -4, parsed.z ?? 3],
-			fov: parsed.fov ?? 45,
-		};
+		const parsed = JSON.parse(cameraJson) as WorldCameraRecord & { target?: readonly [number, number, number] };
+		const position: [number, number, number] = parsed.position
+			? [parsed.position[0], parsed.position[1], parsed.position[2]]
+			: [parsed.x ?? 4, parsed.y ?? -4, parsed.z ?? 3];
+		const target: [number, number, number] = parsed.target
+			? [parsed.target[0], parsed.target[1], parsed.target[2]]
+			: [0, 0, 0];
+		return { position, target, zoom: 1, projection: "perspective", fov: parsed.fov ?? 45 };
 	} catch {
-		return { position: [4, -4, 3], fov: 45 };
+		return { position: [4, -4, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45 };
 	}
 }
 
@@ -284,18 +286,20 @@ function PaintTexturedMesh({
 	geometry,
 	color,
 	textureBase64,
+	flatShading,
 	children,
 	...meshProps
 }: {
 	readonly geometry: BufferGeometry;
 	readonly color: string;
 	readonly textureBase64?: string;
+	readonly flatShading?: boolean;
 	readonly children?: React.ReactNode;
 } & ComponentProps<"mesh">) {
 	const paintMap = textureBase64 ? useLoader(TextureLoader, paintTextureUrl(textureBase64)) : null;
 	return (
 		<mesh geometry={geometry} {...meshProps}>
-			<meshStandardMaterial color={color} map={paintMap ?? undefined} side={DoubleSide} />
+			<meshStandardMaterial color={color} map={paintMap ?? undefined} side={DoubleSide} flatShading={flatShading} />
 			{children}
 		</mesh>
 	);
@@ -386,10 +390,12 @@ function WorldInstanceNode({
 	activeObjectId,
 	selectionMode,
 	selectedComponentIds,
+	previewComponentIds,
 	hoveredComponent,
 	pickEnabled,
 	onPaintAt,
 	paintFromHit,
+	flatShading,
 	onInstancePointerDown,
 	onInstancePointerMove,
 	onWorldPick,
@@ -412,6 +418,7 @@ function WorldInstanceNode({
 	readonly activeObjectId?: string;
 	readonly selectionMode: string;
 	readonly selectedComponentIds: ReadonlySet<number>;
+	readonly previewComponentIds: ReadonlySet<number>;
 	readonly hoveredComponent?: WorldHoverComponent;
 	readonly pickEnabled: boolean;
 	readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
@@ -420,6 +427,7 @@ function WorldInstanceNode({
 		mesh: WorldMeshData,
 		event: ThreeEvent<PointerEvent> & { faceIndex?: number | null; uv?: { x: number; y: number } },
 	) => void;
+	readonly flatShading?: boolean;
 	readonly onInstancePointerDown: (id: string, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
 	readonly onInstancePointerMove: (id: string | null) => void;
 	readonly onWorldPick: (args: { granularity: string; id: number; merge: string }) => void;
@@ -443,6 +451,15 @@ function WorldInstanceNode({
 	const selectedFaceIds = isActiveObject && selectionMode === "face" ? selectedComponentIds : new Set<number>();
 	const selectedVertexIds = isActiveObject && selectionMode === "vertex" ? selectedComponentIds : new Set<number>();
 	const selectedEdgeIds = isActiveObject && selectionMode === "edge" ? selectedComponentIds : new Set<number>();
+	const previewFaceIds = isActiveObject && selectionMode === "face" ? previewComponentIds : new Set<number>();
+	const previewVertexIds = isActiveObject && selectionMode === "vertex" ? previewComponentIds : new Set<number>();
+	const previewEdgeIds = isActiveObject && selectionMode === "edge" ? previewComponentIds : new Set<number>();
+	const facePreviewOverlay =
+		meshData && previewFaceIds.size > 0 ? buildFaceOverlayGeometry(meshData, previewFaceIds) : null;
+	const edgePreviewOverlay =
+		meshData && previewEdgeIds.size > 0 ? buildEdgeOverlayGeometry(meshData, previewEdgeIds) : null;
+	const vertexPreviewOverlay =
+		meshData && previewVertexIds.size > 0 ? buildVertexOverlayGeometry(meshData, previewVertexIds) : null;
 	const faceSelectedOverlay = meshData ? buildFaceOverlayGeometry(meshData, selectedFaceIds) : null;
 	const faceHoveredOverlay =
 		meshData && hoveredFaceId != null ? buildFaceOverlayGeometry(meshData, new Set([hoveredFaceId])) : null;
@@ -461,6 +478,7 @@ function WorldInstanceNode({
 						geometry={geometry}
 						color={meshTint}
 						textureBase64={paintTextureBase64}
+						flatShading={flatShading}
 						onClick={(event) => {
 							if (onPaintAt) {
 								paintFromHit(instance.id, meshData, event);
@@ -501,7 +519,26 @@ function WorldInstanceNode({
 						}}
 					/>
 					{targets.edge && edgeGeometry ? (
-						<lineSegments geometry={edgeGeometry} raycast={() => null}>
+						<lineSegments
+							geometry={edgeGeometry}
+							onClick={(event) => {
+								if (!pickEnabled || !meshData?.edgeIds?.length) return;
+								event.stopPropagation();
+								const edgeIndex = event.index ?? 0;
+								const edgeId = meshData.edgeIds[edgeIndex];
+								if (edgeId == null) return;
+								onWorldPick({ granularity: "edge", id: edgeId, merge: mergeMode(event) });
+							}}
+							onPointerMove={(event) => {
+								if (!pickEnabled || !meshData?.edgeIds?.length) return;
+								event.stopPropagation();
+								const edgeIndex = event.index ?? 0;
+								const edgeId = meshData.edgeIds[edgeIndex];
+								if (edgeId == null) return;
+								onComponentHover({ objectId: instance.id, mode: "edge", id: edgeId });
+							}}
+							onPointerOut={() => onComponentHover(null)}
+						>
 							<lineBasicMaterial color={colors.edge} linewidth={1} />
 						</lineSegments>
 					) : null}
@@ -555,6 +592,19 @@ function WorldInstanceNode({
 							/>
 						</mesh>
 					) : null}
+					{facePreviewOverlay ? (
+						<mesh geometry={facePreviewOverlay} raycast={() => null}>
+							<meshBasicMaterial
+								color={colors.hover}
+								transparent
+								opacity={0.36}
+								side={DoubleSide}
+								depthWrite={false}
+								polygonOffset
+								polygonOffsetFactor={-4}
+							/>
+						</mesh>
+					) : null}
 					{edgeSelectedOverlay ? (
 						<lineSegments geometry={edgeSelectedOverlay} raycast={() => null}>
 							<lineBasicMaterial color={colors.select} linewidth={3} />
@@ -565,6 +615,11 @@ function WorldInstanceNode({
 							<lineBasicMaterial color={colors.hover} linewidth={3} />
 						</lineSegments>
 					) : null}
+					{edgePreviewOverlay ? (
+						<lineSegments geometry={edgePreviewOverlay} raycast={() => null}>
+							<lineBasicMaterial color={colors.hover} linewidth={2} />
+						</lineSegments>
+					) : null}
 					{vertexSelectedOverlay ? (
 						<points geometry={vertexSelectedOverlay} raycast={() => null}>
 							<pointsMaterial color={colors.select} size={0.09} sizeAttenuation depthTest={false} />
@@ -572,6 +627,11 @@ function WorldInstanceNode({
 					) : null}
 					{vertexHoveredOverlay ? (
 						<points geometry={vertexHoveredOverlay} raycast={() => null}>
+							<pointsMaterial color={colors.hover} size={0.09} sizeAttenuation depthTest={false} />
+						</points>
+					) : null}
+					{vertexPreviewOverlay ? (
+						<points geometry={vertexPreviewOverlay} raycast={() => null}>
 							<pointsMaterial color={colors.hover} size={0.09} sizeAttenuation depthTest={false} />
 						</points>
 					) : null}
@@ -622,6 +682,7 @@ function WorldInstancesLayer({
 	gumballDragActive,
 	onGumballDraggingChanged,
 	onGumballDragEnd,
+	previewComponentIds,
 }: {
 	readonly instances: readonly WorldInstanceRecord[];
 	readonly meshes: readonly WorldMeshRecord[];
@@ -635,6 +696,7 @@ function WorldInstancesLayer({
 	readonly gumballDragActive: boolean;
 	readonly onGumballDraggingChanged: (dragging: boolean) => void;
 	readonly onGumballDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
+	readonly previewComponentIds: ReadonlySet<number>;
 }) {
 	const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
 	const geometries = useMemo(() => {
@@ -712,10 +774,12 @@ function WorldInstancesLayer({
 							activeObjectId={selection.activeObjectId}
 							selectionMode={selectionMode}
 							selectedComponentIds={selectedComponentIds}
+							previewComponentIds={previewComponentIds}
 							hoveredComponent={selection.hoveredComponent}
 							pickEnabled={pickEnabled}
 							onPaintAt={onPaintAt}
 							paintFromHit={paintFromHit}
+							flatShading={instance.smoothShading === false}
 							onInstancePointerDown={onInstancePointerDown}
 							onInstancePointerMove={onInstancePointerMove}
 							onWorldPick={onWorldPick}
@@ -736,6 +800,95 @@ function WorldInstancesLayer({
 	);
 }
 //#endregion WorldInstancesLayer
+
+function pointInMarqueeRect(sx: number, sy: number, marquee: readonly SelectionMarqueePoint[]): boolean {
+	if (marquee.length < 2) return false;
+	const start = marquee[0]!;
+	const end = marquee[marquee.length - 1]!;
+	const minX = Math.min(start.x, end.x);
+	const maxX = Math.max(start.x, end.x);
+	const minY = Math.min(start.y, end.y);
+	const maxY = Math.max(start.y, end.y);
+	return sx >= minX && sx <= maxX && sy >= minY && sy <= maxY;
+}
+
+function projectWorldPoint(
+	point: readonly [number, number, number],
+	offset: readonly [number, number, number],
+	camera: import("three").Camera,
+	rect: DOMRect,
+): { readonly x: number; readonly y: number } {
+	const projected = new Vector3(point[0] + offset[0], point[1] + offset[1], point[2] + offset[2]).project(camera);
+	return {
+		x: ((projected.x + 1) / 2) * rect.width,
+		y: ((-projected.y + 1) / 2) * rect.height,
+	};
+}
+
+function resolveMarqueeComponentIds(
+	instances: readonly WorldInstanceRecord[],
+	meshes: readonly WorldMeshRecord[],
+	selectionMode: string,
+	activeObjectId: string | undefined,
+	marquee: readonly SelectionMarqueePoint[],
+	rect: DOMRect,
+	camera: import("three").Camera,
+): readonly number[] {
+	const active = instances.find((instance) => instance.id === activeObjectId);
+	if (!active) return [];
+	const meshId = active.meshId ?? active.id;
+	const meshData = meshes.find((mesh) => mesh.id === meshId)?.data;
+	if (!meshData) return [];
+	const offset = (active.position ?? [0, 0, 0]) as [number, number, number];
+	const hits = new Set<number>();
+	if (selectionMode === "vertex") {
+		const pick = buildVertexPickData(meshData);
+		if (!pick) return [];
+		const positions = pick.geometry.attributes.position!;
+		for (let index = 0; index < pick.vertexIds.length; index += 1) {
+			const screen = projectWorldPoint(
+				[positions.getX(index), positions.getY(index), positions.getZ(index)],
+				offset,
+				camera,
+				rect,
+			);
+			if (pointInMarqueeRect(screen.x, screen.y, marquee)) hits.add(pick.vertexIds[index]!);
+		}
+	} else if (selectionMode === "edge" && meshData.edgeIds && meshData.edgePositions) {
+		for (let edgeIndex = 0; edgeIndex < meshData.edgeIds.length; edgeIndex += 1) {
+			const base = edgeIndex * 6;
+			const screen = projectWorldPoint(
+				[
+					(meshData.edgePositions[base]! + meshData.edgePositions[base + 3]!) * 0.5,
+					(meshData.edgePositions[base + 1]! + meshData.edgePositions[base + 4]!) * 0.5,
+					(meshData.edgePositions[base + 2]! + meshData.edgePositions[base + 5]!) * 0.5,
+				],
+				offset,
+				camera,
+				rect,
+			);
+			if (pointInMarqueeRect(screen.x, screen.y, marquee)) hits.add(meshData.edgeIds[edgeIndex]!);
+		}
+	} else if (selectionMode === "face" && meshData.faceIds && meshData.indices.length) {
+		for (let faceIndex = 0; faceIndex < meshData.faceIds.length; faceIndex += 1) {
+			const i0 = meshData.indices[faceIndex * 3] ?? 0;
+			const i1 = meshData.indices[faceIndex * 3 + 1] ?? 0;
+			const i2 = meshData.indices[faceIndex * 3 + 2] ?? 0;
+			const screen = projectWorldPoint(
+				[
+					(meshData.positions[i0 * 3]! + meshData.positions[i1 * 3]! + meshData.positions[i2 * 3]!) / 3,
+					(meshData.positions[i0 * 3 + 1]! + meshData.positions[i1 * 3 + 1]! + meshData.positions[i2 * 3 + 1]!) / 3,
+					(meshData.positions[i0 * 3 + 2]! + meshData.positions[i1 * 3 + 2]! + meshData.positions[i2 * 3 + 2]!) / 3,
+				],
+				offset,
+				camera,
+				rect,
+			);
+			if (pointInMarqueeRect(screen.x, screen.y, marquee)) hits.add(meshData.faceIds[faceIndex]!);
+		}
+	}
+	return [...hits];
+}
 
 function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefObject<import("three").Camera | null> }) {
 	const camera = useThree((state) => state.camera);
@@ -776,7 +929,7 @@ export function World3dHost({
 }) {
 	const scene = node.world3d;
 	const colors = useSemanticColors();
-	const camera = useMemo(() => parseCamera(scene?.cameraJson ?? "{}"), [scene?.cameraJson]);
+	const cameraState = useMemo(() => parseCameraState(scene?.cameraJson ?? "{}"), [scene?.cameraJson]);
 	const meshes = useMemo(() => parseMeshes(scene?.meshesJson ?? "[]"), [scene?.meshesJson]);
 	const instances = useMemo(() => parseInstances(scene?.instancesJson ?? "[]"), [scene?.instancesJson]);
 	const selection = useMemo(() => parseSelection(scene?.selectionJson ?? "{}"), [scene?.selectionJson]);
@@ -784,8 +937,11 @@ export function World3dHost({
 	const lodRef = useRef(DEFAULT_MANUAL_LOD);
 	const [marqueePath, setMarqueePath] = useState<readonly SelectionMarqueePoint[]>([]);
 	const [marqueeActive, setMarqueeActive] = useState(false);
+	const [marqueePreviewIds, setMarqueePreviewIds] = useState<readonly number[]>([]);
 	const [gumballDragActive, setGumballDragActive] = useState(false);
+	const [paintStrokeActive, setPaintStrokeActive] = useState(false);
 	const cameraRef = useRef<import("three").Camera | null>(null);
+	const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
 
 	const dispatch = useCallback(
 		(command: string, args?: Record<string, unknown>) => {
@@ -859,6 +1015,45 @@ export function World3dHost({
 		[dispatch],
 	);
 
+	const handleCameraChange = useCallback(
+		(state: WorldCameraState) => {
+			dispatch("setCamera", {
+				camera: {
+					position: state.position,
+					target: state.target,
+					fov: cameraState.fov,
+				},
+			});
+		},
+		[cameraState.fov, dispatch],
+	);
+
+	const updateMarqueePreview = useCallback(
+		(path: readonly SelectionMarqueePoint[]) => {
+			if (path.length < 2 || !hostRef.current || !cameraRef.current) {
+				setMarqueePreviewIds([]);
+				return;
+			}
+			if (selectionMode === "mesh" || selectionMode === "object") {
+				setMarqueePreviewIds([]);
+				return;
+			}
+			const rect = hostRef.current.getBoundingClientRect();
+			setMarqueePreviewIds(
+				resolveMarqueeComponentIds(
+					instances,
+					meshes,
+					selectionMode,
+					selection.activeObjectId,
+					path,
+					rect,
+					cameraRef.current,
+				),
+			);
+		},
+		[instances, meshes, selection.activeObjectId, selectionMode],
+	);
+
 	const handleGumballDragEnd = useCallback(
 		(_kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
 			const tool =
@@ -904,18 +1099,28 @@ export function World3dHost({
 	const handlePointerDown = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
 			if (event.button !== 0 || event.target !== hostRef.current) return;
+			if (paintMode) {
+				setPaintStrokeActive(true);
+				dispatch("paintStrokeBegin");
+			}
 			setMarqueeActive(true);
-			setMarqueePath([toLocalPoint(event)]);
+			const point = toLocalPoint(event);
+			setMarqueePath([point]);
+			updateMarqueePreview([point]);
 		},
-		[toLocalPoint],
+		[dispatch, paintMode, toLocalPoint, updateMarqueePreview],
 	);
 
 	const handlePointerMove = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
 			if (!marqueeActive) return;
-			setMarqueePath((path) => [...path, toLocalPoint(event)]);
+			setMarqueePath((path) => {
+				const next = [...path, toLocalPoint(event)];
+				updateMarqueePreview(next);
+				return next;
+			});
 		},
-		[marqueeActive, toLocalPoint],
+		[marqueeActive, toLocalPoint, updateMarqueePreview],
 	);
 
 	const handlePointerUp = useCallback(
@@ -923,20 +1128,60 @@ export function World3dHost({
 			if (marqueeActive && marqueePath.length > 1 && hostRef.current && cameraRef.current) {
 				const rect = hostRef.current.getBoundingClientRect();
 				const camera = cameraRef.current;
-				const selected = instances
-					.filter((instance, index) => instanceCenterInMarquee(instance, index, marqueePath, rect, camera))
-					.map((instance) => instance.id);
-				if (selected.length > 0) {
-					dispatch("worldSelect", {
-						ids: selected,
-						merge: mergeModeToArg(marqueeModeFromModifiers(event)),
-					});
+				const merge = mergeModeToArg(marqueeModeFromModifiers(event));
+				if (selectionMode === "mesh" || selectionMode === "object") {
+					const selected = instances
+						.filter((instance, index) => instanceCenterInMarquee(instance, index, marqueePath, rect, camera))
+						.map((instance) => instance.id);
+					if (selected.length > 0) {
+						dispatch("worldSelect", { ids: selected, merge });
+					}
+				} else {
+					const hits = resolveMarqueeComponentIds(
+						instances,
+						meshes,
+						selectionMode,
+						selection.activeObjectId,
+						marqueePath,
+						rect,
+						camera,
+					);
+					if (hits.length > 0) {
+						const ids =
+							merge === "add"
+								? [...new Set([...(selection.componentIds ?? []), ...hits])]
+								: merge === "toggle"
+									? hits
+									: hits;
+						if (merge === "toggle") {
+							for (const id of hits) {
+								dispatch("worldPick", { granularity: selectionMode, id, merge: "toggle" });
+							}
+						} else {
+							dispatch("setSelection", { mode: selectionMode, ids });
+						}
+					}
 				}
+			}
+			if (paintStrokeActive) {
+				dispatch("paintStrokeEnd");
+				setPaintStrokeActive(false);
 			}
 			setMarqueeActive(false);
 			setMarqueePath([]);
+			setMarqueePreviewIds([]);
 		},
-		[dispatch, instances, marqueeActive, marqueePath],
+		[
+			dispatch,
+			instances,
+			marqueeActive,
+			marqueePath,
+			meshes,
+			paintStrokeActive,
+			selection.activeObjectId,
+			selection.componentIds,
+			selectionMode,
+		],
 	);
 
 	if (!scene) return <div className="semio-world-3d-empty">No world scene</div>;
@@ -963,8 +1208,18 @@ export function World3dHost({
 			onPointerMove={handlePointerMove}
 			onPointerUp={handlePointerUp}
 		>
-			<WorldCanvas className="h-full w-full" cameraUp={[0, 0, 1]} cameraPosition={camera.position} cameraFov={camera.fov}>
-				<WorldLodBridge
+			<WorldCanvas className="h-full w-full" cameraUp={[0, 0, 1]} cameraFov={cameraState.fov}>
+				<WorldOrbitViewSnapGateProvider>
+					<WorldOrbitCameraViewRig
+						state={cameraState}
+						seedKey={scene?.cameraJson ?? "default"}
+						perspectiveFov={cameraState.fov}
+					/>
+					<WorldOrbitGated
+						controlsGate={marqueeActive || gumballDragActive}
+						onCamera={handleCameraChange}
+					/>
+					<WorldLodBridge
 					lodRef={lodRef}
 					distanceReference={100}
 					gridFactor={DEFAULT_LOD_GRID_FACTOR}
@@ -991,8 +1246,10 @@ export function World3dHost({
 						gumballDragActive={gumballDragActive}
 						onGumballDraggingChanged={setGumballDragActive}
 						onGumballDragEnd={handleGumballDragEnd}
+						previewComponentIds={new Set(marqueePreviewIds)}
 					/>
 				</WorldLodBridge>
+				</WorldOrbitViewSnapGateProvider>
 			</WorldCanvas>
 			{marqueeActive && marqueePath.length > 1 && marqueeStart && marqueeEnd ? (
 				method === "lasso" ? (

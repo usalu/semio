@@ -230,6 +230,13 @@ export type NodeGraphScene = {
 	readonly computingJson?: string;
 	readonly capabilitiesJson?: string;
 	readonly fixtureJson?: string;
+	readonly presencePeersJson?: string;
+};
+
+export type PresencePeer = {
+	readonly clientId: string;
+	readonly name: string;
+	readonly selectionCount: number;
 };
 
 export type TextEditorScene = {
@@ -515,6 +522,7 @@ export type ViewState = {
 export type AppDefinition = {
 	readonly id: string;
 	readonly label: string;
+	readonly hierarchy: readonly string[];
 	readonly iconId?: string;
 	readonly controllerId: string;
 	readonly modes: readonly { readonly id: string; readonly label: string; readonly tools?: readonly ToolNode[] }[];
@@ -538,7 +546,7 @@ export type PluginManifest = {
 	readonly label: string;
 	readonly version: string;
 	readonly apps: readonly AppDefinition[];
-	readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly yields: string }[];
+	readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly hierarchy: readonly string[]; readonly yields: string }[];
 	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string }[];
 };
 

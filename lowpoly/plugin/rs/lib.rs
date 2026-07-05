@@ -10,10 +10,10 @@ use png::{BitDepth, ColorType, Encoder};
 use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout,
-    export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, ui_inspector_groups_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene,
+    export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene,
     world3d_selection_json, App, Canvas2dScene, CommandDescriptor, MeshData, PluginApp, PluginBundle,
-    tool_button, tool_collection, tool_separator, tool_toggle, ToolNode, UiControlNode, UiFieldNode,
+    tool_button, tool_collection, tool_toggle, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
@@ -43,7 +43,7 @@ const LOWPOLY_PLAY_WINDOW_UV: &str = "lowpoly-uv";
 const LOWPOLY_FIXTURE_SCHEMA: &str = "lowpoly.fixture";
 
 const PRIMITIVE_CATALOG: &[(&str, &str, &str)] = &[
-    ("box", "Box", "box"),
+    ("box", "Cube", "box"),
     ("plane", "Plane", "square"),
     ("cylinder", "Cylinder", "cylinder"),
     ("cone", "Cone", "triangle"),
@@ -66,6 +66,43 @@ const TOOL_PARAM_KEYS: &[&str] = &[
 //#endregion 🔖Constants
 
 //#region 🔖Envelope
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct LowpolyWorldCamera {
+    #[serde(default = "default_world_cam_pos")]
+    position: [f64; 3],
+    #[serde(default)]
+    target: [f64; 3],
+    #[serde(default = "default_world_cam_fov")]
+    fov: f64,
+}
+
+impl Default for LowpolyWorldCamera {
+    fn default() -> Self {
+        Self {
+            position: default_world_cam_pos(),
+            target: [0.0, 0.0, 0.0],
+            fov: default_world_cam_fov(),
+        }
+    }
+}
+
+fn default_world_cam_pos() -> [f64; 3] {
+    [4.0, -4.0, 3.0]
+}
+
+fn default_world_cam_fov() -> f64 {
+    45.0
+}
+
+fn lowpoly_world_camera_json(runtime: &LowpolyPlayRuntime) -> String {
+    world3d_camera_json(
+        runtime.world_camera.position,
+        runtime.world_camera.target,
+        runtime.world_camera.fov,
+    )
+}
+
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LowpolyPlayRuntime {
@@ -87,6 +124,10 @@ struct LowpolyPlayRuntime {
     tool_params: Value,
     #[serde(default = "default_paint_color")]
     paint_color: [u8; 4],
+    #[serde(default)]
+    world_camera: LowpolyWorldCamera,
+    #[serde(default)]
+    engagement_input: String,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -206,6 +247,11 @@ struct PaintSnapshot {
     object_id: String,
     layer_index: usize,
     pixels: Vec<u8>,
+}
+
+struct DocSnapshot {
+    envelope: LowpolyPlayEnvelope,
+    paint_pixels: HashMap<String, Vec<Vec<u8>>>,
 }
 
 fn load_doc(envelope: &LowpolyPlayEnvelope, paint_pixels: &HashMap<String, Vec<Vec<u8>>>) -> Result<LowpolyDocument, String> {
@@ -486,6 +532,7 @@ fn world_instances_json(fixture: &LowpolyFixture, runtime: &LowpolyPlayRuntime) 
                 "label": object.name,
                 "selected": selected,
                 "hovered": hovered,
+                "smoothShading": object.smooth_shading,
             })
         })
         .collect();
@@ -558,6 +605,7 @@ fn tree_item_with_command(
         None,
         None,
         None,
+        None,
     )
 }
 
@@ -570,6 +618,7 @@ fn tree_item(
     unhover_command: Option<CommandDescriptor>,
     actions: Option<Vec<semio_framework_plugin::UiTreeItemAction>>,
     items: Option<Vec<semio_framework_plugin::UiTreeItemNode>>,
+    default_open: Option<bool>,
     description: Option<String>,
 ) -> semio_framework_plugin::UiTreeItemNode {
     semio_framework_plugin::UiTreeItemNode {
@@ -578,7 +627,7 @@ fn tree_item(
         description,
         icon_id: icon_id.map(str::to_string),
         selected: None,
-        default_open: None,
+        default_open,
         command,
         hover_command,
         unhover_command,
@@ -645,6 +694,7 @@ fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -
                             actions,
                             None,
                             None,
+                            None,
                         )
                     })
                     .collect();
@@ -657,6 +707,7 @@ fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -
                     None,
                     None,
                     Some(leaves),
+                    None,
                     Some(format!("{count}")),
                 )
             };
@@ -664,7 +715,15 @@ fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -
                 format!("lowpoly-hierarchy.{object_id}"),
                 object.name.clone(),
                 Some("box"),
-                Some(lowpoly_cmd("setActiveObject", Some(json!({ "objectId": object.id })))),
+                Some(lowpoly_cmd(
+                    "toggleSelectionTarget",
+                    Some(json!({
+                        "objectId": object.id,
+                        "mode": "mesh",
+                        "id": 0,
+                        "merge": "invertive",
+                    })),
+                )),
                 None,
                 None,
                 None,
@@ -673,6 +732,7 @@ fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -
                     component_group("edge", "Edges", "minus", edge_count),
                     component_group("face", "Faces", "square", face_count),
                 ]),
+                Some(object.id == active_id),
                 Some(object.id.clone()),
             )
         })
@@ -698,11 +758,17 @@ fn build_catalogue_tree() -> UiNode {
     let items: Vec<semio_framework_plugin::UiTreeItemNode> = PRIMITIVE_CATALOG
         .iter()
         .map(|(kind, label, icon)| {
-            tree_item_with_command(
+            tree_item(
                 format!("lowpoly-play-catalogue.{kind}"),
                 *label,
                 Some(icon),
-                lowpoly_cmd("addPrimitive", Some(json!({ "kind": kind }))),
+                Some(lowpoly_cmd("addPrimitive", Some(json!({ "kind": kind })))),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some((*kind).to_string()),
             )
         })
         .collect();
@@ -722,15 +788,22 @@ fn build_catalogue_tree() -> UiNode {
 fn build_layers_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
     let object = active_object(&envelope.fixture);
     let layers = object.map(|entry| entry.paint_layers.as_slice()).unwrap_or(&[]);
+    let active_layer = envelope.runtime.active_paint_layer;
     let items: Vec<semio_framework_plugin::UiTreeItemNode> = layers
         .iter()
         .enumerate()
         .map(|(index, layer)| {
-            tree_item_with_command(
+            tree_item(
                 format!("lowpoly-layer:{index}"),
                 layer.name.clone(),
                 Some("layers"),
-                lowpoly_cmd("setActivePaintLayer", Some(json!({ "layerIndex": index }))),
+                Some(lowpoly_cmd("setActivePaintLayer", Some(json!({ "layerIndex": index })))),
+                None,
+                None,
+                None,
+                None,
+                None,
+                Some(format!("{} · {}", layer.opacity, layer.blend_mode)),
             )
         })
         .collect();
@@ -741,7 +814,7 @@ fn build_layers_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
             default_open: Some(true),
             items,
         }],
-        selected_ids: None,
+        selected_ids: Some(vec![format!("lowpoly-layer:{active_layer}")]),
         highlighted_ids: None,
         selection_change: None,
     })
@@ -810,6 +883,15 @@ fn build_inspector_tree(envelope: &LowpolyPlayEnvelope) -> UiNode {
                 }),
                 ui_inspector_readonly_field(
                     "lowpoly-play-inspector.object.selection",
+                    "Selection",
+                    &format!(
+                        "{} · {} selected",
+                        format_selection_targets_label(&envelope.fixture.selection.targets),
+                        envelope.fixture.selection.ids.len()
+                    ),
+                ),
+                ui_inspector_readonly_field(
+                    "lowpoly-play-inspector.object.selection-mode",
                     "Selection Mode",
                     &envelope.fixture.selection.mode,
                 ),
@@ -869,8 +951,7 @@ fn format_selection_targets_label(targets: &LowpolySelectionTargets) -> String {
     }
 }
 
-fn lowpoly_window_engagement() -> WindowEngagement {
-    let envelope = default_envelope();
+fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement {
     let transform = envelope.runtime.transform_tool.clone();
     let selected_count = envelope.fixture.selection.ids.len();
     WindowEngagement {
@@ -919,10 +1000,10 @@ fn lowpoly_window_engagement() -> WindowEngagement {
         ]),
         input: Some(WindowEngagementInput {
             id: Some("lowpoly-engagement".into()),
-            value: Some(String::new()),
+            value: Some(envelope.runtime.engagement_input.clone()),
             placeholder: Some("extrude, inset, mirror, decimate".into()),
             disabled: None,
-            on_change: None,
+            on_change: Some(lowpoly_cmd("engagementInput", None)),
             on_submit: Some(lowpoly_cmd("engagementSubmit", None)),
             on_repeat_last: None,
             on_abort: None,
@@ -993,7 +1074,6 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                 ),
             ],
         ),
-        tool_separator("lowpoly-tools-sep-transform"),
         tool_collection(
             "lowpoly-tools-transform",
             "move",
@@ -1053,6 +1133,15 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     lowpoly_cmd("mirror", None),
                 ),
                 tool_button("lowpoly-tools-decimate", "minimize-2", "Decimate", lowpoly_cmd("decimate", None)),
+            ],
+        ),
+        tool_collection(
+            "lowpoly-tools-history",
+            "undo",
+            "History",
+            vec![
+                tool_button("lowpoly-tools-undo", "undo", "Undo", lowpoly_cmd("editUndo", None)),
+                tool_button("lowpoly-tools-redo", "redo", "Redo", lowpoly_cmd("editRedo", None)),
             ],
         ),
     ]
@@ -1134,6 +1223,9 @@ struct LowpolyPlayApp {
     paint_pixels: HashMap<String, Vec<Vec<u8>>>,
     paint_undo: Vec<PaintSnapshot>,
     paint_redo: Vec<PaintSnapshot>,
+    paint_stroke_active: bool,
+    edit_undo: Vec<DocSnapshot>,
+    edit_redo: Vec<DocSnapshot>,
     paint_texture_cache: RefCell<HashMap<String, String>>,
 }
 
@@ -1143,6 +1235,9 @@ impl Default for LowpolyPlayApp {
             paint_pixels: HashMap::new(),
             paint_undo: Vec::new(),
             paint_redo: Vec::new(),
+            paint_stroke_active: false,
+            edit_undo: Vec::new(),
+            edit_redo: Vec::new(),
             paint_texture_cache: RefCell::new(HashMap::new()),
         }
     }
@@ -1176,6 +1271,38 @@ impl LowpolyPlayApp {
         self.paint_redo.clear();
     }
 
+    fn push_edit_undo(&mut self, envelope: &LowpolyPlayEnvelope) {
+        self.edit_undo.push(DocSnapshot {
+            envelope: envelope.clone(),
+            paint_pixels: self.paint_pixels.clone(),
+        });
+        self.edit_redo.clear();
+    }
+
+    fn restore_doc_snapshot(&mut self, snapshot: DocSnapshot) -> Vec<String> {
+        self.paint_pixels = snapshot.paint_pixels;
+        self.paint_texture_cache.borrow_mut().clear();
+        vec![set_document_op(&snapshot.envelope)]
+    }
+
+    fn begin_paint_stroke(&mut self, envelope: &LowpolyPlayEnvelope) {
+        if self.paint_stroke_active {
+            return;
+        }
+        let object_id = envelope.fixture.active_object_id.clone();
+        let layer_index = envelope.runtime.active_paint_layer as usize;
+        if let Ok(before) = load_doc(envelope, &self.paint_pixels)
+            .and_then(|doc| doc.layer_pixels(&object_id, layer_index).map(|pixels| pixels.to_vec()))
+        {
+            self.push_paint_undo(&object_id, layer_index, &before);
+        }
+        self.paint_stroke_active = true;
+    }
+
+    fn end_paint_stroke(&mut self) {
+        self.paint_stroke_active = false;
+    }
+
     fn restore_paint_snapshot(&mut self, snapshot: PaintSnapshot) -> Result<(), String> {
         let mut doc = LowpolyDocument::new(default_fixture())?;
         doc.paint_pixels_mut().insert(snapshot.object_id.clone(), vec![snapshot.pixels.clone()]);
@@ -1188,12 +1315,14 @@ impl LowpolyPlayApp {
         envelope: LowpolyPlayEnvelope,
         edit: impl FnOnce(&mut LowpolyDocument, &LowpolyPlayRuntime) -> Result<(), String>,
     ) -> Vec<String> {
+        self.push_edit_undo(&envelope);
         let runtime = envelope.runtime.clone();
         let mut doc = match load_doc(&envelope, &self.paint_pixels) {
             Ok(doc) => doc,
             Err(_) => return Vec::new(),
         };
         if edit(&mut doc, &runtime).is_err() {
+            let _ = self.edit_undo.pop();
             return Vec::new();
         }
         let (next_envelope, pixels) = commit_doc(doc, envelope);
@@ -1319,8 +1448,10 @@ impl LowpolyPlayApp {
             Ok(doc) => doc,
             Err(_) => return Vec::new(),
         };
-        if let Ok(before) = doc.layer_pixels(&object_id, layer_index).map(|pixels| pixels.to_vec()) {
-            self.push_paint_undo(&object_id, layer_index, &before);
+        if !self.paint_stroke_active {
+            if let Ok(before) = doc.layer_pixels(&object_id, layer_index).map(|pixels| pixels.to_vec()) {
+                self.push_paint_undo(&object_id, layer_index, &before);
+            }
         }
         let radius = tool_param_f32(&params, "brushSize", 16.0);
         let opacity = tool_param_f32(&params, "brushOpacity", 1.0);
@@ -1364,6 +1495,18 @@ impl PluginApp for LowpolyPlayApp {
             Some("paint") => paint_tools(&envelope),
             _ => edit_tools(&envelope),
         }
+    }
+
+    fn window_engagements(
+        &self,
+        document_json: &str,
+        _view_state: &ViewState,
+    ) -> HashMap<String, WindowEngagement> {
+        let engagement = lowpoly_window_engagement(&parse_envelope(document_json));
+        HashMap::from([
+            (LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()),
+            (LOWPOLY_PLAY_WINDOW_UV.into(), engagement),
+        ])
     }
 
     fn handle_command(
@@ -1601,6 +1744,12 @@ impl PluginApp for LowpolyPlayApp {
                     doc.sync_meshes_to_fixture()
                 });
             }
+            "engagementInput" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    envelope.runtime.engagement_input = value.into();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "engagementSubmit" => {
                 let value = args
                     .and_then(|value| value.get("value"))
@@ -1705,6 +1854,14 @@ impl PluginApp for LowpolyPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
+            "setCamera" => {
+                if let Some(camera) = args.and_then(|value| value.get("camera")) {
+                    if let Ok(parsed) = serde_json::from_value(camera.clone()) {
+                        envelope.runtime.world_camera = parsed;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
             "setSelectionMethod" => {
                 let method = args
                     .and_then(|value| value.get("method"))
@@ -1729,6 +1886,14 @@ impl PluginApp for LowpolyPlayApp {
             "translateSelection" => return self.apply_translate(envelope, args),
             "rotateSelection" => return self.apply_rotate(envelope, args),
             "scaleSelection" => return self.apply_scale(envelope, args),
+            "paintStrokeBegin" => {
+                self.begin_paint_stroke(&envelope);
+                return Vec::new();
+            }
+            "paintStrokeEnd" => {
+                self.end_paint_stroke();
+                return Vec::new();
+            }
             "paintStroke" => {
                 let u = args.and_then(|value| value.get("u")).and_then(|value| value.as_f64()).unwrap_or(0.0) as f32;
                 let v = args.and_then(|value| value.get("v")).and_then(|value| value.as_f64()).unwrap_or(0.0) as f32;
@@ -1782,6 +1947,24 @@ impl PluginApp for LowpolyPlayApp {
             "clearSeam" => {
                 return self.handle_command("markUvSeam", Some(&json!({ "seam": false })), document_json, _view_state);
             }
+            "editUndo" => {
+                if let Some(snapshot) = self.edit_undo.pop() {
+                    self.edit_redo.push(DocSnapshot {
+                        envelope: envelope.clone(),
+                        paint_pixels: self.paint_pixels.clone(),
+                    });
+                    return self.restore_doc_snapshot(snapshot);
+                }
+            }
+            "editRedo" => {
+                if let Some(snapshot) = self.edit_redo.pop() {
+                    self.edit_undo.push(DocSnapshot {
+                        envelope: envelope.clone(),
+                        paint_pixels: self.paint_pixels.clone(),
+                    });
+                    return self.restore_doc_snapshot(snapshot);
+                }
+            }
             "paintUndo" => {
                 if let Some(snapshot) = self.paint_undo.pop() {
                     if let Ok(current) = load_doc(&envelope, &self.paint_pixels)
@@ -1834,7 +2017,7 @@ impl PluginApp for LowpolyPlayApp {
                         LOWPOLY_PLAY_SURFACE_MAIN,
                         LOWPOLY_PLAY_APP_ID,
                         world3d_scene(
-                            world3d_default_camera(),
+                            lowpoly_world_camera_json(&envelope.runtime),
                             world_meshes_json(loaded, &texture_cache),
                             world_instances_json(&envelope.fixture, &envelope.runtime),
                             world_selection_json_for(&envelope, _view_state.active_mode_id.as_deref(), Some(loaded)),
@@ -1879,9 +2062,9 @@ impl PluginApp for LowpolyPlayApp {
 //#region 🔖Manifest
 fn create_lowpoly_app() -> App {
     let default_example = serde_json::to_string(&default_envelope()).expect("lowpoly default example");
-    let engagement = lowpoly_window_engagement();
+    let engagement = lowpoly_window_engagement(&default_envelope());
     App::from_builder(
-        App::builder(LOWPOLY_PLAY_APP_ID, "Lowpoly")
+        App::builder(LOWPOLY_PLAY_APP_ID, "Lowpoly").hierarchy(["semio", "lowpoly"])
             .icon_id("box")
             .mode("edit", "Edit")
             .mode("paint", "Paint")
@@ -1971,6 +2154,7 @@ fn register_lowpoly_exports() {
             file_name: "lowpoly.glb".into(),
         })
     });
+    semio_framework_os::register_mesh_obj_glb_export_handlers("3d.mesh", "mesh", |_| Ok(mesh_from_kind("box")));
 }
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
@@ -2019,6 +2203,7 @@ mod tests {
         let node = app.render(LOWPOLY_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("lowpoly-play-catalogue.box"));
+        assert!(json.contains("Cube"));
         assert!(json.contains("Plane"));
         assert!(json.contains("Cone"));
         assert!(json.contains("Ico Sphere"));
@@ -2085,6 +2270,16 @@ mod tests {
         envelope = apply_ops(&envelope, &ops);
         assert_eq!(envelope.fixture.active_object_id, rock_id);
         assert_ne!(envelope.fixture.active_object_id, second_id);
+    }
+
+    #[test]
+    fn edit_tools_serialize_icon_ids_and_collections() {
+        let tools = edit_tools(&default_envelope());
+        let json = serde_json::to_string(&tools).unwrap();
+        assert!(json.contains("\"iconId\":\"mouse-pointer\""));
+        assert!(json.contains("\"iconId\":\"pen-tool\""));
+        assert!(json.contains("\"lowpoly-tools-edit\""));
+        assert!(!json.contains("lowpoly-tools-sep-edit"));
     }
 
     #[test]
@@ -2246,6 +2441,86 @@ mod tests {
         let selected = selected_hierarchy_ids(&envelope.fixture);
         assert_eq!(selected.len(), 2);
         assert!(json.contains(&selected[0]));
+    }
+
+    #[test]
+    fn window_engagements_reflect_live_selection_count() {
+        let app = LowpolyPlayApp::default();
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.fixture.selection.ids = vec![0, 1, 2];
+        let document = serde_json::to_string(&envelope).unwrap();
+        let engagements = app.window_engagements(&document, &ViewState::default());
+        let main = engagements.get(LOWPOLY_PLAY_WINDOW_MAIN).expect("main engagement");
+        let status = main.status.as_ref().and_then(|rows| rows.first()).expect("status");
+        assert!(status.text.contains("3 selected"));
+    }
+
+    #[test]
+    fn edit_undo_restores_extrude() {
+        let mut app = LowpolyPlayApp::default();
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.fixture.selection = LowpolySelection {
+            targets: LowpolySelectionTargets {
+                mesh: false,
+                vertex: false,
+                edge: false,
+                face: true,
+            },
+            keys: vec!["lowpoly:obj-1:0:face:0".into()],
+            mode: "face".into(),
+            ids: vec![0],
+        };
+        let before_faces = LowpolyDocument::new(envelope.fixture.clone())
+            .unwrap()
+            .active_mesh()
+            .unwrap()
+            .face_count();
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command("extrude", None, &document, &ViewState::default());
+        let extruded: LowpolyPlayEnvelope = apply_ops(&envelope, &ops);
+        let after_faces = LowpolyDocument::new(extruded.fixture.clone())
+            .unwrap()
+            .active_mesh()
+            .unwrap()
+            .face_count();
+        assert!(after_faces > before_faces);
+        let undo_ops = app.handle_command(
+            "editUndo",
+            None,
+            &serde_json::to_string(&extruded).unwrap(),
+            &ViewState::default(),
+        );
+        let restored: LowpolyPlayEnvelope = apply_ops(&extruded, &undo_ops);
+        let restored_faces = LowpolyDocument::new(restored.fixture.clone())
+            .unwrap()
+            .active_mesh()
+            .unwrap()
+            .face_count();
+        assert_eq!(restored_faces, before_faces);
+    }
+
+    #[test]
+    fn inspector_includes_selection_summary() {
+        let app = LowpolyPlayApp::default();
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.fixture.selection.ids = vec![0, 1];
+        let document = serde_json::to_string(&envelope).unwrap();
+        let node = app.render(LOWPOLY_PLAY_BODY_INSPECTION, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("2 selected"));
+        assert!(json.contains("Selection Mode"));
+    }
+
+    #[test]
+    fn layers_tree_highlights_active_layer() {
+        let app = LowpolyPlayApp::default();
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.active_paint_layer = 1;
+        let document = serde_json::to_string(&envelope).unwrap();
+        let node = app.render(LOWPOLY_PLAY_BODY_LAYERS, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("lowpoly-layer:1"));
+        assert!(json.contains("normal"));
     }
 
     fn apply_ops(envelope: &LowpolyPlayEnvelope, ops: &[String]) -> LowpolyPlayEnvelope {

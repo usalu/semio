@@ -206,4 +206,135 @@ export function computeDagMarqueeOverlay(pointsJson: string, crossing: boolean, 
 export function sceneToSyncJson(scene: NodeGraphScene): string {
 	return JSON.stringify(scene);
 }
+
+//#region DagDomOverlays
+export function GraphParamOverlays({
+	stateJson,
+	logicalW,
+	logicalH,
+	editable,
+	onParamChange,
+}: {
+	readonly stateJson: string;
+	readonly logicalW: number;
+	readonly logicalH: number;
+	readonly editable: boolean;
+	readonly onParamChange: (nodeId: string, portId: string, value: unknown) => void;
+}) {
+	const camera = parseDagOverlayCamera(stateJson);
+	const editors = parseDagParamEditors(stateJson);
+	if (editors.length === 0) return null;
+	return (
+		<div className="pointer-events-none absolute inset-0 z-45">
+			{editors.map((editor) => {
+				const screen = worldToScreen(camera, logicalW, logicalH, editor.x, editor.y);
+				const w = editor.w * camera.zoom;
+				const h = editor.h * camera.zoom;
+				return (
+					<input
+						key={`${editor.nodeId}:${editor.portId}`}
+						className="pointer-events-auto absolute rounded border border-border bg-panel px-1 font-mono text-[10px] text-foreground"
+						style={{ left: screen.x - w / 2, top: screen.y - h / 2, width: w, height: h }}
+						defaultValue={String(editor.value ?? editor.default ?? "")}
+						readOnly={!editable}
+						onPointerDown={(event) => event.stopPropagation()}
+						onChange={(event) => onParamChange(editor.nodeId, editor.portId, event.target.value)}
+					/>
+				);
+			})}
+		</div>
+	);
+}
+
+export function GraphStepperOverlays({
+	stateJson,
+	logicalW,
+	logicalH,
+	editable,
+	onStepperChange,
+}: {
+	readonly stateJson: string;
+	readonly logicalW: number;
+	readonly logicalH: number;
+	readonly editable: boolean;
+	readonly onStepperChange: (widgetId: string, fieldKey: string, value: number) => void;
+}) {
+	const camera = parseDagOverlayCamera(stateJson);
+	const steppers = parseDagStepperOverlays(stateJson);
+	if (steppers.length === 0) return null;
+	return (
+		<div className="pointer-events-none absolute inset-0 z-45">
+			{steppers.flatMap((stepper) =>
+				stepper.fields.map((field) => {
+					const screen = worldToScreen(camera, logicalW, logicalH, field.x, field.y);
+					const w = field.w * camera.zoom;
+					const h = field.h * camera.zoom;
+					return (
+						<input
+							key={`${stepper.widgetId}:${field.key}`}
+							type="number"
+							className="pointer-events-auto absolute rounded border border-border bg-panel px-1 font-mono text-[10px] text-foreground"
+							style={{ left: screen.x, top: screen.y - h / 2, width: w, height: h }}
+							defaultValue={field.value}
+							step={field.step ?? 1}
+							readOnly={!editable}
+							onPointerDown={(event) => event.stopPropagation()}
+							onChange={(event) => onStepperChange(stepper.widgetId, field.key, Number(event.target.value))}
+						/>
+					);
+				}),
+			)}
+		</div>
+	);
+}
+
+const ALIGN_MODES = [
+	{ id: "left", label: "⬅" },
+	{ id: "center-h", label: "↔" },
+	{ id: "right", label: "➡" },
+	{ id: "top", label: "⬆" },
+	{ id: "center-v", label: "↕" },
+	{ id: "bottom", label: "⬇" },
+] as const;
+
+export function alignModeToDag(mode: string): string {
+	const map: Record<string, string> = {
+		left: "alignLeft",
+		right: "alignRight",
+		top: "alignTop",
+		bottom: "alignBottom",
+		"center-h": "alignHorizontal",
+		"center-v": "alignVertical",
+	};
+	return map[mode] ?? mode;
+}
+
+export function SelectionAlignChrome({
+	bounds,
+	onAlign,
+}: {
+	readonly bounds: DagSelectionBounds;
+	readonly onAlign: (mode: string) => void;
+}) {
+	return (
+		<div
+			className="pointer-events-auto absolute z-50 flex gap-0.5 rounded border border-border bg-panel p-0.5 shadow-sm"
+			style={{ left: bounds.x, top: Math.max(0, bounds.y - 28) }}
+		>
+			{ALIGN_MODES.map((mode) => (
+				<button
+					key={mode.id}
+					type="button"
+					className="size-5 rounded text-xs hover:bg-active-base"
+					aria-label={mode.id}
+					onPointerDown={(event) => event.stopPropagation()}
+					onClick={() => onAlign(mode.id)}
+				>
+					{mode.label}
+				</button>
+			))}
+		</div>
+	);
+}
+//#endregion DagDomOverlays
 //#endregion DagOverlayPaint

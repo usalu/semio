@@ -2,6 +2,8 @@
 
 pub mod host;
 pub mod instance;
+pub mod media_export_raster;
+pub mod media_export_simple;
 pub mod media_graph;
 pub mod registry;
 
@@ -9,7 +11,7 @@ pub use host::{
     apply_os_operation, create_empty_os_document, create_os_studio, default_os_projection,
     delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries,
     load_os_studio_document, materialize_os_projection, os_document_from_json, os_document_to_json,
-    seed_os_studio_catalog_if_empty, DevJsonBackbone, LoadedPlugin, LocalJsonBackbone, OsBackboneRef,
+    seed_os_studio_catalog_if_empty, DevJsonBackbone, LoadedPlugin, LocalJsonBackbone, OsBackbonePort, OsBackboneRef,
     OsConflict, OsDiff, OsDocument, OsEnvelope, OsOp, OsProjection, OsStore, OsVcs, PluginHost,
     PluginHotSwapEvent, RemoteOsBackbone, OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
 };
@@ -22,6 +24,8 @@ pub use instance::{
     OsParameter, OsParameterFieldBinding, OsParameterFieldSpec, OsParameterType, OsSourceDocument,
     OS_PARAMETER_PORT_PREFIX,
 };
+pub use media_export_raster::{rasterize_svg_to_png_base64, register_2d_svg_png_export_handlers, register_mesh_obj_glb_export_handlers};
+pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
 pub use media_graph::{
     assert_os_media_export_coverage, empty_media_graph, export_os_app_instance_media,
     list_os_media_graph_vfs_children, media_graph_node_for_instance, os_media_export_extension_for_format,

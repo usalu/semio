@@ -1,7 +1,8 @@
 //! 🔌 JS bridge for wasm-bindgen plugin modules.
 
 use js_sys::{Array, Function, Reflect};
-use semio_framework_core::{PluginManifest, UiNode, ViewState};
+use semio_framework_core::{PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement};
+use std::collections::HashMap;
 use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
@@ -126,6 +127,66 @@ impl PluginBridgeEntry {
         };
         let json = resolved.as_string().ok_or("render not string")?;
         serde_json::from_str(&json).map_err(|err| format!("render parse: {err}"))
+    }
+
+    pub async fn tools(
+        &self,
+        instance_id: u32,
+        view_state: &ViewState,
+    ) -> Result<Vec<ToolNode>, String> {
+        let tools = Reflect::get(self.handle.as_ref(), &JsValue::from_str("tools"))
+            .ok()
+            .and_then(|v| v.dyn_into::<Function>().ok());
+        let Some(tools) = tools else {
+            return Ok(Vec::new());
+        };
+        let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
+        let result = tools
+            .call2(
+                &JsValue::NULL,
+                &JsValue::from_f64(instance_id as f64),
+                &JsValue::from_str(&view_json),
+            )
+            .map_err(|_| "tools failed")?;
+        let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+            JsFuture::from(promise.clone())
+                .await
+                .map_err(|_| "tools promise failed")?
+        } else {
+            result
+        };
+        let json = resolved.as_string().ok_or("tools not string")?;
+        serde_json::from_str(&json).map_err(|err| format!("tools parse: {err}"))
+    }
+
+    pub async fn window_engagements(
+        &self,
+        instance_id: u32,
+        view_state: &ViewState,
+    ) -> Result<HashMap<String, WindowEngagement>, String> {
+        let engagements = Reflect::get(self.handle.as_ref(), &JsValue::from_str("windowEngagements"))
+            .ok()
+            .and_then(|v| v.dyn_into::<Function>().ok());
+        let Some(engagements) = engagements else {
+            return Ok(HashMap::new());
+        };
+        let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
+        let result = engagements
+            .call2(
+                &JsValue::NULL,
+                &JsValue::from_f64(instance_id as f64),
+                &JsValue::from_str(&view_json),
+            )
+            .map_err(|_| "window_engagements failed")?;
+        let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
+            JsFuture::from(promise.clone())
+                .await
+                .map_err(|_| "window_engagements promise failed")?
+        } else {
+            result
+        };
+        let json = resolved.as_string().ok_or("window_engagements not string")?;
+        serde_json::from_str(&json).map_err(|err| format!("window_engagements parse: {err}"))
     }
 }
 

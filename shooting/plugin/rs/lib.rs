@@ -3,7 +3,7 @@
 use semio_framework_plugin::{
     build_raster_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
+    ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, App, CommandDescriptor, PluginApp, PluginBundle, RasterScene, UiControlNode,
     UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
@@ -325,13 +325,37 @@ fn active_asset<'a>(fixture: &'a ShootingFixture) -> Option<&'a ShootingAsset> {
 }
 
 fn camera_json(camera: &ShootingCamera) -> String {
-    json!({
-        "x": camera.position[0],
-        "y": camera.position[1],
-        "z": camera.position[2],
-        "fov": camera.fov,
-    })
-    .to_string()
+    world3d_camera_json(camera.position, camera.target, camera.fov)
+}
+
+fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
+    args.and_then(|value| value.get("ids"))
+        .and_then(|value| serde_json::from_value(value.clone()).ok())
+        .filter(|ids: &Vec<String>| !ids.is_empty())
+        .unwrap_or_else(|| fallback.to_vec())
+}
+
+fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+    [
+        a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+        a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+        a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+        a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
+    ]
+}
+
+fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
+    let len = (ax * ax + ay * ay + az * az).sqrt();
+    if len < 1e-8 {
+        return [0.0, 0.0, 0.0, 1.0];
+    }
+    let half = angle * 0.5;
+    let s = half.sin();
+    [ax / len * s, ay / len * s, az / len * s, half.cos()]
+}
+
+fn scale_vec_mul(scale: [f64; 3], sx: f64, sy: f64, sz: f64) -> [f64; 3] {
+    [scale[0] * sx, scale[1] * sy, scale[2] * sz]
 }
 
 fn asset_scale_json(asset: &ShootingAsset) -> [f64; 3] {
@@ -812,6 +836,54 @@ impl PluginApp for ShootingPlayApp {
                     }
                 }
             }
+            "translateSelection" => {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selected_asset_ids);
+                let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                for asset in &mut envelope.fixture.assets {
+                    if ids.contains(&asset.id) {
+                        asset.origin[0] += dx;
+                        asset.origin[1] += dy;
+                        asset.origin[2] += dz;
+                    }
+                }
+                if !ids.is_empty() {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "rotateSelection" => {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selected_asset_ids);
+                let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let delta = quat_from_axis_angle(ax, ay, az, angle);
+                for asset in &mut envelope.fixture.assets {
+                    if ids.contains(&asset.id) {
+                        let current = asset.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                        asset.orientation = Some(quat_mul(delta, current));
+                    }
+                }
+                if !ids.is_empty() {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "scaleSelection" => {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selected_asset_ids);
+                let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                for asset in &mut envelope.fixture.assets {
+                    if ids.contains(&asset.id) {
+                        let current = asset_scale_json(asset);
+                        asset.scale = Some(json!(scale_vec_mul(current, sx, sy, sz)));
+                    }
+                }
+                if !ids.is_empty() {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "patchShot" | "patchShots" => {
                 let shot_ids: Vec<String> = if command == "patchShot" {
                     args.and_then(|value| value.get("shotId"))
@@ -982,7 +1054,7 @@ impl PluginApp for ShootingPlayApp {
 //#region 🔖Manifest
 fn create_shooting_app() -> App {
     App::from_builder(
-        App::builder(SHOOTING_PLAY_APP_ID, "Shooting")
+        App::builder(SHOOTING_PLAY_APP_ID, "Shooting").hierarchy(["semio", "shooting"])
             .icon_id("camera")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1021,7 +1093,16 @@ fn create_shooting_app() -> App {
     .program("shooting", "Shooting", "icon")
 }
 
+fn shooting_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    semio_framework_os::title_card_svg(value, "Shooting", 512, 512)
+}
+
+fn register_shooting_exports() {
+    semio_framework_os::register_2d_svg_png_export_handlers("2d.shooting", "shooting", shooting_document_json_to_svg);
+}
+
 fn bundle() -> PluginBundle {
+    register_shooting_exports();
     PluginBundle::new("shooting", "Shooting", "0.1.0").register_app(create_shooting_app(), || Box::new(ShootingPlayApp))
 }
 

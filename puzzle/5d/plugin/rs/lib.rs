@@ -1,6 +1,7 @@
 //! 👯 Puzzle 5D plugin — 2D/3D coupled puzzle play app bundled as a hot-swappable WASM component.
 
 use puzzle_5d::{BrushPlacePayload, Puzzle5dPrecomputeSession};
+use semio_framework_os::register_mesh_obj_glb_export_handlers;
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
@@ -447,6 +448,11 @@ fn scene_config_json(envelope: &Puzzle5dEnvelope) -> String {
 
 fn drive_precompute(session: &mut Puzzle5dPrecomputeSession, envelope: &Puzzle5dEnvelope) {
     let _ = session.set_scene(&scene_config_json(envelope));
+    let fallback = semio_framework_plugin::mesh_from_kind(PUZZLE5D_FALLBACK_MESH_KIND);
+    session.register_mesh(PUZZLE5D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
+    for url in collect_mesh_urls(&envelope.document) {
+        session.register_mesh(&url, &fallback.positions, &fallback.indices);
+    }
     let _ = session.precompute_step(8);
 }
 
@@ -555,13 +561,41 @@ fn world_selection_json(runtime: &Puzzle5dRuntime) -> String {
 }
 
 fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
-    json!({
-        "x": camera.position.first().copied().unwrap_or(0.0),
-        "y": camera.position.get(1).copied().unwrap_or(-5.0),
-        "z": camera.position.get(2).copied().unwrap_or(3.0),
-        "fov": 45.0,
-    })
-    .to_string()
+    semio_framework_core::world3d_camera_json(
+        [
+            camera.position.first().copied().unwrap_or(0.0),
+            camera.position.get(1).copied().unwrap_or(-5.0),
+            camera.position.get(2).copied().unwrap_or(3.0),
+        ],
+        camera.target,
+        45.0,
+    )
+}
+
+fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
+    args.and_then(|value| value.get("ids"))
+        .and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok())
+        .filter(|ids| !ids.is_empty())
+        .unwrap_or_else(|| fallback.to_vec())
+}
+
+fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+    [
+        a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+        a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+        a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+        a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
+    ]
+}
+
+fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
+    let len = (ax * ax + ay * ay + az * az).sqrt();
+    if len < 1e-8 {
+        return [0.0, 0.0, 0.0, 1.0];
+    }
+    let half = angle * 0.5;
+    let s = half.sin();
+    [ax / len * s, ay / len * s, az / len * s, half.cos()]
 }
 
 fn resolve_part_kind_mesh_url(part_kind: &str, kind_catalogs: Option<&Value>) -> Option<String> {
@@ -819,7 +853,34 @@ impl PluginApp for Puzzle5dPlayApp {
                         }
                     }
                 }
-                return Vec::new();
+                let part_kind = args
+                    .and_then(|value| value.get("partKind"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("Part");
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                let id = next_part_id();
+                let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
+                envelope.document.parts.push(Puzzle5dPart {
+                    id: id.clone(),
+                    part_kind: part_kind.into(),
+                    part_2d: Puzzle5dPart2d {
+                        x,
+                        y,
+                        shape: "circle".into(),
+                        radius: 20.0,
+                        text: part_kind.into(),
+                    },
+                    part_3d: Puzzle5dPart3d {
+                        origin: [0.0, 0.0, 0.0],
+                        mesh_url,
+                        orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                        scale: None,
+                    },
+                    grips: Vec::new(),
+                });
+                envelope.runtime.selection.part_ids = vec![id];
+                return vec![set_document_op(&envelope)];
             }
             "setFillCount" => {
                 drive_precompute(&mut self.precompute, &envelope);
@@ -935,12 +996,70 @@ impl PluginApp for Puzzle5dPlayApp {
                     }
                 }
             }
-            "setCamera3d" => {
+            "setCamera" | "setCamera3d" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
                         envelope.document.camera3d = parsed;
                         return vec![set_document_op(&envelope)];
                     }
+                }
+            }
+            "translateSelection" => {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selection.part_ids);
+                let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                for part in &mut envelope.document.parts {
+                    if ids.contains(&part.id) {
+                        part.part_3d.origin[0] += dx;
+                        part.part_3d.origin[1] += dy;
+                        part.part_3d.origin[2] += dz;
+                    }
+                }
+                if !ids.is_empty() {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "rotateSelection" => {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selection.part_ids);
+                let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let delta = quat_from_axis_angle(ax, ay, az, angle);
+                for part in &mut envelope.document.parts {
+                    if ids.contains(&part.id) {
+                        let current = part.part_3d.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                        part.part_3d.orientation = Some(quat_mul(delta, current));
+                    }
+                }
+                if !ids.is_empty() {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "scaleSelection" => {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selection.part_ids);
+                let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                for part in &mut envelope.document.parts {
+                    if ids.contains(&part.id) {
+                        part.part_3d.scale = Some(match &part.part_3d.scale {
+                            Some(Value::Array(values)) if values.len() >= 3 => json!([
+                                values[0].as_f64().unwrap_or(1.0) * sx,
+                                values[1].as_f64().unwrap_or(1.0) * sy,
+                                values[2].as_f64().unwrap_or(1.0) * sz,
+                            ]),
+                            Some(Value::Number(value)) => {
+                                let factor = value.as_f64().unwrap_or(1.0);
+                                json!([factor * sx, factor * sy, factor * sz])
+                            }
+                            _ => json!([sx, sy, sz]),
+                        });
+                    }
+                }
+                if !ids.is_empty() {
+                    return vec![set_document_op(&envelope)];
                 }
             }
             "worldSelect" => {
@@ -1018,7 +1137,7 @@ impl PluginApp for Puzzle5dPlayApp {
 //#region 🔖Manifest
 fn create_puzzle5d_app() -> App {
     App::from_builder(
-        App::builder(PUZZLE5D_PLAY_APP_ID, "Puzzle 5D")
+        App::builder(PUZZLE5D_PLAY_APP_ID, "Puzzle 5D").hierarchy(["semio", "puzzle", "5d"])
             .icon_id("puzzle")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1062,7 +1181,14 @@ fn create_puzzle5d_app() -> App {
     .program("puzzle5d", "Puzzle 5D", "model")
 }
 
+fn register_puzzle5d_exports() {
+    register_mesh_obj_glb_export_handlers("5d.puzzle", "puzzle5d", |_| {
+        Ok(semio_framework_plugin::mesh_from_kind("box"))
+    });
+}
+
 fn bundle() -> PluginBundle {
+    register_puzzle5d_exports();
     PluginBundle::new("puzzle5d", "Puzzle 5D", "0.1.0").register_app(create_puzzle5d_app(), || Box::new(Puzzle5dPlayApp::default()))
 }
 

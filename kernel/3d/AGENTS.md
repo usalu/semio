@@ -9,3 +9,7 @@ Boundary-representation kernel at [brep/](brep/AGENTS.md).
 ## Mesh
 
 Half-edge mesh kernel for low-poly editing at [mesh/](mesh/AGENTS.md).
+
+## Scene
+
+Generic 3D scene math, camera, picking, and draw descriptors at [scene/](scene/AGENTS.md).

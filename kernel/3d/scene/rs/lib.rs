@@ -1,4 +1,4 @@
-//! 🌐 3D scene math, orbit camera, mesh instances, and screen picking.
+//! 🌐 Generic 3D scene math, orbit camera, mesh instances, screen picking, and draw descriptors.
 
 //#region Math
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -332,6 +332,12 @@ pub struct Mesh3d {
     pub indices: Vec<u32>,
     pub aabb_min: [f32; 3],
     pub aabb_max: [f32; 3],
+    pub face_ids: Vec<u32>,
+    pub vertex_ids: Vec<u32>,
+    pub edge_positions: Vec<f32>,
+    pub edge_ids: Vec<u32>,
+    pub uvs: Vec<f32>,
+    pub colors: Vec<f32>,
 }
 
 impl Mesh3d {
@@ -350,7 +356,17 @@ impl Mesh3d {
             indices,
             aabb_min,
             aabb_max,
+            face_ids: Vec::new(),
+            vertex_ids: Vec::new(),
+            edge_positions: Vec::new(),
+            edge_ids: Vec::new(),
+            uvs: Vec::new(),
+            colors: Vec::new(),
         }
+    }
+
+    pub fn has_vertex_colors(&self) -> bool {
+        self.colors.len() == self.positions.len()
     }
 }
 
@@ -438,10 +454,10 @@ pub fn frustum_planes(view_proj: Mat4) -> [FrustumPlane; 6] {
     let rows = [
         [m[0][0] + m[0][3], m[1][0] + m[1][3], m[2][0] + m[2][3], m[3][0] + m[3][3]],
         [m[0][3] - m[0][0], m[1][3] - m[1][0], m[2][3] - m[2][0], m[3][3] - m[3][0]],
-        [m[0][0] + m[0][1], m[1][0] + m[1][1], m[2][0] + m[2][1], m[3][0] + m[3][1]],
-        [m[0][1] - m[0][0], m[1][1] - m[1][0], m[2][1] - m[2][0], m[3][1] - m[3][0]],
-        [m[0][0] + m[0][2], m[1][0] + m[1][2], m[2][0] + m[2][2], m[3][0] + m[3][2]],
-        [m[0][2] - m[0][0], m[1][2] - m[1][0], m[2][2] - m[2][0], m[3][2] - m[3][0]],
+        [m[0][3] + m[0][1], m[1][3] + m[1][1], m[2][3] + m[2][1], m[3][3] + m[3][1]],
+        [m[0][3] - m[0][1], m[1][3] - m[1][1], m[2][3] - m[2][1], m[3][3] - m[3][1]],
+        [m[0][3] + m[0][2], m[1][3] + m[1][2], m[2][3] + m[2][2], m[3][3] + m[3][2]],
+        [m[0][3] - m[0][2], m[1][3] - m[1][2], m[2][3] - m[2][2], m[3][3] - m[3][2]],
     ];
     let mut planes = [FrustumPlane {
         normal: Vec3::ZERO,
@@ -550,6 +566,232 @@ pub fn ray_pick_instance(
         }
     }
     best
+}
+
+pub struct RayMeshHit {
+    pub distance: f32,
+    pub triangle_index: usize,
+    pub bary_u: f32,
+    pub bary_v: f32,
+}
+
+pub fn ray_pick_mesh_detail(
+    origin: Vec3,
+    dir: Vec3,
+    mesh: &Mesh3d,
+    instance: &Instance3d,
+) -> Option<RayMeshHit> {
+    let (world_min, world_max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
+    if ray_aabb_slab(origin, dir, world_min, world_max).is_none() {
+        return None;
+    }
+    let mut best: Option<RayMeshHit> = None;
+    for (triangle_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
+        let a = instance.model.transform_point(vertex(mesh, tri[0]));
+        let b = instance.model.transform_point(vertex(mesh, tri[1]));
+        let c = instance.model.transform_point(vertex(mesh, tri[2]));
+        if let Some((t, u, v)) = ray_triangle_barycentric(origin, dir, a, b, c) {
+            if best.as_ref().map_or(true, |hit| t < hit.distance) {
+                best = Some(RayMeshHit {
+                    distance: t,
+                    triangle_index,
+                    bary_u: u,
+                    bary_v: v,
+                });
+            }
+        }
+    }
+    best
+}
+
+fn ray_triangle_barycentric(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Option<(f32, f32, f32)> {
+    let edge1 = b.sub(a);
+    let edge2 = c.sub(a);
+    let h = dir.cross(edge2);
+    let det = edge1.dot(h);
+    if det.abs() < 1e-8 {
+        return None;
+    }
+    let f = 1.0 / det;
+    let s = origin.sub(a);
+    let u = f * s.dot(h);
+    if !(0.0..=1.0).contains(&u) {
+        return None;
+    }
+    let q = s.cross(edge1);
+    let v = f * dir.dot(q);
+    if v < 0.0 || u + v > 1.0 {
+        return None;
+    }
+    let t = f * edge2.dot(q);
+    if t > 1e-4 {
+        Some((t, u, v))
+    } else {
+        None
+    }
+}
+
+pub fn interpolate_mesh_uv(mesh: &Mesh3d, triangle_index: usize, bary_u: f32, bary_v: f32) -> Option<(f32, f32)> {
+    if mesh.uvs.len() < 6 {
+        return None;
+    }
+    let base = triangle_index * 3;
+    let tri = mesh.indices.get(base..base + 3)?;
+    let uv = |index: u32| {
+        let i = index as usize * 2;
+        (mesh.uvs[i], mesh.uvs[i + 1])
+    };
+    let (u0, v0) = uv(tri[0]);
+    let (u1, v1) = uv(tri[1]);
+    let (u2, v2) = uv(tri[2]);
+    let w = 1.0 - bary_u - bary_v;
+    Some((u0 * w + u1 * bary_u + u2 * bary_v, v0 * w + v1 * bary_u + v2 * bary_v))
+}
+
+pub fn screen_select_components(
+    mesh_lookup: &std::collections::HashMap<String, Mesh3d>,
+    draws: &[SceneDraw3d],
+    view_proj: Mat4,
+    width: f32,
+    height: f32,
+    polygon: &[[f32; 2]],
+    rectangle: bool,
+    granularity: &str,
+) -> Vec<String> {
+    use std::collections::HashSet;
+    let mut selected = HashSet::new();
+    let local_polygon: Vec<[f32; 2]> = polygon
+        .iter()
+        .map(|point| [point[0], point[1]])
+        .collect();
+    for draw in draws {
+        let Some(mesh) = mesh_lookup.get(&draw.mesh_key) else {
+            continue;
+        };
+        for instance in &draw.instances {
+            match granularity {
+                "vertex" if !mesh.vertex_ids.is_empty() => {
+                    for (vertex_index, chunk) in mesh.positions.chunks_exact(3).enumerate() {
+                        let world = instance
+                            .model
+                            .transform_point(Vec3::new(chunk[0], chunk[1], chunk[2]));
+                        let Some(screen) = project_point(view_proj, world, width, height) else {
+                            continue;
+                        };
+                        let point = [screen[0], screen[1]];
+                        let inside = if rectangle {
+                            rect_contains(
+                                [
+                                    local_polygon[0][0],
+                                    local_polygon[0][1],
+                                    local_polygon[1][0],
+                                    local_polygon[1][1],
+                                ],
+                                point,
+                            )
+                        } else {
+                            point_in_polygon(point, &local_polygon)
+                        };
+                        if inside {
+                            let id = mesh
+                                .vertex_ids
+                                .get(vertex_index)
+                                .map(|value| value.to_string())
+                                .unwrap_or_else(|| vertex_index.to_string());
+                            selected.insert(id);
+                        }
+                    }
+                }
+                "edge" if !mesh.edge_positions.is_empty() => {
+                    for (edge_index, chunk) in mesh.edge_positions.chunks_exact(6).enumerate() {
+                        let mid = Vec3::new(
+                            (chunk[0] + chunk[3]) * 0.5,
+                            (chunk[1] + chunk[4]) * 0.5,
+                            (chunk[2] + chunk[5]) * 0.5,
+                        );
+                        let world = instance.model.transform_point(mid);
+                        let Some(screen) = project_point(view_proj, world, width, height) else {
+                            continue;
+                        };
+                        let point = [screen[0], screen[1]];
+                        let inside = if rectangle {
+                            rect_contains(
+                                [
+                                    local_polygon[0][0],
+                                    local_polygon[0][1],
+                                    local_polygon[1][0],
+                                    local_polygon[1][1],
+                                ],
+                                point,
+                            )
+                        } else {
+                            point_in_polygon(point, &local_polygon)
+                        };
+                        if inside {
+                            let id = mesh
+                                .edge_ids
+                                .get(edge_index)
+                                .map(|value| value.to_string())
+                                .unwrap_or_else(|| edge_index.to_string());
+                            selected.insert(id);
+                        }
+                    }
+                }
+                "face" if !mesh.face_ids.is_empty() => {
+                    for (tri_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
+                        let mut sum = Vec3::ZERO;
+                        for index in tri {
+                            let vertex = vertex(mesh, *index);
+                            sum = sum.add(instance.model.transform_point(vertex));
+                        }
+                        let centroid = sum.scale(1.0 / 3.0);
+                        let Some(screen) = project_point(view_proj, centroid, width, height) else {
+                            continue;
+                        };
+                        let point = [screen[0], screen[1]];
+                        let inside = if rectangle {
+                            rect_contains(
+                                [
+                                    local_polygon[0][0],
+                                    local_polygon[0][1],
+                                    local_polygon[1][0],
+                                    local_polygon[1][1],
+                                ],
+                                point,
+                            )
+                        } else {
+                            point_in_polygon(point, &local_polygon)
+                        };
+                        if !inside {
+                            continue;
+                        }
+                        let id = mesh
+                            .face_ids
+                            .get(tri_index)
+                            .map(|value| value.to_string())
+                            .unwrap_or_else(|| tri_index.to_string());
+                        selected.insert(id);
+                    }
+                }
+                _ => {
+                    let Some(projected) = projected_aabb_bounds(
+                        view_proj,
+                        instance.model,
+                        mesh.aabb_min,
+                        mesh.aabb_max,
+                        width,
+                        height,
+                    ) else {
+                        continue;
+                    };
+                    if aabb_overlaps_marquee(projected, &local_polygon, rectangle) {
+                        selected.insert(instance.id.clone());
+                    }
+                }
+            }
+        }
+    }
+    selected.into_iter().collect()
 }
 
 fn vertex(mesh: &Mesh3d, index: u32) -> Vec3 {
@@ -751,6 +993,146 @@ pub fn screen_select_instances(
 }
 //#endregion Picking
 
+//#region GumballMath
+pub fn vec3_from_f64(values: [f64; 3]) -> Vec3 {
+    Vec3::new(values[0] as f32, values[1] as f32, values[2] as f32)
+}
+
+pub fn gumball_extent(camera_distance: f32) -> f32 {
+    (camera_distance * 0.15).clamp(0.25, 2.5)
+}
+
+pub fn gumball_eye(camera: &Camera3d, pivot: Vec3) -> Vec3 {
+    camera.position.sub(pivot).normalize()
+}
+
+pub fn ray_plane_point(origin: Vec3, dir: Vec3, plane_point: Vec3, plane_normal: Vec3) -> Option<Vec3> {
+    let denom = plane_normal.dot(dir);
+    if denom.abs() < 1e-6 {
+        return None;
+    }
+    let t = plane_normal.dot(plane_point.sub(origin)) / denom;
+    if t < 0.0 {
+        return None;
+    }
+    Some(origin.add(dir.scale(t)))
+}
+
+pub fn gumball_axis_drag_plane_normal(axis: Vec3, eye: Vec3) -> Vec3 {
+    let axis = axis.normalize();
+    let align = eye.cross(axis);
+    if align.length() > 1e-6 {
+        return align.cross(axis).normalize();
+    }
+    if axis.z.abs() < 0.9 {
+        Vec3::new(0.0, 0.0, 1.0).cross(axis).normalize()
+    } else {
+        Vec3::new(0.0, 1.0, 0.0).cross(axis).normalize()
+    }
+}
+
+pub fn gumball_project_ray_onto_axis(
+    origin: Vec3,
+    dir: Vec3,
+    pivot: Vec3,
+    axis: Vec3,
+    eye: Vec3,
+) -> Option<f32> {
+    let plane_normal = gumball_axis_drag_plane_normal(axis, eye);
+    let hit = ray_plane_point(origin, dir, pivot, plane_normal)?;
+    Some(hit.sub(pivot).dot(axis.normalize()))
+}
+
+pub fn ray_segment_distance(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> Option<f32> {
+    let ab = b.sub(a);
+    let len_sq = ab.dot(ab);
+    if len_sq < 1e-8 {
+        return None;
+    }
+    let t = origin.sub(a).dot(ab) / len_sq;
+    let t_clamped = t.clamp(0.0, 1.0);
+    let closest = a.add(ab.scale(t_clamped));
+    let w = origin.sub(closest);
+    let b_val = dir.dot(w);
+    let c = w.dot(w);
+    let denom = 1.0 - b_val * b_val;
+    let dist_sq = if denom.abs() < 1e-6 {
+        c
+    } else {
+        c - b_val * b_val / denom
+    };
+    Some(dist_sq.max(0.0).sqrt())
+}
+
+pub fn quat_from_basis(x: Vec3, y: Vec3, z: Vec3) -> [f32; 4] {
+    let m00 = x.x;
+    let m01 = y.x;
+    let m02 = z.x;
+    let m10 = x.y;
+    let m11 = y.y;
+    let m12 = z.y;
+    let m20 = x.z;
+    let m21 = y.z;
+    let m22 = z.z;
+    let trace = m00 + m11 + m22;
+    if trace > 0.0 {
+        let s = (trace + 1.0).sqrt() * 2.0;
+        [
+            (m21 - m12) / s,
+            (m02 - m20) / s,
+            (m10 - m01) / s,
+            0.25 * s,
+        ]
+    } else if m00 > m11 && m00 > m22 {
+        let s = (1.0 + m00 - m11 - m22).sqrt() * 2.0;
+        [
+            0.25 * s,
+            (m01 + m10) / s,
+            (m02 + m20) / s,
+            (m21 - m12) / s,
+        ]
+    } else if m11 > m22 {
+        let s = (1.0 + m11 - m00 - m22).sqrt() * 2.0;
+        [
+            (m01 + m10) / s,
+            0.25 * s,
+            (m12 + m21) / s,
+            (m02 - m20) / s,
+        ]
+    } else {
+        let s = (1.0 + m22 - m00 - m11).sqrt() * 2.0;
+        [
+            (m02 + m20) / s,
+            (m12 + m21) / s,
+            0.25 * s,
+            (m10 - m01) / s,
+        ]
+    }
+}
+
+pub fn rotate_vector(vector: Vec3, axis: Vec3, angle: f32) -> Vec3 {
+    let axis = axis.normalize();
+    let cos = angle.cos();
+    let sin = angle.sin();
+    vector
+        .scale(cos)
+        .add(axis.cross(vector).scale(sin))
+        .add(axis.scale(axis.dot(vector) * (1.0 - cos)))
+}
+
+pub fn axis_rotate_angle(start: Vec3, current: Vec3, axis: Vec3) -> f32 {
+    let axis = axis.normalize();
+    let project = |v: Vec3| v.sub(axis.scale(v.dot(axis)));
+    let a = project(start).normalize();
+    let b = project(current).normalize();
+    let mut angle = a.dot(b).clamp(-1.0, 1.0).acos();
+    if axis.dot(a.cross(b)) < 0.0 {
+        angle = -angle;
+    }
+    angle
+}
+//#endregion GumballMath
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -838,6 +1220,57 @@ mod tests {
         assert!(!aabb_intersects_frustum(&planes, min, max));
     }
 
+    fn concrete_forest_camera() -> Camera3d {
+        Camera3d {
+            position: Vec3::new(30.0, -30.0, 20.0),
+            target: Vec3::new(7.0, 0.0, 3.0),
+            up: Vec3::new(0.0, 0.0, 1.0),
+            fov_y: 45.0_f32.to_radians(),
+            near: 0.1,
+            far: 1000.0,
+        }
+    }
+
+    #[test]
+    fn concrete_forest_frustum_contains_target_box() {
+        let camera = concrete_forest_camera();
+        let view_proj = camera.view_proj(1.0);
+        let planes = frustum_planes(view_proj);
+        let target = camera.target;
+        for plane in &planes {
+            let distance = plane.normal.dot(target) + plane.distance;
+            assert!(
+                distance >= -1e-3,
+                "look-at must be inside frustum, distance={distance}"
+            );
+        }
+        assert!(aabb_intersects_frustum(&planes, [6.0, -1.0, 2.0], [8.0, 1.0, 4.0]));
+    }
+
+    #[test]
+    fn concrete_forest_frustum_culls_off_axis_boxes() {
+        let camera = concrete_forest_camera();
+        let view_proj = camera.view_proj(1.0);
+        let planes = frustum_planes(view_proj);
+        assert!(!aabb_intersects_frustum(&planes, [7.0, 0.0, 200.0], [8.0, 1.0, 201.0]));
+        let behind = camera.position.add(camera.position.sub(camera.target).normalize().scale(4.0));
+        let min = [behind.x - 0.25, behind.y - 0.25, behind.z - 0.25];
+        let max = [behind.x + 0.25, behind.y + 0.25, behind.z + 0.25];
+        assert!(!aabb_intersects_frustum(&planes, min, max));
+    }
+
+    #[test]
+    fn concrete_forest_camera_look_at_inside_frustum_planes() {
+        let camera = concrete_forest_camera();
+        let view_proj = camera.view_proj(1.0);
+        let planes = frustum_planes(view_proj);
+        let target = camera.target;
+        for (index, plane) in planes.iter().enumerate() {
+            let distance = plane.normal.dot(target) + plane.distance;
+            assert!(distance >= -1e-2, "plane {index} distance={distance}");
+        }
+    }
+
     #[test]
     fn perspective_maps_depth_to_wgpu_ndc() {
         let near = 0.1_f32;
@@ -877,12 +1310,5 @@ mod tests {
             true,
         );
         assert!(ids.is_empty());
-    }
-
-    #[test]
-    fn world_globals_slot_alignment() {
-        use crate::draw::WORLD_GLOBALS_SLOT_SIZE;
-        assert!(WORLD_GLOBALS_SLOT_SIZE >= 80);
-        assert_eq!(WORLD_GLOBALS_SLOT_SIZE % 256, 0);
     }
 }

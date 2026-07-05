@@ -531,6 +531,62 @@ impl EditorHost {
         self.clamp_camera();
     }
 
+    pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), String> {
+        let value: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        if let Some(buffer) = value.get("buffer").and_then(|v| v.as_str()) {
+            self.set_text(buffer.to_string());
+        }
+        if let Some(json) = value.get("selectionJson").and_then(|v| v.as_str()) {
+            if let Ok(range) = serde_json::from_str::<serde_json::Value>(json) {
+                let start = range.get("start").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
+                let end = range.get("end").and_then(|v| v.as_u64()).unwrap_or(start as u64) as usize;
+                self.set_selection_range(start, end);
+            }
+        }
+        if let Some(json) = value.get("tokensJson").and_then(|v| v.as_str()) {
+            self.set_semantic_tokens_json(json);
+        }
+        if let Some(json) = value.get("diagnosticsJson").and_then(|v| v.as_str()) {
+            self.set_diagnostics_json(json);
+        }
+        if let Some(json) = value.get("placeholdersJson").and_then(|v| v.as_str()) {
+            self.set_placeholders_json(json);
+        }
+        if let Some(json) = value.get("occurrencesJson").and_then(|v| v.as_str()) {
+            if let Ok(value) = serde_json::from_str::<serde_json::Value>(json) {
+                if let Some(hover) = value.get("hover").and_then(|v| v.as_str()) {
+                    self.set_hover_occurrences_json(hover);
+                }
+                if let Some(selection) = value.get("selection").and_then(|v| v.as_str()) {
+                    self.set_selection_occurrences_json(selection);
+                }
+            }
+        }
+        if let Some(json) = value.get("extraCaretsJson").and_then(|v| v.as_str()) {
+            self.set_extra_carets_json(json);
+        }
+        if let Some(json) = value.get("selectableSpansJson").and_then(|v| v.as_str()) {
+            self.set_selectable_spans_json(json);
+        }
+        if let Some(json) = value.get("settingsJson").and_then(|v| v.as_str()) {
+            self.set_editor_settings_json(json);
+        }
+        if let Some(json) = value.get("cameraJson").and_then(|v| v.as_str()) {
+            if let Ok(camera) = serde_json::from_str::<serde_json::Value>(json) {
+                let y = camera.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                self.set_camera(0.0, y, 1.0);
+            }
+        }
+        if let Some(json) = value.get("overlaysJson").and_then(|v| v.as_str()) {
+            if let Ok(overlays) = serde_json::from_str::<serde_json::Value>(json) {
+                if let Some(y) = overlays.get("deadLineY").and_then(|v| v.as_f64()) {
+                    self.set_dead_line_y(y);
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn wheel_scroll_screen(&mut self, delta_y: f64) {
         if !self.scroll_overflows() {
             return;

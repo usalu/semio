@@ -704,7 +704,7 @@ impl PluginApp for WiresPlayApp {
 //#region 🔖AppFactory
 fn create_wires_app() -> App {
     App::from_builder(
-        App::builder(WIRES_PLAY_APP_ID, "Mindmap Wires")
+        App::builder(WIRES_PLAY_APP_ID, "Mindmap Wires").hierarchy(["semio", "reasoning", "mindmap", "wires"])
             .icon_id("reasoning-wires")
             .mode("edit", "Edit")
             .default_mode_id("edit")

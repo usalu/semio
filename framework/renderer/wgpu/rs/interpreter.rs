@@ -3,8 +3,9 @@
 use crate::scenes::render_component_scene;
 use semio_framework_core::{CommandDescriptor, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use ui_wgpu::{
-    ControlNode, KeyValueEntry, Rect, SelectItem, Theme, TreeItem, TreeItemAction, TreeSection, WidgetContext,
-    WidgetInteractionMaps, WidgetNode, measure_widget, render_widget,
+    gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect, SelectItem,
+    Theme, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode, measure_widget,
+    render_widget,
 };
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, CommandDescriptor>;
@@ -12,6 +13,34 @@ pub type FrameworkWidgetContext<'a> = WidgetContext<'a, CommandDescriptor>;
 pub fn measure_ui_node(atlas: &mut ui_wgpu::FontAtlas, theme: &Theme, node: &UiNode) -> (f32, f32) {
     match node {
         UiNode::ComponentScene(_) => (320.0, 240.0),
+        UiNode::Stack(stack) => {
+            let gap = gap_for_token(theme, stack.gap.as_deref());
+            let padding = padding_for_token(theme, stack.padding.as_deref()) * 2.0;
+            let vertical = stack.direction != "horizontal";
+            let mut total_main = 0.0f32;
+            let mut max_cross = 0.0f32;
+            for (index, child) in stack.children.iter().enumerate() {
+                let (w, h) = measure_ui_node(atlas, theme, child);
+                if vertical {
+                    total_main += h;
+                    max_cross = max_cross.max(w);
+                    if index + 1 < stack.children.len() {
+                        total_main += gap;
+                    }
+                } else {
+                    total_main += w;
+                    max_cross = max_cross.max(h);
+                    if index + 1 < stack.children.len() {
+                        total_main += gap;
+                    }
+                }
+            }
+            if vertical {
+                (max_cross + padding, total_main + padding)
+            } else {
+                (total_main + padding, max_cross + padding)
+            }
+        }
         other => measure_widget(atlas, theme, &ui_node_to_widget(other)),
     }
 }
@@ -21,10 +50,31 @@ pub fn render_ui_node(
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
     gpu: &mut ui_wgpu::GpuContext,
-    world3d_states: &mut std::collections::HashMap<String, crate::world3d::World3dState>,
+    world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
 ) {
     match node {
         UiNode::ComponentScene(scene) => render_component_scene(scene, bounds, ctx, gpu, world3d_states),
+        UiNode::Stack(stack) => {
+            let gap = gap_for_token(ctx.theme, stack.gap.as_deref());
+            let padding = padding_for_token(ctx.theme, stack.padding.as_deref());
+            let vertical = stack.direction != "horizontal";
+            let sizes: Vec<f32> = stack
+                .children
+                .iter()
+                .map(|child| {
+                    let (w, h) = measure_ui_node(ctx.atlas, ctx.theme, child);
+                    if vertical { h } else { w }
+                })
+                .collect();
+            let rects = if vertical {
+                layout_vertical(bounds, gap, padding, &sizes)
+            } else {
+                layout_horizontal(bounds, gap, padding, &sizes)
+            };
+            for (child, rect) in stack.children.iter().zip(rects.iter()) {
+                render_ui_node(child, *rect, ctx, gpu, world3d_states);
+            }
+        }
         other => render_widget(&ui_node_to_widget(other), bounds, ctx),
     }
 }

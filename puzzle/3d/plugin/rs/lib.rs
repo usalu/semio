@@ -273,6 +273,47 @@ fn camera_json(camera: &Puzzle3dCamera) -> String {
     .to_string()
 }
 
+fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
+    args.and_then(|value| value.get("ids"))
+        .and_then(|value| serde_json::from_value(value.clone()).ok())
+        .filter(|ids: &Vec<String>| !ids.is_empty())
+        .unwrap_or_else(|| fallback.to_vec())
+}
+
+fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+    [
+        a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+        a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+        a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+        a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
+    ]
+}
+
+fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
+    let len = (ax * ax + ay * ay + az * az).sqrt();
+    if len < 1e-8 {
+        return [0.0, 0.0, 0.0, 1.0];
+    }
+    let half = angle * 0.5;
+    let s = half.sin();
+    [ax / len * s, ay / len * s, az / len * s, half.cos()]
+}
+
+fn scale_value_mul(scale: &Option<Value>, sx: f64, sy: f64, sz: f64) -> Value {
+    match scale {
+        Some(Value::Array(values)) if values.len() >= 3 => json!([
+            values[0].as_f64().unwrap_or(1.0) * sx,
+            values[1].as_f64().unwrap_or(1.0) * sy,
+            values[2].as_f64().unwrap_or(1.0) * sz,
+        ]),
+        Some(Value::Number(value)) => {
+            let factor = value.as_f64().unwrap_or(1.0);
+            json!([factor * sx, factor * sy, factor * sz])
+        }
+        _ => json!([sx, sy, sz]),
+    }
+}
+
 fn resolve_object_mesh_url(object: &Puzzle3dObject, meta: &Puzzle3dFixtureMeta) -> Option<String> {
     if let Some(url) = object.mesh_url.as_ref().filter(|url| !url.is_empty()) {
         return Some(url.clone());
@@ -569,6 +610,11 @@ fn scene_config_json(envelope: &Puzzle3dEnvelope) -> String {
 
 fn sync_precompute_session(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dEnvelope) {
     let _ = session.set_scene(&scene_config_json(envelope));
+    let fallback = mesh_from_kind(PUZZLE3D_FALLBACK_MESH_KIND);
+    session.register_mesh(PUZZLE3D_FALLBACK_MESH_KIND, &fallback.positions, &fallback.indices);
+    for url in collect_mesh_urls(&envelope.fixture) {
+        session.register_mesh(&url, &fallback.positions, &fallback.indices);
+    }
 }
 
 fn world_selection_json(runtime: &Puzzle3dRuntime) -> String {
@@ -872,6 +918,53 @@ impl PluginApp for Puzzle3dPlayApp {
                     }
                 }
             }
+            "translateSelection" => {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selection.object_ids);
+                let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                for object in &mut envelope.fixture.objects {
+                    if ids.contains(&object.id) {
+                        object.origin[0] += dx;
+                        object.origin[1] += dy;
+                        object.origin[2] += dz;
+                    }
+                }
+                if !ids.is_empty() {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "rotateSelection" => {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selection.object_ids);
+                let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let delta = quat_from_axis_angle(ax, ay, az, angle);
+                for object in &mut envelope.fixture.objects {
+                    if ids.contains(&object.id) {
+                        let current = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                        object.orientation = Some(quat_mul(delta, current));
+                    }
+                }
+                if !ids.is_empty() {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "scaleSelection" => {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selection.object_ids);
+                let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                for object in &mut envelope.fixture.objects {
+                    if ids.contains(&object.id) {
+                        object.scale = Some(scale_value_mul(&object.scale, sx, sy, sz));
+                    }
+                }
+                if !ids.is_empty() {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "worldSelect" => {
                 let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
                 let ids: Vec<String> = args
@@ -1109,7 +1202,7 @@ impl PluginApp for Puzzle3dPlayApp {
 //#region 🔖Manifest
 fn create_puzzle3d_app() -> App {
     App::from_builder(
-        App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D")
+        App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D").hierarchy(["semio", "puzzle", "3d"])
             .icon_id("puzzle")
             .mode("edit", "Edit")
             .default_mode_id("edit")

@@ -1473,6 +1473,150 @@ mod wasm_bridge {
 }
 //#endregion 🔖WasmBridge
 
+//#region 🔖MediaExport
+fn escape_svg_text(value: &str) -> String {
+    value
+        .replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+fn rgba_to_svg_color(color: [f64; 4]) -> String {
+    let r = (color[0].clamp(0.0, 1.0) * 255.0).round() as u8;
+    let g = (color[1].clamp(0.0, 1.0) * 255.0).round() as u8;
+    let b = (color[2].clamp(0.0, 1.0) * 255.0).round() as u8;
+    let a = color[3].clamp(0.0, 1.0);
+    if (a - 1.0).abs() < f64::EPSILON {
+        format!("#{:02x}{:02x}{:02x}", r, g, b)
+    } else {
+        format!("rgba({r},{g},{b},{a:.3})")
+    }
+}
+
+fn fill_style_to_svg(fill: &FillStyle) -> String {
+    match fill {
+        FillStyle::Solid { color } => rgba_to_svg_color(*color),
+        FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => "none".into(),
+    }
+}
+
+fn path_segments_to_svg_d(segments: &[PathSegment]) -> String {
+    let mut out = String::new();
+    for segment in segments {
+        match segment {
+            PathSegment::Move { to } => out.push_str(&format!("M {} {} ", to[0], to[1])),
+            PathSegment::Line { to } => out.push_str(&format!("L {} {} ", to[0], to[1])),
+            PathSegment::Quad { ctrl, to } => out.push_str(&format!("Q {} {} {} {} ", ctrl[0], ctrl[1], to[0], to[1])),
+            PathSegment::Cubic { ctrl1, ctrl2, to } => {
+                out.push_str(&format!(
+                    "C {} {} {} {} {} {} ",
+                    ctrl1[0], ctrl1[1], ctrl2[0], ctrl2[1], to[0], to[1]
+                ));
+            }
+            PathSegment::Arc {
+                rx,
+                ry,
+                rotation,
+                large_arc,
+                sweep,
+                to,
+            } => out.push_str(&format!(
+                "A {} {} {} {} {} {} {} ",
+                rx,
+                ry,
+                rotation,
+                if *large_arc { 1 } else { 0 },
+                if *sweep { 1 } else { 0 },
+                to[0],
+                to[1]
+            )),
+            PathSegment::Close => out.push('Z'),
+        }
+    }
+    out.trim().to_string()
+}
+
+fn resolve_draw_document_artboard(doc: &DrawDocument) -> (u32, u32) {
+    if let Some(artboard) = &doc.artboard {
+        return (
+            artboard.width.max(1.0).round() as u32,
+            artboard.height.max(1.0).round() as u32,
+        );
+    }
+    let mut max_x: f64 = 1024.0;
+    let mut max_y: f64 = 1024.0;
+    for layer in flatten_draw_layers(&doc.layers) {
+        if let Some((x, y, width, height)) = draw_layer_world_bounds(layer) {
+            max_x = max_x.max(x + width);
+            max_y = max_y.max(y + height);
+        }
+    }
+    (max_x.max(1.0).round() as u32, max_y.max(1.0).round() as u32)
+}
+
+/// @emoji 💾 Serializes a draw document to SVG markup and raster dimensions.
+pub fn draw_document_to_svg(doc: &DrawDocument) -> (String, u32, u32) {
+    let (width, height) = resolve_draw_document_artboard(doc);
+    let shapes = flatten_draw_document_to_scene_nodes(doc)
+        .into_iter()
+        .map(|node| {
+            let matrix = node
+                .transform
+                .iter()
+                .map(|value| value.to_string())
+                .collect::<Vec<_>>()
+                .join(" ");
+            if let Some(text) = node.text {
+                let fill = node.fill.as_ref().map(fill_style_to_svg).unwrap_or_else(|| "black".into());
+                return format!(
+                    r#"<g transform="matrix({matrix})" opacity="{}"><text x="0" y="{}" font-size="{}" fill="{fill}">{}</text></g>"#,
+                    node.opacity,
+                    text.size,
+                    text.size,
+                    escape_svg_text(&text.content)
+                );
+            }
+            if let Some(image) = node.image {
+                return format!(
+                    r#"<g transform="matrix({matrix})" opacity="{}"><image href="{}" width="{}" height="{}"/></g>"#,
+                    node.opacity, image.src, image.width, image.height
+                );
+            }
+            let d = path_segments_to_svg_d(&node.segments);
+            if d.is_empty() {
+                return String::new();
+            }
+            let fill = node
+                .fill
+                .as_ref()
+                .map(fill_style_to_svg)
+                .unwrap_or_else(|| "none".into());
+            let stroke = node
+                .stroke
+                .as_ref()
+                .map(|style| rgba_to_svg_color(style.color))
+                .unwrap_or_else(|| "none".into());
+            let stroke_width = node.stroke.as_ref().map(|style| style.width).unwrap_or(0.0);
+            format!(
+                r#"<g transform="matrix({matrix})" opacity="{}"><path d="{d}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}" fill-rule="evenodd"/></g>"#,
+                node.opacity
+            )
+        })
+        .filter(|shape| !shape.is_empty())
+        .collect::<Vec<_>>()
+        .join("");
+    let svg = format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">{shapes}</svg>"#
+    );
+    (svg, width, height)
+}
+
+pub fn draw_document_json_to_svg(value: &serde_json::Value) -> Result<(String, u32, u32), String> {
+    let doc: DrawDocument = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+    Ok(draw_document_to_svg(&doc))
+}
+//#endregion 🔖MediaExport
+
 //#region 🧪Tests
 #[cfg(test)]
 mod tests {

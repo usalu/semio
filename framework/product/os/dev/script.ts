@@ -98,7 +98,7 @@ class PluginWatchScript extends BundleScript {
 }
 
 async function buildEngineWasm(pluginId: string, renderer: string): Promise<void> {
-	if (renderer !== "react") return;
+	if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
 	const graphScript = join(repoRoot, "framework/graph/rs/script.ts");
 	const graphBuild = spawnSync("bun", [graphScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
 	if (graphBuild.status !== 0) throw new Error("framework-graph wasm build failed");
@@ -119,7 +119,7 @@ class DevScript extends BundleScript {
 			await buildPlugins(filterPlugin);
 		}
 		const renderer = process.env.SEMIO_RENDERER ?? "react";
-		if (renderer === "wgpu") {
+		if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
 			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
 			const wgpuBuild = spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
 			if (wgpuBuild.status !== 0) throw new Error("wgpu renderer build failed");
@@ -143,7 +143,7 @@ class BuildScript extends BundleScript {
 		await new PluginBuildScript(this.root).run([]);
 		const renderer = process.env.SEMIO_RENDERER ?? "react";
 		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
-		if (renderer === "wgpu") {
+		if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
 			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
 			spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
 		}

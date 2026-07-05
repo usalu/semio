@@ -1,11 +1,11 @@
 //! ✏️ Draw plugin — declarative draw app bundled as a hot-swappable WASM component.
 
 use draw::{
-    apply_draw_edit_op, create_draw_boolean_layer, create_layer_by_kind, default_draw_document,
+    apply_draw_edit_op, create_draw_boolean_layer, create_draw_path_layer, create_layer_by_kind, default_draw_document,
     draw_layer_world_bounds, draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id,
     empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes,
-    flatten_draw_layers, layer_base, layer_id, layer_kind_label, patch_layer_field, rgba_to_hex, DrawDocument, DrawOp,
-    DRAW_BLEND_MODES, DRAW_BOOLEAN_OPS, DRAW_DOCUMENT_SCHEMA,
+    flatten_draw_layers, layer_base, layer_id, layer_kind_label, mutate_draw_layer, patch_layer_field, rgba_to_hex,
+    DrawDocument, DrawLayerNode, DrawOp, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPS, DRAW_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
@@ -41,6 +41,8 @@ struct DrawInteractionState {
     hovered_id: Option<String>,
     #[serde(default)]
     engagement_input: String,
+    #[serde(default)]
+    drawing_path_id: Option<String>,
 }
 
 fn draw_play_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
@@ -132,6 +134,28 @@ fn pick_layer_at(document: &DrawDocument, world_x: f64, world_y: f64) -> Option<
             None
         }
     })
+}
+
+fn append_pen_point(document: &DrawDocument, path_id: &str, point: [f64; 2], start: bool) -> DrawDocument {
+    mutate_draw_layer(document, path_id, |layer| {
+        if let DrawLayerNode::Path(path) = layer {
+            if start {
+                path.segments = vec![
+                    PathSegment::Move { to: point },
+                    PathSegment::Line { to: point },
+                ];
+            } else {
+                path.segments.push(PathSegment::Line { to: point });
+            }
+        }
+    })
+}
+
+fn begin_pen_path(document: &DrawDocument, point: [f64; 2]) -> (DrawDocument, String) {
+    let layer = create_draw_path_layer("Pen path", vec![PathSegment::Move { to: point }, PathSegment::Line { to: point }]);
+    let id = layer_id(&layer).to_string();
+    let next = apply_draw_edit_op(document, &DrawOp::AddLayer { parent_id: None, index: None, layer });
+    (next, id)
 }
 //#endregion 🔖Interaction
 
@@ -456,6 +480,15 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 let extend = args.and_then(|value| value.get("extend")).and_then(|value| value.as_bool()).unwrap_or(false);
                 if let (Some(x), Some(y)) = (x, y) {
                     let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
+                    let point = [world_x, world_y];
+                    if play.document.active_tool.as_deref() == Some("pen") {
+                        push_undo(&mut play);
+                        let (next, path_id) = begin_pen_path(&play.document, point);
+                        play.document = next;
+                        play.interaction.drawing_path_id = Some(path_id.clone());
+                        play.interaction.selected_ids = vec![path_id];
+                        return vec![set_document_op(&play)];
+                    }
                     if let Some(picked) = pick_layer_at(&play.document, world_x, world_y) {
                         if extend {
                             if play.interaction.selected_ids.iter().any(|id| id == &picked) {
@@ -479,11 +512,22 @@ impl semio_framework_plugin::PluginApp for DrawApp {
                 let viewport_h = args.and_then(|value| value.get("height")).and_then(|value| value.as_f64()).unwrap_or(600.0);
                 if let (Some(x), Some(y)) = (x, y) {
                     let (world_x, world_y) = canvas_point_to_world(&play.document.camera, x, y, viewport_w, viewport_h);
+                    if play.document.active_tool.as_deref() == Some("pen") {
+                        if let Some(path_id) = play.interaction.drawing_path_id.clone() {
+                            play.document = append_pen_point(&play.document, &path_id, [world_x, world_y], false);
+                            return vec![set_document_op(&play)];
+                        }
+                    }
                     play.interaction.hovered_id = pick_layer_at(&play.document, world_x, world_y);
                     return vec![set_document_op(&play)];
                 }
             }
-            "canvasPointerUp" | "canvasWheel" => {}
+            "canvasPointerUp" => {
+                if play.interaction.drawing_path_id.take().is_some() {
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "canvasWheel" => {}
             _ => {}
         }
         Vec::new()
@@ -1232,7 +1276,7 @@ fn create_draw_app() -> App {
         possible_engagements: None,
     };
     App::from_builder(
-        App::builder(DRAW_PLAY_APP_ID, "Draw")
+        App::builder(DRAW_PLAY_APP_ID, "Draw").hierarchy(["semio", "draw"])
             .icon_id("draw")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1259,7 +1303,12 @@ fn create_draw_app() -> App {
     .program("draw", "Draw", "2d.drawing")
 }
 
+fn register_draw_exports() {
+    semio_framework_os::register_2d_svg_png_export_handlers("2d.drawing", "draw", draw::draw_document_json_to_svg);
+}
+
 fn draw_bundle() -> semio_framework_plugin::PluginBundle {
+    register_draw_exports();
     semio_framework_plugin::PluginBundle::new("draw", "Draw", "0.1.0").register_app(create_draw_app(), || Box::new(DrawApp))
 }
 

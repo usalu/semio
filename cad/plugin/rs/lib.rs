@@ -149,6 +149,7 @@ fn cad_document_from_modelspace(json: &str, id: &str) -> Option<CadPlayDocument>
                 visible: true,
                 origin: object_origin_from_vertices(object_id, vertices),
                 orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                scale: None,
                 mesh_url,
             })
         })
@@ -230,6 +231,8 @@ struct CadObject {
     origin: [f64; 3],
     #[serde(default)]
     orientation: Option<[f64; 4]>,
+    #[serde(default)]
+    scale: Option<[f64; 3]>,
     #[serde(default, rename = "meshUrl")]
     mesh_url: Option<String>,
 }
@@ -300,6 +303,7 @@ fn default_document() -> CadPlayDocument {
             visible: true,
             origin: [0.0, 0.0, 0.0],
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
             mesh_url: Some("/mesh/hexagonal-cut-concrete-forest-left.glb".into()),
         }],
         nodes: scene.nodes,
@@ -326,6 +330,7 @@ fn forest_play_document() -> CadPlayDocument {
                 visible: true,
                 origin: [5.4, 2.34, 1.5],
                 orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                scale: None,
                 mesh_url: None,
             },
             CadObject {
@@ -335,6 +340,7 @@ fn forest_play_document() -> CadPlayDocument {
                 visible: true,
                 origin: [4.05, 4.68, 3.0],
                 orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                scale: None,
                 mesh_url: None,
             },
             CadObject {
@@ -344,6 +350,7 @@ fn forest_play_document() -> CadPlayDocument {
                 visible: true,
                 origin: [6.75, 4.68, 3.0],
                 orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                scale: None,
                 mesh_url: None,
             },
             CadObject {
@@ -353,6 +360,7 @@ fn forest_play_document() -> CadPlayDocument {
                 visible: true,
                 origin: [5.4, 2.34, 3.0],
                 orientation: Some([0.0, 0.7071, 0.0, 0.7071]),
+                scale: None,
                 mesh_url: None,
             },
         ],
@@ -403,13 +411,78 @@ fn cad_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
 }
 
 fn camera_json(camera: &CadCamera) -> String {
-    json!({
-        "x": camera.position[0],
-        "y": camera.position[1],
-        "z": camera.position[2],
-        "fov": camera.fov,
-    })
-    .to_string()
+    semio_framework_core::world3d_camera_json(camera.position, camera.target, camera.fov)
+}
+
+fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
+    args.and_then(|value| value.get("ids"))
+        .and_then(|value| serde_json::from_value(value.clone()).ok())
+        .filter(|ids: &Vec<String>| !ids.is_empty())
+        .unwrap_or_else(|| fallback.to_vec())
+}
+
+fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+    [
+        a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+        a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+        a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+        a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
+    ]
+}
+
+fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
+    let len = (ax * ax + ay * ay + az * az).sqrt();
+    if len < 1e-8 {
+        return [0.0, 0.0, 0.0, 1.0];
+    }
+    let half = angle * 0.5;
+    let s = half.sin();
+    [ax / len * s, ay / len * s, az / len * s, half.cos()]
+}
+
+fn apply_cad_translate(envelope: &mut CadPlayEnvelope, args: Option<&Value>) -> bool {
+    let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
+    let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+    for object in &mut envelope.document.objects {
+        if ids.contains(&object.id) {
+            object.origin[0] += dx;
+            object.origin[1] += dy;
+            object.origin[2] += dz;
+        }
+    }
+    !ids.is_empty()
+}
+
+fn apply_cad_rotate(envelope: &mut CadPlayEnvelope, args: Option<&Value>) -> bool {
+    let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
+    let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+    let delta = quat_from_axis_angle(ax, ay, az, angle);
+    for object in &mut envelope.document.objects {
+        if ids.contains(&object.id) {
+            let current = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+            object.orientation = Some(quat_mul(delta, current));
+        }
+    }
+    !ids.is_empty()
+}
+
+fn apply_cad_scale(envelope: &mut CadPlayEnvelope, args: Option<&Value>) -> bool {
+    let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
+    let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+    let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+    let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+    for object in &mut envelope.document.objects {
+        if ids.contains(&object.id) {
+            let current = object.scale.unwrap_or([1.0, 1.0, 1.0]);
+            object.scale = Some([current[0] * sx, current[1] * sy, current[2] * sz]);
+        }
+    }
+    !ids.is_empty()
 }
 
 fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
@@ -432,8 +505,8 @@ fn collect_mesh_urls(document: &CadPlayDocument) -> Vec<String> {
     urls.into_iter().collect()
 }
 
-fn object_scale_json(_object: &CadObject) -> [f64; 3] {
-    [1.0, 1.0, 1.0]
+fn object_scale_json(object: &CadObject) -> [f64; 3] {
+    object.scale.unwrap_or([1.0, 1.0, 1.0])
 }
 
 fn world_instances_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) -> String {
@@ -799,6 +872,21 @@ impl PluginApp for CadApp {
                     }
                 }
             }
+            "translateSelection" => {
+                if apply_cad_translate(&mut envelope, args) {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "rotateSelection" => {
+                if apply_cad_rotate(&mut envelope, args) {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "scaleSelection" => {
+                if apply_cad_scale(&mut envelope, args) {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "addObject" => {
                 let typology = args.and_then(|value| value.get("typology")).and_then(|value| value.as_str()).unwrap_or("spatial.shape.box");
                 let label = TYPOLOGY_CATALOG
@@ -814,6 +902,7 @@ impl PluginApp for CadApp {
                     visible: true,
                     origin: [0.0, 0.0, 0.0],
                     orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                    scale: None,
                     mesh_url: TYPOLOGY_MESH_URLS
                         .iter()
                         .find(|(entry, _)| *entry == typology)
@@ -926,7 +1015,7 @@ impl PluginApp for CadApp {
 //#region 🔖Manifest
 fn create_cad_app() -> App {
     App::from_builder(
-        App::builder(CAD_PLAY_APP_ID, "CAD")
+        App::builder(CAD_PLAY_APP_ID, "CAD").hierarchy(["semio", "cad"])
             .icon_id("box")
             .mode("edit", "Edit")
             .default_mode_id("edit")

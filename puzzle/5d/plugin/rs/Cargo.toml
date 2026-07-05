@@ -12,6 +12,8 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
+semio-framework-core = { path = "../../../../framework/core/rs" }
+semio-framework-os = { path = "../../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
 puzzle_5d = { path = "../../rs" }
 serde = { version = "1.0.219", features = ["derive"] }

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import type { CommandDescriptor, UiComponentSceneNode } from "../types.ts";
 
@@ -15,7 +15,119 @@ type CanvasLayerRecord = {
 	readonly y0?: number;
 	readonly x1?: number;
 	readonly y1?: number;
+	readonly dataUrl?: string;
+	readonly points?: readonly (readonly [number, number])[];
+	readonly seams?: readonly number[];
 	readonly base?: { readonly name?: string; readonly x?: number; readonly y?: number; readonly width?: number; readonly height?: number };
+	readonly transform?: readonly number[];
+	readonly segments?: readonly {
+		readonly kind?: string;
+		readonly to?: readonly [number, number];
+		readonly ctrl?: readonly [number, number];
+		readonly ctrl1?: readonly [number, number];
+		readonly ctrl2?: readonly [number, number];
+		readonly rx?: number;
+		readonly ry?: number;
+		readonly rotation?: number;
+		readonly largeArc?: boolean;
+		readonly sweep?: boolean;
+	}[];
+	readonly fill?: { readonly kind?: string; readonly color?: readonly number[] };
+	readonly stroke?: { readonly color?: readonly number[]; readonly width?: number; readonly dash?: readonly number[] };
+	readonly opacity?: number;
+	readonly visible?: boolean;
+	readonly text?: { readonly content?: string; readonly size?: number };
+	readonly image?: { readonly src?: string; readonly width?: number; readonly height?: number };
+};
+
+function rgbaToCss(color: readonly number[] | undefined, opacity = 1): string {
+	if (!color || color.length < 3) return `rgba(148, 163, 184, ${opacity})`;
+	const alpha = (color[3] ?? 1) * opacity;
+	return `rgba(${color[0]! * 255}, ${color[1]! * 255}, ${color[2]! * 255}, ${alpha})`;
+}
+
+function applySceneTransform(ctx: CanvasRenderingContext2D, transform: readonly number[] | undefined): void {
+	if (!transform || transform.length < 6) return;
+	const [a, b, c, d, e, f] = transform;
+	ctx.transform(a ?? 1, b ?? 0, c ?? 0, d ?? 1, e ?? 0, f ?? 0);
+}
+
+function traceScenePath(ctx: CanvasRenderingContext2D, segments: CanvasLayerRecord["segments"]): void {
+	if (!segments?.length) return;
+	for (const segment of segments) {
+		const kind = segment.kind ?? "line";
+		if (kind === "move" && segment.to) {
+			ctx.moveTo(segment.to[0]!, segment.to[1]!);
+		} else if (kind === "line" && segment.to) {
+			ctx.lineTo(segment.to[0]!, segment.to[1]!);
+		} else if (kind === "quad" && segment.ctrl && segment.to) {
+			ctx.quadraticCurveTo(segment.ctrl[0]!, segment.ctrl[1]!, segment.to[0]!, segment.to[1]!);
+		} else if (kind === "cubic" && segment.ctrl1 && segment.ctrl2 && segment.to) {
+			ctx.bezierCurveTo(
+				segment.ctrl1[0]!,
+				segment.ctrl1[1]!,
+				segment.ctrl2[0]!,
+				segment.ctrl2[1]!,
+				segment.to[0]!,
+				segment.to[1]!,
+			);
+		} else if (kind === "arc" && segment.to) {
+			ctx.arcTo(segment.to[0]!, segment.to[1]!, segment.to[0]!, segment.to[1]!, 0);
+		} else if (kind === "close") {
+			ctx.closePath();
+		}
+	}
+}
+
+function drawSceneNode(
+	ctx: CanvasRenderingContext2D,
+	layer: CanvasLayerRecord,
+	zoom: number,
+	imageCache: ReadonlyMap<string, HTMLImageElement>,
+): void {
+	if (layer.visible === false) return;
+	const opacity = layer.opacity ?? 1;
+	ctx.save();
+	applySceneTransform(ctx, layer.transform);
+	if (layer.segments?.length) {
+		ctx.beginPath();
+		traceScenePath(ctx, layer.segments);
+		if (layer.fill?.color) {
+			ctx.fillStyle = rgbaToCss(layer.fill.color, opacity);
+			ctx.fill();
+		}
+		if (layer.stroke) {
+			ctx.strokeStyle = rgbaToCss(layer.stroke.color, opacity);
+			ctx.lineWidth = Math.max((layer.stroke.width ?? 1) / zoom, 1 / zoom);
+			ctx.setLineDash(layer.stroke.dash?.map((value) => value / zoom) ?? []);
+			ctx.stroke();
+			ctx.setLineDash([]);
+		} else if (!layer.fill?.color) {
+			ctx.strokeStyle = rgbaToCss([0.58, 0.64, 0.72, 0.95], opacity);
+			ctx.lineWidth = Math.max(1 / zoom, 1);
+			ctx.stroke();
+		}
+	}
+	if (layer.text?.content) {
+		ctx.fillStyle = rgbaToCss([0.9, 0.93, 0.97, 1], opacity);
+		ctx.font = `${(layer.text.size ?? 14) / zoom}px ui-sans-serif, system-ui, sans-serif`;
+		ctx.fillText(layer.text.content, 0, 0);
+	}
+	if (layer.image?.src) {
+		const width = layer.image.width ?? layer.width ?? 64;
+		const height = layer.image.height ?? layer.height ?? 64;
+		const image = imageCache.get(layer.image.src);
+		if (image?.complete) {
+			ctx.drawImage(image, 0, 0, width, height);
+		}
+	}
+	ctx.restore();
+}
+
+type CanvasCamera = {
+	x: number;
+	y: number;
+	zoom: number;
 };
 
 function layerBounds(layer: CanvasLayerRecord): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null {
@@ -31,16 +143,33 @@ function layerLabel(layer: CanvasLayerRecord): string {
 	return layer.name ?? layer.base?.name ?? layer.kind ?? layer.id ?? "layer";
 }
 
+function drawCheckerboard(ctx: CanvasRenderingContext2D, width: number, height: number, zoom: number): void {
+	const cell = 16 / Math.max(zoom, 0.25);
+	const cols = Math.ceil(width / cell) + 1;
+	const rows = Math.ceil(height / cell) + 1;
+	for (let row = 0; row < rows; row += 1) {
+		for (let col = 0; col < cols; col += 1) {
+			ctx.fillStyle = (row + col) % 2 === 0 ? "#2a2d34" : "#1f2228";
+			ctx.fillRect(col * cell - width / 2, row * cell - height / 2, cell, cell);
+		}
+	}
+}
+
 class JsonLayersCanvasSession implements GraphWasmSession {
 	private canvas: HTMLCanvasElement | null = null;
 	private ctx: CanvasRenderingContext2D | null = null;
 	private logicalWidth = 1;
 	private logicalHeight = 1;
 	private dpr = 1;
+	private readonly imageCache = new Map<string, HTMLImageElement>();
+	private panning = false;
+	private panStart = { x: 0, y: 0 };
+	private panCameraStart = { x: 0, y: 0 };
 
 	constructor(
 		private readonly layersJson: string,
-		private readonly camera: { readonly x: number; readonly y: number; readonly zoom: number },
+		private camera: CanvasCamera,
+		private readonly onCameraChange: (camera: CanvasCamera) => void,
 		private readonly onPointer?: (command: string, args?: Record<string, unknown>) => void,
 	) {}
 
@@ -50,6 +179,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 		this.logicalWidth = logicalW;
 		this.logicalHeight = logicalH;
 		this.dpr = dpr;
+		await this.preloadImages();
 		this.renderFrame();
 		return undefined;
 	}
@@ -58,6 +188,37 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 		this.logicalWidth = width;
 		this.logicalHeight = height;
 		this.dpr = dpr;
+	}
+
+	updateCamera(camera: CanvasCamera): void {
+		this.camera = camera;
+	}
+
+	private parseLayers(): CanvasLayerRecord[] {
+		try {
+			return JSON.parse(this.layersJson) as CanvasLayerRecord[];
+		} catch {
+			return [];
+		}
+	}
+
+	private async preloadImages(): Promise<void> {
+		const layers = this.parseLayers();
+		const urls = new Set<string>();
+		for (const layer of layers) {
+			if (layer.kind === "image" && layer.dataUrl) urls.add(layer.dataUrl);
+			if (layer.image?.src) urls.add(layer.image.src);
+		}
+		await Promise.all(
+			[...urls].map(async (key) => {
+				if (this.imageCache.has(key)) return;
+				const image = new Image();
+				image.decoding = "async";
+				image.src = key;
+				await image.decode().catch(() => undefined);
+				this.imageCache.set(key, image);
+			}),
+		);
 	}
 
 	renderFrame(): void {
@@ -70,17 +231,42 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 		ctx.clearRect(0, 0, width, height);
 		ctx.fillStyle = "#111318";
 		ctx.fillRect(0, 0, width, height);
-		let layers: CanvasLayerRecord[] = [];
-		try {
-			layers = JSON.parse(this.layersJson) as CanvasLayerRecord[];
-		} catch {
-			layers = [];
-		}
-		ctx.save();
+		const layers = this.parseLayers();
 		const zoom = this.camera.zoom || 1;
+		ctx.save();
 		ctx.translate(width / 2 + this.camera.x * this.dpr * zoom, height / 2 + this.camera.y * this.dpr * zoom);
 		ctx.scale(zoom * this.dpr, zoom * this.dpr);
+		drawCheckerboard(ctx, this.logicalWidth, this.logicalHeight, zoom);
 		for (const [index, layer] of layers.entries()) {
+			if (layer.segments?.length || layer.text || layer.image?.src) {
+				drawSceneNode(ctx, layer, zoom, this.imageCache);
+				continue;
+			}
+			if (layer.kind === "image" && layer.dataUrl) {
+				const bounds = layerBounds(layer);
+				const image = this.imageCache.get(layer.dataUrl);
+				if (bounds && image && image.complete) {
+					ctx.drawImage(image, bounds.x, bounds.y, bounds.width, bounds.height);
+				}
+				continue;
+			}
+			if (layer.kind === "polyline" && layer.points?.length) {
+				const seams = layer.seams ?? [];
+				for (let segment = 0; segment + 1 < layer.points.length; segment += 2) {
+					const [x0, y0] = layer.points[segment]!;
+					const [x1, y1] = layer.points[segment + 1]!;
+					const seamIndex = segment / 2;
+					ctx.strokeStyle = "rgba(148, 163, 184, 0.95)";
+					ctx.lineWidth = Math.max(1 / zoom, 1);
+					ctx.setLineDash(seams[seamIndex] ? [6 / zoom, 4 / zoom] : []);
+					ctx.beginPath();
+					ctx.moveTo(x0, y0);
+					ctx.lineTo(x1, y1);
+					ctx.stroke();
+				}
+				ctx.setLineDash([]);
+				continue;
+			}
 			const bounds = layerBounds(layer);
 			const label = layerLabel(layer);
 			const hue = (index * 47) % 360;
@@ -120,19 +306,79 @@ class JsonLayersCanvasSession implements GraphWasmSession {
 		ctx.restore();
 	}
 
+	private toCanvasCoords(x: number, y: number): { readonly x: number; readonly y: number } {
+		const canvas = this.canvas;
+		if (!canvas) return { x, y };
+		const zoom = this.camera.zoom || 1;
+		const width = canvas.width;
+		const height = canvas.height;
+		return {
+			x: (x - width / 2) / (zoom * this.dpr) - this.camera.x,
+			y: (y - height / 2) / (zoom * this.dpr) - this.camera.y,
+		};
+	}
+
 	pointerDown(x: number, y: number, button: number, extend: boolean): void {
-		this.onPointer?.("canvasPointerDown", { x, y, button, extend });
+		if (button === 1) {
+			this.panning = true;
+			this.panStart = { x, y };
+			this.panCameraStart = { x: this.camera.x, y: this.camera.y };
+			return;
+		}
+		const point = this.toCanvasCoords(x, y);
+		this.onPointer?.("canvasPointerDown", {
+			x: point.x,
+			y: point.y,
+			button,
+			extend,
+			width: this.logicalWidth,
+			height: this.logicalHeight,
+		});
 	}
 
 	pointerMove(x: number, y: number): void {
-		this.onPointer?.("canvasPointerMove", { x, y });
+		if (this.panning) {
+			const zoom = this.camera.zoom || 1;
+			const next = {
+				...this.camera,
+				x: this.panCameraStart.x + (x - this.panStart.x) / (zoom * this.dpr),
+				y: this.panCameraStart.y + (y - this.panStart.y) / (zoom * this.dpr),
+			};
+			this.camera = next;
+			this.onCameraChange(next);
+			this.renderFrame();
+			return;
+		}
+		const point = this.toCanvasCoords(x, y);
+		this.onPointer?.("canvasPointerMove", {
+			x: point.x,
+			y: point.y,
+			width: this.logicalWidth,
+			height: this.logicalHeight,
+		});
 	}
 
 	pointerUp(x: number, y: number): void {
-		this.onPointer?.("canvasPointerUp", { x, y });
+		if (this.panning) {
+			this.panning = false;
+			return;
+		}
+		const point = this.toCanvasCoords(x, y);
+		this.onPointer?.("canvasPointerUp", {
+			x: point.x,
+			y: point.y,
+			width: this.logicalWidth,
+			height: this.logicalHeight,
+		});
 	}
 
 	wheel(x: number, y: number, deltaY: number): void {
+		const factor = deltaY > 0 ? 0.9 : 1.1;
+		const nextZoom = Math.min(8, Math.max(0.125, (this.camera.zoom || 1) * factor));
+		const next = { ...this.camera, zoom: nextZoom };
+		this.camera = next;
+		this.onCameraChange(next);
+		this.renderFrame();
 		this.onPointer?.("canvasWheel", { x, y, deltaY });
 	}
 }
@@ -147,6 +393,13 @@ export function Canvas2dHost({
 	readonly onCommand: (command: CommandDescriptor) => void;
 }) {
 	const scene = node.canvas2d;
+	const initialCamera = useMemo(
+		() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }),
+		[scene?.cameraX, scene?.cameraY, scene?.zoom],
+	);
+	const cameraRef = useRef<CanvasCamera>(initialCamera);
+	cameraRef.current = initialCamera;
+	const sessionRef = useRef<JsonLayersCanvasSession | null>(null);
 	const dispatch = useCallback(
 		(command: string, args?: Record<string, unknown>) => {
 			onCommand({
@@ -158,13 +411,28 @@ export function Canvas2dHost({
 		[node.controllerId, node.surfaceId, onCommand],
 	);
 	const sessionFactory = useMemo(() => {
-		return () =>
-			new JsonLayersCanvasSession(
+		return () => {
+			const session = new JsonLayersCanvasSession(
 				scene?.layersJson ?? "[]",
-				{ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 },
-				dispatch,
+				cameraRef.current,
+				(next) => {
+					cameraRef.current = next;
+					sessionRef.current?.updateCamera(next);
+				},
+				(command, args) => {
+					if (command === "canvasPointerDown" && args?.button === 0) {
+						dispatch("paintStrokeBegin");
+					}
+					if (command === "canvasPointerUp") {
+						dispatch("paintStrokeEnd");
+					}
+					dispatch(command, args);
+				},
 			);
-	}, [dispatch, scene?.cameraX, scene?.cameraY, scene?.layersJson, scene?.zoom]);
+			sessionRef.current = session;
+			return session;
+		};
+	}, [dispatch, scene?.layersJson]);
 
 	if (!scene) return <div className="semio-canvas-2d-empty">No canvas scene</div>;
 

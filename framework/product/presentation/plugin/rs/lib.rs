@@ -711,7 +711,7 @@ impl PluginApp for PresentationPlayApp {
 //#region 🔖Manifest
 fn create_presentation_app() -> App {
     App::from_builder(
-        App::builder(PRESENTATION_PLAY_APP_ID, "Presentation")
+        App::builder(PRESENTATION_PLAY_APP_ID, "Presentation").hierarchy(["semio", "presentation"])
             .icon_id("presentation")
             .mode("main", "Edit")
             .default_mode_id("main")
@@ -745,7 +745,16 @@ fn create_presentation_app() -> App {
     .program("presentation", "Presentation", "deck")
 }
 
+fn presentation_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    semio_framework_os::title_card_svg(value.get("deck").unwrap_or(value), "Presentation", 1280, 720)
+}
+
+fn register_presentation_exports() {
+    semio_framework_os::register_2d_svg_png_export_handlers("presentation.deck", "presentation", presentation_document_json_to_svg);
+}
+
 fn bundle() -> PluginBundle {
+    register_presentation_exports();
     PluginBundle::new("presentation", "Presentation", "0.1.0").register_app(create_presentation_app(), || {
         Box::new(PresentationPlayApp)
     })

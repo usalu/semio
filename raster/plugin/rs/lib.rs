@@ -1273,7 +1273,7 @@ impl PluginApp for RasterApp {
 //#region 🔖Manifest
 fn create_raster_app() -> App {
     App::from_builder(
-        App::builder(RASTER_PLAY_APP_ID, "Raster")
+        App::builder(RASTER_PLAY_APP_ID, "Raster").hierarchy(["semio", "raster"])
             .icon_id("raster")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1312,7 +1312,16 @@ fn create_raster_app() -> App {
     .program("raster", "Raster", "2d.raster")
 }
 
+fn raster_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    semio_framework_os::title_card_svg(value, "Raster", 1024, 1024)
+}
+
+fn register_raster_exports() {
+    semio_framework_os::register_2d_svg_png_export_handlers("2d.raster", "raster", raster_document_json_to_svg);
+}
+
 fn raster_bundle() -> PluginBundle {
+    register_raster_exports();
     PluginBundle::new("raster", "Raster", "0.1.0").register_app(create_raster_app(), || Box::new(RasterApp))
 }
 

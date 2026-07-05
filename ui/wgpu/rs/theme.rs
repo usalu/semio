@@ -3,7 +3,7 @@
 use crate::geometry::Rect;
 use ui_styling::{
     metrics::{chrome as chrome_metrics, dom, typography},
-    radii, strokes, ChromeTheme, CHROME_DARK, CHROME_LIGHT,
+    opacities, radii, strokes, ChromeTheme, CHROME_DARK, CHROME_LIGHT,
 };
 use ui_styling::theme::ThemeName;
 
@@ -56,6 +56,8 @@ pub struct Theme {
     pub navbar_height: f32,
     pub panel_header_height: f32,
     pub control_height: f32,
+    pub control_height_small: f32,
+    pub glass_panel_alpha: f32,
     pub font_size_body: f32,
     pub font_size_small: f32,
     pub font_size_emphasized: f32,
@@ -70,6 +72,7 @@ pub struct Theme {
     pub border_radius: f32,
     pub border_normal: Rgba,
     pub border_emphasized: Rgba,
+    pub text_element: Rgba,
     pub stroke_hairline: f32,
 }
 
@@ -109,6 +112,8 @@ fn from_chrome(chrome: &ChromeTheme) -> Theme {
         navbar_height: chrome_px(chrome_metrics::NAVBAR_HEIGHT_UI_SPACING),
         panel_header_height: chrome_px(chrome_metrics::PANEL_HEADER_HEIGHT_UI_SPACING),
         control_height: chrome_px(chrome_metrics::CONTROL_HEIGHT_UI_SPACING),
+        control_height_small: chrome_px(5.0),
+        glass_panel_alpha: opacities::GLASS_PANEL_ALPHA as f32,
         font_size_body: typography::TEXT_SM_PX as f32,
         font_size_small: typography::TEXT_XS_PX as f32,
         font_size_emphasized: typography::TEXT_BASE_PX as f32,
@@ -123,6 +128,7 @@ fn from_chrome(chrome: &ChromeTheme) -> Theme {
         border_radius: radii::CHROME as f32,
         border_normal: Rgba::from_chrome(&chrome.border_normal),
         border_emphasized: Rgba::from_chrome(&chrome.border_emphasized),
+        text_element: Rgba::from_chrome(&chrome.border_element),
         stroke_hairline: strokes::CHROME_BORDER_HAIRLINE as f32,
     }
 }
@@ -142,6 +148,57 @@ impl Theme {
             ThemeName::Dark => Self::dark(),
         }
     }
+
+    pub fn glass_panel_fill(&self) -> Rgba {
+        let a = self.glass_panel_alpha;
+        let [pr, pg, pb, _] = ui_styling::color::linear_to_rgba8(self.panel.r, self.panel.g, self.panel.b, self.panel.a);
+        let [cr, cg, cb, _] = ui_styling::color::linear_to_rgba8(
+            self.canvas_clear.r,
+            self.canvas_clear.g,
+            self.canvas_clear.b,
+            self.canvas_clear.a,
+        );
+        let mix = |panel: u8, canvas: u8| -> u8 {
+            (f32::from(panel) * a + f32::from(canvas) * (1.0 - a)).round().clamp(0.0, 255.0) as u8
+        };
+        Rgba::from_srgb8(mix(pr, cr), mix(pg, cg), mix(pb, cb), 255)
+    }
 }
 
 pub type ThemedRect = Rect;
+
+#[cfg(test)]
+mod tests {
+    use super::{Rgba, Theme};
+    use ui_styling::color::linear_to_rgba8;
+
+    #[test]
+    fn light_window_token_matches_react_navbar_hex() {
+        let theme = Theme::light();
+        let [r, g, b, _] = linear_to_rgba8(theme.navbar.r, theme.navbar.g, theme.navbar.b, theme.navbar.a);
+        assert_eq!([r, g, b], [235, 232, 217]);
+    }
+
+    #[test]
+    fn light_canvas_token_matches_react_canvas_hex() {
+        let theme = Theme::light();
+        let [r, g, b, _] = linear_to_rgba8(theme.canvas_clear.r, theme.canvas_clear.g, theme.canvas_clear.b, theme.canvas_clear.a);
+        assert_eq!([r, g, b], [240, 236, 221]);
+    }
+
+    #[test]
+    fn glass_panel_fill_matches_react_color_mix_over_canvas() {
+        let theme = Theme::light();
+        let fill = theme.glass_panel_fill();
+        let [r, g, b, _] = linear_to_rgba8(fill.r, fill.g, fill.b, fill.a);
+        assert_eq!([r, g, b], [217, 215, 202]);
+    }
+
+    #[test]
+    fn chrome_item_default_is_transparent() {
+        use crate::chrome::chrome_item_bg;
+        let theme = Theme::light();
+        let bg = chrome_item_bg(&theme, false, false);
+        assert_eq!(bg.a, 0.0);
+    }
+}

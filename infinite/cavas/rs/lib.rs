@@ -647,6 +647,10 @@ mod renderer {
         pub fn path_count(&self) -> usize {
             self.0.encoding().path_tags.len()
         }
+
+        pub fn vello_scene(&self) -> &backend::Scene {
+            &self.0
+        }
     }
 
     /// @emoji 🏷️ Parsed SVG document for icon and label rasterization.

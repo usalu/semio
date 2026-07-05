@@ -1,6 +1,6 @@
 //! 🖌️ Draw list and GPU pipeline for UI quads, vector geometry, and 3D scene passes.
 
-use crate::scene3d::ScenePass3d;
+use kernel_3d_scene::ScenePass3d;
 use crate::shaders::{UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
 use crate::theme::Rgba;
 use bytemuck::{Pod, Zeroable};
@@ -11,6 +11,7 @@ pub const KIND_SOLID: f32 = 3.0;
 pub const KIND_ROUNDED: f32 = 1.0;
 pub const KIND_GLYPH: f32 = 2.0;
 pub const KIND_TEXTURED: f32 = 4.0;
+pub const KIND_RASTER: f32 = 5.0;
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Pod, Zeroable)]
@@ -56,11 +57,20 @@ impl UiInstance {
         }
     }
 
-    pub fn textured(rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) -> Self {
+    pub fn textured(rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) -> Self {
+        Self {
+            rect,
+            color: [color.r, color.g, color.b, color.a],
+            params: [0.0, 0.0, KIND_TEXTURED, 0.0],
+            uv_rect,
+        }
+    }
+
+    pub fn raster(rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) -> Self {
         Self {
             rect,
             color: [1.0, 1.0, 1.0, alpha],
-            params: [0.0, 0.0, KIND_TEXTURED, 0.0],
+            params: [0.0, 0.0, KIND_RASTER, 0.0],
             uv_rect,
         }
     }
@@ -107,6 +117,7 @@ impl ScissorRect {
 pub struct DrawLayer {
     pub scissor: Option<ScissorRect>,
     pub ui_instances: Vec<UiInstance>,
+    pub raster_instances: Vec<(String, UiInstance)>,
     pub vector_vertices: Vec<VectorVertex>,
 }
 
@@ -115,6 +126,7 @@ impl Default for DrawLayer {
         Self {
             scissor: None,
             ui_instances: Vec::new(),
+            raster_instances: Vec::new(),
             vector_vertices: Vec::new(),
         }
     }
@@ -168,6 +180,7 @@ impl DrawList {
         self.layers.push(DrawLayer {
             scissor: Some(scissor),
             ui_instances: Vec::new(),
+            raster_instances: Vec::new(),
             vector_vertices: Vec::new(),
         });
     }
@@ -178,6 +191,7 @@ impl DrawList {
         self.layers.push(DrawLayer {
             scissor: parent,
             ui_instances: Vec::new(),
+            raster_instances: Vec::new(),
             vector_vertices: Vec::new(),
         });
     }
@@ -212,10 +226,17 @@ impl DrawList {
             .push(UiInstance::glyph(rect, color, uv_rect));
     }
 
-    pub fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
+    pub fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) {
         self.active_layer()
             .ui_instances
-            .push(UiInstance::textured(rect, uv_rect, alpha));
+            .push(UiInstance::textured(rect, uv_rect, color));
+    }
+
+    pub fn push_raster_quad(&mut self, key: &str, rect: [f32; 4], uv_rect: [f32; 4], alpha: f32) {
+        self.active_layer().raster_instances.push((
+            key.to_string(),
+            UiInstance::raster(rect, uv_rect, alpha),
+        ));
     }
 
     pub fn push_line(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
@@ -343,10 +364,10 @@ pub struct World3dGpuInstance {
 impl World3dGpuInstance {
     pub fn from_instance(model: [f32; 16], color: [f32; 4], selected: bool, hovered: bool) -> Self {
         Self {
-            model0: [model[0], model[4], model[8], model[12]],
-            model1: [model[1], model[5], model[9], model[13]],
-            model2: [model[2], model[6], model[10], model[14]],
-            model3: [model[3], model[7], model[11], model[15]],
+            model0: [model[0], model[1], model[2], model[3]],
+            model1: [model[4], model[5], model[6], model[7]],
+            model2: [model[8], model[9], model[10], model[11]],
+            model3: [model[12], model[13], model[14], model[15]],
             color,
             flags: [
                 if selected { 1.0 } else { 0.0 },
@@ -698,7 +719,22 @@ impl RasterTextureStore {
         width: u32,
         height: u32,
     ) {
-        if self.textures.contains_key(key) {
+        if let Some(existing) = self.textures.get(key) {
+            queue.write_texture(
+                wgpu::TexelCopyTextureInfo {
+                    texture: &existing.texture,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d::ZERO,
+                    aspect: wgpu::TextureAspect::All,
+                },
+                pixels,
+                wgpu::TexelCopyBufferLayout {
+                    offset: 0,
+                    bytes_per_row: Some(width * 4),
+                    rows_per_image: Some(height),
+                },
+                wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+            );
             return;
         }
         let texture = device.create_texture(&wgpu::TextureDescriptor {
@@ -707,7 +743,7 @@ impl RasterTextureStore {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8Unorm,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             view_formats: &[],
         });
@@ -728,7 +764,7 @@ impl RasterTextureStore {
         );
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("raster_bind_group"),
+            label: Some("raster_texture_bind_group"),
             layout: &self.layout,
             entries: &[
                 wgpu::BindGroupEntry { binding: 0, resource: globals_buffer.as_entire_binding() },
@@ -751,6 +787,35 @@ impl RasterTextureStore {
 
     pub fn get(&self, key: &str) -> Option<&RasterTexture> {
         self.textures.get(key)
+    }
+
+    pub fn replace_gpu_bind_group(
+        &mut self,
+        device: &wgpu::Device,
+        globals_buffer: &wgpu::Buffer,
+        glyph_view: &wgpu::TextureView,
+        glyph_sampler: &wgpu::Sampler,
+        key: &str,
+        raster_view: &wgpu::TextureView,
+        texture: wgpu::Texture,
+        width: u32,
+        height: u32,
+    ) {
+        let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("raster_bind_group"),
+            layout: &self.layout,
+            entries: &[
+                wgpu::BindGroupEntry { binding: 0, resource: globals_buffer.as_entire_binding() },
+                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(glyph_view) },
+                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(glyph_sampler) },
+                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(raster_view) },
+                wgpu::BindGroupEntry { binding: 4, resource: wgpu::BindingResource::Sampler(&self.sampler) },
+            ],
+        });
+        self.textures.insert(
+            key.to_string(),
+            RasterTexture { texture, bind_group, width, height },
+        );
     }
 }
 
@@ -944,7 +1009,7 @@ impl UiPipelines {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8Unorm,
+            format: wgpu::TextureFormat::Rgba8UnormSrgb,
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             view_formats: &[],
         });
@@ -1504,6 +1569,67 @@ impl UiPipelines {
         pass.draw(0..6, start..start + count);
     }
 
+    fn draw_raster_layers(
+        &self,
+        pass: &mut wgpu::RenderPass<'_>,
+        raster_store: &RasterTextureStore,
+        draw: &DrawList,
+        frame_buffers: &mut FrameBuffers,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        width: f32,
+        height: f32,
+    ) {
+        for layer in &draw.layers {
+            if layer.raster_instances.is_empty() {
+                continue;
+            }
+            if let Some(scissor) = layer.scissor {
+                set_pass_scissor(pass, Some(scissor), width, height);
+            } else {
+                pass.set_scissor_rect(0, 0, width as u32, height as u32);
+            }
+            let mut batch_key: Option<String> = None;
+            let mut batch_instances: Vec<UiInstance> = Vec::new();
+            let mut flush = |key: &str, instances: &[UiInstance]| {
+                if instances.is_empty() {
+                    return;
+                }
+                let Some(rt) = raster_store.get(key) else {
+                    return;
+                };
+                pass.set_pipeline(&self.ui_pipeline);
+                pass.set_bind_group(0, &rt.bind_group, &[]);
+                let Some(buffer) = frame_buffers.ui_instances.upload(
+                    device,
+                    queue,
+                    instances,
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                    "raster_instances",
+                ) else {
+                    return;
+                };
+                pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
+                pass.set_vertex_buffer(1, buffer);
+                pass.draw(0..6, 0..instances.len() as u32);
+            };
+            for (key, instance) in &layer.raster_instances {
+                if batch_key.as_deref() != Some(key.as_str()) {
+                    if let Some(ref prior) = batch_key {
+                        flush(prior, &batch_instances);
+                    }
+                    batch_key = Some(key.clone());
+                    batch_instances.clear();
+                }
+                batch_instances.push(*instance);
+            }
+            if let Some(ref key) = batch_key {
+                flush(key, &batch_instances);
+            }
+        }
+        pass.set_scissor_rect(0, 0, width as u32, height as u32);
+    }
+
     fn draw_vector_vertices<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
@@ -1680,6 +1806,7 @@ impl UiPipelines {
         draw: &DrawList,
         overlay: Option<&DrawList>,
         mesh_store: &MeshGpuStore,
+        raster_store: &RasterTextureStore,
         frame_buffers: &mut FrameBuffers,
         width: f32,
         height: f32,
@@ -1757,6 +1884,40 @@ impl UiPipelines {
             depth_view.is_some(),
         );
         drop(pass);
+        if draw.layers.iter().any(|layer| !layer.raster_instances.is_empty()) {
+            let mut raster_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("ui_raster_pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    },
+                    depth_slice: None,
+                })],
+                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment {
+                    view: depth,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            self.draw_raster_layers(
+                &mut raster_pass,
+                raster_store,
+                draw,
+                frame_buffers,
+                device,
+                queue,
+                width,
+                height,
+            );
+        }
         if let Some(overlay) = overlay {
             let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("ui_overlay_pass"),
@@ -1861,7 +2022,7 @@ impl UiPipelines {
 mod tests {
     use super::{ear_clip_polygon, mesh_content_version, DrawList, ScissorRect, WORLD_GLOBALS_SLOT_SIZE};
     use crate::geometry::Rect;
-    use crate::scene3d::ScenePass3d;
+    use kernel_3d_scene::ScenePass3d;
     use crate::theme::Rgba;
 
     #[test]

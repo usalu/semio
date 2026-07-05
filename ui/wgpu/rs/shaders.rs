@@ -72,7 +72,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     if (kind == 2) {
         return vec4<f32>(in.color.rgb, glyph.r * in.color.a);
     }
-    if (kind == 4) {
+    if (kind == 4 || kind == 5) {
         return vec4<f32>(icon.rgb * in.color.rgb, icon.a * in.color.a);
     }
     if (kind == 3) {

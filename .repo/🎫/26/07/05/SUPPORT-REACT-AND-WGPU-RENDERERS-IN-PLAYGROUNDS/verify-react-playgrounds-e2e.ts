@@ -113,7 +113,9 @@ async function assertTier1BodyContent(page: import("playwright").Page, pluginId:
 		? ".semio-world-3d-host canvas"
 		: canvas2dPlugins.has(pluginId)
 			? "canvas"
-			: "#root";
+			: graphPlugins.has(pluginId)
+				? '[data-component-kind="node-graph"], canvas, svg'
+				: "#root";
 	const locator = page.locator(selector).first();
 	if ((await locator.count()) === 0) throw new Error(`tier1 body surface missing for ${pluginId}`);
 	const png = Buffer.from(await locator.screenshot({ type: "png" }));
@@ -286,7 +288,7 @@ async function smokePlugin(
 		if (warnings.length > 0) throw new Error(`console warnings: ${warnings.join(" | ")}`);
 		if (errors.length > 0) throw new Error(errors.join(" | "));
 		const shotPath = join(import.meta.dir, `screenshot-react-${pluginId}.png`);
-		await page.screenshot({ path: shotPath, fullPage: true });
+		await page.screenshot({ path: shotPath, fullPage: false });
 		return `ok functional plugin=${pluginId}`;
 	} finally {
 		await page.close();
@@ -325,6 +327,7 @@ try {
 			env: {
 				...process.env,
 				SKIP_PLUGIN_BUILD: process.env.SKIP_PLUGIN_BUILD ?? "1",
+				SKIP_ENGINE_BUILD: process.env.SKIP_ENGINE_BUILD ?? "1",
 				S_OS_PORT: port,
 				SEMIO_RENDERER: "react",
 				SEMIO_PLUGIN: "s",

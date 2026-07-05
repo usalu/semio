@@ -224,9 +224,58 @@ fn force_layout_fixture_json(fixture_json: &str) -> Option<String> {
 }
 
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("ids"))
+    args.and_then(|value| value.get("nodeIds"))
         .and_then(|value| serde_json::from_value(value.clone()).ok())
+        .or_else(|| {
+            args.and_then(|value| value.get("ids"))
+                .and_then(|value| serde_json::from_value(value.clone()).ok())
+        })
+        .or_else(|| {
+            args.and_then(|value| value.get("nodeId"))
+                .and_then(|value| value.as_str())
+                .map(|id| vec![id.to_string()])
+        })
         .unwrap_or_default()
+}
+
+fn remove_nodes_from_fixture_json(fixture_json: &str, node_ids: &[String]) -> Option<String> {
+    let mut fixture = parse_fixture_json(fixture_json)?;
+    fixture.nodes.retain(|node| !node_ids.contains(&node.id));
+    fixture.edges.retain(|edge| {
+        let from = edge.source.split(':').next().unwrap_or(&edge.source);
+        let to = edge.target.split(':').next().unwrap_or(&edge.target);
+        !node_ids.iter().any(|id| id == from || id == to)
+    });
+    Graph::from_fixture(fixture).ok()?.fixture_json().ok()
+}
+
+fn apply_node_graph_edit_ops(envelope: &mut TrinityJackEnvelope, ops: &[Value]) -> bool {
+    let mut changed = false;
+    for op in ops {
+        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+            "setFixture" => {
+                if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
+                    if parse_fixture_json(fixture_json).is_some() {
+                        envelope.fixture_json = fixture_json.into();
+                        changed = true;
+                    }
+                }
+            }
+            "deleteSelection" => {
+                if !envelope.runtime.selected_node_ids.is_empty() {
+                    if let Some(next) =
+                        remove_nodes_from_fixture_json(&envelope.fixture_json, &envelope.runtime.selected_node_ids)
+                    {
+                        envelope.fixture_json = next;
+                        envelope.runtime.selected_node_ids.clear();
+                        changed = true;
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    changed
 }
 //#endregion 🔖Envelope
 
@@ -640,10 +689,21 @@ fn build_inspector_tree(envelope: &TrinityJackEnvelope) -> UiNode {
 fn render_graph(envelope: &TrinityJackEnvelope) -> UiNode {
     let fixture = parse_fixture_json(&envelope.fixture_json).unwrap_or_else(|| GraphFixture::from_json(NAKAGIN_FIXTURE_JSON).unwrap());
     let (nodes_json, edges_json, viewport_json) = fixture_to_media_graph(&fixture);
+    let selection_json = if envelope.runtime.selected_node_ids.is_empty() {
+        None
+    } else {
+        serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
+    };
     build_node_graph_scene(
         TRINITY_JACK_PLAY_SURFACE_GRAPH,
         TRINITY_JACK_PLAY_CONTROLLER_ID,
-        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
+        NodeGraphScene {
+            selection_json,
+            context_menu_json: Some(
+                r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+            ),
+            ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
+        },
     )
 }
 
@@ -697,9 +757,33 @@ impl PluginApp for TrinityJackPlayApp {
                     }
                 }
             }
-            "setSelection" => {
+            "setSelection" | "selectNode" | "nodeGraphSelect" => {
                 envelope.runtime.selected_node_ids = selection_ids(args);
                 return vec![set_document_op(&envelope)];
+            }
+            "nodeGraphHover" => return Vec::new(),
+            "nodeGraphViewport" => {
+                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
+                    if let Ok(camera) = serde_json::from_str::<trinity_ram::Camera>(viewport_json) {
+                        if let Some(mut fixture) = parse_fixture_json(&envelope.fixture_json) {
+                            fixture.camera = camera;
+                            if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {
+                                envelope.fixture_json = json;
+                                return vec![set_document_op(&envelope)];
+                            }
+                        }
+                    }
+                }
+            }
+            "nodeGraphEdit" => {
+                let ops = args
+                    .and_then(|value| value.get("ops"))
+                    .and_then(|value| value.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                if apply_node_graph_edit_ops(&mut envelope, &ops) {
+                    return vec![set_document_op(&envelope)];
+                }
             }
             "setJackQuery" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
@@ -892,6 +976,7 @@ fn jack_window_stack(id: &str, title: &str, size: Option<f64>) -> WindowLayoutCh
     WindowLayoutChild::Stack(WindowLayoutStackNode {
         kind: "stack".into(),
         size,
+        active_window_kind_id: None,
         children: vec![WindowLayoutWindowNode {
             kind: "window".into(),
             window_kind_id: id.into(),
@@ -911,6 +996,7 @@ fn jack_layout() -> WindowLayout {
                 WindowLayoutChild::Stack(WindowLayoutStackNode {
                     kind: "stack".into(),
                     size: Some(0.6),
+                    active_window_kind_id: None,
                     children: vec![WindowLayoutWindowNode {
                         kind: "window".into(),
                         window_kind_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into(),
@@ -934,7 +1020,7 @@ fn jack_layout() -> WindowLayout {
 
 fn create_trinity_jack_app() -> App {
     App::from_builder(
-        App::builder(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack")
+        App::builder(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack").hierarchy(["semio", "trinity", "jack"])
             .icon_id("trinity")
             .mode("explore", "Explore")
             .default_mode_id("explore")
@@ -1018,6 +1104,28 @@ mod tests {
         let envelope = parse_envelope(&next);
         assert!(parse_fixture_json(&envelope.fixture_json).is_some());
         assert!(!envelope.runtime.jack_result_json.is_empty());
+    }
+
+    #[test]
+    fn node_graph_select_updates_selection() {
+        let mut app = TrinityJackPlayApp;
+        let document = app.initial_document_json();
+        let fixture = parse_fixture_json(NAKAGIN_FIXTURE_JSON).expect("fixture");
+        let node_id = fixture.nodes.first().expect("node").id.clone();
+        let ops = app.handle_command(
+            "nodeGraphSelect",
+            Some(&json!({ "nodeIds": [node_id.clone()] })),
+            &document,
+            &ViewState::default(),
+        );
+        assert!(!ops.is_empty());
+        let next = ops
+            .first()
+            .and_then(|op| serde_json::from_str::<Value>(op).ok())
+            .and_then(|value| value.get("document").cloned())
+            .expect("document op");
+        let envelope = serde_json::from_value::<TrinityJackEnvelope>(next).expect("envelope");
+        assert_eq!(envelope.runtime.selected_node_ids, vec![node_id]);
     }
 
     #[test]

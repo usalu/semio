@@ -101,6 +101,7 @@ pub mod opacities {
     pub const LABEL_HALO_ALPHA: u8 = 200;
     pub const SELECTION_PREVIEW_STROKE_ALPHA: u8 = 180;
     pub const HANDLE_FILL_TRANSPARENT: f64 = 0.0;
+    pub const GLASS_PANEL_ALPHA: f64 = 0.58;
 }
 
 pub mod metrics {

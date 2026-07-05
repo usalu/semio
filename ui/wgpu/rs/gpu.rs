@@ -9,6 +9,7 @@ pub struct GpuContext {
     queue: wgpu::Queue,
     surface: Surface<'static>,
     config: wgpu::SurfaceConfiguration,
+    color_target_format: wgpu::TextureFormat,
     pipelines: UiPipelines,
     frame_buffers: FrameBuffers,
     depth_texture: Option<wgpu::Texture>,
@@ -50,32 +51,38 @@ impl GpuContext {
             .await
             .map_err(|err| format!("device: {err:?}"))?;
         let caps = surface.get_capabilities(&adapter);
-        let format = caps
+        let surface_format = caps
             .formats
             .iter()
             .copied()
-            .find(|f| f.is_srgb())
+            .find(|f| !f.is_srgb())
             .unwrap_or(caps.formats[0]);
+        let color_target_format = if surface_format.is_srgb() {
+            surface_format
+        } else {
+            surface_format.add_srgb_suffix()
+        };
         let width = 1;
         let height = 1;
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format,
+            format: surface_format,
             width,
             height,
             present_mode: wgpu::PresentMode::AutoVsync,
             alpha_mode: caps.alpha_modes[0],
-            view_formats: vec![],
+            view_formats: vec![color_target_format],
             desired_maximum_frame_latency: 2,
         };
         surface.configure(&device, &config);
-        let pipelines = UiPipelines::new(&device, &queue, format);
+        let pipelines = UiPipelines::new(&device, &queue, color_target_format);
         let raster_store = RasterTextureStore::new(&device, pipelines.bind_group_layout());
         let mut gpu = Self {
             device,
             queue,
             surface,
             config,
+            color_target_format,
             pipelines,
             frame_buffers: FrameBuffers::default(),
             depth_texture: None,
@@ -139,7 +146,10 @@ impl GpuContext {
             .surface
             .get_current_texture()
             .map_err(|err| format!("frame: {err:?}"))?;
-        let view = frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let view = frame.texture.create_view(&wgpu::TextureViewDescriptor {
+            format: Some(self.color_target_format),
+            ..Default::default()
+        });
         let mut encoder = self
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("ui_wgpu_frame") });
@@ -153,6 +163,7 @@ impl GpuContext {
             draw,
             overlay,
             &self.mesh_store,
+            &self.raster_store,
             &mut self.frame_buffers,
             self.width as f32,
             self.height as f32,
@@ -194,6 +205,39 @@ impl GpuContext {
 
     pub fn ensure_world_plane_texture(&mut self, key: &str, pixels: &[u8], width: u32, height: u32) {
         self.ensure_raster_texture(key, pixels, width, height);
+    }
+
+    pub fn device(&self) -> &wgpu::Device {
+        &self.device
+    }
+
+    pub fn queue(&self) -> &wgpu::Queue {
+        &self.queue
+    }
+
+    pub fn dpr(&self) -> f32 {
+        self.dpr
+    }
+
+    pub fn register_engine_texture(
+        &mut self,
+        key: &str,
+        texture: wgpu::Texture,
+        view: &wgpu::TextureView,
+        width: u32,
+        height: u32,
+    ) {
+        self.raster_store.replace_gpu_bind_group(
+            &self.device,
+            self.pipelines.globals_buffer(),
+            &self.pipelines.glyph_view(),
+            self.pipelines.glyph_sampler(),
+            key,
+            view,
+            texture,
+            width,
+            height,
+        );
     }
 
     pub fn width(&self) -> u32 {

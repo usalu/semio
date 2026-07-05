@@ -1,13 +1,18 @@
 //! 🧊 Raw wgpu WASM renderer for declarative framework UiNode trees.
 
 pub mod dock;
+pub mod engine_canvas;
 pub mod interpreter;
 pub mod plugin_bridge;
 pub mod scenes;
 pub mod shell;
-pub mod world3d;
 
 use plugin_bridge::{filter_plugins, parse_plugin_entries};
+use infinite_world::{
+    apply_glb_bytes, collect_pending_glb_fetches, fetch_url_bytes, handle_world3d_paint_commands,
+    handle_world3d_pointer_button,
+    handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel,
+};
 use semio_framework_core::CommandDescriptor;
 use shell::ShellState;
 use std::cell::RefCell;
@@ -69,8 +74,8 @@ impl AppRuntime {
             self.shell
                 .handle_pointer_wheel(x, y, wheel_delta, &self.input);
             for state in self.shell.world3d_states.values_mut() {
-                if state.bounds.inset(8.0).contains(x, y) {
-                    world3d::handle_world3d_wheel(state, wheel_delta);
+                if state.bounds.contains(x, y) {
+                    handle_world3d_wheel(state, wheel_delta);
                 }
             }
         }
@@ -109,18 +114,18 @@ impl AppRuntime {
                     let Ok(app) = runtime.try_borrow() else {
                         return;
                     };
-                    world3d::collect_pending_glb_fetches(&app.shell.world3d_states)
+                    collect_pending_glb_fetches(&app.shell.world3d_states)
                 };
                 let mut fetched = Vec::new();
                 for item in pending {
-                    if let Some(bytes) = world3d::fetch_url_bytes(&item.url).await {
+                    if let Some(bytes) = fetch_url_bytes(&item.url).await {
                         fetched.push((item.surface_id, item.url, bytes));
                     }
                 }
                 if let Ok(mut app) = runtime.try_borrow_mut() {
                     for (surface_id, url, bytes) in fetched {
                         if let Some(state) = app.shell.world3d_states.get_mut(&surface_id) {
-                            world3d::apply_glb_bytes(state, &url, &bytes);
+                            apply_glb_bytes(state, &url, &bytes);
                         }
                     }
                     app.asset_poll_pending = false;
@@ -188,18 +193,21 @@ impl AppRuntime {
         self.modifiers = modifiers.clone();
         let mut world_commands = Vec::new();
         for state in self.shell.world3d_states.values_mut() {
-            if !state.bounds.inset(8.0).contains(x, y) {
+            if !state.bounds.contains(x, y) {
                 continue;
             }
-            if let Some(command) = world3d::handle_world3d_pointer_button(
+            if let Some(command) = handle_world3d_pointer_button(
                 state,
                 x,
                 y,
                 down,
                 button,
-                modifiers.shift,
-                modifiers.ctrl,
+                &modifiers,
             ) {
+                world_commands.push(command);
+            }
+            world_commands.extend(handle_world3d_paint_commands(state, x, y, down, button));
+            if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
                 world_commands.push(command);
             }
         }
@@ -236,21 +244,30 @@ impl AppRuntime {
         if let Err(err) = self.shell.flush_deferred_commands().await {
             web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] deferred commands: {err}")));
         }
-        if down && (button == 2 || button == 1) {
+        if down && (button == 0 || button == 2 || button == 1) {
             for state in self.shell.world3d_states.values_mut() {
-                if state.bounds.inset(8.0).contains(x, y) {
-                    world3d::handle_world3d_pointer_drag(state, x, y, drag_dx, drag_dy, button, modifiers.shift);
+                if state.bounds.contains(x, y) {
+                    handle_world3d_pointer_drag(
+                        state,
+                        x,
+                        y,
+                        drag_dx,
+                        drag_dy,
+                        button,
+                        &modifiers,
+                    );
                 }
             }
         }
         let mut world_commands = Vec::new();
         for state in self.shell.world3d_states.values_mut() {
-            if !state.bounds.inset(8.0).contains(x, y) {
+            if !state.bounds.contains(x, y) {
                 continue;
             }
-            if let Some(command) = world3d::handle_world3d_pointer_move(state, x, y, down, button) {
+            if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
                 world_commands.push(command);
             }
+            world_commands.extend(handle_world3d_paint_commands(state, x, y, down, button));
         }
         if !world_commands.is_empty() {
             self.dispatch_world3d_commands(world_commands).await;

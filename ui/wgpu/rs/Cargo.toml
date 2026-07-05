@@ -10,6 +10,7 @@ path = "lib.rs"
 
 [dependencies]
 ui_styling = { path = "../../styling/rs" }
+kernel_3d_scene = { path = "../../../kernel/3d/scene/rs" }
 fontdue = "0.9.3"
 bytemuck = { version = "1.24.0", features = ["derive"] }
 wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"] }

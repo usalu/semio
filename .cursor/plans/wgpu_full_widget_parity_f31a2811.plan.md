@@ -4,31 +4,31 @@ overview: "Bring every framework-used UI component in the wgpu renderer to full 
 todos:
   - id: interpreter-fields
     content: "Carry all dropped wire fields through interpreter.rs and widget structs: button/toggle icon_id, input kind/commit/on_change, slider/stepper step/uniform/on_delta, ring disabled, section default_open"
-    status: in_progress
+    status: completed
   - id: section-select-input
     content: Wire Section collapse (hit branch + default_open + atlas chevrons), Select dropdown open/close/pick with on_change dispatch, Input focus_input seeding + commit dispatch
-    status: pending
+    status: completed
   - id: slider-ring-stepper
     content: Implement Slider/Ring drag-to-value with step and on_change dispatch, NumberStepper on_delta minus/plus + editable center + bordered 3-segment chrome
-    status: pending
+    status: completed
   - id: misc-widgets
     content: Button icon_id, Toggle icon + pressed args, editable Vec3 triple input, KeyValue grid alignment, Field gap tokens, Text wrapping, Separator measure, IconSelect icon rendering
-    status: pending
+    status: completed
   - id: tree-leftovers
     content: "Tree: skip is_hidden rows, content-driven measure width, hovered action labels"
-    status: pending
+    status: completed
   - id: table-parity
     content: "Table scene: remove zebra + column separators, hairline row borders, React row heights/padding, empty message, single-click double-fire guard"
-    status: pending
+    status: completed
   - id: vfs-parity
     content: "VFS scene: expand/collapse hierarchy with visibility filtering + chevrons, glyph icons, schema column labels + 32% name column, typed descriptor formatting, shift/meta multi-select, selected text emphasis, drag affordance, empty message"
-    status: pending
+    status: completed
   - id: text-editor-commands
     content: "Text editor scene: rename setDocument to textEdit, add submit (Cmd+Enter) and formatDocument (Cmd+S) dispatch"
-    status: pending
+    status: completed
   - id: verify-all
     content: Build native+wasm, rebuild bindings, run E2E for s/forms/draw/flow, screenshot-diff vs React shell
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -1,24 +1,32 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent } from "react";
 import {
+	CATALOGUE_DRAG_MIME,
+	CanvasPickMenu,
+	ContextMenuController,
 	Diagram,
 	Handle,
 	Position,
-	CATALOGUE_DRAG_MIME,
-	ContextMenuController,
+	SelectionMarquee,
+	useCanvasPickInteraction,
+	type CanvasPickTarget,
 	type Edge,
 	type Node,
 	type NodeProps,
 	type NodeTypes,
 } from "@semio-tech/ui-react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
-import type { CommandDescriptor, NodeGraphScene, UiComponentSceneNode } from "../types.ts";
+import type { CommandDescriptor, NodeGraphScene, PresencePeer, UiComponentSceneNode } from "../types.ts";
 import { nodeGraphCommands } from "../types.ts";
 import { useUIFindSafe } from "../ui-search-find.tsx";
 import { FlowGraphCanvasHost } from "./flow-graph-canvas-host.tsx";
 import {
 	computeDagMarqueeOverlay,
+	GraphParamOverlays,
+	GraphStepperOverlays,
 	paintDagLabelOverlays,
 	parseDagSelectionUnionBoundsScreen,
+	SelectionAlignChrome,
+	alignModeToDag,
 	sceneToSyncJson,
 } from "./graph-canvas-overlays.tsx";
 import { createGraphSession, isFlowGraphScene } from "../wasm-session-loader.ts";
@@ -77,6 +85,8 @@ type FrameworkGraphSession = GraphWasmSession & {
 	pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
 	wheelScreen(sx: number, sy: number, deltaX: number, deltaY: number, zoomGesture: boolean): void;
 	labelOverlayPaintStateJson(): string;
+	paramOverlayPaintStateJson(): string;
+	stepperOverlayStateJson(): string;
 	selectionUnionBoundsScreenJson(): string;
 	selectionPreviewPointsJson(): string;
 	selectionPreviewCrossing(): boolean;
@@ -85,6 +95,11 @@ type FrameworkGraphSession = GraphWasmSession & {
 	hoveredChannelJson(): string;
 	cameraJson(): string;
 	takePendingOpenInstanceId(): string | null | undefined;
+	pickTargetsAtScreenJson(sx: number, sy: number): string;
+	setHover?(widgetId: string | null): void;
+	setHoverChannel?(widgetId: string | null, port?: string | null): void;
+	alignSelection?(mode: string): void;
+	fixtureJson?(): string;
 	setCanvasThemeJson?(json: string): void;
 };
 //#endregion Types
@@ -139,6 +154,40 @@ function mediaGraphEdgesToDiagramEdges(records: readonly MediaGraphEdgeRecord[])
 	}));
 }
 //#endregion Parsing
+
+//#region Keyboard
+function isEditableGraphKeyTarget(target: EventTarget | null): boolean {
+	if (!(target instanceof HTMLElement)) return false;
+	const tag = target.tagName;
+	if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+	if (target.isContentEditable) return true;
+	return target.closest("[contenteditable='true'], [role='textbox']") != null;
+}
+
+function handleGraphKeyboard(
+	event: KeyboardEvent<HTMLDivElement>,
+	editable: boolean,
+	parsedNodes: readonly MediaGraphNodeRecord[],
+	dispatch: (command: string, args?: Record<string, unknown>) => void,
+) {
+	if (!editable || isEditableGraphKeyTarget(event.target)) return;
+	const mod = event.metaKey || event.ctrlKey;
+	if (mod && event.key.toLowerCase() === "a") {
+		event.preventDefault();
+		dispatch("setMediaNodeSelection", { nodeIds: parsedNodes.map((node) => node.id) });
+		return;
+	}
+	if (event.key === "Escape") {
+		event.preventDefault();
+		dispatch("setMediaNodeSelection", { nodeIds: [] });
+		return;
+	}
+	if (event.key === "Delete" || event.key === "Backspace") {
+		event.preventDefault();
+		dispatch("deleteSelection", {});
+	}
+}
+//#endregion Keyboard
 
 //#region DiagramNode
 function MediaGraphDiagramNode({ data }: NodeProps<MediaGraphNodeData>) {
@@ -202,6 +251,9 @@ function WasmGraphSurface({
 	const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
 	const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
 	const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
+	const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
+	const [paramStateJson, setParamStateJson] = useState("{}");
+	const [stepperStateJson, setStepperStateJson] = useState("{}");
 	const sceneJson = useMemo(() => sceneToSyncJson(scene), [scene]);
 
 	const dispatch = useCallback(
@@ -227,6 +279,13 @@ function WasmGraphSurface({
 		setMarquee(
 			computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), "rectangle"),
 		);
+		try {
+			setParamStateJson(session.paramOverlayPaintStateJson());
+			setStepperStateJson(session.stepperOverlayStateJson());
+		} catch {
+			/* session not ready */
+		}
+		setOverlaySize({ w: rect.width, h: rect.height });
 	}, []);
 
 	useEffect(() => {
@@ -267,6 +326,8 @@ function WasmGraphSurface({
 			pointerUpScreen: () => {},
 			wheelScreen: () => {},
 			labelOverlayPaintStateJson: () => '{"labels":[]}',
+			paramOverlayPaintStateJson: () => "{}",
+			stepperOverlayStateJson: () => "{}",
 			selectionUnionBoundsScreenJson: () => "{}",
 			selectionPreviewPointsJson: () => "[]",
 			selectionPreviewCrossing: () => false,
@@ -274,6 +335,11 @@ function WasmGraphSurface({
 			hoveredNodeId: () => null,
 			hoveredChannelJson: () => "{}",
 			cameraJson: () => scene.viewportJson,
+			pickTargetsAtScreenJson: () => "[]",
+			setHover: () => {},
+			setHoverChannel: () => {},
+			alignSelection: () => {},
+			fixtureJson: () => "{}",
 			takePendingOpenInstanceId: () => null,
 		} satisfies FrameworkGraphSession;
 	}, [scene.viewportJson, wasmSession]);
@@ -295,6 +361,50 @@ function WasmGraphSurface({
 		paintOverlays();
 	}, [dispatch, paintOverlays]);
 
+	const commitGraphFixture = useCallback(() => {
+		const session = sessionRef.current;
+		if (!session?.fixtureJson) return;
+		try {
+			const fixtureJson = session.fixtureJson();
+			dispatch(nodeGraphCommands.edit, { ops: [{ op: "setFixture", fixtureJson }] });
+		} catch {
+			/* session not ready */
+		}
+	}, [dispatch]);
+
+	const pickInteraction = useCanvasPickInteraction({
+		resolveTargetsAtClient: (client) => {
+			const session = sessionRef.current;
+			const container = containerRef.current;
+			if (!session?.pickTargetsAtScreenJson || !container) return [];
+			const rect = container.getBoundingClientRect();
+			const sx = client.x - rect.left;
+			const sy = client.y - rect.top;
+			try {
+				return JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
+			} catch {
+				return [];
+			}
+		},
+		onHoverFocus: (focus) => {
+			const session = sessionRef.current;
+			if (!session) return;
+			const target = focus.target;
+			if (!target) {
+				session.setHover?.(null);
+			} else if (target.portId) {
+				session.setHoverChannel?.(target.id, target.portId);
+			} else {
+				session.setHover?.(target.id);
+			}
+			session.renderFrame();
+			paintOverlays();
+		},
+		onSelectTarget: () => {
+			emitInteractionState();
+		},
+	});
+
 	return (
 		<div
 			ref={containerRef}
@@ -314,10 +424,14 @@ function WasmGraphSurface({
 					style={{ left: selectionBounds.x, top: selectionBounds.y, width: selectionBounds.width, height: selectionBounds.height }}
 				/>
 			) : null}
-			{marquee?.kind === "rect" && marquee.x != null && marquee.y != null && marquee.width != null && marquee.height != null ? (
-				<div
-					className={`pointer-events-none absolute z-20 border ${marquee.coverage === "partial" ? "border-dashed border-muted-foreground/60" : "border-accent/80 bg-accent/10"}`}
-					style={{ left: marquee.x, top: marquee.y, width: marquee.width, height: marquee.height }}
+			{marquee ? (
+				<SelectionMarquee
+					coverage={marquee.coverage ?? "full"}
+					shape={
+						marquee.kind === "lasso"
+							? { shape: "polygon", points: marquee.points ?? [] }
+							: { shape: "rect", rect: { x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 } }
+					}
 				/>
 			) : null}
 			<div
@@ -327,6 +441,8 @@ function WasmGraphSurface({
 					const session = sessionRef.current;
 					if (!session?.pointerDownScreen) return;
 					const rect = event.currentTarget.getBoundingClientRect();
+					const client = { x: event.clientX, y: event.clientY };
+					pickInteraction.onCanvasPointerDown(client);
 					session.pointerDownScreen(
 						event.clientX - rect.left,
 						event.clientY - rect.top,
@@ -342,6 +458,8 @@ function WasmGraphSurface({
 					const session = sessionRef.current;
 					if (!session?.pointerMoveScreen) return;
 					const rect = event.currentTarget.getBoundingClientRect();
+					const client = { x: event.clientX, y: event.clientY };
+					pickInteraction.onCanvasPointerMove(client);
 					session.pointerMoveScreen(
 						event.clientX - rect.left,
 						event.clientY - rect.top,
@@ -356,6 +474,8 @@ function WasmGraphSurface({
 					const session = sessionRef.current;
 					if (!session?.pointerUpScreen) return;
 					const rect = event.currentTarget.getBoundingClientRect();
+					const client = { x: event.clientX, y: event.clientY };
+					pickInteraction.onCanvasPointerUp(client, { shift: event.shiftKey, ctrlOrMeta: event.metaKey || event.ctrlKey, alt: event.altKey });
 					session.pointerUpScreen(
 						event.clientX - rect.left,
 						event.clientY - rect.top,
@@ -366,6 +486,7 @@ function WasmGraphSurface({
 					session.renderFrame();
 					emitInteractionState();
 				}}
+				onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
 				onWheel={(event) => {
 					event.preventDefault();
 					const session = sessionRef.current;
@@ -376,6 +497,44 @@ function WasmGraphSurface({
 					session.renderFrame();
 					emitInteractionState();
 				}}
+			/>
+			{selectionBounds && editable ? (
+				<SelectionAlignChrome
+					bounds={selectionBounds}
+					onAlign={(mode) => {
+						const session = sessionRef.current;
+						if (!session?.alignSelection) return;
+						session.alignSelection(alignModeToDag(mode));
+						commitGraphFixture();
+						session.renderFrame();
+						emitInteractionState();
+					}}
+				/>
+			) : null}
+			<GraphParamOverlays
+				stateJson={paramStateJson}
+				logicalW={overlaySize.w}
+				logicalH={overlaySize.h}
+				editable={editable}
+				onParamChange={(nodeId, portId, value) =>
+					dispatch(nodeGraphCommands.edit, { op: "setParam", nodeId, portId, value })
+				}
+			/>
+			<GraphStepperOverlays
+				stateJson={stepperStateJson}
+				logicalW={overlaySize.w}
+				logicalH={overlaySize.h}
+				editable={editable}
+				onStepperChange={(widgetId, fieldKey, value) =>
+					dispatch(nodeGraphCommands.edit, { op: "setStepper", widgetId, fieldKey, value })
+				}
+			/>
+			<CanvasPickMenu
+				request={pickInteraction.pickMenu}
+				hoveredKey={pickInteraction.menuHoveredKey}
+				onHoverKey={pickInteraction.onMenuHoverKey}
+				onPick={pickInteraction.onMenuPick}
+				onDismiss={pickInteraction.dismissPickMenu}
 			/>
 			<ContextMenuController
 				open={contextMenu != null}
@@ -547,6 +706,20 @@ const useClient = () => {
 	return client;
 };
 
+function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer[] }) {
+	if (peers.length === 0) return null;
+	return (
+		<div className="pointer-events-none absolute right-2 top-2 z-panel flex max-w-[14rem] flex-col gap-1 rounded border border-border/60 bg-window/90 px-2 py-1 text-xs shadow-sm">
+			{peers.map((peer) => (
+				<div key={peer.clientId} className="flex items-center justify-between gap-2 text-muted-foreground">
+					<span className="truncate font-medium text-foreground">{peer.name}</span>
+					<span>{peer.selectionCount} selected</span>
+				</div>
+			))}
+		</div>
+	);
+}
+
 export function NodeGraphHost({
 	node,
 	onCommand,
@@ -560,6 +733,7 @@ export function NodeGraphHost({
 	const parsedEdges = useMemo(() => parseJsonArray<MediaGraphEdgeRecord>(scene?.edgesJson), [scene?.edgesJson]);
 	const findItems = useMemo(() => parseJsonArray<GraphFindItem>(scene?.findItemsJson), [scene?.findItemsJson]);
 	const contextMenuItems = useMemo(() => parseJsonArray<GraphContextMenuItem>(scene?.contextMenuJson), [scene?.contextMenuJson]);
+	const presencePeers = useMemo(() => parseJsonArray<PresencePeer>(scene?.presencePeersJson), [scene?.presencePeersJson]);
 	const isClient = useClient();
 
 	const dispatch = useCallback(
@@ -594,7 +768,12 @@ export function NodeGraphHost({
 	const useFlowEngine = isFlowGraphScene(scene.capabilitiesJson) || Boolean(scene.fixtureJson);
 
 	return (
-		<div className="semio-node-graph-host relative h-full min-h-[24rem] w-full" data-surface-id={node.surfaceId}>
+		<div
+			className="semio-node-graph-host relative h-full min-h-[24rem] w-full"
+			data-surface-id={node.surfaceId}
+			tabIndex={editable ? 0 : undefined}
+			onKeyDown={(event) => handleGraphKeyboard(event, editable, parsedNodes, dispatch)}
+		>
 			{isClient ? (
 				useFlowEngine ? (
 					<FlowGraphCanvasHost
@@ -627,6 +806,7 @@ export function NodeGraphHost({
 					onCommand={onCommand}
 				/>
 			)}
+			<PresencePeersOverlay peers={presencePeers} />
 		</div>
 	);
 }

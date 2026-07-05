@@ -1,12 +1,17 @@
 //! 🌊 Flow plugin — declarative flow play app bundled as a hot-swappable WASM component.
 
-use flow_core::{dag::DagFixture, CameraJson, FlowFixture, FlowHost, Widget};
+use flow_core::{
+    dag::DagFixture, flow_operator_catalogue_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
+    CameraJson, FlowFixture, FlowHost, Widget,
+};
 use semio_framework_plugin::{
-    build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
-    ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field,
-    ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode,
-    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout,
+    handle_generation_command, render_generation_form_body, render_generation_preview_text, render_generations_tree,
+    selected_generation, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
+    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App, CommandDescriptor, GenerationPlayState,
+    NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode,
+    UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_HIERARCHY_ID,     FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -25,6 +30,13 @@ const FLOW_PLAY_BODY_CATALOGUE: &str = "flow.play.catalogue";
 const FLOW_PLAY_BODY_INSPECTOR: &str = "flow.play.inspection";
 const FLOW_PLAY_WINDOW_MAIN: &str = "flow-main";
 const FLOW_PLAY_WINDOW_COMPILED: &str = "flow-compiled-dag";
+const FLOW_PLAY_WINDOW_GENERATIONS: &str = "flow-generations";
+const FLOW_PLAY_WINDOW_GENERATE_FORM: &str = "flow-generate-form";
+const FLOW_PLAY_WINDOW_GENERATE_PREVIEW: &str = "flow-generate-preview";
+const FLOW_PLAY_BODY_GENERATIONS: &str = "flow.play.generations";
+const FLOW_PLAY_BODY_GENERATE_FORM: &str = "flow.play.generate-form";
+const FLOW_PLAY_BODY_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
+const FLOW_PLAY_SURFACE_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 //#endregion 🔖Constants
 
 //#region 🔖Types
@@ -33,10 +45,6 @@ const FLOW_PLAY_WINDOW_COMPILED: &str = "flow-compiled-dag";
 struct FlowPlayRuntime {
     #[serde(default)]
     selected_node_ids: Vec<String>,
-    #[serde(default)]
-    undo_fixtures: Vec<FlowFixture>,
-    #[serde(default)]
-    redo_fixtures: Vec<FlowFixture>,
     #[serde(default)]
     last_eval_json: String,
 }
@@ -47,6 +55,8 @@ struct FlowPlayEnvelope {
     fixture: FlowFixture,
     #[serde(default)]
     runtime: FlowPlayRuntime,
+    #[serde(default)]
+    generation: GenerationPlayState,
 }
 
 #[derive(Serialize)]
@@ -87,6 +97,7 @@ fn default_envelope() -> FlowPlayEnvelope {
     FlowPlayEnvelope {
         fixture: FlowFixture::default(),
         runtime: FlowPlayRuntime::default(),
+        generation: GenerationPlayState::default(),
     }
 }
 
@@ -106,13 +117,14 @@ fn flow_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
     }
 }
 
-fn host_from_envelope(envelope: &FlowPlayEnvelope) -> FlowHost {
-    FlowHost::from_fixture(envelope.fixture.clone())
+fn seed_host_catalogue(host: &mut FlowHost) {
+    host.set_host_catalogue_json(&flow_operator_catalogue_json());
 }
 
-fn snapshot_fixture(runtime: &mut FlowPlayRuntime, fixture: &FlowFixture) {
-    runtime.undo_fixtures.push(fixture.clone());
-    runtime.redo_fixtures.clear();
+fn host_from_envelope(envelope: &FlowPlayEnvelope) -> FlowHost {
+    let mut host = FlowHost::from_fixture(envelope.fixture.clone());
+    seed_host_catalogue(&mut host);
+    host
 }
 
 fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
@@ -594,6 +606,58 @@ fn render_compiled_dag(envelope: &FlowPlayEnvelope) -> UiNode {
         TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None),
     )
 }
+
+fn evaluate_generation_preview(envelope: &FlowPlayEnvelope, values: &serde_json::Map<String, Value>) -> String {
+    let fixture_json = serde_json::to_string(&envelope.fixture).unwrap_or_default();
+    let patched = apply_generation_values_to_fixture(&fixture_json, values);
+    let fixture = FlowHost::parse_fixture_json(&patched).unwrap_or_else(|_| envelope.fixture.clone());
+    let mut host = FlowHost::from_fixture(fixture);
+    seed_host_catalogue(&mut host);
+    host.evaluate().unwrap_or_default()
+}
+
+fn refresh_generation_preview(envelope: &mut FlowPlayEnvelope) {
+    let Some(generation) = selected_generation(&envelope.generation) else {
+        envelope.generation.preview_text = None;
+        return;
+    };
+    let preview = evaluate_generation_preview(envelope, &generation.values);
+    envelope.generation.preview_text = Some(preview.clone());
+    envelope.runtime.last_eval_json = preview;
+}
+
+fn render_generate_generations(envelope: &FlowPlayEnvelope) -> UiNode {
+    render_generations_tree(
+        FLOW_PLAY_APP_ID,
+        "flow-play-generate",
+        &envelope.generation.generations,
+        envelope.generation.selected_generation_id.as_deref(),
+    )
+}
+
+fn render_generate_form(envelope: &FlowPlayEnvelope) -> UiNode {
+    let spec = flow_fixture_to_form_spec(&envelope.fixture);
+    let Some(generation) = selected_generation(&envelope.generation) else {
+        return ui_text("Add a generation to edit input values.");
+    };
+    render_generation_form_body(
+        &spec,
+        &generation.values,
+        FLOW_PLAY_APP_ID,
+        "updateGenerationValues",
+        &generation.id,
+    )
+}
+
+fn render_generate_preview(envelope: &FlowPlayEnvelope) -> UiNode {
+    let text = envelope
+        .generation
+        .preview_text
+        .as_deref()
+        .filter(|value| !value.is_empty())
+        .unwrap_or("(evaluate a generation to preview output)");
+    render_generation_preview_text(FLOW_PLAY_SURFACE_GENERATE_PREVIEW, FLOW_PLAY_APP_ID, text)
+}
 //#endregion 🔖Render
 
 //#region 🔖FlowPlayApp
@@ -608,7 +672,7 @@ impl FlowPlayApp {
             .as_ref()
             .map_or(true, |host| host.fixture != envelope.fixture);
         if replace {
-            self.host = Some(FlowHost::from_fixture(envelope.fixture.clone()));
+            self.host = Some(host_from_envelope(envelope));
         }
         self.host.as_mut().expect("flow host")
     }
@@ -653,11 +717,11 @@ impl PluginApp for FlowPlayApp {
                 return vec![set_document_op(&envelope)];
             }
             "moveMediaNode" => {
-                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str());
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
+                    host.begin_change();
                     if host.move_widget(node_id, x, y).is_ok() {
                         envelope.fixture = host.fixture.clone();
                         return vec![set_document_op(&envelope)];
@@ -698,7 +762,6 @@ impl PluginApp for FlowPlayApp {
                     .or_else(|| args.and_then(|value| value.get("id")))
                     .and_then(|value| value.as_str());
                 if let Some(widget_id) = widget_id {
-                    snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                     if host.remove_widget(widget_id).is_ok() {
                         envelope.runtime.selected_node_ids.retain(|id| id != widget_id);
                         if let Ok(eval_json) = host.evaluate() {
@@ -710,7 +773,6 @@ impl PluginApp for FlowPlayApp {
                 }
             }
             "deleteSelection" => {
-                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 sync_host_selection(host, &envelope.runtime.selected_node_ids);
                 if host.delete_selection().is_ok() {
                     envelope.runtime.selected_node_ids.clear();
@@ -727,7 +789,6 @@ impl PluginApp for FlowPlayApp {
                     .or_else(|| args.and_then(|value| value.get("edgeId")))
                     .and_then(|value| value.as_str());
                 if let Some(synapse_id) = synapse_id {
-                    snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                     if host.disconnect(synapse_id).is_ok() {
                         if let Ok(eval_json) = host.evaluate() {
                             envelope.runtime.last_eval_json = eval_json;
@@ -743,7 +804,6 @@ impl PluginApp for FlowPlayApp {
                 let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str());
                 let to_port = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str());
                 if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
-                    snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                     if host.connect_ports(from, from_port, to, to_port).is_ok() {
                         if let Ok(eval_json) = host.evaluate() {
                             envelope.runtime.last_eval_json = eval_json;
@@ -764,7 +824,6 @@ impl PluginApp for FlowPlayApp {
                 };
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
-                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 if let Ok(id) = host.add_widget(&descriptor, x, y) {
                     envelope.runtime.selected_node_ids = vec![id];
                     if let Ok(eval_json) = host.evaluate() {
@@ -775,14 +834,13 @@ impl PluginApp for FlowPlayApp {
                 }
             }
             "reorganize" => {
-                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
                     envelope.fixture = host.fixture.clone();
                     return vec![set_document_op(&envelope)];
                 }
             }
             "patchFlowWidgets" => {
-                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
+                host.begin_change();
                 let widget_ids: Vec<String> = args
                     .and_then(|value| value.get("widgetIds"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
@@ -807,7 +865,7 @@ impl PluginApp for FlowPlayApp {
                         _ => {}
                     }
                 }
-                host.replace_fixture(envelope.fixture.clone());
+                host.set_fixture_preserving_history(envelope.fixture.clone());
                 if let Ok(eval_json) = host.evaluate() {
                     envelope.runtime.last_eval_json = eval_json;
                 }
@@ -815,7 +873,7 @@ impl PluginApp for FlowPlayApp {
                 return vec![set_document_op(&envelope)];
             }
             "renameFlowWidget" => {
-                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
+                host.begin_change();
                 let old_id = args.and_then(|value| value.get("oldId")).and_then(|value| value.as_str());
                 let new_id = args.and_then(|value| value.get("value")).and_then(|value| value.as_str());
                 if let (Some(old_id), Some(new_id)) = (old_id, new_id) {
@@ -846,7 +904,7 @@ impl PluginApp for FlowPlayApp {
                             }
                         }
                         envelope.runtime.selected_node_ids = vec![trimmed.into()];
-                        host.replace_fixture(envelope.fixture.clone());
+                        host.set_fixture_preserving_history(envelope.fixture.clone());
                         envelope.fixture = host.fixture.clone();
                         return vec![set_document_op(&envelope)];
                     }
@@ -883,15 +941,14 @@ impl PluginApp for FlowPlayApp {
                         "setFixture" => {
                             if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
                                 if let Ok(fixture) = serde_json::from_str::<FlowFixture>(fixture_json) {
-                                    snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
+                                    host.begin_change();
                                     envelope.fixture = fixture.clone();
-                                    host.replace_fixture(fixture);
+                                    host.set_fixture_preserving_history(fixture);
                                     changed = true;
                                 }
                             }
                         }
                         "deleteSelection" => {
-                            snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                             sync_host_selection(host, &envelope.runtime.selected_node_ids);
                             if host.delete_selection().is_ok() {
                                 envelope.runtime.selected_node_ids.clear();
@@ -904,7 +961,6 @@ impl PluginApp for FlowPlayApp {
                             let to = op.get("targetNodeId").and_then(|value| value.as_str());
                             let to_port = op.get("targetPortId").and_then(|value| value.as_str());
                             if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
-                                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                                 if host.connect_ports(from, from_port, to, to_port).is_ok() {
                                     changed = true;
                                 }
@@ -921,6 +977,17 @@ impl PluginApp for FlowPlayApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
+            "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
+                let spec = flow_fixture_to_form_spec(&envelope.fixture);
+                if handle_generation_command(command, args, &mut envelope.generation, &spec, FLOW_PLAY_APP_ID) {
+                    if command == "addGeneration" && envelope.generation.generations.len() == 1 {
+                        refresh_generation_preview(&mut envelope);
+                    } else if command == "selectGeneration" || command == "updateGenerationValues" {
+                        refresh_generation_preview(&mut envelope);
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             _ => {}
         }
         Vec::new()
@@ -931,6 +998,9 @@ impl PluginApp for FlowPlayApp {
         match body_key {
             FLOW_PLAY_BODY_MAIN => render_main_graph(&envelope),
             FLOW_PLAY_BODY_COMPILED => render_compiled_dag(&envelope),
+            FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(&envelope),
+            FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(&envelope),
+            FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope),
             FLOW_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
             FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope),
             FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
@@ -954,17 +1024,42 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
 //#region 🔖Manifest
 fn create_flow_app() -> App {
     App::from_builder(
-        App::builder(FLOW_PLAY_APP_ID, "Flow")
+        App::builder(FLOW_PLAY_APP_ID, "Flow").hierarchy(["semio", "flow"])
             .icon_id("flow")
             .mode("edit", "Edit")
+            .mode("generate", "Generate")
             .default_mode_id("edit")
             .window_kind(FLOW_PLAY_WINDOW_MAIN, "Flow", FLOW_PLAY_BODY_MAIN)
             .window_kind(FLOW_PLAY_WINDOW_COMPILED, "DSL", FLOW_PLAY_BODY_COMPILED)
+            .window_kind(FLOW_PLAY_WINDOW_GENERATIONS, "Generations", FLOW_PLAY_BODY_GENERATIONS)
+            .window_kind(FLOW_PLAY_WINDOW_GENERATE_FORM, "Form", FLOW_PLAY_BODY_GENERATE_FORM)
+            .window_kind(
+                FLOW_PLAY_WINDOW_GENERATE_PREVIEW,
+                "Preview",
+                FLOW_PLAY_BODY_GENERATE_PREVIEW,
+            )
             .default_layout(create_default_layout(
                 &[FLOW_PLAY_WINDOW_MAIN.into(), FLOW_PLAY_WINDOW_COMPILED.into()],
                 "row",
                 Some(&[68.0, 32.0]),
                 Some(&["Flow".into(), "DSL".into()]),
+            ))
+            .named_layout(create_named_layout(
+                "flow-generate",
+                "Generate",
+                create_default_layout(
+                    &[
+                        FLOW_PLAY_WINDOW_GENERATIONS.into(),
+                        FLOW_PLAY_WINDOW_GENERATE_FORM.into(),
+                        FLOW_PLAY_WINDOW_GENERATE_PREVIEW.into(),
+                    ],
+                    "row",
+                    Some(&[22.0, 43.0, 35.0]),
+                    Some(&["Generations".into(), "Form".into(), "Preview".into()]),
+                ),
+                "builtin",
+                Some("sparkles".into()),
+                None,
             ))
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
@@ -1038,6 +1133,16 @@ mod tests {
     }
 
     #[test]
+    fn catalogue_lists_module_operators() {
+        let app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        let node = app.render(FLOW_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("flow-play-catalogue.math"), "expected math module section: {json}");
+        assert!(json.contains("math.add"), "expected math.add operator: {json}");
+    }
+
+    #[test]
     fn evaluate_updates_preview_state() {
         let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
@@ -1065,5 +1170,29 @@ mod tests {
         let restored: FlowPlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&undo_ops[0]).unwrap()["document"].clone()).unwrap();
         assert_eq!(restored.fixture.widgets.len(), count_before);
+    }
+
+    #[test]
+    fn generate_mode_renders_three_surfaces() {
+        let app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        let generations = app.render(FLOW_PLAY_BODY_GENERATIONS, &document, &ViewState::default());
+        let form = app.render(FLOW_PLAY_BODY_GENERATE_FORM, &document, &ViewState::default());
+        let preview = app.render(FLOW_PLAY_BODY_GENERATE_PREVIEW, &document, &ViewState::default());
+        assert!(serde_json::to_string(&generations).unwrap().contains("addGeneration"));
+        assert!(serde_json::to_string(&form).unwrap().contains("Add a generation"));
+        assert!(serde_json::to_string(&preview).unwrap().contains("text-editor"));
+    }
+
+    #[test]
+    fn add_generation_evaluates_preview() {
+        let mut app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        let ops = app.handle_command("addGeneration", None, &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let updated: FlowPlayEnvelope =
+            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+        assert_eq!(updated.generation.generations.len(), 1);
+        assert!(updated.generation.preview_text.as_deref().unwrap_or("").len() > 2);
     }
 }

@@ -7,15 +7,17 @@ use semio_framework_os::{
     os_app_registration,
     os_document_from_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json,
     os_media_graph_to_node_graph_payload, os_media_graph_vfs_schema,
-    os_parameter_types_compatible, os_parameter_value, os_program_by_id, parameter_id_from_port_id,
-    register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, MediaGraphPosition,
-    OsAppInstance, OsDocument, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
+    os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
+    register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, DevJsonBackbone, MediaGraphPosition,
+    OsAppInstance, OsBackbonePort, OsDocument, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
     OsParameterType, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
+    OS_STUDIO_BACKBONE_URI_PREFIX,
 };
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
     create_default_layout, create_tab_stack_layout, layout::MeasureSelectItem,
-    layout::WindowEngagementStatus, ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text,
+    layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
+    ui_inspector_all_equal, ui_text,
     App, CommandDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene,
     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
     UiSelectItem, UiSelectNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
@@ -26,9 +28,9 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::sync::{Arc, LazyLock};
-use vcs::{create_document_vcs_envelope, DocumentBackboneRef, MemoryBackbonePort};
+use vcs::{create_document_vcs_envelope, DocumentBackboneRef, LocalStorageBackbonePort};
 use mathematical_graph_port_directed_dag::{
     dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec,
 };
@@ -61,6 +63,8 @@ const S_PLAY_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 
 const DEMO_STUDIO_JSON: &str = include_str!("../../example/demo.s.json");
 const OS_BOOT_STUDIO_ID: &str = "default";
+
+const S_STUDIO_EXAMPLES: &[(&str, &str, &str)] = &[("demo", "Demo Studio", DEMO_STUDIO_JSON)];
 //#endregion 🔖Constants
 
 //#region 🔖Types
@@ -84,6 +88,7 @@ struct StudioProgramEntry {
     program_id: String,
     app_id: String,
     label: String,
+    hierarchy: Vec<String>,
     yields: String,
 }
 
@@ -95,6 +100,7 @@ struct SpawnedAppEntry {
     instance_id: u32,
     app_id: String,
     label: String,
+    hierarchy: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -116,6 +122,8 @@ struct StudioRuntimeState {
     compiled_dag_engagement_input: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     studio_id: Option<String>,
+    #[serde(default)]
+    clipboard_instance_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -144,9 +152,9 @@ fn ensure_studio_fixtures_registered() {
     let _ = &*FIXTURES;
 }
 
-static CATALOG_PORT: LazyLock<Arc<MemoryBackbonePort>> = LazyLock::new(|| {
+static CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
     ensure_studio_fixtures_registered();
-    let port = Arc::new(MemoryBackbonePort::new());
+    let port: Arc<dyn OsBackbonePort> = Arc::new(LocalStorageBackbonePort::new());
     if list_os_studio_catalog_entries(port.clone())
         .map(|entries| entries.is_empty())
         .unwrap_or(true)
@@ -163,7 +171,7 @@ static CATALOG_PORT: LazyLock<Arc<MemoryBackbonePort>> = LazyLock::new(|| {
     port
 });
 
-fn catalog_port() -> Arc<MemoryBackbonePort> {
+fn catalog_port() -> Arc<dyn OsBackbonePort> {
     CATALOG_PORT.clone()
 }
 //#endregion 🔖CatalogBackbone
@@ -307,6 +315,91 @@ fn envelope_from_store(store: OsStore, runtime: StudioRuntimeState) -> SStudioEn
         runtime,
     }
 }
+
+fn studio_example_document_json(example_id: &str) -> Option<String> {
+    S_STUDIO_EXAMPLES
+        .iter()
+        .find(|(id, _, _)| *id == example_id)
+        .map(|(_, _, json)| (*json).to_string())
+}
+
+fn studio_id_for_envelope(envelope: &SStudioEnvelope) -> Option<String> {
+    envelope
+        .runtime
+        .studio_id
+        .clone()
+        .or_else(|| {
+            if envelope.document.id.is_empty() {
+                None
+            } else {
+                Some(envelope.document.id.clone())
+            }
+        })
+}
+
+fn persist_studio_document(document: &OsDocument, studio_id: &str) {
+    let port = catalog_port();
+    let uri = format!("{OS_STUDIO_BACKBONE_URI_PREFIX}{studio_id}");
+    let mut backbone = DevJsonBackbone::new(port);
+    backbone.attach(&uri);
+    let _ = backbone.sync(document);
+}
+
+fn persist_envelope_document(envelope: &SStudioEnvelope) {
+    if let Some(studio_id) = studio_id_for_envelope(envelope) {
+        persist_studio_document(&envelope.document, &studio_id);
+    }
+}
+
+fn primary_selected_instance_id(runtime: &StudioRuntimeState, projection: &OsProjection) -> Option<String> {
+    runtime.selected_app_instance_ids.first().cloned().or_else(|| {
+        runtime.selected_media_node_ids.first().and_then(|node_id| {
+            projection
+                .media_graph
+                .nodes
+                .iter()
+                .find(|node| node.id == *node_id)
+                .map(|node| node.instance_id.clone())
+        })
+    })
+}
+
+fn selected_instance_ids(runtime: &StudioRuntimeState, projection: &OsProjection) -> Vec<String> {
+    if !runtime.selected_app_instance_ids.is_empty() {
+        return runtime.selected_app_instance_ids.clone();
+    }
+    runtime
+        .selected_media_node_ids
+        .iter()
+        .filter_map(|node_id| {
+            projection
+                .media_graph
+                .nodes
+                .iter()
+                .find(|node| node.id == *node_id)
+                .map(|node| node.instance_id.clone())
+        })
+        .collect()
+}
+
+fn media_graph_context_menu_json() -> String {
+    json!([
+        { "id": "open-instance", "label": "Open instance", "command": "openInstance" },
+        { "id": "duplicate-instance", "label": "Duplicate", "command": "duplicateAppInstance" },
+        { "id": "copy-instance", "label": "Copy", "command": "copyAppInstance" },
+        { "id": "paste-instance", "label": "Paste", "command": "pasteAppInstance" },
+        { "id": "rename-instance", "label": "Rename label…", "command": "renameAppInstance" },
+        { "id": "remove-instance", "label": "Remove", "command": "removeAppInstance" },
+        { "id": "select-all", "label": "Select all", "command": "setMediaNodeSelection", "args": { "selectAll": true } },
+        { "id": "clear-selection", "label": "Clear selection", "command": "setMediaNodeSelection", "args": { "nodeIds": [] } },
+        { "id": "reorganize", "label": "Reorganize", "command": "reorganizeMediaGraph" }
+    ])
+    .to_string()
+}
+
+fn presence_peers_json() -> String {
+    "[]".into()
+}
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖HomeVfs
@@ -444,6 +537,50 @@ fn render_media_vfs(document: &OsDocument) -> UiNode {
 //#endregion 🔖MediaGraphVfs
 
 //#region 🔖StudioPanels
+#[derive(Default)]
+struct AppCatalogueNode {
+    children: BTreeMap<String, AppCatalogueNode>,
+    app: Option<StudioProgramEntry>,
+}
+
+fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> UiTreeItemNode {
+    let id_path = path.join(".");
+    let children = node
+        .children
+        .into_iter()
+        .map(|(segment, child)| {
+            let mut child_path = path.to_vec();
+            child_path.push(segment.clone());
+            app_catalogue_item(&child_path, &segment, child)
+        })
+        .collect::<Vec<_>>();
+    let app = node.app;
+    let mut drag_data = HashMap::new();
+    if let Some(app) = &app {
+        drag_data.insert(
+            S_PLAY_CATALOGUE_DRAG_MIME.into(),
+            json!({ "programId": app.program_id, "appId": app.app_id }).to_string(),
+        );
+    }
+    UiTreeItemNode {
+        id: format!("s-play-catalogue.hierarchy.{id_path}"),
+        label: label.into(),
+        description: app.as_ref().and_then(|entry| (!entry.yields.is_empty()).then(|| entry.yields.clone())),
+        icon_id: app.as_ref().map(|entry| entry.app_id.clone()),
+        selected: None,
+        default_open: (!children.is_empty()).then_some(true),
+        command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
+        draggable: app.as_ref().map(|_| true),
+        drag_data: (!drag_data.is_empty()).then_some(drag_data),
+        items: (!children.is_empty()).then_some(children),
+        control: None,
+        is_hidden: None,
+    }
+}
+
 fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
     let programs: Vec<StudioProgramEntry> = if panel.programs.is_empty() {
         let mut entries = Vec::new();
@@ -457,6 +594,7 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
                     program_id: program.id.clone(),
                     app_id: app.id,
                     label: app.label,
+                    hierarchy: app.hierarchy,
                     yields: app
                         .outputs
                         .first()
@@ -469,61 +607,24 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
     } else {
         panel.programs.clone()
     };
-    let mut program_groups: HashMap<String, Vec<&StudioProgramEntry>> = HashMap::new();
-    for program in &programs {
-        program_groups
-            .entry(program.program_id.clone())
-            .or_default()
-            .push(program);
+    let mut hierarchy = AppCatalogueNode::default();
+    for program in programs {
+        let mut node = &mut hierarchy;
+        for segment in &program.hierarchy {
+            node = node.children.entry(segment.clone()).or_default();
+        }
+        node.app = Some(program);
     }
-    let mut sections = vec![UiTreeSectionNode {
+    let sections = vec![UiTreeSectionNode {
         id: S_PLAY_CATALOGUE_TAB_ID.into(),
         label: Some("Apps".into()),
         default_open: Some(true),
-        items: Vec::new(),
+        items: hierarchy
+            .children
+            .into_iter()
+            .map(|(segment, node)| app_catalogue_item(&[segment.clone()], &segment, node))
+            .collect(),
     }];
-    for (program_id, apps) in program_groups {
-        let program_name = os_program_by_id(&program_id)
-            .map(|program| program.name)
-            .unwrap_or(program_id.clone());
-        let app_items: Vec<UiTreeItemNode> = apps
-            .iter()
-            .map(|app| {
-                let mut drag_data = HashMap::new();
-                drag_data.insert(
-                    S_PLAY_CATALOGUE_DRAG_MIME.into(),
-                    json!({ "programId": app.program_id, "appId": app.app_id }).to_string(),
-                );
-                UiTreeItemNode {
-                    id: format!("s-play-catalogue.app.{}.{}", app.program_id, app.app_id),
-                    label: app.label.clone(),
-                    description: if app.yields.is_empty() {
-                        None
-                    } else {
-                        Some(app.yields.clone())
-                    },
-                    icon_id: Some(app.app_id.clone()),
-                    selected: None,
-                    default_open: None,
-                    command: None,
-                    hover_command: None,
-                    unhover_command: None,
-                    actions: None,
-                    draggable: Some(true),
-                    drag_data: Some(drag_data),
-                    items: None,
-                    control: None,
-                    is_hidden: None,
-                }
-            })
-            .collect();
-        sections.push(UiTreeSectionNode {
-            id: format!("s-play-catalogue.program.{program_id}"),
-            label: Some(program_name),
-            default_open: Some(true),
-            items: app_items,
-        });
-    }
     UiNode::Tree(UiTreeNode {
         sections,
         selected_ids: None,
@@ -596,97 +697,99 @@ fn parameter_constraint_fields(parameter: &OsParameter) -> Vec<UiNode> {
             max,
             step,
             ..
-        } => {
-            let mut fields = Vec::new();
-            if let Some(min) = min {
-                fields.push(UiNode::Field(UiFieldNode {
-                    id: format!("s-play-parameters.{id}.min"),
-                    label: "Min".into(),
-                    child: UiControlNode::NumberStepper(UiNumberStepperNode {
-                        id: format!("s-play-parameters.{id}.min.stepper"),
-                        value: *min,
-                        step: 1.0,
-                        uniform: true,
-                        on_absolute: s_play_cmd(
-                            "patchParameter",
-                            Some(json!({ "parameterId": id, "field": "min" })),
-                        ),
-                        on_delta: s_play_cmd(
-                            "patchParameter",
-                            Some(json!({ "parameterId": id, "field": "min" })),
-                        ),
-                    }),
-                }));
-            }
-            if let Some(max) = max {
-                fields.push(UiNode::Field(UiFieldNode {
-                    id: format!("s-play-parameters.{id}.max"),
-                    label: "Max".into(),
-                    child: UiControlNode::NumberStepper(UiNumberStepperNode {
-                        id: format!("s-play-parameters.{id}.max.stepper"),
-                        value: *max,
-                        step: 1.0,
-                        uniform: true,
-                        on_absolute: s_play_cmd(
-                            "patchParameter",
-                            Some(json!({ "parameterId": id, "field": "max" })),
-                        ),
-                        on_delta: s_play_cmd(
-                            "patchParameter",
-                            Some(json!({ "parameterId": id, "field": "max" })),
-                        ),
-                    }),
-                }));
-            }
-            if let Some(step) = step {
-                fields.push(UiNode::Field(UiFieldNode {
-                    id: format!("s-play-parameters.{id}.step"),
-                    label: "Step".into(),
-                    child: UiControlNode::NumberStepper(UiNumberStepperNode {
-                        id: format!("s-play-parameters.{id}.step.stepper"),
-                        value: *step,
-                        step: 0.1,
-                        uniform: true,
-                        on_absolute: s_play_cmd(
-                            "patchParameter",
-                            Some(json!({ "parameterId": id, "field": "step" })),
-                        ),
-                        on_delta: s_play_cmd(
-                            "patchParameter",
-                            Some(json!({ "parameterId": id, "field": "step" })),
-                        ),
-                    }),
-                }));
-            }
-            fields
-        }
-        OsParameter::Categorical { id, options, .. } => vec![
+        } => vec![
             UiNode::Field(UiFieldNode {
-                id: format!("s-play-parameters.{id}.options"),
-                label: "Options".into(),
-                child: UiControlNode::Input(UiInputNode {
-                    id: format!("s-play-parameters.{id}.options.input"),
-                    input_kind: "text".into(),
-                    value: options.join(", "),
-                    placeholder: Some("Comma-separated options".into()),
-                    commit: None,
-                    on_change: s_play_cmd(
+                id: format!("s-play-parameters.{id}.min"),
+                label: "Min".into(),
+                child: UiControlNode::NumberStepper(UiNumberStepperNode {
+                    id: format!("s-play-parameters.{id}.min.stepper"),
+                    value: min.unwrap_or(0.0),
+                    step: 1.0,
+                    uniform: true,
+                    on_absolute: s_play_cmd(
                         "patchParameter",
-                        Some(json!({ "parameterId": id, "field": "options" })),
+                        Some(json!({ "parameterId": id, "field": "min" })),
+                    ),
+                    on_delta: s_play_cmd(
+                        "patchParameter",
+                        Some(json!({ "parameterId": id, "field": "min" })),
                     ),
                 }),
             }),
-            UiNode::Button(UiButtonNode {
-                id: Some(format!("s-play-parameters.{id}.add-option")),
-                icon_id: "plus".into(),
-                label: "Add Option".into(),
-                command: s_play_cmd(
-                    "patchParameter",
-                    Some(json!({ "parameterId": id, "field": "addOption", "value": "New" })),
-                ),
-                style: None,
+            UiNode::Field(UiFieldNode {
+                id: format!("s-play-parameters.{id}.max"),
+                label: "Max".into(),
+                child: UiControlNode::NumberStepper(UiNumberStepperNode {
+                    id: format!("s-play-parameters.{id}.max.stepper"),
+                    value: max.unwrap_or(0.0),
+                    step: 1.0,
+                    uniform: true,
+                    on_absolute: s_play_cmd(
+                        "patchParameter",
+                        Some(json!({ "parameterId": id, "field": "max" })),
+                    ),
+                    on_delta: s_play_cmd(
+                        "patchParameter",
+                        Some(json!({ "parameterId": id, "field": "max" })),
+                    ),
+                }),
+            }),
+            UiNode::Field(UiFieldNode {
+                id: format!("s-play-parameters.{id}.step"),
+                label: "Step".into(),
+                child: UiControlNode::NumberStepper(UiNumberStepperNode {
+                    id: format!("s-play-parameters.{id}.step.stepper"),
+                    value: step.unwrap_or(0.0),
+                    step: 0.1,
+                    uniform: true,
+                    on_absolute: s_play_cmd(
+                        "patchParameter",
+                        Some(json!({ "parameterId": id, "field": "step" })),
+                    ),
+                    on_delta: s_play_cmd(
+                        "patchParameter",
+                        Some(json!({ "parameterId": id, "field": "step" })),
+                    ),
+                }),
             }),
         ],
+        OsParameter::Categorical { id, options, .. } => {
+            let mut fields: Vec<UiNode> = options
+                .iter()
+                .map(|option| {
+                    UiNode::Field(UiFieldNode {
+                        id: format!("s-play-parameters.{id}.option.{option}"),
+                        label: option.clone(),
+                        child: UiControlNode::Button(UiButtonNode {
+                            id: Some(format!("s-play-parameters.{id}.option.{option}.remove")),
+                            icon_id: "trash-2".into(),
+                            label: "Remove".into(),
+                            command: s_play_cmd(
+                                "patchParameter",
+                                Some(json!({ "parameterId": id, "field": "removeOption", "value": option })),
+                            ),
+                            style: None,
+                        }),
+                    })
+                })
+                .collect();
+            fields.push(UiNode::Field(UiFieldNode {
+                id: format!("s-play-parameters.{id}.add-option"),
+                label: "Add option".into(),
+                child: UiControlNode::Input(UiInputNode {
+                    id: format!("s-play-parameters.{id}.add-option.input"),
+                    input_kind: "text".into(),
+                    value: String::new(),
+                    placeholder: Some("New option".into()),
+                    commit: None,
+                    on_change: s_play_cmd(
+                        "patchParameter",
+                        Some(json!({ "parameterId": id, "field": "addOption" })),
+                    ),
+                }),
+            }));
+            fields
+        }
         _ => Vec::new(),
     }
 }
@@ -869,26 +972,51 @@ fn build_inspector_tree(document: &OsDocument, runtime: &StudioRuntimeState) -> 
             .filter_map(|id| projection.app_instances.iter().find(|instance| &instance.id == id))
             .collect();
         let labels: Vec<_> = instances.iter().map(|instance| instance.label.clone()).collect();
+        let programs: Vec<_> = instances.iter().map(|instance| instance.program_id.clone()).collect();
+        let apps: Vec<_> = instances.iter().map(|instance| instance.app_id.clone()).collect();
         let label_uniform = ui_inspector_all_equal(&labels);
-        let mut instance_fields = vec![UiNode::Field(UiFieldNode {
-            id: "s-play-inspector.app-instance.label".into(),
-            label: "Label".into(),
-            child: UiControlNode::Input(UiInputNode {
-                id: "s-play-inspector.app-instance.label.input".into(),
-                input_kind: "text".into(),
-                value: if label_uniform {
-                    labels.first().cloned().unwrap_or_default()
+        let program_uniform = ui_inspector_all_equal(&programs);
+        let app_uniform = ui_inspector_all_equal(&apps);
+        let mut instance_fields = vec![
+            ui_text(format!(
+                "Program: {}",
+                if program_uniform {
+                    programs.first().cloned().unwrap_or_default()
                 } else {
-                    String::new()
-                },
-                placeholder: if label_uniform { None } else { Some("Mixed".into()) },
-                commit: None,
-                on_change: s_play_cmd(
-                    "patchAppInstances",
-                    Some(json!({ "instanceIds": instance_ids, "field": "label" })),
-                ),
+                    "Mixed".into()
+                }
+            )),
+            ui_text(format!(
+                "App: {}",
+                if app_uniform {
+                    apps.first().cloned().unwrap_or_default()
+                } else {
+                    "Mixed".into()
+                }
+            )),
+            UiNode::Field(UiFieldNode {
+                id: "s-play-inspector.app-instance.label".into(),
+                label: "Label".into(),
+                child: UiControlNode::Input(UiInputNode {
+                    id: "s-play-inspector.app-instance.label.input".into(),
+                    input_kind: "text".into(),
+                    value: if label_uniform {
+                        labels.first().cloned().unwrap_or_default()
+                    } else {
+                        String::new()
+                    },
+                    placeholder: if label_uniform { None } else { Some("Mixed".into()) },
+                    commit: None,
+                    on_change: s_play_cmd(
+                        "patchAppInstances",
+                        Some(json!({ "instanceIds": instance_ids, "field": "label" })),
+                    ),
+                }),
             }),
-        })];
+        ];
+        if instance_ids.len() == 1 {
+            instance_fields.insert(2, ui_text(format!("Instance id: {}", instance_ids[0])));
+        }
         if instance_ids.len() == 1 {
             if let Some(instance) = instances.first() {
                 if let Some(registration) = os_app_registration(&instance.program_id, &instance.app_id) {
@@ -1171,13 +1299,12 @@ fn render_media_graph(document: &OsDocument, runtime: &StudioRuntimeState) -> Ui
         NodeGraphScene {
             editable: Some(true),
             operators_json: Some(serde_json::to_string(&operators).unwrap_or_else(|_| "[]".into())),
-            context_menu_json: Some(
-                r#"[{"id":"select-node","label":"Select node","command":"nodeGraphSelect"},{"id":"open-instance","label":"Open instance","command":"openInstance"},{"id":"remove-instance","label":"Remove instance","command":"removeAppInstance"}]"#.into(),
-            ),
+            context_menu_json: Some(media_graph_context_menu_json()),
             find_items_json: Some(graph_payload.find_items_json),
             selection_json,
             hover_json,
             capabilities_json: Some(r#"{"spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
+            presence_peers_json: Some(presence_peers_json()),
             ..NodeGraphScene::base(
                 graph_payload.nodes_json,
                 graph_payload.edges_json,
@@ -1482,18 +1609,98 @@ impl SStudioApp {
                 }
             }
             "removeAppInstance" => {
-                if let Some(instance_id) = args
+                let instance_id = args
                     .and_then(|value| value.get("instanceId"))
                     .and_then(|value| value.as_str())
-                {
+                    .map(str::to_string)
+                    .or_else(|| {
+                        let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                        primary_selected_instance_id(&runtime, &projection)
+                    });
+                if let Some(instance_id) = instance_id {
                     let _ = store.dispatch_apply(vec![OsOp::RemoveAppInstance {
-                        instance_id: instance_id.into(),
+                        instance_id: instance_id.clone(),
                     }]);
-                    if runtime.active_instance_id.as_deref() == Some(instance_id) {
+                    if runtime.active_instance_id.as_deref() == Some(instance_id.as_str()) {
                         runtime.active_instance_id = None;
                     }
-                    if runtime.focused_instance_id.as_deref() == Some(instance_id) {
+                    if runtime.focused_instance_id.as_deref() == Some(instance_id.as_str()) {
                         runtime.focused_instance_id = None;
+                    }
+                }
+            }
+            "deleteSelection" => {
+                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                let instance_ids = selected_instance_ids(&runtime, &projection);
+                for instance_id in instance_ids {
+                    let _ = store.dispatch_apply(vec![OsOp::RemoveAppInstance {
+                        instance_id: instance_id.clone(),
+                    }]);
+                }
+                runtime.selected_app_instance_ids.clear();
+                runtime.selected_media_node_ids.clear();
+                runtime.active_instance_id = None;
+                runtime.focused_instance_id = None;
+            }
+            "copyAppInstance" => {
+                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                runtime.clipboard_instance_ids = selected_instance_ids(&runtime, &projection);
+            }
+            "duplicateAppInstance" | "pasteAppInstance" => {
+                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                let source_ids = if command == "pasteAppInstance" {
+                    runtime.clipboard_instance_ids.clone()
+                } else {
+                    selected_instance_ids(&runtime, &projection)
+                };
+                for instance_id in source_ids {
+                    let Some(instance) = projection
+                        .app_instances
+                        .iter()
+                        .find(|row| row.id == instance_id)
+                    else {
+                        continue;
+                    };
+                    let position = projection
+                        .media_graph
+                        .nodes
+                        .iter()
+                        .find(|node| node.instance_id == instance_id)
+                        .map(|node| MediaGraphPosition {
+                            x: node.x + 40.0,
+                            y: node.y + 40.0,
+                        })
+                        .unwrap_or(MediaGraphPosition { x: 80.0, y: 80.0 });
+                    let label = format!("{} Copy", instance.label);
+                    if let Ok(new_id) = store.spawn_app_instance(
+                        &instance.program_id,
+                        &instance.app_id,
+                        Some(&label),
+                        position,
+                    ) {
+                        runtime.active_instance_id = Some(new_id);
+                    }
+                }
+            }
+            "renameAppInstance" => {
+                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                if let Some(instance_id) = primary_selected_instance_id(&runtime, &projection) {
+                    let next_label = args
+                        .and_then(|value| value.get("label"))
+                        .and_then(|value| value.as_str())
+                        .map(str::to_string)
+                        .or_else(|| {
+                            projection
+                                .app_instances
+                                .iter()
+                                .find(|row| row.id == instance_id)
+                                .map(|instance| format!("{} (renamed)", instance.label))
+                        });
+                    if let Some(label) = next_label {
+                        let _ = store.dispatch_apply(vec![OsOp::PatchAppInstance {
+                            instance_id,
+                            label: Some(label),
+                        }]);
                     }
                 }
             }
@@ -1535,9 +1742,7 @@ impl SStudioApp {
                     .and_then(|value| value.get("exampleId"))
                     .and_then(|value| value.as_str())
                 {
-                    let document_json = if example_id == "demo" {
-                        initial_studio_document_json()
-                    } else {
+                    let Some(document_json) = studio_example_document_json(example_id) else {
                         return vec![];
                     };
                     if let Ok(document) = os_document_from_json(&document_json) {
@@ -1610,16 +1815,24 @@ impl SStudioApp {
                 }
             }
             "nodeGraphSelect" | "setMediaNodeSelection" => {
-                let node_ids: Vec<String> = args
-                    .and_then(|value| value.get("nodeIds"))
-                    .and_then(|value| value.as_array())
-                    .map(|rows| {
-                        rows.iter()
-                            .filter_map(|value| value.as_str().map(str::to_string))
-                            .collect()
-                    })
-                    .unwrap_or_default();
                 let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                let node_ids: Vec<String> = if args
+                    .and_then(|value| value.get("selectAll"))
+                    .and_then(|value| value.as_bool())
+                    .unwrap_or(false)
+                {
+                    projection.media_graph.nodes.iter().map(|node| node.id.clone()).collect()
+                } else {
+                    args
+                        .and_then(|value| value.get("nodeIds"))
+                        .and_then(|value| value.as_array())
+                        .map(|rows| {
+                            rows.iter()
+                                .filter_map(|value| value.as_str().map(str::to_string))
+                                .collect()
+                        })
+                        .unwrap_or_default()
+                };
                 runtime.selected_media_node_ids = node_ids.clone();
                 runtime.selected_app_instance_ids = node_ids
                     .iter()
@@ -1634,6 +1847,27 @@ impl SStudioApp {
                     .collect();
                 if runtime.selected_app_instance_ids.len() == 1 {
                     runtime.active_instance_id = runtime.selected_app_instance_ids.first().cloned();
+                }
+            }
+            "reorganizeMediaGraph" => {
+                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                let node_ids: Vec<String> = if runtime.selected_media_node_ids.is_empty() {
+                    projection.media_graph.nodes.iter().map(|node| node.id.clone()).collect()
+                } else {
+                    runtime.selected_media_node_ids.clone()
+                };
+                let mut ops = Vec::new();
+                for (index, node_id) in node_ids.iter().enumerate() {
+                    let col = (index % 4) as f64;
+                    let row = (index / 4) as f64;
+                    ops.push(OsOp::MoveMediaNode {
+                        node_id: node_id.clone(),
+                        x: 80.0 + col * 220.0,
+                        y: 80.0 + row * 160.0,
+                    });
+                }
+                if !ops.is_empty() {
+                    let _ = store.dispatch_apply(ops);
                 }
             }
             "nodeGraphHover" | "textHover" => {
@@ -1812,13 +2046,16 @@ impl SStudioApp {
                 }
             }
             "openInstance" => {
-                if let Some(instance_id) = args
+                let projection = store.projection().unwrap_or_else(|_| default_os_projection());
+                let instance_id = args
                     .and_then(|value| value.get("instanceId"))
                     .and_then(|value| value.as_str())
-                {
-                    runtime.focused_instance_id = Some(instance_id.into());
-                    runtime.active_instance_id = Some(instance_id.into());
-                    runtime.selected_app_instance_ids = vec![instance_id.into()];
+                    .map(str::to_string)
+                    .or_else(|| primary_selected_instance_id(&runtime, &projection));
+                if let Some(instance_id) = instance_id {
+                    runtime.focused_instance_id = Some(instance_id.clone());
+                    runtime.active_instance_id = Some(instance_id.clone());
+                    runtime.selected_app_instance_ids = vec![instance_id.clone()];
                     let projection = store.projection().unwrap_or_else(|_| default_os_projection());
                     if let Some(node) = projection
                         .media_graph
@@ -1895,6 +2132,7 @@ impl SStudioApp {
             _ => {}
         }
         *envelope = envelope_from_store(store, runtime);
+        persist_envelope_document(envelope);
         ops.push(set_studio_document_op(envelope));
         ops
     }
@@ -2023,10 +2261,17 @@ fn media_graph_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance
 
 fn create_home_app() -> App {
     let mut app = App::from_builder(
-        App::builder(S_HOME_APP_ID, "Home")
+        App::builder(S_HOME_APP_ID, "Home").hierarchy(["semio", "s", "home"])
             .icon_id("home")
             .mode("explore", "Explore")
             .default_mode_id("explore")
+            .mode_tools(
+                "explore",
+                vec![
+                    tool_button("s-home.create", "plus", "New Studio", s_home_cmd("createStudio", None)),
+                    tool_button("s-home.import", "upload", "Import Studio", s_home_cmd("importStudio", None)),
+                ],
+            )
             .window_kind(S_HOME_WINDOW, "Studios", S_HOME_BODY)
             .default_layout(create_tab_stack_layout(
                 &[S_HOME_WINDOW.into()],
@@ -2051,7 +2296,7 @@ fn create_studio_app() -> App {
         projection.app_instances.len(),
     );
     let measures = media_graph_measures(&runtime, &projection.app_instances);
-    let mut builder = App::builder(S_PLAY_APP_ID, "Studio")
+    let mut builder = App::builder(S_PLAY_APP_ID, "Studio").hierarchy(["semio", "s", "studio"])
         .icon_id("s")
         .mode("main", "Studio")
         .default_mode_id("main")
@@ -2081,6 +2326,24 @@ fn create_studio_app() -> App {
             S_PLAY_INSPECTOR_BODY_KEY,
         )
         .default_layout(studio_play_layout())
+        .mode_tools(
+            "main",
+            vec![tool_collection(
+                "s-play.history",
+                "history",
+                "History",
+                vec![
+                    tool_button("s-play.undo", "undo-2", "Undo", s_play_cmd("undo", None)),
+                    tool_button("s-play.redo", "redo-2", "Redo", s_play_cmd("redo", None)),
+                    tool_button(
+                        "s-play.checkpoint",
+                        "git-commit-horizontal",
+                        "Checkpoint",
+                        s_play_cmd("commitCheckpoint", None),
+                    ),
+                ],
+            )],
+        )
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")
         .keybinding("mod+s", "commitCheckpoint");
@@ -2107,9 +2370,10 @@ fn create_studio_app() -> App {
         program: None,
     };
     app.definition.controller_id = S_PLAY_CONTROLLER_ID.into();
-    app = app
-        .example("demo", "Demo Studio", initial_studio_document_json())
-        .program("s", "S Studio", "studio");
+    let mut app = app.program("s", "S Studio", "studio");
+    for (id, label, json) in S_STUDIO_EXAMPLES {
+        app = app.example(*id, *label, (*json).to_string());
+    }
     app
 }
 
@@ -2150,6 +2414,7 @@ mod tests {
                 apps: vec![OsPlatformAppInput {
                     id: "draw".into(),
                     label: "Draw".into(),
+                    hierarchy: vec!["semio".into(), "draw".into()],
                     controller_id: "draw-play".into(),
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
@@ -2307,12 +2572,33 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_tree_lists_programs() {
-        seed_draw_program();
-        let panel = StudioPanelState::default();
+    fn catalogue_tree_nests_apps_by_canonical_hierarchy() {
+        let panel = StudioPanelState {
+            programs: vec![
+                StudioProgramEntry {
+                    plugin_id: "puzzle2d".into(),
+                    program_id: "puzzle2d".into(),
+                    app_id: "puzzle2d-play".into(),
+                    label: "Puzzle 2D".into(),
+                    hierarchy: vec!["semio".into(), "puzzle".into(), "2d".into()],
+                    yields: "layout".into(),
+                },
+                StudioProgramEntry {
+                    plugin_id: "puzzle3d".into(),
+                    program_id: "puzzle3d".into(),
+                    app_id: "puzzle3d-play".into(),
+                    label: "Puzzle 3D".into(),
+                    hierarchy: vec!["semio".into(), "puzzle".into(), "3d".into()],
+                    yields: "model".into(),
+                },
+            ],
+            ..Default::default()
+        };
         let tree = build_catalogue_tree(&panel);
         let json = serde_json::to_string(&tree).unwrap();
-        assert!(json.contains("draw"));
+        assert!(json.contains("s-play-catalogue.hierarchy.semio.puzzle.2d"));
+        assert!(json.contains("s-play-catalogue.hierarchy.semio.puzzle.3d"));
+        assert_eq!(json.matches("\"label\":\"puzzle\"").count(), 1);
     }
 
     #[test]
@@ -2467,6 +2753,7 @@ mod tests {
                 apps: vec![OsPlatformAppInput {
                     id: "puzzle5d".into(),
                     label: "Puzzle 5D".into(),
+                    hierarchy: vec!["semio".into(), "puzzle".into(), "5d".into()],
                     controller_id: "puzzle5d-play".into(),
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
@@ -2506,6 +2793,7 @@ mod tests {
                 apps: vec![OsPlatformAppInput {
                     id: "shooting".into(),
                     label: "Shooting".into(),
+                    hierarchy: vec!["semio".into(), "shooting".into()],
                     controller_id: "shooting-play".into(),
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
@@ -2618,6 +2906,41 @@ mod tests {
             projection_from_document(&envelope.document).app_instances.len(),
             after_first
         );
+    }
+
+    #[test]
+    fn studio_document_persists_through_backbone_port() {
+        let port: Arc<dyn OsBackbonePort> = Arc::new(LocalStorageBackbonePort::new());
+        let mut demo = parse_demo_studio_document();
+        demo.id = "persist-test".into();
+        demo.name = "Persist Test".into();
+        let _ = seed_os_studio_catalog_if_empty(demo.clone(), port.clone()).expect("seed");
+        let loaded = load_os_studio_document("persist-test", port.clone()).expect("load");
+        assert_eq!(loaded.id, "persist-test");
+        assert_eq!(loaded.name, "Persist Test");
+    }
+
+    #[test]
+    fn studio_and_home_modes_expose_history_tools() {
+        let studio = create_studio_app();
+        let home = create_home_app();
+        let studio_tools = studio
+            .definition
+            .modes
+            .iter()
+            .find(|mode| mode.id == "main")
+            .map(|mode| mode.tools.len())
+            .unwrap_or(0);
+        let home_tools = home
+            .definition
+            .modes
+            .iter()
+            .find(|mode| mode.id == "explore")
+            .map(|mode| mode.tools.len())
+            .unwrap_or(0);
+        assert!(studio_tools > 0);
+        assert!(home_tools > 0);
+        assert_eq!(studio.examples.len(), S_STUDIO_EXAMPLES.len());
     }
 }
 //#endregion 🧪Tests

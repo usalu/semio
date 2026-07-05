@@ -1,6 +1,7 @@
 //! 🔌 Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM components.
 
 pub mod app;
+pub mod generate_mode;
 pub mod plugin_runtime;
 pub mod scaffold;
 pub mod world3d_host;
@@ -8,6 +9,12 @@ pub mod world3d_host;
 pub use app::{
     App, AppBuilder, AppInstance, KeybindingSpec, ModeSpec, PanelTabSpec, Plugin, PluginApp, PluginBundle,
     WindowKindSpec,
+};
+pub use generate_mode::{
+    add_generation, handle_generation_command, initial_generation_values, remove_generation,
+    rename_generation, render_generation_form_body, render_generation_preview_text,
+    render_generations_tree, select_generation, selected_generation, selected_generation_mut,
+    update_generation_values, FormGeneration, GenerationPlayState,
 };
 pub use plugin_runtime::install_plugin_bundle;
 pub use scaffold::{

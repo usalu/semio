@@ -1416,7 +1416,7 @@ fn create_puzzle2d_app() -> App {
     sync_host_from_envelope(&mut host, &envelope);
     let engagement = puzzle2d_engagement(&envelope, &host);
     App::from_builder(
-        App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D")
+        App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D").hierarchy(["semio", "puzzle", "2d"])
             .icon_id("puzzle2d")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1453,7 +1453,16 @@ fn create_puzzle2d_app() -> App {
     .program("puzzle2d", "Puzzle 2D", "layout")
 }
 
+fn puzzle2d_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
+    semio_framework_os::title_card_svg(value, "Puzzle 2D", 1024, 768)
+}
+
+fn register_puzzle2d_exports() {
+    semio_framework_os::register_2d_svg_png_export_handlers("2d.puzzle", "puzzle2d", puzzle2d_document_json_to_svg);
+}
+
 fn puzzle2d_bundle() -> PluginBundle {
+    register_puzzle2d_exports();
     PluginBundle::new("puzzle2d", "Puzzle 2D", "0.1.0").register_app(create_puzzle2d_app(), || Box::new(Puzzle2dPlayApp::default()))
 }
 

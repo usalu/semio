@@ -15,7 +15,9 @@ impl Puzzle5dPrecomputeSession {
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), String> {
-        self.inner.set_scene(json).map_err(|e| e.to_string())
+        self.inner
+            .set_scene(json)
+            .map_err(|error| format!("{error:?}"))
     }
 
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
