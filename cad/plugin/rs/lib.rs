@@ -4,11 +4,11 @@ use cad_document::{empty_cad_projection, CadNode, CadOp, CadScene, CAD_DOCUMENT_
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, export_mesh_glb_bytes, export_mesh_obj,
     merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json, App,
-    CommandDescriptor, MeshData, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup,
-    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ui_stack_vertical, ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
+    world3d_selection_json, App, CommandDescriptor, MeshData, PluginApp, PluginBundle, UiControlNode, UiFieldNode,
+    UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
 use base64::Engine;
@@ -28,8 +28,18 @@ const CAD_PLAY_BODY_HIERARCHY: &str = "cad.play.hierarchy";
 const CAD_PLAY_BODY_CATALOGUE: &str = "cad.play.catalogue";
 const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";
 const CAD_PLAY_WINDOW_COMPOSITE: &str = "cad-composite";
+const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
+const CAD_FALLBACK_MESH_KIND: &str = "box";
 
 static CAD_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
+
+const TYPOLOGY_MESH_URLS: &[(&str, &str)] = &[
+    ("building.building.slab", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
+    ("building.building.column", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
+    ("building.building.beam", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
+    ("building.building.wall", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
+    ("spatial.shape.box", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
+];
 
 const TYPOLOGY_CATALOG: &[(&str, &str, &str)] = &[
     ("building.building.slab", "Slab", "square"),
@@ -90,6 +100,12 @@ struct CadObject {
     typology: String,
     #[serde(default)]
     visible: bool,
+    #[serde(default)]
+    origin: [f64; 3],
+    #[serde(default)]
+    orientation: Option<[f64; 4]>,
+    #[serde(default, rename = "meshUrl")]
+    mesh_url: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -156,9 +172,78 @@ fn default_document() -> CadPlayDocument {
             label: "Box".into(),
             typology: "spatial.shape.box".into(),
             visible: true,
+            origin: [0.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            mesh_url: Some("/mesh/hexagonal-cut-concrete-forest-left.glb".into()),
         }],
         nodes: scene.nodes,
         active_tool: Some("selectDirect".into()),
+    }
+}
+
+fn forest_play_document() -> CadPlayDocument {
+    CadPlayDocument {
+        schema: "cad.document".into(),
+        id: "hexagonal-cut-concrete-forest-left".into(),
+        camera: CadCamera {
+            position: [12.0, -12.0, 8.0],
+            target: [5.4, 2.34, 1.5],
+            zoom: 1.0,
+            fov: 50.0,
+        },
+        objects: vec![
+            CadObject {
+                id: "object-slab".into(),
+                label: "Slab".into(),
+                typology: "building.building.slab".into(),
+                visible: true,
+                origin: [5.4, 2.34, 1.5],
+                orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                mesh_url: None,
+            },
+            CadObject {
+                id: "object-column-10".into(),
+                label: "Column 10".into(),
+                typology: "building.building.column".into(),
+                visible: true,
+                origin: [4.05, 4.68, 3.0],
+                orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                mesh_url: None,
+            },
+            CadObject {
+                id: "object-column-11".into(),
+                label: "Column 11".into(),
+                typology: "building.building.column".into(),
+                visible: true,
+                origin: [6.75, 4.68, 3.0],
+                orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                mesh_url: None,
+            },
+            CadObject {
+                id: "object-beam-2".into(),
+                label: "Beam 2".into(),
+                typology: "building.building.beam".into(),
+                visible: true,
+                origin: [5.4, 2.34, 3.0],
+                orientation: Some([0.0, 0.7071, 0.0, 0.7071]),
+                mesh_url: None,
+            },
+        ],
+        nodes: vec![
+            CadNode {
+                id: "node-root".into(),
+                label: "Concrete Forest Left".into(),
+                kind: "group".into(),
+            },
+        ],
+        active_tool: Some("selectDirect".into()),
+    }
+}
+
+fn forest_play_envelope() -> CadPlayEnvelope {
+    CadPlayEnvelope {
+        document: forest_play_document(),
+        runtime: CadPlayRuntime::default(),
     }
 }
 
@@ -200,21 +285,51 @@ fn camera_json(camera: &CadCamera) -> String {
     .to_string()
 }
 
+fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
+    if let Some(url) = object.mesh_url.as_ref().filter(|url| !url.is_empty()) {
+        return Some(url.clone());
+    }
+    TYPOLOGY_MESH_URLS
+        .iter()
+        .find(|(typology, _)| *typology == object.typology)
+        .map(|(_, url)| url.to_string())
+}
+
+fn collect_mesh_urls(document: &CadPlayDocument) -> Vec<String> {
+    let mut urls = HashSet::new();
+    for object in &document.objects {
+        if let Some(url) = resolve_object_mesh_url(object) {
+            urls.insert(url);
+        }
+    }
+    urls.into_iter().collect()
+}
+
+fn object_scale_json(_object: &CadObject) -> [f64; 3] {
+    [1.0, 1.0, 1.0]
+}
+
 fn world_instances_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) -> String {
     let instances: Vec<Value> = document
         .objects
         .iter()
-        .enumerate()
-        .filter(|(_, object)| object.visible)
-        .map(|(index, object)| {
-            let mesh_id = typology_mesh_kind(&object.typology);
+        .filter(|object| object.visible)
+        .map(|object| {
+            let mesh_id = resolve_object_mesh_url(object)
+                .map(|url| world3d_mesh_id_from_url(&url))
+                .unwrap_or_else(|| typology_mesh_kind(&object.typology).to_string());
             let selected = runtime.selected_object_ids.contains(&object.id);
             let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str());
             json!({
                 "id": object.id,
                 "meshId": mesh_id,
-                "position": [index as f64 * 1.5, 0.0, 0.0],
-                "scale": [1.0, 1.0, 1.0],
+                "position": [
+                    object.origin.first().copied().unwrap_or(0.0),
+                    object.origin.get(1).copied().unwrap_or(0.0),
+                    object.origin.get(2).copied().unwrap_or(0.0),
+                ],
+                "rotation": object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
+                "scale": object_scale_json(object),
                 "label": object.label,
                 "color": if selected { "#3b82f6" } else { "#64748b" },
                 "selected": selected,
@@ -226,14 +341,17 @@ fn world_instances_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) ->
 }
 
 fn world_meshes_json(document: &CadPlayDocument) -> String {
-    let kinds: Vec<String> = document
+    let mut kinds: Vec<String> = document
         .objects
         .iter()
         .map(|object| typology_mesh_kind(&object.typology).to_string())
         .collect::<HashSet<_>>()
         .into_iter()
         .collect();
-    world3d_meshes_json_from_kinds(&kinds)
+    if kinds.is_empty() {
+        kinds.push(CAD_FALLBACK_MESH_KIND.into());
+    }
+    world3d_meshes_json_from_kinds_and_urls(&kinds, &collect_mesh_urls(document))
 }
 
 fn world_selection_json(runtime: &CadPlayRuntime) -> String {
@@ -251,7 +369,7 @@ fn export_mesh_from_envelope(envelope: &CadPlayEnvelope) -> MeshData {
         .iter()
         .find(|object| envelope.runtime.selected_object_ids.contains(&object.id))
         .map(|object| typology_mesh_kind(&object.typology))
-        .unwrap_or("box");
+        .unwrap_or(CAD_FALLBACK_MESH_KIND);
     mesh_from_kind(kind)
 }
 
@@ -284,6 +402,9 @@ fn tree_item_with_command(
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -471,6 +592,37 @@ impl PluginApp for CadApp {
                     }
                 }
             }
+            "setActiveExample" => {
+                let example_id = args
+                    .and_then(|value| value.get("exampleId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                envelope = if example_id.is_empty() || example_id == "empty" {
+                    CadPlayEnvelope {
+                        document: CadPlayDocument {
+                            schema: "cad.document".into(),
+                            id: "cad".into(),
+                            camera: CadCamera {
+                                position: default_camera_position(),
+                                target: default_camera_target(),
+                                zoom: 1.0,
+                                fov: default_fov(),
+                            },
+                            objects: Vec::new(),
+                            nodes: Vec::new(),
+                            active_tool: Some("selectDirect".into()),
+                        },
+                        runtime: CadPlayRuntime::default(),
+                    }
+                } else if example_id == "default" {
+                    default_envelope()
+                } else if example_id == CAD_EXAMPLE_FOREST_LEFT || example_id == "forest-left" {
+                    forest_play_envelope()
+                } else {
+                    envelope
+                };
+                return vec![set_document_op(&envelope)];
+            }
             "setActiveTool" => {
                 if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
                     envelope.document.active_tool = Some(tool.into());
@@ -516,6 +668,12 @@ impl PluginApp for CadApp {
                     label: format!("{label} {}", envelope.document.objects.len() + 1),
                     typology: typology.into(),
                     visible: true,
+                    origin: [0.0, 0.0, 0.0],
+                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                    mesh_url: TYPOLOGY_MESH_URLS
+                        .iter()
+                        .find(|(entry, _)| *entry == typology)
+                        .map(|(_, url)| url.to_string()),
                 });
                 envelope.runtime.selected_object_ids = vec![id];
                 return vec![set_document_op(&envelope)];
@@ -655,6 +813,11 @@ fn create_cad_app() -> App {
             ),
     )
     .example("default", "Default", &serde_json::to_string(&default_envelope()).unwrap())
+    .example(
+        CAD_EXAMPLE_FOREST_LEFT,
+        "Hexagonal Cut Concrete Forest Left",
+        &serde_json::to_string(&forest_play_envelope()).unwrap(),
+    )
     .program("cad", "CAD", "model")
 }
 
@@ -696,6 +859,16 @@ semio_framework_plugin::wasm_plugin_exports!();
 mod tests {
     use super::*;
     use semio_framework_plugin::PluginApp;
+
+    #[test]
+    fn forest_example_uses_mesh_urls_and_origins() {
+        let envelope = forest_play_envelope();
+        let json = world_instances_json(&envelope.document, &envelope.runtime);
+        assert!(json.contains("object-column-10"));
+        assert!(json.contains("4.05"));
+        let meshes = world_meshes_json(&envelope.document);
+        assert!(meshes.contains("hexagonal-cut-concrete-forest-left.glb"));
+    }
 
     #[test]
     fn renders_world_scene() {

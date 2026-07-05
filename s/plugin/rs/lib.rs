@@ -108,6 +108,8 @@ struct StudioRuntimeState {
     selected_media_node_ids: Vec<String>,
     #[serde(default)]
     selected_app_instance_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hovered_media_node_id: Option<String>,
     #[serde(default)]
     media_graph_engagement_input: String,
     #[serde(default)]
@@ -504,6 +506,9 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
                     selected: None,
                     default_open: None,
                     command: None,
+                    hover_command: None,
+                    unhover_command: None,
+                    actions: None,
                     draggable: Some(true),
                     drag_data: Some(drag_data),
                     items: None,
@@ -1144,7 +1149,7 @@ fn compiled_dag_engagement(document: &OsDocument) -> WindowEngagement {
 //#endregion 🔖CompiledDag
 
 //#region 🔖StudioWindows
-fn render_media_graph(document: &OsDocument, _runtime: &StudioRuntimeState) -> UiNode {
+fn render_media_graph(document: &OsDocument, runtime: &StudioRuntimeState) -> UiNode {
     let projection = projection_from_document(document);
     let graph_payload = os_media_graph_to_node_graph_payload(&projection.media_graph, &projection.app_instances);
     let operators = build_os_media_flow_operator_infos(
@@ -1152,17 +1157,32 @@ fn render_media_graph(document: &OsDocument, _runtime: &StudioRuntimeState) -> U
         &projection.app_instances,
         &projection.parameters,
     );
+    let selection_json = if runtime.selected_media_node_ids.is_empty() {
+        None
+    } else {
+        Some(serde_json::to_string(&runtime.selected_media_node_ids).unwrap_or_else(|_| "[]".into()))
+    };
+    let hover_json = runtime.hovered_media_node_id.as_ref().map(|id| {
+        json!({ "nodeId": id }).to_string()
+    });
     build_node_graph_scene(
         S_PLAY_SURFACE_MEDIA_GRAPH,
         S_PLAY_CONTROLLER_ID,
         NodeGraphScene {
-            nodes_json: graph_payload.nodes_json,
-            edges_json: graph_payload.edges_json,
-            viewport_json: graph_payload.viewport_json,
             editable: Some(true),
             operators_json: Some(serde_json::to_string(&operators).unwrap_or_else(|_| "[]".into())),
-            context_menu_json: None,
+            context_menu_json: Some(
+                r#"[{"id":"select-node","label":"Select node","command":"nodeGraphSelect"},{"id":"open-instance","label":"Open instance","command":"openInstance"},{"id":"remove-instance","label":"Remove instance","command":"removeAppInstance"}]"#.into(),
+            ),
             find_items_json: Some(graph_payload.find_items_json),
+            selection_json,
+            hover_json,
+            capabilities_json: Some(r#"{"spotlight":false,"noteEdit":false,"clusters":false}"#.into()),
+            ..NodeGraphScene::base(
+                graph_payload.nodes_json,
+                graph_payload.edges_json,
+                graph_payload.viewport_json,
+            )
         },
     )
 }
@@ -1589,7 +1609,7 @@ impl SStudioApp {
                     runtime.selected_media_node_ids = node_id.into_iter().collect();
                 }
             }
-            "setMediaNodeSelection" => {
+            "nodeGraphSelect" | "setMediaNodeSelection" => {
                 let node_ids: Vec<String> = args
                     .and_then(|value| value.get("nodeIds"))
                     .and_then(|value| value.as_array())
@@ -1615,6 +1635,22 @@ impl SStudioApp {
                 if runtime.selected_app_instance_ids.len() == 1 {
                     runtime.active_instance_id = runtime.selected_app_instance_ids.first().cloned();
                 }
+            }
+            "nodeGraphHover" | "textHover" => {
+                runtime.hovered_media_node_id = args
+                    .and_then(|value| value.get("hoverJson"))
+                    .and_then(|value| {
+                        if value.is_null() {
+                            None
+                        } else if let Some(text) = value.as_str() {
+                            serde_json::from_str::<Value>(text)
+                                .ok()
+                                .and_then(|parsed| parsed.get("nodeId").and_then(|id| id.as_str().map(str::to_string)))
+                                .or_else(|| Some(text.to_string()))
+                        } else {
+                            value.get("nodeId").and_then(|id| id.as_str().map(str::to_string))
+                        }
+                    });
             }
             "setAppInstanceSelection" => {
                 let instance_ids: Vec<String> = args
@@ -2118,6 +2154,7 @@ mod tests {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
+                        tools: vec![],
                     }],
                     default_mode_id: None,
                 }],
@@ -2415,6 +2452,7 @@ mod tests {
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
+                    tools: vec![],
                 }],
                 default_mode_id: None,
                 parameter_fields: Vec::new(),
@@ -2433,6 +2471,7 @@ mod tests {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
+                        tools: vec![],
                     }],
                     default_mode_id: None,
                 }],
@@ -2452,6 +2491,7 @@ mod tests {
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
+                    tools: vec![],
                 }],
                 default_mode_id: None,
                 parameter_fields: Vec::new(),
@@ -2470,6 +2510,7 @@ mod tests {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
+                        tools: vec![],
                     }],
                     default_mode_id: None,
                 }],

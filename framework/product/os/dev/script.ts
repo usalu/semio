@@ -97,6 +97,21 @@ class PluginWatchScript extends BundleScript {
 	}
 }
 
+async function buildEngineWasm(pluginId: string, renderer: string): Promise<void> {
+	if (renderer !== "react") return;
+	const graphScript = join(repoRoot, "framework/graph/rs/script.ts");
+	const graphBuild = spawnSync("bun", [graphScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+	if (graphBuild.status !== 0) throw new Error("framework-graph wasm build failed");
+	const editorScript = join(repoRoot, "framework/editor/rs/script.ts");
+	const editorBuild = spawnSync("bun", [editorScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+	if (editorBuild.status !== 0) throw new Error("framework-editor wasm build failed");
+	if (pluginId === "flow") {
+		const flowScript = join(repoRoot, "flow/core/script.ts");
+		const flowBuild = spawnSync("bun", [flowScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+		if (flowBuild.status !== 0) throw new Error("flow-core wasm build failed");
+	}
+}
+
 class DevScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		if (process.env.SKIP_PLUGIN_BUILD !== "1") {
@@ -110,6 +125,7 @@ class DevScript extends BundleScript {
 			if (wgpuBuild.status !== 0) throw new Error("wgpu renderer build failed");
 		}
 		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+		await buildEngineWasm(plugin, renderer);
 		runViteBunxDev(this.root, segments, {
 			portEnv: "S_OS_PORT",
 			defaultPort: "6066",
@@ -126,10 +142,12 @@ class BuildScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		await new PluginBuildScript(this.root).run([]);
 		const renderer = process.env.SEMIO_RENDERER ?? "react";
+		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 		if (renderer === "wgpu") {
 			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
 			spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
 		}
+		await buildEngineWasm(plugin, renderer);
 		spawnSync("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...segments], {
 			cwd: this.root,
 			stdio: "inherit",

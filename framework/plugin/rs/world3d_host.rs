@@ -61,7 +61,9 @@ pub fn world3d_meshes_json_from_kinds_and_urls(kinds: &[String], urls: &[String]
         if meshes.iter().any(|entry| entry.get("id").and_then(|v| v.as_str()) == Some(id.as_str())) {
             continue;
         }
-        meshes.push(json!({ "id": id, "url": url }));
+        let fallback_kind = kinds.first().map(String::as_str).unwrap_or("box");
+        let data = mesh_from_kind(fallback_kind);
+        meshes.push(json!({ "id": id, "data": data }));
     }
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }

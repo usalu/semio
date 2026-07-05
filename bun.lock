@@ -543,6 +543,14 @@
       "name": "@semio-tech/framework-core",
       "version": "0.1.0",
     },
+    "framework/editor/rs": {
+      "name": "@semio-tech/framework-editor-rs",
+      "version": "0.1.0",
+    },
+    "framework/graph/rs": {
+      "name": "@semio-tech/framework-graph-rs",
+      "version": "0.1.0",
+    },
     "framework/product/os/core": {
       "name": "@semio-tech/framework-os-core",
       "version": "0.1.0",
@@ -592,7 +600,10 @@
       "version": "0.1.0",
       "dependencies": {
         "@react-three/fiber": "^9.5.0",
+        "@semio-tech/flow-core": "workspace:*",
         "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/framework-editor-rs": "workspace:*",
+        "@semio-tech/framework-graph-rs": "workspace:*",
         "@semio-tech/infinite-cavas-react-renderer": "workspace:*",
         "@semio-tech/infinite-world-r3f": "workspace:*",
         "@semio-tech/ui-asset": "workspace:*",
@@ -616,6 +627,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/framework-core": "workspace:*",
+        "@semio-tech/ui-asset": "workspace:*",
       },
       "devDependencies": {
         "typescript": "^5.9.3",
@@ -1890,6 +1902,10 @@
     "@semio-tech/flow-module-brep": ["@semio-tech/flow-module-brep@workspace:flow/module/brep"],
 
     "@semio-tech/framework-core": ["@semio-tech/framework-core@workspace:framework/core"],
+
+    "@semio-tech/framework-editor-rs": ["@semio-tech/framework-editor-rs@workspace:framework/editor/rs"],
+
+    "@semio-tech/framework-graph-rs": ["@semio-tech/framework-graph-rs@workspace:framework/graph/rs"],
 
     "@semio-tech/framework-os-core": ["@semio-tech/framework-os-core@workspace:framework/product/os/core"],
 

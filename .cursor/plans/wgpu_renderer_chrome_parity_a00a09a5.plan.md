@@ -4,34 +4,34 @@ overview: "Bring the WGPU/Rust renderer's OS chrome to full functional parity wi
 todos:
   - id: shell-state-plumbing
     content: "Add ShellState fields: panel kinds, active example/mode, rail fold/expand/width maps, search/find item caches"
-    status: in_progress
+    status: completed
   - id: navbar-restore
     content: "Rewrite render_navbar: example dropdown, 4-icon panel toggle group, mode buttons; remove history/breadcrumb/inline-theme/visible search-find buttons"
-    status: pending
+    status: completed
   - id: framework-panels
     content: Add Display/Settings tabs and Hierarchy auto-injection to WGPU side panels, wired to active panel kind
-    status: pending
+    status: completed
   - id: command-palette
     content: "Implement real Search overlay: item list from panel tabs/windows/keybindings, substring filter, keyboard nav, dispatch"
-    status: pending
+    status: completed
   - id: find-dialog
     content: Implement real Find overlay + node-graph scene find-item registration and select-on-choose callback
-    status: pending
+    status: completed
   - id: window-command-rail
     content: "Implement WindowEngagementChrome-equivalent rail: fold/unfold, options/input/control(s)/status/possibleEngagements"
-    status: pending
+    status: completed
   - id: window-options-rail
     content: "Implement WindowMeasuresChrome-equivalent rail: fold/unfold/focus, measure tree (group/select/slider/toggle), resize"
-    status: pending
+    status: completed
   - id: keyboard-shortcuts
     content: Wire Mod+P/Mod+F/history/panel-toggle keybindings and palette arrow/enter/escape routing in lib.rs/input.rs
-    status: pending
+    status: completed
   - id: context-menu-items
     content: Replace context menu no-ops with real scene-contributed items (node-graph first)
-    status: pending
+    status: completed
   - id: verify-e2e
     content: Extend verify-wgpu-playgrounds-e2e.ts with palette/find/rail assertions; cargo test; rebuild wasm; run full 25-plugin suites both renderers; screenshot s and draw
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -14,6 +14,10 @@ use ui_wgpu::{
 
 pub type DockPath = Vec<usize>;
 
+fn empty_path() -> DockPath {
+    Vec::new()
+}
+
 //#region DockTypes
 #[derive(Clone, Debug, PartialEq)]
 pub enum DockNode {
@@ -46,7 +50,7 @@ pub struct DockState {
     pub split_resize_origin: Vec<f32>,
 }
 
-pub struct DockRenderContext<'a, 'b> {
+pub struct DockRenderContext<'a> {
     pub draw: &'a mut DrawList,
     pub atlas: &'a mut FontAtlas,
     pub icons: &'a IconAtlas,
@@ -136,18 +140,16 @@ impl DockState {
             return;
         }
         let delta_frac = delta_px / axis_total;
-        let left = &mut children[split_index].1;
-        let right = &mut children[split_index + 1].1;
-        let origin_left = self.split_resize_origin.get(split_index).copied().unwrap_or(*left);
+        let origin_left = self.split_resize_origin.get(split_index).copied().unwrap_or(children[split_index].1);
         let origin_right = self
             .split_resize_origin
             .get(split_index + 1)
             .copied()
-            .unwrap_or(*right);
+            .unwrap_or(children[split_index + 1].1);
         let new_left = (origin_left + delta_frac).clamp(0.08, 0.92);
         let new_right = (origin_right - delta_frac).clamp(0.08, 0.92);
-        *left = new_left;
-        *right = new_right;
+        children[split_index].1 = new_left;
+        children[split_index + 1].1 = new_right;
         normalize_pair_sizes(children, split_index);
     }
 
@@ -168,7 +170,10 @@ impl DockState {
         let canvas = bounds.inset(theme.gap_standard);
         let mut out = Vec::new();
         if let Some(path) = &self.maximized_stack {
-            if let Some((node, rect)) = solve_node_rect(&self.root, canvas, path, &[]) {
+            if let (Some(node), Some(rect)) = (
+                node_at(&self.root, path),
+                solve_node_bounds(&self.root, canvas, path, &[]),
+            ) {
                 if let DockNode::Stack { active, .. } = node {
                     out.push((
                         path.clone(),
@@ -179,26 +184,29 @@ impl DockState {
             }
             return out;
         }
-        collect_stack_bodies(&self.root, canvas, &[], theme, &mut out);
+        collect_stack_bodies(&self.root, canvas, &empty_path(), theme, &mut out);
         out
     }
 
     pub fn register_hits(
         &self,
-        ctx: &mut DockRenderContext<'_, '_>,
+        ctx: &mut DockRenderContext<'_>,
         bounds: Rect,
     ) {
         let canvas = bounds.inset(ctx.theme.gap_standard);
         ctx.draw.push_solid([canvas.x, canvas.y, canvas.w, canvas.h], ctx.theme.canvas_clear);
         if let Some(path) = &self.maximized_stack {
-            if let Some((node, rect)) = solve_node_rect(&self.root, canvas, path, &[]) {
+            if let (Some(node), Some(rect)) = (
+                node_at(&self.root, path),
+                solve_node_bounds(&self.root, canvas, path, &[]),
+            ) {
                 if let DockNode::Stack { .. } = node {
                     render_stack(self, ctx, path, node, rect, true, &mut |_, _| {});
                     return;
                 }
             }
         }
-        render_node(self, ctx, &self.root, canvas, &[], &mut |_, _| {});
+        render_node(self, ctx, &self.root, canvas, &empty_path(), &mut |_, _| {});
     }
 }
 //#endregion DockLayout
@@ -300,6 +308,7 @@ fn first_window_id(node: &DockNode) -> Option<String> {
         DockNode::Row(children) | DockNode::Column(children) => {
             children.iter().find_map(|(child, _)| first_window_id(child))
         }
+        DockNode::Stack { .. } => None,
     }
 }
 
@@ -316,14 +325,15 @@ fn find_stack_path(node: &DockNode, window_id: &str, path: &mut DockPath) -> Opt
             }
             None
         }
+        DockNode::Stack { .. } => None,
     }
 }
 
-fn path_exists(node: &DockNode, path: &DockPath) -> bool {
+fn path_exists(node: &DockNode, path: &[usize]) -> bool {
     node_at(node, path).is_some()
 }
 
-fn node_at<'a>(node: &'a DockNode, path: &DockPath) -> Option<&'a DockNode> {
+fn node_at<'a>(node: &'a DockNode, path: &[usize]) -> Option<&'a DockNode> {
     let mut current = node;
     for index in path {
         current = match current {
@@ -334,7 +344,7 @@ fn node_at<'a>(node: &'a DockNode, path: &DockPath) -> Option<&'a DockNode> {
     Some(current)
 }
 
-fn node_at_mut<'a>(node: &'a mut DockNode, path: &DockPath) -> Option<&'a mut DockNode> {
+fn node_at_mut<'a>(node: &'a mut DockNode, path: &[usize]) -> Option<&'a mut DockNode> {
     if path.is_empty() {
         return Some(node);
     }
@@ -343,7 +353,7 @@ fn node_at_mut<'a>(node: &'a mut DockNode, path: &DockPath) -> Option<&'a mut Do
         DockNode::Row(children) | DockNode::Column(children) => children.get_mut(*head).map(|(n, _)| n)?,
         DockNode::Stack { .. } => return None,
     };
-    node_at_mut(child, tail)
+    node_at_mut(child, &tail.to_vec())
 }
 
 fn collapse_empty(node: &mut DockNode) {
@@ -370,24 +380,24 @@ fn is_empty_node(node: &DockNode) -> bool {
     }
 }
 
-fn solve_node_rect(
+fn solve_node_bounds(
     node: &DockNode,
     bounds: Rect,
-    target_path: &DockPath,
-    current_path: &DockPath,
-) -> Option<(&DockNode, Rect)> {
+    target_path: &[usize],
+    current_path: &[usize],
+) -> Option<Rect> {
     if current_path == target_path {
-        return Some((node, bounds));
+        return Some(bounds);
     }
     match node {
         DockNode::Row(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum().max(0.001);
+            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
             let mut x = bounds.x;
             for (index, (child, size)) in children.iter().enumerate() {
                 let w = bounds.w * (*size / total);
                 let mut path = current_path.to_vec();
                 path.push(index);
-                if let Some(found) = solve_node_rect(child, Rect::new(x, bounds.y, w, bounds.h), target_path, &path) {
+                if let Some(found) = solve_node_bounds(child, Rect::new(x, bounds.y, w, bounds.h), target_path, &path) {
                     return Some(found);
                 }
                 x += w;
@@ -395,13 +405,13 @@ fn solve_node_rect(
             None
         }
         DockNode::Column(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum().max(0.001);
+            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
             let mut y = bounds.y;
             for (index, (child, size)) in children.iter().enumerate() {
                 let h = bounds.h * (*size / total);
                 let mut path = current_path.to_vec();
                 path.push(index);
-                if let Some(found) = solve_node_rect(child, Rect::new(bounds.x, y, bounds.w, h), target_path, &path) {
+                if let Some(found) = solve_node_bounds(child, Rect::new(bounds.x, y, bounds.w, h), target_path, &path) {
                     return Some(found);
                 }
                 y += h;
@@ -414,10 +424,10 @@ fn solve_node_rect(
 
 fn render_node(
     state: &DockState,
-    ctx: &mut DockRenderContext<'_, '_>,
+    ctx: &mut DockRenderContext<'_>,
     node: &DockNode,
     bounds: Rect,
-    path: &DockPath,
+    path: &[usize],
     render_body: &mut dyn FnMut(Rect, &str),
 ) {
     match node {
@@ -429,14 +439,14 @@ fn render_node(
 
 fn render_axis(
     state: &DockState,
-    ctx: &mut DockRenderContext<'_, '_>,
+    ctx: &mut DockRenderContext<'_>,
     children: &[(DockNode, f32)],
     bounds: Rect,
-    path: &DockPath,
+    path: &[usize],
     horizontal: bool,
     render_body: &mut dyn FnMut(Rect, &str),
 ) {
-    let total: f32 = children.iter().map(|(_, s)| *s).sum().max(0.001);
+    let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
     let split_w = 6.0;
     if horizontal {
         let mut x = bounds.x;
@@ -470,8 +480,8 @@ fn render_axis(
 }
 
 fn register_split_hit(
-    ctx: &mut DockRenderContext<'_, '_>,
-    path: &DockPath,
+    ctx: &mut DockRenderContext<'_>,
+    path: &[usize],
     index: usize,
     rect: Rect,
     axis: DragAxis,
@@ -482,13 +492,14 @@ fn register_split_hit(
         control_id: Some(format!("dock.split.{}.{index}", path_str(path))),
         kind: HitKind::ScrollRegion,
         drag_axis: Some(axis),
+        drag_data: None,
     });
 }
 
 fn render_stack(
     state: &DockState,
-    ctx: &mut DockRenderContext<'_, '_>,
-    path: &DockPath,
+    ctx: &mut DockRenderContext<'_>,
+    path: &[usize],
     node: &DockNode,
     bounds: Rect,
     maximized: bool,
@@ -503,7 +514,7 @@ fn render_stack(
     let theme = ctx.theme;
     let tab_h = theme.control_height;
     let stroke = theme.stroke_hairline;
-    let globally_active = state.active_stack.as_ref() == Some(path);
+    let globally_active = state.active_stack.as_ref().map(|p| p.as_slice()) == Some(path);
     let border = if globally_active {
         theme.accent
     } else {
@@ -519,7 +530,11 @@ fn render_stack(
     ctx.draw
         .push_solid([cap_rect.x + cap_rect.w - stroke, cap_rect.y, stroke, cap_rect.h], border);
 
-    let controls_w = theme.control_height * 2.0 + theme.gap_standard;
+    let focus_label = if maximized { "Unfocus" } else { "Focus" };
+    let focus_icon = if maximized { "minimize-2" } else { "maximize-2" };
+    let focus_w = measure_cap_button(ctx.atlas, theme, focus_icon, focus_label);
+    let close_w = measure_cap_button(ctx.atlas, theme, "x", "Close");
+    let controls_w = focus_w + close_w + theme.gap_standard * 0.5;
     let mut tab_x = cap_rect.x + theme.gap_standard;
     for window_id in windows {
         let label = ctx
@@ -565,6 +580,7 @@ fn render_stack(
             control_id: Some(format!("dock.tab.{}.{}", path_str(path), window_id)),
             kind: HitKind::Window,
             drag_axis: None,
+            drag_data: None,
         });
         tab_x += tw + theme.gap_standard * 0.5;
     }
@@ -578,17 +594,17 @@ fn render_stack(
     let focus_rect = Rect::new(
         cap_rect.x + cap_rect.w - controls_w,
         cap_y + theme.gap_standard * 0.5,
-        theme.control_height,
+        focus_w,
         tab_h - theme.gap_standard,
     );
     let close_rect = Rect::new(
-        focus_rect.x + theme.control_height + theme.gap_standard * 0.5,
+        focus_rect.x + focus_w + theme.gap_standard * 0.5,
         focus_rect.y,
-        theme.control_height,
+        close_w,
         focus_rect.h,
     );
-    render_cap_button(ctx, focus_rect, if maximized { "▣" } else { "⛶" }, "dock.focus", path);
-    render_cap_button(ctx, close_rect, "×", "dock.close", path);
+    render_cap_button(ctx, focus_rect, focus_icon, focus_label, "dock.focus", path);
+    render_cap_button(ctx, close_rect, "x", "Close", "dock.close", path);
 
     let body_y = cap_y + tab_h;
     let body_rect = Rect::new(bounds.x, body_y, bounds.w, bounds.h - tab_h);
@@ -604,7 +620,13 @@ fn render_stack(
     render_body(content, active);
 }
 
-fn render_cap_button(ctx: &mut DockRenderContext<'_, '_>, rect: Rect, glyph: &str, prefix: &str, path: &DockPath) {
+fn measure_cap_button(atlas: &mut FontAtlas, theme: &Theme, _icon_id: &str, label: &str) -> f32 {
+    let icon_w = 14.0 + theme.gap_standard;
+    let text_w = atlas.measure_text(label, theme.font_size_small).0;
+    theme.padding_standard * 2.0 + icon_w + text_w
+}
+
+fn render_cap_button(ctx: &mut DockRenderContext<'_>, rect: Rect, icon_id: &str, label: &str, prefix: &str, path: &[usize]) {
     let hovered = rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
     let bg = if hovered {
         ctx.theme.button_hover
@@ -612,17 +634,28 @@ fn render_cap_button(ctx: &mut DockRenderContext<'_, '_>, rect: Rect, glyph: &st
         ctx.theme.button
     };
     ctx.draw.push_solid([rect.x, rect.y, rect.w, rect.h], bg);
+    let icon_size = 14.0;
+    let mut content_x = rect.x + ctx.theme.padding_standard;
+    if let Some(uv) = ctx.icons.icon_uv(icon_id) {
+        ctx.draw.push_textured(
+            [
+                content_x,
+                rect.y + (rect.h - icon_size) * 0.5,
+                icon_size,
+                icon_size,
+            ],
+            uv,
+            1.0,
+        );
+        content_x += icon_size + ctx.theme.gap_standard;
+    }
     dock_text(
         ctx,
-        glyph,
-        rect.x + (rect.w - ctx.theme.font_size_small) * 0.5,
+        label,
+        content_x,
         rect.y + (rect.h + ctx.theme.font_size_small) * 0.5 - 1.0,
         ctx.theme.font_size_small,
-        if hovered {
-            ctx.theme.active_foreground
-        } else {
-            ctx.theme.text_muted
-        },
+        if hovered { ctx.theme.active_foreground } else { ctx.theme.text },
     );
     ctx.input.register_hit(HitTarget {
         rect,
@@ -630,10 +663,11 @@ fn render_cap_button(ctx: &mut DockRenderContext<'_, '_>, rect: Rect, glyph: &st
         control_id: Some(format!("{prefix}.{}", path_str(path))),
         kind: HitKind::Button,
         drag_axis: None,
+        drag_data: None,
     });
 }
 
-pub fn path_str(path: &DockPath) -> String {
+pub fn path_str(path: &[usize]) -> String {
     path.iter()
         .map(|i| i.to_string())
         .collect::<Vec<_>>()
@@ -659,13 +693,13 @@ fn stack_content_rect(bounds: Rect, theme: &Theme) -> Rect {
 fn collect_stack_bodies(
     node: &DockNode,
     bounds: Rect,
-    path: &DockPath,
+    path: &[usize],
     theme: &Theme,
     out: &mut Vec<(DockPath, Rect, String)>,
 ) {
     match node {
         DockNode::Row(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum().max(0.001);
+            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
             let mut x = bounds.x;
             for (index, (child, size)) in children.iter().enumerate() {
                 let w = bounds.w * (*size / total);
@@ -676,7 +710,7 @@ fn collect_stack_bodies(
             }
         }
         DockNode::Column(children) => {
-            let total: f32 = children.iter().map(|(_, s)| *s).sum().max(0.001);
+            let total: f32 = children.iter().map(|(_, s)| *s).sum::<f32>().max(0.001);
             let mut y = bounds.y;
             for (index, (child, size)) in children.iter().enumerate() {
                 let h = bounds.h * (*size / total);
@@ -693,7 +727,7 @@ fn collect_stack_bodies(
 }
 
 fn dock_text(
-    ctx: &mut DockRenderContext<'_, '_>,
+    ctx: &mut DockRenderContext<'_>,
     text: &str,
     x: f32,
     y: f32,
@@ -713,6 +747,9 @@ fn dock_text(
         &mut scroll,
         &mut collapsed,
         &mut selects,
+        None,
+        None,
+        None,
     );
     draw_text(&mut widget_ctx, text, x, y, size, color);
 }
@@ -720,7 +757,7 @@ fn dock_text(
 //#region DockFreeFunctions
 
 //#region DockTests
-#[cfg(test)]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use super::*;
     use semio_framework_core::layout::create_default_layout;
@@ -735,6 +772,7 @@ mod tests {
             modes: vec![ModeDefinition {
                 id: "default".into(),
                 label: "Default".into(),
+                tools: vec![],
             }],
             default_mode_id: Some("default".into()),
             window_kinds: window_ids

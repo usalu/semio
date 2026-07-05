@@ -33,6 +33,7 @@ const FORMS_PLAY_BODY_INSPECTION: &str = "forms.play.inspection";
 const FORMS_PLAY_WINDOW_EDIT: &str = "forms-edit";
 const FORMS_PLAY_WINDOW_TRY: &str = "forms-try";
 const FORMS_QUESTION_DRAG_MIME: &str = "application/x-semio-forms-question-kind";
+const BUILDING_COMPONENT_EXAMPLE_JSON: &str = include_str!("../../example/building-component.forms.json");
 
 static FORM_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
@@ -215,6 +216,54 @@ fn default_question_for_kind(kind: &str, id: String) -> FormQuestion {
             text: Some("Informational note".into()),
             options: None,
         },
+        "date" => FormQuestion {
+            id,
+            label: "Date".into(),
+            kind: "date".into(),
+            default: Some(json!("2026-01-01")),
+            text: None,
+            options: None,
+        },
+        "color" => FormQuestion {
+            id,
+            label: "Color".into(),
+            kind: "color".into(),
+            default: Some(json!("#336699")),
+            text: None,
+            options: None,
+        },
+        "image" => FormQuestion {
+            id,
+            label: "Image".into(),
+            kind: "image".into(),
+            default: None,
+            text: None,
+            options: None,
+        },
+        "file" => FormQuestion {
+            id,
+            label: "File".into(),
+            kind: "file".into(),
+            default: None,
+            text: None,
+            options: None,
+        },
+        "vector" => FormQuestion {
+            id,
+            label: "Vector".into(),
+            kind: "vector".into(),
+            default: Some(json!([0.0, 0.0, 0.0])),
+            text: None,
+            options: None,
+        },
+        "buildingComponent" => FormQuestion {
+            id,
+            label: "Building Component".into(),
+            kind: "buildingComponent".into(),
+            default: Some(json!({ "fixtureSlug": "hexagonal-mushroom-column", "params": { "height": 6 } })),
+            text: None,
+            options: None,
+        },
         _ => FormQuestion {
             id,
             label: kind.into(),
@@ -278,7 +327,7 @@ fn apply_store_command(play: &mut FormsPlayEnvelope, store: &mut FormsStore) -> 
     vec![set_document_op(play)]
 }
 
-fn catalogue_kinds() -> [(&'static str, &'static str, &'static str); 8] {
+fn catalogue_kinds() -> [(&'static str, &'static str, &'static str); 14] {
     [
         ("text", "Text", "type"),
         ("number", "Number", "hash"),
@@ -288,6 +337,12 @@ fn catalogue_kinds() -> [(&'static str, &'static str, &'static str); 8] {
         ("slider", "Slider", "sliders-horizontal"),
         ("longText", "Long Text", "align-left"),
         ("note", "Note", "sticky-note"),
+        ("date", "Date", "calendar"),
+        ("color", "Color", "palette"),
+        ("image", "Image", "image"),
+        ("file", "File", "file"),
+        ("vector", "Vector", "move-3d"),
+        ("buildingComponent", "Building Component", "building"),
     ]
 }
 //#endregion 🔖Helpers
@@ -373,6 +428,9 @@ fn build_hierarchy_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
             selected: None,
             default_open: Some(true),
             command: Some(forms_cmd("setSelection", Some(json!({ "ids": [] })))),
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: Some(true),
             drag_data: None,
             items: Some(
@@ -386,6 +444,9 @@ fn build_hierarchy_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
                         selected: None,
                         default_open: None,
                         command: Some(forms_cmd("setSelection", Some(json!({ "ids": [question.id.clone()] })))),
+                        hover_command: None,
+                        unhover_command: None,
+                        actions: None,
                         draggable: Some(true),
                         drag_data: None,
                         items: None,
@@ -412,6 +473,9 @@ fn build_hierarchy_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
                     selected: None,
                     default_open: None,
                     command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
                     draggable: None,
                     drag_data: None,
                     items: None,
@@ -442,6 +506,9 @@ fn build_catalogue_tree() -> UiNode {
                 selected: None,
                 default_open: None,
                 command: Some(forms_cmd("addQuestion", Some(json!({ "kind": kind })))),
+                hover_command: None,
+                unhover_command: None,
+                actions: None,
                 draggable: Some(true),
                 drag_data: Some(drag_data),
                 items: None,
@@ -471,6 +538,9 @@ fn build_catalogue_tree() -> UiNode {
                         selected: None,
                         default_open: None,
                         command: Some(forms_cmd("addStep", None)),
+                        hover_command: None,
+                        unhover_command: None,
+                        actions: None,
                         draggable: None,
                         drag_data: None,
                         items: None,
@@ -485,6 +555,9 @@ fn build_catalogue_tree() -> UiNode {
                         selected: None,
                         default_open: None,
                         command: Some(forms_cmd("addQuestion", Some(json!({ "kind": "text" })))),
+                        hover_command: None,
+                        unhover_command: None,
+                        actions: None,
                         draggable: None,
                         drag_data: None,
                         items: None,
@@ -789,7 +862,33 @@ impl PluginApp for FormsPlayApp {
                 let _ = serde_json::to_string_pretty(&spec).unwrap_or_default();
                 return Vec::new();
             }
-            "setSpecJson" | "editEngagementInput" | "tryEngagementInput" | "setTryValues" | "resetTry" => {}
+            "setSpecJson" | "editEngagementInput" | "tryEngagementInput" => {}
+            "setActiveExample" => {
+                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
+                let json_text = match example_id {
+                    "building-component" => BUILDING_COMPONENT_EXAMPLE_JSON,
+                    _ => return Vec::new(),
+                };
+                let spec: FormSpec = serde_json::from_str(json_text).unwrap_or_else(|_| materialized_projection(&play));
+                let document_id = spec.id.clone();
+                let envelope = create_document_vcs_envelope(FORMS_DOCUMENT_SCHEMA, &document_id, spec, None);
+                store = FormsStore::new(envelope);
+                play.try_values.clear();
+                play.selected_ids.clear();
+                return apply_store_command(&mut play, &mut store);
+            }
+            "setTryValues" => {
+                if let Some(values) = args.and_then(|value| value.get("values")).and_then(|value| value.as_object()) {
+                    for (key, value) in values {
+                        play.try_values.insert(key.clone(), value.clone());
+                    }
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "resetTry" => {
+                play.try_values.clear();
+                return vec![set_document_op(&play)];
+            }
             _ => {}
         }
         Vec::new()
@@ -831,6 +930,8 @@ fn create_forms_app() -> App {
                 Some(&["Edit".into(), "Try".into()]),
             )),
     )
+    .example("empty", "Empty", serde_json::to_string(&default_envelope()).unwrap())
+    .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_JSON)
     .program("forms", "Forms", "data")
 }
 
@@ -920,6 +1021,21 @@ mod tests {
         assert!(flatten_questions(&materialized_projection(&next))
             .iter()
             .any(|(_, question)| question.kind == "text"));
+    }
+
+    #[test]
+    fn set_try_values_updates_runtime() {
+        let mut app = FormsPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "setTryValues",
+            Some(&json!({ "values": { "q-text": "Ada" } })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let next = apply_ops(&document, &ops);
+        assert_eq!(next.try_values.get("q-text").and_then(|v| v.as_str()), Some("Ada"));
     }
 
     #[test]

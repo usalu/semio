@@ -1535,8 +1535,10 @@ export function runWasmPackWebBuild(opts: {
   wasmBaseName: string;
   /** When true, build with atomics + `-Z build-std` for wasm-bindgen-rayon thread pools. */
   threads?: boolean;
+  /** Optional Cargo feature flags passed to wasm-pack / cargo build. */
+  cargoFeatures?: readonly string[];
 }): void {
-  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, threads = false } = opts;
+  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, threads = false, cargoFeatures = [] } = opts;
   const pkgDir = join(rsDir, "pkg");
   const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
   if (process.env[skipEnvVar] === "1") {
@@ -1569,11 +1571,16 @@ export function runWasmPackWebBuild(opts: {
       process.exit(1);
     }
     const cargoWasm = join(repoRoot, "target/wasm32-unknown-unknown/release", `${crateName.replace(/-/g, "_")}.wasm`);
-    res = spawnSync(
-      "cargo",
-      ["build", "--release", "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort"],
-      { cwd: rsDir, stdio: "inherit", env: { ...process.env } },
-    );
+    const threadedCargoArgs = [
+      "build",
+      "--release",
+      "--target",
+      "wasm32-unknown-unknown",
+      "-Z",
+      "build-std=std,panic_abort",
+      ...cargoFeatures.flatMap((feature) => ["--features", feature]),
+    ];
+    res = spawnSync("cargo", threadedCargoArgs, { cwd: rsDir, stdio: "inherit", env: { ...process.env } });
     if (res.status !== 0) {
       console.error(`[${logPrefix}] cargo threaded build failed`);
       process.exit(res.status ?? 1);
@@ -1585,11 +1592,19 @@ export function runWasmPackWebBuild(opts: {
       { cwd: rsDir, stdio: "inherit", env: { ...process.env } },
     );
   } else {
-    res = spawnSync(
-      "bun",
-      ["x", "wasm-pack", "build", "--release", "--target", "web", "--out-dir", "pkg", "--no-pack"],
-      { cwd: rsDir, stdio: "inherit", env: { ...process.env } },
-    );
+    const wasmPackArgs = [
+      "x",
+      "wasm-pack",
+      "build",
+      "--release",
+      "--target",
+      "web",
+      "--out-dir",
+      "pkg",
+      "--no-pack",
+      ...cargoFeatures.flatMap((feature) => ["--", "--features", feature]),
+    ];
+    res = spawnSync("bun", wasmPackArgs, { cwd: rsDir, stdio: "inherit", env: { ...process.env } });
   }
   if (res.status !== 0) {
     console.error(`[${logPrefix}] wasm build failed`);

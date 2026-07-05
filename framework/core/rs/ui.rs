@@ -191,6 +191,17 @@ pub struct UiSectionNode {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct UiTreeItemAction {
+    pub icon_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    pub command: CommandDescriptor,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reveal_on_hover: Option<bool>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UiTreeItemNode {
     pub id: String,
     pub label: String,
@@ -205,6 +216,12 @@ pub struct UiTreeItemNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub command: Option<CommandDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub hover_command: Option<CommandDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub unhover_command: Option<CommandDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub actions: Option<Vec<UiTreeItemAction>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub draggable: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub drag_data: Option<HashMap<String, String>>,
@@ -214,6 +231,29 @@ pub struct UiTreeItemNode {
     pub control: Option<UiControlNode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub is_hidden: Option<bool>,
+}
+
+impl UiTreeItemNode {
+    /** @emoji 🌳 Builds a tree item with optional extensions unset. */
+    pub fn base(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            label: label.into(),
+            description: None,
+            icon_id: None,
+            selected: None,
+            default_open: None,
+            command: None,
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: None,
+            control: None,
+            is_hidden: None,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -405,6 +445,9 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                     selected: None,
                     default_open: None,
                     command: None,
+                    hover_command: None,
+                    unhover_command: None,
+                    actions: None,
                     draggable: None,
                     drag_data: None,
                     items: None,
@@ -436,6 +479,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             selected: None,
             default_open: None,
             command: None,
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -459,6 +505,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                 selected: None,
                 default_open: None,
                 command: None,
+                hover_command: None,
+                unhover_command: None,
+                actions: None,
                 draggable: None,
                 drag_data: None,
                 items: None,
@@ -474,6 +523,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             selected: None,
             default_open: None,
             command: None,
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -501,6 +553,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             selected: None,
             default_open: None,
             command: None,
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -515,6 +570,9 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             selected: None,
             default_open: None,
             command: None,
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -533,6 +591,9 @@ fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -595,6 +656,26 @@ pub struct NodeGraphScene {
     pub context_menu_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub find_items_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selection_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hover_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub preview_off_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lod_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub catalogue_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub controls_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub clusters_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub computing_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub capabilities_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fixture_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -613,6 +694,18 @@ pub struct TextEditorScene {
     pub completions_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub overlays_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub occurrences_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub placeholders_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub extra_carets_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selectable_spans_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub settings_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub camera_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -706,6 +799,16 @@ impl NodeGraphScene {
             operators_json: None,
             context_menu_json: None,
             find_items_json: None,
+            selection_json: None,
+            hover_json: None,
+            preview_off_json: None,
+            lod_json: None,
+            catalogue_json: None,
+            controls_json: None,
+            clusters_json: None,
+            computing_json: None,
+            capabilities_json: None,
+            fixture_json: None,
         }
     }
 }
@@ -721,9 +824,36 @@ impl TextEditorScene {
             diagnostics_json: None,
             completions_json: None,
             overlays_json: None,
+            occurrences_json: None,
+            placeholders_json: None,
+            extra_carets_json: None,
+            selectable_spans_json: None,
+            settings_json: None,
+            camera_json: None,
         }
     }
 }
+
+//#region 🔖SceneCommands
+/** @emoji 🎮 Renderer-to-plugin command names for node-graph surfaces. */
+pub mod node_graph_commands {
+    pub const SELECT: &str = "nodeGraphSelect";
+    pub const HOVER: &str = "nodeGraphHover";
+    pub const EDIT: &str = "nodeGraphEdit";
+    pub const VIEWPORT: &str = "nodeGraphViewport";
+    pub const SPOTLIGHT_COMMIT: &str = "spotlightCommit";
+}
+
+/** @emoji ✍️ Renderer-to-plugin command names for text-editor surfaces. */
+pub mod text_editor_commands {
+    pub const EDIT: &str = "textEdit";
+    pub const SELECT: &str = "textSelect";
+    pub const HOVER: &str = "textHover";
+    pub const REQUEST_COMPLETIONS: &str = "requestCompletions";
+    pub const COMMIT_RENAME: &str = "commitRename";
+    pub const FORMAT_DOCUMENT: &str = "formatDocument";
+}
+//#endregion 🔖SceneCommands
 
 pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {

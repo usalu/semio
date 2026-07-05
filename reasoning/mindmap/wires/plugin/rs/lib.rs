@@ -258,8 +258,34 @@ fn hierarchy_tree_selected_ids(board: &Value, selected: &[String]) -> Vec<String
 //#endregion 🔖Envelope
 
 //#region 🔖Canvas
-fn render_canvas(board: &Value) -> UiNode {
+fn relationship_edge_layers(wires: &Value, board: &Value) -> Vec<Value> {
+    let mut layers = Vec::new();
+    for relationship in wires_relationships(wires) {
+        let edge_id = relationship.get("edgeId").and_then(|value| value.as_str()).unwrap_or("");
+        if edge_id.is_empty() {
+            continue;
+        }
+        let edge = fixture_edges(board).iter().find(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(edge_id));
+        if let Some(edge) = edge {
+            layers.push(edge.clone());
+        } else {
+            layers.push(json!({
+                "id": edge_id,
+                "kind": "edge",
+                "edgeKind": relationship.get("kind").cloned().unwrap_or_else(|| json!("relationship")),
+                "source": relationship.get("sourceIdentityId").map(|value| value.to_string()).unwrap_or_default(),
+                "target": relationship.get("targetIdentityId").map(|value| value.to_string()).unwrap_or_default(),
+            }));
+        }
+    }
+    layers
+}
+
+fn render_canvas(board: &Value, wires: &Value) -> UiNode {
     let (camera_x, camera_y, zoom) = fixture_camera(board);
+    let mut layers: Vec<Value> = fixture_nodes(board).iter().cloned().collect();
+    layers.extend(fixture_edges(board).iter().cloned());
+    layers.extend(relationship_edge_layers(wires, board));
     build_canvas_2d_scene(
         WIRES_PLAY_SURFACE_ID,
         WIRES_PLAY_CONTROLLER_ID,
@@ -267,7 +293,7 @@ fn render_canvas(board: &Value) -> UiNode {
             camera_x,
             camera_y,
             zoom,
-            layers_json: serde_json::to_string(fixture_nodes(board)).unwrap_or_else(|_| "[]".into()),
+            layers_json: serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into()),
         },
     )
 }
@@ -283,6 +309,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -338,6 +367,9 @@ fn render_hierarchy_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
                         selected: None,
                         default_open: None,
                         command: None,
+                        hover_command: None,
+                        unhover_command: None,
+                        actions: None,
                         draggable: None,
                         drag_data: None,
                         items: None,
@@ -361,6 +393,9 @@ fn render_hierarchy_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
                         selected: None,
                         default_open: None,
                         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
                         draggable: None,
                         drag_data: None,
                         items: None,
@@ -396,6 +431,13 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
         .enumerate()
         .map(|(index, entry)| {
             let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind");
+            let command = match section_id {
+                "wires-play-kinds.identity-kinds" => wires_cmd("addNode", Some(json!({ "kind": kind_id }))),
+                "wires-play-kinds.relationship-kinds" => {
+                    wires_cmd("addRelationship", Some(json!({ "kind": kind_id })))
+                }
+                _ => wires_cmd("addNode", Some(json!({ "kind": kind_id }))),
+            };
             UiTreeItemNode {
                 id: format!("{section_id}.{index}.{kind_id}"),
                 label: catalog_kind_label(entry),
@@ -403,7 +445,10 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
                 icon_id: None,
                 selected: None,
                 default_open: None,
-                command: None,
+                command: Some(command),
+                hover_command: None,
+                unhover_command: None,
+                actions: None,
                 draggable: None,
                 drag_data: None,
                 items: None,
@@ -425,6 +470,9 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
                 selected: None,
                 default_open: None,
                 command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
                 draggable: None,
                 drag_data: None,
                 items: None,
@@ -576,6 +624,65 @@ impl PluginApp for WiresPlayApp {
                 };
                 return vec![set_document_op(&envelope)];
             }
+            "addNode" => {
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("identity");
+                let id = format!("node-{}", envelope.board_fixture.get("nodes").and_then(|v| v.as_array()).map(|a| a.len()).unwrap_or(0) + 1);
+                if let Some(nodes) = envelope.board_fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
+                    nodes.push(json!({
+                        "id": id,
+                        "nodeKind": kind,
+                        "shape": "circle",
+                        "x": 0.0,
+                        "y": 0.0,
+                        "radius": 24.0,
+                        "text": id,
+                        "handles": []
+                    }));
+                }
+                envelope.selected_ids = vec![id];
+                return vec![set_document_op(&envelope)];
+            }
+            "addRelationship" => {
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("owns");
+                let edge_id = format!("edge-{}", fixture_edges(&envelope.board_fixture).len() + 1);
+                if let Some(edges) = envelope.board_fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
+                    edges.push(json!({
+                        "id": edge_id,
+                        "edgeKind": format!("wires.{kind}"),
+                        "source": "node-1",
+                        "target": "node-2"
+                    }));
+                }
+                if let Some(relationships) = envelope.wires_fixture.get_mut("relationships").and_then(|value| value.as_array_mut()) {
+                    relationships.push(json!({
+                        "edgeId": edge_id,
+                        "kind": kind,
+                        "sourceIdentityId": 1,
+                        "targetIdentityId": 2
+                    }));
+                }
+                envelope.selected_ids = vec![edge_id];
+                return vec![set_document_op(&envelope)];
+            }
+            "deleteSelection" => {
+                let selected: std::collections::HashSet<&str> = envelope.selected_ids.iter().map(String::as_str).collect();
+                if let Some(nodes) = envelope.board_fixture.get_mut("nodes").and_then(|value| value.as_array_mut()) {
+                    nodes.retain(|node| {
+                        node.get("id")
+                            .and_then(|value| value.as_str())
+                            .is_none_or(|id| !selected.contains(id))
+                    });
+                }
+                if let Some(edges) = envelope.board_fixture.get_mut("edges").and_then(|value| value.as_array_mut()) {
+                    edges.retain(|edge| {
+                        edge.get("id")
+                            .and_then(|value| value.as_str())
+                            .is_none_or(|id| !selected.contains(id))
+                    });
+                }
+                envelope.selected_ids.clear();
+                return vec![set_document_op(&envelope)];
+            }
             _ => {}
         }
         Vec::new()
@@ -584,7 +691,7 @@ impl PluginApp for WiresPlayApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            WIRES_PLAY_BODY_COMPOSITE => render_canvas(&envelope.board_fixture),
+            WIRES_PLAY_BODY_COMPOSITE => render_canvas(&envelope.board_fixture, &envelope.wires_fixture),
             WIRES_PLAY_BODY_HIERARCHY => render_hierarchy_panel(&envelope),
             WIRES_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.wires_fixture),
             WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope),

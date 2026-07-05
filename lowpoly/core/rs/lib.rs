@@ -18,7 +18,7 @@ pub struct LowpolyTransform {
 }
 
 impl Default for LowpolyTransform {
-    pub fn default() -> Self {
+    fn default() -> Self {
         Self {
             position: [0.0, 0.0, 0.0],
             rotation: [0.0, 0.0, 0.0],
@@ -37,7 +37,7 @@ pub struct LowpolySelectionTargets {
 }
 
 impl Default for LowpolySelectionTargets {
-    pub fn default() -> Self {
+    fn default() -> Self {
         Self {
             mesh: true,
             vertex: false,
@@ -59,7 +59,7 @@ pub struct LowpolySelection {
 }
 
 impl Default for LowpolySelection {
-    pub fn default() -> Self {
+    fn default() -> Self {
         Self {
             targets: LowpolySelectionTargets::default(),
             keys: Vec::new(),
@@ -128,7 +128,7 @@ pub struct LowpolyFixture {
 }
 
 impl Default for LowpolyFixture {
-    pub fn default() -> Self {
+    fn default() -> Self {
         default_fixture()
     }
 }
@@ -266,6 +266,26 @@ impl LowpolyDocument {
     pub fn active_mesh(&self) -> Result<&HalfedgeMesh, String> {
         let idx = self.active_index().ok_or_else(|| "no active object".to_string())?;
         self.meshes.get(idx).ok_or_else(|| "mesh missing".to_string())
+    }
+
+    pub fn fixture(&self) -> &LowpolyFixture {
+        &self.fixture
+    }
+
+    pub fn fixture_mut(&mut self) -> &mut LowpolyFixture {
+        &mut self.fixture
+    }
+
+    pub fn paint_pixels(&self) -> &HashMap<String, Vec<Vec<u8>>> {
+        &self.paint_pixels
+    }
+
+    pub fn paint_pixels_mut(&mut self) -> &mut HashMap<String, Vec<Vec<u8>>> {
+        &mut self.paint_pixels
+    }
+
+    pub fn mesh_at(&self, index: usize) -> Option<&HalfedgeMesh> {
+        self.meshes.get(index)
     }
 
     pub fn selected_face_ids(&self) -> Vec<FaceId> {
@@ -1022,6 +1042,16 @@ impl LowpolySession {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn print_default_fixture_json_for_example_asset() {
+        if std::env::var("LOWPOLY_WRITE_DEFAULT_FIXTURE").ok().as_deref() != Some("1") {
+            return;
+        }
+        let fixture = default_fixture();
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../example/default.lowpoly.json");
+        std::fs::write(path, serde_json::to_string(&fixture).expect("fixture json")).expect("write default.lowpoly.json");
+    }
 
     #[test]
     pub fn default_fixture_has_rock_object() {

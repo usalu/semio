@@ -4,28 +4,28 @@ overview: "Restructure the wgpu shell to mirror the React OS shell 1:1: the slim
 todos:
   - id: dock-layout-tree
     content: "DockNode layout tree in ShellState: parse default_layout, even-layout fallback, recursive row/column/stack rect solver"
-    status: in_progress
+    status: completed
   - id: dock-stack-chrome
     content: Stack tab bar (pills, gap, Focus/Close controls cap), U-shaped cap/body frames, active-stack accent, maximize + close + tab-switch interactions
-    status: pending
+    status: completed
   - id: dock-split-resize
     content: Draggable split resize between row/column children
-    status: pending
+    status: completed
   - id: navbar-rebuild
     content: "Rebuild render_navbar to React slots: logo+title, spacer, panel-kind icon toggle group, mode button group, fullscreen toggle; drop breadcrumb/back/forward/S/F/theme"
-    status: pending
+    status: completed
   - id: panel-kinds
     content: Panel kind switching (workbench/display left, details/settings right) + framework Display and Settings tabs (theme select moves here) + hierarchy fallback + tab icons
-    status: pending
+    status: completed
   - id: footer-studio-bars
     content: Footer action-group styling with app icon; studio Home / Back-to-focused canvas bars above mode dock
-    status: pending
+    status: completed
   - id: palettes-hotkeys
     content: Real Search/Find centered modals with item lists + keyboard nav; hotkeys mod+p/f/b/shift+b and history mod+[/]/up
-    status: pending
+    status: completed
   - id: verify-parity
     content: Cargo tests incl. dock unit tests, wasm rebuild, 25-plugin E2E, side-by-side screenshot comparison vs React shell
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -32,6 +32,8 @@ const IMPERATIVE_PLAY_WINDOW_SCRIPT: &str = "imperative-script";
 struct ImperativePlayRuntime {
     #[serde(default)]
     selected_step_ids: Vec<String>,
+    #[serde(default)]
+    run_output_json: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -40,9 +42,13 @@ struct ImperativePlayEnvelope {
     document: ImperativeDocument,
     #[serde(default)]
     runtime: ImperativePlayRuntime,
+    #[serde(default)]
+    undo_stack: Vec<ImperativeDocument>,
+    #[serde(default)]
+    redo_stack: Vec<ImperativeDocument>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct TableRow {
     index: usize,
     id: String,
@@ -55,6 +61,8 @@ fn default_envelope() -> ImperativePlayEnvelope {
     ImperativePlayEnvelope {
         document: default_document(),
         runtime: ImperativePlayRuntime::default(),
+        undo_stack: Vec::new(),
+        redo_stack: Vec::new(),
     }
 }
 
@@ -64,6 +72,14 @@ fn parse_envelope(document_json: &str) -> ImperativePlayEnvelope {
 
 fn set_document_op(envelope: &ImperativePlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
+}
+
+fn push_undo_imperative(play: &mut ImperativePlayEnvelope) {
+    play.undo_stack.push(play.document.clone());
+    if play.undo_stack.len() > 32 {
+        play.undo_stack.remove(0);
+    }
+    play.redo_stack.clear();
 }
 
 fn imperative_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
@@ -100,6 +116,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -117,6 +136,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -219,13 +241,24 @@ fn build_inspector_tree(document: &ImperativeDocument, selected: &[String]) -> U
 //#endregion 🔖Panels
 
 //#region 🔖Render
-fn render_main_table(document: &ImperativeDocument) -> UiNode {
+fn render_main_table(envelope: &ImperativePlayEnvelope) -> UiNode {
+    let mut rows_json = table_rows(&envelope.document.path.steps);
+    if !envelope.runtime.run_output_json.is_empty() {
+        if let Ok(mut rows) = serde_json::from_str::<Vec<TableRow>>(&rows_json) {
+            rows.push(TableRow {
+                index: rows.len() + 1,
+                id: "run-output".into(),
+                kind: envelope.runtime.run_output_json.chars().take(80).collect(),
+            });
+            rows_json = serde_json::to_string(&rows).unwrap_or(rows_json);
+        }
+    }
     build_table_scene(
         IMPERATIVE_PLAY_SURFACE_MAIN,
         IMPERATIVE_PLAY_APP_ID,
         TableScene {
             columns_json: json!([{"id":"index","label":"#"},{"id":"id","label":"Id"},{"id":"kind","label":"Kind"}]).to_string(),
-            rows_json: table_rows(&document.path.steps),
+            rows_json,
         },
     )
 }
@@ -279,13 +312,61 @@ impl PluginApp for ImperativePlayApp {
             "addStep" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
                 let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
+                push_undo_imperative(&mut envelope);
                 let id = host.add_step(kind, index);
                 envelope.document = host.document;
                 envelope.runtime.selected_step_ids = vec![id];
                 return vec![set_document_op(&envelope)];
             }
+            "addStepAt" => {
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
+                let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
+                let path_ref = imperative_core::PathRef::default();
+                push_undo_imperative(&mut envelope);
+                let id = host.add_step_at(&path_ref, kind, index);
+                envelope.document = host.document;
+                envelope.runtime.selected_step_ids = vec![id];
+                return vec![set_document_op(&envelope)];
+            }
+            "removeStepAt" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                if let Some(id) = id {
+                    let path_ref = imperative_core::PathRef::default();
+                    push_undo_imperative(&mut envelope);
+                    if host.remove_step_at(&path_ref, id) {
+                        envelope.document = host.document;
+                        envelope.runtime.selected_step_ids.retain(|step_id| step_id != id);
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "moveStepAt" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let new_index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
+                if let (Some(id), Some(new_index)) = (id, new_index) {
+                    let path_ref = imperative_core::PathRef::default();
+                    push_undo_imperative(&mut envelope);
+                    if host.move_step_at(&path_ref, id, new_index) {
+                        envelope.document = host.document;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "setStepParamsAt" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let params = args.and_then(|value| value.get("params"));
+                if let (Some(id), Some(params)) = (id, params) {
+                    let path_ref = imperative_core::PathRef::default();
+                    push_undo_imperative(&mut envelope);
+                    if host.set_step_params_at(&path_ref, id, &params.to_string()).is_ok() {
+                        envelope.document = host.document;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
             "removeStep" => {
                 if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
+                    push_undo_imperative(&mut envelope);
                     if host.remove_step(id) {
                         envelope.document = host.document;
                         envelope.runtime.selected_step_ids.retain(|step_id| step_id != id);
@@ -297,6 +378,7 @@ impl PluginApp for ImperativePlayApp {
                 let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                 let new_index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize);
                 if let (Some(id), Some(new_index)) = (id, new_index) {
+                    push_undo_imperative(&mut envelope);
                     if host.move_step(id, new_index) {
                         envelope.document = host.document;
                         return vec![set_document_op(&envelope)];
@@ -307,6 +389,7 @@ impl PluginApp for ImperativePlayApp {
                 let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
                 let params = args.and_then(|value| value.get("params"));
                 if let (Some(id), Some(params)) = (id, params) {
+                    push_undo_imperative(&mut envelope);
                     if host.set_step_params_json(id, &params.to_string()).is_ok() {
                         envelope.document = host.document;
                         return vec![set_document_op(&envelope)];
@@ -314,8 +397,24 @@ impl PluginApp for ImperativePlayApp {
                 }
             }
             "run" => {
-                let _result = host.run();
+                let result = host.run();
+                envelope.runtime.run_output_json =
+                    serde_json::to_string(&result.scope).unwrap_or_else(|_| format!("{:?}", result.scope));
                 return vec![set_document_op(&envelope)];
+            }
+            "undo" => {
+                if let Some(previous) = envelope.undo_stack.pop() {
+                    envelope.redo_stack.push(envelope.document.clone());
+                    envelope.document = previous;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "redo" => {
+                if let Some(next) = envelope.redo_stack.pop() {
+                    envelope.undo_stack.push(envelope.document.clone());
+                    envelope.document = next;
+                    return vec![set_document_op(&envelope)];
+                }
             }
             _ => {}
         }
@@ -325,7 +424,7 @@ impl PluginApp for ImperativePlayApp {
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(&envelope.document),
+            IMPERATIVE_PLAY_BODY_MAIN => render_main_table(&envelope),
             IMPERATIVE_PLAY_BODY_SCRIPT => render_script(&envelope),
             IMPERATIVE_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.document, &envelope.runtime.selected_step_ids),
             IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(),

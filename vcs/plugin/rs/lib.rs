@@ -3,7 +3,8 @@
 use semio_framework_plugin::{
     build_table_scene, build_text_editor_scene, create_default_layout, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, App, CommandDescriptor, PluginApp, PluginBundle, TableScene, TextEditorScene,
-    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    UiControlNode, UiFieldNode, UiInputNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -371,7 +372,10 @@ fn build_hierarchy_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNo
             icon_id: Some("git-commit".into()),
             selected: None,
             default_open: None,
-            command: Some(vcs_cmd("setSelection", Some(json!({ "ids": [checkpoint.id.clone()] })))),
+            command: Some(vcs_cmd("checkoutCheckpoint", Some(json!({ "checkpointId": checkpoint.id })))),
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -394,6 +398,9 @@ fn build_hierarchy_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNo
                 "switchAlternative",
                 Some(json!({ "alternativeId": alt.id })),
             )),
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -416,6 +423,9 @@ fn build_hierarchy_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNo
                         selected: None,
                         default_open: None,
                         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
                         draggable: None,
                         drag_data: None,
                         items: None,
@@ -446,10 +456,54 @@ fn build_hierarchy_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNo
 
 fn build_inspection_tree(projection: &VcsDemoProjection) -> UiNode {
     ui_stack_vertical(vec![
-        ui_inspector_readonly_field("vcs-play-inspector.title", "Title", projection.title.clone()),
-        ui_inspector_readonly_field("vcs-play-inspector.counter", "Counter", projection.counter.to_string()),
-        ui_inspector_readonly_field("vcs-play-inspector.status", "Status", projection.status.clone()),
-        ui_inspector_readonly_field("vcs-play-inspector.notes", "Notes", projection.notes.clone()),
+        UiNode::Field(UiFieldNode {
+            id: "vcs-play-inspector.title".into(),
+            label: "Title".into(),
+            child: UiControlNode::Input(UiInputNode {
+                id: "vcs-play-inspector.title.input".into(),
+                input_kind: "text".into(),
+                value: projection.title.clone(),
+                placeholder: None,
+                commit: Some("blur".into()),
+                on_change: vcs_cmd("patchProjection", Some(json!({ "field": "title" }))),
+            }),
+        }),
+        UiNode::Field(UiFieldNode {
+            id: "vcs-play-inspector.counter".into(),
+            label: "Counter".into(),
+            child: UiControlNode::Input(UiInputNode {
+                id: "vcs-play-inspector.counter.input".into(),
+                input_kind: "number".into(),
+                value: projection.counter.to_string(),
+                placeholder: None,
+                commit: Some("blur".into()),
+                on_change: vcs_cmd("patchProjection", Some(json!({ "field": "counter" }))),
+            }),
+        }),
+        UiNode::Field(UiFieldNode {
+            id: "vcs-play-inspector.status".into(),
+            label: "Status".into(),
+            child: UiControlNode::Input(UiInputNode {
+                id: "vcs-play-inspector.status.input".into(),
+                input_kind: "text".into(),
+                value: projection.status.clone(),
+                placeholder: None,
+                commit: Some("blur".into()),
+                on_change: vcs_cmd("patchProjection", Some(json!({ "field": "status" }))),
+            }),
+        }),
+        UiNode::Field(UiFieldNode {
+            id: "vcs-play-inspector.notes".into(),
+            label: "Notes".into(),
+            child: UiControlNode::Input(UiInputNode {
+                id: "vcs-play-inspector.notes.input".into(),
+                input_kind: "text".into(),
+                value: projection.notes.clone(),
+                placeholder: None,
+                commit: Some("blur".into()),
+                on_change: vcs_cmd("patchProjection", Some(json!({ "field": "notes" }))),
+            }),
+        }),
         ui_inspector_readonly_field("vcs-play-inspector.tags", "Tags", projection.tags.join(", ")),
     ])
 }
@@ -574,6 +628,32 @@ impl PluginApp for VcsPlayApp {
                 if let Some(alternative_id) = args.and_then(|value| value.get("alternativeId")).and_then(|value| value.as_str()) {
                     let _ = store.dispatch(DocumentVcsCommand::SwitchAlternative {
                         alternative_id: alternative_id.into(),
+                    });
+                    return vec![set_document_op(&sync_store_to_envelope(&store, &play.selected_checkpoint_ids))];
+                }
+            }
+            "checkoutCheckpoint" => {
+                if let Some(checkpoint_id) = args.and_then(|value| value.get("checkpointId")).and_then(|value| value.as_str()) {
+                    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint {
+                        checkpoint_id: checkpoint_id.into(),
+                    });
+                    return vec![set_document_op(&sync_store_to_envelope(&store, &play.selected_checkpoint_ids))];
+                }
+            }
+            "patchProjection" => {
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args.and_then(|value| value.get("value"));
+                let operation = match field {
+                    "title" => value.and_then(|entry| entry.as_str()).map(|title| VcsDemoOp::SetTitle { title: title.into() }),
+                    "counter" => value.and_then(|entry| entry.as_i64()).map(|counter| VcsDemoOp::SetCounter { counter }),
+                    "status" => value.and_then(|entry| entry.as_str()).map(|status| VcsDemoOp::SetStatus { status: status.into() }),
+                    "notes" => value.and_then(|entry| entry.as_str()).map(|notes| VcsDemoOp::SetNotes { notes: notes.into() }),
+                    _ => None,
+                };
+                if let Some(operation) = operation {
+                    let _ = store.dispatch(DocumentVcsCommand::Apply {
+                        operations: vec![operation],
+                        description: None,
                     });
                     return vec![set_document_op(&sync_store_to_envelope(&store, &play.selected_checkpoint_ids))];
                 }

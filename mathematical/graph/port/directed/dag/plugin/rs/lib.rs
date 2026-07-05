@@ -1,8 +1,9 @@
 //! 🔀 DAG plugin — declarative DAG play app bundled as a hot-swappable WASM component.
 
 use mathematical_graph_port_directed_dag::{
-    dag_fixture_to_wire_literal, dag_node_kind_tag, fit_node_size, would_create_cycle, DagFixture,
-    DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, IoPortSpec,
+    dag_fixture_to_wire_literal, dag_node_kind_tag, fit_node_size, note_widget_size, preview_widget_size,
+    stepper_widget_height, stepper_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost,
+    DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,
 };
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
@@ -15,6 +16,7 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::BTreeSet;
 use std::sync::LazyLock;
 
 //#region 🔖Constants
@@ -36,6 +38,10 @@ const DAG_PLAY_WINDOW_COMPILED: &str = "dag-compiled-dag";
 struct DagPlayRuntime {
     #[serde(default)]
     selected_node_ids: Vec<String>,
+    #[serde(default)]
+    undo_fixtures: Vec<DagFixture>,
+    #[serde(default)]
+    redo_fixtures: Vec<DagFixture>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -101,6 +107,11 @@ fn dag_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
         command: command.into(),
         args,
     }
+}
+
+fn snapshot_dag(runtime: &mut DagPlayRuntime, fixture: &DagFixture) {
+    runtime.undo_fixtures.push(fixture.clone());
+    runtime.redo_fixtures.clear();
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -217,6 +228,67 @@ fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpec {
             },
             ..Default::default()
         },
+        "note" => {
+            let text = String::new();
+            let (width, height) = note_widget_size(&text);
+            DagNodeSpec {
+                id: id.into(),
+                name: "Note".into(),
+                abbreviation: "Note".into(),
+                icon: "emoji:📝".into(),
+                x,
+                y,
+                width,
+                height,
+                kind: DagNodeKind::Note {
+                    text,
+                    output: IoPortSpec::named("T", "Txt", "text", "Text"),
+                },
+                ..Default::default()
+            }
+        }
+        "preview" => {
+            let (width, height) = preview_widget_size(&DagPreviewContent::Scalar { text: String::new() }, &BTreeSet::new());
+            DagNodeSpec {
+                id: id.into(),
+                name: "Preview".into(),
+                abbreviation: "Prv".into(),
+                icon: "emoji:👁️".into(),
+                x,
+                y,
+                width,
+                height,
+                kind: DagNodeKind::Preview {
+                    content: DagPreviewContent::Scalar { text: String::new() },
+                    expanded: BTreeSet::new(),
+                    input: IoPortSpec::named("I", "In", "in", "Input"),
+                },
+                ..Default::default()
+            }
+        }
+        "stepper" => {
+            let fields = vec![DagStepperField {
+                key: "value".into(),
+                label: "Value".into(),
+                value: 0.0,
+                step: 1.0,
+            }];
+            DagNodeSpec {
+                id: id.into(),
+                name: "Stepper".into(),
+                abbreviation: "Stp".into(),
+                icon: "emoji:🎚️".into(),
+                x,
+                y,
+                width: stepper_widget_width(),
+                height: stepper_widget_height(fields.len()),
+                kind: DagNodeKind::Stepper {
+                    fields,
+                    output: IoPortSpec::named("N", "Num", "number", "Number"),
+                },
+                ..Default::default()
+            }
+        }
         _ => DagNodeSpec {
             id: id.into(),
             name: "Computation".into(),
@@ -279,6 +351,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -296,6 +371,9 @@ fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, d
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -313,6 +391,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -377,7 +458,15 @@ fn build_hierarchy_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
 }
 
 fn build_catalogue_tree() -> UiNode {
-    let kinds = [("computation", "Computation"), ("slider", "Slider"), ("select", "Select"), ("screen", "Screen")];
+    let kinds = [
+        ("computation", "Computation"),
+        ("slider", "Slider"),
+        ("stepper", "Stepper"),
+        ("select", "Select"),
+        ("note", "Note"),
+        ("preview", "Preview"),
+        ("screen", "Screen"),
+    ];
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "dag-play-catalogue.node-kinds".into(),
@@ -583,6 +672,78 @@ impl PluginApp for DagPlayApp {
                 envelope.runtime.selected_node_ids.clear();
                 return vec![set_document_op(&envelope)];
             }
+            "undo" => {
+                if let Some(previous) = envelope.runtime.undo_fixtures.pop() {
+                    envelope.runtime.redo_fixtures.push(envelope.fixture.clone());
+                    envelope.fixture = previous;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "redo" => {
+                if let Some(next) = envelope.runtime.redo_fixtures.pop() {
+                    envelope.runtime.undo_fixtures.push(envelope.fixture.clone());
+                    envelope.fixture = next;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "renameDagNode" => {
+                let old_id = args.and_then(|value| value.get("oldId")).and_then(|value| value.as_str());
+                let new_id = args.and_then(|value| value.get("value")).and_then(|value| value.as_str());
+                if let (Some(old_id), Some(new_id)) = (old_id, new_id) {
+                    let trimmed = new_id.trim();
+                    if !trimmed.is_empty()
+                        && trimmed != old_id
+                        && !envelope.fixture.nodes.iter().any(|node| node.id == trimmed)
+                    {
+                        snapshot_dag(&mut envelope.runtime, &envelope.fixture);
+                        for node in &mut envelope.fixture.nodes {
+                            if node.id == old_id {
+                                node.id = trimmed.into();
+                            }
+                        }
+                        for edge in &mut envelope.fixture.edges {
+                            let (from_node, from_port) = split_endpoint(&edge.source);
+                            let (to_node, to_port) = split_endpoint(&edge.target);
+                            if from_node == old_id {
+                                edge.source = format!("{trimmed}:{from_port}");
+                            }
+                            if to_node == old_id {
+                                edge.target = format!("{trimmed}:{to_port}");
+                            }
+                        }
+                        envelope.runtime.selected_node_ids = vec![trimmed.into()];
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "removeNode" => {
+                let node_id = args
+                    .and_then(|value| value.get("nodeId"))
+                    .or_else(|| args.and_then(|value| value.get("id")))
+                    .and_then(|value| value.as_str());
+                if let Some(node_id) = node_id {
+                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
+                    envelope.fixture.nodes.retain(|node| node.id != node_id);
+                    envelope.fixture.edges.retain(|edge| {
+                        let (from, _) = split_endpoint(&edge.source);
+                        let (to, _) = split_endpoint(&edge.target);
+                        from != node_id && to != node_id
+                    });
+                    envelope.runtime.selected_node_ids.retain(|id| id != node_id);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "disconnect" => {
+                let edge_id = args
+                    .and_then(|value| value.get("edgeId"))
+                    .or_else(|| args.and_then(|value| value.get("synapseId")))
+                    .and_then(|value| value.as_str());
+                if let Some(edge_id) = edge_id {
+                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
+                    envelope.fixture.edges.retain(|edge| edge.id != edge_id);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
             "moveMediaNode" => {
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str());
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
@@ -607,6 +768,7 @@ impl PluginApp for DagPlayApp {
                 if let (Some(from), Some(from_port), Some(to), Some(to_port)) =
                     (source_node_id, source_port_id, target_node_id, target_port_id)
                 {
+                    snapshot_dag(&mut envelope.runtime, &envelope.fixture);
                     if connect_ports(&mut envelope.fixture, from, from_port, to, to_port).is_ok() {
                         return vec![set_document_op(&envelope)];
                     }
@@ -617,11 +779,13 @@ impl PluginApp for DagPlayApp {
                 let id = next_node_id(&envelope.fixture);
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
                 envelope.fixture.nodes.push(default_node_for_kind(kind, &id, x, y));
                 envelope.runtime.selected_node_ids = vec![id];
                 return vec![set_document_op(&envelope)];
             }
             "reorganize" => {
+                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
                 if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&envelope.fixture).unwrap()) {
                     let _ = host.reorganize(&DagLayoutOptions::default());
                     if let Ok(json) = host.fixture_json() {
@@ -633,6 +797,7 @@ impl PluginApp for DagPlayApp {
                 }
             }
             "patchDagNodes" => {
+                snapshot_dag(&mut envelope.runtime, &envelope.fixture);
                 let node_ids: Vec<String> = args
                     .and_then(|value| value.get("nodeIds"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
@@ -786,5 +951,36 @@ mod tests {
         let node = app.render(DAG_PLAY_BODY_INSPECTOR, &serde_json::to_string(&envelope).unwrap(), &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("field"));
+    }
+
+    #[test]
+    fn rename_dag_node_updates_fixture() {
+        let mut app = DagPlayApp;
+        let document = app.initial_document_json();
+        let envelope: DagPlayEnvelope = serde_json::from_str(&document).unwrap();
+        let old_id = envelope.fixture.nodes.first().map(|node| node.id.clone()).expect("node");
+        let ops = app.handle_command(
+            "renameDagNode",
+            Some(&json!({ "oldId": old_id, "value": "renamed-node" })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let updated: DagPlayEnvelope =
+            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+        assert!(updated.fixture.nodes.iter().any(|node| node.id == "renamed-node"));
+    }
+
+    #[test]
+    fn remove_node_deletes_from_fixture() {
+        let mut app = DagPlayApp;
+        let document = app.initial_document_json();
+        let envelope: DagPlayEnvelope = serde_json::from_str(&document).unwrap();
+        let node_id = envelope.fixture.nodes.first().map(|node| node.id.clone()).expect("node");
+        let ops = app.handle_command("removeNode", Some(&json!({ "nodeId": node_id })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let updated: DagPlayEnvelope =
+            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+        assert!(updated.fixture.nodes.iter().all(|node| node.id != node_id));
     }
 }

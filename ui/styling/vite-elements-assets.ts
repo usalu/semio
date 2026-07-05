@@ -118,6 +118,8 @@ const dagLodScaleJson = () => ${JSON.stringify(JSON.stringify([
 export default async function initWasm() {}
 export const initSync = () => {};
 export class FlowSession { lodScaleJson() { return dagLodScaleJson(); } }
+export class GraphSession { lodScaleJson() { return dagLodScaleJson(); } syncFromSceneJson() {} labelOverlayPaintStateJson() { return '{"labels":[]}'; } selectionUnionBoundsScreenJson() { return '{}'; } selectionPreviewPointsJson() { return '[]'; } selectionPreviewCrossing() { return false; } selectedNodeIdsJson() { return '[]'; } hoveredNodeId() { return null; } hoveredChannelJson() { return '{}'; } cameraJson() { return '{"x":0,"y":0,"zoom":1}'; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScreen() {} }
+export class EditorSession { syncFromSceneJson() {} setText() {} text() { return ''; } caret() { return 0; } anchor() { return 0; } pointerDownScreen() {} pointerMoveScreen() {} pointerUpScreen() {} wheelScrollScreen() {} insertText() {} backspace() {} deleteForward() {} selectAll() {} replaceSelection() {} selectionText() { return ''; } hoverTokenRangeJson() { return 'null'; } setHoverRange() {} cameraJson() { return '{}'; } }
 export class DagSession { lodScaleJson() { return dagLodScaleJson(); } }
 export class BoardSession { lodScaleJson() { return dagLodScaleJson(); } }
 export class WriterSession {}
@@ -162,7 +164,11 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
         ? resolve(dirname(importer), cleanId)
         : cleanId.startsWith("@semio-tech/flow-core/pkg/")
           ? resolve(repoRoot, "flow/core/rs/pkg", cleanId.slice("@semio-tech/flow-core/pkg/".length))
-          : resolve(repoRoot, cleanId.replace(/^@semio-tech\/[^/]+\//, ""));
+          : cleanId.startsWith("@semio-tech/framework-graph-rs/pkg/")
+            ? resolve(repoRoot, "framework/graph/rs/pkg", cleanId.slice("@semio-tech/framework-graph-rs/pkg/".length))
+            : cleanId.startsWith("@semio-tech/framework-editor-rs/pkg/")
+              ? resolve(repoRoot, "framework/editor/rs/pkg", cleanId.slice("@semio-tech/framework-editor-rs/pkg/".length))
+              : resolve(repoRoot, cleanId.replace(/^@semio-tech\/[^/]+\//, ""));
       if (existsSync(abs)) return undefined;
       return `${PLAYGROUND_WASM_STUB_PREFIX}${playgroundWasmStubKey(cleanId)}`;
     },

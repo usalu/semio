@@ -33,6 +33,12 @@ const FLOW_PLAY_WINDOW_COMPILED: &str = "flow-compiled-dag";
 struct FlowPlayRuntime {
     #[serde(default)]
     selected_node_ids: Vec<String>,
+    #[serde(default)]
+    undo_fixtures: Vec<FlowFixture>,
+    #[serde(default)]
+    redo_fixtures: Vec<FlowFixture>,
+    #[serde(default)]
+    last_eval_json: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -102,6 +108,19 @@ fn flow_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
 
 fn host_from_envelope(envelope: &FlowPlayEnvelope) -> FlowHost {
     FlowHost::from_fixture(envelope.fixture.clone())
+}
+
+fn snapshot_fixture(runtime: &mut FlowPlayRuntime, fixture: &FlowFixture) {
+    runtime.undo_fixtures.push(fixture.clone());
+    runtime.redo_fixtures.clear();
+}
+
+fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
+    if selected.is_empty() {
+        let _ = host.dag.cancel_area_select();
+    } else {
+        host.dag.set_selection(selected);
+    }
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
@@ -213,6 +232,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -230,6 +252,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -265,6 +290,9 @@ fn build_hierarchy_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
                 selected: None,
                 default_open: None,
                 command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
                 draggable: None,
                 drag_data: None,
                 items: None,
@@ -303,7 +331,7 @@ fn build_hierarchy_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
 }
 
 fn build_catalogue_tree() -> UiNode {
-    let sources = [("inputSlider", "Slider"), ("inputNote", "Note")];
+    let sources = [("inputSlider", "Slider"), ("inputStepper", "Stepper"), ("inputNote", "Note")];
     let components = [("math.add", "Add"), ("logic.and", "And"), ("text.concat", "Concat")];
     let sinks = [("outputPreview", "Preview"), ("outputExport", "Export")];
     UiNode::Tree(UiTreeNode {
@@ -464,10 +492,28 @@ fn render_main_graph(envelope: &FlowPlayEnvelope) -> UiNode {
     let host = host_from_envelope(envelope);
     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
     let viewport_json = serde_json::to_string(&envelope.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+    let fixture_json = serde_json::to_string(&envelope.fixture).ok();
+    let selection_json = if envelope.runtime.selected_node_ids.is_empty() {
+        None
+    } else {
+        serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
+    };
     build_node_graph_scene(
         FLOW_PLAY_SURFACE_MAIN,
         FLOW_PLAY_APP_ID,
-        NodeGraphScene::base(nodes_json, edges_json, viewport_json),
+        NodeGraphScene {
+            editable: Some(true),
+            operators_json: None,
+            context_menu_json: Some(
+                r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+            ),
+            find_items_json: None,
+            capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
+            lod_json: Some(r#"{"automatic":true}"#.into()),
+            fixture_json,
+            selection_json,
+            ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
+        },
     )
 }
 
@@ -510,8 +556,11 @@ impl PluginApp for FlowPlayApp {
                     }
                 }
             }
-            "setSelection" | "selectNode" => {
-                let ids = selection_ids(args);
+            "setSelection" | "selectNode" | "nodeGraphSelect" => {
+                let ids = args
+                    .and_then(|value| value.get("nodeIds"))
+                    .and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok())
+                    .or_else(|| selection_ids(args));
                 envelope.runtime.selected_node_ids = ids;
                 return vec![set_document_op(&envelope)];
             }
@@ -530,13 +579,83 @@ impl PluginApp for FlowPlayApp {
                     }
                 }
             }
+            "undo" => {
+                if let Some(previous) = envelope.runtime.undo_fixtures.pop() {
+                    envelope.runtime.redo_fixtures.push(envelope.fixture.clone());
+                    envelope.fixture = previous;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "redo" => {
+                if let Some(next) = envelope.runtime.redo_fixtures.pop() {
+                    envelope.runtime.undo_fixtures.push(envelope.fixture.clone());
+                    envelope.fixture = next;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "evaluate" => {
+                if let Ok(eval_json) = host.evaluate() {
+                    envelope.fixture = host.fixture;
+                    envelope.runtime.last_eval_json = eval_json;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "removeWidget" => {
+                let widget_id = args
+                    .and_then(|value| value.get("widgetId"))
+                    .or_else(|| args.and_then(|value| value.get("id")))
+                    .and_then(|value| value.as_str());
+                if let Some(widget_id) = widget_id {
+                    snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
+                    if host.remove_widget(widget_id).is_ok() {
+                        envelope.runtime.selected_node_ids.retain(|id| id != widget_id);
+                        if let Ok(eval_json) = host.evaluate() {
+                            envelope.runtime.last_eval_json = eval_json;
+                        }
+                        envelope.fixture = host.fixture;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "deleteSelection" => {
+                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
+                sync_host_selection(&mut host, &envelope.runtime.selected_node_ids);
+                if host.delete_selection().is_ok() {
+                    envelope.runtime.selected_node_ids.clear();
+                    if let Ok(eval_json) = host.evaluate() {
+                        envelope.runtime.last_eval_json = eval_json;
+                    }
+                    envelope.fixture = host.fixture;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "disconnect" => {
+                let synapse_id = args
+                    .and_then(|value| value.get("synapseId"))
+                    .or_else(|| args.and_then(|value| value.get("edgeId")))
+                    .and_then(|value| value.as_str());
+                if let Some(synapse_id) = synapse_id {
+                    snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
+                    if host.disconnect(synapse_id).is_ok() {
+                        if let Ok(eval_json) = host.evaluate() {
+                            envelope.runtime.last_eval_json = eval_json;
+                        }
+                        envelope.fixture = host.fixture;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
             "connectMediaPorts" => {
                 let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str());
                 let from_port = args.and_then(|value| value.get("sourcePortId")).and_then(|value| value.as_str());
                 let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str());
                 let to_port = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str());
                 if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
+                    snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                     if host.connect_ports(from, from_port, to, to_port).is_ok() {
+                        if let Ok(eval_json) = host.evaluate() {
+                            envelope.runtime.last_eval_json = eval_json;
+                        }
                         envelope.fixture = host.fixture;
                         return vec![set_document_op(&envelope)];
                     }
@@ -553,19 +672,25 @@ impl PluginApp for FlowPlayApp {
                 };
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 if let Ok(id) = host.add_widget(&descriptor, x, y) {
-                    envelope.fixture = host.fixture;
                     envelope.runtime.selected_node_ids = vec![id];
+                    if let Ok(eval_json) = host.evaluate() {
+                        envelope.runtime.last_eval_json = eval_json;
+                    }
+                    envelope.fixture = host.fixture;
                     return vec![set_document_op(&envelope)];
                 }
             }
             "reorganize" => {
+                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
                     envelope.fixture = host.fixture;
                     return vec![set_document_op(&envelope)];
                 }
             }
             "patchFlowWidgets" => {
+                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 let widget_ids: Vec<String> = args
                     .and_then(|value| value.get("widgetIds"))
                     .and_then(|value| serde_json::from_value(value.clone()).ok())
@@ -591,10 +716,14 @@ impl PluginApp for FlowPlayApp {
                     }
                 }
                 host.replace_fixture(envelope.fixture.clone());
+                if let Ok(eval_json) = host.evaluate() {
+                    envelope.runtime.last_eval_json = eval_json;
+                }
                 envelope.fixture = host.fixture;
                 return vec![set_document_op(&envelope)];
             }
             "renameFlowWidget" => {
+                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
                 let old_id = args.and_then(|value| value.get("oldId")).and_then(|value| value.as_str());
                 let new_id = args.and_then(|value| value.get("value")).and_then(|value| value.as_str());
                 if let (Some(old_id), Some(new_id)) = (old_id, new_id) {
@@ -629,6 +758,75 @@ impl PluginApp for FlowPlayApp {
                         envelope.fixture = host.fixture;
                         return vec![set_document_op(&envelope)];
                     }
+                }
+            }
+            "nodeGraphHover" => {
+                return Vec::new();
+            }
+            "nodeGraphViewport" => {
+                if let Some(viewport_json) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()) {
+                    if let Ok(camera) = serde_json::from_str::<flow_core::dag::DagCamera>(viewport_json) {
+                        envelope.fixture.camera = camera;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "nodeGraphEdit" | "spotlightCommit" => {
+                let ops = args
+                    .and_then(|value| value.get("ops"))
+                    .and_then(|value| value.as_array())
+                    .cloned()
+                    .unwrap_or_default();
+                if ops.is_empty() && command == "spotlightCommit" {
+                    if let Ok(eval_json) = host.evaluate() {
+                        envelope.runtime.last_eval_json = eval_json;
+                        envelope.fixture = host.fixture;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+                let mut changed = false;
+                for op in ops {
+                    let op_name = op.get("op").and_then(|value| value.as_str()).unwrap_or("");
+                    match op_name {
+                        "setFixture" => {
+                            if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
+                                if let Ok(fixture) = serde_json::from_str::<FlowFixture>(fixture_json) {
+                                    snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
+                                    envelope.fixture = fixture.clone();
+                                    host.replace_fixture(fixture);
+                                    changed = true;
+                                }
+                            }
+                        }
+                        "deleteSelection" => {
+                            snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
+                            sync_host_selection(&mut host, &envelope.runtime.selected_node_ids);
+                            if host.delete_selection().is_ok() {
+                                envelope.runtime.selected_node_ids.clear();
+                                changed = true;
+                            }
+                        }
+                        "connect" => {
+                            let from = op.get("sourceNodeId").and_then(|value| value.as_str());
+                            let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
+                            let to = op.get("targetNodeId").and_then(|value| value.as_str());
+                            let to_port = op.get("targetPortId").and_then(|value| value.as_str());
+                            if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
+                                snapshot_fixture(&mut envelope.runtime, &envelope.fixture);
+                                if host.connect_ports(from, from_port, to, to_port).is_ok() {
+                                    changed = true;
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                if changed {
+                    if let Ok(eval_json) = host.evaluate() {
+                        envelope.runtime.last_eval_json = eval_json;
+                    }
+                    envelope.fixture = host.fixture;
+                    return vec![set_document_op(&envelope)];
                 }
             }
             _ => {}
@@ -745,5 +943,35 @@ mod tests {
         let node = app.render(FLOW_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("flow-play-hierarchy.widgets"));
+    }
+
+    #[test]
+    fn evaluate_updates_preview_state() {
+        let mut app = FlowPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("evaluate", None, &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let updated: FlowPlayEnvelope = serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+        assert!(!updated.runtime.last_eval_json.is_empty());
+    }
+
+    #[test]
+    fn undo_restores_fixture_after_add_widget() {
+        let mut app = FlowPlayApp;
+        let document = app.initial_document_json();
+        let before: FlowPlayEnvelope = serde_json::from_str(&document).unwrap();
+        let count_before = before.fixture.widgets.len();
+        let ops = app.handle_command(
+            "addWidget",
+            Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })),
+            &document,
+            &ViewState::default(),
+        );
+        assert_eq!(ops.len(), 1);
+        let after_add = serde_json::to_string(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"]).unwrap();
+        let undo_ops = app.handle_command("undo", None, &after_add, &ViewState::default());
+        let restored: FlowPlayEnvelope =
+            serde_json::from_value(serde_json::from_str::<Value>(&undo_ops[0]).unwrap()["document"].clone()).unwrap();
+        assert_eq!(restored.fixture.widgets.len(), count_before);
     }
 }

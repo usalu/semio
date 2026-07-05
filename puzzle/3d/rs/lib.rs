@@ -1560,7 +1560,8 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, String> {
-        let payload: BrushPlacePayload = serde_json::from_str(payload_json)?;
+        let payload: BrushPlacePayload =
+            serde_json::from_str(payload_json).map_err(|e| e.to_string())?;
         let fixture = self
             .engine
             .apply_brush_placement(&payload)

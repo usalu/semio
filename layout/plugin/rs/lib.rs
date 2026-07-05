@@ -1,15 +1,17 @@
 //! 📐 Layout plugin — blueprint/preview document editor bundled as a hot-swappable WASM component.
 
 use layout_rs::{
-    parse_layout_document, resolve_page, Frame, LayoutDocument, LAYOUT_FIXTURE_SCHEMA, Page,
+    export_document_svg, parse_layout_document, resolve_page, Frame, LayoutBounds, LayoutCamera, LayoutDocument,
+    LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins,
 };
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp,
-    PluginBundle, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
+    Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
+    UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -48,6 +50,20 @@ struct LayoutPlayRuntime {
     selected_ids: Vec<String>,
     #[serde(default)]
     hovered_id: Option<String>,
+    #[serde(default)]
+    pan_drag: Option<LayoutPanDrag>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    last_export_json: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct LayoutPanDrag {
+    blueprint: bool,
+    start_x: f64,
+    start_y: f64,
+    origin_camera_x: f64,
+    origin_camera_y: f64,
 }
 
 impl Default for LayoutPlayRuntime {
@@ -56,6 +72,8 @@ impl Default for LayoutPlayRuntime {
             active_page_id: default_active_page_id(),
             selected_ids: Vec::new(),
             hovered_id: None,
+            pan_drag: None,
+            last_export_json: None,
         }
     }
 }
@@ -98,6 +116,16 @@ struct LayoutCanvasLayer {
     y: f64,
     width: f64,
     height: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    fill: Option<[f32; 4]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    stroke: Option<[f32; 4]>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "linkId")]
+    link_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none", rename = "storyId")]
+    story_id: Option<String>,
 }
 //#endregion 🔖Types
 
@@ -170,6 +198,28 @@ fn push_undo(play: &mut LayoutPlayEnvelope) {
     play.redo_stack.clear();
 }
 
+fn story_excerpt(doc: &LayoutDocument, story_id: &str, max_len: usize) -> Option<String> {
+    doc.stories
+        .iter()
+        .find(|story| story.id == story_id)
+        .map(|story| story.content.chars().take(max_len).collect::<String>())
+        .filter(|text| !text.is_empty())
+}
+
+fn frame_layer_content(doc: &LayoutDocument, frame: &Frame) -> (Option<[f32; 4]>, Option<[f32; 4]>, Option<String>, Option<String>, Option<String>) {
+    match frame {
+        Frame::Rect { fill, stroke, .. } => (fill.clone(), stroke.clone(), None, None, None),
+        Frame::Text { story_id, .. } => (
+            None,
+            None,
+            story_excerpt(doc, story_id, 240),
+            None,
+            Some(story_id.clone()),
+        ),
+        Frame::Image { link_id, .. } => (None, None, None, Some(link_id.clone()), None),
+    }
+}
+
 fn canvas_layers(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, blueprint: bool) -> String {
     let page = match active_page(doc, runtime) {
         Some(page) => page,
@@ -181,6 +231,7 @@ fn canvas_layers(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, blueprint: b
         .filter(|entry| entry.frame.visible())
         .map(|entry| {
             let bounds = entry.frame.bounds();
+            let (fill, stroke, text, link_id, story_id) = frame_layer_content(doc, &entry.frame);
             LayoutCanvasLayer {
                 id: entry.frame.id().into(),
                 kind: entry.frame.kind_str().into(),
@@ -189,10 +240,42 @@ fn canvas_layers(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, blueprint: b
                 y: bounds.y,
                 width: bounds.width,
                 height: bounds.height,
+                fill,
+                stroke,
+                text,
+                link_id,
+                story_id,
             }
         })
         .collect();
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+}
+
+fn surface_is_blueprint(args: Option<&Value>) -> bool {
+    args.and_then(|value| value.get("surfaceId"))
+        .and_then(|value| value.as_str())
+        .is_none_or(|surface| surface.contains("blueprint"))
+}
+
+fn camera_for_surface<'a>(doc: &'a mut LayoutDocument, blueprint: bool) -> &'a mut LayoutCamera {
+    if blueprint {
+        &mut doc.camera
+    } else {
+        &mut doc.preview_camera
+    }
+}
+
+fn patch_frame_bounds(frame: &mut Frame, field: &str, value: f64) {
+    let bounds = match frame {
+        Frame::Rect { bounds, .. } | Frame::Text { bounds, .. } | Frame::Image { bounds, .. } => bounds,
+    };
+    match field {
+        "x" => bounds.x = value,
+        "y" => bounds.y = value,
+        "width" | "w" => bounds.width = value,
+        "height" | "h" => bounds.height = value,
+        _ => {}
+    }
 }
 
 fn run_layout_preflight(doc: &LayoutDocument) -> Vec<PreflightIssue> {
@@ -289,6 +372,9 @@ fn tree_item(
         icon_id,
         selected: None,
         default_open: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         command,
         draggable: None,
         drag_data: None,
@@ -406,6 +492,13 @@ fn build_catalogue_tree() -> UiNode {
                 Some(layout_cmd("addFrame", Some(json!({ "kind": kind })))),
             )
         })
+        .chain(std::iter::once(tree_item(
+            "layout-catalogue.page",
+            "Page",
+            Some("page".into()),
+            Some("file".into()),
+            Some(layout_cmd("addPage", None)),
+        )))
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
@@ -438,7 +531,21 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
             default_open: Some(true),
             fields: vec![
                 ui_inspector_readonly_field("layout-play-inspector.page-id", "Id", page.id.clone()),
-                ui_inspector_readonly_field("layout-play-inspector.page-name", "Name", page.name.clone()),
+                UiNode::Field(UiFieldNode {
+                    id: "layout-play-inspector.page-name".into(),
+                    label: "Name".into(),
+                    child: UiControlNode::Input(UiInputNode {
+                        id: "layout-play-inspector.page-name.input".into(),
+                        input_kind: "text".into(),
+                        value: page.name.clone(),
+                        placeholder: None,
+                        commit: Some("blur".into()),
+                        on_change: layout_cmd(
+                            "patchPage",
+                            Some(json!({ "pageId": page.id, "field": "name" })),
+                        ),
+                    }),
+                }),
                 ui_inspector_readonly_field(
                     "layout-play-inspector.page-size",
                     "Size",
@@ -450,23 +557,51 @@ fn build_inspector_tree(play: &LayoutPlayEnvelope) -> UiNode {
     for page in &doc.pages {
         if let Some(frame) = page.frames.iter().find(|frame| frame.id() == selected_id) {
             let bounds = frame.bounds();
+            let frame_id = frame.id().to_string();
+            let page_id = page.id.clone();
+            let name_mixed = ui_inspector_mixed_text(&[frame.id().to_string()]);
+            let mut fields = vec![
+                ui_inspector_readonly_field("layout-play-inspector.frame-id", "Id", frame_id.clone()),
+                ui_inspector_readonly_field("layout-play-inspector.frame-kind", "Kind", frame.kind_str().to_string()),
+                ui_inspector_readonly_field("layout-play-inspector.frame-page", "Page", page.name.clone()),
+            ];
+            for (field, label, value) in [
+                ("x", "X", bounds.x),
+                ("y", "Y", bounds.y),
+                ("width", "Width", bounds.width),
+                ("height", "Height", bounds.height),
+            ] {
+                fields.push(UiNode::Field(UiFieldNode {
+                    id: format!("layout-play-inspector.frame-{field}"),
+                    label: label.into(),
+                    child: UiControlNode::Input(UiInputNode {
+                        id: format!("layout-play-inspector.frame-{field}.input"),
+                        input_kind: "number".into(),
+                        value: format!("{}", value as i64),
+                        placeholder: None,
+                        commit: Some("blur".into()),
+                        on_change: layout_cmd(
+                            "patchFrame",
+                            Some(json!({ "frameId": frame_id, "pageId": page_id, "field": field })),
+                        ),
+                    }),
+                }));
+            }
+            if let Frame::Text { story_id, .. } = frame {
+                if let Some(excerpt) = story_excerpt(doc, story_id, 240) {
+                    fields.push(ui_inspector_readonly_field(
+                        "layout-play-inspector.frame-story",
+                        "Story",
+                        excerpt,
+                    ));
+                }
+            }
+            let _ = name_mixed;
             return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
                 id: "layout-play-inspector.frame".into(),
                 label: "Frame".into(),
                 default_open: Some(true),
-                fields: vec![
-                    ui_inspector_readonly_field("layout-play-inspector.frame-id", "Id", frame.id().to_string()),
-                    ui_inspector_readonly_field("layout-play-inspector.frame-kind", "Kind", frame.kind_str().to_string()),
-                    ui_inspector_readonly_field("layout-play-inspector.frame-page", "Page", page.name.clone()),
-                    ui_inspector_readonly_field(
-                        "layout-play-inspector.frame-bounds",
-                        "Bounds",
-                        format!(
-                            "x={} y={} w={} h={}",
-                            bounds.x as i64, bounds.y as i64, bounds.width as i64, bounds.height as i64
-                        ),
-                    ),
-                ],
+                fields,
             }]);
         }
     }
@@ -693,7 +828,195 @@ impl PluginApp for LayoutPlayApp {
                     return vec![set_document_op(&play)];
                 }
             }
-            "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => {}
+            "addPage" => {
+                push_undo(&mut play);
+                let template = play
+                    .document
+                    .pages
+                    .iter()
+                    .find(|page| page.id == play.runtime.active_page_id)
+                    .or_else(|| play.document.pages.first());
+                let (width, height, spread_id, parent_page_id, margins, columns) = template
+                    .map(|page| {
+                        (
+                            page.width,
+                            page.height,
+                            page.spread_id.clone(),
+                            page.parent_page_id.clone(),
+                            page.margins.clone(),
+                            page.columns.clone(),
+                        )
+                    })
+                    .unwrap_or((
+                        595.0,
+                        842.0,
+                        "spread-1".into(),
+                        None,
+                        PageMargins {
+                            top: 48.0,
+                            right: 36.0,
+                            bottom: 48.0,
+                            left: 36.0,
+                        },
+                        PageColumns { count: 1, gutter: 0.0 },
+                    ));
+                let page_id = format!("page-{}", play.document.pages.len() + 1);
+                let layer_id = format!("layer-{page_id}");
+                play.document.pages.push(Page {
+                    id: page_id.clone(),
+                    name: format!("Page {}", play.document.pages.len() + 1),
+                    spread_id,
+                    parent_page_id,
+                    width,
+                    height,
+                    margins,
+                    columns,
+                    guides: Vec::new(),
+                    layer_ids: vec![layer_id.clone()],
+                    layers: vec![layout_rs::Layer {
+                        id: layer_id,
+                        name: "Content".into(),
+                        visible: true,
+                        locked: false,
+                        object_ids: Vec::new(),
+                    }],
+                    frames: Vec::new(),
+                    overrides: Vec::new(),
+                });
+                play.runtime.active_page_id = page_id.clone();
+                play.runtime.selected_ids = vec![page_id];
+                return vec![set_document_op(&play)];
+            }
+            "patchPage" => {
+                let page_id = args
+                    .and_then(|value| value.get("pageId"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string)
+                    .unwrap_or_else(|| play.runtime.active_page_id.clone());
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args.and_then(|value| value.get("value"));
+                push_undo(&mut play);
+                if let Some(page) = play.document.pages.iter_mut().find(|page| page.id == page_id) {
+                    match field {
+                        "name" => {
+                            if let Some(name) = value.and_then(|entry| entry.as_str()) {
+                                page.name = name.into();
+                            }
+                        }
+                        "width" => {
+                            if let Some(width) = value.and_then(|entry| entry.as_f64()) {
+                                page.width = width;
+                            }
+                        }
+                        "height" => {
+                            if let Some(height) = value.and_then(|entry| entry.as_f64()) {
+                                page.height = height;
+                            }
+                        }
+                        _ => {}
+                    }
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "patchFrame" => {
+                let frame_id = args.and_then(|value| value.get("frameId")).and_then(|value| value.as_str()).unwrap_or("");
+                let page_id = args
+                    .and_then(|value| value.get("pageId"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string)
+                    .unwrap_or_else(|| play.runtime.active_page_id.clone());
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64());
+                if frame_id.is_empty() {
+                    return Vec::new();
+                }
+                push_undo(&mut play);
+                if let Some(page) = play.document.pages.iter_mut().find(|page| page.id == page_id) {
+                    if let Some(frame) = page.frames.iter_mut().find(|frame| frame.id() == frame_id) {
+                        if let Some(value) = value {
+                            patch_frame_bounds(frame, field, value);
+                        }
+                        return vec![set_document_op(&play)];
+                    }
+                }
+            }
+            "exportPng" | "exportSvg" => {
+                let page_id = args
+                    .and_then(|value| value.get("pageId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or(play.runtime.active_page_id.as_str());
+                let payload = if command == "exportSvg" {
+                    export_document_svg(&play.document, page_id)
+                        .map(|svg| json!({ "format": "svg", "pageId": page_id, "svg": svg }))
+                        .unwrap_or_else(|error| {
+                            json!({
+                                "format": "svg",
+                                "pageId": page_id,
+                                "error": error,
+                                "document": play.document,
+                            })
+                        })
+                } else {
+                    json!({
+                        "format": "png",
+                        "pageId": page_id,
+                        "document": play.document,
+                    })
+                };
+                play.runtime.last_export_json = Some(payload.to_string());
+                return vec![set_document_op(&play)];
+            }
+            "canvasPointerDown" => {
+                let blueprint = surface_is_blueprint(args);
+                let button = args.and_then(|value| value.get("button")).and_then(|value| value.as_i64()).unwrap_or(0);
+                if button == 1 || button == 2 {
+                    let camera = if blueprint {
+                        &play.document.camera
+                    } else {
+                        &play.document.preview_camera
+                    };
+                    play.runtime.pan_drag = Some(LayoutPanDrag {
+                        blueprint,
+                        start_x: args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0),
+                        start_y: args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0),
+                        origin_camera_x: camera.x,
+                        origin_camera_y: camera.y,
+                    });
+                    return vec![set_document_op(&play)];
+                }
+                if let Some(layer_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) {
+                    play.runtime.selected_ids = vec![layer_id.into()];
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "canvasPointerMove" => {
+                if let Some(drag) = play.runtime.pan_drag.clone() {
+                    let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(drag.start_x);
+                    let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(drag.start_y);
+                    let zoom = if drag.blueprint {
+                        play.document.camera.zoom
+                    } else {
+                        play.document.preview_camera.zoom
+                    }
+                    .max(0.01);
+                    let camera = camera_for_surface(&mut play.document, drag.blueprint);
+                    camera.x = drag.origin_camera_x - (x - drag.start_x) / zoom;
+                    camera.y = drag.origin_camera_y - (y - drag.start_y) / zoom;
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "canvasPointerUp" => {
+                play.runtime.pan_drag = None;
+                return vec![set_document_op(&play)];
+            }
+            "canvasWheel" => {
+                let blueprint = surface_is_blueprint(args);
+                let delta = args.and_then(|value| value.get("deltaY")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
+                let camera = camera_for_surface(&mut play.document, blueprint);
+                camera.zoom = (camera.zoom * factor).clamp(0.1, 8.0);
+                return vec![set_document_op(&play)];
+            }
             _ => {}
         }
         Vec::new()

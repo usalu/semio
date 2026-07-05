@@ -14,7 +14,8 @@
     "wasm": "bun nx run @semio-tech/framework-renderer-wgpu:wasm"
   },
   "dependencies": {
-    "@semio-tech/framework-core": "workspace:*"
+    "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/ui-asset": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.9.3",

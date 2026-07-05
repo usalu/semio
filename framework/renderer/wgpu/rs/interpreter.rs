@@ -1,9 +1,10 @@
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
 use crate::scenes::render_component_scene;
-use semio_framework_core::{CommandDescriptor, UiControlNode, UiNode};
+use semio_framework_core::{CommandDescriptor, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
+use std::collections::HashMap;
 use ui_wgpu::{
-    ControlNode, KeyValueEntry, Rect, SelectItem, Theme, TreeItem, TreeSection, WidgetContext,
+    ControlNode, KeyValueEntry, Rect, SelectItem, Theme, TreeItem, TreeItemAction, TreeSection, WidgetContext,
     WidgetNode, measure_widget, render_widget,
 };
 
@@ -107,6 +108,9 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
         },
         UiNode::Tree(tree) => WidgetNode::Tree {
             sections: tree.sections.iter().map(tree_section_to_widget).collect(),
+            selected_ids: tree.selected_ids.clone().unwrap_or_default(),
+            highlighted_ids: tree.highlighted_ids.clone().unwrap_or_default(),
+            selection_change: tree.selection_change.clone(),
         },
         UiNode::ComponentScene(_) => WidgetNode::Text {
             value: String::new(),
@@ -173,20 +177,111 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<CommandDescriptor> 
     }
 }
 
-fn tree_section_to_widget(section: &semio_framework_core::UiTreeSectionNode) -> TreeSection<CommandDescriptor> {
+fn tree_action_to_widget(action: &UiTreeItemAction) -> TreeItemAction<CommandDescriptor> {
+    TreeItemAction {
+        icon_id: action.icon_id.clone(),
+        label: action.label.clone(),
+        event: action.command.clone(),
+        reveal_on_hover: action.reveal_on_hover.unwrap_or(false),
+    }
+}
+
+fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<CommandDescriptor> {
     TreeSection {
+        id: section.id.clone(),
         label: section.label.clone(),
+        default_open: section.default_open.unwrap_or(true),
         items: section.items.iter().map(tree_item_to_widget).collect(),
     }
 }
 
-fn tree_item_to_widget(item: &semio_framework_core::UiTreeItemNode) -> TreeItem<CommandDescriptor> {
+fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<CommandDescriptor> {
     TreeItem {
         id: item.id.clone(),
         label: item.label.clone(),
+        description: item.description.clone(),
+        icon_id: item.icon_id.clone(),
         selected: item.selected.unwrap_or(false),
+        highlighted: false,
+        default_open: item.default_open.unwrap_or(false),
+        is_hidden: item.is_hidden.unwrap_or(false),
         event: item.command.clone(),
-        children: item.items.as_ref().map(|items| items.iter().map(tree_item_to_widget).collect()).unwrap_or_default(),
+        hover_event: item.hover_command.clone(),
+        unhover_event: item.unhover_command.clone(),
+        actions: item
+            .actions
+            .as_ref()
+            .map(|actions| actions.iter().map(tree_action_to_widget).collect())
+            .unwrap_or_default(),
+        draggable: item.draggable.unwrap_or(false),
+        drag_data: item.drag_data.clone().unwrap_or_default(),
+        control: item
+            .control
+            .as_ref()
+            .map(|control| Box::new(control_to_widget_node(control))),
+        children: item
+            .items
+            .as_ref()
+            .map(|items| items.iter().map(tree_item_to_widget).collect())
+            .unwrap_or_default(),
+    }
+}
+
+fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<CommandDescriptor> {
+    match control {
+        UiControlNode::Button(n) => WidgetNode::Button {
+            id: n.id.clone(),
+            label: n.label.clone(),
+            event: Some(n.command.clone()),
+        },
+        UiControlNode::Input(n) => WidgetNode::Input {
+            id: n.id.clone(),
+            value: n.value.clone(),
+            placeholder: n.placeholder.clone(),
+        },
+        UiControlNode::Select(n) => WidgetNode::Select {
+            id: n.id.clone(),
+            value: n.value.clone(),
+            items: n.items.iter().map(|i| SelectItem { value: i.value.clone(), label: i.label.clone() }).collect(),
+            placeholder: n.placeholder.clone(),
+            event: Some(n.on_change.clone()),
+        },
+        UiControlNode::Toggle(n) => WidgetNode::Toggle {
+            id: n.id.clone(),
+            pressed: n.pressed,
+            text: n.text.clone(),
+            event: Some(n.on_change.clone()),
+        },
+        UiControlNode::Vec3(n) => WidgetNode::Vec3 {
+            id: n.id.clone(),
+            value: n.value,
+            event: Some(n.on_change.clone()),
+        },
+        UiControlNode::KeyValue(n) => WidgetNode::KeyValue {
+            entries: n.entries.iter().map(|e| KeyValueEntry { label: e.label.clone(), value: e.value.clone() }).collect(),
+        },
+        UiControlNode::Slider(n) => WidgetNode::Slider {
+            id: n.id.clone(),
+            value: n.value,
+            min: n.min,
+            max: n.max,
+            event: Some(n.on_change.clone()),
+        },
+        UiControlNode::NumberStepper(n) => WidgetNode::NumberStepper {
+            id: n.id.clone(),
+            value: n.value,
+            event: Some(n.on_absolute.clone()),
+        },
+        UiControlNode::Ring(n) => WidgetNode::Ring {
+            id: n.id.clone(),
+            t: n.t,
+            event: Some(n.on_change.clone()),
+        },
+        UiControlNode::IconSelect(n) => WidgetNode::IconSelect {
+            id: n.id.clone(),
+            value: n.value.clone(),
+            event: Some(n.on_change.clone()),
+        },
     }
 }
 
@@ -200,6 +295,9 @@ pub fn framework_widget_context<'a>(
     scroll_offsets: &'a mut std::collections::HashMap<String, f32>,
     collapsed_sections: &'a mut std::collections::HashMap<String, bool>,
     open_selects: &'a mut std::collections::HashMap<String, bool>,
+    tree_hover_commands: Option<&'a mut HashMap<String, CommandDescriptor>>,
+    tree_unhover_commands: Option<&'a mut HashMap<String, CommandDescriptor>>,
+    tree_selection_change: Option<&'a mut Option<CommandDescriptor>>,
 ) -> FrameworkWidgetContext<'a> {
     WidgetContext {
         draw,
@@ -211,5 +309,8 @@ pub fn framework_widget_context<'a>(
         scroll_offsets,
         collapsed_sections,
         open_selects,
+        tree_hover_commands,
+        tree_unhover_commands,
+        tree_selection_change,
     }
 }

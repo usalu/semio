@@ -1,0 +1,10 @@
+{
+  "name": "@semio-tech/framework-graph-rs",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./pkg/framework_graph.js"
+  },
+  "bundleKind": "library"
+}

@@ -264,6 +264,15 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], onCommand: UiIn
 		className: item.draggable || item.dragData ? "cursor-grab active:cursor-grabbing" : undefined,
 		items: item.items?.length ? uiTreeItemsToTreeData(item.items, onCommand) : undefined,
 		onClick: item.command ? () => dispatchUiCommand(onCommand, item.command!, {}) : undefined,
+		onPointerEnter: item.hoverCommand ? () => dispatchUiCommand(onCommand, item.hoverCommand!, {}) : undefined,
+		onPointerLeave: item.unhoverCommand ? () => dispatchUiCommand(onCommand, item.unhoverCommand!, {}) : undefined,
+		actions: item.actions?.map((action) => ({
+			kind: "button" as const,
+			icon: renderControlIcon(action.iconId, 12),
+			title: action.label,
+			revealOnHover: action.revealOnHover,
+			onClick: () => dispatchUiCommand(onCommand, action.command, {}),
+		})),
 	}));
 }
 
@@ -301,7 +310,7 @@ function DeclarativeTreePanel({ treeNode, onCommand }: { readonly treeNode: UiTr
 		<Tree
 			className="min-h-0 min-w-0 flex-1 overflow-auto"
 			sections={config.sections}
-			selectionMode="single"
+			selectionMode={config.selectedIds?.length ? "multiple" : "single"}
 			showLines
 			selectedIds={config.selectedIds}
 			highlightedIds={config.highlightedIds}

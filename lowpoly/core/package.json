@@ -5,9 +5,6 @@
   "description": "lowpoly · mesh editing session and fixture types",
   "type": "module",
   "private": true,
-  "exports": {
-    "./pkg/lowpoly_core.js": "./rs/pkg/lowpoly_core.js"
-  },
   "devDependencies": {
     "typescript": "^5.9.3"
   },

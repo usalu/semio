@@ -1,6 +1,7 @@
 //! 🎬 Native component scene hosts for canvas-2d, tables, graphs, and 3D views.
 
 use crate::interpreter::FrameworkWidgetContext;
+use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem};
 use crate::world3d::{render_world_3d, World3dState};
 use base64::Engine;
 use semio_framework_core::{CommandDescriptor, UiComponentSceneNode};
@@ -97,6 +98,27 @@ pub struct PendingRasterUpload {
 
 thread_local! {
     static SCENE_STATE: RefCell<HashMap<String, SceneSurfaceState>> = RefCell::new(HashMap::new());
+    static GRAPH_NODE_CTX: RefCell<HashMap<String, Option<String>>> = RefCell::new(HashMap::new());
+}
+
+/** @emoji 🕸️ Clears per-frame graph node metadata used by context menus. */
+pub fn clear_graph_node_context() {
+    GRAPH_NODE_CTX.with(|cell| cell.borrow_mut().clear());
+}
+
+/** @emoji 🕸️ Registers a graph node instance mapping for context-menu dispatch. */
+pub fn register_graph_node(node_id: &str, instance_id: Option<&str>) {
+    GRAPH_NODE_CTX.with(|cell| {
+        cell.borrow_mut().insert(
+            node_id.to_string(),
+            instance_id.map(str::to_string),
+        );
+    });
+}
+
+/** @emoji 🕸️ Resolves a graph node instance id for context-menu commands. */
+pub fn graph_node_instance(node_id: &str) -> Option<String> {
+    GRAPH_NODE_CTX.with(|cell| cell.borrow().get(node_id).cloned().flatten())
 }
 
 fn scene_state(surface_id: &str) -> SceneSurfaceState {
@@ -632,6 +654,7 @@ fn render_raster(
         control_id: Some(scene.surface_id.clone()),
         kind: HitKind::Generic,
         drag_axis: None,
+    drag_data: None,
     });
 }
 //#endregion Raster
@@ -725,6 +748,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
             control_id: Some(control_id),
             kind: HitKind::Generic,
             drag_axis: None,
+        drag_data: None,
         });
     }
     ctx.draw.pop_scissor();
@@ -734,6 +758,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
         control_id: Some(scroll_key(&scene.surface_id, "body")),
         kind: HitKind::ScrollRegion,
         drag_axis: None,
+    drag_data: None,
     });
 }
 //#endregion Table
@@ -785,11 +810,66 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         control_id: Some(scene.surface_id.clone()),
         kind: HitKind::Generic,
         drag_axis: Some(DragAxis::Both),
+    drag_data: None,
     });
 }
 //#endregion Canvas2d
 
 //#region NodeGraph
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GraphContextMenuItem {
+    id: String,
+    label: String,
+    command: String,
+    #[serde(default)]
+    args: Option<Value>,
+}
+
+fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &semio_framework_core::NodeGraphScene) {
+    let Some(raw) = graph.context_menu_json.as_deref() else {
+        return;
+    };
+    let items: Vec<GraphContextMenuItem> = serde_json::from_str(raw).unwrap_or_default();
+    for item in items {
+        push_context_menu_item(ContextMenuItem {
+            id: format!("{}.context.{}", scene.surface_id, item.id),
+            label: item.label,
+            command: Some(CommandDescriptor {
+                controller_id: scene.controller_id.clone(),
+                command: item.command,
+                args: item.args,
+            }),
+        });
+    }
+}
+
+/** @emoji 🕸️ Applies node-hit context to a scene context-menu command. */
+pub fn resolve_graph_context_command(
+    command: &CommandDescriptor,
+    node_id: Option<&str>,
+) -> CommandDescriptor {
+    let Some(node_id) = node_id else {
+        return command.clone();
+    };
+    let mut resolved = command.clone();
+    match command.command.as_str() {
+        "setMediaNodeSelection" => {
+            resolved.args = Some(json!({ "nodeIds": [node_id] }));
+        }
+        "removeAppInstance" => {
+            if let Some(instance_id) = graph_node_instance(node_id) {
+                resolved.args = Some(json!({ "instanceId": instance_id }));
+            }
+        }
+        "selectNode" => {
+            resolved.args = Some(json!({ "nodeId": node_id }));
+        }
+        _ => {}
+    }
+    resolved
+}
+
 #[derive(Clone, Debug, Deserialize)]
 struct GraphPort {
     id: String,
@@ -895,6 +975,34 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
         return render_placeholder("node-graph", bounds, ctx);
     };
     let nodes = parse_graph_nodes(&graph.nodes_json);
+    let selected_ids: HashSet<String> = graph
+        .selection_json
+        .as_deref()
+        .and_then(|json| serde_json::from_str::<Vec<String>>(json).ok())
+        .map(|ids| ids.into_iter().collect())
+        .unwrap_or_default();
+    let hovered_id = graph.hover_json.as_deref().and_then(|json| {
+        serde_json::from_str::<serde_json::Value>(json)
+            .ok()
+            .and_then(|value| value.get("nodeId").and_then(|id| id.as_str().map(str::to_string)))
+    });
+    push_graph_context_menu(scene, graph);
+    for node in &nodes {
+        register_graph_node(&node.id, node.instance_id.as_deref());
+        let label = node
+            .label
+            .as_deref()
+            .or(node.instance_id.as_deref())
+            .unwrap_or(&node.id);
+        push_find_item(ShellFindItem {
+            id: node.id.clone(),
+            label: label.to_string(),
+            description: node.instance_id.clone(),
+            category: Some("Nodes".into()),
+            surface_id: scene.surface_id.clone(),
+            node_id: node.id.clone(),
+        });
+    }
     let edges = parse_graph_edges(&graph.edges_json);
     let inner = bounds.inset(8.0);
     ctx.draw
@@ -945,8 +1053,15 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
         let w = node.width.unwrap_or(180.0) as f32 * viewport.zoom;
         let h = node.height.unwrap_or(72.0) as f32 * viewport.zoom;
         let body = Rect::new(sx, sy, w, h);
+        let fill = if selected_ids.contains(&node.id) {
+            theme.accent
+        } else if hovered_id.as_deref() == Some(node.id.as_str()) {
+            theme.button_hover
+        } else {
+            theme.button
+        };
         ctx.draw
-            .push_rounded([body.x, body.y, body.w, body.h], theme.button, theme.border_radius);
+            .push_rounded([body.x, body.y, body.w, body.h], fill, theme.border_radius);
         let label = node
             .label
             .as_deref()
@@ -977,6 +1092,7 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
                     control_id: Some(format!("{}.port.in.{}.{}", scene.surface_id, node.id, port.id)),
                     kind: HitKind::Generic,
                     drag_axis: None,
+                drag_data: None,
                 });
             }
             if let Some(port) = outputs.get(row) {
@@ -998,6 +1114,7 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
                     control_id: Some(format!("{}.port.out.{}.{}", scene.surface_id, node.id, port.id)),
                     kind: HitKind::Generic,
                     drag_axis: None,
+                drag_data: None,
                 });
             }
         }
@@ -1007,6 +1124,7 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
             control_id: Some(format!("{}.node.{}", scene.surface_id, node.id)),
             kind: HitKind::Generic,
             drag_axis: Some(DragAxis::Both),
+        drag_data: None,
         });
     }
     ctx.input.register_hit(HitTarget {
@@ -1015,6 +1133,7 @@ fn render_node_graph(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
         control_id: Some(format!("{}.pane", scene.surface_id)),
         kind: HitKind::ScrollRegion,
         drag_axis: Some(DragAxis::Both),
+    drag_data: None,
     });
 }
 
@@ -1135,6 +1254,7 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
             control_id: Some(control_id),
             kind: HitKind::Generic,
             drag_axis: None,
+        drag_data: None,
         });
     }
     if rows.is_empty() {
@@ -1148,6 +1268,7 @@ fn render_vfs(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWid
         control_id: Some(scroll_key(&scene.surface_id, "vfs")),
         kind: HitKind::ScrollRegion,
         drag_axis: None,
+    drag_data: None,
     });
 }
 
@@ -1380,6 +1501,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
         control_id: Some(editor_id.clone()),
         kind: HitKind::Input,
         drag_axis: None,
+    drag_data: None,
     });
     ctx.input.register_hit(HitTarget {
         rect: inner,
@@ -1387,6 +1509,7 @@ fn render_text_editor(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Fram
         control_id: Some(scroll_key(&scene.surface_id, "editor")),
         kind: HitKind::ScrollRegion,
         drag_axis: None,
+    drag_data: None,
     });
     if ctx.input.pointer_down
         && inner.contains(ctx.input.pointer_x, ctx.input.pointer_y)

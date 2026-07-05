@@ -236,6 +236,7 @@ pub fn os_baseline_resource(
         modes: vec![ModeDefinition {
             id: "edit".into(),
             label: "Edit".into(),
+            tools: Vec::new(),
         }],
         default_mode_id: None,
         parameter_fields: Vec::new(),
@@ -396,6 +397,7 @@ pub fn resolve_os_app_definition(
             vec![ModeDefinition {
                 id: "edit".into(),
                 label: "Edit".into(),
+                tools: Vec::new(),
             }]
         } else {
             app.modes.clone()

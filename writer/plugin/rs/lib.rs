@@ -3,6 +3,8 @@
 mod grammar;
 
 use grammar::tokenize_language;
+use trinity_jack::{lint, semantic_tokens, Diagnostic};
+use trinity_ram::{empty_trinity_graph_fixture, Graph};
 use semio_framework_plugin::{
     build_text_editor_scene, ui_declarative_sections_to_tree, ui_text, App,
     CommandDescriptor, PluginApp, PluginBundle, TextEditorScene, UiNode, UiSectionNode,
@@ -105,6 +107,122 @@ fn apply_writer_edit(mut document: WriterDocument, op: &Value) -> WriterDocument
     }
     document
 }
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WriterEditorSelection {
+    start: usize,
+    end: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WriterEditorSettings {
+    #[serde(default)]
+    show_line_numbers: bool,
+    #[serde(default = "default_font_px")]
+    font_px: u32,
+    #[serde(default = "default_line_height")]
+    line_height: u32,
+    #[serde(default = "default_tab_size")]
+    tab_size: u32,
+}
+
+fn default_font_px() -> u32 {
+    14
+}
+
+fn default_line_height() -> u32 {
+    20
+}
+
+fn default_tab_size() -> u32 {
+    2
+}
+
+impl Default for WriterEditorSettings {
+    fn default() -> Self {
+        Self {
+            show_line_numbers: true,
+            font_px: default_font_px(),
+            line_height: default_line_height(),
+            tab_size: default_tab_size(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WriterPlayRuntime {
+    #[serde(default)]
+    selected_ast_ids: Vec<String>,
+    #[serde(default)]
+    editor_selection: Option<WriterEditorSelection>,
+    #[serde(default)]
+    format_signal: u32,
+    #[serde(default)]
+    lint_signal: u32,
+    #[serde(default)]
+    revision: u32,
+    #[serde(default)]
+    editor_settings: WriterEditorSettings,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WriterPlayEnvelope {
+    #[serde(flatten)]
+    document: WriterDocument,
+    #[serde(default)]
+    runtime: WriterPlayRuntime,
+    #[serde(default)]
+    undo_stack: Vec<WriterDocument>,
+    #[serde(default)]
+    redo_stack: Vec<WriterDocument>,
+}
+
+fn parse_envelope(document_json: &str) -> WriterPlayEnvelope {
+    if let Ok(envelope) = serde_json::from_str::<WriterPlayEnvelope>(document_json) {
+        return envelope;
+    }
+    let document: WriterDocument = serde_json::from_str(document_json).unwrap_or_else(|_| empty_writer_document());
+    WriterPlayEnvelope {
+        document,
+        runtime: WriterPlayRuntime::default(),
+        undo_stack: Vec::new(),
+        redo_stack: Vec::new(),
+    }
+}
+
+fn set_document_op(envelope: &WriterPlayEnvelope) -> String {
+    json!({ "op": "setDocument", "document": envelope }).to_string()
+}
+
+fn push_undo_writer(play: &mut WriterPlayEnvelope) {
+    play.undo_stack.push(play.document.clone());
+    if play.undo_stack.len() > 32 {
+        play.undo_stack.remove(0);
+    }
+    play.redo_stack.clear();
+}
+
+fn jack_ast_node_for_selection(root: &JackAstNode, start: usize, end: usize) -> Option<&JackAstNode> {
+    if start > end {
+        return None;
+    }
+    fn visit<'a>(node: &'a JackAstNode, start: usize, end: usize) -> Option<&'a JackAstNode> {
+        if start >= node.start && end <= node.end {
+            let deeper = node
+                .children
+                .iter()
+                .find_map(|child| visit(child, start, end));
+            Some(deeper.unwrap_or(node))
+        } else {
+            None
+        }
+    }
+    visit(root, start, end)
+}
 //#endregion 🔖Document
 
 //#region 🔖JackAst
@@ -189,6 +307,9 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
             "selectAstNode",
             Some(json!({ "id": node.id, "start": node.start, "end": node.end })),
         )),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: if children.is_empty() { None } else { Some(children) },
@@ -225,7 +346,7 @@ fn selection_from_view(view_state: &ViewState) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn render_hierarchy_panel(document: &WriterDocument, view_state: &ViewState) -> UiNode {
+fn render_hierarchy_panel(document: &WriterDocument, runtime: &WriterPlayRuntime) -> UiNode {
     if document.language_id != "jack" {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "writer-hierarchy".into(),
@@ -257,6 +378,9 @@ fn render_hierarchy_panel(document: &WriterDocument, view_state: &ViewState) -> 
                     selected: None,
                     default_open: None,
                     command: None,
+                    hover_command: None,
+                    unhover_command: None,
+                    actions: None,
                     draggable: None,
                     drag_data: None,
                     items: None,
@@ -267,7 +391,7 @@ fn render_hierarchy_panel(document: &WriterDocument, view_state: &ViewState) -> 
                 items
             },
         }],
-        selected_ids: Some(selection_from_view(view_state)),
+        selected_ids: Some(runtime.selected_ast_ids.clone()),
         highlighted_ids: None,
         selection_change: Some(play_cmd(
             WRITER_PLAY_CONTROLLER_ID,
@@ -315,17 +439,40 @@ fn render_inspection_panel(document: &WriterDocument) -> UiNode {
 //#endregion 🔖Panels
 
 //#region 🔖Scene
-fn render_main_scene(document: &WriterDocument, view_state: &ViewState) -> UiNode {
-    let selection_json = view_state.selection_json.clone().or_else(|| {
-        view_state
-            .panel_json
-            .as_ref()
-            .and_then(|json| serde_json::from_str::<Value>(json).ok())
-            .and_then(|value| value.get("editorSelection").cloned())
-            .map(|value| value.to_string())
+fn render_main_scene(document: &WriterDocument, runtime: &WriterPlayRuntime) -> UiNode {
+    let selection_json = runtime.editor_selection.as_ref().map(|selection| {
+        json!({ "start": selection.start, "end": selection.end }).to_string()
     });
-    let tokens = tokenize_language(&document.text, &document.language_id);
-    let tokens_json = serde_json::to_string(&tokens).ok();
+    let tokens_json = if document.language_id == "jack" {
+        serde_json::to_string(&semantic_tokens(&document.text)).ok()
+    } else {
+        let tokens = tokenize_language(&document.text, &document.language_id);
+        serde_json::to_string(&tokens).ok()
+    };
+    let diagnostics_json = if document.language_id == "jack" {
+        let graph = Graph::load_json(r#"{"nodes":[],"edges":[]}"#).expect("empty jack graph");
+        let diagnostics: Vec<serde_json::Value> = lint(&graph, &document.text)
+            .into_iter()
+            .map(|diag: Diagnostic| {
+                json!({
+                    "start": diag.start,
+                    "end": diag.end,
+                    "severity": diag.severity,
+                    "message": diag.message
+                })
+            })
+            .collect();
+        Some(serde_json::to_string(&diagnostics).unwrap_or_else(|_| "[]".into()))
+    } else if runtime.lint_signal > 0 {
+        Some(json!([{
+            "start": 0,
+            "end": document.text.len().max(1),
+            "severity": "info",
+            "message": format!("Lint pass #{}", runtime.lint_signal)
+        }]).to_string())
+    } else {
+        None
+    };
     build_text_editor_scene(
         WRITER_PLAY_SURFACE_ID,
         WRITER_PLAY_CONTROLLER_ID,
@@ -334,9 +481,21 @@ fn render_main_scene(document: &WriterDocument, view_state: &ViewState) -> UiNod
             language: Some(document.language_id.clone()),
             selection_json,
             tokens_json,
-            diagnostics_json: None,
-            completions_json: None,
-            overlays_json: None,
+            diagnostics_json,
+            completions_json: if runtime.format_signal > 0 {
+                Some(json!([{ "label": "format", "detail": format!("pass #{}", runtime.format_signal) }]).to_string())
+            } else {
+                None
+            },
+            overlays_json: runtime
+                .editor_settings
+                .show_line_numbers
+                .then(|| json!({ "lineNumbers": true }).to_string()),
+            settings_json: Some(serde_json::to_string(&runtime.editor_settings).unwrap_or_else(|_| "{}".into())),
+            camera_json: Some(
+                json!({ "x": document.camera.x, "y": document.camera.y, "zoom": document.camera.zoom }).to_string(),
+            ),
+            ..TextEditorScene::base(String::new(), None, None)
         },
     )
 }
@@ -351,7 +510,13 @@ impl PluginApp for WriterApp {
     }
 
     fn initial_document_json(&self) -> String {
-        serde_json::to_string(&empty_writer_document()).expect("writer document json")
+        serde_json::to_string(&WriterPlayEnvelope {
+            document: empty_writer_document(),
+            runtime: WriterPlayRuntime::default(),
+            undo_stack: Vec::new(),
+            redo_stack: Vec::new(),
+        })
+        .expect("writer document json")
     }
 
     fn handle_command(
@@ -361,57 +526,179 @@ impl PluginApp for WriterApp {
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
-        let mut document: WriterDocument =
-            serde_json::from_str(document_json).unwrap_or_else(|_| empty_writer_document());
+        let mut play = parse_envelope(document_json);
         match command {
-            "setDocument" => {
+            "textEdit" | "setDocument" => {
+                if let Some(text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) {
+                    push_undo_writer(&mut play);
+                    play.document.text = text.into();
+                    play.runtime.revision += 1;
+                    return vec![set_document_op(&play)];
+                }
                 if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                        document = parsed;
-                        return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    if let Ok(parsed) = serde_json::from_value::<WriterPlayEnvelope>(next.clone()) {
+                        return vec![set_document_op(&parsed)];
+                    }
+                    if let Ok(parsed) = serde_json::from_value::<WriterDocument>(next.clone()) {
+                        play.document = parsed;
+                        return vec![set_document_op(&play)];
                     }
                 }
             }
             "setDocumentJson" => {
                 if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
                     if let Ok(parsed) = serde_json::from_str(json_text) {
-                        document = parsed;
-                        return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                        push_undo_writer(&mut play);
+                        play.document = parsed;
+                        play.runtime.revision += 1;
+                        return vec![set_document_op(&play)];
                     }
                 }
             }
             "setText" => {
                 if let Some(text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) {
-                    document.text = text.into();
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    push_undo_writer(&mut play);
+                    play.document.text = text.into();
+                    play.runtime.revision += 1;
+                    return vec![set_document_op(&play)];
                 }
             }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                        document.camera = parsed;
-                        return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                        play.document.camera = parsed;
+                        play.runtime.revision += 1;
+                        return vec![set_document_op(&play)];
                     }
                 }
             }
-            "selectAstNode" | "setEditorSelection" => {
-                return Vec::new();
+            "formatDocument" => {
+                play.runtime.format_signal += 1;
+                play.runtime.revision += 1;
+                return vec![set_document_op(&play)];
             }
-            "setAstSelection" | "setAstHover" | "setEditorHover" | "formatDocument" | "lintDocument"
-            | "toggleLineNumbers" | "setEditorSetting" => {}
+            "lintDocument" => {
+                play.runtime.lint_signal += 1;
+                play.runtime.revision += 1;
+                return vec![set_document_op(&play)];
+            }
+            "textSelect" | "selectAstNode" => {
+                if command == "textSelect" {
+                    let start = args.and_then(|value| value.get("start")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
+                    let end = args.and_then(|value| value.get("end")).and_then(|value| value.as_u64()).unwrap_or(start as u64) as usize;
+                    play.runtime.editor_selection = Some(WriterEditorSelection { start, end });
+                    play.runtime.revision += 1;
+                    return vec![set_document_op(&play)];
+                }
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).unwrap_or("");
+                let start = args.and_then(|value| value.get("start")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
+                let end = args.and_then(|value| value.get("end")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
+                play.runtime.selected_ast_ids = if id.is_empty() { Vec::new() } else { vec![id.into()] };
+                play.runtime.editor_selection = Some(WriterEditorSelection { start, end });
+                play.runtime.revision += 1;
+                return vec![set_document_op(&play)];
+            }
+            "setEditorSelection" => {
+                let start = args.and_then(|value| value.get("start")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
+                let end = args.and_then(|value| value.get("end")).and_then(|value| value.as_u64()).unwrap_or(0) as usize;
+                play.runtime.editor_selection = Some(WriterEditorSelection { start, end });
+                if play.document.language_id == "jack" {
+                    let root = parse_jack_ast(&play.document.text);
+                    play.runtime.selected_ast_ids = jack_ast_node_for_selection(&root, start, end)
+                        .map(|node| vec![node.id.clone()])
+                        .unwrap_or_default();
+                } else {
+                    play.runtime.selected_ast_ids.clear();
+                }
+                play.runtime.revision += 1;
+                return vec![set_document_op(&play)];
+            }
+            "setAstSelection" => {
+                let ids: Vec<String> = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| value.as_array())
+                    .map(|items| items.iter().filter_map(|item| item.as_str().map(str::to_string)).collect())
+                    .unwrap_or_default();
+                play.runtime.selected_ast_ids = ids.clone();
+                if let Some(id) = ids.first() {
+                    if play.document.language_id == "jack" {
+                        let root = parse_jack_ast(&play.document.text);
+                        let selection = root
+                            .children
+                            .iter()
+                            .chain(std::iter::once(&root))
+                            .find(|node| node.id == *id)
+                            .map(|node| WriterEditorSelection {
+                                start: node.start,
+                                end: node.end,
+                            });
+                        play.runtime.editor_selection = selection;
+                    }
+                }
+                play.runtime.revision += 1;
+                return vec![set_document_op(&play)];
+            }
+            "setAstHover" | "setEditorHover" => {
+                play.runtime.revision += 1;
+                return vec![set_document_op(&play)];
+            }
+            "toggleLineNumbers" => {
+                play.runtime.editor_settings.show_line_numbers = !play.runtime.editor_settings.show_line_numbers;
+                play.runtime.revision += 1;
+                return vec![set_document_op(&play)];
+            }
+            "setEditorSetting" => {
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args.and_then(|value| value.get("value"));
+                match field {
+                    "fontPx" => {
+                        if let Some(px) = value.and_then(|v| v.as_u64()) {
+                            play.runtime.editor_settings.font_px = px as u32;
+                        }
+                    }
+                    "lineHeight" => {
+                        if let Some(px) = value.and_then(|v| v.as_u64()) {
+                            play.runtime.editor_settings.line_height = px as u32;
+                        }
+                    }
+                    "tabSize" => {
+                        if let Some(px) = value.and_then(|v| v.as_u64()) {
+                            play.runtime.editor_settings.tab_size = px.max(1) as u32;
+                        }
+                    }
+                    _ => return Vec::new(),
+                }
+                play.runtime.revision += 1;
+                return vec![set_document_op(&play)];
+            }
+            "undo" => {
+                if let Some(previous) = play.undo_stack.pop() {
+                    play.redo_stack.push(play.document.clone());
+                    play.document = previous;
+                    play.runtime.revision += 1;
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "redo" => {
+                if let Some(next) = play.redo_stack.pop() {
+                    play.undo_stack.push(play.document.clone());
+                    play.document = next;
+                    play.runtime.revision += 1;
+                    return vec![set_document_op(&play)];
+                }
+            }
             _ => {}
         }
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let document: WriterDocument =
-            serde_json::from_str(document_json).unwrap_or_else(|_| empty_writer_document());
+    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+        let play = parse_envelope(document_json);
         match body_key {
-            WRITER_PLAY_BODY_MAIN => render_main_scene(&document, view_state),
-            WRITER_PLAY_BODY_HIERARCHY => render_hierarchy_panel(&document, view_state),
+            WRITER_PLAY_BODY_MAIN => render_main_scene(&play.document, &play.runtime),
+            WRITER_PLAY_BODY_HIERARCHY => render_hierarchy_panel(&play.document, &play.runtime),
             WRITER_PLAY_BODY_CATALOGUE => render_catalogue_panel(),
-            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(&document),
+            WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(&play.document),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

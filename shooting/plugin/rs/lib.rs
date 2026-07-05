@@ -3,12 +3,13 @@
 use semio_framework_plugin::{
     build_raster_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json, App, CommandDescriptor,
-    PluginApp, PluginBundle, RasterScene, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
+    world3d_selection_json, App, CommandDescriptor, PluginApp, PluginBundle, RasterScene, UiControlNode,
+    UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -29,7 +30,10 @@ const SHOOTING_PLAY_WINDOW_ICON: &str = "shooting-icon";
 const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
 const SHOOTING_EXAMPLE_DEFAULT_ID: &str = "base-icon";
 
-const SHOOTING_MESH_KIND: &str = "box";
+const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
+
+const ICON_PLACEHOLDER_PNG_BASE64: &str =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
 const DEFAULT_EXAMPLE_JSON: &str = include_str!("../../example/base-icon.shooting.json");
 
@@ -78,6 +82,12 @@ struct ShootingAsset {
     url: String,
     #[serde(default = "default_glb_format")]
     format: String,
+    #[serde(default)]
+    origin: [f64; 3],
+    #[serde(default)]
+    orientation: Option<[f64; 4]>,
+    #[serde(default)]
+    scale: Option<Value>,
 }
 
 fn default_glb_format() -> String {
@@ -108,6 +118,8 @@ struct ShootingSceneLighting {
     shadow: Value,
     #[serde(default)]
     material: Value,
+    #[serde(default, rename = "emblemBase64")]
+    emblem_base64: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -322,21 +334,61 @@ fn camera_json(camera: &ShootingCamera) -> String {
     .to_string()
 }
 
+fn asset_scale_json(asset: &ShootingAsset) -> [f64; 3] {
+    match &asset.scale {
+        Some(Value::Array(values)) if values.len() >= 3 => [
+            values[0].as_f64().unwrap_or(1.0),
+            values[1].as_f64().unwrap_or(1.0),
+            values[2].as_f64().unwrap_or(1.0),
+        ],
+        Some(Value::Number(value)) => {
+            let scale = value.as_f64().unwrap_or(1.0);
+            [scale, scale, scale]
+        }
+        _ => [1.0, 1.0, 1.0],
+    }
+}
+
+fn resolve_asset_mesh_url(asset: &ShootingAsset) -> Option<String> {
+    if asset.url.is_empty() {
+        None
+    } else {
+        Some(asset.url.clone())
+    }
+}
+
+fn collect_mesh_urls(fixture: &ShootingFixture) -> Vec<String> {
+    let mut urls = HashSet::new();
+    for asset in &fixture.assets {
+        if let Some(url) = resolve_asset_mesh_url(asset) {
+            urls.insert(url);
+        }
+    }
+    urls.into_iter().collect()
+}
+
 fn world_instances_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) -> String {
     let instances: Vec<Value> = fixture
         .assets
         .iter()
-        .enumerate()
-        .map(|(index, asset)| {
+        .map(|asset| {
             let active = fixture.active_asset_id == asset.id
-                || (fixture.active_asset_id.is_empty() && index == 0);
+                || (fixture.active_asset_id.is_empty() && fixture.assets.first().map(|entry| &entry.id) == Some(&asset.id));
             let selected = runtime.selected_asset_ids.contains(&asset.id) || active;
             let hovered = runtime.hovered_asset_id.as_deref() == Some(asset.id.as_str());
+            let mesh_id = resolve_asset_mesh_url(asset)
+                .map(|url| world3d_mesh_id_from_url(&url))
+                .unwrap_or_else(|| SHOOTING_FALLBACK_MESH_KIND.into());
             json!({
                 "id": asset.id,
-                "meshId": SHOOTING_MESH_KIND,
-                "position": [if active { 0.0 } else { index as f64 * 2.0 }, 0.0, 0.0],
-                "scale": [if active { 1.2 } else { 0.8 }, if active { 1.2 } else { 0.8 }, if active { 1.2 } else { 0.8 }],
+                "meshId": mesh_id,
+                "position": [
+                    asset.origin.first().copied().unwrap_or(0.0),
+                    asset.origin.get(1).copied().unwrap_or(0.0),
+                    asset.origin.get(2).copied().unwrap_or(0.0),
+                ],
+                "rotation": asset.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
+                "scale": asset_scale_json(asset),
                 "label": asset.name,
                 "color": if selected { "#9aa0ab" } else { "#6b7280" },
                 "selected": selected,
@@ -347,8 +399,8 @@ fn world_instances_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_meshes_json() -> String {
-    world3d_meshes_json_from_kinds(&[SHOOTING_MESH_KIND.into()])
+fn world_meshes_json(fixture: &ShootingFixture) -> String {
+    world3d_meshes_json_from_kinds_and_urls(&[SHOOTING_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(fixture))
 }
 
 fn world_selection_json(runtime: &ShootingPlayRuntime) -> String {
@@ -370,6 +422,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -392,6 +447,9 @@ fn tree_item_with_command(
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -620,7 +678,7 @@ fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) 
         SHOOTING_PLAY_APP_ID,
         world3d_scene(
             camera_json(&fixture.camera),
-            world_meshes_json(),
+            world_meshes_json(fixture),
             world_instances_json(fixture, runtime),
             world_selection_json(runtime),
         ),
@@ -630,13 +688,19 @@ fn render_model_scene(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime) 
 fn render_icon_scene(fixture: &ShootingFixture) -> UiNode {
     let shot = active_shot(fixture);
     let (width, height) = shot.map(|entry| (entry.width, entry.height)).unwrap_or((256, 256));
+    let pixels_base64 = fixture
+        .scene
+        .emblem_base64
+        .clone()
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| ICON_PLACEHOLDER_PNG_BASE64.into());
     build_raster_scene(
         SHOOTING_PLAY_SURFACE_ICON,
         SHOOTING_PLAY_APP_ID,
         RasterScene {
             width,
             height,
-            pixels_base64: String::new(),
+            pixels_base64,
         },
     )
 }
@@ -827,6 +891,9 @@ impl PluginApp for ShootingPlayApp {
                     name: format!("Asset {}", envelope.fixture.assets.len() + 1),
                     url: format!("/mesh/placeholder.{format}"),
                     format: format.into(),
+                    origin: [0.0, 0.0, 0.0],
+                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                    scale: None,
                 };
                 envelope.fixture = apply_fixture_edit(&envelope.fixture, &ShootingFixtureEditOp::AddAsset { asset });
                 envelope.fixture = apply_fixture_edit(
@@ -985,6 +1052,20 @@ mod tests {
         let node = app.render(SHOOTING_PLAY_BODY_ICON, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("raster"));
+        assert!(
+            json.contains(ICON_PLACEHOLDER_PNG_BASE64),
+            "icon preview uses placeholder raster until SVG shot render is ported"
+        );
+    }
+
+    #[test]
+    fn model_scene_uses_asset_mesh_urls() {
+        let app = ShootingPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(SHOOTING_PLAY_BODY_MODEL, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("mesh:base"));
+        assert!(json.contains("/mesh/base.glb"));
     }
 
     #[test]

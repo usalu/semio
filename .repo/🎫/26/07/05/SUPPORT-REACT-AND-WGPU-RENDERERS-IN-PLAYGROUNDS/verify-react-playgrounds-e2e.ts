@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
-/** 🧪 React OS dev smoke: each plugin boots, shell chrome visible, no console errors. */
+/** 🧪 React OS dev functional smoke: each plugin boots, chrome visible, canvas has real content, no console errors. */
 
 import { type Subprocess, spawn } from "bun";
 import { chromium } from "playwright";
 import { join } from "node:path";
+import { PNG } from "pngjs";
 
 const repoRoot = join(import.meta.dir, "../../../../../..");
 const plugins = [
@@ -13,6 +14,10 @@ const plugins = [
 ] as const;
 
 const world3dPlugins = new Set(["cad", "puzzle3d", "puzzle5d", "shooting", "lowpoly", "procedural3d"]);
+const canvas2dPlugins = new Set([
+	"draw", "note", "layout", "puzzle2d", "gis2d", "procedural2d", "reasoning-wires", "presentation",
+]);
+const graphPlugins = new Set(["flow", "dag", "sequence", "trinity", "trinity-rewrite"]);
 
 const bunExe = Bun.which("bun") ?? "bun";
 const port = process.env.S_OS_PORT ?? "7199";
@@ -20,6 +25,79 @@ const baseUrl = `http://127.0.0.1:${port}/`;
 const bootTimeoutMs = 240_000;
 const onlyPlugin = process.argv.find((arg, index) => process.argv[index - 1] === "--plugin");
 const targets = onlyPlugin ? plugins.filter((id) => id === onlyPlugin) : [...plugins];
+
+type PaintStats = {
+	readonly nonBackgroundRatio: number;
+	readonly maxLuma: number;
+};
+
+function analyzePngBuffer(png: Buffer): PaintStats {
+	const { data, width: w, height: h } = PNG.sync.read(png);
+	if (w < 8 || h < 8) throw new Error("screenshot too small");
+	const bgR = 13;
+	const bgG = 13;
+	const bgB = 15;
+	const tolerance = 8;
+	const isBg = (r: number, g: number, b: number) =>
+		Math.abs(r - bgR) <= tolerance && Math.abs(g - bgG) <= tolerance && Math.abs(b - bgB) <= tolerance;
+	const luma = (r: number, g: number, b: number) => 0.299 * r + 0.587 * g + 0.114 * b;
+	let nonBg = 0;
+	let maxLuma = 0;
+	for (let i = 0; i < data.length; i += 4) {
+		const r = data[i]!;
+		const g = data[i + 1]!;
+		const b = data[i + 2]!;
+		maxLuma = Math.max(maxLuma, luma(r, g, b));
+		if (!isBg(r, g, b)) nonBg += 1;
+	}
+	return { nonBackgroundRatio: nonBg / (w * h), maxLuma };
+}
+
+async function capturePaintStats(page: import("playwright").Page, selector: string): Promise<PaintStats | null> {
+	const locator = page.locator(selector).first();
+	if ((await locator.count()) === 0) return null;
+	const png = Buffer.from(await locator.screenshot({ type: "png" }));
+	return analyzePngBuffer(png);
+}
+
+async function assertFunctionalContent(page: import("playwright").Page, pluginId: string): Promise<void> {
+	if (world3dPlugins.has(pluginId)) {
+		const stats = await capturePaintStats(page, ".semio-world-3d-host canvas");
+		if (!stats) throw new Error("world-3d canvas missing");
+		if (stats.nonBackgroundRatio < 0.005) throw new Error("world-3d canvas appears blank");
+		if (stats.maxLuma < 40) throw new Error("world-3d canvas lacks visible geometry");
+		return;
+	}
+	if (canvas2dPlugins.has(pluginId)) {
+		const stats = await capturePaintStats(page, "canvas");
+		if (!stats) throw new Error("canvas-2d surface missing");
+		if (stats.nonBackgroundRatio < 0.003) throw new Error("canvas-2d appears blank");
+		return;
+	}
+	if (graphPlugins.has(pluginId)) {
+		const nodeGraph = page.locator('[data-component-kind="node-graph"], canvas, svg').first();
+		if ((await nodeGraph.count()) === 0) throw new Error("graph surface missing");
+		return;
+	}
+	if (pluginId === "raster") {
+		const stats = await capturePaintStats(page, "canvas");
+		if (!stats || stats.nonBackgroundRatio < 0.002) throw new Error("raster composite appears empty");
+		return;
+	}
+	if (pluginId === "writer" || pluginId === "forms" || pluginId === "vcs" || pluginId === "imperative") {
+		const body = page.locator('[data-slot="window-content"], .semio-text-editor-host, table').first();
+		if ((await body.count()) === 0) throw new Error("main body surface missing");
+	}
+}
+
+async function assertPanelTabs(page: import("playwright").Page): Promise<void> {
+	const tabs = page.locator('[data-slot="side-panel-tabs"], [data-slot="mobile-panel-tabs"]').first();
+	if ((await tabs.count()) > 0) return;
+	const tabButton = page.locator('[data-slot="side-panel-tab-button"], [data-slot="mobile-panel-tab-button"]').first();
+	if ((await tabButton.count()) > 0) return;
+	const panelContent = page.locator('[data-slot="side-panel-content"], [data-slot="mobile-panel-content"]').first();
+	if ((await panelContent.count()) === 0) throw new Error("side panel missing");
+}
 
 async function waitForDev(url: string): Promise<void> {
 	const deadline = Date.now() + bootTimeoutMs;
@@ -104,18 +182,20 @@ async function smokePlugin(
 		await waitForReactShell(page);
 		const chromeVisible = await shellChromeVisible(page);
 		if (!chromeVisible) throw new Error("shell chrome not visible");
+		await assertPanelTabs(page);
 		if (world3dPlugins.has(pluginId)) {
 			const worldReady = await world3dCanvasReady(page);
 			if (!worldReady) throw new Error("world-3d canvas missing or too small");
 		}
-		if (pluginId === "s" || pluginId === "flow") {
+		await assertFunctionalContent(page, pluginId);
+		if (pluginId === "s" || pluginId === "flow" || pluginId === "puzzle3d") {
 			await interactionSmoke(page, pluginId);
 		}
 		if (warnings.length > 0) throw new Error(`console warnings: ${warnings.join(" | ")}`);
 		if (errors.length > 0) throw new Error(errors.join(" | "));
 		const shotPath = join(import.meta.dir, `screenshot-react-${pluginId}.png`);
 		await page.screenshot({ path: shotPath, fullPage: true });
-		return `ok shell visible plugin=${pluginId}`;
+		return `ok functional plugin=${pluginId}`;
 	} finally {
 		await page.close();
 	}

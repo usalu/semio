@@ -7,8 +7,11 @@ use semio_framework_plugin::{
     UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
     FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    create_default_layout,
+    UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
 };
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+use image::RgbaImage;
+use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -149,6 +152,13 @@ fn default_blend() -> String {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+struct RasterImageAsset {
+    mime: String,
+    data: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct RasterDocument {
     schema: String,
     id: String,
@@ -158,6 +168,8 @@ struct RasterDocument {
     camera: RasterCamera,
     #[serde(default)]
     layers: Vec<RasterLayerNode>,
+    #[serde(default)]
+    assets: HashMap<String, RasterImageAsset>,
     #[serde(skip_serializing_if = "Option::is_none")]
     active_tool: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -201,6 +213,7 @@ fn empty_raster_document() -> RasterDocument {
         title: Some("Untitled".into()),
         camera: default_camera(),
         layers: vec![create_pixel_layer("Background", 512, 512)],
+        assets: HashMap::new(),
         active_tool: Some("selectMarquee".into()),
         brush_size: Some(24.0),
         brush_opacity: Some(1.0),
@@ -215,6 +228,13 @@ fn layer_row_id(layer: &RasterLayerNode) -> String {
     };
     let id = layer_node_id(layer);
     format!("{RASTER_TREE_PREFIX}.{segment}.{id}")
+}
+
+fn layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
+    row_id
+        .strip_prefix(&format!("{RASTER_TREE_PREFIX}."))
+        .and_then(|rest| rest.split('.').nth(1))
+        .map(str::to_string)
 }
 
 fn mask_row_id(target_id: &str) -> String {
@@ -415,6 +435,237 @@ fn raster_document_bounds(document: &RasterDocument) -> (u32, u32) {
     }
     (max_x.max(1), max_y.max(1))
 }
+
+fn checkerboard_rgba(width: u32, height: u32) -> Vec<u8> {
+    let mut rgba = vec![0u8; (width * height * 4) as usize];
+    for y in 0..height {
+        for x in 0..width {
+            let idx = ((y * width + x) * 4) as usize;
+            let v = if ((x / 16) + (y / 16)) % 2 == 0 { 220u8 } else { 180u8 };
+            rgba[idx] = v;
+            rgba[idx + 1] = v;
+            rgba[idx + 2] = v;
+            rgba[idx + 3] = 255;
+        }
+    }
+    rgba
+}
+
+fn decode_asset_rgba(asset: &RasterImageAsset) -> Option<RgbaImage> {
+    let bytes = BASE64.decode(asset.data.as_bytes()).ok()?;
+    image::load_from_memory(&bytes).ok().map(|img| img.to_rgba8())
+}
+
+fn layer_pixel_rgba(document: &RasterDocument, layer: &RasterLayerNode) -> Option<(u32, u32, Vec<u8>)> {
+    let RasterLayerNode::Pixel {
+        width,
+        height,
+        image_key,
+        ..
+    } = layer
+    else {
+        return None;
+    };
+    let width = width.unwrap_or(512);
+    let height = height.unwrap_or(512);
+    if let Some(key) = image_key {
+        if let Some(asset) = document.assets.get(key) {
+            if let Some(image) = decode_asset_rgba(asset) {
+                return Some((image.width(), image.height(), image.into_raw()));
+            }
+        }
+    }
+    Some((width, height, checkerboard_rgba(width, height)))
+}
+
+fn blit_rgba(
+    canvas: &mut [u8],
+    canvas_w: u32,
+    canvas_h: u32,
+    src: &[u8],
+    src_w: u32,
+    src_h: u32,
+    dst_x: i32,
+    dst_y: i32,
+    opacity: f32,
+) {
+    for y in 0..src_h {
+        for x in 0..src_w {
+            let dst_xp = dst_x + x as i32;
+            let dst_yp = dst_y + y as i32;
+            if dst_xp < 0 || dst_yp < 0 || dst_xp >= canvas_w as i32 || dst_yp >= canvas_h as i32 {
+                continue;
+            }
+            let src_idx = ((y * src_w + x) * 4) as usize;
+            let dst_idx = ((dst_yp as u32 * canvas_w + dst_xp as u32) * 4) as usize;
+            let alpha = (src[src_idx + 3] as f32 / 255.0) * opacity;
+            if alpha <= 0.0 {
+                continue;
+            }
+            for channel in 0..3 {
+                let dst = canvas[dst_idx + channel] as f32;
+                let src_px = src[src_idx + channel] as f32;
+                canvas[dst_idx + channel] = (dst * (1.0 - alpha) + src_px * alpha) as u8;
+            }
+            canvas[dst_idx + 3] = 255;
+        }
+    }
+}
+
+fn flatten_raster_layers(layers: &[RasterLayerNode]) -> Vec<&RasterLayerNode> {
+    let mut out = Vec::new();
+    fn visit<'a>(layers: &'a [RasterLayerNode], out: &mut Vec<&'a RasterLayerNode>) {
+        for layer in layers {
+            out.push(layer);
+            if let RasterLayerNode::Group { children, .. } = layer {
+                visit(children, out);
+            }
+        }
+    }
+    visit(layers, &mut out);
+    out
+}
+
+fn composite_raster_pixels(document: &RasterDocument) -> (u32, u32, Vec<u8>) {
+    let (width, height) = raster_document_bounds(document);
+    let mut canvas = vec![255u8; (width * height * 4) as usize];
+    for channel in canvas.chunks_exact_mut(4) {
+        channel[0] = 32;
+        channel[1] = 34;
+        channel[2] = 40;
+        channel[3] = 255;
+    }
+    for layer in flatten_raster_layers(&document.layers) {
+        if !layer_visible(layer) {
+            continue;
+        }
+        let RasterLayerNode::Pixel {
+            opacity,
+            transform,
+            ..
+        } = layer
+        else {
+            continue;
+        };
+        let Some((src_w, src_h, src)) = layer_pixel_rgba(document, layer) else {
+            continue;
+        };
+        let dst_x = transform.x.round() as i32;
+        let dst_y = transform.y.round() as i32;
+        blit_rgba(
+            &mut canvas,
+            width,
+            height,
+            &src,
+            src_w,
+            src_h,
+            dst_x,
+            dst_y,
+            *opacity as f32,
+        );
+    }
+    (width, height, canvas)
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RasterPlayEnvelope {
+    #[serde(flatten)]
+    document: RasterDocument,
+    #[serde(default)]
+    selected_ids: Vec<String>,
+    #[serde(default)]
+    undo_stack: Vec<RasterDocument>,
+    #[serde(default)]
+    redo_stack: Vec<RasterDocument>,
+}
+
+fn parse_envelope(document_json: &str) -> RasterPlayEnvelope {
+    if let Ok(envelope) = serde_json::from_str::<RasterPlayEnvelope>(document_json) {
+        return envelope;
+    }
+    let document: RasterDocument = serde_json::from_str(document_json).unwrap_or_else(|_| empty_raster_document());
+    RasterPlayEnvelope {
+        document,
+        selected_ids: Vec::new(),
+        undo_stack: Vec::new(),
+        redo_stack: Vec::new(),
+    }
+}
+
+fn set_document_op(envelope: &RasterPlayEnvelope) -> String {
+    json!({ "op": "setDocument", "document": envelope }).to_string()
+}
+
+fn push_undo_raster(play: &mut RasterPlayEnvelope) {
+    play.undo_stack.push(play.document.clone());
+    if play.undo_stack.len() > 32 {
+        play.undo_stack.remove(0);
+    }
+    play.redo_stack.clear();
+}
+
+fn patch_layer_field(document: &mut RasterDocument, layer_id: &str, field: &str, value: &Value) -> bool {
+    update_layer_in_tree(&mut document.layers, layer_id, &mut |layer| match layer {
+        RasterLayerNode::Pixel {
+            name,
+            visible,
+            opacity,
+            blend_mode,
+            transform,
+            width,
+            height,
+            ..
+        } => {
+            match field {
+                "name" => *name = value.as_str().unwrap_or("").into(),
+                "visible" => *visible = value.as_bool().unwrap_or(*visible),
+                "opacity" => *opacity = value.as_f64().unwrap_or(*opacity as f64) as f32,
+                "blendMode" => *blend_mode = value.as_str().unwrap_or(blend_mode).into(),
+                "transformX" => transform.x = value.as_f64().unwrap_or(transform.x),
+                "transformY" => transform.y = value.as_f64().unwrap_or(transform.y),
+                "width" => *width = Some(value.as_u64().unwrap_or(width.unwrap_or(512) as u64) as u32),
+                "height" => *height = Some(value.as_u64().unwrap_or(height.unwrap_or(512) as u64) as u32),
+                _ => {}
+            }
+        }
+        RasterLayerNode::Group {
+            name,
+            visible,
+            opacity,
+            blend_mode,
+            transform,
+            ..
+        } => {
+            match field {
+                "name" => *name = value.as_str().unwrap_or("").into(),
+                "visible" => *visible = value.as_bool().unwrap_or(*visible),
+                "opacity" => *opacity = value.as_f64().unwrap_or(*opacity as f64) as f32,
+                "blendMode" => *blend_mode = value.as_str().unwrap_or(blend_mode).into(),
+                "transformX" => transform.x = value.as_f64().unwrap_or(transform.x),
+                "transformY" => transform.y = value.as_f64().unwrap_or(transform.y),
+                _ => {}
+            }
+        }
+        RasterLayerNode::Adjustment {
+            name,
+            visible,
+            opacity,
+            blend_mode,
+            adjustment_kind,
+            ..
+        } => {
+            match field {
+                "name" => *name = value.as_str().unwrap_or("").into(),
+                "visible" => *visible = value.as_bool().unwrap_or(*visible),
+                "opacity" => *opacity = value.as_f64().unwrap_or(*opacity as f64) as f32,
+                "blendMode" => *blend_mode = value.as_str().unwrap_or(blend_mode).into(),
+                "adjustmentKind" => *adjustment_kind = value.as_str().unwrap_or(adjustment_kind).into(),
+                _ => {}
+            }
+        }
+    })
+}
 //#endregion 🔖Document
 
 //#region 🔖Panels
@@ -440,6 +691,13 @@ fn selection_from_view(view_state: &ViewState) -> Vec<String> {
             })
         })
         .unwrap_or_default()
+}
+
+fn selection_from_envelope(play: &RasterPlayEnvelope, view_state: &ViewState) -> Vec<String> {
+    if !play.selected_ids.is_empty() {
+        return play.selected_ids.clone();
+    }
+    selection_from_view(view_state)
 }
 
 fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
@@ -473,6 +731,9 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
             "setSelection",
             Some(json!({ "ids": [layer_node_id(layer)] })),
         )),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: Some(true),
         drag_data: None,
         items: nested,
@@ -481,7 +742,7 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
     }
 }
 
-fn render_layers_panel(document: &RasterDocument, view_state: &ViewState) -> UiNode {
+fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view_state: &ViewState) -> UiNode {
     let toolbar = vec![
         UiTreeItemNode {
             id: "raster-play-layers.add.pixel".into(),
@@ -495,6 +756,9 @@ fn render_layers_panel(document: &RasterDocument, view_state: &ViewState) -> UiN
                 "addLayer",
                 Some(json!({ "kind": "pixel" })),
             )),
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -513,6 +777,9 @@ fn render_layers_panel(document: &RasterDocument, view_state: &ViewState) -> UiN
                 "addLayer",
                 Some(json!({ "kind": "group" })),
             )),
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -521,7 +788,7 @@ fn render_layers_panel(document: &RasterDocument, view_state: &ViewState) -> UiN
         },
     ];
     let layer_items: Vec<UiTreeItemNode> = document.layers.iter().map(layer_tree_item).collect();
-    let selected_ids: Vec<String> = selection_from_view(view_state)
+    let selected_ids: Vec<String> = selection_from_envelope(play, view_state)
         .iter()
         .filter_map(|id| find_layer(&document.layers, id).map(layer_row_id))
         .collect();
@@ -542,7 +809,7 @@ fn render_layers_panel(document: &RasterDocument, view_state: &ViewState) -> UiN
     })
 }
 
-fn render_masks_panel(document: &RasterDocument, view_state: &ViewState) -> UiNode {
+fn render_masks_panel(document: &RasterDocument, play: &RasterPlayEnvelope, view_state: &ViewState) -> UiNode {
     let mut items = Vec::new();
     fn collect_masks(layer: &RasterLayerNode, items: &mut Vec<UiTreeItemNode>) {
         if let RasterLayerNode::Pixel { id, name, mask, .. }
@@ -561,6 +828,9 @@ fn render_masks_panel(document: &RasterDocument, view_state: &ViewState) -> UiNo
                         "setSelection",
                         Some(json!({ "ids": [id] })),
                     )),
+                    hover_command: None,
+                    unhover_command: None,
+                    actions: None,
                     draggable: None,
                     drag_data: None,
                     items: None,
@@ -587,6 +857,9 @@ fn render_masks_panel(document: &RasterDocument, view_state: &ViewState) -> UiNo
             selected: None,
             default_open: None,
             command: None,
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -602,7 +875,7 @@ fn render_masks_panel(document: &RasterDocument, view_state: &ViewState) -> UiNo
             items,
         }],
         selected_ids: Some(
-            selection_from_view(view_state)
+            selection_from_envelope(play, view_state)
                 .iter()
                 .map(|id| mask_row_id(id))
                 .collect(),
@@ -678,14 +951,14 @@ fn render_properties_panel(document: &RasterDocument, view_state: &ViewState) ->
 
 //#region 🔖Scenes
 fn render_composite_scene(document: &RasterDocument) -> UiNode {
-    let (width, height) = raster_document_bounds(document);
+    let (width, height, pixels) = composite_raster_pixels(document);
     build_raster_scene(
         RASTER_PLAY_SURFACE_COMPOSITE,
         RASTER_PLAY_CONTROLLER_ID,
         RasterScene {
             width,
             height,
-            pixels_base64: String::new(),
+            pixels_base64: BASE64.encode(pixels),
         },
     )
 }
@@ -713,7 +986,13 @@ impl PluginApp for RasterApp {
     }
 
     fn initial_document_json(&self) -> String {
-        serde_json::to_string(&empty_raster_document()).expect("raster document json")
+        serde_json::to_string(&RasterPlayEnvelope {
+            document: empty_raster_document(),
+            selected_ids: Vec::new(),
+            undo_stack: Vec::new(),
+            redo_stack: Vec::new(),
+        })
+        .expect("raster document json")
     }
 
     fn handle_command(
@@ -723,45 +1002,47 @@ impl PluginApp for RasterApp {
         document_json: &str,
         _view_state: &ViewState,
     ) -> Vec<String> {
-        let mut document: RasterDocument =
-            serde_json::from_str(document_json).unwrap_or_else(|_| empty_raster_document());
+        let mut play = parse_envelope(document_json);
         match command {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                        document = parsed;
-                        return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    if let Ok(parsed) = serde_json::from_value::<RasterPlayEnvelope>(next.clone()) {
+                        return vec![set_document_op(&parsed)];
+                    }
+                    if let Ok(parsed) = serde_json::from_value::<RasterDocument>(next.clone()) {
+                        play.document = parsed;
+                        return vec![set_document_op(&play)];
                     }
                 }
             }
             "setBrushSize" => {
                 if let Some(size) = args.and_then(|value| value.get("brushSize")).and_then(|value| value.as_f64()) {
-                    document.brush_size = Some(size as f32);
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    play.document.brush_size = Some(size as f32);
+                    return vec![set_document_op(&play)];
                 }
             }
             "setBrushOpacity" => {
                 if let Some(opacity) = args.and_then(|value| value.get("opacity")).and_then(|value| value.as_f64()) {
-                    document.brush_opacity = Some(opacity as f32);
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    play.document.brush_opacity = Some(opacity as f32);
+                    return vec![set_document_op(&play)];
                 }
             }
             "setActiveTool" => {
                 if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    document.active_tool = Some(tool.into());
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    play.document.active_tool = Some(tool.into());
+                    return vec![set_document_op(&play)];
                 }
             }
             "setCamera" | "setCameraZoom" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                        document.camera = parsed;
-                        return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                        play.document.camera = parsed;
+                        return vec![set_document_op(&play)];
                     }
                 }
                 if let Some(zoom) = args.and_then(|value| value.get("zoom")).and_then(|value| value.as_f64()) {
-                    document.camera.zoom = zoom;
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    play.document.camera.zoom = zoom;
+                    return vec![set_document_op(&play)];
                 }
             }
             "setLayerVisible" | "toggleLayerVisible" => {
@@ -770,16 +1051,16 @@ impl PluginApp for RasterApp {
                         .and_then(|value| value.get("visible"))
                         .and_then(|value| value.as_bool())
                         .unwrap_or_else(|| {
-                            find_layer(&document.layers, target_id)
+                            find_layer(&play.document.layers, target_id)
                                 .map(|layer| !layer_visible(layer))
                                 .unwrap_or(true)
                         });
-                    update_layer_in_tree(&mut document.layers, target_id, &mut |layer| match layer {
+                    update_layer_in_tree(&mut play.document.layers, target_id, &mut |layer| match layer {
                         RasterLayerNode::Pixel { visible: v, .. }
                         | RasterLayerNode::Group { visible: v, .. }
                         | RasterLayerNode::Adjustment { visible: v, .. } => *v = visible,
                     });
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    return vec![set_document_op(&play)];
                 }
             }
             "addLayer" => {
@@ -809,39 +1090,180 @@ impl PluginApp for RasterApp {
                     },
                     _ => create_pixel_layer("Layer", 512, 512),
                 };
-                document.layers.push(layer);
-                return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                push_undo_raster(&mut play);
+                play.document.layers.push(layer);
+                return vec![set_document_op(&play)];
             }
             "deleteLayer" => {
                 if let Some(target_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) {
-                    remove_layer_from_tree(&mut document.layers, target_id);
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    push_undo_raster(&mut play);
+                    remove_layer_from_tree(&mut play.document.layers, target_id);
+                    play.selected_ids.retain(|id| id != target_id);
+                    return vec![set_document_op(&play)];
                 }
             }
             "duplicateLayer" => {
                 if let Some(target_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) {
-                    if let Some(layer) = find_layer(&document.layers, target_id).cloned() {
-                        document.layers.push(clone_layer(&layer));
-                        return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    if let Some(layer) = find_layer(&play.document.layers, target_id).cloned() {
+                        push_undo_raster(&mut play);
+                        play.document.layers.push(clone_layer(&layer));
+                        return vec![set_document_op(&play)];
                     }
                 }
             }
-            "setSelection" | "setHover" | "selectAll" => {}
+            "setSelection" => {
+                play.selected_ids = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                return vec![set_document_op(&play)];
+            }
+            "setHover" => {}
+            "selectAll" => {
+                play.selected_ids = flatten_raster_layers(&play.document.layers)
+                    .into_iter()
+                    .filter_map(|layer| match layer {
+                        RasterLayerNode::Pixel { id, .. }
+                        | RasterLayerNode::Group { id, .. }
+                        | RasterLayerNode::Adjustment { id, .. } => Some(id.clone()),
+                    })
+                    .collect();
+                return vec![set_document_op(&play)];
+            }
+            "patchLayer" => {
+                let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args
+                    .and_then(|value| value.get("value"))
+                    .or_else(|| args.and_then(|value| value.get("pressed")))
+                    .cloned()
+                    .unwrap_or(Value::Null);
+                if !layer_id.is_empty() && !field.is_empty() {
+                    push_undo_raster(&mut play);
+                    patch_layer_field(&mut play.document, layer_id, field, &value);
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "patchLayers" => {
+                let layer_ids: Vec<String> = args
+                    .and_then(|value| value.get("layerIds"))
+                    .and_then(|value| value.as_array())
+                    .map(|values| values.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect())
+                    .unwrap_or_default();
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args
+                    .and_then(|value| value.get("value"))
+                    .or_else(|| args.and_then(|value| value.get("pressed")))
+                    .cloned()
+                    .unwrap_or(Value::Null);
+                if !field.is_empty() {
+                    push_undo_raster(&mut play);
+                    for layer_id in layer_ids {
+                        patch_layer_field(&mut play.document, &layer_id, field, &value);
+                    }
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "dropLayerKind" => {
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("pixel");
+                let layer = match kind {
+                    "group" => RasterLayerNode::Group {
+                        id: create_raster_id("group"),
+                        name: "Group".into(),
+                        visible: true,
+                        opacity: 1.0,
+                        blend_mode: "normal".into(),
+                        transform: RasterTransform::default(),
+                        mask: None,
+                        children: Vec::new(),
+                    },
+                    "adjustment" => RasterLayerNode::Adjustment {
+                        id: create_raster_id("adjust"),
+                        name: "Adjustment".into(),
+                        visible: true,
+                        opacity: 1.0,
+                        blend_mode: "normal".into(),
+                        transform: RasterTransform::default(),
+                        adjustment_kind: "brightnessContrast".into(),
+                    },
+                    _ => create_pixel_layer("Layer", 512, 512),
+                };
+                let select_id = layer_node_id(&layer).to_string();
+                push_undo_raster(&mut play);
+                play.document.layers.push(layer);
+                play.selected_ids = vec![select_id];
+                return vec![set_document_op(&play)];
+            }
+            "moveLayer" => {
+                let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str());
+                let target_row_id = args
+                    .and_then(|value| value.get("targetRowId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("raster-play-layers");
+                let drop_position = args
+                    .and_then(|value| value.get("dropPosition"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("after");
+                let Some(layer_id) = layer_id else {
+                    return Vec::new();
+                };
+                let Some(layer) = find_layer(&play.document.layers, layer_id).cloned() else {
+                    return Vec::new();
+                };
+                push_undo_raster(&mut play);
+                remove_layer_from_tree(&mut play.document.layers, layer_id);
+                let parent_id = layer_id_from_tree_row_id(target_row_id).and_then(|id| {
+                    find_layer(&play.document.layers, &id).and_then(|entry| {
+                        if matches!(entry, RasterLayerNode::Group { .. }) {
+                            Some(id)
+                        } else {
+                            None
+                        }
+                    })
+                });
+                let index = if drop_position == "before" {
+                    0
+                } else if let Some(ref parent) = parent_id {
+                    find_layer(&play.document.layers, parent)
+                        .and_then(|entry| match entry {
+                            RasterLayerNode::Group { children, .. } => Some(children.len()),
+                            _ => None,
+                        })
+                        .unwrap_or(0)
+                } else {
+                    play.document.layers.len()
+                };
+                insert_layer(&mut play.document.layers, parent_id.as_deref(), index, layer);
+                return vec![set_document_op(&play)];
+            }
+            "undo" => {
+                if let Some(previous) = play.undo_stack.pop() {
+                    play.redo_stack.push(play.document.clone());
+                    play.document = previous;
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "redo" => {
+                if let Some(next) = play.redo_stack.pop() {
+                    play.undo_stack.push(play.document.clone());
+                    play.document = next;
+                    return vec![set_document_op(&play)];
+                }
+            }
             _ => {}
         }
         Vec::new()
     }
 
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let document: RasterDocument =
-            serde_json::from_str(document_json).unwrap_or_else(|_| empty_raster_document());
+        let play = parse_envelope(document_json);
         match body_key {
-            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(&document),
-            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(&document),
-            RASTER_PLAY_BODY_LAYERS => render_layers_panel(&document, view_state),
-            RASTER_PLAY_BODY_MASKS => render_masks_panel(&document, view_state),
+            RASTER_PLAY_BODY_COMPOSITE => render_composite_scene(&play.document),
+            RASTER_PLAY_BODY_NAVIGATOR => render_navigator_scene(&play.document),
+            RASTER_PLAY_BODY_LAYERS => render_layers_panel(&play.document, &play, view_state),
+            RASTER_PLAY_BODY_MASKS => render_masks_panel(&play.document, &play, view_state),
             RASTER_PLAY_BODY_CATALOGUE => render_catalogue_panel(),
-            RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(&document, view_state),
+            RASTER_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, view_state),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -936,6 +1358,16 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Backdrop"));
+    }
+
+    #[test]
+    fn composite_scene_encodes_pixels() {
+        let app = RasterApp;
+        let document = SEMIO_EXAMPLE_JSON.to_string();
+        let node = app.render(RASTER_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("raster"));
+        assert!(!json.contains("\"pixelsBase64\":\"\""));
     }
 
     #[test]

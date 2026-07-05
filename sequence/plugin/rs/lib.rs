@@ -36,6 +36,8 @@ const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";
 struct SequencePlayRuntime {
     #[serde(default)]
     selected_step_ids: Vec<String>,
+    #[serde(default)]
+    last_run_json: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -44,6 +46,10 @@ struct SequencePlayEnvelope {
     fixture: SequenceFixture,
     #[serde(default)]
     runtime: SequencePlayRuntime,
+    #[serde(default)]
+    undo_stack: Vec<SequenceFixture>,
+    #[serde(default)]
+    redo_stack: Vec<SequenceFixture>,
 }
 
 #[derive(Serialize)]
@@ -84,6 +90,8 @@ fn default_envelope() -> SequencePlayEnvelope {
     SequencePlayEnvelope {
         fixture: default_fixture(),
         runtime: SequencePlayRuntime::default(),
+        undo_stack: Vec::new(),
+        redo_stack: Vec::new(),
     }
 }
 
@@ -93,6 +101,14 @@ fn parse_envelope(document_json: &str) -> SequencePlayEnvelope {
 
 fn set_document_op(envelope: &SequencePlayEnvelope) -> String {
     json!({ "op": "setDocument", "document": envelope }).to_string()
+}
+
+fn push_undo(envelope: &mut SequencePlayEnvelope) {
+    envelope.undo_stack.push(envelope.fixture.clone());
+    if envelope.undo_stack.len() > 32 {
+        envelope.undo_stack.remove(0);
+    }
+    envelope.redo_stack.clear();
 }
 
 fn sequence_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
@@ -177,6 +193,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -194,6 +213,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -229,6 +251,9 @@ fn build_hierarchy_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
                 selected: None,
                 default_open: None,
                 command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
                 draggable: None,
                 drag_data: None,
                 items: None,
@@ -339,7 +364,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
                     value: step_ids[0].clone(),
                     placeholder: None,
                     commit: None,
-                    on_change: sequence_cmd("noop", None),
+                    on_change: sequence_cmd("setStepParams", Some(json!({ "id": step_ids[0], "field": "id" }))),
                 }),
             }),
         );
@@ -367,10 +392,15 @@ fn render_main_graph(envelope: &SequencePlayEnvelope) -> UiNode {
 
 fn render_script(envelope: &SequencePlayEnvelope) -> UiNode {
     let host = host_from_envelope(envelope);
+    let mut text = host.compile_text();
+    if !envelope.runtime.last_run_json.is_empty() {
+        text.push_str("\n\n# run result\n");
+        text.push_str(&envelope.runtime.last_run_json);
+    }
     build_text_editor_scene(
         SEQUENCE_PLAY_SURFACE_SCRIPT,
         SEQUENCE_PLAY_APP_ID,
-        TextEditorScene::base(host.compile_text(), Some("imperative".into()), None),
+        TextEditorScene::base(text, Some("imperative".into()), None),
     )
 }
 
@@ -426,12 +456,15 @@ impl PluginApp for SequencePlayApp {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
-                    if let Some(step) = envelope.fixture.steps.iter_mut().find(|step| step.id == node_id) {
-                        step.x = x;
-                        step.y = y;
-                        host.replace_fixture(envelope.fixture.clone()).ok();
-                        envelope.fixture = host.fixture;
-                        return vec![set_document_op(&envelope)];
+                    if envelope.fixture.steps.iter().any(|step| step.id == node_id) {
+                        push_undo(&mut envelope);
+                        if let Some(step) = envelope.fixture.steps.iter_mut().find(|step| step.id == node_id) {
+                            step.x = x;
+                            step.y = y;
+                            host.replace_fixture(envelope.fixture.clone()).ok();
+                            envelope.fixture = host.fixture;
+                            return vec![set_document_op(&envelope)];
+                        }
                     }
                 }
             }
@@ -439,6 +472,7 @@ impl PluginApp for SequencePlayApp {
                 let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str());
                 let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str());
                 if let (Some(from), Some(to)) = (from, to) {
+                    push_undo(&mut envelope);
                     if host.connect_steps(from, to).is_ok() {
                         envelope.fixture = host.fixture;
                         return vec![set_document_op(&envelope)];
@@ -449,14 +483,111 @@ impl PluginApp for SequencePlayApp {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                push_undo(&mut envelope);
                 let id = host.add_step(kind, x, y);
                 envelope.fixture = host.fixture;
                 envelope.runtime.selected_step_ids = vec![id];
                 return vec![set_document_op(&envelope)];
             }
-            "run" => {
-                let _result = host.run();
+            "addStepToSlot" | "addStepDropped" => {
+                let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                let picked = args
+                    .and_then(|value| value.get("pickedStepId"))
+                    .or_else(|| args.and_then(|value| value.get("owner")))
+                    .and_then(|value| value.as_str());
+                push_undo(&mut envelope);
+                let id = if command == "addStepToSlot" {
+                    let owner = args.and_then(|value| value.get("owner")).and_then(|value| value.as_str());
+                    let slot = args.and_then(|value| value.get("slotName")).and_then(|value| value.as_str());
+                    match (owner, slot) {
+                        (Some(owner), Some(slot)) => host.add_step_in_slot(
+                            kind,
+                            x,
+                            y,
+                            Some(sequence_core::SlotRef {
+                                owner: owner.into(),
+                                name: slot.into(),
+                            }),
+                        ),
+                        _ => host.add_step(kind, x, y),
+                    }
+                } else {
+                    host.add_step_dropped(kind, x, y, picked)
+                };
+                envelope.fixture = host.fixture;
+                envelope.runtime.selected_step_ids = vec![id];
                 return vec![set_document_op(&envelope)];
+            }
+            "removeStep" => {
+                let step_id = args
+                    .and_then(|value| value.get("id"))
+                    .or_else(|| args.and_then(|value| value.get("stepId")))
+                    .and_then(|value| value.as_str());
+                if let Some(step_id) = step_id {
+                    push_undo(&mut envelope);
+                    if host.remove_step(step_id) {
+                        envelope.fixture = host.fixture;
+                        envelope.runtime.selected_step_ids.retain(|id| id != step_id);
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "setStepParams" => {
+                let step_id = args
+                    .and_then(|value| value.get("id"))
+                    .or_else(|| args.and_then(|value| value.get("stepId")))
+                    .and_then(|value| value.as_str());
+                let params = args.and_then(|value| value.get("params"));
+                if let (Some(step_id), Some(params)) = (step_id, params) {
+                    push_undo(&mut envelope);
+                    if host.set_step_params_json(step_id, &params.to_string()).is_ok() {
+                        envelope.fixture = host.fixture;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "setStepCollapsed" => {
+                let step_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                let collapsed = args.and_then(|value| value.get("collapsed")).and_then(|value| value.as_bool()).unwrap_or(true);
+                if let Some(step_id) = step_id {
+                    push_undo(&mut envelope);
+                    if host.set_step_collapsed(step_id, collapsed) {
+                        envelope.fixture = host.fixture;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "disconnectSteps" => {
+                let from_id = args.and_then(|value| value.get("fromId")).and_then(|value| value.as_str());
+                let to_id = args.and_then(|value| value.get("toId")).and_then(|value| value.as_str());
+                if let (Some(from_id), Some(to_id)) = (from_id, to_id) {
+                    push_undo(&mut envelope);
+                    if host.disconnect_steps(from_id, to_id) {
+                        envelope.fixture = host.fixture;
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "run" => {
+                let result = host.run();
+                envelope.runtime.last_run_json = serde_json::to_string(&result).unwrap_or_default();
+                return vec![set_document_op(&envelope)];
+            }
+            "undo" => {
+                if let Some(previous) = envelope.undo_stack.pop() {
+                    envelope.redo_stack.push(envelope.fixture.clone());
+                    envelope.fixture = previous;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "redo" => {
+                if let Some(next) = envelope.redo_stack.pop() {
+                    envelope.undo_stack.push(envelope.fixture.clone());
+                    envelope.fixture = next;
+                    return vec![set_document_op(&envelope)];
+                }
             }
             _ => {}
         }
@@ -580,5 +711,29 @@ mod tests {
         let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
         let updated: SequencePlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
         assert!(updated.fixture.steps.len() > 2);
+    }
+
+    #[test]
+    fn run_stores_result_in_runtime() {
+        let mut app = SequencePlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("run", None, &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let updated: SequencePlayEnvelope =
+            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+        assert!(!updated.runtime.last_run_json.is_empty());
+    }
+
+    #[test]
+    fn remove_step_command_deletes_step() {
+        let mut app = SequencePlayApp;
+        let envelope = default_envelope();
+        let step_id = envelope.fixture.steps[0].id.clone();
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command("removeStep", Some(&json!({ "id": step_id })), &document, &ViewState::default());
+        assert_eq!(ops.len(), 1);
+        let updated: SequencePlayEnvelope =
+            serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
+        assert!(updated.fixture.steps.iter().all(|step| step.id != step_id));
     }
 }

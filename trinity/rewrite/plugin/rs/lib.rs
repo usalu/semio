@@ -75,6 +75,22 @@ struct RewritePlayRuntime {
     parameter_bindings: HashMap<String, PropertyValue>,
     #[serde(default)]
     reorganize_epoch: u64,
+    #[serde(default)]
+    active_hover_var: String,
+    #[serde(default)]
+    hover_epoch: u64,
+    #[serde(default)]
+    active_select_var: String,
+    #[serde(default)]
+    select_epoch: u64,
+    #[serde(default)]
+    lhs_graph_hover_id: String,
+    #[serde(default)]
+    rhs_graph_hover_id: String,
+    #[serde(default)]
+    undo_stack: Vec<String>,
+    #[serde(default)]
+    redo_stack: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -176,6 +192,44 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
     args.and_then(|value| value.get("ids"))
         .and_then(|value| serde_json::from_value(value.clone()).ok())
         .unwrap_or_default()
+}
+
+fn snapshot_envelope_json(envelope: &TrinityRewriteEnvelope) -> String {
+    serde_json::to_string(envelope).unwrap_or_default()
+}
+
+fn push_undo(envelope: &mut TrinityRewriteEnvelope) {
+    envelope.runtime.undo_stack.push(snapshot_envelope_json(envelope));
+    if envelope.runtime.undo_stack.len() > 32 {
+        envelope.runtime.undo_stack.remove(0);
+    }
+    envelope.runtime.redo_stack.clear();
+}
+
+fn patch_fixture_nodes(fixture_json: &str, node_ids: &[String], field: &str, value: &str) -> Option<String> {
+    let mut fixture = GraphFixture::from_json(fixture_json).ok()?;
+    for node in fixture.nodes.iter_mut() {
+        if !node_ids.iter().any(|id| id == &node.id) {
+            continue;
+        }
+        match field {
+            "name" => node.name = value.into(),
+            "kind" => node.kind = value.into(),
+            _ => {}
+        }
+    }
+    Graph::from_fixture(fixture).ok()?.fixture_json().ok()
+}
+
+fn var_from_node_name(name: &str) -> Option<String> {
+    let trimmed = name.trim();
+    if let Some((var, _)) = trimmed.split_once(':') {
+        return Some(var.trim().into());
+    }
+    if let Some((var, _)) = trimmed.split_once(" : ") {
+        return Some(var.trim().into());
+    }
+    None
 }
 //#endregion 🔖Envelope
 
@@ -290,6 +344,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -313,6 +370,9 @@ fn build_hierarchy_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
             selected: None,
             default_open: None,
             command: Some(rewrite_cmd("setSelection", Some(json!({ "ids": [node.id] })))),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -579,6 +639,137 @@ impl PluginApp for TrinityRewritePlayApp {
                 if let Some(node_id) = args.and_then(|v| v.get("nodeId")).and_then(|v| v.as_str()) {
                     envelope.runtime.selected_node_ids = vec![node_id.into()];
                     return vec![set_document_op(&envelope)];
+                }
+            }
+            "patchTrinityNodes" => {
+                let node_ids: Vec<String> = args
+                    .and_then(|v| v.get("nodeIds"))
+                    .and_then(|v| serde_json::from_value(v.clone()).ok())
+                    .unwrap_or_default();
+                let field = args.and_then(|v| v.get("field")).and_then(|v| v.as_str()).unwrap_or("");
+                let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()).map(str::trim).unwrap_or("");
+                if !node_ids.is_empty() && !field.is_empty() && !value.is_empty() {
+                    push_undo(&mut envelope);
+                    if let Some(next) = patch_fixture_nodes(&envelope.before_fixture_json, &node_ids, field, value) {
+                        envelope.before_fixture_json = next;
+                        envelope.after_fixture_json =
+                            apply_rewrite_to_fixture(&envelope.before_fixture_json, &envelope);
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "setLhsGraphHover" | "setBeforeGraphHover" => {
+                if let Some(id) = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()) {
+                    envelope.runtime.lhs_graph_hover_id = id.into();
+                    if let Some(fixture) = parse_fixture_json(&envelope.before_fixture_json) {
+                        if let Some(node) = fixture.nodes.iter().find(|node| node.id == id) {
+                            if let Some(var) = var_from_node_name(&node.name) {
+                                envelope.runtime.active_hover_var = var;
+                            }
+                        }
+                    }
+                    envelope.runtime.hover_epoch += 1;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setRhsGraphHover" | "setAfterGraphHover" => {
+                if let Some(id) = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()) {
+                    envelope.runtime.rhs_graph_hover_id = id.into();
+                    if let Some(fixture) = parse_fixture_json(&envelope.after_fixture_json) {
+                        if let Some(node) = fixture.nodes.iter().find(|node| node.id == id) {
+                            if let Some(var) = var_from_node_name(&node.name) {
+                                envelope.runtime.active_hover_var = var;
+                            }
+                        }
+                    }
+                    envelope.runtime.hover_epoch += 1;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setJackHover" => {
+                if let Some(var) = args.and_then(|v| v.get("var")).and_then(|v| v.as_str()) {
+                    envelope.runtime.active_hover_var = var.into();
+                } else if let Some(offset) = args.and_then(|v| v.get("offset")).and_then(|v| v.as_u64()) {
+                    let query = compiled_jack_query(&envelope);
+                    let text = query.as_str();
+                    let offset = offset as usize;
+                    if offset < text.len() {
+                        let slice = &text[offset..];
+                        let token: String = slice
+                            .chars()
+                            .take_while(|ch| ch.is_ascii_alphanumeric() || *ch == '_')
+                            .collect();
+                        if !token.is_empty() {
+                            envelope.runtime.active_hover_var = token;
+                        }
+                    }
+                }
+                envelope.runtime.hover_epoch += 1;
+                return vec![set_document_op(&envelope)];
+            }
+            "setLhsGraphSelect" | "setBeforeGraphSelect" => {
+                if let Some(id) = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()) {
+                    envelope.runtime.selected_node_ids = vec![id.into()];
+                    if let Some(fixture) = parse_fixture_json(&envelope.before_fixture_json) {
+                        if let Some(node) = fixture.nodes.iter().find(|node| node.id == id) {
+                            if let Some(var) = var_from_node_name(&node.name) {
+                                envelope.runtime.active_select_var = var;
+                            }
+                        }
+                    }
+                    envelope.runtime.select_epoch += 1;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setRhsGraphSelect" | "setAfterGraphSelect" => {
+                if let Some(id) = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()) {
+                    envelope.runtime.selected_node_ids = vec![id.into()];
+                    if let Some(fixture) = parse_fixture_json(&envelope.after_fixture_json) {
+                        if let Some(node) = fixture.nodes.iter().find(|node| node.id == id) {
+                            if let Some(var) = var_from_node_name(&node.name) {
+                                envelope.runtime.active_select_var = var;
+                            }
+                        }
+                    }
+                    envelope.runtime.select_epoch += 1;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setJackSelect" => {
+                if let Some(var) = args.and_then(|v| v.get("var")).and_then(|v| v.as_str()) {
+                    envelope.runtime.active_select_var = var.into();
+                } else if let Some(offset) = args.and_then(|v| v.get("offset")).and_then(|v| v.as_u64()) {
+                    let query = compiled_jack_query(&envelope);
+                    let text = query.as_str();
+                    let offset = offset as usize;
+                    if offset < text.len() {
+                        let slice = &text[offset..];
+                        let token: String = slice
+                            .chars()
+                            .take_while(|ch| ch.is_ascii_alphanumeric() || *ch == '_')
+                            .collect();
+                        if !token.is_empty() {
+                            envelope.runtime.active_select_var = token;
+                        }
+                    }
+                }
+                envelope.runtime.select_epoch += 1;
+                return vec![set_document_op(&envelope)];
+            }
+            "undo" => {
+                if let Some(previous_json) = envelope.runtime.undo_stack.pop() {
+                    envelope.runtime.redo_stack.push(snapshot_envelope_json(&envelope));
+                    if let Ok(previous) = serde_json::from_str(&previous_json) {
+                        return vec![set_document_op(&previous)];
+                    }
+                }
+            }
+            "redo" => {
+                if let Some(next_json) = envelope.runtime.redo_stack.pop() {
+                    envelope.runtime.undo_stack.push(snapshot_envelope_json(&envelope));
+                    if let Ok(next) = serde_json::from_str(&next_json) {
+                        return vec![set_document_op(&next)];
+                    }
                 }
             }
             _ => {}

@@ -79,12 +79,14 @@ impl Mat4 {
 
     pub fn perspective(fov_y: f32, aspect: f32, near: f32, far: f32) -> Self {
         let f = 1.0 / (fov_y * 0.5).tan();
+        let gl_z = (far + near) / (near - far);
+        let gl_w = (2.0 * far * near) / (near - far);
         Self {
             cols: [
                 [f / aspect, 0.0, 0.0, 0.0],
                 [0.0, f, 0.0, 0.0],
-                [0.0, 0.0, (far + near) / (near - far), -1.0],
-                [0.0, 0.0, (2.0 * far * near) / (near - far), 0.0],
+                [0.0, 0.0, 0.5 * gl_z - 0.5, -1.0],
+                [0.0, 0.0, 0.5 * gl_w, 0.0],
             ],
         }
     }
@@ -242,7 +244,7 @@ impl Camera3d {
         let view = Mat4::look_at(self.position, self.target, self.up);
         let proj = Mat4::perspective(self.fov_y, aspect, self.near, self.far);
         let inv = proj.mul(view).inverse();
-        let near = inv.transform_point(Vec3::new(ndc_x, ndc_y, -1.0));
+        let near = inv.transform_point(Vec3::new(ndc_x, ndc_y, 0.0));
         let far = inv.transform_point(Vec3::new(ndc_x, ndc_y, 1.0));
         let dir = far.sub(near).normalize();
         (self.position, dir)
@@ -384,12 +386,15 @@ pub struct SceneDraw3d {
     pub instances: Vec<Instance3d>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct ScenePass3d {
     pub viewport: [f32; 4],
     pub view_proj: [f32; 16],
     pub light_dir: [f32; 3],
     pub draws: Vec<SceneDraw3d>,
+    pub layer_index: usize,
+    pub ui_watermark: usize,
+    pub vector_watermark: usize,
 }
 //#endregion ScenePass
 
@@ -403,42 +408,12 @@ pub struct FrustumPlane {
 pub fn frustum_planes(view_proj: Mat4) -> [FrustumPlane; 6] {
     let m = view_proj.cols;
     let rows = [
-        [
-            m[0][0] + m[3][0],
-            m[0][1] + m[3][1],
-            m[0][2] + m[3][2],
-            m[0][3] + m[3][3],
-        ],
-        [
-            m[0][0] - m[3][0],
-            m[0][1] - m[3][1],
-            m[0][2] - m[3][2],
-            m[0][3] - m[3][3],
-        ],
-        [
-            m[0][0] + m[1][0],
-            m[0][1] + m[1][1],
-            m[0][2] + m[1][2],
-            m[0][3] + m[1][3],
-        ],
-        [
-            m[0][0] - m[1][0],
-            m[0][1] - m[1][1],
-            m[0][2] - m[1][2],
-            m[0][3] - m[1][3],
-        ],
-        [
-            m[0][0] + m[2][0],
-            m[0][1] + m[2][1],
-            m[0][2] + m[2][2],
-            m[0][3] + m[2][3],
-        ],
-        [
-            m[0][0] - m[2][0],
-            m[0][1] - m[2][1],
-            m[0][2] - m[2][2],
-            m[0][3] - m[2][3],
-        ],
+        [m[0][0] + m[0][3], m[1][0] + m[1][3], m[2][0] + m[2][3], m[3][0] + m[3][3]],
+        [m[0][3] - m[0][0], m[1][3] - m[1][0], m[2][3] - m[2][0], m[3][3] - m[3][0]],
+        [m[0][0] + m[0][1], m[1][0] + m[1][1], m[2][0] + m[2][1], m[3][0] + m[3][1]],
+        [m[0][1] - m[0][0], m[1][1] - m[1][0], m[2][1] - m[2][0], m[3][1] - m[3][0]],
+        [m[0][0] + m[0][2], m[1][0] + m[1][2], m[2][0] + m[2][2], m[3][0] + m[3][2]],
+        [m[0][2] - m[0][0], m[1][2] - m[1][0], m[2][2] - m[2][0], m[3][2] - m[3][0]],
     ];
     let mut planes = [FrustumPlane {
         normal: Vec3::ZERO,
@@ -821,6 +796,29 @@ mod tests {
         let view_proj = camera.view_proj(1.0);
         let planes = frustum_planes(view_proj);
         assert!(aabb_intersects_frustum(&planes, [-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]));
+    }
+
+    #[test]
+    fn frustum_culls_behind_camera_box() {
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let planes = frustum_planes(view_proj);
+        assert!(aabb_intersects_frustum(&planes, [-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]));
+        let behind = camera.position.add(camera.position.sub(camera.target).normalize().scale(2.0));
+        let min = [behind.x - 0.1, behind.y - 0.1, behind.z - 0.1];
+        let max = [behind.x + 0.1, behind.y + 0.1, behind.z + 0.1];
+        assert!(!aabb_intersects_frustum(&planes, min, max));
+    }
+
+    #[test]
+    fn perspective_maps_depth_to_wgpu_ndc() {
+        let near = 0.1_f32;
+        let far = 100.0_f32;
+        let proj = Mat4::perspective(45.0_f32.to_radians(), 1.0, near, far);
+        let near_pt = proj.transform_point(Vec3::new(0.0, 0.0, -near));
+        let far_pt = proj.transform_point(Vec3::new(0.0, 0.0, -far));
+        assert!((near_pt.z - 0.0).abs() < 1e-4, "near z={}", near_pt.z);
+        assert!((far_pt.z - 1.0).abs() < 1e-3, "far z={}", far_pt.z);
     }
 
     #[test]

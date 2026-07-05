@@ -2,11 +2,12 @@
 
 use semio_framework_plugin::{
     build_canvas_2d_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene,
-    CommandDescriptor, PluginApp, PluginBundle, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
-    UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, create_default_layout,
+    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
+    Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
+    UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -195,6 +196,10 @@ struct NoteDocument {
     #[serde(skip_serializing_if = "Option::is_none")]
     grid_spacing: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    snap_enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    snap_grid_spacing: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pencil_width: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     eraser_radius: Option<f64>,
@@ -223,6 +228,8 @@ fn empty_note_document() -> NoteDocument {
         active_tool: Some("selectDirect".into()),
         grid_visible: Some(true),
         grid_spacing: Some(32.0),
+        snap_enabled: Some(false),
+        snap_grid_spacing: Some(8.0),
         pencil_width: Some(3.0),
         eraser_radius: Some(12.0),
     }
@@ -440,6 +447,265 @@ fn clone_block(block: &NoteBlockNode) -> NoteBlockNode {
     }
     cloned
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct NotePlayEnvelope {
+    #[serde(flatten)]
+    document: NoteDocument,
+    #[serde(default)]
+    undo_stack: Vec<NoteDocument>,
+    #[serde(default)]
+    redo_stack: Vec<NoteDocument>,
+    #[serde(default)]
+    selected_ids: Vec<String>,
+    #[serde(default)]
+    hovered_id: Option<String>,
+}
+
+fn parse_envelope(document_json: &str) -> NotePlayEnvelope {
+    if let Ok(envelope) = serde_json::from_str::<NotePlayEnvelope>(document_json) {
+        return envelope;
+    }
+    let document: NoteDocument = serde_json::from_str(document_json).unwrap_or_else(|_| empty_note_document());
+    NotePlayEnvelope {
+        document,
+        undo_stack: Vec::new(),
+        redo_stack: Vec::new(),
+        selected_ids: Vec::new(),
+        hovered_id: None,
+    }
+}
+
+fn set_document_op(envelope: &NotePlayEnvelope) -> String {
+    json!({ "op": "setDocument", "document": envelope }).to_string()
+}
+
+fn push_undo(play: &mut NotePlayEnvelope) {
+    play.undo_stack.push(play.document.clone());
+    if play.undo_stack.len() > 32 {
+        play.undo_stack.remove(0);
+    }
+    play.redo_stack.clear();
+}
+
+fn block_tree_row_id_from_str(block_id: &str) -> String {
+    format!("note-play-block:{block_id}")
+}
+
+fn block_id_from_tree_row_id(row_id: &str) -> Option<String> {
+    row_id.strip_prefix("note-play-block:").map(str::to_string)
+}
+
+fn insert_block(blocks: &mut Vec<NoteBlockNode>, parent_id: Option<&str>, index: usize, block: NoteBlockNode) {
+    if let Some(parent_id) = parent_id {
+        for node in blocks.iter_mut() {
+            if let NoteBlockNode::Group { id, children, .. } = node {
+                if id == parent_id {
+                    let index = index.min(children.len());
+                    children.insert(index, block);
+                    return;
+                }
+                insert_block(children, Some(parent_id), index, block.clone());
+            }
+        }
+        return;
+    }
+    let index = index.min(blocks.len());
+    blocks.insert(index, block);
+}
+
+fn update_block_in_tree(blocks: &mut [NoteBlockNode], target_id: &str, next_block: NoteBlockNode) -> bool {
+    for block in blocks.iter_mut() {
+        if block_id(block) == target_id {
+            *block = next_block;
+            return true;
+        }
+        if let NoteBlockNode::Group { children, .. } = block {
+            if update_block_in_tree(children, target_id, next_block.clone()) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn mutate_block_in_tree(
+    blocks: &mut [NoteBlockNode],
+    target_id: &str,
+    mutator: &mut impl FnMut(&NoteBlockNode) -> NoteBlockNode,
+) -> bool {
+    for block in blocks.iter_mut() {
+        if block_id(block) == target_id {
+            *block = mutator(block);
+            return true;
+        }
+        if let NoteBlockNode::Group { children, .. } = block {
+            if mutate_block_in_tree(children, target_id, mutator) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn block_bounds(block: &NoteBlockNode) -> (f64, f64, f64, f64) {
+    match block {
+        NoteBlockNode::Text { x, y, width, height, .. }
+        | NoteBlockNode::Image { x, y, width, height, .. }
+        | NoteBlockNode::Table { x, y, width, height, .. }
+        | NoteBlockNode::Math { x, y, width, height, .. }
+        | NoteBlockNode::Ink { x, y, width, height, .. }
+        | NoteBlockNode::Group { x, y, width, height, .. } => (*x, *y, *width, *height),
+    }
+}
+
+fn patch_block_field(document: &NoteDocument, block_id: &str, field: &str, value: &Value) -> NoteDocument {
+    let Some(block) = find_block(&document.blocks, block_id).cloned() else {
+        return document.clone();
+    };
+    let mut next = document.clone();
+    match field {
+        "name" => {
+            mutate_block_in_tree(&mut next.blocks, block_id, &mut |block| {
+                let mut cloned = block.clone();
+                match &mut cloned {
+                    NoteBlockNode::Text { name, .. }
+                    | NoteBlockNode::Image { name, .. }
+                    | NoteBlockNode::Table { name, .. }
+                    | NoteBlockNode::Math { name, .. }
+                    | NoteBlockNode::Ink { name, .. }
+                    | NoteBlockNode::Group { name, .. } => *name = value.as_str().unwrap_or("").into(),
+                }
+                cloned
+            });
+        }
+        "visible" => {
+            let pressed = value.as_bool().unwrap_or(true);
+            mutate_block_in_tree(&mut next.blocks, block_id, &mut |block| {
+                let mut cloned = block.clone();
+                match &mut cloned {
+                    NoteBlockNode::Text { visible, .. }
+                    | NoteBlockNode::Image { visible, .. }
+                    | NoteBlockNode::Table { visible, .. }
+                    | NoteBlockNode::Math { visible, .. }
+                    | NoteBlockNode::Ink { visible, .. }
+                    | NoteBlockNode::Group { visible, .. } => *visible = pressed,
+                }
+                cloned
+            });
+        }
+        "locked" => {
+            let pressed = value.as_bool().unwrap_or(false);
+            mutate_block_in_tree(&mut next.blocks, block_id, &mut |block| {
+                let mut cloned = block.clone();
+                match &mut cloned {
+                    NoteBlockNode::Text { locked, .. }
+                    | NoteBlockNode::Image { locked, .. }
+                    | NoteBlockNode::Table { locked, .. }
+                    | NoteBlockNode::Math { locked, .. }
+                    | NoteBlockNode::Ink { locked, .. }
+                    | NoteBlockNode::Group { locked, .. } => *locked = pressed,
+                }
+                cloned
+            });
+        }
+        "x" | "y" | "width" | "height" => {
+            let number = value.as_f64().unwrap_or(0.0);
+            mutate_block_in_tree(&mut next.blocks, block_id, &mut |block| {
+                let mut cloned = block.clone();
+                match &mut cloned {
+                    NoteBlockNode::Text { x, y, width, height, .. } => match field {
+                        "x" => *x = number,
+                        "y" => *y = number,
+                        "width" => *width = number,
+                        _ => *height = number,
+                    },
+                    NoteBlockNode::Image { x, y, width, height, .. } => match field {
+                        "x" => *x = number,
+                        "y" => *y = number,
+                        "width" => *width = number,
+                        _ => *height = number,
+                    },
+                    NoteBlockNode::Table { x, y, width, height, .. } => match field {
+                        "x" => *x = number,
+                        "y" => *y = number,
+                        "width" => *width = number,
+                        _ => *height = number,
+                    },
+                    NoteBlockNode::Math { x, y, width, height, .. } => match field {
+                        "x" => *x = number,
+                        "y" => *y = number,
+                        "width" => *width = number,
+                        _ => *height = number,
+                    },
+                    NoteBlockNode::Ink { x, y, width, height, .. } => match field {
+                        "x" => *x = number,
+                        "y" => *y = number,
+                        "width" => *width = number,
+                        _ => *height = number,
+                    },
+                    NoteBlockNode::Group { x, y, width, height, .. } => match field {
+                        "x" => *x = number,
+                        "y" => *y = number,
+                        "width" => *width = number,
+                        _ => *height = number,
+                    },
+                }
+                cloned
+            });
+        }
+        "textContent" => {
+            if let NoteBlockNode::Text { .. } = block {
+                let text = value.as_str().unwrap_or("");
+                let paragraphs = vec![NoteTextParagraph {
+                    runs: vec![NoteTextRun { text: text.into() }],
+                }];
+                let mut updated = block;
+                if let NoteBlockNode::Text { paragraphs: p, .. } = &mut updated {
+                    *p = paragraphs;
+                }
+                update_block_in_tree(&mut next.blocks, block_id, updated);
+            }
+        }
+        "textSize" => {
+            if let NoteBlockNode::Text { .. } = block {
+                let mut updated = block;
+                if let NoteBlockNode::Text { font_size, .. } = &mut updated {
+                    *font_size = value.as_f64().unwrap_or(18.0);
+                }
+                update_block_in_tree(&mut next.blocks, block_id, updated);
+            }
+        }
+        "mathTex" => {
+            if let NoteBlockNode::Math { .. } = block {
+                let mut updated = block;
+                if let NoteBlockNode::Math { tex, .. } = &mut updated {
+                    *tex = value.as_str().unwrap_or("").into();
+                }
+                update_block_in_tree(&mut next.blocks, block_id, updated);
+            }
+        }
+        "inkWidth" => {
+            if let NoteBlockNode::Ink { .. } = block {
+                let mut updated = block;
+                if let NoteBlockNode::Ink { stroke_width, .. } = &mut updated {
+                    *stroke_width = value.as_f64().unwrap_or(3.0);
+                }
+                update_block_in_tree(&mut next.blocks, block_id, updated);
+            }
+        }
+        _ => {}
+    }
+    next
+}
+
+fn selection_from_envelope(play: &NotePlayEnvelope, view_state: &ViewState) -> Vec<String> {
+    if !play.selected_ids.is_empty() {
+        return play.selected_ids.clone();
+    }
+    selection_from_view(view_state)
+}
 //#endregion 🔖Document
 
 //#region 🔖Panels
@@ -497,6 +763,9 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
             "setSelection",
             Some(json!({ "ids": [block_id(block)] })),
         )),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: Some(true),
         drag_data: None,
         items: nested,
@@ -505,7 +774,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
     }
 }
 
-fn render_hierarchy_panel(document: &NoteDocument, view_state: &ViewState) -> UiNode {
+fn render_hierarchy_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_state: &ViewState) -> UiNode {
     let toolbar = vec![
         ("text", "Add Text", "type"),
         ("table", "Add Table", "table"),
@@ -526,6 +795,9 @@ fn render_hierarchy_panel(document: &NoteDocument, view_state: &ViewState) -> Ui
             "addBlock",
             Some(json!({ "kind": kind })),
         )),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -542,6 +814,9 @@ fn render_hierarchy_panel(document: &NoteDocument, view_state: &ViewState) -> Ui
             selected: None,
             default_open: None,
             command: None,
+            hover_command: None,
+            unhover_command: None,
+            actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -551,7 +826,7 @@ fn render_hierarchy_panel(document: &NoteDocument, view_state: &ViewState) -> Ui
     } else {
         document.blocks.iter().map(block_tree_item).collect()
     };
-    let selected_ids: Vec<String> = selection_from_view(view_state)
+    let selected_ids: Vec<String> = selection_from_envelope(play, view_state)
         .iter()
         .filter_map(|id| find_block(&document.blocks, id).map(block_tree_row_id))
         .collect();
@@ -588,8 +863,56 @@ fn render_catalogue_panel() -> UiNode {
     }])
 }
 
-fn render_properties_panel(document: &NoteDocument, view_state: &ViewState) -> UiNode {
-    let selected = selection_from_view(view_state);
+fn inspector_patch(block_ids: &[String], field: &str) -> CommandDescriptor {
+    play_cmd(
+        NOTE_PLAY_CONTROLLER_ID,
+        "patchBlocks",
+        Some(json!({ "blockIds": block_ids, "field": field })),
+    )
+}
+
+fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
+    let mixed = ui_inspector_mixed_text(values);
+    UiNode::Field(UiFieldNode {
+        id: field_id.into(),
+        label: label.into(),
+        child: UiControlNode::Input(UiInputNode {
+            id: format!("{field_id}.input"),
+            input_kind: "text".into(),
+            value: mixed.value,
+            placeholder: mixed.placeholder,
+            commit: None,
+            on_change: inspector_patch(block_ids, field),
+        }),
+    })
+}
+
+fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
+    let mixed = ui_inspector_mixed_number(values);
+    UiNode::Field(UiFieldNode {
+        id: field_id.into(),
+        label: label.into(),
+        child: UiControlNode::Input(UiInputNode {
+            id: format!("{field_id}.input"),
+            input_kind: "number".into(),
+            value: if mixed.uniform {
+                mixed.value.to_string()
+            } else {
+                String::new()
+            },
+            placeholder: if mixed.uniform {
+                None
+            } else {
+                Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
+            },
+            commit: None,
+            on_change: inspector_patch(block_ids, field),
+        }),
+    })
+}
+
+fn render_properties_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_state: &ViewState) -> UiNode {
+    let selected = selection_from_envelope(play, view_state);
     let blocks: Vec<&NoteBlockNode> = selected
         .iter()
         .filter_map(|id| find_block(&document.blocks, id))
@@ -599,41 +922,68 @@ fn render_properties_panel(document: &NoteDocument, view_state: &ViewState) -> U
             ui_text(format!("Schema: {}", document.schema)),
             ui_text(format!("Blocks: {}", flatten_blocks(&document.blocks).len())),
             ui_text(format!("Tool: {}", document.active_tool.clone().unwrap_or_else(|| "selectDirect".into()))),
+            ui_text(format!(
+                "Snap: {}",
+                if document.snap_enabled.unwrap_or(false) {
+                    format!("{}px", document.snap_grid_spacing.unwrap_or(8.0))
+                } else {
+                    "off".into()
+                }
+            )),
         ]);
     }
+    let block_ids: Vec<String> = blocks.iter().map(|block| block_id(*block).into()).collect();
     let names: Vec<String> = blocks.iter().map(|block| block_name(*block).into()).collect();
-    let xs: Vec<f64> = blocks
+    let xs: Vec<f64> = blocks.iter().map(|block| block_bounds(block).0).collect();
+    let ys: Vec<f64> = blocks.iter().map(|block| block_bounds(block).1).collect();
+    let widths: Vec<f64> = blocks.iter().map(|block| block_bounds(block).2).collect();
+    let heights: Vec<f64> = blocks.iter().map(|block| block_bounds(block).3).collect();
+    let visibles: Vec<bool> = blocks.iter().map(|block| block_visible(block)).collect();
+    let locked: Vec<bool> = blocks
         .iter()
         .map(|block| match block {
-            NoteBlockNode::Text { x, .. }
-            | NoteBlockNode::Image { x, .. }
-            | NoteBlockNode::Table { x, .. }
-            | NoteBlockNode::Math { x, .. }
-            | NoteBlockNode::Ink { x, .. }
-            | NoteBlockNode::Group { x, .. } => *x,
+            NoteBlockNode::Text { locked, .. }
+            | NoteBlockNode::Image { locked, .. }
+            | NoteBlockNode::Table { locked, .. }
+            | NoteBlockNode::Math { locked, .. }
+            | NoteBlockNode::Ink { locked, .. }
+            | NoteBlockNode::Group { locked, .. } => *locked,
         })
         .collect();
-    let mixed_name = ui_inspector_mixed_text(&names);
-    let mixed_x = ui_inspector_mixed_number(&xs);
+    let visible_mixed = ui_inspector_mixed_toggle(&visibles);
+    let locked_mixed = ui_inspector_mixed_toggle(&locked);
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "note-properties.block".into(),
         label: "Block".into(),
         default_open: Some(true),
         fields: vec![
-            ui_inspector_readonly_field(
-                "note-properties.name",
-                "Name",
-                mixed_name.placeholder.unwrap_or(mixed_name.value),
-            ),
-            ui_inspector_readonly_field(
-                "note-properties.x",
-                "X",
-                if mixed_x.uniform {
-                    mixed_x.value.to_string()
-                } else {
-                    "Mixed".into()
-                },
-            ),
+            inspector_text_field(&block_ids, "note-properties.name", "Name", &names, "name"),
+            inspector_number_field(&block_ids, "note-properties.x", "X", &xs, "x"),
+            inspector_number_field(&block_ids, "note-properties.y", "Y", &ys, "y"),
+            inspector_number_field(&block_ids, "note-properties.width", "Width", &widths, "width"),
+            inspector_number_field(&block_ids, "note-properties.height", "Height", &heights, "height"),
+            UiNode::Field(UiFieldNode {
+                id: "note-properties.visible".into(),
+                label: "Visible".into(),
+                child: UiControlNode::Toggle(UiToggleNode {
+                    id: "note-properties.visible.toggle".into(),
+                    icon_id: "eye".into(),
+                    pressed: visible_mixed.uniform && visible_mixed.pressed,
+                    text: None,
+                    on_change: inspector_patch(&block_ids, "visible"),
+                }),
+            }),
+            UiNode::Field(UiFieldNode {
+                id: "note-properties.locked".into(),
+                label: "Locked".into(),
+                child: UiControlNode::Toggle(UiToggleNode {
+                    id: "note-properties.locked.toggle".into(),
+                    icon_id: "lock".into(),
+                    pressed: locked_mixed.uniform && locked_mixed.pressed,
+                    text: None,
+                    on_change: inspector_patch(&block_ids, "locked"),
+                }),
+            }),
         ],
     }])
 }
@@ -663,7 +1013,14 @@ impl PluginApp for NoteApp {
     }
 
     fn initial_document_json(&self) -> String {
-        serde_json::to_string(&empty_note_document()).expect("note document json")
+        serde_json::to_string(&NotePlayEnvelope {
+            document: empty_note_document(),
+            undo_stack: Vec::new(),
+            redo_stack: Vec::new(),
+            selected_ids: Vec::new(),
+            hovered_id: None,
+        })
+        .expect("note document json")
     }
 
     fn handle_command(
@@ -671,61 +1028,86 @@ impl PluginApp for NoteApp {
         command: &str,
         args: Option<&Value>,
         document_json: &str,
-        _view_state: &ViewState,
+        view_state: &ViewState,
     ) -> Vec<String> {
-        let mut document: NoteDocument =
-            serde_json::from_str(document_json).unwrap_or_else(|_| empty_note_document());
+        let mut play = parse_envelope(document_json);
         match command {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
-                    if let Ok(parsed) = serde_json::from_value(next.clone()) {
-                        document = parsed;
-                        return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    if let Ok(parsed) = serde_json::from_value::<NotePlayEnvelope>(next.clone()) {
+                        return vec![set_document_op(&parsed)];
+                    }
+                    if let Ok(parsed) = serde_json::from_value::<NoteDocument>(next.clone()) {
+                        play.document = parsed;
+                        return vec![set_document_op(&play)];
                     }
                 }
             }
             "setCamera" | "setCameraZoom" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value(camera.clone()) {
-                        document.camera = parsed;
-                        return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                        push_undo(&mut play);
+                        play.document.camera = parsed;
+                        return vec![set_document_op(&play)];
                     }
                 }
                 if let Some(zoom) = args.and_then(|value| value.get("zoom")).and_then(|value| value.as_f64()) {
-                    document.camera.zoom = zoom;
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    push_undo(&mut play);
+                    play.document.camera.zoom = zoom;
+                    return vec![set_document_op(&play)];
                 }
             }
             "setActiveTool" => {
                 if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
-                    document.active_tool = Some(tool.into());
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    push_undo(&mut play);
+                    play.document.active_tool = Some(tool.into());
+                    return vec![set_document_op(&play)];
                 }
             }
             "setGridVisible" | "toggleGrid" => {
                 let visible = args
                     .and_then(|value| value.get("visible"))
                     .and_then(|value| value.as_bool())
-                    .unwrap_or(!(document.grid_visible.unwrap_or(true)));
-                document.grid_visible = Some(visible);
-                return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    .unwrap_or(!(play.document.grid_visible.unwrap_or(true)));
+                push_undo(&mut play);
+                play.document.grid_visible = Some(visible);
+                return vec![set_document_op(&play)];
             }
             "setGridSpacing" => {
                 if let Some(spacing) = args.and_then(|value| value.get("spacing")).and_then(|value| value.as_f64()) {
-                    document.grid_spacing = Some(spacing);
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    push_undo(&mut play);
+                    play.document.grid_spacing = Some(spacing);
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "setSnapEnabled" | "toggleSnap" => {
+                let enabled = args
+                    .and_then(|value| value.get("enabled"))
+                    .and_then(|value| value.as_bool())
+                    .unwrap_or(!(play.document.snap_enabled.unwrap_or(false)));
+                push_undo(&mut play);
+                play.document.snap_enabled = Some(enabled);
+                return vec![set_document_op(&play)];
+            }
+            "setSnapGridSpacing" => {
+                if let Some(spacing) = args.and_then(|value| value.get("spacing")).and_then(|value| value.as_f64()) {
+                    push_undo(&mut play);
+                    play.document.snap_grid_spacing = Some(spacing.max(1.0));
+                    return vec![set_document_op(&play)];
                 }
             }
             "setPencilWidth" => {
                 if let Some(width) = args.and_then(|value| value.get("width")).and_then(|value| value.as_f64()) {
-                    document.pencil_width = Some(width);
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    push_undo(&mut play);
+                    play.document.pencil_width = Some(width);
+                    return vec![set_document_op(&play)];
                 }
             }
             "setEraserRadius" => {
                 if let Some(radius) = args.and_then(|value| value.get("radius")).and_then(|value| value.as_f64()) {
-                    document.eraser_radius = Some(radius);
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    push_undo(&mut play);
+                    play.document.eraser_radius = Some(radius);
+                    return vec![set_document_op(&play)];
                 }
             }
             "addBlock" => {
@@ -733,45 +1115,207 @@ impl PluginApp for NoteApp {
                     .and_then(|value| value.get("kind"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("text");
-                document.blocks.push(create_block_by_kind(kind));
-                return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                push_undo(&mut play);
+                play.document.blocks.push(create_block_by_kind(kind));
+                return vec![set_document_op(&play)];
+            }
+            "dropBlockKind" => {
+                let kind = args
+                    .and_then(|value| value.get("kind"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("text");
+                push_undo(&mut play);
+                let block = create_block_by_kind(kind);
+                play.selected_ids = vec![block_id(&block).into()];
+                play.document.blocks.push(block);
+                return vec![set_document_op(&play)];
+            }
+            "moveBlock" => {
+                let block_id_arg = args.and_then(|value| value.get("blockId")).and_then(|value| value.as_str());
+                let target_row_id = args
+                    .and_then(|value| value.get("targetRowId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("note-play-blocks");
+                let drop_position = args
+                    .and_then(|value| value.get("dropPosition"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("after");
+                let Some(block_id_arg) = block_id_arg else {
+                    return Vec::new();
+                };
+                let Some(block) = find_block(&play.document.blocks, block_id_arg).cloned() else {
+                    return Vec::new();
+                };
+                let target_id = block_id_from_tree_row_id(target_row_id);
+                let parent_id = target_id.as_ref().and_then(|id| {
+                    find_block(&play.document.blocks, id).and_then(|entry| {
+                        if matches!(entry, NoteBlockNode::Group { .. }) {
+                            Some(id.clone())
+                        } else {
+                            None
+                        }
+                    })
+                });
+                let index = if drop_position == "before" {
+                    0
+                } else if let Some(ref parent) = parent_id {
+                    find_block(&play.document.blocks, parent)
+                        .and_then(|entry| match entry {
+                            NoteBlockNode::Group { children, .. } => Some(children.len()),
+                            _ => None,
+                        })
+                        .unwrap_or(0)
+                } else {
+                    play.document.blocks.len()
+                };
+                push_undo(&mut play);
+                remove_block_from_tree(&mut play.document.blocks, block_id_arg);
+                insert_block(&mut play.document.blocks, parent_id.as_deref(), index, block);
+                return vec![set_document_op(&play)];
             }
             "deleteBlock" | "deleteSelection" => {
                 if let Some(block_id) = args.and_then(|value| value.get("blockId")).and_then(|value| value.as_str()) {
-                    remove_block_from_tree(&mut document.blocks, block_id);
-                    return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    push_undo(&mut play);
+                    remove_block_from_tree(&mut play.document.blocks, block_id);
+                    play.selected_ids.retain(|id| id != block_id);
+                    return vec![set_document_op(&play)];
+                }
+                if !play.selected_ids.is_empty() {
+                    push_undo(&mut play);
+                    for block_id in play.selected_ids.clone() {
+                        remove_block_from_tree(&mut play.document.blocks, &block_id);
+                    }
+                    play.selected_ids.clear();
+                    return vec![set_document_op(&play)];
                 }
             }
             "duplicateBlock" | "duplicateSelection" => {
                 if let Some(block_id) = args.and_then(|value| value.get("blockId")).and_then(|value| value.as_str()) {
-                    if let Some(block) = find_block(&document.blocks, block_id).cloned() {
-                        document.blocks.push(clone_block(&block));
-                        return vec![json!({ "op": "setDocument", "document": document }).to_string()];
+                    if let Some(block) = find_block(&play.document.blocks, block_id).cloned() {
+                        push_undo(&mut play);
+                        play.document.blocks.push(clone_block(&block));
+                        return vec![set_document_op(&play)];
                     }
                 }
             }
+            "patchBlocks" => {
+                let block_ids: Vec<String> = args
+                    .and_then(|value| value.get("blockIds"))
+                    .and_then(|value| value.as_array())
+                    .map(|values| values.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect())
+                    .unwrap_or_default();
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args
+                    .and_then(|value| value.get("value"))
+                    .or_else(|| args.and_then(|value| value.get("pressed")))
+                    .cloned()
+                    .unwrap_or(Value::Null);
+                if block_ids.is_empty() || field.is_empty() {
+                    return Vec::new();
+                }
+                push_undo(&mut play);
+                for block_id in block_ids {
+                    play.document = patch_block_field(&play.document, &block_id, field, &value);
+                }
+                return vec![set_document_op(&play)];
+            }
             "selectAll" => {
-                let ids: Vec<String> = flatten_blocks(&document.blocks)
+                play.selected_ids = flatten_blocks(&play.document.blocks)
                     .into_iter()
                     .map(|block| block_id(block).into())
                     .collect();
-                return vec![json!({ "op": "setSelection", "ids": ids }).to_string()];
+                return vec![set_document_op(&play)];
             }
-            "clearSelection" | "setSelection" | "setHover" | "undo" | "redo" => {}
+            "clearSelection" => {
+                play.selected_ids.clear();
+                return vec![set_document_op(&play)];
+            }
+            "setSelection" => {
+                play.selected_ids = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_default();
+                return vec![set_document_op(&play)];
+            }
+            "setHover" => {
+                play.hovered_id = args
+                    .and_then(|value| value.get("id"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                return vec![set_document_op(&play)];
+            }
+            "nudgeSelection" => {
+                let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                if play.selected_ids.is_empty() {
+                    return Vec::new();
+                }
+                push_undo(&mut play);
+                let selected: std::collections::HashSet<String> = play.selected_ids.iter().cloned().collect();
+                let nudges: Vec<(String, NoteBlockNode)> = flatten_blocks(&play.document.blocks)
+                    .into_iter()
+                    .filter(|block| selected.contains(block_id(block)))
+                    .filter_map(|block| {
+                        let locked = matches!(
+                            block,
+                            NoteBlockNode::Group { locked: true, .. }
+                                | NoteBlockNode::Text { locked: true, .. }
+                                | NoteBlockNode::Image { locked: true, .. }
+                                | NoteBlockNode::Table { locked: true, .. }
+                                | NoteBlockNode::Math { locked: true, .. }
+                                | NoteBlockNode::Ink { locked: true, .. }
+                        );
+                        if locked {
+                            return None;
+                        }
+                        let id = block_id(block).to_string();
+                        let mut updated = block.clone();
+                        match &mut updated {
+                            NoteBlockNode::Text { x, y, .. }
+                            | NoteBlockNode::Image { x, y, .. }
+                            | NoteBlockNode::Table { x, y, .. }
+                            | NoteBlockNode::Math { x, y, .. }
+                            | NoteBlockNode::Ink { x, y, .. }
+                            | NoteBlockNode::Group { x, y, .. } => {
+                                *x += dx;
+                                *y += dy;
+                            }
+                        }
+                        Some((id, updated))
+                    })
+                    .collect();
+                for (id, updated) in nudges {
+                    update_block_in_tree(&mut play.document.blocks, &id, updated);
+                }
+                return vec![set_document_op(&play)];
+            }
+            "undo" => {
+                if let Some(previous) = play.undo_stack.pop() {
+                    play.redo_stack.push(play.document.clone());
+                    play.document = previous;
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "redo" => {
+                if let Some(next) = play.redo_stack.pop() {
+                    play.undo_stack.push(play.document.clone());
+                    play.document = next;
+                    return vec![set_document_op(&play)];
+                }
+            }
             _ => {}
         }
         Vec::new()
     }
 
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
-        let document: NoteDocument =
-            serde_json::from_str(document_json).unwrap_or_else(|_| empty_note_document());
+        let play = parse_envelope(document_json);
         match body_key {
-            NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(&document, NOTE_PLAY_SURFACE_COMPOSITE),
-            NOTE_PLAY_BODY_NAVIGATOR => render_canvas_scene(&document, NOTE_PLAY_SURFACE_NAVIGATOR),
-            NOTE_PLAY_BODY_HIERARCHY => render_hierarchy_panel(&document, view_state),
+            NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(&play.document, NOTE_PLAY_SURFACE_COMPOSITE),
+            NOTE_PLAY_BODY_NAVIGATOR => render_canvas_scene(&play.document, NOTE_PLAY_SURFACE_NAVIGATOR),
+            NOTE_PLAY_BODY_HIERARCHY => render_hierarchy_panel(&play.document, &play, view_state),
             NOTE_PLAY_BODY_CATALOGUE => render_catalogue_panel(),
-            NOTE_PLAY_BODY_PROPERTIES => render_properties_panel(&document, view_state),
+            NOTE_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, &play, view_state),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }

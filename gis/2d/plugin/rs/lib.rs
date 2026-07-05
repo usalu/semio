@@ -1,7 +1,8 @@
 //! 🗺️ GIS 2D plugin — GIS map play app bundled as a hot-swappable WASM component.
 
 use gis_2d::{
-    empty_gis_map_projection, GisMapDocument, GisMapEnvelope, GisMapOp, GisMapStore, GIS_MAP_SCHEMA,
+    empty_gis_map_projection, projection, GisMapDocument, GisMapEnvelope, GisMapOp, GisMapStore, MapHost,
+    GIS_MAP_SCHEMA,
 };
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
@@ -26,6 +27,8 @@ const GIS2D_PLAY_BODY_CATALOGUE: &str = "gis2d.play.catalogue";
 const GIS2D_PLAY_BODY_INSPECTION: &str = "gis2d.play.inspection";
 const GIS2D_PLAY_WINDOW_MAIN: &str = "gis2d-main";
 
+const REUSE_MAP_EXAMPLE_JSON: &str = include_str!("../../example/reuse.map.gis.json");
+
 const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
     ("raster", "Raster", "map"),
     ("water", "Water", "droplets"),
@@ -49,6 +52,14 @@ struct Gis2dPlayRuntime {
     selected_ids: Vec<String>,
     #[serde(default)]
     layer_visibility: HashMap<String, bool>,
+    #[serde(default)]
+    map_fixture_json: String,
+    #[serde(default = "default_map_camera_json")]
+    camera_json: String,
+}
+
+fn default_map_camera_json() -> String {
+    r#"{"x":0,"y":0,"zoom":1}"#.into()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -84,12 +95,70 @@ fn default_layer_visibility() -> HashMap<String, bool> {
 fn default_envelope() -> Gis2dPlayEnvelope {
     let mut runtime = Gis2dPlayRuntime::default();
     runtime.layer_visibility = default_layer_visibility();
+    runtime.map_fixture_json = REUSE_MAP_EXAMPLE_JSON.into();
     Gis2dPlayEnvelope {
         envelope: create_document_vcs_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None),
         applied_edit_ids: Vec::new(),
         redo_edit_ids: Vec::new(),
         runtime,
     }
+}
+
+fn map_host_from_play(play: &Gis2dPlayEnvelope) -> MapHost {
+    let mut host = MapHost::new();
+    if !play.runtime.map_fixture_json.is_empty() {
+        let _ = host.sync_map_json(&play.runtime.map_fixture_json);
+    }
+    if let Ok(camera) = serde_json::from_str::<Value>(&play.runtime.camera_json) {
+        let x = camera.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
+        let y = camera.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
+        let zoom = camera.get("zoom").and_then(|value| value.as_f64()).unwrap_or(1.0);
+        host.set_camera(x, y, zoom);
+    }
+    host
+}
+
+fn map_canvas_layers(play: &Gis2dPlayEnvelope) -> String {
+    let host = map_host_from_play(play);
+    let mut layers: Vec<GisMapCanvasLayer> = Vec::new();
+    for position in host.positions.values() {
+        if !layer_visible(&play.runtime, "positions") {
+            continue;
+        }
+        let world = projection::lonlat_to_world(position.lon, position.lat);
+        layers.push(GisMapCanvasLayer {
+            id: position.id.clone(),
+            kind: "position".into(),
+            name: position.label.clone().or_else(|| position.name.clone()).unwrap_or_else(|| position.id.clone()),
+            x: world.x,
+            y: world.y,
+            width: 16.0,
+            height: 16.0,
+        });
+    }
+    if layer_visible(&play.runtime, "routes") {
+        for route in host.routes.values() {
+            for (index, point) in route.points.iter().enumerate() {
+                if point.len() < 2 {
+                    continue;
+                }
+                let world = projection::lonlat_to_world(point[0], point[1]);
+                layers.push(GisMapCanvasLayer {
+                    id: format!("{}-{}", route.id, index),
+                    kind: "route".into(),
+                    name: route.id.clone(),
+                    x: world.x,
+                    y: world.y,
+                    width: 8.0,
+                    height: 8.0,
+                });
+            }
+        }
+    }
+    if layers.is_empty() {
+        return canvas_layers(play);
+    }
+    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 
 fn parse_envelope(document_json: &str) -> Gis2dPlayEnvelope {
@@ -200,6 +269,9 @@ fn tree_item(
         icon_id,
         selected: None,
         default_open: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         command,
         draggable: None,
         drag_data: None,
@@ -332,14 +404,16 @@ fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
 
 //#region 🔖Render
 fn render_canvas(play: &Gis2dPlayEnvelope) -> UiNode {
+    let host = map_host_from_play(play);
+    let camera: Value = serde_json::from_str(&play.runtime.camera_json).unwrap_or(json!({"x":0,"y":0,"zoom":1}));
     build_canvas_2d_scene(
         GIS2D_PLAY_SURFACE,
         GIS2D_PLAY_APP_ID,
         Canvas2dScene {
-            camera_x: 0.0,
-            camera_y: 0.0,
-            zoom: 1.0,
-            layers_json: canvas_layers(play),
+            camera_x: camera.get("x").and_then(|value| value.as_f64()).unwrap_or(host.camera.x),
+            camera_y: camera.get("y").and_then(|value| value.as_f64()).unwrap_or(host.camera.y),
+            zoom: camera.get("zoom").and_then(|value| value.as_f64()).unwrap_or(host.camera.zoom),
+            layers_json: map_canvas_layers(play),
         },
     )
 }
@@ -398,18 +472,60 @@ impl PluginApp for Gis2dPlayApp {
                 }
             }
             "undo" => {
-                if let Some(last) = play.applied_edit_ids.pop() {
-                    play.redo_edit_ids.push(last);
-                    return vec![set_document_op(&play)];
-                }
+                let _ = store.dispatch(DocumentVcsCommand::Undo);
+                return vec![set_document_op(&sync_store_to_envelope(&store, &play.runtime, &play.redo_edit_ids))];
             }
             "redo" => {
-                if let Some(next) = play.redo_edit_ids.pop() {
-                    play.applied_edit_ids.push(next);
+                let _ = store.dispatch(DocumentVcsCommand::Redo);
+                return vec![set_document_op(&sync_store_to_envelope(&store, &play.runtime, &play.redo_edit_ids))];
+            }
+            "setActiveExample" => {
+                let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
+                play.runtime.map_fixture_json = if example_id.is_empty() || example_id == "empty" {
+                    r#"{"positions":[],"routes":[],"regions":[]}"#.into()
+                } else {
+                    REUSE_MAP_EXAMPLE_JSON.into()
+                };
+                play.runtime.selected_ids.clear();
+                return vec![set_document_op(&play)];
+            }
+            "fitWorld" => {
+                let mut host = map_host_from_play(&play);
+                host.fit_world_camera();
+                play.runtime.camera_json = host.camera_json();
+                return vec![set_document_op(&play)];
+            }
+            "patchPositions" => {
+                if let Some(positions) = args.and_then(|value| value.get("positions")) {
+                    let mut descriptor: Value = serde_json::from_str(&play.runtime.map_fixture_json)
+                        .unwrap_or_else(|_| json!({ "positions": [], "routes": [], "regions": [] }));
+                    descriptor["positions"] = positions.clone();
+                    play.runtime.map_fixture_json = descriptor.to_string();
+                    let _ = store.dispatch(DocumentVcsCommand::Apply {
+                        operations: vec![GisMapOp::SetLayers {
+                            layers: vec![json!({ "id": "positions", "name": "Positions", "kind": "map-layer" })],
+                        }],
+                        description: None,
+                    });
+                    play.redo_edit_ids.clear();
+                    return vec![set_document_op(&sync_store_to_envelope(&store, &play.runtime, &play.redo_edit_ids))];
+                }
+            }
+            "setCamera" => {
+                if let Some(camera) = args.and_then(|value| value.get("camera")) {
+                    play.runtime.camera_json = camera.to_string();
                     return vec![set_document_op(&play)];
                 }
             }
-            "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => {}
+            "canvasWheel" => {
+                let delta = args.and_then(|value| value.get("deltaY")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let mut host = map_host_from_play(&play);
+                let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
+                host.camera.zoom = (host.camera.zoom * factor).clamp(0.1, 8.0);
+                play.runtime.camera_json = host.camera_json();
+                return vec![set_document_op(&play)];
+            }
+            "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" => {}
             _ => {}
         }
         Vec::new()
@@ -463,6 +579,7 @@ fn create_gis2d_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
+    .example("reuse-map", "Reuse Map", serde_json::to_string(&default_envelope()).unwrap())
     .program("gis2d", "GIS 2D", "map")
 }
 

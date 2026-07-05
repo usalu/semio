@@ -1,20 +1,16 @@
-//! 🎲 Procedural 2D plugin — procedural revision play app bundled as a hot-swappable WASM component.
+//! 🎲 Procedural 2D plugin — procedural flow play app bundled as a hot-swappable WASM component.
 
-use procedural_2d::{
-    empty_procedural2d_projection, Procedural2dDocument, Procedural2dEnvelope, Procedural2dOp, Procedural2dStore,
-    PROCEDURAL_2D_SCHEMA,
-};
+use flow_core::{FlowFixture, FlowHost, Widget};
 use semio_framework_plugin::{
-    build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiInspectorFieldGroup,
-    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp,
+    PluginBundle, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
+    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::LazyLock;
-use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand};
 
 //#region 🔖Constants
 const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
@@ -27,6 +23,7 @@ const PROCEDURAL2D_PLAY_BODY_CATALOGUE: &str = "procedural2d.play.catalogue";
 const PROCEDURAL2D_PLAY_BODY_INSPECTION: &str = "procedural2d.play.inspection";
 const PROCEDURAL2D_PLAY_WINDOW_MAIN: &str = "procedural2d-main";
 const PROCEDURAL2D_PLAY_WINDOW_PREVIEW: &str = "procedural2d-preview";
+const DEFAULT_PROCEDURAL2D_FIXTURE_JSON: &str = include_str!("../../example/default.procedural2d.json");
 //#endregion 🔖Constants
 
 //#region 🔖Types
@@ -35,44 +32,37 @@ const PROCEDURAL2D_PLAY_WINDOW_PREVIEW: &str = "procedural2d-preview";
 struct Procedural2dPlayRuntime {
     #[serde(default)]
     selected_ids: Vec<String>,
+    #[serde(default = "default_show_mode")]
+    show_mode: String,
+    #[serde(default)]
+    eval_outputs_json: String,
+    #[serde(default)]
+    undo_stack: Vec<FlowFixture>,
+    #[serde(default)]
+    redo_stack: Vec<FlowFixture>,
+}
+
+fn default_show_mode() -> String {
+    "preview".into()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Procedural2dPlayEnvelope {
-    envelope: Procedural2dEnvelope,
-    #[serde(default)]
-    applied_edit_ids: Vec<String>,
-    #[serde(default)]
-    redo_edit_ids: Vec<String>,
+    fixture: FlowFixture,
     #[serde(default)]
     runtime: Procedural2dPlayRuntime,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-struct Procedural2dCanvasLayer {
-    id: String,
-    kind: String,
-    name: String,
-    x: f64,
-    y: f64,
-    width: f64,
-    height: f64,
 }
 //#endregion 🔖Types
 
 //#region 🔖DocumentHelpers
+fn default_fixture() -> FlowFixture {
+    serde_json::from_str(DEFAULT_PROCEDURAL2D_FIXTURE_JSON).unwrap_or_default()
+}
+
 fn default_envelope() -> Procedural2dPlayEnvelope {
     Procedural2dPlayEnvelope {
-        envelope: create_document_vcs_envelope(
-            PROCEDURAL_2D_SCHEMA,
-            "procedural2d",
-            empty_procedural2d_projection(),
-            None,
-        ),
-        applied_edit_ids: Vec::new(),
-        redo_edit_ids: Vec::new(),
+        fixture: default_fixture(),
         runtime: Procedural2dPlayRuntime::default(),
     }
 }
@@ -93,28 +83,16 @@ fn procedural2d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
     }
 }
 
-fn store_from_envelope(play: &Procedural2dPlayEnvelope) -> Procedural2dStore {
-    let mut store = Procedural2dStore::new(play.envelope.clone());
-    store.set_envelope(play.envelope.clone(), play.applied_edit_ids.clone());
-    store
+fn host_from_envelope(envelope: &Procedural2dPlayEnvelope) -> FlowHost {
+    FlowHost::from_fixture(envelope.fixture.clone())
 }
 
-fn sync_store_to_envelope(
-    store: &Procedural2dStore,
-    runtime: &Procedural2dPlayRuntime,
-    redo_edit_ids: &[String],
-) -> Procedural2dPlayEnvelope {
-    Procedural2dPlayEnvelope {
-        envelope: store.envelope().clone(),
-        applied_edit_ids: store.applied_edit_ids().to_vec(),
-        redo_edit_ids: redo_edit_ids.to_vec(),
-        runtime: runtime.clone(),
+fn push_undo(play: &mut Procedural2dPlayEnvelope) {
+    play.runtime.undo_stack.push(play.fixture.clone());
+    if play.runtime.undo_stack.len() > 32 {
+        play.runtime.undo_stack.remove(0);
     }
-}
-
-fn materialized_projection(play: &Procedural2dPlayEnvelope) -> Procedural2dDocument {
-    materialize_document_projection(&play.envelope, &play.applied_edit_ids)
-        .unwrap_or_else(|_| play.envelope.vcs.initial_projection.clone())
+    play.runtime.redo_stack.clear();
 }
 
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
@@ -123,37 +101,68 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn canvas_layers(document: &Procedural2dDocument, preview: bool) -> String {
-    let revision = document.revision;
+fn widget_id(widget: &Widget) -> &str {
+    match widget {
+        Widget::Neuron { id, .. }
+        | Widget::InputSlider { id, .. }
+        | Widget::InputStepper { id, .. }
+        | Widget::InputNote { id, .. }
+        | Widget::InputImage { id, .. }
+        | Widget::Variable { id, .. }
+        | Widget::OutputPreview { id, .. }
+        | Widget::OutputAction { id, .. }
+        | Widget::OutputExport { id, .. }
+        | Widget::Cluster { id, .. } => id,
+    }
+}
+
+fn eval_preview_layers(play: &Procedural2dPlayEnvelope, preview: bool) -> String {
+    let mut host = host_from_envelope(play);
+    let eval_json = if play.runtime.eval_outputs_json.is_empty() {
+        host.evaluate().unwrap_or_default()
+    } else {
+        host.apply_eval_outputs_json(&play.runtime.eval_outputs_json);
+        play.runtime.eval_outputs_json.clone()
+    };
     let offset = if preview { 240.0 } else { 0.0 };
-    let layers = vec![
-        Procedural2dCanvasLayer {
-            id: if preview {
-                "procedural2d-preview.revision".into()
-            } else {
-                "procedural2d-main.revision".into()
-            },
-            kind: "rect".into(),
-            name: format!("Revision {revision}"),
-            x: offset,
-            y: 0.0,
-            width: 180.0 + (revision as f64 * 12.0).min(120.0),
-            height: 72.0,
-        },
-        Procedural2dCanvasLayer {
-            id: if preview {
-                "procedural2d-preview.tile".into()
-            } else {
-                "procedural2d-main.tile".into()
-            },
-            kind: "rect".into(),
-            name: if preview { "Preview Tile".into() } else { "Main Tile".into() },
-            x: offset + 24.0,
-            y: 96.0,
-            width: 96.0,
-            height: 96.0,
-        },
-    ];
+    let mode = play.runtime.show_mode.as_str();
+    let mut layers = vec![json!({
+        "id": if preview { "procedural2d-preview.flow" } else { "procedural2d-main.flow" },
+        "kind": "rect",
+        "name": format!("Mode: {mode}"),
+        "x": offset,
+        "y": 0.0,
+        "width": 180.0,
+        "height": 72.0,
+    })];
+    if let Ok(outputs) = serde_json::from_str::<Value>(&eval_json) {
+        if let Some(preview_value) = outputs.get("preview").or_else(|| outputs.get("outputs")) {
+            layers.push(json!({
+                "id": if preview { "procedural2d-preview.eval" } else { "procedural2d-main.eval" },
+                "kind": "text",
+                "name": "Eval",
+                "x": offset + 24.0,
+                "y": 96.0,
+                "width": 220.0,
+                "height": 120.0,
+                "text": preview_value.to_string().chars().take(120).collect::<String>(),
+            }));
+        }
+    }
+    for widget in &play.fixture.widgets {
+        let id = widget_id(widget).to_string();
+        if play.runtime.selected_ids.is_empty() || play.runtime.selected_ids.iter().any(|selected| selected == &id) {
+            layers.push(json!({
+                "id": format!("widget-{id}"),
+                "kind": "node",
+                "name": id,
+                "x": offset + 48.0,
+                "y": 240.0,
+                "width": 96.0,
+                "height": 48.0,
+            }));
+        }
+    }
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
 //#endregion 🔖DocumentHelpers
@@ -167,6 +176,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>, command: Option<Co
         icon_id: None,
         selected: None,
         default_open: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         command,
         draggable: None,
         drag_data: None,
@@ -177,49 +189,35 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>, command: Option<Co
 }
 
 fn build_hierarchy_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
-    let projection = materialized_projection(play);
-    let revision_row = tree_item(
-        "procedural2d-play-hierarchy.revision",
-        format!("Revision {}", projection.revision),
-        Some(procedural2d_cmd("setSelection", Some(json!({ "ids": ["revision"] })))),
-    );
-    let checkpoint_items: Vec<UiTreeItemNode> = play
-        .envelope
-        .vcs
-        .checkpoints
+    let widget_items: Vec<UiTreeItemNode> = play
+        .fixture
+        .widgets
         .iter()
-        .map(|checkpoint| {
+        .map(|widget| {
+            let id = widget_id(widget).to_string();
             tree_item(
-                format!("procedural2d-play-hierarchy.checkpoint.{}", checkpoint.id),
-                checkpoint.message.clone().unwrap_or_else(|| checkpoint.id.clone()),
-                None,
+                format!("procedural2d-play-hierarchy.widget.{id}"),
+                id.clone(),
+                Some(procedural2d_cmd("setSelection", Some(json!({ "ids": [id] })))),
             )
         })
         .collect();
     UiNode::Tree(UiTreeNode {
-        sections: vec![
-            UiTreeSectionNode {
-                id: "procedural2d-play-hierarchy.document".into(),
-                label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
-                default_open: Some(true),
-                items: vec![revision_row],
+        sections: vec![UiTreeSectionNode {
+            id: "procedural2d-play-hierarchy.widgets".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            default_open: Some(true),
+            items: if widget_items.is_empty() {
+                vec![tree_item("procedural2d-play-hierarchy.empty", "(none)", None)]
+            } else {
+                widget_items
             },
-            UiTreeSectionNode {
-                id: "procedural2d-play-hierarchy.checkpoints".into(),
-                label: Some("Checkpoints".into()),
-                default_open: Some(false),
-                items: if checkpoint_items.is_empty() {
-                    vec![tree_item("procedural2d-play-hierarchy.checkpoints.empty", "(none)", None)]
-                } else {
-                    checkpoint_items
-                },
-            },
-        ],
+        }],
         selected_ids: Some(
             play.runtime
                 .selected_ids
                 .iter()
-                .map(|id| format!("procedural2d-play-hierarchy.{id}"))
+                .map(|id| format!("procedural2d-play-hierarchy.widget.{id}"))
                 .collect(),
         ),
         highlighted_ids: None,
@@ -228,22 +226,22 @@ fn build_hierarchy_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
 }
 
 fn build_catalogue_tree() -> UiNode {
-    let revision_items = [1_i64, 2, 3, 5, 8]
-        .into_iter()
-        .map(|revision| {
+    let mode_items = ["preview", "generate", "wire"]
+        .iter()
+        .map(|mode| {
             tree_item(
-                format!("procedural2d-play-catalogue.revision.{revision}"),
-                format!("Revision {revision}"),
-                Some(procedural2d_cmd("setRevision", Some(json!({ "revision": revision })))),
+                format!("procedural2d-play-catalogue.mode.{mode}"),
+                format!("Show {mode}"),
+                Some(procedural2d_cmd("setShowMode", Some(json!({ "value": mode })))),
             )
         })
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
-            id: "procedural2d-play-catalogue.revisions".into(),
+            id: "procedural2d-play-catalogue.modes".into(),
             label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
             default_open: Some(true),
-            items: revision_items,
+            items: mode_items,
         }],
         selected_ids: None,
         highlighted_ids: None,
@@ -252,59 +250,49 @@ fn build_catalogue_tree() -> UiNode {
 }
 
 fn build_inspector_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
-    let projection = materialized_projection(play);
     if play.runtime.selected_ids.is_empty() {
         return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {}", PROCEDURAL_2D_SCHEMA)),
-            ui_text(format!("Revision: {}", projection.revision)),
-            ui_text(format!("Edits applied: {}", play.applied_edit_ids.len())),
+            ui_text("Schema: flow.fixture"),
+            ui_text(format!("Widgets: {}", play.fixture.widgets.len())),
+            ui_text(format!("Show mode: {}", play.runtime.show_mode)),
         ]);
     }
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-        id: "procedural2d-play-inspector.revision".into(),
-        label: "Revision".into(),
+        id: "procedural2d-play-inspector.selection".into(),
+        label: "Selection".into(),
         default_open: Some(true),
-        fields: vec![
-            ui_inspector_readonly_field(
-                "procedural2d-play-inspector.revision-value",
-                "Value",
-                projection.revision.to_string(),
-            ),
-            ui_inspector_readonly_field(
-                "procedural2d-play-inspector.selection",
-                "Selection",
-                play.runtime.selected_ids.join(", "),
-            ),
-        ],
+        fields: vec![ui_inspector_readonly_field(
+            "procedural2d-play-inspector.ids",
+            "Ids",
+            play.runtime.selected_ids.join(", "),
+        )],
     }])
 }
 //#endregion 🔖Panels
 
 //#region 🔖Render
 fn render_main_canvas(play: &Procedural2dPlayEnvelope) -> UiNode {
-    let projection = materialized_projection(play);
     build_canvas_2d_scene(
         PROCEDURAL2D_PLAY_SURFACE_MAIN,
         PROCEDURAL2D_PLAY_APP_ID,
         Canvas2dScene {
-            camera_x: 0.0,
-            camera_y: 0.0,
-            zoom: 1.0,
-            layers_json: canvas_layers(&projection, false),
+            camera_x: play.fixture.camera.x,
+            camera_y: play.fixture.camera.y,
+            zoom: play.fixture.camera.zoom,
+            layers_json: eval_preview_layers(play, false),
         },
     )
 }
 
 fn render_preview_canvas(play: &Procedural2dPlayEnvelope) -> UiNode {
-    let projection = materialized_projection(play);
     build_canvas_2d_scene(
         PROCEDURAL2D_PLAY_SURFACE_PREVIEW,
         PROCEDURAL2D_PLAY_APP_ID,
         Canvas2dScene {
-            camera_x: 0.0,
-            camera_y: 0.0,
-            zoom: 1.0,
-            layers_json: canvas_layers(&projection, true),
+            camera_x: play.fixture.camera.x,
+            camera_y: play.fixture.camera.y,
+            zoom: play.fixture.camera.zoom,
+            layers_json: eval_preview_layers(play, true),
         },
     )
 }
@@ -330,7 +318,6 @@ impl PluginApp for Procedural2dPlayApp {
         _view_state: &ViewState,
     ) -> Vec<String> {
         let mut play = parse_envelope(document_json);
-        let mut store = store_from_envelope(&play);
         match command {
             "setDocument" => {
                 if let Some(document) = args.and_then(|value| value.get("document")) {
@@ -343,27 +330,40 @@ impl PluginApp for Procedural2dPlayApp {
                 play.runtime.selected_ids = selection_ids(args);
                 return vec![set_document_op(&play)];
             }
-            "setRevision" => {
-                let revision = args
-                    .and_then(|value| value.get("revision"))
-                    .and_then(|value| value.as_i64())
-                    .unwrap_or(0);
-                let _ = store.dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![Procedural2dOp::SetRevision { revision }],
-                    description: None,
-                });
-                play.redo_edit_ids.clear();
-                return vec![set_document_op(&sync_store_to_envelope(&store, &play.runtime, &play.redo_edit_ids))];
+            "setShowMode" => {
+                if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                    play.runtime.show_mode = mode.into();
+                    return vec![set_document_op(&play)];
+                }
+            }
+            "generate" => {
+                push_undo(&mut play);
+                let mut host = host_from_envelope(&play);
+                play.runtime.eval_outputs_json = host.evaluate().unwrap_or_default();
+                play.runtime.show_mode = "generate".into();
+                return vec![set_document_op(&play)];
+            }
+            "setEvalOutputs" => {
+                if let Some(outputs) = args.and_then(|value| value.get("outputs")) {
+                    play.runtime.eval_outputs_json = outputs.to_string();
+                    return vec![set_document_op(&play)];
+                }
+                if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
+                    play.runtime.eval_outputs_json = json_text.into();
+                    return vec![set_document_op(&play)];
+                }
             }
             "undo" => {
-                if let Some(last) = play.applied_edit_ids.pop() {
-                    play.redo_edit_ids.push(last);
+                if let Some(previous) = play.runtime.undo_stack.pop() {
+                    play.runtime.redo_stack.push(play.fixture.clone());
+                    play.fixture = previous;
                     return vec![set_document_op(&play)];
                 }
             }
             "redo" => {
-                if let Some(next) = play.redo_edit_ids.pop() {
-                    play.applied_edit_ids.push(next);
+                if let Some(next) = play.runtime.redo_stack.pop() {
+                    play.runtime.undo_stack.push(play.fixture.clone());
+                    play.fixture = next;
                     return vec![set_document_op(&play)];
                 }
             }
@@ -423,6 +423,7 @@ fn create_procedural2d_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
+    .example("default", "Default", serde_json::to_string(&default_envelope()).unwrap())
     .program("procedural2d", "Procedural 2D", "layout")
 }
 
@@ -461,66 +462,42 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_revision() {
+    fn hierarchy_lists_widgets() {
         let app = Procedural2dPlayApp;
         let document = app.initial_document_json();
         let node = app.render(PROCEDURAL2D_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("procedural2d-play-hierarchy.revision"));
+        assert!(json.contains("procedural2d-play-hierarchy.widget.rect"));
     }
 
     #[test]
-    fn catalogue_lists_revision_presets() {
+    fn catalogue_lists_show_modes() {
         let app = Procedural2dPlayApp;
         let document = app.initial_document_json();
         let node = app.render(PROCEDURAL2D_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("procedural2d-play-catalogue.revision.1"));
+        assert!(json.contains("procedural2d-play-catalogue.mode.preview"));
     }
 
     #[test]
-    fn set_revision_command_updates_projection() {
+    fn generate_command_sets_eval_outputs() {
         let mut app = Procedural2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("setRevision", Some(&json!({ "revision": 5 })), &document, &ViewState::default());
+        let ops = app.handle_command("generate", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Procedural2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert_eq!(materialized_projection(&next).revision, 5);
+        assert_eq!(next.runtime.show_mode, "generate");
     }
 
     #[test]
-    fn set_selection_updates_runtime() {
+    fn set_show_mode_updates_runtime() {
         let mut app = Procedural2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
-            "setSelection",
-            Some(&json!({ "ids": ["revision"] })),
-            &document,
-            &ViewState::default(),
-        );
-        assert_eq!(ops.len(), 1);
+        let ops = app.handle_command("setShowMode", Some(&json!({ "value": "wire" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Procedural2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
-        assert_eq!(next.runtime.selected_ids, vec!["revision".to_string()]);
-    }
-
-    #[test]
-    fn undo_redo_round_trip_revision() {
-        let mut app = Procedural2dPlayApp;
-        let document = app.initial_document_json();
-        let applied = app
-            .handle_command("setRevision", Some(&json!({ "revision": 3 })), &document, &ViewState::default());
-        let document = serde_json::from_str::<Value>(&applied[0]).unwrap()["document"].to_string();
-        let undone = app.handle_command("undo", None, &document, &ViewState::default());
-        let undone_doc: Procedural2dPlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&undone[0]).unwrap()["document"].clone()).unwrap();
-        assert_eq!(materialized_projection(&undone_doc).revision, 0);
-        let undone_json = serde_json::from_str::<Value>(&undone[0]).unwrap()["document"].to_string();
-        let redone = app.handle_command("redo", None, &undone_json, &ViewState::default());
-        let redone_doc: Procedural2dPlayEnvelope =
-            serde_json::from_value(serde_json::from_str::<Value>(&redone[0]).unwrap()["document"].clone()).unwrap();
-        assert_eq!(materialized_projection(&redone_doc).revision, 3);
+        assert_eq!(next.runtime.show_mode, "wire");
     }
 }
 //#endregion 🧪Tests

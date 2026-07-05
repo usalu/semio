@@ -155,6 +155,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -179,6 +182,9 @@ fn build_hierarchy_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
             selected: Some(envelope.runtime.selected_ids.contains(&tile.id)),
             default_open: None,
             command: Some(presentation_cmd("setSelectedIds", Some(json!({ "ids": [tile.id] })))),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
             draggable: None,
             drag_data: None,
             items: None,
@@ -491,7 +497,7 @@ impl PluginApp for PresentationPlayApp {
                 }
                 return vec![set_document_op(&envelope)];
             }
-            "renameTiles" => {
+            "renameTile" | "renameTiles" => {
                 let ids: Vec<String> = args
                     .and_then(|v| v.get("ids"))
                     .and_then(|v| serde_json::from_value(v.clone()).ok())
@@ -518,7 +524,7 @@ impl PluginApp for PresentationPlayApp {
                 }
                 return vec![set_document_op(&envelope)];
             }
-            "patchTileCrops" => {
+            "patchTileCrops" | "patchTileCrop" => {
                 let ids: Vec<String> = args
                     .and_then(|v| v.get("ids"))
                     .and_then(|v| serde_json::from_value(v.clone()).ok())
@@ -545,21 +551,60 @@ impl PluginApp for PresentationPlayApp {
             }
             "setSource" => {
                 if let Some(source_value) = args {
-                    if let Ok(source) = serde_json::from_value::<FigureTileSource>(source_value.clone()) {
-                        let replaced = source.src != envelope.deck.source.src;
+                    let mut partial = envelope.deck.source.clone();
+                    if let Some(src) = source_value.get("src").and_then(|v| v.as_str()) {
+                        partial.src = src.into();
+                    }
+                    if let Some(kind) = source_value.get("kind").and_then(|v| v.as_str()) {
+                        partial.kind = kind.into();
+                    }
+                    if let Some(frame_value) = source_value.get("frame") {
+                        if let Ok(frame) = serde_json::from_value::<FigureTileFrame>(frame_value.clone()) {
+                            partial.frame = frame;
+                        }
+                    }
+                    if source_value.get("src").is_none() && source_value.get("kind").is_none() && source_value.get("frame").is_none() {
+                        if let Ok(source) = serde_json::from_value::<FigureTileSource>(source_value.clone()) {
+                            partial = source;
+                        }
+                    }
+                    let replaced = partial.src != envelope.deck.source.src;
+                    apply_edit(
+                        &mut envelope,
+                        PresentationEdit::ReplaceSource {
+                            source: partial,
+                            reset_tiles: replaced,
+                        },
+                    );
+                    if replaced {
+                        envelope.runtime.selected_ids.clear();
+                    }
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "setFrame" => {
+                if let Some(frame_value) = args.and_then(|v| v.get("frame")) {
+                    if let Ok(frame) = serde_json::from_value::<FigureTileFrame>(frame_value.clone()) {
+                        let mut source = envelope.deck.source.clone();
+                        source.frame = frame;
                         apply_edit(
                             &mut envelope,
                             PresentationEdit::ReplaceSource {
                                 source,
-                                reset_tiles: replaced,
+                                reset_tiles: false,
                             },
                         );
-                        if replaced {
-                            envelope.runtime.selected_ids.clear();
-                        }
                         return vec![set_document_op(&envelope)];
                     }
                 }
+            }
+            "setActiveExample" => {
+                let example_id = args.and_then(|v| v.get("exampleId")).and_then(|v| v.as_str()).unwrap_or("demo");
+                if example_id == "demo" || example_id.is_empty() {
+                    envelope.deck = default_presentation_deck();
+                }
+                envelope.runtime.selected_ids.clear();
+                return vec![set_document_op(&envelope)];
             }
             "clearTiles" => {
                 apply_edit(&mut envelope, PresentationEdit::ClearTiles);

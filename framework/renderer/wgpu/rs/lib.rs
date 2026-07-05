@@ -135,6 +135,36 @@ impl AppRuntime {
         self.shell.screen_h = (css_height * dpr).max(1.0);
     }
 
+    fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
+        let activate_search = matches!(self.shell.overlay_state, shell::OverlayState::Search)
+            && action == KeyAction::Enter;
+        let activate_find = matches!(self.shell.overlay_state, shell::OverlayState::Find)
+            && action == KeyAction::Enter;
+        let search_index = self.shell.search_selected;
+        let find_index = self.shell.find_selected;
+        self.shell
+            .handle_keyboard(action, &modifiers, &mut self.input);
+        if activate_search {
+            let runtime = self.self_weak.clone();
+            spawn_local(async move {
+                if let Some(runtime) = runtime.upgrade() {
+                    if let Ok(mut app) = runtime.try_borrow_mut() {
+                        let _ = app.shell.activate_search_item(search_index).await;
+                    }
+                }
+            });
+        } else if activate_find {
+            let runtime = self.self_weak.clone();
+            spawn_local(async move {
+                if let Some(runtime) = runtime.upgrade() {
+                    if let Ok(mut app) = runtime.try_borrow_mut() {
+                        let _ = app.shell.activate_find_item(find_index).await;
+                    }
+                }
+            });
+        }
+    }
+
     async fn dispatch_world3d_commands(&mut self, commands: Vec<CommandDescriptor>) {
         for command in commands {
             if let Err(err) = self.shell.dispatch_command(command).await {
@@ -203,6 +233,9 @@ impl AppRuntime {
         self.modifiers = modifiers.clone();
         self.shell
             .handle_pointer_move(x, y, down, &mut self.input, &self.theme);
+        if let Err(err) = self.shell.flush_deferred_commands().await {
+            web_sys::console::warn_1(&JsValue::from_str(&format!("[DEBUG] deferred commands: {err}")));
+        }
         if down && (button == 2 || button == 1) {
             for state in self.shell.world3d_states.values_mut() {
                 if state.bounds.inset(8.0).contains(x, y) {
@@ -256,9 +289,11 @@ pub async fn semio_renderer_boot(
     canvas.set_width((css_width * dpr) as u32);
     canvas.set_height((css_height * dpr) as u32);
 
-    let font_bytes = fetch_font_bytes("/asset/font/kelly-slab/latin.ttf")
-        .await
-        .unwrap_or_default();
+    const ANTA_LATIN: &[u8] = include_bytes!("../../../../ui/asset/font/anta/latin.ttf");
+    let font_bytes = match fetch_font_bytes("/asset/font/anta/latin.ttf").await {
+        Ok(bytes) if bytes.len() > 256 => bytes,
+        _ => ANTA_LATIN.to_vec(),
+    };
     let atlas = FontAtlas::from_bytes(&font_bytes)
         .map_err(|err| JsValue::from_str(&format!("[DEBUG] atlas failed: {err}")))?;
 
@@ -331,19 +366,9 @@ pub async fn semio_renderer_boot(
                     app.wheel_delta += delta;
                 }
             }),
-            on_key: Rc::new(move |action, _modifiers| {
-                let Ok(mut app) = runtime_keyboard.try_borrow_mut() else {
-                    return;
-                };
-                if app.input.focused_id.is_some() {
-                    match action {
-                        KeyAction::Char(key) => app.input.text_buffer.push_str(&key),
-                        KeyAction::Backspace => app.input.backspace(),
-                        KeyAction::Delete => app.input.delete_forward(),
-                        KeyAction::Enter | KeyAction::Escape | KeyAction::ArrowLeft
-                        | KeyAction::ArrowRight | KeyAction::ArrowUp | KeyAction::ArrowDown
-                        | KeyAction::Tab => {}
-                    }
+            on_key: Rc::new(move |action, modifiers| {
+                if let Ok(mut app) = runtime_keyboard.try_borrow_mut() {
+                    app.handle_key(action, modifiers);
                 }
             }),
             on_context_menu: Rc::new(move |x, y| {

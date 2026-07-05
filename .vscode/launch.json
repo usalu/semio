@@ -98,7 +98,7 @@
       "command": "bun ./script.ts dev cad",
       "cwd": "${workspaceFolder}",
       "env": {
-        "CAD_JS_RENDERER_PLAY_PORT": "6020",
+        "CAD_JS_RENDERER_PLAY_PORT": "6120",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -107,7 +107,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6020)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6120)",
         "uriFormat": "%s"
       }
     },
@@ -138,7 +138,7 @@
       "command": "bun ./script.ts dev cad fixture concrete",
       "cwd": "${workspaceFolder}",
       "env": {
-        "CAD_JS_RENDERER_PLAY_PORT": "6020",
+        "CAD_JS_RENDERER_PLAY_PORT": "6120",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -147,7 +147,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6020)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6120)",
         "uriFormat": "%s"
       }
     },
@@ -411,7 +411,7 @@
       "command": "bun run dev:dag",
       "cwd": "${workspaceFolder}",
       "env": {
-        "DAG_PLAY_PORT": "6017",
+        "DAG_PLAY_PORT": "6117",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -420,7 +420,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6017)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6117)",
         "uriFormat": "%s"
       }
     },
@@ -451,7 +451,7 @@
       "command": "bun run dev:flow",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FLOW_PLAY_PORT": "6016",
+        "FLOW_PLAY_PORT": "6116",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -460,7 +460,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6016)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6116)",
         "uriFormat": "%s"
       }
     },
@@ -491,7 +491,7 @@
       "command": "bun run dev:imperative",
       "cwd": "${workspaceFolder}",
       "env": {
-        "IMPERATIVE_PLAY_PORT": "6076",
+        "IMPERATIVE_PLAY_PORT": "6176",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -500,7 +500,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6076)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6176)",
         "uriFormat": "%s"
       }
     },
@@ -531,7 +531,7 @@
       "command": "bun run dev:sequence",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEQUENCE_PLAY_PORT": "6077",
+        "SEQUENCE_PLAY_PORT": "6177",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -540,7 +540,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6077)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6177)",
         "uriFormat": "%s"
       }
     },
@@ -571,7 +571,7 @@
       "command": "bun run dev:lowpoly",
       "cwd": "${workspaceFolder}",
       "env": {
-        "LOWPOLY_PLAY_PORT": "6078",
+        "LOWPOLY_PLAY_PORT": "6178",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -580,7 +580,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6078)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6178)",
         "uriFormat": "%s"
       }
     },
@@ -611,7 +611,7 @@
       "command": "bun run dev:layout",
       "cwd": "${workspaceFolder}",
       "env": {
-        "LAYOUT_PLAY_PORT": "6079",
+        "LAYOUT_PLAY_PORT": "6179",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -620,7 +620,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6079)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6179)",
         "uriFormat": "%s"
       }
     },
@@ -651,7 +651,7 @@
       "command": "bun run dev:gis:2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "GIS_2D_PLAY_PORT": "6040",
+        "GIS_2D_PLAY_PORT": "6140",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -660,7 +660,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6040)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6140)",
         "uriFormat": "%s"
       }
     },
@@ -691,7 +691,7 @@
       "command": "bun run dev:presentation",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PRESENTATION_PLAY_PORT": "6051",
+        "PRESENTATION_PLAY_PORT": "6151",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -700,7 +700,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6051)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6151)",
         "uriFormat": "%s"
       }
     },
@@ -731,7 +731,7 @@
       "command": "bun run dev:procedural:2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCEDURAL_2D_PLAY_PORT": "6021",
+        "PROCEDURAL_2D_PLAY_PORT": "6121",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -740,7 +740,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6021)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6121)",
         "uriFormat": "%s"
       }
     },
@@ -771,7 +771,7 @@
       "command": "bun run dev:procedural:3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCEDURAL_3D_PLAY_PORT": "6018",
+        "PROCEDURAL_3D_PLAY_PORT": "6118",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -780,7 +780,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6118)",
         "uriFormat": "%s"
       }
     },
@@ -811,7 +811,7 @@
       "command": "bun run dev:procedural:3d:hexagonal-column",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROCEDURAL_3D_PLAY_PORT": "6018",
+        "PROCEDURAL_3D_PLAY_PORT": "6118",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -820,7 +820,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6018)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6118)",
         "uriFormat": "%s"
       }
     },
@@ -870,7 +870,7 @@
       "command": "bun run dev:puzzle:2d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_2D_PLAY_PORT": "6012",
+        "PUZZLE_2D_PLAY_PORT": "6112",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -879,7 +879,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6012)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6112)",
         "uriFormat": "%s"
       }
     },
@@ -910,7 +910,7 @@
       "command": "bun run dev:puzzle:3d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_3D_PLAY_PORT": "6013",
+        "PUZZLE_3D_PLAY_PORT": "6113",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -919,7 +919,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6113)",
         "uriFormat": "%s"
       }
     },
@@ -950,7 +950,7 @@
       "command": "bun run dev:puzzle:3d:concrete-forest",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_3D_PLAY_PORT": "6013",
+        "PUZZLE_3D_PLAY_PORT": "6113",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -959,7 +959,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6013)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6113)",
         "uriFormat": "%s"
       }
     },
@@ -990,7 +990,7 @@
       "command": "bun run dev:puzzle:5d",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_5D_PLAY_PORT": "6014",
+        "PUZZLE_5D_PLAY_PORT": "6114",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -999,7 +999,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6014)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6114)",
         "uriFormat": "%s"
       }
     },
@@ -1030,7 +1030,7 @@
       "command": "bun run dev:puzzle:5d:concrete-forest",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_5D_PLAY_PORT": "6014",
+        "PUZZLE_5D_PLAY_PORT": "6114",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1039,7 +1039,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6014)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6114)",
         "uriFormat": "%s"
       }
     },
@@ -1070,7 +1070,7 @@
       "command": "bun run dev:reasoning:wires",
       "cwd": "${workspaceFolder}",
       "env": {
-        "WIRES_PLAY_PORT": "6015",
+        "WIRES_PLAY_PORT": "6115",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1079,7 +1079,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6015)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6115)",
         "uriFormat": "%s"
       }
     },
@@ -1130,7 +1130,7 @@
       "command": "bun run dev:shooting",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SHOOTING_PLAY_PORT": "6019",
+        "SHOOTING_PLAY_PORT": "6119",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1139,7 +1139,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6019)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6119)",
         "uriFormat": "%s"
       }
     },
@@ -1170,7 +1170,7 @@
       "command": "bun run dev:shooting:base-icon",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SHOOTING_PLAY_PORT": "6019",
+        "SHOOTING_PLAY_PORT": "6119",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1179,7 +1179,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6019)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6119)",
         "uriFormat": "%s"
       }
     },
@@ -1305,7 +1305,7 @@
       "command": "bun run dev:trinity:jack",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_JACK_PLAY_PORT": "6054",
+        "TRINITY_JACK_PLAY_PORT": "6154",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1314,7 +1314,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6054)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6154)",
         "uriFormat": "%s"
       }
     },
@@ -1356,7 +1356,7 @@
       "command": "bun run dev:trinity:rewrite",
       "cwd": "${workspaceFolder}",
       "env": {
-        "TRINITY_REWRITE_PLAY_PORT": "6056",
+        "TRINITY_REWRITE_PLAY_PORT": "6156",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1365,7 +1365,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6056)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6156)",
         "uriFormat": "%s"
       }
     },
@@ -1396,7 +1396,7 @@
       "command": "bun run dev:forms",
       "cwd": "${workspaceFolder}",
       "env": {
-        "FORMS_PLAY_PORT": "6058",
+        "FORMS_PLAY_PORT": "6158",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1405,7 +1405,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6058)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6158)",
         "uriFormat": "%s"
       }
     },
@@ -1436,7 +1436,7 @@
       "command": "bun run dev:raster",
       "cwd": "${workspaceFolder}",
       "env": {
-        "RASTER_PLAY_PORT": "6060",
+        "RASTER_PLAY_PORT": "6160",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1445,7 +1445,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6060)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6160)",
         "uriFormat": "%s"
       }
     },
@@ -1476,7 +1476,7 @@
       "command": "bun run dev:vcs",
       "cwd": "${workspaceFolder}",
       "env": {
-        "VCS_PLAY_PORT": "6075",
+        "VCS_PLAY_PORT": "6175",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1485,7 +1485,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6075)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6175)",
         "uriFormat": "%s"
       }
     },
@@ -1622,7 +1622,7 @@
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
       "cwd": "${workspaceFolder}",
       "env": {
-        "S_OS_PORT": "6064",
+        "S_OS_PORT": "6164",
         "SEMIO_PLUGIN": "draw",
         "SEMIO_RENDERER": "wgpu"
       },
@@ -1632,7 +1632,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6064)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6164)",
         "uriFormat": "%s"
       }
     },
@@ -1663,7 +1663,7 @@
       "command": "bun run dev:note",
       "cwd": "${workspaceFolder}",
       "env": {
-        "NOTE_PLAY_PORT": "6080",
+        "NOTE_PLAY_PORT": "6180",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1672,7 +1672,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6080)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6180)",
         "uriFormat": "%s"
       }
     },
@@ -1703,7 +1703,7 @@
       "command": "bun run dev:writer",
       "cwd": "${workspaceFolder}",
       "env": {
-        "WRITER_PLAY_PORT": "6062",
+        "WRITER_PLAY_PORT": "6162",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -1712,7 +1712,7 @@
       },
       "serverReadyAction": {
         "action": "openExternally",
-        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6062)",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6162)",
         "uriFormat": "%s"
       }
     },

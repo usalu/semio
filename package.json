@@ -8,6 +8,8 @@
     "ui/js/react",
     "ui/styling/js",
     "framework/core",
+    "framework/editor/rs",
+    "framework/graph/rs",
     "framework/renderer/react",
     "framework/renderer/wgpu",
     "framework/product/os/dev",

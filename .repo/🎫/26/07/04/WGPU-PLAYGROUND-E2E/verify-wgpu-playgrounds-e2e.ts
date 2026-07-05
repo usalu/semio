@@ -169,6 +169,9 @@ async function smokePlugin(
 		if (pluginId === "s" || pluginId === "flow") {
 			await interactionSmoke(page, pluginId);
 		}
+		if (pluginId === "s" || pluginId === "draw" || pluginId === "flow") {
+			await chromeParitySmoke(page, pluginId);
+		}
 		if (warnings.length > 0) throw new Error(`console warnings: ${warnings.join(" | ")}`);
 		if (errors.length > 0) throw new Error(errors.join(" | "));
 		const shotPath = join(import.meta.dir, `screenshot-${pluginId}.png`);
@@ -179,6 +182,39 @@ async function smokePlugin(
 	}
 }
 
+async function chromeParitySmoke(page: import("playwright").Page, pluginId: string): Promise<void> {
+	const canvas = page.locator("#semio-wgpu-canvas");
+	const box = await canvas.boundingBox();
+	if (!box) throw new Error("canvas missing for chrome parity smoke");
+	await page.keyboard.press(process.platform === "darwin" ? "Meta+p" : "Control+p");
+	await page.waitForTimeout(350);
+	let painted = await canvasHasVisibleContent(page);
+	if (!painted) throw new Error("command palette broke canvas paint");
+	await page.keyboard.press("Escape");
+	await page.waitForTimeout(150);
+	if (pluginId === "flow" || pluginId === "draw") {
+		await page.keyboard.press(process.platform === "darwin" ? "Meta+f" : "Control+f");
+		await page.waitForTimeout(350);
+		painted = await canvasHasVisibleContent(page);
+		if (!painted) throw new Error("find palette broke canvas paint");
+		await page.keyboard.press("Escape");
+	}
+	const click = async (rx: number, ry: number) => {
+		await page.mouse.click(box.x + box.width * rx, box.y + box.height * ry);
+		await page.waitForTimeout(250);
+	};
+	await click(0.78, 0.08);
+	if (pluginId === "draw") {
+		await click(0.92, 0.12);
+	}
+	if (pluginId === "s") {
+		await click(0.06, 0.12);
+		await click(0.92, 0.12);
+	}
+	painted = await canvasHasVisibleContent(page);
+	if (!painted) throw new Error("window chrome rails broke canvas paint");
+}
+
 async function interactionSmoke(page: import("playwright").Page, pluginId: string): Promise<void> {
 	const canvas = page.locator("#semio-wgpu-canvas");
 	const box = await canvas.boundingBox();
@@ -187,8 +223,8 @@ async function interactionSmoke(page: import("playwright").Page, pluginId: strin
 		await page.mouse.click(box.x + box.width * rx, box.y + box.height * ry);
 		await page.waitForTimeout(200);
 	};
-	await click(0.92, 0.04);
-	await click(0.88, 0.04);
+	await click(0.72, 0.04);
+	await click(0.68, 0.04);
 	if (pluginId === "flow") {
 		await click(0.5, 0.55);
 		await click(0.62, 0.48);

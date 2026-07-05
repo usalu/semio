@@ -15,6 +15,9 @@
   "dependencies": {
     "@react-three/fiber": "^9.5.0",
     "@semio-tech/framework-core": "workspace:*",
+    "@semio-tech/framework-editor-rs": "workspace:*",
+    "@semio-tech/framework-graph-rs": "workspace:*",
+    "@semio-tech/flow-core": "workspace:*",
     "@semio-tech/infinite-cavas-react-renderer": "workspace:*",
     "@semio-tech/infinite-world-r3f": "workspace:*",
     "@semio-tech/ui-asset": "workspace:*",

@@ -182,7 +182,15 @@ impl DrawList {
         });
     }
 
-    pub fn push_scene_pass(&mut self, pass: ScenePass3d) {
+    pub fn push_scene_pass(&mut self, mut pass: ScenePass3d) {
+        if self.layers.is_empty() {
+            self.layers.push(DrawLayer::default());
+        }
+        let layer_index = self.layers.len() - 1;
+        let layer = &self.layers[layer_index];
+        pass.layer_index = layer_index;
+        pass.ui_watermark = layer.ui_instances.len();
+        pass.vector_watermark = layer.vector_vertices.len();
         self.scene_passes.push(pass);
     }
 
@@ -601,6 +609,8 @@ fn sign(p1: [f32; 2], p2: [f32; 2], p3: [f32; 2]) -> f32 {
     (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1])
 }
 
+pub const ICON_ATLAS_TEXTURE_SIZE: u32 = 2048;
+
 pub struct IconAtlas {
     pub width: u32,
     pub height: u32,
@@ -749,6 +759,7 @@ pub(crate) struct UiPipelines {
 }
 
 struct LayerBatch {
+    layer_index: usize,
     scissor: Option<ScissorRect>,
     ui_start: u32,
     ui_count: u32,
@@ -760,8 +771,13 @@ fn build_layer_batches(draw: &DrawList) -> (Vec<UiInstance>, Vec<VectorVertex>, 
     let mut all_ui = Vec::new();
     let mut all_vec = Vec::new();
     let mut batches = Vec::new();
-    for layer in &draw.layers {
-        if layer.ui_instances.is_empty() && layer.vector_vertices.is_empty() {
+    let scene_layers: std::collections::HashSet<usize> =
+        draw.scene_passes.iter().map(|pass| pass.layer_index).collect();
+    for (layer_index, layer) in draw.layers.iter().enumerate() {
+        if layer.ui_instances.is_empty()
+            && layer.vector_vertices.is_empty()
+            && !scene_layers.contains(&layer_index)
+        {
             continue;
         }
         let ui_start = all_ui.len() as u32;
@@ -769,6 +785,7 @@ fn build_layer_batches(draw: &DrawList) -> (Vec<UiInstance>, Vec<VectorVertex>, 
         let vec_start = all_vec.len() as u32;
         all_vec.extend_from_slice(&layer.vector_vertices);
         batches.push(LayerBatch {
+            layer_index,
             scissor: layer.scissor,
             ui_start,
             ui_count: layer.ui_instances.len() as u32,
@@ -888,7 +905,7 @@ impl UiPipelines {
 
         let glyph_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("glyph_atlas"),
-            size: wgpu::Extent3d { width: 2048, height: 2048, depth_or_array_layers: 1 },
+            size: wgpu::Extent3d { width: ICON_ATLAS_TEXTURE_SIZE, height: ICON_ATLAS_TEXTURE_SIZE, depth_or_array_layers: 1 },
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
@@ -905,7 +922,7 @@ impl UiPipelines {
         });
         let icon_texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("icon_atlas"),
-            size: wgpu::Extent3d { width: 2048, height: 2048, depth_or_array_layers: 1 },
+            size: wgpu::Extent3d { width: ICON_ATLAS_TEXTURE_SIZE, height: ICON_ATLAS_TEXTURE_SIZE, depth_or_array_layers: 1 },
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
@@ -1216,48 +1233,181 @@ impl UiPipelines {
         Some(prepared)
     }
 
-    fn draw_world_passes<'a>(
+    fn draw_world_pass_at<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
         mesh_store: &MeshGpuStore,
-        prepared: &[PreparedWorldPass],
+        prepared: &PreparedWorldPass,
+        slot: u32,
         instance_buffer: wgpu::BufferSlice<'a>,
         screen_w: f32,
         screen_h: f32,
     ) {
         let instance_stride = mem::size_of::<World3dGpuInstance>() as u64;
         pass.set_pipeline(&self.world_pipeline);
-        for (slot, scene) in prepared.iter().enumerate() {
-            let viewport = scene.viewport;
-            pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
-            pass.set_scissor_rect(
-                viewport[0] as u32,
-                viewport[1] as u32,
-                viewport[2] as u32,
-                viewport[3] as u32,
+        let viewport = prepared.viewport;
+        pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
+        pass.set_scissor_rect(
+            viewport[0] as u32,
+            viewport[1] as u32,
+            viewport[2] as u32,
+            viewport[3] as u32,
+        );
+        pass.set_bind_group(
+            0,
+            &self.world_globals_ring.bind_group,
+            &[self.world_globals_ring.offset_for_slot(slot)],
+        );
+        for draw_call in &prepared.draws {
+            let store_key = MeshGpuStore::lookup_key(&draw_call.mesh_key, draw_call.mesh_version);
+            let Some(mesh) = mesh_store.get(&store_key) else {
+                continue;
+            };
+            let byte_offset = draw_call.instance_offset as u64 * instance_stride;
+            pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
+            pass.set_vertex_buffer(
+                1,
+                instance_buffer.slice(byte_offset..byte_offset + draw_call.instance_count as u64 * instance_stride),
             );
-            pass.set_bind_group(
-                0,
-                &self.world_globals_ring.bind_group,
-                &[self.world_globals_ring.offset_for_slot(slot as u32)],
-            );
-            for draw_call in &scene.draws {
-                let store_key = MeshGpuStore::lookup_key(&draw_call.mesh_key, draw_call.mesh_version);
-                let Some(mesh) = mesh_store.get(&store_key) else {
-                    continue;
-                };
-                let byte_offset = draw_call.instance_offset as u64 * instance_stride;
-                pass.set_vertex_buffer(0, mesh.vertex_buffer.slice(..));
-                pass.set_vertex_buffer(
-                    1,
-                    instance_buffer.slice(byte_offset..byte_offset + draw_call.instance_count as u64 * instance_stride),
-                );
-                pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
-                pass.draw_indexed(0..mesh.index_count, 0, 0..draw_call.instance_count);
-            }
+            pass.set_index_buffer(mesh.index_buffer.slice(..), wgpu::IndexFormat::Uint32);
+            pass.draw_indexed(0..mesh.index_count, 0, 0..draw_call.instance_count);
         }
         pass.set_viewport(0.0, 0.0, screen_w, screen_h, 0.0, 1.0);
         pass.set_scissor_rect(0, 0, screen_w as u32, screen_h as u32);
+    }
+
+    fn draw_ui_instances<'a>(
+        &'a self,
+        pass: &mut wgpu::RenderPass<'a>,
+        instance_buffer: &wgpu::BufferSlice<'a>,
+        start: u32,
+        count: u32,
+    ) {
+        if count == 0 {
+            return;
+        }
+        pass.set_pipeline(&self.ui_pipeline);
+        pass.set_bind_group(0, &self.glyph_bind_group, &[]);
+        pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
+        pass.set_vertex_buffer(1, instance_buffer.clone());
+        pass.draw(0..6, start..start + count);
+    }
+
+    fn draw_vector_vertices<'a>(
+        &'a self,
+        pass: &mut wgpu::RenderPass<'a>,
+        vector_buffer: &wgpu::BufferSlice<'a>,
+        start: u32,
+        count: u32,
+    ) {
+        if count == 0 {
+            return;
+        }
+        pass.set_pipeline(&self.vector_pipeline);
+        pass.set_vertex_buffer(0, vector_buffer.clone());
+        pass.draw(start..start + count, 0..1);
+    }
+
+    fn render_interleaved_layers<'a>(
+        &'a self,
+        pass: &mut wgpu::RenderPass<'a>,
+        draw: &DrawList,
+        batches: &[LayerBatch],
+        ui_buffer: Option<&wgpu::BufferSlice<'a>>,
+        vector_buffer: Option<&wgpu::BufferSlice<'a>>,
+        world_prepared: Option<&[PreparedWorldPass]>,
+        instance_buffer: Option<wgpu::BufferSlice<'a>>,
+        mesh_store: &MeshGpuStore,
+        width: f32,
+        height: f32,
+        depth_enabled: bool,
+    ) {
+        for batch in batches {
+            set_pass_scissor(pass, batch.scissor, width, height);
+            let mut layer_passes: Vec<(usize, usize, usize)> = draw
+                .scene_passes
+                .iter()
+                .enumerate()
+                .filter(|(_, scene)| scene.layer_index == batch.layer_index)
+                .map(|(index, scene)| (index, scene.ui_watermark, scene.vector_watermark))
+                .collect();
+            layer_passes.sort_by_key(|(_, ui, vec)| (*ui, *vec));
+            if layer_passes.is_empty() {
+                if let Some(instance_buffer) = ui_buffer {
+                    self.draw_ui_instances(pass, instance_buffer, batch.ui_start, batch.ui_count);
+                }
+                if let Some(vector_buffer) = vector_buffer {
+                    self.draw_vector_vertices(pass, vector_buffer, batch.vec_start, batch.vec_count);
+                }
+                continue;
+            }
+            let mut ui_local = 0u32;
+            let mut vec_local = 0u32;
+            for (pass_index, ui_mark, vec_mark) in layer_passes {
+                let ui_mark = ui_mark as u32;
+                let vec_mark = vec_mark as u32;
+                if ui_mark > ui_local {
+                    if let Some(instance_buffer) = ui_buffer {
+                        self.draw_ui_instances(
+                            pass,
+                            instance_buffer,
+                            batch.ui_start + ui_local,
+                            ui_mark - ui_local,
+                        );
+                    }
+                    ui_local = ui_mark;
+                }
+                if vec_mark > vec_local {
+                    if let Some(vector_buffer) = vector_buffer {
+                        self.draw_vector_vertices(
+                            pass,
+                            vector_buffer,
+                            batch.vec_start + vec_local,
+                            vec_mark - vec_local,
+                        );
+                    }
+                    vec_local = vec_mark;
+                }
+                if depth_enabled {
+                    if let (Some(prepared), Some(instance_buffer)) =
+                        (world_prepared, instance_buffer.as_ref())
+                    {
+                        if let Some(scene) = prepared.get(pass_index) {
+                            self.draw_world_pass_at(
+                                pass,
+                                mesh_store,
+                                scene,
+                                pass_index as u32,
+                                instance_buffer.clone(),
+                                width,
+                                height,
+                            );
+                        }
+                    }
+                }
+            }
+            if ui_local < batch.ui_count {
+                if let Some(instance_buffer) = ui_buffer {
+                    self.draw_ui_instances(
+                        pass,
+                        instance_buffer,
+                        batch.ui_start + ui_local,
+                        batch.ui_count - ui_local,
+                    );
+                }
+            }
+            if vec_local < batch.vec_count {
+                if let Some(vector_buffer) = vector_buffer {
+                    self.draw_vector_vertices(
+                        pass,
+                        vector_buffer,
+                        batch.vec_start + vec_local,
+                        batch.vec_count - vec_local,
+                    );
+                }
+            }
+        }
+        pass.set_scissor_rect(0, 0, width as u32, height as u32);
     }
 
     pub fn update_globals(&self, queue: &wgpu::Queue, width: f32, height: f32) {
@@ -1327,6 +1477,30 @@ impl UiPipelines {
         } else {
             None
         };
+        let (all_ui, all_vec, batches) = build_layer_batches(draw);
+        let ui_buffer = if all_ui.is_empty() {
+            None
+        } else {
+            frame_buffers.ui_instances.upload(
+                device,
+                queue,
+                &all_ui,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "ui_instances",
+            )
+        };
+        let vector_buffer = if all_vec.is_empty() {
+            None
+        } else {
+            frame_buffers.vector_vertices.upload(
+                device,
+                queue,
+                &all_vec,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "vector_vertices",
+            )
+        };
+        let instance_buffer = frame_buffers.world_instances.slice();
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("ui_pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -1354,67 +1528,19 @@ impl UiPipelines {
             timestamp_writes: None,
             occlusion_query_set: None,
         });
-
-        if let (Some(prepared), Some(instance_buffer)) =
-            (world_prepared, frame_buffers.world_instances.slice())
-        {
-            self.draw_world_passes(&mut pass, mesh_store, &prepared, instance_buffer, width, height);
-        }
-
-        pass.set_pipeline(&self.ui_pipeline);
-        pass.set_bind_group(0, &self.glyph_bind_group, &[]);
-        pass.set_scissor_rect(0, 0, width as u32, height as u32);
-
-        let (all_ui, all_vec, batches) = build_layer_batches(draw);
-        let ui_buffer = if all_ui.is_empty() {
-            None
-        } else {
-            frame_buffers.ui_instances.upload(
-                device,
-                queue,
-                &all_ui,
-                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-                "ui_instances",
-            )
-        };
-        let vector_buffer = if all_vec.is_empty() {
-            None
-        } else {
-            frame_buffers.vector_vertices.upload(
-                device,
-                queue,
-                &all_vec,
-                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
-                "vector_vertices",
-            )
-        };
-
-        for batch in &batches {
-            set_pass_scissor(&mut pass, batch.scissor, width, height);
-            if batch.ui_count > 0 {
-                if let Some(instance_buffer) = &ui_buffer {
-                    pass.set_pipeline(&self.ui_pipeline);
-                    pass.set_bind_group(0, &self.glyph_bind_group, &[]);
-                    pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
-                    pass.set_vertex_buffer(1, instance_buffer.clone());
-                    pass.draw(
-                        0..6,
-                        batch.ui_start..batch.ui_start + batch.ui_count,
-                    );
-                }
-            }
-            if batch.vec_count > 0 {
-                if let Some(vector_buffer) = &vector_buffer {
-                    pass.set_pipeline(&self.vector_pipeline);
-                    pass.set_vertex_buffer(0, vector_buffer.clone());
-                    pass.draw(
-                        batch.vec_start..batch.vec_start + batch.vec_count,
-                        0..1,
-                    );
-                }
-            }
-        }
-        pass.set_scissor_rect(0, 0, width as u32, height as u32);
+        self.render_interleaved_layers(
+            &mut pass,
+            draw,
+            &batches,
+            ui_buffer.as_ref(),
+            vector_buffer.as_ref(),
+            world_prepared.as_deref(),
+            instance_buffer,
+            mesh_store,
+            width,
+            height,
+            depth_view.is_some(),
+        );
         drop(pass);
         if let Some(overlay) = overlay {
             let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -1520,6 +1646,7 @@ impl UiPipelines {
 mod tests {
     use super::{ear_clip_polygon, mesh_content_version, DrawList, ScissorRect, WORLD_GLOBALS_SLOT_SIZE};
     use crate::geometry::Rect;
+    use crate::scene3d::ScenePass3d;
     use crate::theme::Rgba;
 
     #[test]
@@ -1562,6 +1689,26 @@ mod tests {
     fn world_globals_slot_size_is_aligned() {
         assert!(WORLD_GLOBALS_SLOT_SIZE >= 80);
         assert_eq!(WORLD_GLOBALS_SLOT_SIZE % 256, 0);
+    }
+
+    #[test]
+    fn scene_pass_records_layer_watermarks() {
+        let mut draw = DrawList::default();
+        draw.push_solid([0.0, 0.0, 10.0, 10.0], Rgba::new(1.0, 0.0, 0.0, 1.0));
+        draw.push_solid([1.0, 1.0, 8.0, 8.0], Rgba::new(0.0, 1.0, 0.0, 1.0));
+        draw.push_scene_pass(ScenePass3d {
+            viewport: [0.0, 0.0, 100.0, 100.0],
+            view_proj: [0.0; 16],
+            light_dir: [0.0, 0.0, 1.0],
+            ..Default::default()
+        });
+        draw.push_line(0.0, 0.0, 1.0, 1.0, Rgba::new(0.0, 0.0, 1.0, 1.0), 1.0);
+        let pass = &draw.scene_passes[0];
+        assert_eq!(pass.layer_index, 0);
+        assert_eq!(pass.ui_watermark, 2);
+        assert_eq!(pass.vector_watermark, 0);
+        assert_eq!(draw.layers[0].ui_instances.len(), 2);
+        assert_eq!(draw.layers[0].vector_vertices.len(), 6);
     }
 
     #[test]

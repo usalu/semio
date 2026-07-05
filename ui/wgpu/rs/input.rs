@@ -4,6 +4,8 @@ use crate::geometry::Rect;
 #[cfg(target_arch = "wasm32")]
 use std::rc::Rc;
 
+use std::collections::HashMap;
+
 #[derive(Clone, Debug)]
 pub struct HitTarget<E> {
     pub rect: Rect,
@@ -11,6 +13,7 @@ pub struct HitTarget<E> {
     pub control_id: Option<String>,
     pub kind: HitKind,
     pub drag_axis: Option<DragAxis>,
+    pub drag_data: Option<HashMap<String, String>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -21,6 +24,23 @@ pub enum DragAxis {
     Ring,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TreeDropPosition {
+    Before,
+    After,
+    Inside,
+}
+
+#[derive(Clone, Debug)]
+pub struct TreeDragState {
+    pub source_id: String,
+    pub drag_data: HashMap<String, String>,
+    pub x: f32,
+    pub y: f32,
+    pub drop_target_id: Option<String>,
+    pub drop_position: TreeDropPosition,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum HitKind {
     Button,
@@ -29,6 +49,7 @@ pub enum HitKind {
     Select,
     Slider,
     TreeItem,
+    TreeDropTarget,
     PanelTab,
     NavbarItem,
     Window,

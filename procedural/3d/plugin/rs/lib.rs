@@ -5,13 +5,14 @@ use semio_framework_plugin::{
     build_node_graph_scene, build_world_3d_scene, create_default_layout, export_mesh_glb_bytes,
     export_mesh_obj, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
-    world3d_default_camera, world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json,
+    world3d_default_camera, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json,
     CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use std::collections::HashSet;
 use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -31,7 +32,14 @@ const PROCEDURAL_3D_PLAY_BODY_INSPECTION: &str = "procedural.play.inspection";
 const PROCEDURAL_3D_PLAY_WINDOW_MAIN: &str = "procedural-main";
 const PROCEDURAL_3D_PLAY_WINDOW_PREVIEW: &str = "procedural-preview";
 
-const PROCEDURAL_MESH_KIND: &str = "box";
+const PROCEDURAL_FALLBACK_MESH_KIND: &str = "box";
+const PROCEDURAL_EXAMPLE_HEX_COLUMN: &str = "hexagonal-mushroom-column";
+const PROCEDURAL_EXAMPLE_RECT_EXTRUDE: &str = "rectangle-extrude-volume";
+const PROCEDURAL_EXAMPLE_SPHERE_TORUS: &str = "sphere-cut-with-torus";
+
+const HEX_COLUMN_EXAMPLE_JSON: &str = include_str!("../../example/hexagonal-mushroom-column.procedural.json");
+const RECT_EXTRUDE_EXAMPLE_JSON: &str = include_str!("../../example/rectangle-extrude-volume.procedural.json");
+const SPHERE_TORUS_EXAMPLE_JSON: &str = include_str!("../../example/sphere-cut-with-torus.procedural.json");
 
 const WIDGET_CATALOG: &[(&str, &str, &str)] = &[
     ("neuron", "Neuron", "cpu"),
@@ -74,10 +82,17 @@ struct Procedural3dEnvelope {
 }
 
 fn default_envelope() -> Procedural3dEnvelope {
-    Procedural3dEnvelope {
+    envelope_from_fixture_json(HEX_COLUMN_EXAMPLE_JSON).unwrap_or_else(|| Procedural3dEnvelope {
         fixture: FlowFixture::default(),
         runtime: Procedural3dRuntime::default(),
-    }
+    })
+}
+
+fn envelope_from_fixture_json(json_text: &str) -> Option<Procedural3dEnvelope> {
+    serde_json::from_str::<FlowFixture>(json_text).ok().map(|fixture| Procedural3dEnvelope {
+        fixture,
+        runtime: Procedural3dRuntime::default(),
+    })
 }
 
 fn parse_envelope(document_json: &str) -> Procedural3dEnvelope {
@@ -158,32 +173,73 @@ fn widget_id(widget: &Widget) -> &str {
     }
 }
 
-fn preview_instances_json(host: &FlowHost, runtime: &Procedural3dRuntime) -> String {
-    let instances: Vec<Value> = host
-        .dag
-        .fixture
-        .nodes
+fn neuron_mesh_kind(neuron_kind: &str) -> &'static str {
+    match neuron_kind {
+        "brep.prim3d.sphere" => "sphere",
+        "brep.prim3d.cylinder" => "cylinder",
+        "brep.prim3d.cone" => "cone",
+        "brep.prim3d.torus" => "torus",
+        "brep.prim3d.box" => "box",
+        "brep.solid.extrude" | "brep.bool.cut" | "brep.bool.fuse" => "box",
+        _ => PROCEDURAL_FALLBACK_MESH_KIND,
+    }
+}
+
+fn widget_preview_mesh_kind(widget: &Widget) -> Option<&'static str> {
+    match widget {
+        Widget::Neuron { neuronKind, preview, .. } if *preview => Some(neuron_mesh_kind(neuronKind)),
+        Widget::OutputPreview { .. } => Some(PROCEDURAL_FALLBACK_MESH_KIND),
+        _ => None,
+    }
+}
+
+fn widget_layout_position(fixture: &FlowFixture, widget_id: &str) -> (f64, f64) {
+    fixture
+        .layout
+        .get(widget_id)
+        .map(|layout| (layout.x, layout.y))
+        .unwrap_or((0.0, 0.0))
+}
+
+fn preview_instances_json(fixture: &FlowFixture, runtime: &Procedural3dRuntime) -> String {
+    let instances: Vec<Value> = fixture
+        .widgets
         .iter()
-        .enumerate()
-        .map(|(index, node)| {
-            let selected = runtime.selected_node_ids.contains(&node.id);
-            let hovered = runtime.hovered_node_id.as_deref() == Some(node.id.as_str());
-            json!({
-                "id": node.id,
-                "meshId": PROCEDURAL_MESH_KIND,
-                "position": [node.x * 0.01, node.y * 0.01, index as f64 * 0.5],
+        .filter_map(|widget| {
+            let mesh_kind = widget_preview_mesh_kind(widget)?;
+            let id = widget_id(widget).to_string();
+            let (x, y) = widget_layout_position(fixture, &id);
+            let selected = runtime.selected_node_ids.contains(&id);
+            let hovered = runtime.hovered_node_id.as_deref() == Some(id.as_str());
+            Some(json!({
+                "id": id,
+                "meshId": mesh_kind,
+                "position": [x * 0.01, -y * 0.01, 0.0],
+                "rotation": [0.0, 0.0, 0.0, 1.0],
                 "scale": [1.0, 1.0, 1.0],
-                "label": node.name,
+                "label": id,
                 "selected": selected,
                 "hovered": hovered,
-            })
+            }))
         })
         .collect();
     serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
 }
 
-fn preview_meshes_json() -> String {
-    world3d_meshes_json_from_kinds(&[PROCEDURAL_MESH_KIND.into()])
+fn preview_meshes_json(fixture: &FlowFixture) -> String {
+    let kinds: Vec<String> = fixture
+        .widgets
+        .iter()
+        .filter_map(|widget| widget_preview_mesh_kind(widget).map(str::to_string))
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
+    let fallback_kinds = if kinds.is_empty() {
+        vec![PROCEDURAL_FALLBACK_MESH_KIND.into()]
+    } else {
+        kinds
+    };
+    world3d_meshes_json_from_kinds_and_urls(&fallback_kinds, &[])
 }
 
 fn preview_selection_json(runtime: &Procedural3dRuntime) -> String {
@@ -194,8 +250,14 @@ fn preview_selection_json(runtime: &Procedural3dRuntime) -> String {
     )
 }
 
-fn export_mesh_from_envelope(_envelope: &Procedural3dEnvelope) -> semio_framework_plugin::MeshData {
-    mesh_from_kind(PROCEDURAL_MESH_KIND)
+fn export_mesh_from_envelope(envelope: &Procedural3dEnvelope) -> semio_framework_plugin::MeshData {
+    let kind = envelope
+        .fixture
+        .widgets
+        .iter()
+        .find_map(|widget| widget_preview_mesh_kind(widget))
+        .unwrap_or(PROCEDURAL_FALLBACK_MESH_KIND);
+    mesh_from_kind(kind)
 }
 //#endregion 🔖Document
 
@@ -214,6 +276,9 @@ fn tree_item_with_command(
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -350,12 +415,33 @@ impl PluginApp for Procedural3dPlayApp {
                     }
                 }
             }
+            "setActiveExample" => {
+                let example_id = args
+                    .and_then(|value| value.get("exampleId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                envelope = if example_id.is_empty() || example_id == "empty" {
+                    Procedural3dEnvelope {
+                        fixture: FlowFixture::default(),
+                        runtime: Procedural3dRuntime::default(),
+                    }
+                } else if example_id == PROCEDURAL_EXAMPLE_HEX_COLUMN || example_id == "demo" {
+                    envelope_from_fixture_json(HEX_COLUMN_EXAMPLE_JSON).unwrap_or_else(default_envelope)
+                } else if example_id == PROCEDURAL_EXAMPLE_RECT_EXTRUDE {
+                    envelope_from_fixture_json(RECT_EXTRUDE_EXAMPLE_JSON).unwrap_or_else(default_envelope)
+                } else if example_id == PROCEDURAL_EXAMPLE_SPHERE_TORUS {
+                    envelope_from_fixture_json(SPHERE_TORUS_EXAMPLE_JSON).unwrap_or_else(default_envelope)
+                } else {
+                    envelope
+                };
+                return vec![set_document_op(&envelope)];
+            }
             "setSelection" | "selectNode" => {
                 envelope.runtime.selected_node_ids = selection_ids(args);
                 return vec![set_document_op(&envelope)];
             }
             "setLodMode" => {
-                if let Some(mode) = args.and_then(|value| value.get("instanceId")).and_then(|value| value.as_str()) {
+                if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                     envelope.runtime.lod_mode = mode.into();
                     return vec![set_document_op(&envelope)];
                 }
@@ -468,8 +554,8 @@ impl PluginApp for Procedural3dPlayApp {
                 PROCEDURAL_3D_PLAY_APP_ID,
                 world3d_scene(
                     world3d_default_camera(),
-                    preview_meshes_json(),
-                    preview_instances_json(&host, &envelope.runtime),
+                    preview_meshes_json(&envelope.fixture),
+                    preview_instances_json(&envelope.fixture, &envelope.runtime),
                     preview_selection_json(&envelope.runtime),
                 ),
             ),
@@ -531,7 +617,9 @@ fn create_procedural3d_app() -> App {
                 PROCEDURAL_3D_PLAY_BODY_INSPECTION,
             ),
     )
-    .example("demo", "Demo", &serde_json::to_string(&default_envelope()).unwrap())
+    .example(PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", HEX_COLUMN_EXAMPLE_JSON)
+    .example(PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", RECT_EXTRUDE_EXAMPLE_JSON)
+    .example(PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", SPHERE_TORUS_EXAMPLE_JSON)
     .program("procedural3d", "Procedural 3D", "brep")
 }
 
@@ -582,6 +670,40 @@ mod tests {
         let node = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("node-graph"));
+    }
+
+    #[test]
+    fn preview_uses_widget_mesh_kinds() {
+        let app = Procedural3dPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("world-3d"));
+        assert!(json.contains("meshId"));
+        assert!(json.contains("box"));
+    }
+
+    #[test]
+    fn set_lod_mode_reads_value_arg() {
+        let mut app = Procedural3dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("setLodMode", Some(&json!({ "value": "wireframe" })), &document, &ViewState::default());
+        let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.lod_mode, "wireframe");
+    }
+
+    #[test]
+    fn set_active_example_loads_sphere_fixture() {
+        let mut app = Procedural3dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "setActiveExample",
+            Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
+            &document,
+            &ViewState::default(),
+        );
+        let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(envelope.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.prim3d.sphere")));
     }
 
     #[test]

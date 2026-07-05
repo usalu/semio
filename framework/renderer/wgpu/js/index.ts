@@ -2,6 +2,7 @@
 /** @emoji 🧊 `@semio-tech/framework-renderer-wgpu` — raw wgpu WASM renderer boot for declarative Rust plugin UI trees. */
 // #endregion 🧲Header
 
+import { ICON_NAMES, ICONS } from "@semio-tech/ui-asset";
 import { loadPluginModule, pluginHandleForBridge } from "@semio-tech/framework-core";
 
 export type FrameworkOsWgpuBootOptions = {
@@ -13,33 +14,13 @@ export type FrameworkOsWgpuBootOptions = {
 
 const DEFAULT_RENDERER_MODULE_URL = "/renderer-modules/wgpu/semio_framework_renderer_wgpu.js";
 
-const ICON_IDS = [
-	"search",
-	"panel-left",
-	"panel-right",
-	"chevron-left",
-	"chevron-right",
-	"chevron-up",
-	"chevron-down",
-	"sun",
-	"moon",
-	"rotate-ccw",
-	"rotate-cw",
-	"save",
-	"home",
-	"settings",
-	"x",
-	"plus",
-	"minus",
-] as const;
+const SEMIO_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 350"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
 
 const ICON_SIZE = 24;
-const ATLAS_COLS = 8;
+const ATLAS_COLS = 16;
+const ICON_ATLAS_TEXTURE_SIZE = 2048;
 
-async function rasterizeIcon(id: string): Promise<ImageData | null> {
-	const response = await fetch(`/asset/icon/${id}.svg`);
-	if (!response.ok) return null;
-	const svg = await response.text();
+async function rasterizeSvg(svg: string): Promise<ImageData | null> {
 	const blob = new Blob([svg], { type: "image/svg+xml" });
 	const url = URL.createObjectURL(blob);
 	try {
@@ -62,13 +43,22 @@ async function rasterizeIcon(id: string): Promise<ImageData | null> {
 	}
 }
 
+async function rasterizeIcon(id: string): Promise<ImageData | null> {
+	const svg = ICONS[id as keyof typeof ICONS];
+	if (!svg) return null;
+	return rasterizeSvg(svg);
+}
+
 export async function buildIconAtlas(): Promise<{
 	width: number;
 	height: number;
 	pixels: Uint8Array;
 	entries: Record<string, [number, number, number, number]>;
 }> {
-	const loaded = await Promise.all(ICON_IDS.map(async (id) => ({ id, image: await rasterizeIcon(id) })));
+	const loaded = await Promise.all([
+		...ICON_NAMES.map(async (id) => ({ id, image: await rasterizeIcon(id) })),
+		{ id: "semio-logo", image: await rasterizeSvg(SEMIO_LOGO_SVG) },
+	]);
 	const rows = Math.ceil(loaded.length / ATLAS_COLS);
 	const width = ATLAS_COLS * ICON_SIZE;
 	const height = rows * ICON_SIZE;
@@ -90,7 +80,12 @@ export async function buildIconAtlas(): Promise<{
 				pixels[dst + 3] = item.image.data[src + 3] ?? 0;
 			}
 		}
-		entries[item.id] = [ox / width, oy / height, (ox + ICON_SIZE) / width, (oy + ICON_SIZE) / height];
+		entries[item.id] = [
+			ox / ICON_ATLAS_TEXTURE_SIZE,
+			oy / ICON_ATLAS_TEXTURE_SIZE,
+			(ox + ICON_SIZE) / ICON_ATLAS_TEXTURE_SIZE,
+			(oy + ICON_SIZE) / ICON_ATLAS_TEXTURE_SIZE,
+		];
 	}
 	return { width, height, pixels, entries };
 }
@@ -108,12 +103,15 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
 	root.append(canvas);
 
 	const pluginEntries = options.plugins ?? [];
-	const handles = await Promise.all(
-		pluginEntries.map(async (entry) => ({
-			pluginId: entry.pluginId,
-			handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
-		})),
-	);
+	const [handles, iconAtlas] = await Promise.all([
+		Promise.all(
+			pluginEntries.map(async (entry) => ({
+				pluginId: entry.pluginId,
+				handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
+			})),
+		),
+		buildIconAtlas(),
+	]);
 
 	const rendererUrl = options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL;
 	const rendererModule = (await import(/* @vite-ignore */ rendererUrl)) as {
@@ -130,7 +128,6 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
 		throw new Error("[DEBUG] wgpu renderer module missing semioRendererBoot");
 	}
 	await rendererModule.semioRendererBoot(canvas, handles, options.plugin ?? "s");
-	const iconAtlas = await buildIconAtlas();
 	if (rendererModule.uploadIconAtlas) {
 		rendererModule.uploadIconAtlas(
 			iconAtlas.width,
@@ -139,4 +136,5 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
 			JSON.stringify(iconAtlas.entries),
 		);
 	}
+	await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
 }

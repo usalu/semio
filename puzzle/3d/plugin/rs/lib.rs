@@ -334,7 +334,7 @@ fn scene_config_json(envelope: &Puzzle3dEnvelope) -> String {
             "targetVolumes": envelope.fixture.target_volumes,
         },
         "kindCatalogs": envelope.fixture.meta.kind_catalogs,
-        "kindCompatibility": envelope.fixture.meta.kind_compatibility.unwrap_or(json!([])),
+        "kindCompatibility": envelope.fixture.meta.kind_compatibility.clone().unwrap_or(json!([])),
         "overlapBudget": envelope.runtime.overlap_budget,
         "seed": 1,
         "hostRules": {},
@@ -394,6 +394,9 @@ fn tree_item_with_command(
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -860,7 +863,7 @@ mod tests {
 
     #[test]
     fn renders_world_scene() {
-        let app = Puzzle3dPlayApp;
+        let app = Puzzle3dPlayApp::default();
         let document = app.initial_document_json();
         let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -876,7 +879,7 @@ mod tests {
 
     #[test]
     fn hierarchy_lists_objects() {
-        let app = Puzzle3dPlayApp;
+        let app = Puzzle3dPlayApp::default();
         let document = app.initial_document_json();
         let node = app.render(PUZZLE3D_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -885,7 +888,7 @@ mod tests {
 
     #[test]
     fn add_object_kind_appends_object() {
-        let mut app = Puzzle3dPlayApp;
+        let mut app = Puzzle3dPlayApp::default();
         let document = app.initial_document_json();
         let ops = app.handle_command(
             "addObjectKind",

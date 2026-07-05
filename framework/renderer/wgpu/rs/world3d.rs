@@ -298,6 +298,7 @@ pub fn render_world_3d(
         view_proj: view_proj.to_cols_array(),
         light_dir: [0.4, 0.6, 0.8],
         draws: culled_draws,
+        ..Default::default()
     });
     if state.marquee_active && state.marquee_points.len() >= 2 {
         let accent = theme.accent;
@@ -337,6 +338,7 @@ pub fn render_world_3d(
         control_id: Some(state.surface_id.clone()),
         kind: HitKind::World3d,
         drag_axis: None,
+    drag_data: None,
     });
 }
 
@@ -347,6 +349,7 @@ pub fn world3d_hit_target(scene: &UiComponentSceneNode, bounds: Rect) -> HitTarg
         control_id: Some(scene.surface_id.clone()),
         kind: HitKind::World3d,
         drag_axis: None,
+        drag_data: None,
     }
 }
 
@@ -585,8 +588,19 @@ pub fn collect_pending_glb_fetches(states: &HashMap<String, World3dState>) -> Ve
     pending
 }
 
+fn mesh_id_from_url(url: &str) -> String {
+    let slug = url
+        .trim_start_matches('/')
+        .rsplit('/')
+        .next()
+        .unwrap_or(url)
+        .trim_end_matches(".glb")
+        .trim_end_matches(".gltf");
+    format!("mesh:{slug}")
+}
+
 pub fn apply_glb_bytes(state: &mut World3dState, url: &str, bytes: &[u8]) {
-    let mesh_id = format!("url:{url}");
+    let mesh_id = mesh_id_from_url(url);
     if state.meshes.contains_key(&mesh_id) {
         state.pending_glb_urls.remove(url);
         return;

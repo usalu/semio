@@ -151,6 +151,13 @@ export type UiSectionNode = {
 	readonly children: readonly UiNode[];
 };
 
+export type UiTreeItemAction = {
+	readonly iconId: string;
+	readonly label?: string;
+	readonly command: CommandDescriptor;
+	readonly revealOnHover?: boolean;
+};
+
 export type UiTreeItemNode = {
 	readonly id: string;
 	readonly label: string;
@@ -159,6 +166,9 @@ export type UiTreeItemNode = {
 	readonly selected?: boolean;
 	readonly defaultOpen?: boolean;
 	readonly command?: CommandDescriptor;
+	readonly hoverCommand?: CommandDescriptor;
+	readonly unhoverCommand?: CommandDescriptor;
+	readonly actions?: readonly UiTreeItemAction[];
 	readonly draggable?: boolean;
 	readonly dragData?: Readonly<Record<string, string>>;
 	readonly items?: readonly UiTreeItemNode[];
@@ -210,6 +220,16 @@ export type NodeGraphScene = {
 	readonly operatorsJson?: string;
 	readonly contextMenuJson?: string;
 	readonly findItemsJson?: string;
+	readonly selectionJson?: string;
+	readonly hoverJson?: string;
+	readonly previewOffJson?: string;
+	readonly lodJson?: string;
+	readonly catalogueJson?: string;
+	readonly controlsJson?: string;
+	readonly clustersJson?: string;
+	readonly computingJson?: string;
+	readonly capabilitiesJson?: string;
+	readonly fixtureJson?: string;
 };
 
 export type TextEditorScene = {
@@ -220,7 +240,30 @@ export type TextEditorScene = {
 	readonly diagnosticsJson?: string;
 	readonly completionsJson?: string;
 	readonly overlaysJson?: string;
+	readonly occurrencesJson?: string;
+	readonly placeholdersJson?: string;
+	readonly extraCaretsJson?: string;
+	readonly selectableSpansJson?: string;
+	readonly settingsJson?: string;
+	readonly cameraJson?: string;
 };
+
+export const nodeGraphCommands = {
+	select: "nodeGraphSelect",
+	hover: "nodeGraphHover",
+	edit: "nodeGraphEdit",
+	viewport: "nodeGraphViewport",
+	spotlightCommit: "spotlightCommit",
+} as const;
+
+export const textEditorCommands = {
+	edit: "textEdit",
+	select: "textSelect",
+	hover: "textHover",
+	requestCompletions: "requestCompletions",
+	commitRename: "commitRename",
+	formatDocument: "formatDocument",
+} as const;
 
 export type TableScene = {
 	readonly columnsJson: string;

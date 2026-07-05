@@ -13,7 +13,7 @@ use semio_framework_plugin::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::LazyLock;
-use trinity_jack::{run_json, QueryResult};
+use trinity_jack::{run_json, QueryResult, QueryResultKind};
 use trinity_ram::{Graph, GraphFixture, Node, PortDirection, PropertyValue};
 
 //#region 🔖Constants
@@ -59,6 +59,10 @@ struct TrinityJackRuntime {
     results_engagement_input: String,
     #[serde(default)]
     reorganize_epoch: u64,
+    #[serde(default)]
+    undo_stack: Vec<String>,
+    #[serde(default)]
+    redo_stack: Vec<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -145,6 +149,46 @@ fn run_jack_on_fixture(fixture_json: &str, query: &str) -> (String, String) {
             fixture_json.into(),
         ),
     }
+}
+
+fn force_layout_fixture_json(fixture_json: &str) -> Option<String> {
+    let mut fixture = GraphFixture::from_json(fixture_json).ok()?;
+    if fixture.nodes.is_empty() {
+        return None;
+    }
+    use mathematical_core::force_layout::{run_force_layout, ForceLayoutOptions, Vec2};
+    let mut positions: Vec<Vec2> = fixture.nodes.iter().map(|node| Vec2::new(node.x, node.y)).collect();
+    let radii: Vec<f64> = fixture.nodes.iter().map(|node| (node.width.max(48.0) + node.height.max(24.0)) * 0.25).collect();
+    let id_to_index: std::collections::HashMap<String, usize> = fixture
+        .nodes
+        .iter()
+        .enumerate()
+        .map(|(index, node)| (node.id.clone(), index))
+        .collect();
+    let mut edge_pairs = Vec::new();
+    for edge in &fixture.edges {
+        let (source_node, _) = split_endpoint(&edge.source);
+        let (target_node, _) = split_endpoint(&edge.target);
+        if let (Some(a), Some(b)) = (id_to_index.get(&source_node), id_to_index.get(&target_node)) {
+            edge_pairs.push((*a, *b));
+        }
+    }
+    let pin = vec![None; positions.len()];
+    run_force_layout(
+        &mut positions,
+        &radii,
+        &edge_pairs,
+        &pin,
+        &ForceLayoutOptions {
+            iterations: 120,
+            ..ForceLayoutOptions::default()
+        },
+    );
+    for (index, node) in fixture.nodes.iter_mut().enumerate() {
+        node.x = positions[index].x;
+        node.y = positions[index].y;
+    }
+    Graph::from_fixture(fixture).ok()?.fixture_json().ok()
 }
 
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
@@ -260,6 +304,28 @@ fn node_to_media_record(node: &Node) -> MediaGraphNodeRecord {
 
 fn result_to_table(result_json: &str) -> (String, String) {
     let parsed: QueryResult = serde_json::from_str(result_json).unwrap_or(QueryResult::table(vec![], vec![]));
+    if parsed.kind == QueryResultKind::Graph {
+        if let Some(fixture) = parsed.graph_fixture {
+            let columns = vec![json!({ "id": "index", "label": "#" }), json!({ "id": "id", "label": "Id" }), json!({ "id": "name", "label": "Name" }), json!({ "id": "kind", "label": "Kind" })];
+            let rows: Vec<Value> = fixture
+                .nodes
+                .iter()
+                .enumerate()
+                .map(|(index, node)| {
+                    json!({
+                        "index": index + 1,
+                        "id": node.id,
+                        "name": node.name,
+                        "kind": node.kind,
+                    })
+                })
+                .collect();
+            return (
+                serde_json::to_string(&columns).unwrap_or_else(|_| "[]".into()),
+                serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()),
+            );
+        }
+    }
     let columns: Vec<Value> = parsed
         .columns
         .iter()
@@ -295,6 +361,9 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         selected: None,
         default_open: None,
         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -317,6 +386,9 @@ fn tree_item_with_command(
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -673,7 +745,31 @@ impl PluginApp for TrinityJackPlayApp {
                 }
             }
             "reorganize" => {
+                if let Some(next_json) = force_layout_fixture_json(&envelope.fixture_json) {
+                    envelope.runtime.undo_stack.push(envelope.fixture_json.clone());
+                    envelope.fixture_json = next_json;
+                    envelope.runtime.redo_stack.clear();
+                }
                 envelope.runtime.reorganize_epoch += 1;
+                return vec![set_document_op(&envelope)];
+            }
+            "undo" => {
+                if let Some(previous) = envelope.runtime.undo_stack.pop() {
+                    envelope.runtime.redo_stack.push(envelope.fixture_json.clone());
+                    envelope.fixture_json = previous;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "redo" => {
+                if let Some(next) = envelope.runtime.redo_stack.pop() {
+                    envelope.runtime.undo_stack.push(envelope.fixture_json.clone());
+                    envelope.fixture_json = next;
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "commitCheckpoint" => {
+                envelope.runtime.undo_stack.push(envelope.fixture_json.clone());
+                envelope.runtime.redo_stack.clear();
                 return vec![set_document_op(&envelope)];
             }
             "editorEngagementInput" => {

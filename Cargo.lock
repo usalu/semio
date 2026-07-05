@@ -2064,6 +2064,36 @@ dependencies = [
 ]
 
 [[package]]
+name = "framework_editor"
+version = "0.1.0"
+dependencies = [
+ "infinite_cavas",
+ "js-sys",
+ "serde",
+ "serde_json",
+ "ui_styling",
+ "vcs",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "framework_graph"
+version = "0.1.0"
+dependencies = [
+ "infinite_cavas",
+ "js-sys",
+ "mathematical_graph_port_directed_dag",
+ "serde",
+ "serde_json",
+ "ui_styling",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "futures"
 version = "0.3.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3790,6 +3820,9 @@ name = "lowpoly-plugin"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "kernel_3d_mesh",
+ "lowpoly_core",
+ "png 0.17.16",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -4947,6 +4980,7 @@ dependencies = [
 name = "procedural2d-plugin"
 version = "0.1.0"
 dependencies = [
+ "flow_core",
  "procedural_2d",
  "semio-framework-plugin",
  "serde",
@@ -5319,6 +5353,8 @@ dependencies = [
 name = "raster-plugin"
 version = "0.1.0"
 dependencies = [
+ "base64",
+ "image",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -7093,6 +7129,7 @@ dependencies = [
 name = "trinity-plugin"
 version = "0.1.0"
 dependencies = [
+ "mathematical_core",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -8857,15 +8894,11 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 name = "writer"
 version = "0.1.0"
 dependencies = [
- "infinite_cavas",
- "js-sys",
+ "framework_editor",
  "serde",
  "serde_json",
- "ui_styling",
  "vcs",
  "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
@@ -8876,6 +8909,8 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "trinity_jack",
+ "trinity_ram",
  "wasm-bindgen",
 ]
 

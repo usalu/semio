@@ -3,12 +3,13 @@
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
-    world3d_meshes_json_from_kinds, world3d_scene, world3d_selection_json, App, Canvas2dScene,
-    CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json,
+    App, Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup,
+    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
+use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -28,10 +29,12 @@ const PUZZLE5D_PLAY_WINDOW_2D: &str = "puzzle5d-2d";
 const PUZZLE5D_PLAY_WINDOW_3D: &str = "puzzle5d-3d";
 const PUZZLE5D_SCHEMA: &str = "puzzle.5d";
 const PUZZLE5D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
+const PUZZLE5D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
 
-const PUZZLE5D_MESH_KIND: &str = "box";
+const PUZZLE5D_FALLBACK_MESH_KIND: &str = "box";
 
 const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../example/concrete-forest.5d.json");
+const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../example/nakagin-capsule-tower.5d.json");
 //#endregion 🔖Constants
 
 //#region 🔖Document
@@ -80,6 +83,19 @@ struct Puzzle5dPart2d {
     text: String,
 }
 
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+struct Puzzle5dPart3d {
+    #[serde(default)]
+    origin: [f64; 3],
+    #[serde(default, rename = "meshUrl")]
+    mesh_url: Option<String>,
+    #[serde(default)]
+    orientation: Option<[f64; 4]>,
+    #[serde(default)]
+    scale: Option<Value>,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct Puzzle5dPart {
@@ -88,6 +104,8 @@ struct Puzzle5dPart {
     part_kind: String,
     #[serde(default, rename = "2d")]
     part_2d: Puzzle5dPart2d,
+    #[serde(default, rename = "3d")]
+    part_3d: Puzzle5dPart3d,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -102,6 +120,8 @@ struct Puzzle5dDocument {
     camera3d: Puzzle5dCamera3d,
     #[serde(default)]
     parts: Vec<Puzzle5dPart>,
+    #[serde(default, rename = "kindCatalogs")]
+    kind_catalogs: Option<Value>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -120,6 +140,14 @@ struct Puzzle5dRuntime {
     selection_method: String,
     #[serde(default)]
     hovered_part_id: Option<String>,
+    #[serde(default = "default_active_tool")]
+    active_tool: String,
+    #[serde(default)]
+    fill_count: u32,
+}
+
+fn default_active_tool() -> String {
+    "select".into()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -139,20 +167,24 @@ fn empty_document() -> Puzzle5dDocument {
         camera2d: Puzzle5dCamera2d::default(),
         camera3d: Puzzle5dCamera3d::default(),
         parts: Vec::new(),
+        kind_catalogs: None,
     }
 }
 
-fn default_envelope() -> Puzzle5dEnvelope {
-    if let Ok(document) = serde_json::from_str::<Puzzle5dDocument>(CONCRETE_FOREST_EXAMPLE_JSON) {
-        return Puzzle5dEnvelope {
+fn envelope_from_document_json(json_text: &str) -> Option<Puzzle5dEnvelope> {
+    serde_json::from_str::<Puzzle5dDocument>(json_text)
+        .ok()
+        .map(|document| Puzzle5dEnvelope {
             document,
             runtime: Puzzle5dRuntime::default(),
-        };
-    }
-    Puzzle5dEnvelope {
+        })
+}
+
+fn default_envelope() -> Puzzle5dEnvelope {
+    envelope_from_document_json(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|| Puzzle5dEnvelope {
         document: empty_document(),
         runtime: Puzzle5dRuntime::default(),
-    }
+    })
 }
 
 fn parse_envelope(document_json: &str) -> Puzzle5dEnvelope {
@@ -182,9 +214,14 @@ fn canvas_layers_json(document: &Puzzle5dDocument, selection: &Puzzle5dSelection
         .parts
         .iter()
         .map(|part| {
+            let shape = if part.part_2d.shape.is_empty() {
+                "circle"
+            } else {
+                part.part_2d.shape.as_str()
+            };
             json!({
                 "id": part.id,
-                "kind": "circle",
+                "kind": shape,
                 "x": part.part_2d.x,
                 "y": part.part_2d.y,
                 "radius": part.part_2d.radius.max(8.0),
@@ -194,6 +231,95 @@ fn canvas_layers_json(document: &Puzzle5dDocument, selection: &Puzzle5dSelection
         })
         .collect();
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+}
+
+fn resolve_part_mesh_url(part: &Puzzle5dPart, kind_catalogs: Option<&Value>) -> Option<String> {
+    if let Some(url) = part.part_3d.mesh_url.as_ref().filter(|url| !url.is_empty()) {
+        return Some(url.clone());
+    }
+    let catalogs = kind_catalogs?;
+    let parts = catalogs.get("parts")?.as_array()?;
+    for entry in parts {
+        if entry.get("id").and_then(|v| v.as_str()) == Some(part.part_kind.as_str()) {
+            return entry
+                .get("meshUrl")
+                .and_then(|v| v.as_str())
+                .map(str::to_string);
+        }
+    }
+    None
+}
+
+fn collect_mesh_urls(document: &Puzzle5dDocument) -> Vec<String> {
+    let mut urls = HashSet::new();
+    for part in &document.parts {
+        if let Some(url) = resolve_part_mesh_url(part, document.kind_catalogs.as_ref()) {
+            urls.insert(url);
+        }
+    }
+    if let Some(catalogs) = document.kind_catalogs.as_ref() {
+        if let Some(parts) = catalogs.get("parts").and_then(|v| v.as_array()) {
+            for entry in parts {
+                if let Some(url) = entry.get("meshUrl").and_then(|v| v.as_str()) {
+                    urls.insert(url.to_string());
+                }
+            }
+        }
+    }
+    urls.into_iter().collect()
+}
+
+fn part_scale_json(part: &Puzzle5dPart) -> [f64; 3] {
+    match &part.part_3d.scale {
+        Some(Value::Array(values)) if values.len() >= 3 => [
+            values[0].as_f64().unwrap_or(1.0),
+            values[1].as_f64().unwrap_or(1.0),
+            values[2].as_f64().unwrap_or(1.0),
+        ],
+        _ => [1.0, 1.0, 1.0],
+    }
+}
+
+fn world_instances_json(document: &Puzzle5dDocument, runtime: &Puzzle5dRuntime) -> String {
+    let instances: Vec<Value> = document
+        .parts
+        .iter()
+        .map(|part| {
+            let selected = runtime.selection.part_ids.contains(&part.id);
+            let hovered = runtime.hovered_part_id.as_deref() == Some(part.id.as_str());
+            let mesh_id = resolve_part_mesh_url(part, document.kind_catalogs.as_ref())
+                .map(|url| world3d_mesh_id_from_url(&url))
+                .unwrap_or_else(|| PUZZLE5D_FALLBACK_MESH_KIND.into());
+            json!({
+                "id": part.id,
+                "meshId": mesh_id,
+                "position": [
+                    part.part_3d.origin.first().copied().unwrap_or(0.0),
+                    part.part_3d.origin.get(1).copied().unwrap_or(0.0),
+                    part.part_3d.origin.get(2).copied().unwrap_or(0.0),
+                ],
+                "rotation": part.part_3d.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
+                "scale": part_scale_json(part),
+                "label": part.part_kind,
+                "color": if selected { "#8b5cf6" } else { "#94a3b8" },
+                "selected": selected,
+                "hovered": hovered,
+            })
+        })
+        .collect();
+    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+}
+
+fn world_meshes_json(document: &Puzzle5dDocument) -> String {
+    world3d_meshes_json_from_kinds_and_urls(&[PUZZLE5D_FALLBACK_MESH_KIND.into()], &collect_mesh_urls(document))
+}
+
+fn world_selection_json(runtime: &Puzzle5dRuntime) -> String {
+    world3d_selection_json(
+        &runtime.selection_method,
+        &runtime.selection.part_ids,
+        runtime.hovered_part_id.as_deref(),
+    )
 }
 
 fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
@@ -206,39 +332,18 @@ fn camera3d_json(camera: &Puzzle5dCamera3d) -> String {
     .to_string()
 }
 
-fn world_instances_json(document: &Puzzle5dDocument, runtime: &Puzzle5dRuntime) -> String {
-    let instances: Vec<Value> = document
-        .parts
-        .iter()
-        .enumerate()
-        .map(|(index, part)| {
-            let selected = runtime.selection.part_ids.contains(&part.id);
-            let hovered = runtime.hovered_part_id.as_deref() == Some(part.id.as_str());
-            json!({
-                "id": part.id,
-                "meshId": PUZZLE5D_MESH_KIND,
-                "position": [index as f64 * 1.2, 0.0, 0.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": part.part_kind,
-                "color": if selected { "#8b5cf6" } else { "#94a3b8" },
-                "selected": selected,
-                "hovered": hovered,
-            })
-        })
-        .collect();
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
-}
-
-fn world_meshes_json() -> String {
-    world3d_meshes_json_from_kinds(&[PUZZLE5D_MESH_KIND.into()])
-}
-
-fn world_selection_json(runtime: &Puzzle5dRuntime) -> String {
-    world3d_selection_json(
-        &runtime.selection_method,
-        &runtime.selection.part_ids,
-        runtime.hovered_part_id.as_deref(),
-    )
+fn resolve_part_kind_mesh_url(part_kind: &str, kind_catalogs: Option<&Value>) -> Option<String> {
+    let catalogs = kind_catalogs?;
+    let parts = catalogs.get("parts")?.as_array()?;
+    for entry in parts {
+        if entry.get("id").and_then(|v| v.as_str()) == Some(part_kind) {
+            return entry
+                .get("meshUrl")
+                .and_then(|v| v.as_str())
+                .map(str::to_string);
+        }
+    }
+    None
 }
 
 fn next_part_id() -> String {
@@ -262,6 +367,9 @@ fn tree_item_with_command(
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -399,6 +507,8 @@ impl PluginApp for Puzzle5dPlayApp {
                     }
                 } else if example_id == PUZZLE5D_EXAMPLE_CONCRETE_FOREST || example_id == "concrete" {
                     default_envelope()
+                } else if example_id == PUZZLE5D_EXAMPLE_NAKAGIN || example_id == "nakagin" {
+                    envelope_from_document_json(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(default_envelope)
                 } else {
                     envelope
                 };
@@ -412,12 +522,62 @@ impl PluginApp for Puzzle5dPlayApp {
                 envelope.runtime.selection.part_ids = part_ids;
                 return vec![set_document_op(&envelope)];
             }
+            "setActiveTool" => {
+                let tool = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()).unwrap_or("select");
+                if tool == "select" || tool == "brush" || tool == "fill" {
+                    envelope.runtime.active_tool = tool.into();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "addBrushPart" => {
+                let part_kind = args
+                    .and_then(|value| value.get("partKind"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                if part_kind.is_empty() {
+                    return Vec::new();
+                }
+                let id = next_part_id();
+                let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
+                let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
+                envelope.document.parts.push(Puzzle5dPart {
+                    id: id.clone(),
+                    part_kind: part_kind.into(),
+                    part_2d: Puzzle5dPart2d {
+                        x,
+                        y,
+                        shape: "circle".into(),
+                        radius: 20.0,
+                        text: part_kind.into(),
+                    },
+                    part_3d: Puzzle5dPart3d {
+                        origin: [0.0, 0.0, 0.0],
+                        mesh_url,
+                        orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                        scale: None,
+                    },
+                });
+                envelope.runtime.selection.part_ids = vec![id];
+                envelope.runtime.active_tool = "brush".into();
+                return vec![set_document_op(&envelope)];
+            }
+            "setFillCount" => {
+                let count = args
+                    .and_then(|value| value.get("count"))
+                    .and_then(|value| value.as_u64())
+                    .unwrap_or(0) as u32;
+                envelope.runtime.fill_count = count;
+                envelope.runtime.active_tool = "fill".into();
+                return vec![set_document_op(&envelope)];
+            }
             "addPartKind" => {
                 let part_kind = args
                     .and_then(|value| value.get("partKind"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("Part");
                 let id = next_part_id();
+                let mesh_url = resolve_part_kind_mesh_url(part_kind, envelope.document.kind_catalogs.as_ref());
                 envelope.document.parts.push(Puzzle5dPart {
                     id: id.clone(),
                     part_kind: part_kind.into(),
@@ -427,6 +587,12 @@ impl PluginApp for Puzzle5dPlayApp {
                         shape: "circle".into(),
                         radius: 20.0,
                         text: part_kind.into(),
+                    },
+                    part_3d: Puzzle5dPart3d {
+                        origin: [0.0, 0.0, 0.0],
+                        mesh_url,
+                        orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                        scale: None,
                     },
                 });
                 envelope.runtime.selection.part_ids = vec![id];
@@ -513,7 +679,7 @@ impl PluginApp for Puzzle5dPlayApp {
                 PUZZLE5D_PLAY_APP_ID,
                 world3d_scene(
                     camera3d_json(&envelope.document.camera3d),
-                    world_meshes_json(),
+                    world_meshes_json(&envelope.document),
                     world_instances_json(&envelope.document, &envelope.runtime),
                     world_selection_json(&envelope.runtime),
                 ),
@@ -566,6 +732,11 @@ fn create_puzzle5d_app() -> App {
         "Concrete Forest",
         CONCRETE_FOREST_EXAMPLE_JSON,
     )
+    .example(
+        PUZZLE5D_EXAMPLE_NAKAGIN,
+        "Nakagin Capsule Tower",
+        NAKAGIN_EXAMPLE_JSON,
+    )
     .program("puzzle5d", "Puzzle 5D", "model")
 }
 
@@ -600,6 +771,38 @@ mod tests {
         let node = app.render(PUZZLE5D_PLAY_BODY_3D, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("world-3d"));
+    }
+
+    #[test]
+    fn concrete_forest_uses_real_mesh_urls() {
+        let app = Puzzle5dPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(PUZZLE5D_PLAY_BODY_3D, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("hexagonal-cut-concrete-forest-left"));
+    }
+
+    #[test]
+    fn set_active_tool_updates_runtime() {
+        let mut app = Puzzle5dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
+        let envelope: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+        assert_eq!(envelope.runtime.active_tool, "brush");
+    }
+
+    #[test]
+    fn add_brush_part_appends_part() {
+        let mut app = Puzzle5dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "addBrushPart",
+            Some(&json!({ "partKind": "Hexagonal Cut Concrete Forest Left", "x": 200.0, "y": 180.0 })),
+            &document,
+            &ViewState::default(),
+        );
+        let envelope: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
+        assert!(envelope.document.parts.iter().any(|part| part.part_2d.x == 200.0));
     }
 
     #[test]

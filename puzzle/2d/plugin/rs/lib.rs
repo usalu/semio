@@ -23,7 +23,9 @@ const PUZZLE2D_PLAY_BODY_CATALOGUE: &str = "puzzle2d.play.catalogue";
 const PUZZLE2D_PLAY_BODY_PROPERTIES: &str = "puzzle2d.play.properties";
 const PUZZLE2D_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
 const PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID: &str = "concrete-forest";
+const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = "nakagin-capsule-tower";
 const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../example/concrete-forest.2d.json");
+const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../example/nakagin-capsule-tower.2d.json");
 
 static NODE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
@@ -34,6 +36,8 @@ static NODE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 struct Puzzle2dPlayRuntime {
     #[serde(default)]
     selected_ids: Vec<String>,
+    #[serde(default)]
+    active_tool: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -220,6 +224,36 @@ fn puzzle_extension_id() -> &'static str {
 //#endregion 🔖Envelope
 
 //#region 🔖Canvas
+fn fixture_wires(fixture: &Value) -> &[Value] {
+    fixture
+        .get("wires")
+        .and_then(|value| value.as_array())
+        .map(|values| values.as_slice())
+        .unwrap_or(&[])
+}
+
+fn fixture_handles(fixture: &Value) -> Vec<Value> {
+    fixture_nodes(fixture)
+        .iter()
+        .flat_map(|node| {
+            node.get("handles")
+                .and_then(|value| value.as_array())
+                .into_iter()
+                .flatten()
+                .cloned()
+        })
+        .collect()
+}
+
+fn canvas_layers_json(fixture: &Value) -> String {
+    let mut layers: Vec<Value> = Vec::new();
+    layers.extend(fixture_nodes(fixture).iter().cloned());
+    layers.extend(fixture_edges(fixture).iter().cloned());
+    layers.extend(fixture_wires(fixture).iter().cloned());
+    layers.extend(fixture_handles(fixture));
+    serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
+}
+
 fn render_canvas(fixture: &Value) -> UiNode {
     let (camera_x, camera_y, zoom) = fixture_camera(fixture);
     build_canvas_2d_scene(
@@ -229,9 +263,37 @@ fn render_canvas(fixture: &Value) -> UiNode {
             camera_x,
             camera_y,
             zoom,
-            layers_json: serde_json::to_string(fixture_nodes(fixture)).unwrap_or_else(|_| "[]".into()),
+            layers_json: canvas_layers_json(fixture),
         },
     )
+}
+
+fn force_layout_fixture(fixture: &mut Value) {
+    let Ok(layout_json) = puzzle_2d::apply_force_graph_layout_to_fixture_v1_json(
+        &fixture.to_string(),
+        r#"{"mode":"force-graph"}"#,
+    ) else {
+        return;
+    };
+    if let Ok(parsed) = serde_json::from_str(&layout_json) {
+        *fixture = parsed;
+    }
+}
+
+fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value: &Value) {
+    if let Some(nodes) = fixture.get_mut("nodes").and_then(|entry| entry.as_array_mut()) {
+        for node in nodes {
+            let Some(id) = node.get("id").and_then(|entry| entry.as_str()) else {
+                continue;
+            };
+            if !ids.is_empty() && !ids.contains(&id.to_string()) {
+                continue;
+            }
+            if let Some(obj) = node.as_object_mut() {
+                obj.insert(field.to_string(), value.clone());
+            }
+        }
+    }
 }
 //#endregion 🔖Canvas
 
@@ -245,6 +307,9 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
         selected: None,
         default_open: None,
         command: Some(command),
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
         draggable: None,
         drag_data: None,
         items: None,
@@ -340,6 +405,9 @@ fn render_hierarchy_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
                         selected: None,
                         default_open: None,
                         command: None,
+                        hover_command: None,
+                        unhover_command: None,
+                        actions: None,
                         draggable: None,
                         drag_data: None,
                         items: None,
@@ -363,6 +431,9 @@ fn render_hierarchy_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
                         selected: None,
                         default_open: None,
                         command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
                         draggable: None,
                         drag_data: None,
                         items: None,
@@ -441,6 +512,9 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
                 selected: None,
                 default_open: None,
                 command: Some(puzzle2d_cmd("addNode", Some(json!({ "kind": kind_id })))),
+                hover_command: None,
+                unhover_command: None,
+                actions: None,
                 draggable: None,
                 drag_data: None,
                 items: None,
@@ -462,6 +536,9 @@ fn kind_catalog_section(section_id: &str, label: &str, entries: &[Value]) -> UiT
                 selected: None,
                 default_open: None,
                 command: None,
+        hover_command: None,
+        unhover_command: None,
+        actions: None,
                 draggable: None,
                 drag_data: None,
                 items: None,
@@ -609,11 +686,80 @@ impl PluginApp for Puzzle2dPlayApp {
                     default_empty_fixture()
                 } else if example_id == PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID || example_id == "concrete" {
                     serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture())
+                } else if example_id == PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID || example_id == "nakagin" {
+                    serde_json::from_str(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture())
                 } else {
                     default_empty_fixture()
                 };
                 envelope.runtime.selected_ids.clear();
                 return vec![set_document_op(&envelope)];
+            }
+            "setActiveTool" => {
+                if let Some(tool) = args.and_then(|value| value.get("tool")).and_then(|value| value.as_str()) {
+                    envelope.runtime.active_tool = tool.into();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "patchInspectorNodes" => {
+                let ids: Vec<String> = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_else(|| envelope.runtime.selected_ids.clone());
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
+                if !field.is_empty() {
+                    patch_inspector_nodes(&mut envelope.fixture, &ids, field, &value);
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "forceLayout" | "reorganize" => {
+                force_layout_fixture(&mut envelope.fixture);
+                return vec![set_document_op(&envelope)];
+            }
+            "selectAll" => {
+                let ids: Vec<String> = fixture_nodes(&envelope.fixture)
+                    .iter()
+                    .filter_map(|node| node.get("id").and_then(|value| value.as_str()).map(str::to_string))
+                    .collect();
+                envelope.runtime.selected_ids = ids;
+                return vec![set_document_op(&envelope)];
+            }
+            "clearSelection" => {
+                envelope.runtime.selected_ids.clear();
+                return vec![set_document_op(&envelope)];
+            }
+            "focusSelection" => {
+                if envelope.runtime.selected_ids.is_empty() {
+                    return Vec::new();
+                }
+                let mut min_x = f64::INFINITY;
+                let mut min_y = f64::INFINITY;
+                let mut max_x = f64::NEG_INFINITY;
+                let mut max_y = f64::NEG_INFINITY;
+                for node in fixture_nodes(&envelope.fixture) {
+                    let Some(id) = node.get("id").and_then(|value| value.as_str()) else {
+                        continue;
+                    };
+                    if !envelope.runtime.selected_ids.iter().any(|selected| selected == id) {
+                        continue;
+                    }
+                    let x = node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
+                    let y = node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
+                    let radius = node.get("radius").and_then(|value| value.as_f64()).unwrap_or(24.0);
+                    min_x = min_x.min(x - radius);
+                    min_y = min_y.min(y - radius);
+                    max_x = max_x.max(x + radius);
+                    max_y = max_y.max(y + radius);
+                }
+                if min_x.is_finite() {
+                    let camera = json!({
+                        "x": (min_x + max_x) * 0.5,
+                        "y": (min_y + max_y) * 0.5,
+                        "zoom": 1.0,
+                    });
+                    set_fixture_camera(&mut envelope.fixture, &camera);
+                    return vec![set_document_op(&envelope)];
+                }
             }
             _ => {}
         }
@@ -657,6 +803,15 @@ fn create_puzzle2d_app() -> App {
         "Concrete Forest",
         serde_json::to_string(&Puzzle2dPlayEnvelope {
             fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture()),
+            runtime: Puzzle2dPlayRuntime::default(),
+        })
+        .unwrap(),
+    )
+    .example(
+        PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID,
+        "Nakagin Capsule Tower",
+        serde_json::to_string(&Puzzle2dPlayEnvelope {
+            fixture: serde_json::from_str(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture()),
             runtime: Puzzle2dPlayRuntime::default(),
         })
         .unwrap(),

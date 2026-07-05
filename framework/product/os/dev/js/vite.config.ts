@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { uiAssetsVitePlugin, puzzle3dMeshesVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "..");
@@ -39,6 +39,7 @@ export default defineConfig({
 	},
 	plugins: [
 		...uiAssetsVitePlugin(uiAssetsRoot),
+		...puzzle3dMeshesVitePlugin(repoRoot),
 		...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),
 	],
 	optimizeDeps: {
