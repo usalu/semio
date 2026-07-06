@@ -14,7 +14,7 @@ use semio_framework_plugin::{
     NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID,     FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID,     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -28,7 +28,7 @@ const FLOW_PLAY_SURFACE_MAIN: &str = "flow.play.main";
 const FLOW_PLAY_SURFACE_COMPILED: &str = "flow.play.compiled-dag";
 const FLOW_PLAY_BODY_MAIN: &str = "flow.play.main";
 const FLOW_PLAY_BODY_COMPILED: &str = "flow.play.compiled-dag";
-const FLOW_PLAY_BODY_HIERARCHY: &str = "flow.play.hierarchy";
+const FLOW_PLAY_BODY_DOCUMENT: &str = "flow.play.document";
 const FLOW_PLAY_BODY_CATALOGUE: &str = "flow.play.catalogue";
 const FLOW_PLAY_BODY_INSPECTOR: &str = "flow.play.inspection";
 const FLOW_PLAY_WINDOW_MAIN: &str = "flow-main";
@@ -333,13 +333,13 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖Panels
-fn build_hierarchy_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
+fn build_document_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = fixture
         .widgets
         .iter()
         .map(|widget| {
             tree_item_with_command(
-                format!("flow-play-hierarchy.widget.{}", widget_id(widget)),
+                format!("flow-play-document.widget.{}", widget_id(widget)),
                 widget_tree_label(widget),
                 Some(widget_kind_label(widget).into()),
                 flow_cmd("setSelection", Some(json!({ "ids": [widget_id(widget)] }))),
@@ -351,7 +351,7 @@ fn build_hierarchy_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
         .iter()
         .map(|synapse| {
             UiTreeItemNode {
-                id: format!("flow-play-hierarchy.synapse.{}", synapse.id),
+                id: format!("flow-play-document.synapse.{}", synapse.id),
                 label: format!("{} → {}", synapse.from, synapse.to),
                 description: Some(format!("{} → {}", synapse.from_port, synapse.to_port)),
                 icon_id: None,
@@ -372,27 +372,27 @@ fn build_hierarchy_tree(fixture: &FlowFixture, selected: &[String]) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "flow-play-hierarchy.widgets".into(),
+                id: "flow-play-document.widgets".into(),
                 label: Some("Widgets".into()),
                 default_open: Some(true),
                 items: if widget_items.is_empty() {
-                    vec![tree_item("flow-play-hierarchy.widgets.empty", "(none)")]
+                    vec![tree_item("flow-play-document.widgets.empty", "(none)")]
                 } else {
                     widget_items
                 },
             },
             UiTreeSectionNode {
-                id: "flow-play-hierarchy.synapses".into(),
+                id: "flow-play-document.synapses".into(),
                 label: Some("Synapses".into()),
                 default_open: Some(false),
                 items: if synapse_items.is_empty() {
-                    vec![tree_item("flow-play-hierarchy.synapses.empty", "(none)")]
+                    vec![tree_item("flow-play-document.synapses.empty", "(none)")]
                 } else {
                     synapse_items
                 },
             },
         ],
-        selected_ids: Some(selected.iter().map(|id| format!("flow-play-hierarchy.widget.{id}")).collect()),
+        selected_ids: Some(selected.iter().map(|id| format!("flow-play-document.widget.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
     })
@@ -1193,7 +1193,7 @@ impl PluginApp for FlowPlayApp {
             FLOW_PLAY_BODY_GENERATIONS => render_generate_generations(&envelope),
             FLOW_PLAY_BODY_GENERATE_FORM => render_generate_form(&envelope),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope),
-            FLOW_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
+            FLOW_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
             FLOW_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope),
             FLOW_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids, &envelope.runtime),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -1216,7 +1216,7 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
 //#region 🔖Manifest
 fn create_flow_app() -> App {
     App::from_builder(
-        App::builder(FLOW_PLAY_APP_ID, "Flow").hierarchy(["semio", "flow"])
+        App::builder(FLOW_PLAY_APP_ID, "Flow").document(["semio", "flow"])
             .icon_id("flow")
             .mode("edit", "Edit")
             .mode("generate", "Generate")
@@ -1254,10 +1254,10 @@ fn create_flow_app() -> App {
                 None,
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                FLOW_PLAY_BODY_HIERARCHY,
+                FLOW_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1284,7 +1284,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 #[cfg(test)]
@@ -1316,12 +1316,12 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_widgets() {
+    fn document_lists_widgets() {
         let app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
-        let node = app.render(FLOW_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(FLOW_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("flow-play-hierarchy.widgets"));
+        assert!(json.contains("flow-play-document.widgets"));
     }
 
     #[test]

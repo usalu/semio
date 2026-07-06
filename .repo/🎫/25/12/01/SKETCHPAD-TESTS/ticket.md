@@ -5,14 +5,14 @@
 
 Sketchpad tests had 10 failing tests out of 16:
 
-- Settings Panel Hierarchy tests (5): Toggle ID and data-panel attribute missing
+- Settings Panel Document tests (5): Toggle ID and data-panel attribute missing
 - Type toolbar tests (3): Tool IDs incorrect
 - Kit Import test (1): Performance and initialization issues
 - Drag and Drop Pieces test (1): Timeout issues
 
 # Plan
 
-1. ✅ Fix Settings Panel Hierarchy tests - reorder panels so SETTINGS is first
+1. ✅ Fix Settings Panel Document tests - reorder panels so SETTINGS is first
 2. ✅ Add data-panel attribute to Panel component
 3. ✅ Fix ToolGroup to use tool ID instead of mode ID
 4. ⏳ Investigate remaining Settings Panel failures (Kit, Design, Type)
@@ -48,12 +48,12 @@ Sketchpad tests had 10 failing tests out of 16:
 
 - Kit > Design > Windows
 - Docs tests (5)
-- Settings Panel Hierarchy > Home app
+- Settings Panel Document > Home app
 - Kit Import Drag and Drop (after threshold increase)
 
 ### Still Failing (async state/store initialization issues):
 
-- Settings Panel Hierarchy > Kit/Design/Type apps (4) - toggle click works but panel store not ready
+- Settings Panel Document > Kit/Design/Type apps (4) - toggle click works but panel store not ready
 - Type toolbar tests (3) - toolbar sections context not synced in time
 - Drag and Drop Pieces (1) - drop zones not found, async timing
 

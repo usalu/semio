@@ -37,7 +37,7 @@ Brought the wgpu renderer to pre-migration feature parity for lowpoly and framew
 
 - `cargo test -p kernel_3d_scene -p infinite_world -p lowpoly-plugin --lib` — 22 lowpoly tests passed
 - `bun ./framework/renderer/wgpu/script.ts wasm` — succeeded
-- Wgpu E2E (`verify-wgpu-playgrounds-e2e.ts --plugin lowpoly`) — boot failed on port 7202 (stale dev server / manifest hierarchy errors for unrelated plugins); rerun with clean dev server
+- Wgpu E2E (`verify-wgpu-playgrounds-e2e.ts --plugin lowpoly`) — boot failed on port 7202 (stale dev server / manifest document errors for unrelated plugins); rerun with clean dev server
 
 ## Files touched
 

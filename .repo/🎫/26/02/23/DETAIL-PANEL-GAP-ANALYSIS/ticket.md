@@ -92,9 +92,9 @@ Complete feature-by-feature gap analysis between old and new detail panel builds
 | Attributes (editable) | NOT PRESENT | NOT PRESENT | N/A (neither has it) |
 | Multi-select support | `setConnections()` for bulk updates | `handleBulkUpdate()` with `updateConnections()` | MIGRATED |
 | "Editing N connections" message | `Editing {N} connections simultaneously` text | NOT PRESENT as explicit message (no count display for multi-select) | **MISSING** |
-| Nested "Plane > Translation" grouping | `TreeItem label="Plane" > TreeItem label="Translation"` | Flat list of steppers (no nested grouping) | **PARTIAL** (flattened, no hierarchy labels) |
-| Nested "Plane > Orientation" grouping | `TreeItem label="Orientation"` grouping rotation/turn/tilt | Flat list of sliders (no nested grouping) | **PARTIAL** (flattened, no hierarchy labels) |
-| Nested "Diagram" grouping | `TreeItem label="Diagram"` grouping x/y offsets | Flat list of steppers (no grouping) | **PARTIAL** (flattened, no hierarchy label) |
+| Nested "Plane > Translation" grouping | `TreeItem label="Plane" > TreeItem label="Translation"` | Flat list of steppers (no nested grouping) | **PARTIAL** (flattened, no document labels) |
+| Nested "Plane > Orientation" grouping | `TreeItem label="Orientation"` grouping rotation/turn/tilt | Flat list of sliders (no nested grouping) | **PARTIAL** (flattened, no document labels) |
+| Nested "Diagram" grouping | `TreeItem label="Diagram"` grouping x/y offsets | Flat list of steppers (no grouping) | **PARTIAL** (flattened, no document label) |
 
 ### PORT/CONNECTOR SECTION
 
@@ -134,7 +134,7 @@ Complete feature-by-feature gap analysis between old and new detail panel builds
 3. **Connections Section - "Editing N connections" message**: OLD showed `Editing {N} connections simultaneously` when multi-selecting. NEW has no equivalent count message.
 
 ### PARTIAL (present but incomplete):
-4. **Connections Section - Nested grouping**: OLD had `Plane > Translation`, `Plane > Orientation`, `Diagram` nested TreeItem grouping. NEW has flat list without hierarchy labels.
+4. **Connections Section - Nested grouping**: OLD had `Plane > Translation`, `Plane > Orientation`, `Diagram` nested TreeItem grouping. NEW has flat list without document labels.
 
 ### NEW features in new build (not in old):
 5. Piece name field (editable)

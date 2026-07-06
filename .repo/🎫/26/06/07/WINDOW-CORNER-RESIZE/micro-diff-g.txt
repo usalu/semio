@@ -99,7 +99,7 @@ index 6e971b0c0..c8a6d8e23 100644
 +  return ownerId !== undefined && revealedObjectIds.has(ownerId);
 +}
 +
- /** @emoji 🖱️ Maps a hierarchy {@link SelectionTarget} to the canvas hover key (typology object when possible). */
+ /** @emoji 🖱️ Maps a document {@link SelectionTarget} to the canvas hover key (typology object when possible). */
  export function canvasHoverKeyForSelectionTarget(model: Model, modelDefinitionId: string, target: SelectionTarget): string {
    if (target.kind === "object") return selectionTargetHoverKey(target);
 @@ -2460,17 +2539,23 @@ export function resolveSpatialPickTargetsToRender(
@@ -430,18 +430,18 @@ diff --git a/cad/js/renderer/play/index.tsx b/cad/js/renderer/play/index.tsx
 index 260cbe5c2..5f7a2e3ef 100644
 --- a/cad/js/renderer/play/index.tsx
 +++ b/cad/js/renderer/play/index.tsx
-@@ -483,14 +483,16 @@ export function buildCadPlayHierarchySections(
-       items: objectItems.length ? objectItems : [{ id: `cad-play-hierarchy.model.${modelDefinitionId}.objects.empty`, label: "(no objects)" }],
+@@ -483,14 +483,16 @@ export function buildCadPlayDocumentSections(
+       items: objectItems.length ? objectItems : [{ id: `cad-play-document.model.${modelDefinitionId}.objects.empty`, label: "(no objects)" }],
      });
    }
 -  const modelSpaceRoot: TreeDataItem = {
--    id: "cad-play-hierarchy.modelspace",
+-    id: "cad-play-document.modelspace",
 -    label: "ModelSpace",
 -    defaultOpen: true,
--    items: modelBranches.length ? modelBranches : [{ id: "cad-play-hierarchy.modelspace.empty", label: "(empty)" }],
+-    items: modelBranches.length ? modelBranches : [{ id: "cad-play-document.modelspace.empty", label: "(empty)" }],
 -  };
    return {
--    sections: [{ id: "cad-play-hierarchy.root", defaultOpen: true, items: [modelSpaceRoot] }],
+-    sections: [{ id: "cad-play-document.root", defaultOpen: true, items: [modelSpaceRoot] }],
 +    sections: modelBranches.length
 +      ? modelBranches.map((branch) => ({
 +          id: branch.id,
@@ -450,7 +450,7 @@ index 260cbe5c2..5f7a2e3ef 100644
 +          defaultOpen: branch.defaultOpen,
 +          items: branch.items ?? [],
 +        }))
-+      : [{ id: "cad-play-hierarchy.empty", label: "ModelSpace", defaultOpen: true, items: [{ id: "cad-play-hierarchy.empty.msg", label: "(empty)" }] }],
++      : [{ id: "cad-play-document.empty", label: "ModelSpace", defaultOpen: true, items: [{ id: "cad-play-document.empty.msg", label: "(empty)" }] }],
      highlightKeyToItemIds,
    };
  }
@@ -571,7 +571,7 @@ index 260cbe5c2..5f7a2e3ef 100644
 @@ -3029,7 +3028,7 @@ if (import.meta.vitest) {
        await rt.send({ kind: "set.height", value: 4, modifiers: {} });
        await rt.send({ kind: "confirm", modifiers: {} });
-       const build = buildCadPlayHierarchySections({ [defaultModelDefinitionId()]: model }, defaultModelDefinitionId(), [], () => {});
+       const build = buildCadPlayDocumentSections({ [defaultModelDefinitionId()]: model }, defaultModelDefinitionId(), [], () => {});
 -      const modelBranch = build.sections[0]?.items?.[0]?.items?.[0];
 +      const modelBranch = build.sections[0]?.items?.[0];
        expect(modelBranch?.items?.some((row) => row.label !== "(no objects)")).toBe(true);
@@ -580,7 +580,7 @@ index 260cbe5c2..5f7a2e3ef 100644
 @@ -3061,7 +3060,7 @@ if (import.meta.vitest) {
          primitives: { solid: String(solid) },
        };
-       const build = buildCadPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {});
+       const build = buildCadPlayDocumentSections({ "spatial.shape": model }, "spatial.shape", [], () => {});
 -      const primitiveNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0]?.items?.[0];
 +      const primitiveNode = build.sections[0]?.items?.[0]?.items?.[0];
        expect(primitiveNode?.label).toContain("solid:");
@@ -589,7 +589,7 @@ index 260cbe5c2..5f7a2e3ef 100644
 @@ -3087,7 +3086,7 @@ if (import.meta.vitest) {
        };
        const mdId = defaultModelDefinitionId();
-       const build = buildCadPlayHierarchySections({ [mdId]: model }, mdId, [], () => {});
+       const build = buildCadPlayDocumentSections({ [mdId]: model }, mdId, [], () => {});
 -      const objectNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0];
 +      const objectNode = build.sections[0]?.items?.[0];
        expect(objectNode?.label).toContain("object-imported");
@@ -661,7 +661,7 @@ index 260cbe5c2..5f7a2e3ef 100644
 +      ).toBeGreaterThan(0);
 +    });
 +
-     it("buildCadPlayHierarchySections lists concrete forest BIM objects across play definitions", () => {
+     it("buildCadPlayDocumentSections lists concrete forest BIM objects across play definitions", () => {
 -      const models = ensureCadPlayQuadModels(
 -        modelsFromCadJson({
 -          modelSpace: geometryConcreteForestLeft,
@@ -672,23 +672,23 @@ index 260cbe5c2..5f7a2e3ef 100644
 +        modelSpace: geometryConcreteForestLeft,
 +        activeModelDefinitionId: defaultModelDefinitionId(),
 +      });
-       const build = buildCadPlayHierarchySections(models, defaultModelDefinitionId(), [], () => {});
+       const build = buildCadPlayDocumentSections(models, defaultModelDefinitionId(), [], () => {});
 -      const modelSpaceRoot = build.sections[0]?.items[0];
--      const buildingBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
-+      const buildingBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
+-      const buildingBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
++      const buildingBranch = build.sections.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
        expect(buildingBranch?.items?.length).toBe(12);
--      const energyBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
+-      const energyBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
 -      expect((energyBranch?.items?.length ?? 0) > 0).toBe(true);
 -      const structureBranch = modelSpaceRoot?.items?.find(
-+      const energyBranch = build.sections.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
++      const energyBranch = build.sections.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
 +      expect(energyBranch?.items?.[0]?.label).toBe("(no objects)");
 +      const structureBranch = build.sections.find(
-         (row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID}`,
+         (row) => row.id === `cad-play-document.model.${CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID}`,
        );
 -      expect((structureBranch?.items?.length ?? 0) > 0).toBe(true);
--      expect(modelSpaceRoot?.items?.some((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`)).toBe(true);
+-      expect(modelSpaceRoot?.items?.some((row) => row.id === `cad-play-document.model.${defaultModelDefinitionId()}`)).toBe(true);
 +      expect(structureBranch?.items?.[0]?.label).toBe("(no objects)");
-+      expect(build.sections.some((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`)).toBe(true);
++      expect(build.sections.some((row) => row.id === `cad-play-document.model.${defaultModelDefinitionId()}`)).toBe(true);
      });
    });
  }
@@ -855,138 +855,138 @@ index 29c5fb3db..ec5afdded 100644
  	platformFromViewContext,
  	type AppTools,
  	type ToolItem,
-@@ -468,22 +467,13 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
+@@ -468,22 +467,13 @@ function buildPuzzle2dFixtureNodeDocumentItem(
      }
    }
    visiting.delete(nodeId);
 -  const nodeItems: UiTreeItemNode[] = [];
 -  if (node.handles.length > 0) {
 -    const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
--      id: `puzzle-2d-play-hierarchy.handle.${handle.id}`,
+-      id: `puzzle-2d-play-document.handle.${handle.id}`,
 -      label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
 -      ...(omitItemSelection ? {} : { isSelected: selectedIds.has(handle.id) }),
 -      onClick: () => onSelect(handle.id),
--      ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, handle.id),
+-      ...puzzle2dPlayDocumentHoverHandlers(onHover, fixture, handle.id),
 -    }));
 -    nodeItems.push({
--      id: `puzzle-2d-play-hierarchy.node.${nodeId}.handles`,
+-      id: `puzzle-2d-play-document.node.${nodeId}.handles`,
 -      label: "Handles",
 -      defaultOpen: true,
 -      items: handleItems,
 -    });
 -  }
 +  const handleItems: UiTreeItemNode[] = node.handles.map((handle) => ({
-+    id: `puzzle-2d-play-hierarchy.handle.${handle.id}`,
++    id: `puzzle-2d-play-document.handle.${handle.id}`,
 +    label: puzzle2dFixtureHandleDisplayLabel(handle, kindCatalogs),
 +    ...(omitItemSelection ? {} : { isSelected: selectedIds.has(handle.id) }),
 +    onClick: () => onSelect(handle.id),
-+    ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, handle.id),
++    ...puzzle2dPlayDocumentHoverHandlers(onHover, fixture, handle.id),
 +  }));
    return {
-     id: `puzzle-2d-play-hierarchy.node.${nodeId}`,
+     id: `puzzle-2d-play-document.node.${nodeId}`,
      label: puzzle2dFixtureNodeDisplayLabel(node, kindCatalogs),
-@@ -492,7 +482,7 @@ function buildPuzzle2dFixtureNodeHierarchyItem(
+@@ -492,7 +482,7 @@ function buildPuzzle2dFixtureNodeDocumentItem(
      defaultOpen: true,
      onClick: () => onSelect(nodeId),
-     ...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, nodeId),
+     ...puzzle2dPlayDocumentHoverHandlers(onHover, fixture, nodeId),
 -    items: [...nodeItems, ...childItems],
 +    items: [...handleItems, ...childItems],
    };
  }
  
-@@ -575,7 +565,7 @@ export function puzzle2dPlayHierarchyTreeHighlightedIds(
+@@ -575,7 +565,7 @@ export function puzzle2dPlayDocumentTreeHighlightedIds(
  	return [];
  }
  
 -/** @emoji 🌳 Nested workbench tree: Puzzle 2D → nodes (graph) → handles; flat edges group. */
-+/** @emoji 🌳 Workbench hierarchy: Nodes and Edges sections. */
- export function buildPuzzle2dPlayHierarchySections(
++/** @emoji 🌳 Workbench document: Nodes and Edges sections. */
+ export function buildPuzzle2dPlayDocumentSections(
  	fixture: Puzzle2dFixtureV1,
  	selectionIds: readonly string[],
-@@ -596,12 +586,6 @@ export function buildPuzzle2dPlayHierarchySections(
+@@ -596,12 +586,6 @@ export function buildPuzzle2dPlayDocumentSections(
  			nodeItems.push(item);
  		}
  	}
 -	const nodesGroup: UiTreeItemNode = {
--		id: "puzzle-2d-play-hierarchy.nodes",
+-		id: "puzzle-2d-play-document.nodes",
 -		label: "Nodes",
 -		defaultOpen: true,
--		items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-hierarchy.nodes.empty", label: "(none)" }],
+-		items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-document.nodes.empty", label: "(none)" }],
 -	};
  	const edgeItems: UiTreeItemNode[] = fixture.edges.map((edge) => ({
- 		id: `puzzle-2d-play-hierarchy.edge.${edge.id}`,
+ 		id: `puzzle-2d-play-document.edge.${edge.id}`,
  		label: puzzle2dFixtureEdgeDisplayLabel(edge, fixture, kindCatalogs),
-@@ -609,19 +593,23 @@ export function buildPuzzle2dPlayHierarchySections(
+@@ -609,19 +593,23 @@ export function buildPuzzle2dPlayDocumentSections(
  		onClick: () => onSelect(edge.id),
- 		...puzzle2dPlayHierarchyHoverHandlers(onHover, fixture, edge.id),
+ 		...puzzle2dPlayDocumentHoverHandlers(onHover, fixture, edge.id),
  	}));
 -	const edgesGroup: UiTreeItemNode = {
--		id: "puzzle-2d-play-hierarchy.edges",
+-		id: "puzzle-2d-play-document.edges",
 -		label: "Edges",
 -		defaultOpen: true,
--		items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-hierarchy.edges.empty", label: "(none)" }],
+-		items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-document.edges.empty", label: "(none)" }],
 -	};
 -	const puzzle2dRoot: UiTreeItemNode = {
--		id: "puzzle-2d-play-hierarchy.puzzle2d",
+-		id: "puzzle-2d-play-document.puzzle2d",
 -		label: "Puzzle 2D",
 -		defaultOpen: true,
 -		items: [nodesGroup, edgesGroup],
 -	};
--	return playgroundTreePanelRootItems("puzzle-2d-play-hierarchy.root", [puzzle2dRoot]) as UiTreeNode;
+-	return playgroundTreePanelRootItems("puzzle-2d-play-document.root", [puzzle2dRoot]) as UiTreeNode;
 +	return {
 +		type: "tree",
 +		sections: [
 +			{
-+				id: "puzzle-2d-play-hierarchy.nodes",
++				id: "puzzle-2d-play-document.nodes",
 +				label: "Nodes",
 +				defaultOpen: true,
-+				items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-hierarchy.nodes.empty", label: "(none)" }],
++				items: nodeItems.length ? nodeItems : [{ id: "puzzle-2d-play-document.nodes.empty", label: "(none)" }],
 +			},
 +			{
-+				id: "puzzle-2d-play-hierarchy.edges",
++				id: "puzzle-2d-play-document.edges",
 +				label: "Edges",
 +				defaultOpen: true,
-+				items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-hierarchy.edges.empty", label: "(none)" }],
++				items: edgeItems.length ? edgeItems : [{ id: "puzzle-2d-play-document.edges.empty", label: "(none)" }],
 +			},
 +		],
 +	} as UiTreeNode;
  }
- //#endregion 🔖Puzzle2dPlayHierarchy
+ //#endregion 🔖Puzzle2dPlayDocument
  
 @@ -1937,8 +1925,8 @@ if (import.meta.vitest) {
  			});
  			expect(fixture).not.toBeNull();
- 			const tree = buildPuzzle2dPlayHierarchySections(fixture!, [], () => {});
+ 			const tree = buildPuzzle2dPlayDocumentSections(fixture!, [], () => {});
 -			const nodesGroup = tree.sections[0]?.items?.[0]?.items?.find((row) => row.label === "Nodes");
--			const rootItem = nodesGroup?.items?.find((row) => row.id === "puzzle-2d-play-hierarchy.node.root");
+-			const rootItem = nodesGroup?.items?.find((row) => row.id === "puzzle-2d-play-document.node.root");
 +			const nodesSection = tree.sections.find((section) => section.label === "Nodes");
-+			const rootItem = nodesSection?.items?.find((row) => row.id === "puzzle-2d-play-hierarchy.node.root");
++			const rootItem = nodesSection?.items?.find((row) => row.id === "puzzle-2d-play-document.node.root");
  			expect(rootItem?.items?.some((row) => row.label === "Child")).toBe(true);
  			expect(rootItem?.items?.some((row) => row.label === "Handles")).toBe(false);
  		});
 @@ -1972,13 +1960,11 @@ if (import.meta.vitest) {
  			});
  			expect(fixture).not.toBeNull();
- 			const tree = buildPuzzle2dPlayHierarchySections(fixture!, [], () => {});
+ 			const tree = buildPuzzle2dPlayDocumentSections(fixture!, [], () => {});
 -			const puzzle2dRoot = tree.sections[0]?.items?.[0];
 -			expect(puzzle2dRoot?.label).toBe("Puzzle 2D");
 -			const nodesGroup = puzzle2dRoot?.items?.find((row) => row.label === "Nodes");
--			expect(nodesGroup?.items?.[0]?.id).toBe("puzzle-2d-play-hierarchy.node.root");
+-			expect(nodesGroup?.items?.[0]?.id).toBe("puzzle-2d-play-document.node.root");
 -			expect(nodesGroup?.items?.[0]?.label).toBe("Root");
 -			expect(nodesGroup?.items?.[0]?.items?.[0]?.label).toBe("Handles");
 -			expect(nodesGroup?.items?.[0]?.items?.[1]?.label).toBe("Child");
 +			const nodesSection = tree.sections.find((section) => section.label === "Nodes");
-+			expect(nodesSection?.items?.[0]?.id).toBe("puzzle-2d-play-hierarchy.node.root");
++			expect(nodesSection?.items?.[0]?.id).toBe("puzzle-2d-play-document.node.root");
 +			expect(nodesSection?.items?.[0]?.label).toBe("Root");
-+			expect(nodesSection?.items?.[0]?.items?.[0]?.id).toBe("puzzle-2d-play-hierarchy.handle.h-root");
++			expect(nodesSection?.items?.[0]?.items?.[0]?.id).toBe("puzzle-2d-play-document.handle.h-root");
 +			expect(nodesSection?.items?.[0]?.items?.[1]?.label).toBe("Child");
  		});
  
  		it("buildPuzzle2dPlayRuntime wires main mode and empty side tab slots", () => {
 @@ -2343,9 +2329,9 @@ if (import.meta.vitest) {
  
- 	it("nakagin default fixture yields a populated hierarchy nodes group", () => {
- 		const tree = buildPuzzle2dPlayHierarchySections(PUZZLE_2D_PLAY_DEFAULT_FIXTURE, [], () => {});
+ 	it("nakagin default fixture yields a populated document nodes group", () => {
+ 		const tree = buildPuzzle2dPlayDocumentSections(PUZZLE_2D_PLAY_DEFAULT_FIXTURE, [], () => {});
 -		const nodesGroup = tree.sections[0]?.items?.[0]?.items?.find((row) => row.label === "Nodes");
 -		expect(nodesGroup?.items?.length).toBeGreaterThan(0);
 -		expect(nodesGroup?.items?.[0]?.label).not.toBe("(none)");
@@ -1018,119 +1018,119 @@ index e4606d3c3..7662ad13f 100644
    brushPlacementOverlapBudget: DEFAULT_BRUSH_PLACEMENT_OVERLAP_BUDGET,
    cameraSeedEpoch: 0,
    hoverFocus: { hoverTarget: null, kindHover: null },
-@@ -1405,7 +1405,7 @@ export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelectio
+@@ -1405,7 +1405,7 @@ export function puzzle3dPlayDocumentSelectedIds(selection: Puzzle3dPlaySelectio
    return ids;
  }
  
--/** @emoji 🌳 Structural hierarchy sections (no per-row selected flags; selection via {@link puzzle3dPlayHierarchySelectedIds}). */
-+/** @emoji 🌳 Structural hierarchy sections: Objects, References, Target Volumes, Attractions. */
- export function buildPuzzle3dPlayHierarchySections(
+-/** @emoji 🌳 Structural document sections (no per-row selected flags; selection via {@link puzzle3dPlayDocumentSelectedIds}). */
++/** @emoji 🌳 Structural document sections: Objects, References, Target Volumes, Attractions. */
+ export function buildPuzzle3dPlayDocumentSections(
    fixture: FixtureV1,
-   options?: Puzzle3dPlayHierarchyHoverBuildOptions,
-@@ -1422,12 +1422,6 @@ export function buildPuzzle3dPlayHierarchySections(
-         ...puzzle3dPlayHierarchyEntityChrome(vortex, { kind: "vortex", fullId }, options),
+   options?: Puzzle3dPlayDocumentHoverBuildOptions,
+@@ -1422,12 +1422,6 @@ export function buildPuzzle3dPlayDocumentSections(
+         ...puzzle3dPlayDocumentEntityChrome(vortex, { kind: "vortex", fullId }, options),
        };
      });
 -    const vorticesGroup: UiTreeItemNode = {
--      id: `puzzle-3d-play-hierarchy.object.${object.id}.vortices`,
+-      id: `puzzle-3d-play-document.object.${object.id}.vortices`,
 -      label: "Vortices",
 -      defaultOpen: true,
--      items: vortexItems.length ? vortexItems : [{ id: `puzzle-3d-play-hierarchy.object.${object.id}.vortices.empty`, label: "(none)" }],
+-      items: vortexItems.length ? vortexItems : [{ id: `puzzle-3d-play-document.object.${object.id}.vortices.empty`, label: "(none)" }],
 -    };
      return {
-       id: `puzzle-3d-play-hierarchy.object.${object.id}`,
+       id: `puzzle-3d-play-document.object.${object.id}`,
        ...puzzle3dPlayFixtureTreeRowFields(object.label, object.id),
-@@ -1435,15 +1429,9 @@ export function buildPuzzle3dPlayHierarchySections(
+@@ -1435,15 +1429,9 @@ export function buildPuzzle3dPlayDocumentSections(
        command: puzzle3dPlaySelectObjectCommand(object.id),
-       ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
-       ...puzzle3dPlayHierarchyEntityChrome(object, { kind: "object", id: object.id }, options),
+       ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
+       ...puzzle3dPlayDocumentEntityChrome(object, { kind: "object", id: object.id }, options),
 -      items: [vorticesGroup],
-+      items: vortexItems.length ? vortexItems : [{ id: `puzzle-3d-play-hierarchy.object.${object.id}.vortices.empty`, label: "(none)" }],
++      items: vortexItems.length ? vortexItems : [{ id: `puzzle-3d-play-document.object.${object.id}.vortices.empty`, label: "(none)" }],
      };
    });
 -  const objectsGroup: UiTreeItemNode = {
--    id: "puzzle-3d-play-hierarchy.objects",
+-    id: "puzzle-3d-play-document.objects",
 -    label: "Objects",
 -    defaultOpen: true,
--    items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-hierarchy.objects.empty", label: "(none)" }],
+-    items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-document.objects.empty", label: "(none)" }],
 -  };
    const attractionItems: UiTreeItemNode[] = fixture.attractions.map((attraction) => ({
-     id: `puzzle-3d-play-hierarchy.attraction.${attraction.id}`,
+     id: `puzzle-3d-play-document.attraction.${attraction.id}`,
      label: attraction.id,
-@@ -1452,12 +1440,6 @@ export function buildPuzzle3dPlayHierarchySections(
-     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "attraction", id: attraction.id }),
-     ...puzzle3dPlayHierarchyEntityChrome(attraction, { kind: "attraction", id: attraction.id }, options),
+@@ -1452,12 +1440,6 @@ export function buildPuzzle3dPlayDocumentSections(
+     ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "attraction", id: attraction.id }),
+     ...puzzle3dPlayDocumentEntityChrome(attraction, { kind: "attraction", id: attraction.id }, options),
    }));
 -  const attractionsGroup: UiTreeItemNode = {
--    id: "puzzle-3d-play-hierarchy.attractions",
+-    id: "puzzle-3d-play-document.attractions",
 -    label: "Attractions",
 -    defaultOpen: true,
--    items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-hierarchy.attractions.empty", label: "(none)" }],
+-    items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-document.attractions.empty", label: "(none)" }],
 -  };
    const referenceItems: UiTreeItemNode[] = (fixture.references ?? []).map((reference) => ({
-     id: `puzzle-3d-play-hierarchy.reference.${reference.id}`,
+     id: `puzzle-3d-play-document.reference.${reference.id}`,
      label: reference.id,
-@@ -1466,12 +1448,6 @@ export function buildPuzzle3dPlayHierarchySections(
-     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "reference", id: reference.id }),
-     ...puzzle3dPlayHierarchyEntityChrome(reference, { kind: "reference", id: reference.id }, options),
+@@ -1466,12 +1448,6 @@ export function buildPuzzle3dPlayDocumentSections(
+     ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "reference", id: reference.id }),
+     ...puzzle3dPlayDocumentEntityChrome(reference, { kind: "reference", id: reference.id }, options),
    }));
 -  const referencesGroup: UiTreeItemNode = {
--    id: "puzzle-3d-play-hierarchy.references",
+-    id: "puzzle-3d-play-document.references",
 -    label: "References",
 -    defaultOpen: true,
--    items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-hierarchy.references.empty", label: "(none)" }],
+-    items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-document.references.empty", label: "(none)" }],
 -  };
    const targetVolumeItems: UiTreeItemNode[] = (fixture.targetVolumes ?? []).map((volume) => ({
-     id: `puzzle-3d-play-hierarchy.target-volume.${volume.id}`,
+     id: `puzzle-3d-play-document.target-volume.${volume.id}`,
      label: volume.id,
-@@ -1479,22 +1455,35 @@ export function buildPuzzle3dPlayHierarchySections(
-     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "targetVolume", id: volume.id }),
-     ...puzzle3dPlayHierarchyEntityChrome(volume, { kind: "targetVolume", id: volume.id }, options),
+@@ -1479,22 +1455,35 @@ export function buildPuzzle3dPlayDocumentSections(
+     ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "targetVolume", id: volume.id }),
+     ...puzzle3dPlayDocumentEntityChrome(volume, { kind: "targetVolume", id: volume.id }, options),
    }));
 -  const targetVolumesGroup: UiTreeItemNode = {
--    id: "puzzle-3d-play-hierarchy.target-volumes",
+-    id: "puzzle-3d-play-document.target-volumes",
 -    label: "Target Volumes",
 -    defaultOpen: true,
--    items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-hierarchy.target-volumes.empty", label: "(none)" }],
+-    items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-document.target-volumes.empty", label: "(none)" }],
 -  };
 -  const viewportRoot: UiTreeItemNode = {
--    id: "puzzle-3d-play-hierarchy.viewport",
+-    id: "puzzle-3d-play-document.viewport",
 -    label: "Puzzle 3D",
 -    defaultOpen: true,
 -    items: [objectsGroup, referencesGroup, targetVolumesGroup, attractionsGroup],
 -  };
--  return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [viewportRoot]).sections;
+-  return playgroundTreePanelRootItems("puzzle-3d-play-document.root", [viewportRoot]).sections;
 +  return [
 +    {
-+      id: "puzzle-3d-play-hierarchy.objects",
++      id: "puzzle-3d-play-document.objects",
 +      label: "Objects",
 +      defaultOpen: true,
-+      items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-hierarchy.objects.empty", label: "(none)" }],
++      items: objectItems.length ? objectItems : [{ id: "puzzle-3d-play-document.objects.empty", label: "(none)" }],
 +    },
 +    {
-+      id: "puzzle-3d-play-hierarchy.references",
++      id: "puzzle-3d-play-document.references",
 +      label: "References",
 +      defaultOpen: true,
-+      items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-hierarchy.references.empty", label: "(none)" }],
++      items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-document.references.empty", label: "(none)" }],
 +    },
 +    {
-+      id: "puzzle-3d-play-hierarchy.target-volumes",
++      id: "puzzle-3d-play-document.target-volumes",
 +      label: "Target Volumes",
 +      defaultOpen: true,
-+      items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-hierarchy.target-volumes.empty", label: "(none)" }],
++      items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-document.target-volumes.empty", label: "(none)" }],
 +    },
 +    {
-+      id: "puzzle-3d-play-hierarchy.attractions",
++      id: "puzzle-3d-play-document.attractions",
 +      label: "Attractions",
 +      defaultOpen: true,
-+      items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-hierarchy.attractions.empty", label: "(none)" }],
++      items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-document.attractions.empty", label: "(none)" }],
 +    },
 +  ];
  }
  
 -/** @emoji 🌳 Nested workbench tree: Puzzle 3D → Objects → Vortices; Attractions sibling group. */
-+/** @emoji 🌳 Workbench hierarchy: Objects, References, Target Volumes, Attractions sections. */
- export function buildPuzzle3dPlayHierarchyTree(
++/** @emoji 🌳 Workbench document: Objects, References, Target Volumes, Attractions sections. */
+ export function buildPuzzle3dPlayDocumentTree(
    fixture: FixtureV1 | null,
    selection: Puzzle3dPlaySelection,
 @@ -1670,7 +1659,7 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
@@ -1227,7 +1227,7 @@ index e4606d3c3..7662ad13f 100644
 @@ -4827,17 +4823,14 @@ if (import.meta.vitest) {
        });
        expect(fixture).not.toBeNull();
-       const tree = buildPuzzle3dPlayHierarchyTree(fixture!, PUZZLE_3D_PLAY_EMPTY_SELECTION);
+       const tree = buildPuzzle3dPlayDocumentTree(fixture!, PUZZLE_3D_PLAY_EMPTY_SELECTION);
 -      const viewportRoot = tree.sections[0]?.items?.[0];
 -      expect(viewportRoot?.label).toBe("Puzzle 3D");
 -      const objectsGroup = viewportRoot?.items?.find((row) => row.label === "Objects");
@@ -1239,16 +1239,16 @@ index e4606d3c3..7662ad13f 100644
        expect(firstObject?.label).toBe("Alpha");
 -      expect(firstObject?.items?.[0]?.label).toBe("Vortices");
 -      expect(firstObject?.items?.[0]?.items?.[0]?.label).toBe("Handle A");
--      expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.vortex.a:v1");
+-      expect(firstObject?.items?.[0]?.items?.[0]?.id).toBe("puzzle-3d-play-document.vortex.a:v1");
 -      const attractionsGroup = viewportRoot?.items?.find((row) => row.label === "Attractions");
--      expect(attractionsGroup?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.attraction.t1");
+-      expect(attractionsGroup?.items?.[0]?.id).toBe("puzzle-3d-play-document.attraction.t1");
 +      expect(firstObject?.items?.[0]?.label).toBe("Handle A");
-+      expect(firstObject?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.vortex.a:v1");
++      expect(firstObject?.items?.[0]?.id).toBe("puzzle-3d-play-document.vortex.a:v1");
 +      const attractionsSection = tree.sections.find((section) => section.label === "Attractions");
-+      expect(attractionsSection?.items?.[0]?.id).toBe("puzzle-3d-play-hierarchy.attraction.t1");
++      expect(attractionsSection?.items?.[0]?.id).toBe("puzzle-3d-play-document.attraction.t1");
      });
  
-     it("buildPuzzle3dPlayHierarchySections omits per-row selected flags", () => {
+     it("buildPuzzle3dPlayDocumentSections omits per-row selected flags", () => {
 diff --git a/puzzle/3d/react/index.tsx b/puzzle/3d/react/index.tsx
 index 2b864be90..48a3f0cab 100644
 --- a/puzzle/3d/react/index.tsx
@@ -1665,62 +1665,62 @@ diff --git a/puzzle/5d/play/index.ts b/puzzle/5d/play/index.ts
 index 648416bf9..0b18e7074 100644
 --- a/puzzle/5d/play/index.ts
 +++ b/puzzle/5d/play/index.ts
-@@ -146,35 +146,33 @@ export interface Puzzle5dPlayHierarchySelectHandlers {
+@@ -146,35 +146,33 @@ export interface Puzzle5dPlayDocumentSelectHandlers {
    readonly onSelect3dAttraction: (attractionId: string) => void;
  }
  
--/** @emoji 🌳 Puzzle 5d hierarchy: manifest → 2d + 3d composition subtrees. */
-+/** @emoji 🌳 Puzzle 5d hierarchy: flat 2d and 3d composition sections. */
-+function puzzle5dPlayHierarchyTreeSections(domain: "2d" | "3d", labelPrefix: string, tree: UiTreeNode): UiTreeSectionNode[] {
+-/** @emoji 🌳 Puzzle 5d document: manifest → 2d + 3d composition subtrees. */
++/** @emoji 🌳 Puzzle 5d document: flat 2d and 3d composition sections. */
++function puzzle5dPlayDocumentTreeSections(domain: "2d" | "3d", labelPrefix: string, tree: UiTreeNode): UiTreeSectionNode[] {
 +  if (tree.type !== "tree") {
 +    return [];
 +  }
 +  return tree.sections.map((section) => ({
 +    ...section,
-+    id: section.id.replace(/^puzzle-(?:2d|3d)-play-hierarchy\./, `puzzle-5d-play-hierarchy.${domain}.`),
++    id: section.id.replace(/^puzzle-(?:2d|3d)-play-document\./, `puzzle-5d-play-document.${domain}.`),
 +    label: `${labelPrefix} · ${section.label}`,
 +  }));
 +}
 +
- export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapshot, handlers: Puzzle5dPlayHierarchySelectHandlers): UiTreeNode {
+ export function buildPuzzle5dPlayDocumentSections(snapshot: Puzzle5dPlaySnapshot, handlers: Puzzle5dPlayDocumentSelectHandlers): UiTreeNode {
 -  const branches: UiTreeItemNode[] = [];
 +  const sections: UiTreeSectionNode[] = [];
    if (snapshot.fixture2d) {
--    const root2d = buildPuzzle2dPlayHierarchySections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d).sections[0]?.items?.[0];
+-    const root2d = buildPuzzle2dPlayDocumentSections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d).sections[0]?.items?.[0];
 -    branches.push({
--      id: "puzzle-5d-play-hierarchy.2d",
+-      id: "puzzle-5d-play-document.2d",
 -      label: "2d",
 -      defaultOpen: true,
--      items: root2d?.items ?? [{ id: "puzzle-5d-play-hierarchy.2d.empty", label: "(empty)" }],
+-      items: root2d?.items ?? [{ id: "puzzle-5d-play-document.2d.empty", label: "(empty)" }],
 -    });
-+    const tree2d = buildPuzzle2dPlayHierarchySections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d);
-+    sections.push(...puzzle5dPlayHierarchyTreeSections("2d", "2d", tree2d));
++    const tree2d = buildPuzzle2dPlayDocumentSections(snapshot.fixture2d, [...snapshot.selected2d], handlers.onSelect2d);
++    sections.push(...puzzle5dPlayDocumentTreeSections("2d", "2d", tree2d));
    }
    if (snapshot.fixture3d) {
      const selection3d = snapshot.selected3d ? { ...PUZZLE_3D_PLAY_EMPTY_SELECTION, objectIds: [snapshot.selected3d] } : PUZZLE_3D_PLAY_EMPTY_SELECTION;
--    const root3d = buildPuzzle3dPlayHierarchyTree(snapshot.fixture3d, selection3d).sections[0]?.items?.[0];
+-    const root3d = buildPuzzle3dPlayDocumentTree(snapshot.fixture3d, selection3d).sections[0]?.items?.[0];
 -    branches.push({
--      id: "puzzle-5d-play-hierarchy.3d",
+-      id: "puzzle-5d-play-document.3d",
 -      label: "3d",
 -      defaultOpen: true,
--      items: root3d?.items ?? [{ id: "puzzle-5d-play-hierarchy.3d.empty", label: "(empty)" }],
+-      items: root3d?.items ?? [{ id: "puzzle-5d-play-document.3d.empty", label: "(empty)" }],
 -    });
-+    const tree3d = buildPuzzle3dPlayHierarchyTree(snapshot.fixture3d, selection3d);
-+    sections.push(...puzzle5dPlayHierarchyTreeSections("3d", "3d", tree3d));
++    const tree3d = buildPuzzle3dPlayDocumentTree(snapshot.fixture3d, selection3d);
++    sections.push(...puzzle5dPlayDocumentTreeSections("3d", "3d", tree3d));
    }
 -  const root5d: UiTreeItemNode = {
--    id: "puzzle-5d-play-hierarchy.5d",
+-    id: "puzzle-5d-play-document.5d",
 -    label: snapshot.manifestLabel ?? "5d",
 -    defaultOpen: true,
--    items: branches.length ? branches : [{ id: "puzzle-5d-play-hierarchy.5d.empty", label: "(no fixtures)" }],
+-    items: branches.length ? branches : [{ id: "puzzle-5d-play-document.5d.empty", label: "(no fixtures)" }],
 -  };
--  return playgroundTreePanelRootItems("puzzle-5d-play-hierarchy.root", [root5d]);
+-  return playgroundTreePanelRootItems("puzzle-5d-play-document.root", [root5d]);
 +  if (!sections.length) {
-+    return playgroundTreePanelRootItems("puzzle-5d-play-hierarchy.root", [{ id: "puzzle-5d-play-hierarchy.empty", label: "(no fixtures)" }]);
++    return playgroundTreePanelRootItems("puzzle-5d-play-document.root", [{ id: "puzzle-5d-play-document.empty", label: "(no fixtures)" }]);
 +  }
 +  return { type: "tree", sections };
  }
- //#endregion 🔖Puzzle5dPlayHierarchy
+ //#endregion 🔖Puzzle5dPlayDocument
  
 @@ -1131,11 +1129,9 @@ if (import.meta.vitest) {
          onSelect3dVortex: () => {},
@@ -1743,57 +1743,57 @@ index 47c993f24..e50493d64 100644
 +++ b/reasoning/mindmap/wires/play/index.ts
 @@ -30,7 +30,7 @@ export {
  
- import { Playground2d, type Puzzle2dPlayHierarchyBuildOptions } from "@puzzle/2d/play";
+ import { Playground2d, type Puzzle2dPlayDocumentBuildOptions } from "@puzzle/2d/play";
  import type { KindCatalogBundle, Puzzle2dFixtureV1 } from "@puzzle/2d/react";
 -import { playgroundTreePanelRootItems, type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@framework/playground/core";
 +import { type UiNode, type UiTreeItemNode, type UiTreeNode, type UiTreeSectionNode } from "@framework/playground/core";
  import { puzzle2dFixtureMergedKindCatalogs } from "@puzzle/2d/react";
  import { bootstrapElementsSurfaceChromeDocument } from "@ui/react";
  import {
-@@ -203,12 +203,6 @@ export function buildWiresPlayHierarchySections(
-       ...wiresHierarchyHoverHandlers(onHover, identity.nodeId),
+@@ -203,12 +203,6 @@ export function buildWiresPlayDocumentSections(
+       ...wiresDocumentHoverHandlers(onHover, identity.nodeId),
      };
    });
 -  const identitiesGroup: UiTreeItemNode = {
--    id: "wires-play-hierarchy.identities",
+-    id: "wires-play-document.identities",
 -    label: "Identities",
 -    defaultOpen: true,
--    items: identityItems.length ? identityItems : [{ id: "wires-play-hierarchy.identities.empty", label: "(none)" }],
+-    items: identityItems.length ? identityItems : [{ id: "wires-play-document.identities.empty", label: "(none)" }],
 -  };
    const relationshipItems: UiTreeItemNode[] = puzzleFixture.edges.map((edge) => ({
-     id: `${WIRES_PLAY_HIERARCHY_RELATIONSHIP_PREFIX}${edge.id}`,
-     label: wiresRelationshipHierarchyLabel(wiresFixture, edge.id) ?? edge.id,
-@@ -216,19 +210,23 @@ export function buildWiresPlayHierarchySections(
+     id: `${WIRES_PLAY_DOCUMENT_RELATIONSHIP_PREFIX}${edge.id}`,
+     label: wiresRelationshipDocumentLabel(wiresFixture, edge.id) ?? edge.id,
+@@ -216,19 +210,23 @@ export function buildWiresPlayDocumentSections(
      onClick: () => onSelect(edge.id),
-     ...wiresHierarchyHoverHandlers(onHover, edge.id),
+     ...wiresDocumentHoverHandlers(onHover, edge.id),
    }));
 -  const relationshipsGroup: UiTreeItemNode = {
--    id: "wires-play-hierarchy.relationships",
+-    id: "wires-play-document.relationships",
 -    label: "Relationships",
 -    defaultOpen: true,
--    items: relationshipItems.length ? relationshipItems : [{ id: "wires-play-hierarchy.relationships.empty", label: "(none)" }],
+-    items: relationshipItems.length ? relationshipItems : [{ id: "wires-play-document.relationships.empty", label: "(none)" }],
 -  };
 -  const wiresRoot: UiTreeItemNode = {
--    id: "wires-play-hierarchy.wires",
+-    id: "wires-play-document.wires",
 -    label: wiresFixture.source.kitName,
 -    defaultOpen: true,
 -    items: [identitiesGroup, relationshipsGroup],
 -  };
--  return playgroundTreePanelRootItems("wires-play-hierarchy.root", [wiresRoot]) as UiTreeNode;
+-  return playgroundTreePanelRootItems("wires-play-document.root", [wiresRoot]) as UiTreeNode;
 +  return {
 +    type: "tree",
 +    sections: [
 +      {
-+        id: "wires-play-hierarchy.identities",
++        id: "wires-play-document.identities",
 +        label: "Identities",
 +        defaultOpen: true,
-+        items: identityItems.length ? identityItems : [{ id: "wires-play-hierarchy.identities.empty", label: "(none)" }],
++        items: identityItems.length ? identityItems : [{ id: "wires-play-document.identities.empty", label: "(none)" }],
 +      },
 +      {
-+        id: "wires-play-hierarchy.relationships",
++        id: "wires-play-document.relationships",
 +        label: "Relationships",
 +        defaultOpen: true,
-+        items: relationshipItems.length ? relationshipItems : [{ id: "wires-play-hierarchy.relationships.empty", label: "(none)" }],
++        items: relationshipItems.length ? relationshipItems : [{ id: "wires-play-document.relationships.empty", label: "(none)" }],
 +      },
 +    ],
 +  } as UiTreeNode;
@@ -1802,17 +1802,17 @@ index 47c993f24..e50493d64 100644
  //#region 🔖Boot
 @@ -261,11 +259,10 @@ if (import.meta.vitest) {
  
-     it("buildWiresPlayHierarchySections uses Identities and Relationships groups", () => {
-       const tree = buildWiresPlayHierarchySections(WIRES_PLAY_FIXTURE, WIRES_PLAY_DEFAULT_FIXTURE, [], () => {});
+     it("buildWiresPlayDocumentSections uses Identities and Relationships groups", () => {
+       const tree = buildWiresPlayDocumentSections(WIRES_PLAY_FIXTURE, WIRES_PLAY_DEFAULT_FIXTURE, [], () => {});
 -      const root = tree.sections[0]?.items?.[0];
 -      expect(root?.label).toBe("Metabolism");
 -      const groups = root?.items ?? [];
 -      expect(groups.map((g) => g.label)).toEqual(["Identities", "Relationships"]);
--      const rel = groups[1]?.items?.find((row) => row.id === "wires-play-hierarchy.relationship.wires-rel-is-capital");
+-      const rel = groups[1]?.items?.find((row) => row.id === "wires-play-document.relationship.wires-rel-is-capital");
 +      const groups = tree.sections.map((section) => section.label);
 +      expect(groups).toEqual(["Identities", "Relationships"]);
 +      const relationshipsSection = tree.sections.find((section) => section.label === "Relationships");
-+      const rel = relationshipsSection?.items?.find((row) => row.id === "wires-play-hierarchy.relationship.wires-rel-is-capital");
++      const rel = relationshipsSection?.items?.find((row) => row.id === "wires-play-document.relationship.wires-rel-is-capital");
        expect(rel?.label).toBe("Is: Bridge → Capital");
      });
  

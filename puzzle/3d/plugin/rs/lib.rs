@@ -7,7 +7,7 @@ use semio_framework_plugin::{
     world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, CommandDescriptor, MeshData,
     PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use puzzle_3d::{BrushPlacePayload, Puzzle3dPrecomputeSession};
@@ -24,7 +24,7 @@ const PUZZLE3D_PLAY_APP_ID: &str = "puzzle3d-play";
 const PUZZLE3D_PLAY_CONTROLLER_ID: &str = "puzzle3d-play";
 const PUZZLE3D_PLAY_SURFACE_VIEWPORT: &str = "puzzle.3d.play.viewport";
 const PUZZLE3D_PLAY_BODY_COMPOSITE: &str = "puzzle3d.play.composite";
-const PUZZLE3D_PLAY_BODY_HIERARCHY: &str = "puzzle.3d.play.hierarchy";
+const PUZZLE3D_PLAY_BODY_DOCUMENT: &str = "puzzle.3d.play.document";
 const PUZZLE3D_PLAY_BODY_KINDS: &str = "puzzle.3d.play.kinds";
 const PUZZLE3D_PLAY_BODY_INSPECTOR: &str = "puzzle.3d.play.inspector";
 const PUZZLE3D_PLAY_WINDOW_MAIN: &str = "puzzle3d-main";
@@ -672,7 +672,7 @@ fn tree_item_with_command(
     }
 }
 
-fn build_hierarchy_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
+fn build_document_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
     let object_items: Vec<UiTreeItemNode> = envelope
         .fixture
         .objects
@@ -708,13 +708,13 @@ fn build_hierarchy_tree(envelope: &Puzzle3dEnvelope) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "puzzle3d-play-hierarchy.objects".into(),
+                id: "puzzle3d-play-document.objects".into(),
                 label: Some("Objects".into()),
                 default_open: Some(true),
                 items: object_items,
             },
             UiTreeSectionNode {
-                id: "puzzle3d-play-hierarchy.attractions".into(),
+                id: "puzzle3d-play-document.attractions".into(),
                 label: Some("Attractions".into()),
                 default_open: Some(false),
                 items: attraction_items,
@@ -1190,7 +1190,7 @@ impl PluginApp for Puzzle3dPlayApp {
                     ),
                 )
             }
-            PUZZLE3D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
+            PUZZLE3D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             PUZZLE3D_PLAY_BODY_KINDS => build_kinds_tree(),
             PUZZLE3D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -1202,7 +1202,7 @@ impl PluginApp for Puzzle3dPlayApp {
 //#region 🔖Manifest
 fn create_puzzle3d_app() -> App {
     App::from_builder(
-        App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D").hierarchy(["semio", "puzzle", "3d"])
+        App::builder(PUZZLE3D_PLAY_APP_ID, "Puzzle 3D").document(["semio", "puzzle", "3d"])
             .icon_id("puzzle")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1214,10 +1214,10 @@ fn create_puzzle3d_app() -> App {
                 Some(&["Puzzle 3D".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                PUZZLE3D_PLAY_BODY_HIERARCHY,
+                PUZZLE3D_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1269,7 +1269,7 @@ fn register_puzzle3d_exports() {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -1295,10 +1295,10 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_objects() {
+    fn document_lists_objects() {
         let app = Puzzle3dPlayApp::default();
         let document = app.initial_document_json();
-        let node = app.render(PUZZLE3D_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(PUZZLE3D_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("puzzle3d-object:"));
     }

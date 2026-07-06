@@ -9,7 +9,7 @@
 
 # Plan
 
-- Add ticket command hierarchy and ticket close semantics.
+- Add ticket command document and ticket close semantics.
 - Enforce interaction lifecycle (no overlapping interactions).
 - Require file lists for interaction start/finish and persist them on start/finish.
 - Update dev docs to ticket terminology and workflow.

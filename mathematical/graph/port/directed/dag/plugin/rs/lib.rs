@@ -11,7 +11,7 @@ use semio_framework_plugin::{
     ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,7 @@ const DAG_PLAY_SURFACE_MAIN: &str = "dag.play.main";
 const DAG_PLAY_SURFACE_COMPILED: &str = "dag.play.compiled-dag";
 const DAG_PLAY_BODY_MAIN: &str = "dag.play.main";
 const DAG_PLAY_BODY_COMPILED: &str = "dag.play.compiled-dag";
-const DAG_PLAY_BODY_HIERARCHY: &str = "dag.play.hierarchy";
+const DAG_PLAY_BODY_DOCUMENT: &str = "dag.play.document";
 const DAG_PLAY_BODY_CATALOGUE: &str = "dag.play.catalogue";
 const DAG_PLAY_BODY_INSPECTOR: &str = "dag.play.inspection";
 const DAG_PLAY_WINDOW_MAIN: &str = "dag-main";
@@ -404,13 +404,13 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖Panels
-fn build_hierarchy_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
+fn build_document_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
     let node_items: Vec<UiTreeItemNode> = fixture
         .nodes
         .iter()
         .map(|node| {
             tree_item_with_command(
-                format!("dag-play-hierarchy.node.{}", node.id),
+                format!("dag-play-document.node.{}", node.id),
                 if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
                 Some(dag_node_kind_tag(&node.kind).into()),
                 dag_cmd("setSelection", Some(json!({ "ids": [node.id.clone()] }))),
@@ -422,7 +422,7 @@ fn build_hierarchy_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
         .iter()
         .map(|edge| {
             tree_item_with_description(
-                format!("dag-play-hierarchy.edge.{}", edge.id),
+                format!("dag-play-document.edge.{}", edge.id),
                 format!("{} → {}", edge.source, edge.target),
                 edge.id.clone(),
             )
@@ -431,27 +431,27 @@ fn build_hierarchy_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "dag-play-hierarchy.nodes".into(),
+                id: "dag-play-document.nodes".into(),
                 label: Some("Nodes".into()),
                 default_open: Some(true),
                 items: if node_items.is_empty() {
-                    vec![tree_item("dag-play-hierarchy.nodes.empty", "(none)")]
+                    vec![tree_item("dag-play-document.nodes.empty", "(none)")]
                 } else {
                     node_items
                 },
             },
             UiTreeSectionNode {
-                id: "dag-play-hierarchy.edges".into(),
+                id: "dag-play-document.edges".into(),
                 label: Some("Edges".into()),
                 default_open: Some(false),
                 items: if edge_items.is_empty() {
-                    vec![tree_item("dag-play-hierarchy.edges.empty", "(none)")]
+                    vec![tree_item("dag-play-document.edges.empty", "(none)")]
                 } else {
                     edge_items
                 },
             },
         ],
-        selected_ids: Some(selected.iter().map(|id| format!("dag-play-hierarchy.node.{id}")).collect()),
+        selected_ids: Some(selected.iter().map(|id| format!("dag-play-document.node.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
     })
@@ -528,7 +528,7 @@ fn build_inspector_tree(fixture: &DagFixture, selected: &[String]) -> UiNode {
             id: "dag-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Select a node in the hierarchy.")],
+            children: vec![ui_text("Select a node in the document.")],
         }]);
     }
     let nodes: Vec<&DagNodeSpec> = selected
@@ -944,7 +944,7 @@ impl PluginApp for DagPlayApp {
         match body_key {
             DAG_PLAY_BODY_MAIN => render_main_graph(&envelope),
             DAG_PLAY_BODY_COMPILED => render_compiled_dag(&envelope.fixture),
-            DAG_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
+            DAG_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
             DAG_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
             DAG_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_node_ids),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -956,7 +956,7 @@ impl PluginApp for DagPlayApp {
 //#region 🔖Manifest
 fn create_dag_app() -> App {
     App::from_builder(
-        App::builder(DAG_PLAY_APP_ID, "DAG").hierarchy(["semio", "mathematical", "graph", "port", "directed", "dag"])
+        App::builder(DAG_PLAY_APP_ID, "DAG").document(["semio", "mathematical", "graph", "port", "directed", "dag"])
             .icon_id("dag")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -969,10 +969,10 @@ fn create_dag_app() -> App {
                 Some(&["DAG".into(), "DSL".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                DAG_PLAY_BODY_HIERARCHY,
+                DAG_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -999,7 +999,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 #[cfg(test)]

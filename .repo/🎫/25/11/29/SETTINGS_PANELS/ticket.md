@@ -1,9 +1,9 @@
 # Ticket
 
 ## Todos
-# Settings Panel Hierarchy
+# Settings Panel Document
 
-## App Hierarchy
+## App Document
 
 The compose Sketchpad application has a hierarchical structure where child apps inherit and extend functionality from their parent apps:
 
@@ -86,7 +86,7 @@ Panels from the same kind have different sections ordered from most specific (to
 Each panel section has the following properties:
 
 - `id`: Unique identifier (e.g., "compose.sketchpad.app.home.settings")
-- `specificity`: Number indicating hierarchy level (higher = more specific)
+- `specificity`: Number indicating document level (higher = more specific)
 - `order`: Number for ordering within same specificity level
 - `content`: React component or function returning the section content
 
@@ -148,7 +148,7 @@ useEffect(() => {
 
 ## Testing
 
-The settings panel hierarchy is tested using Playwright end-to-end tests in `sketchpad.test.ts`. The tests verify:
+The settings panel document is tested using Playwright end-to-end tests in `sketchpad.test.ts`. The tests verify:
 
 1. Each app shows the correct settings sections
 2. Sections appear in the correct order (most specific to least specific)
@@ -180,7 +180,7 @@ test("Home app shows correct settings sections in order", async ({ page }) => {
 - `js/compose/sketchpad/Kit.tsx`: Added Kit and Sketchpad settings sections
 - `js/compose/sketchpad/Design.tsx`: Added Design, Kit, and Sketchpad settings sections
 - `js/compose/sketchpad/Type.tsx`: Added Type, Kit, and Sketchpad settings sections
-- `js/compose/sketchpad.test.ts`: Added comprehensive tests for settings panel hierarchy
+- `js/compose/sketchpad.test.ts`: Added comprehensive tests for settings panel document
 
 ## Changes
 
@@ -189,4 +189,4 @@ test("Home app shows correct settings sections in order", async ({ page }) => {
 ## Summary
 # Summary
 
-Implement settings panel hierarchy
+Implement settings panel document

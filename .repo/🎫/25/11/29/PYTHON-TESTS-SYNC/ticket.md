@@ -12,7 +12,7 @@
 
 1. ✅ Add comprehensive Python tests that mirror JavaScript tests
 2. ✅ Use pytransform3d for spatial math operations
-3. ✅ Use networkx for graph operations (piece graph, hierarchy)
+3. ✅ Use networkx for graph operations (piece graph, document)
 4. ✅ Add validation tests matching compose.ts validation constraints
 5. ✅ Add flattenDesign tests with plane validation
 6. ✅ Add Kit diff tests (apply forward, apply inverse)

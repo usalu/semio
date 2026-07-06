@@ -329,7 +329,7 @@ export type DesignFlattenMapEntryDto = Readonly<{
   readonly center: PointDto;
 }>;
 
-/** @emoji 🧾 Per-piece hierarchy + flat pose row from `design.pieces` (`PieceStore` GraphQL fields). */
+/** @emoji 🧾 Per-piece document + flat pose row from `design.pieces` (`PieceStore` GraphQL fields). */
 export type PiecePlacementRowDto = Readonly<{
   readonly pieceId: string;
   readonly plane: PlaneDto;
@@ -6568,8 +6568,8 @@ const includedDesignInfoJsonZod = z.object({
   externalConnections: z.array(ConnectionSchema).optional(),
 });
 
-/** Zod for one `PieceStore` row returned under `designByDtoId.pieces` (hierarchy + flat pose for {@link PiecePlacementRowDto}). */
-const pieceStoreHierarchyPieceGqlZod = z.object({
+/** Zod for one `PieceStore` row returned under `designByDtoId.pieces` (document + flat pose for {@link PiecePlacementRowDto}). */
+const pieceStoreDocumentPieceGqlZod = z.object({
   id: z.string(),
   depth: z.number(),
   path: z.array(z.object({ id: z.string() })),
@@ -6587,7 +6587,7 @@ function composeParsePiecePlacementMapJson(pieces: readonly unknown[] | undefine
   const m = new Map<string, PiecePlacementRowDto>();
   if (!Array.isArray(pieces)) return m;
   for (const r of pieces) {
-    const parsed = pieceStoreHierarchyPieceGqlZod.safeParse(r);
+    const parsed = pieceStoreDocumentPieceGqlZod.safeParse(r);
     if (!parsed.success) continue;
     const row = parsed.data;
     const pathIds = row.path.map((p) => p.id);
@@ -7475,7 +7475,7 @@ export class DesignStore {
       .then((v) => (Array.isArray(v) ? v : []));
   }
 
-  /** @emoji 🧾 Per-piece hierarchy + flat pose metadata (`getPiecesMetadata` / `PieceStore` GraphQL). */
+  /** @emoji 🧾 Per-piece document + flat pose metadata (`getPiecesMetadata` / `PieceStore` GraphQL). */
   readPiecesPlacementMetadataMap(): Promise<ReadonlyMap<string, PiecePlacementRowDto>> {
     return this.root.getPiecesMetadata(this.readPoint, this.id);
   }

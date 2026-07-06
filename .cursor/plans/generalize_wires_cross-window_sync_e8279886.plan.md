@@ -1,6 +1,6 @@
 ---
 name: Generalize Wires Cross-Window Sync
-overview: Route normal-graph (wires) scenes through the exact same JS scene + descriptor + authoring-peer + play-shell pipeline as puzzle 2d, so every non-window-local mechanism (live drag, drag-commit, selection, preselect/suggestions, hover, structural deletes, hierarchy, inspector, camera-fit) works identically. The `graphPortMode` axis only changes geometry/hit-test/handle-UI, never the sync architecture. Remove the `wasmFixtureJson` bypass.
+overview: Route normal-graph (wires) scenes through the exact same JS scene + descriptor + authoring-peer + play-shell pipeline as puzzle 2d, so every non-window-local mechanism (live drag, drag-commit, selection, preselect/suggestions, hover, structural deletes, document, inspector, camera-fit) works identically. The `graphPortMode` axis only changes geometry/hit-test/handle-UI, never the sync architecture. Remove the `wasmFixtureJson` bypass.
 todos:
   - id: scene-edge-endpoints
     content: Generalize Puzzle2dSceneEdge.source/target to node-or-handle anchors; update computeEdgeBezier and syncPuzzle2dScene edge resolution to bind node-id edges.
@@ -14,11 +14,11 @@ todos:
   - id: shell-normal-fixture
     content: Feed the wires board into the play shell fixture state and re-enable declarativeSceneDescriptor + sceneMarkers + sceneAuthoringEpoch + onDragEnd patchFixture for wires; thread graphPortMode=normal; remove duplicate mindmap camera/wasm helpers.
     status: completed
-  - id: hierarchy-no-empty-handles
-    content: Omit the per-node Handles subfolder in buildPuzzle2dPlayHierarchySections when a node has no handles.
+  - id: document-no-empty-handles
+    content: Omit the per-node Handles subfolder in buildPuzzle2dPlayDocumentSections when a node has no handles.
     status: completed
   - id: validate-sync
-    content: Add Rust sync_descriptor normal-mode test and vitest peer-sync tests; verify cross-pane drag/hover/selection/preselect, hierarchy and inspector at runtime on :6015; update ticket.
+    content: Add Rust sync_descriptor normal-mode test and vitest peer-sync tests; verify cross-pane drag/hover/selection/preselect, document and inspector at runtime on :6015; update ticket.
     status: completed
 isProject: false
 ---
@@ -31,7 +31,7 @@ The wires/normal path bypasses the shared pipeline by pushing `wasmFixtureJson` 
 
 - live drag: `nodeMove` drain -> `puzzle2dBroadcastNodeMove` -> peer `applyNodePositionSilent` reads `this.scene.nodes` (empty -> dropped) ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) ~3716, ~5540)
 - selection / preselect / structural / brush broadcasts all operate on `this.scene` ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) ~10664-10708)
-- drag-commit / re-fit / hierarchy / inspector use the shell `Puzzle2dFixture` + `sceneAuthoringEpoch` ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) ~3470+)
+- drag-commit / re-fit / document / inspector use the shell `Puzzle2dFixture` + `sceneAuthoringEpoch` ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) ~3470+)
 
 The Rust host already supports normal graphs through the shared `sync_descriptor` path: `EdgeData.source/target` are plain string ids and geometry/hit-test branch on `GraphPortMode` ([puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) ~3704). The only JS blocker is `Puzzle2dSceneEdge.source/target` being typed/resolved as handles only.
 
@@ -70,14 +70,14 @@ flowchart LR
   - `initialFixture`, `selectionSeedForFixture`, `triptychCamerasFromFixture`, `puzzle2dFixtureMergedKindCatalogs`, `buildPuzzle2dSceneDescriptorFromFixture`, `puzzle2dFixtureSceneMarkers` all already accept `Puzzle2dFixture` -> feed the wires board when `PUZZLE_PLAY_ENTRY === "wires"`. Remove the special `triptychCamerasFromMindmapBoard`/`mindmapBoardWorldBounds`/`PUZZLE_2D_PLAY_WIRES_WASM_FIXTURE_JSON` helpers added earlier.
   - In `Puzzle2dPlayPaneCanvas` pass `graphPortMode={isWires ? "normal" : undefined}` and the normal `declarativeSceneDescriptor` + `sceneMarkers` like the ported panes (re-enable `onFixtureDrop`/`sceneAuthoringEpoch`/`onDragEnd` -> `patchFixture`). Selection targets `{nodes:true, edges:true, handles:false}` for wires.
 
-## Phase 4 - Hierarchy / inspector cleanliness for normal nodes
+## Phase 4 - Document / inspector cleanliness for normal nodes
 
-- `buildPuzzle2dPlayHierarchySections` ([puzzle/2d/play/index.ts](puzzle/2d/play/index.ts) ~278): omit the per-node `Handles` subfolder when `node.handles.length === 0` (so wires topics show as clean nodes, no empty Handles folder). Inspector already keys off node fields and works without handles.
+- `buildPuzzle2dPlayDocumentSections` ([puzzle/2d/play/index.ts](puzzle/2d/play/index.ts) ~278): omit the per-node `Handles` subfolder when `node.handles.length === 0` (so wires topics show as clean nodes, no empty Handles folder). Inspector already keys off node fields and works without handles.
 
 ## Phase 5 - Validation
 
 - Rust: add a `sync_descriptor` + normal-mode test confirming node-id edges render/hit-test without handles ([puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs) host_tests).
 - Vitest ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) test region): node-id edge binds in `syncPuzzle2dScene`; `puzzle2dBroadcastNodeMove`/`applyNodePositionSilent` and `applySelectionFromPeerSilent`/`syncPreselectionSilent` mirror across two normal-mode peers.
-- Runtime: wires play on :6015 - drag a topic in one pane, confirm live + committed move in the other two panes; confirm hover, selection, and preselect mirror; confirm hierarchy lists topics and inspector edits one.
+- Runtime: wires play on :6015 - drag a topic in one pane, confirm live + committed move in the other two panes; confirm hover, selection, and preselect mirror; confirm document lists topics and inspector edits one.
 - Keep temp logs under `.repo/🎫/26/06/03/WIRES-NORMAL-GRAPH/`; reopen that ticket; close with file summary.
 

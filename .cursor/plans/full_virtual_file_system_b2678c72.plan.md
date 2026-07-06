@@ -34,7 +34,7 @@ isProject: false
 
 # Full Virtual File System for compose
 
-Make `compose/rs` `FileSystemNode` the single source of truth and have sketchpad lazily fetch children over GraphQL. Hierarchy: `Kit -> Folders/Files/Designs/Types/Families` (nested by folder), `Type -> Representations/Ports/Connectors`, `Design -> Pieces/Connections`, everything else is a leaf.
+Make `compose/rs` `FileSystemNode` the single source of truth and have sketchpad lazily fetch children over GraphQL. Document: `Kit -> Folders/Files/Designs/Types/Families` (nested by folder), `Type -> Representations/Ports/Connectors`, `Design -> Pieces/Connections`, everything else is a leaf.
 
 Per repo rules, open a ticket via repo MCP first; associate to goal `compose` (ticket `VIRTUAL-FILE-SYSTEM-ROW-SELECTION` is selection-only, so create a new ticket e.g. `FULL-VIRTUAL-FILE-SYSTEM`). Extend existing files/tests only (no new files outside the ticket folder). No legacy/back-compat.
 

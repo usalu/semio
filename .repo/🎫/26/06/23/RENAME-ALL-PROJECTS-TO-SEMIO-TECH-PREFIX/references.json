@@ -476,7 +476,7 @@
     "repo",
     "@ui/react"
   ],
-  ".cursor/plans/play_hierarchy_tabs_b3050808.plan.md": [
+  ".cursor/plans/play_document_tabs_b3050808.plan.md": [
     "repo",
     "@compose/play"
   ],
@@ -6369,7 +6369,7 @@
   ".repo/🎫/25/11/22/MIGRATION-PORT-RESOLUTION/ticket.json": [
     "repo"
   ],
-  ".repo/🎫/25/11/22/PANEL-SECTION-HIERARCHY/ticket.json": [
+  ".repo/🎫/25/11/22/PANEL-SECTION-DOCUMENT/ticket.json": [
     "repo"
   ],
   ".repo/🎫/25/11/22/SIDE-WEAK-ENTITY/ticket.json": [
@@ -6703,7 +6703,7 @@
   ".repo/🎫/26/01/05/CONTRIBUTOR-DERIVED/ticket.json": [
     "repo"
   ],
-  ".repo/🎫/26/01/05/SCOPE-HIERARCHY-BUNDLES/ticket.json": [
+  ".repo/🎫/26/01/05/SCOPE-DOCUMENT-BUNDLES/ticket.json": [
     "repo"
   ],
   ".repo/🎫/26/01/05/TICKET-ITERATION-FILE-FILTER/ticket.json": [
@@ -7484,7 +7484,7 @@
   ".repo/🎫/26/02/02/EXTEND-REPO-MECHANISM-WITH-TODOS/ticket.json": [
     "repo"
   ],
-  ".repo/🎫/26/02/02/FIX-GOAL-TREE-HIERARCHY-AND-SORTING/ticket.json": [
+  ".repo/🎫/26/02/02/FIX-GOAL-TREE-DOCUMENT-AND-SORTING/ticket.json": [
     "repo"
   ],
   ".repo/🎫/26/02/02/FIX-POST-ATTACH-CODEGEN-FAILURE/ticket.json": [
@@ -7562,13 +7562,13 @@
   ".repo/🎫/26/02/03/LINK-TICKET-ISSUES-TO-PROJECT-AND-ASSIGN-TO-CREATOR/ticket.json": [
     "repo"
   ],
-  ".repo/🎫/26/02/03/REFACTOR-GOAL-AND-TICKET-HIERARCHY-TO-USE-FOLDER-NESTING/ticket.json": [
+  ".repo/🎫/26/02/03/REFACTOR-GOAL-AND-TICKET-DOCUMENT-TO-USE-FOLDER-NESTING/ticket.json": [
     "repo"
   ],
-  ".repo/🎫/26/02/03/REFACTOR-GOAL-AND-TICKET-HIERARCHY-TO-USE-FOLDER-NESTING/ticket.md": [
+  ".repo/🎫/26/02/03/REFACTOR-GOAL-AND-TICKET-DOCUMENT-TO-USE-FOLDER-NESTING/ticket.md": [
     "repo"
   ],
-  ".repo/🎫/26/02/03/REFACTOR-GOAL-HIERARCHY-AND-FIX-TESTS/ticket.json": [
+  ".repo/🎫/26/02/03/REFACTOR-GOAL-DOCUMENT-AND-FIX-TESTS/ticket.json": [
     "repo"
   ],
   ".repo/🎫/26/02/03/REFACTOR-VSCODE-EXTENSION-SIDEVIEW/ticket.json": [
@@ -8646,7 +8646,7 @@
   ".repo/🎫/26/02/21/RESTRUCTURE-TICKET-JSON-FOR-HOOK-INTEGRATION/ticket.md": [
     "repo"
   ],
-  ".repo/🎫/26/02/21/STRICT-HIERARCHY-REFACTORING-MONO-REPO-ROOT/ticket.json": [
+  ".repo/🎫/26/02/21/STRICT-DOCUMENT-REFACTORING-MONO-REPO-ROOT/ticket.json": [
     "repo"
   ],
   ".repo/🎫/26/02/22/MOVE-CHAT-AND-SETTINGS-TO-LEFT-SIDE-PANEL/ticket.md": [
@@ -8856,7 +8856,7 @@
   ".repo/🎫/26/03/02/ADD-TEMPLATE-FILE-KIND/ticket.json": [
     "repo"
   ],
-  ".repo/🎫/26/03/02/DETAIL-PANEL-HIERARCHY-PADDING/ticket.md": [
+  ".repo/🎫/26/03/02/DETAIL-PANEL-DOCUMENT-PADDING/ticket.md": [
     "repo"
   ],
   ".repo/🎫/26/03/02/EXPORT-EXACTLY-SQLITE-SCHEMA/ticket.json": [
@@ -8975,7 +8975,7 @@
   ".repo/🎫/26/03/06/REFACTOR-CONTRIBUTOR-IDENTIFICATION-TO-ALIAS/ticket.json": [
     "repo"
   ],
-  ".repo/🎫/26/03/06/REFACTOR-SESSION-ID-HIERARCHY-TO-USE-CHECKPOINT-AS-PARENT/ticket.json": [
+  ".repo/🎫/26/03/06/REFACTOR-SESSION-ID-DOCUMENT-TO-USE-CHECKPOINT-AS-PARENT/ticket.json": [
     "repo"
   ],
   ".repo/🎫/26/03/06/REMOVE-DEPRECATED-MCP-TOOL-COMMANDS/ticket.json": [
@@ -10947,7 +10947,7 @@
   ".repo/🎫/26/06/01/KIND-NAMES-FROM-REPRESENTATION-FILES/sync-nakagin-3d-specific-kind-names.ts": [
     "repo"
   ],
-  ".repo/🎫/26/06/01/PRESENTATION-CHAPTER-HIERARCHY/ticket.json": [
+  ".repo/🎫/26/06/01/PRESENTATION-CHAPTER-DOCUMENT/ticket.json": [
     "@framework/presentation"
   ],
   ".repo/🎫/26/06/01/PRESENTATION-EMBODIMENTS-AND-DISPOSITIONS/ticket.json": [
@@ -11017,7 +11017,7 @@
     "@framework/platform/core",
     "@ui/react"
   ],
-  ".repo/🎫/26/06/01/projektetagesemantichierarchy/vitest.deck.config.ts": [
+  ".repo/🎫/26/06/01/projektetagesemanticdocument/vitest.deck.config.ts": [
     "repo",
     "@framework/presentation",
     "@framework/presentation/core",
@@ -11493,7 +11493,7 @@
   ".repo/🎫/26/06/11/PUZZLE-5D-2D-3D-HOVER-SYNC/ticket.json": [
     "@infinite/world/r3f"
   ],
-  ".repo/🎫/26/06/11/REFERENCES-IN-CAD-MODEL-DEFINITION-HIERARCHY/summary.md": [
+  ".repo/🎫/26/06/11/REFERENCES-IN-CAD-MODEL-DEFINITION-DOCUMENT/summary.md": [
     "@cad/js",
     "@cad/js/renderer"
   ],
@@ -11519,7 +11519,7 @@
     "@puzzle/asset",
     "@ui/asset"
   ],
-  ".repo/🎫/26/06/11/referencesincadmodeldefinitionhierarchy/summary.md": [
+  ".repo/🎫/26/06/11/referencesincadmodeldefinitiondocument/summary.md": [
     "@cad/js",
     "@cad/js/renderer"
   ],

@@ -15,7 +15,7 @@ todos:
     content: Extend brepjs and play tests to assert BIM solid counts, per-typology classification, and Building-pane object listing
     status: completed
   - id: verify
-    content: Run the generator and verify in CAD Play that the Building pane renders the classified BIM model and hierarchy
+    content: Run the generator and verify in CAD Play that the Building pane renders the classified BIM model and document
     status: completed
 isProject: false
 ---
@@ -78,4 +78,4 @@ Because [`modelsFromCadJson`](cad/js/renderer/play/index.tsx) loads all models f
 
 ## 6. Verify at runtime
 
-Reload CAD Play, select "Concrete forest (left)", confirm the Building pane renders the BIM model with distinct per-class colors and that Slab/Beam/Column nodes appear in the hierarchy tree (confirm via console/log per repo rules).
+Reload CAD Play, select "Concrete forest (left)", confirm the Building pane renders the BIM model with distinct per-class colors and that Slab/Beam/Column nodes appear in the document tree (confirm via console/log per repo rules).

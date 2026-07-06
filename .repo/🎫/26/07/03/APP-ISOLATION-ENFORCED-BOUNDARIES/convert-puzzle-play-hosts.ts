@@ -41,7 +41,7 @@ export const puzzle2dAppRenderer: AppRendererContribution = {
     [PUZZLE_2D_PLAY_SURFACE_ID_COMPILED_DAG]: Puzzle2dPlayCompiledDagSurfaceHost,
   },
   panelTabs: {
-    workbench: [new Puzzle2dPlayHierarchyPanelDefinition(), new Puzzle2dPlayKindsPanelDefinition()],
+    workbench: [new Puzzle2dPlayDocumentPanelDefinition(), new Puzzle2dPlayKindsPanelDefinition()],
     details: [new Puzzle2dPlayInspectorPanelDefinition()],
   },
   tabIcons: {

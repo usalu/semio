@@ -1,6 +1,6 @@
 ---
 name: Transitive same-kind hover
-overview: "Add transitive same-kind hover across puzzle 3D and 2D: hovering any instance (or a kind row in the tree) highlights all instances that share the same kind, in both the canvas and the hierarchy tree, driven by the existing instance to kind (\"is a\") relationships."
+overview: "Add transitive same-kind hover across puzzle 3D and 2D: hovering any instance (or a kind row in the tree) highlights all instances that share the same kind, in both the canvas and the document tree, driven by the existing instance to kind (\"is a\") relationships."
 todos:
   - id: ticket
     content: Read repo://goals and open a repo ticket for transitive same-kind hover; define shared HoverDomain + kind-aware hover concept.
@@ -12,13 +12,13 @@ todos:
     content: "Puzzle 3D items: compute transitive hovered (direct OR isKindHovered) for object, vortex, attraction feeding mesh/vortex/attraction styles."
     status: completed
   - id: 3d-shell
-    content: Puzzle 3D play shell + PlayCanvas controlled hover props; wire hierarchy + kinds-tab row onPointerEnter/Leave; transitive tree highlightedIds.
+    content: Puzzle 3D play shell + PlayCanvas controlled hover props; wire document + kinds-tab row onPointerEnter/Leave; transitive tree highlightedIds.
     status: completed
   - id: 2d-rust
     content: "Puzzle 2D Rust engine: add hovered_kind, resolve element kind on hover, transitive hovered_style_kind, set_hovered_kind setter, emit kind in hover event."
     status: completed
   - id: 2d-shell
-    content: "Puzzle 2D: wire Puzzle2dPlayPaneCanvas controlled hover, kind-aware shell hover, transitive hierarchy highlightedIds, kinds-tab row hover handlers."
+    content: "Puzzle 2D: wire Puzzle2dPlayPaneCanvas controlled hover, kind-aware shell hover, transitive document highlightedIds, kinds-tab row hover handlers."
     status: completed
   - id: framework-hover
     content: Upgrade shell hover model to kind-aware { id, kind } as single source for tree + canvas transitive derivation.
@@ -33,7 +33,7 @@ isProject: false
 
 ## Goal
 
-Hovering an instance, or a kind row in a tree, highlights every instance that shares the same kind ("is a" relation), in both the canvas and the hierarchy/kinds trees. Applies to puzzle 3D (object/vortex/attraction) and puzzle 2D (node/handle/edge/wire). CAD/presentation are out of scope (their pick targets are geometric types, not catalog-kind instances).
+Hovering an instance, or a kind row in a tree, highlights every instance that shares the same kind ("is a" relation), in both the canvas and the document/kinds trees. Applies to puzzle 3D (object/vortex/attraction) and puzzle 2D (node/handle/edge/wire). CAD/presentation are out of scope (their pick targets are geometric types, not catalog-kind instances).
 
 ## Core concept (shared)
 
@@ -65,9 +65,9 @@ Registry in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx):
 Play shell in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) and [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts):
 
 - Add 3D shell hover state (mirror the existing 2D `hoveredId` at ~3979) carrying `{ id, kind }`.
-- Populate `onPointerEnter`/`onPointerLeave` on hierarchy rows in `buildPuzzle3dPlayHierarchySections` (~807) using the same helper pattern as 2D `puzzle2dPlayHierarchyHoverHandlers`.
+- Populate `onPointerEnter`/`onPointerLeave` on document rows in `buildPuzzle3dPlayDocumentSections` (~807) using the same helper pattern as 2D `puzzle2dPlayDocumentHoverHandlers`.
 - Add hover handlers to kinds-tab rows in `buildPuzzle3dPlayKindsTree` (~939) that set the kind hover directly.
-- Compute hierarchy `highlightedIds` transitively (all rows whose instance shares the hovered kind) and pass to the tree; wire hover into `PlayCanvas` from `Puzzle3dPlayViewportHost` (~1945).
+- Compute document `highlightedIds` transitively (all rows whose instance shares the hovered kind) and pass to the tree; wire hover into `PlayCanvas` from `Puzzle3dPlayViewportHost` (~1945).
 
 ## Puzzle 2D
 
@@ -80,8 +80,8 @@ Rust engine in [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs):
 React + shell:
 
 - Expose kind in [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) (`Puzzle2dRenderer` hover emit ~6856, add `syncHoveredKindSilent` analogous to `syncHoveredIdSilent` ~12841; extend `hoveredId` prop with an optional `kindHover`).
-- Wire `Puzzle2dPlayPaneCanvas` (~3177 in playground renderer) controlled hover (`hoveredId`/`onHover`) which is currently NOT connected; route through the existing shell hover (`setHoverForPane`/`setHierarchyHover` ~4229).
-- In [puzzle/2d/play/index.ts](puzzle/2d/play/index.ts) extend `puzzle2dPlayHierarchyTreeHighlightedIds` (~~392) to expand to all same-kind rows, and add hover handlers to kinds-tab rows in `buildPuzzle2dPlayKindsTree` (~~519).
+- Wire `Puzzle2dPlayPaneCanvas` (~3177 in playground renderer) controlled hover (`hoveredId`/`onHover`) which is currently NOT connected; route through the existing shell hover (`setHoverForPane`/`setDocumentHover` ~4229).
+- In [puzzle/2d/play/index.ts](puzzle/2d/play/index.ts) extend `puzzle2dPlayDocumentTreeHighlightedIds` (~~392) to expand to all same-kind rows, and add hover handlers to kinds-tab rows in `buildPuzzle2dPlayKindsTree` (~~519).
 
 ## Framework hover model
 

@@ -1,6 +1,6 @@
 import.meta.env = {"BASE_URL": "/", "DEV": true, "MODE": "development", "PLAYGROUND_LOCKED_FIXTURE_ID": "hexagonal-mushroom-column", "PROD": false, "PUZZLE_PLAY_ENTRY": "procedural-3d", "SSR": false};import * as __vite_glob_0_0 from "/@fs/Users/ueli/Documents/semio/procedural/3d/fixture/hexagonal-mushroom-column.procedural.json?import";import * as __vite_glob_0_1 from "/@fs/Users/ueli/Documents/semio/procedural/3d/fixture/rectangle-extrude-volume.procedural.json?import";import * as __vite_glob_0_2 from "/@fs/Users/ueli/Documents/semio/procedural/3d/fixture/sphere-cut-with-torus.procedural.json?import";import {
   buildFlowPlayCatalogueTree,
-  buildFlowPlayHierarchyTree,
+  buildFlowPlayDocumentTree,
   buildFlowPlayInspectorTree,
   parseFlowPlayFixtureJson
 } from "/@fs/Users/ueli/Documents/semio/flow/play/index.ts";
@@ -75,7 +75,7 @@ export const PROCEDURAL_PLAY_LAYOUT = createDefaultLayout(
 );
 export const PROCEDURAL_PLAY_KINDS_TAB_ID = "procedural-play-kinds";
 export const PROCEDURAL_PLAY_EXTENSIONS_TAB_ID = "procedural-play-extensions";
-export const PROCEDURAL_PLAY_HIERARCHY_TAB_ID = "framework.panel.hierarchy";
+export const PROCEDURAL_PLAY_DOCUMENT_TAB_ID = "framework.panel.document";
 export const PROCEDURAL_PLAY_CATALOGUE_TAB_ID = "framework.panel.catalogue";
 export const PROCEDURAL_PLAY_INSPECTION_TAB_ID = "framework.panel.inspection";
 export const PROCEDURAL_PLAY_FIXTURE_DEFAULT_ID = "procedural-default";
@@ -323,8 +323,8 @@ export function buildProceduralPlayKindsTree(sections) {
   const treeSections = buildCatalogueKindsTreeSections(sections, "procedural-play-kinds", flowPlayCatalogueItemDragData);
   return { type: "tree", sections: treeSections };
 }
-export function buildProceduralPlayHierarchyTree(fixtureJson, selectedNodeIds) {
-  return buildFlowPlayHierarchyTree(fixtureJson, selectedNodeIds, PROCEDURAL_3D_PLAY_CONTROLLER_ID);
+export function buildProceduralPlayDocumentTree(fixtureJson, selectedNodeIds) {
+  return buildFlowPlayDocumentTree(fixtureJson, selectedNodeIds, PROCEDURAL_3D_PLAY_CONTROLLER_ID);
 }
 export function buildProceduralPlayCatalogueTree(sections, extensionEntries) {
   return buildFlowPlayCatalogueTree(sections, extensionEntries);

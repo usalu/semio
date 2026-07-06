@@ -9,7 +9,7 @@ todos:
     content: "Rewrite render_navbar: example dropdown, 4-icon panel toggle group, mode buttons; remove history/breadcrumb/inline-theme/visible search-find buttons"
     status: completed
   - id: framework-panels
-    content: Add Display/Settings tabs and Hierarchy auto-injection to WGPU side panels, wired to active panel kind
+    content: Add Display/Settings tabs and Document auto-injection to WGPU side panels, wired to active panel kind
     status: completed
   - id: command-palette
     content: "Implement real Search overlay: item list from panel tabs/windows/keybindings, substring filter, keyboard nav, dispatch"
@@ -42,7 +42,7 @@ All 25 playground apps can boot in two renderer modes via `SEMIO_RENDERER=react|
 - Global command palette (Mod+P) and find-in-window (Mod+F): `[render_palette](framework/renderer/wgpu/rs/shell.rs)` draws a title + empty input box, no item list, no filtering, no keyboard nav, no dispatch.
 - Per-window **Command** rail (engagement) and **Window Options** rail (measures): not implemented at all in `shell.rs`, even though `WindowKindDefinition.measures` / `.engagement` ([framework/core/rs/ui.rs:913-923](framework/core/rs/ui.rs)) are already populated by the `s` and `draw` plugins ([s/plugin/rs/lib.rs](s/plugin/rs/lib.rs), [draw/plugin/rs/lib.rs](draw/plugin/rs/lib.rs)) and already deserialized into `ActiveSession.app` on the WGPU side via `PluginBridgeEntry` — this is a pure rendering/interaction gap, not a data gap.
 - Navbar: currently shows back/forward/up + breadcrumb + inline theme dropdown + visible Search/Find toggle buttons (the *old*, now-superseded React navbar shape). React has since been restored to: logo/title → example dropdown → fill → 4-icon panel toggle group (display/workbench/details/settings) → mode button group, with theme moved into a Settings panel tab and history/breadcrumb/search/find kept only as keybindings.
-- Framework side-panel tabs (Display/Workbench/Details/Settings, Hierarchy auto-injection) exist in React (`framework/renderer/react/os-chrome-panels.tsx`) but have no WGPU equivalent — panels only show raw plugin tabs.
+- Framework side-panel tabs (Display/Workbench/Details/Settings, Document auto-injection) exist in React (`framework/renderer/react/os-chrome-panels.tsx`) but have no WGPU equivalent — panels only show raw plugin tabs.
 - Keyboard: `on_key` in [framework/renderer/wgpu/rs/lib.rs:333-346](framework/renderer/wgpu/rs/lib.rs) only appends characters into a focused input; there is no Mod+P/Mod+F/history/Escape/Arrow routing.
 
 Confirmed via `AppDefinition`/`WindowKindDefinition`/`PluginManifest` in [framework/core/rs/ui.rs](framework/core/rs/ui.rs): the WGPU shell already receives everything it needs (`session.app.window_kinds[].measures`/`.engagement`, `manifest.examples`, `app.modes`, `app.panel_tabs`) — this plan is entirely about consuming that data in `shell.rs`/`lib.rs`, reusing existing `ui/wgpu/rs/widgets.rs` primitives (`Select`, `Slider`, `Toggle`, `Tree`, `NumberStepper`, `Ring`, `Input`, `Button`).
@@ -86,7 +86,7 @@ Rebuild to match the restored `navbarItems` order in [framework/renderer/react/o
 
 - **Display tab**: named layouts + window tree, built from `app.named_layouts` / `app.window_kinds`, using the existing `Tree` widget (`ui/wgpu/rs/widgets.rs`), selecting a layout dispatches the layout-switch command (mirrors `createFrameworkDisplayPanelTabs`).
 - **Settings tab**: theme select (move the current `render_theme_dropdown` content in here as an inline `Select`), compact toggle, expertise select (mirrors `createFrameworkSettingsPanelTab`).
-- **Hierarchy tab auto-injection**: when the left/workbench tab set has no plugin-provided tab, inject a `framework.panel.hierarchy` tab (constant already exists: `FRAMEWORK_PANEL_TAB_HIERARCHY_ID` in `shell.rs`) showing the window/panel tree — mirrors the injection at [framework/renderer/react/os-shell.tsx:1172-1181](framework/renderer/react/os-shell.tsx).
+- **Document tab auto-injection**: when the left/workbench tab set has no plugin-provided tab, inject a `framework.panel.document` tab (constant already exists: `FRAMEWORK_PANEL_TAB_DOCUMENT_ID` in `shell.rs`) showing the window/panel tree — mirrors the injection at [framework/renderer/react/os-shell.tsx:1172-1181](framework/renderer/react/os-shell.tsx).
 - Switch which tab set renders based on `active_left_panel_kind`/`active_right_panel_kind` from Phase 1.
 
 ### 4. Command palette (Mod+P) — real implementation in `shell.rs`

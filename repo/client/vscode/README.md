@@ -96,7 +96,7 @@ Ticket detail views consume git-derived per-file and total line stats stored on 
 
 ## Commands
 
-Command trees mirror the CLI command and subcommand hierarchy; matching a command group keeps its subtree visible.
+Command trees mirror the CLI command and subcommand document; matching a command group keeps its subtree visible.
 
 ## Diagnostics
 

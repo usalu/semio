@@ -18,13 +18,13 @@ todos:
     content: Render WorldReferenceLayer in puzzle 3d scene with registry selection/hover and relocate wiring
     status: completed
   - id: puzzle-play
-    content: "Puzzle 3d play: import-reference command, file drop placement, hierarchy References group with hide/lock toggles, toolbar/launch.json entries"
+    content: "Puzzle 3d play: import-reference command, file drop placement, document References group with hide/lock toggles, toolbar/launch.json entries"
     status: completed
   - id: cad-scene
     content: "CAD: add cad.references WorldLayer in InteractionSpatialView + references store + selection/gumball commit + flags filtering"
     status: completed
   - id: cad-play
-    content: "CAD play: import-reference command, hierarchy References group with hide/lock, toolbar/launch.json entries, .model.json references sidecar"
+    content: "CAD play: import-reference command, document References group with hide/lock, toolbar/launch.json entries, .model.json references sidecar"
     status: completed
   - id: assets-fixtures
     content: Add Vite static alias for infinite/fixture and seed puzzle + CAD fixtures referencing sketch.png and site.pdf
@@ -97,7 +97,7 @@ In [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx):
 In [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts):
 
 - Add an "Import reference" command (file path/picker) + drop support that places at grid-plane hit using `puzzle3dClientToGridPlaneCad`.
-- Hierarchy tree: a "References" group with per-item hidden/locked toggles (reuse `toggleEntityFlag` path) and select.
+- Document tree: a "References" group with per-item hidden/locked toggles (reuse `toggleEntityFlag` path) and select.
 - Register toolbar entries in `launch.json`-driven play UI following existing grouping.
 
 In [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): extend the puzzle3d drop handler to also resolve reference-file drops to `addReferenceToFixture`.
@@ -110,7 +110,7 @@ In [cad/js/renderer/index.tsx](cad/js/renderer/index.tsx):
 - References stored in a renderer-host references collection (CAD model is geometry-only); persisted in the CAD play shell state and `.model.json` fixture sidecar `references[]`. Per-entity hide/lock reuse `worldEntitySelectable` filtering already used for pick targets ([cad/js/renderer/index.tsx](cad/js/renderer/index.tsx) lines 680-687).
 - Selection + gumball: reference picks feed the host selection; `WorldReferenceGumball` commits pose back to the references store.
 
-In [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx): add import-reference command, hierarchy "References" group with hidden/locked toggles (mirror `toggleHierarchyEntityFlag`), and toolbar registration.
+In [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx): add import-reference command, document "References" group with hidden/locked toggles (mirror `toggleDocumentEntityFlag`), and toolbar registration.
 
 ## 5. Asset serving + fixtures (for testing)
 

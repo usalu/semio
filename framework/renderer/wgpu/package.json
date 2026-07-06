@@ -11,7 +11,10 @@
   },
   "scripts": {
     "test": "bun nx run @semio-tech/framework-renderer-wgpu:test",
-    "wasm": "bun nx run @semio-tech/framework-renderer-wgpu:wasm"
+    "wasm": "bun nx run @semio-tech/framework-renderer-wgpu:wasm",
+    "serve": "bun nx run @semio-tech/framework-renderer-wgpu:serve",
+    "dev": "bun nx run @semio-tech/framework-renderer-wgpu:dev",
+    "native": "bun nx run @semio-tech/framework-renderer-wgpu:native"
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",

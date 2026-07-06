@@ -9,7 +9,7 @@ Plan:
 
 1. Review the existing workbench section setup in js/compose/sketchpad/apps/design/App.tsx to understand how types and designs are rendered and interacted with (hover, navigation, creation).
 2. Refactor the workbench registration to expose one pieces section containing both trees, ensuring the tree builders preserve parent-child relationships and the section actions reflect the new structure.
-3. Update any related identifiers or translations necessary for the new pieces section and verify the resulting hierarchy and interactions align with the requirement.
+3. Update any related identifiers or translations necessary for the new pieces section and verify the resulting document and interactions align with the requirement.
 
 Implementation:
 

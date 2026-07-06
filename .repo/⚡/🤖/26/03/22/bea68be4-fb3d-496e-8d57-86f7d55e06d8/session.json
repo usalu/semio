@@ -1820,7 +1820,7 @@
             "description": "Find ticket folder"
           },
           "tool_response": {
-            "stdout": ".repo/🎫/26/03/22/EXTEND-DESKTOP-HOME-WITH-OPEN-CATEGORIES-AND-REMOVE-FIRST-FORM-SCREEN\n.repo/🎫/26/03/22/EXTEND-NAKAGIN-DESIGN-WITH-TOWER-LAYERS-AND-IFC-SPATIAL-HIERARCHY-EXPORT",
+            "stdout": ".repo/🎫/26/03/22/EXTEND-DESKTOP-HOME-WITH-OPEN-CATEGORIES-AND-REMOVE-FIRST-FORM-SCREEN\n.repo/🎫/26/03/22/EXTEND-NAKAGIN-DESIGN-WITH-TOWER-LAYERS-AND-IFC-SPATIAL-DOCUMENT-EXPORT",
             "stderr": "",
             "interrupted": false,
             "isImage": false,

@@ -68,9 +68,9 @@ import {
 	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
 	FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
-	FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+	FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
+	FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+	FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 	FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -5268,7 +5268,7 @@ const composeSketchpadTranslationBundles = {
         "up": {
           "label": {
             "normal": "Go up one level",
-            "beginner": "Click to go up one level in the navigation hierarchy"
+            "beginner": "Click to go up one level in the navigation document"
           },
           "manual": "navigation",
           "tutorial": "getting-started/intro",
@@ -13865,7 +13865,7 @@ const SKETCHPAD_SURFACE_TYPE_SCENE = "compose.sketchpad.surface.type.scene";
 export const SKETCHPAD_SURFACE_DOCS_PAGE = "compose.sketchpad.surface.docs.page";
 export const SKETCHPAD_SURFACE_FEEDBACK_FORM = "compose.sketchpad.surface.feedback.form";
 const SKETCHPAD_PANEL_WINDOWS_BODY = "compose.sketchpad.panel.windows";
-const SKETCHPAD_PANEL_HIERARCHY_BODY = "compose.sketchpad.panel.hierarchy";
+const SKETCHPAD_PANEL_DOCUMENT_BODY = "compose.sketchpad.panel.document";
 const SKETCHPAD_PANEL_CATALOGUE_BODY = "compose.sketchpad.panel.catalogue";
 const SKETCHPAD_PANEL_INSPECTION_BODY = "compose.sketchpad.panel.inspection";
 
@@ -14248,16 +14248,16 @@ function sketchpadAllEqual<T>(values: readonly T[]): boolean {
 	return true;
 }
 
-function sketchpadHierarchySelectedIds(selection: SketchpadRouteSelection): string[] {
+function sketchpadDocumentSelectedIds(selection: SketchpadRouteSelection): string[] {
 	return [
-		...selection.pieceIds.map((id) => `sketchpad.hierarchy.piece.${id}`),
-		...selection.connectionIds.map((id) => `sketchpad.hierarchy.connection.${id}`),
-		...selection.kitWiresNodeIds.map((id) => `sketchpad.hierarchy.kit-node.${id}`),
+		...selection.pieceIds.map((id) => `sketchpad.document.piece.${id}`),
+		...selection.connectionIds.map((id) => `sketchpad.document.connection.${id}`),
+		...selection.kitWiresNodeIds.map((id) => `sketchpad.document.kit-node.${id}`),
 	];
 }
 
-/** @emoji 🌳 Workbench hierarchy for the active sketchpad route. */
-function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNode {
+/** @emoji 🌳 Workbench document for the active sketchpad route. */
+function buildSketchpadDocumentPanelBody(ctx: WindowBodyViewContext): UiTreeNode {
 	const ctrl = getSketchpadShellController();
 	const routeUri = ctrl?.navigationPath ?? ctx.platform.uri ?? "/";
 	const pathOnly = routeUri.split("?")[0] ?? "/";
@@ -14271,8 +14271,8 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 		if (pathOnly.startsWith("/docs")) {
 			sections.push({
 				type: "section",
-				id: "sketchpad.hierarchy.docs",
-				label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+				id: "sketchpad.document.docs",
+				label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 				children: [{ type: "text", value: sketchpadTitleFromDocPath(parseSketchpadRouteScopeFromPath(pathOnly).docsPath) }],
 			});
 			return uiDeclarativeSectionsToTree(sections);
@@ -14280,7 +14280,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 		const kitItems: UiTreeItemNode[] = open.map((id) => {
 			const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
 			return {
-				id: `sketchpad.hierarchy.kit.${id}`,
+				id: `sketchpad.document.kit.${id}`,
 				label: kit?.name ?? id,
 				command: sketchpadShellCmd("navigate", { path: `/kits/${id}` }),
 			};
@@ -14288,13 +14288,13 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 		if (homeSelected.length > 0) {
 			sections.push({
 				type: "section",
-				id: "sketchpad.hierarchy.home-selected",
+				id: "sketchpad.document.home-selected",
 				label: "Selected kits",
 				children: homeSelected.map((id) => {
 					const kit = ctrl?.getKitStore(id)?.getSnapshot().kit;
 					return {
 						type: "button",
-						id: `sketchpad.hierarchy.home-kit.${id}`,
+						id: `sketchpad.document.home-kit.${id}`,
 						label: kit?.name ?? id,
 						command: sketchpadShellCmd("navigate", { path: `/kits/${id}` }),
 					};
@@ -14303,7 +14303,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 		}
 		sections.push({
 			type: "section",
-			id: "sketchpad.hierarchy.open-kits",
+			id: "sketchpad.document.open-kits",
 			label: "Open kits",
 			children: kitItems.length
 				? kitItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
@@ -14313,27 +14313,27 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 						sketchpadPanelCommandButton("Create empty kit", "createTemporaryKit", { name: "Untitled Kit" }),
 					],
 		});
-		return { ...uiDeclarativeSectionsToTree(sections), selectedIds: sketchpadHierarchySelectedIds(selection) };
+		return { ...uiDeclarativeSectionsToTree(sections), selectedIds: sketchpadDocumentSelectedIds(selection) };
 	}
 	const kit = ctrl?.getKitStore(kitId)?.getSnapshot().kit;
 	if (!kit) {
 		return uiDeclarativeSectionsToTree([
-			{ type: "section", id: "sketchpad.hierarchy.loading", label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, children: [{ type: "text", value: "Kit loading…" }] },
+			{ type: "section", id: "sketchpad.document.loading", label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, children: [{ type: "text", value: "Kit loading…" }] },
 		]);
 	}
 	const designItems: UiTreeItemNode[] = sketchpadKitItemsOf<Design>(kit.designs).map((design) => ({
-		id: `sketchpad.hierarchy.design.${design.id}`,
+		id: `sketchpad.document.design.${design.id}`,
 		label: design.name ?? design.id ?? "",
 		command: sketchpadShellCmd("navigate", { path: `/kits/${kitId}/design/${design.id}` }),
 	}));
 	const typeItems: UiTreeItemNode[] = sketchpadKitTypeRows(kit).map((type) => ({
-		id: `sketchpad.hierarchy.type.${type.id}`,
+		id: `sketchpad.document.type.${type.id}`,
 		label: type.name ?? type.id ?? "",
 		command: sketchpadShellCmd("navigate", { path: `/kits/${kitId}/type/${type.id}` }),
 	}));
 	sections.push({
 		type: "section",
-		id: "sketchpad.hierarchy.kit",
+		id: "sketchpad.document.kit",
 		label: kit.name ?? kitId,
 		children: [
 			{ type: "text", value: `${designItems.length} design(s) · ${typeItems.length} type(s)` },
@@ -14343,7 +14343,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 	if (designId) {
 		const design = findDesignInKit(kit, designId);
 		const pieceItems: UiTreeItemNode[] = (design?.pieces ?? []).map((piece) => ({
-			id: `sketchpad.hierarchy.piece.${piece.id}`,
+			id: `sketchpad.document.piece.${piece.id}`,
 			label: sketchpadPieceLabel(piece, kit),
 			command: sketchpadShellCmd("setRouteSelection", {
 				pieceIds: [piece.id!],
@@ -14356,7 +14356,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 		const connectionItems: UiTreeItemNode[] = connections
 			.filter((connection) => Boolean(connection.id))
 			.map((connection) => ({
-				id: `sketchpad.hierarchy.connection.${connection.id}`,
+				id: `sketchpad.document.connection.${connection.id}`,
 				label: connection.id!,
 				command: sketchpadShellCmd("setRouteSelection", {
 					pieceIds: [],
@@ -14367,7 +14367,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 			}));
 		sections.push({
 			type: "section",
-			id: "sketchpad.hierarchy.design",
+			id: "sketchpad.document.design",
 			label: design?.name ?? designId,
 			children: [
 				{ type: "text", value: `${pieceItems.length} piece(s) · ${connectionItems.length} connection(s)` },
@@ -14379,7 +14379,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 		const type = findTypeInKit(kit, typeId);
 		sections.push({
 			type: "section",
-			id: "sketchpad.hierarchy.type",
+			id: "sketchpad.document.type",
 			label: type?.name ?? typeId,
 			children: [{ type: "text", value: `${type?.representations?.length ?? 0} representation(s)` }],
 		});
@@ -14387,7 +14387,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 		const quality = findQualityInKit(kit, qualityId);
 		sections.push({
 			type: "section",
-			id: "sketchpad.hierarchy.quality",
+			id: "sketchpad.document.quality",
 			label: quality?.key ?? qualityId,
 			children: [{ type: "text", value: quality?.value ?? "" }],
 		});
@@ -14395,7 +14395,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 		sections.push(
 			{
 				type: "section",
-				id: "sketchpad.hierarchy.designs",
+				id: "sketchpad.document.designs",
 				label: "Designs",
 				children: designItems.length
 					? designItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
@@ -14403,7 +14403,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 			},
 			{
 				type: "section",
-				id: "sketchpad.hierarchy.types",
+				id: "sketchpad.document.types",
 				label: "Types",
 				children: typeItems.length
 					? typeItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
@@ -14411,7 +14411,7 @@ function buildSketchpadHierarchyPanelBody(ctx: WindowBodyViewContext): UiTreeNod
 			},
 		);
 	}
-	return { ...uiDeclarativeSectionsToTree(sections), selectedIds: sketchpadHierarchySelectedIds(selection) };
+	return { ...uiDeclarativeSectionsToTree(sections), selectedIds: sketchpadDocumentSelectedIds(selection) };
 }
 
 /** @emoji 📚 Workbench catalogue of kit types for the active route. */
@@ -14665,7 +14665,7 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
 		!typeId &&
 		!qualityId
 	) {
-		children[0]!.children!.push({ type: "text", value: "Select pieces or connections in the canvas or hierarchy." });
+		children[0]!.children!.push({ type: "text", value: "Select pieces or connections in the canvas or document." });
 	}
 	return uiDeclarativeSectionsToTree(children);
 }
@@ -15525,7 +15525,7 @@ function sketchpadKitAppCommands(): readonly SearchItemSpec[] {
 
 function sketchpadHomePanelTabs(): readonly SideTabSpec[] {
 	return [
-		{ id: FRAMEWORK_PANEL_TAB_HIERARCHY_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_HIERARCHY_BODY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID, iconId: FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_DOCUMENT_BODY, label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL },
 		{ id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SKETCHPAD_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
 	];
 }
@@ -15533,7 +15533,7 @@ function sketchpadHomePanelTabs(): readonly SideTabSpec[] {
 function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
 	return [
 		{ id: "display", iconId: "compose.sketchpad.icon.windows", panel: "display", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY, label: "Display" },
-		{ id: FRAMEWORK_PANEL_TAB_HIERARCHY_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_HIERARCHY_BODY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+		{ id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID, iconId: FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_DOCUMENT_BODY, label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL },
 		{ id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: SKETCHPAD_PANEL_CATALOGUE_BODY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
 		{ id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SKETCHPAD_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
 	];
@@ -15645,7 +15645,7 @@ function registerSketchpadWindowBodies(): void {
 		};
 		return tree;
 	});
-	registerSidePanelBody(SKETCHPAD_PANEL_HIERARCHY_BODY, buildSketchpadHierarchyPanelBody);
+	registerSidePanelBody(SKETCHPAD_PANEL_DOCUMENT_BODY, buildSketchpadDocumentPanelBody);
 	registerSidePanelBody(SKETCHPAD_PANEL_CATALOGUE_BODY, buildSketchpadCataloguePanelBody);
 	registerSidePanelBody(SKETCHPAD_PANEL_INSPECTION_BODY, buildSketchpadInspectionPanelBody);
 }

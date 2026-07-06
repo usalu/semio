@@ -12,7 +12,7 @@ The existing `machines.ts` has a unified `sketchpadMachine` that handles:
 
 However, the machine is "flat" - all events are handled at the root level without proper hierarchical state modeling. The user started designing a proper statechart with:
 
-- Navigation hierarchy: Idle → Home → Kit → Design/Type/Quality → Docs
+- Navigation document: Idle → Home → Kit → Design/Type/Quality → Docs
 - Parallel states within each app for interaction modes
 - Context menu states for different entities
 

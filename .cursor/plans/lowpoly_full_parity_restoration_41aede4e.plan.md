@@ -32,8 +32,8 @@ todos:
   - id: layers-polish
     content: Add selected_ids highlight and opacity/blendMode description to build_layers_tree
     status: completed
-  - id: hierarchy-object-select
-    content: Allow whole-mesh selection via toggleSelectionTarget on hierarchy object rows plus default_open for the active object
+  - id: document-object-select
+    content: Allow whole-mesh selection via toggleSelectionTarget on document object rows plus default_open for the active object
     status: completed
   - id: flat-shading
     content: Apply flatShading based on smoothShading flag in React mesh material
@@ -49,7 +49,7 @@ isProject: false
 
 # Lowpoly Full Parity Restoration
 
-A follow-up audit (beyond the already-completed hierarchy/selection/colors/gumball/footer work) found several **large, previously unaddressed** gaps. These explain the user's "large areas are still missing" feedback — the most severe ones make the React-mode 3D/UV viewports barely usable, independent of the footer/hierarchy work already done.
+A follow-up audit (beyond the already-completed document/selection/colors/gumball/footer work) found several **large, previously unaddressed** gaps. These explain the user's "large areas are still missing" feedback — the most severe ones make the React-mode 3D/UV viewports barely usable, independent of the footer/document work already done.
 
 ## Tier 1 — Viewport is effectively broken without these
 
@@ -88,7 +88,7 @@ Old lowpoly registered `createLowpolyAppVcsHandler()` (`internal.ts:423-432`, wi
 - **Catalogue**: old primitive label was "Cube" (`index.ts:304`), new shows "Box" ([lowpoly/plugin/rs/lib.rs:46](lowpoly/plugin/rs/lib.rs)); old also had a per-item `description` (`index.ts:319`) that's dropped in `tree_item_with_command` (lines 740-745).
 - **Inspector**: old had a combined readonly "Selection" field showing `"{targets label} · {N} selected"` (`index.ts:341-342`); new only shows `"Selection Mode"` ([lib.rs:850-854](lowpoly/plugin/rs/lib.rs)) — restore the combined summary.
 - **Layers panel**: old highlighted the active layer via `selectedIds` and showed `opacity · blendMode` description (`index.ts:490-496`); new `build_layers_tree` (lib.rs:761-786) has neither.
-- **Hierarchy**: old object rows were selectable as a whole-mesh target (`toggleSelectionTarget`, `index.ts:250-276`) and auto-expanded the active object (`defaultOpen`, `index.ts:277`); new object rows only dispatch `setActiveObject` ([lib.rs:706](lowpoly/plugin/rs/lib.rs)) with no `default_open`.
+- **Document**: old object rows were selectable as a whole-mesh target (`toggleSelectionTarget`, `index.ts:250-276`) and auto-expanded the active object (`defaultOpen`, `index.ts:277`); new object rows only dispatch `setActiveObject` ([lib.rs:706](lowpoly/plugin/rs/lib.rs)) with no `default_open`.
 - **Smooth shading**: old mesh material set `flatShading={!object.smoothShading}` (`index.tsx:789`); new `PaintTexturedMesh` never sets `flatShading` (world-3d-host.tsx:~298), so the smooth-shading toggle has no visual effect in React mode.
 - **Engagement text input**: `on_change: None` for the command-bar field ([lib.rs:964](lowpoly/plugin/rs/lib.rs)) means typed text never round-trips into local UI state on the wgpu shell — wire an `on_change`/`engagementInput` handler.
 

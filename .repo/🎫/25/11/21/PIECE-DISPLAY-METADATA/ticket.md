@@ -14,7 +14,7 @@ Both come from the flattened design which depends deeply on the kit structure.
 
 ## Current State
 
-- `usePiecesMetadata()` exists in App.tsx and returns a Map with plane, center, and hierarchy info
+- `usePiecesMetadata()` exists in App.tsx and returns a Map with plane, center, and document info
 - This metadata comes from `design.getFlatPiecesMetadata()` which calculates positions during flattening
 - The data is already available but not exposed as individual hooks
 

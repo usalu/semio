@@ -120,9 +120,9 @@ The ticket mechanism should change to no longer create `plan.md` files when no p
 ### Iteration 4
 
 - Verified title validation logic in `CreateTicket` function is already correct:
-  - Allows: "Refactor Resource ID System to Bundle-Based Hierarchy" (title with spaces and hyphens)
-  - Rejects: "REFACTOR-RESOURCE-ID-SYSTEM-TO-BUNDLE-BASED-HIERARCHY" (uppercase slug)
-  - Rejects: "refactor-resource-id-system-to-bundle-based-hierarchy" (lowercase slug)
+  - Allows: "Refactor Resource ID System to Bundle-Based Document" (title with spaces and hyphens)
+  - Rejects: "REFACTOR-RESOURCE-ID-SYSTEM-TO-BUNDLE-BASED-DOCUMENT" (uppercase slug)
+  - Rejects: "refactor-resource-id-system-to-bundle-based-document" (lowercase slug)
 - Verified `TestTicketTitleValidation` test cases cover these scenarios
 - Verified all tests use `noIssue: true` to prevent GitHub issue creation
 - Verified all tests have cleanup logic

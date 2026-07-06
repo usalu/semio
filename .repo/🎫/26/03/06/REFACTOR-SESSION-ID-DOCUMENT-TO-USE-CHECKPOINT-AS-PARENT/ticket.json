@@ -1,0 +1,14 @@
+{
+  "title": "Refactor Session ID Document to Use Checkpoint as Parent",
+  "emoji": "♻️",
+  "status": "closed",
+  "description": "The session entity must have checkpoint as its parent in the ID document. The session ID must use the checkpoint ID as prefix instead of the date document (year/month/day). Update Session struct to include Checkpoint field, update GetID() to use checkpoint ID as parent, update SessionMeta to store checkpoint, update StreamSessions to read checkpoint from session.json, update normalizeTicketSessionID and currentTicketSessionID to produce/handle the new format, update GetArtifactID/sessions parent handling, update SQLite schema, and update all tests.",
+  "summary": "Refactored session ID document so checkpoint is the parent of session. Added Checkpoint field to Session struct and SessionMeta. Updated Session.GetID() to use checkpoint ID as parent (falls back to date document if checkpoint unknown). Added ExtractSessionCheckpoint() to read checkpoint SHA from session.json. Updated StreamSessions() to populate Checkpoint from session.json. Updated logHook to extract checkpoint from HookResultAgentStarted and persist it in SessionMeta. Updated normalizeTicketSessionID() to handle checkpoint-prefixed session IDs (format: checkpointID⚪uuid). Updated currentTicketSessionID() to resolve current checkpoint and build full session ID with checkpoint prefix. Added checkpoint field to session tree node data. Added checkpoint_sha column to session table in both SQLite schema files. Updated TestSessionGetID, TestGetArtifactID_Session, TestGetArtifactID_Sessions, TestCheckpointInLoggedEventJSON, and added TestNormalizeTicketSessionID. All session/checkpoint tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/787"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪17728315509961991292023428050724194568"
+  ]
+}

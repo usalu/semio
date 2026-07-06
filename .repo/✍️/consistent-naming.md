@@ -1,6 +1,6 @@
 ## Plan: Normalize GraphQL Interface Field Groups
 
-Normalize inherited field-group headers in c:\git\compose\compose\graphql\target.schema.graphql so every definition uses the established ancestor grouping convention. The concrete cleanup is to replace shorthand `# WeakEntity` header blocks with separate `# Node` and `# Entity` sections wherever those inherited fields are spelled out, while preserving the existing deeper hierarchy patterns such as `# StrongEntity`, `# RichStrongEntity`, and `# Artifact`.
+Normalize inherited field-group headers in c:\git\compose\compose\graphql\target.schema.graphql so every definition uses the established ancestor grouping convention. The concrete cleanup is to replace shorthand `# WeakEntity` header blocks with separate `# Node` and `# Entity` sections wherever those inherited fields are spelled out, while preserving the existing deeper document patterns such as `# StrongEntity`, `# RichStrongEntity`, and `# Artifact`.
 
 **Steps**
 
@@ -9,7 +9,7 @@ Normalize inherited field-group headers in c:\git\compose\compose\graphql\target
 3. Update each `Modification` interface/implementation to use the same inherited split: `# Node` for `id`, `# Entity` for `hash`, `owner`, and `owns`, then `# Modification` for `before`, `diff`, and `after`. This depends on step 1 and can run in parallel with step 2 once the inventory is complete.
 4. Update each aggregate `*Modifications` type that currently starts with `# WeakEntity` so the inherited fields are split into `# Node` and `# Entity`, then leave aggregate-specific fields under their local header or existing trailing fields. This depends on step 1 and can run in parallel with step 2 and step 3.
 5. Spot-check neighboring definitions that already follow the convention, especially Diff, Version, WeakEntity, StrongEntity, Artifact, and representative Artifact descendants, to ensure the cleanup does not accidentally normalize patterns that are already intentional. This blocks final verification.
-6. Run schema-wide searches to confirm there are no remaining shorthand inherited headers for the targeted class of definitions and that the comment hierarchy remains internally consistent.
+6. Run schema-wide searches to confirm there are no remaining shorthand inherited headers for the targeted class of definitions and that the comment document remains internally consistent.
 
 **Relevant files**
 
@@ -27,7 +27,7 @@ Normalize inherited field-group headers in c:\git\compose\compose\graphql\target
 - Included: comment-header normalization for inherited fields in c:\git\compose\compose\graphql\target.schema.graphql.
 - Excluded: renaming GraphQL kinds, changing field signatures, or broader semantic/schema refactors unrelated to field-group headers.
 - Recommended rule: whenever a definition spells out inherited WeakEntity fields, group them by ancestor origin as `# Node` then `# Entity`, not `# WeakEntity`.
-- Preserve existing intentional deeper hierarchy patterns where descendants inherit through StrongEntity / Artifact and already use immediate ancestor headers correctly.
+- Preserve existing intentional deeper document patterns where descendants inherit through StrongEntity / Artifact and already use immediate ancestor headers correctly.
 
 **Further Considerations**
 

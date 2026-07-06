@@ -93,13 +93,13 @@ Added `toArray` helper in `test-roundtrip.mjs` to normalize top-level kit fields
 
 1. Check if `kitToSqlite` correctly handles connector insertion (no duplicates, correct type_guid)
 2. Check if `sqliteToKit` correctly filters connectors by type_guid
-3. Check if type hierarchy (parent/child) is causing connector inheritance issues
+3. Check if type document (parent/child) is causing connector inheritance issues
 4. Examine the `\` type in the metabolism JSON to see its actual connector structure
 
 ## Next Steps
 
 1. **Debug Connector Assignment** - Add logging to track which connectors are being inserted/loaded for this specific type
-2. **Check Type Hierarchy** - Verify if the `\` type has a parent and if parent connectors are being included
+2. **Check Type Document** - Verify if the `\` type has a parent and if parent connectors are being included
 3. **Validate SQL Queries** - Ensure `SELECT * FROM connector WHERE type_guid = ?` is correctly scoped
 4. **Compare JSON Structure** - Check if the original JSON for this type actually has 1 or 4 connectors
 

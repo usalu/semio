@@ -47,7 +47,7 @@ SEMANTIC_RULES = [
     (r'lock', '🔒'), (r'unlock', '🔓'), (r'encrypt', '🔐'), (r'decrypt', '🔑'),
     (r'string|text|name|label|title', '🔤'), (r'number|count|size|length|int', '🔢'),
     (r'bool|flag|toggle|enable|disable', '🔘'), (r'list|array|slice|collection', '📋'),
-    (r'map|dict|hash|set', '🗺️'), (r'tree|hierarchy|nested', '🌳'),
+    (r'map|dict|hash|set', '🗺️'), (r'tree|document|nested', '🌳'),
     (r'node|item|element|entry', '🔖'), (r'key|id|identifier', '🔑'),
     (r'value|data|content|body', '📦'), (r'header|meta|info', '📰'),
     (r'color|colour|rgb|hex', '🎨'), (r'style|css|theme', '💄'),

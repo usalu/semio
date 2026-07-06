@@ -8,7 +8,7 @@ use semio_framework_plugin::{
     App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiControlNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -23,7 +23,7 @@ const SEQUENCE_PLAY_SURFACE_COMPILED: &str = "sequence.play.compiled-dag";
 const SEQUENCE_PLAY_BODY_MAIN: &str = "sequence.play.main";
 const SEQUENCE_PLAY_BODY_SCRIPT: &str = "sequence.play.script";
 const SEQUENCE_PLAY_BODY_COMPILED: &str = "sequence.play.compiled-dag";
-const SEQUENCE_PLAY_BODY_HIERARCHY: &str = "sequence.play.hierarchy";
+const SEQUENCE_PLAY_BODY_DOCUMENT: &str = "sequence.play.document";
 const SEQUENCE_PLAY_BODY_CATALOGUE: &str = "sequence.play.catalogue";
 const SEQUENCE_PLAY_BODY_INSPECTOR: &str = "sequence.play.inspection";
 const SEQUENCE_PLAY_WINDOW_MAIN: &str = "sequence-main";
@@ -240,14 +240,14 @@ fn control_slots(kind: &str) -> &'static [&'static str] {
 
 fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTreeItemNode {
     let mut item = tree_item_with_command(
-        format!("sequence-play-hierarchy.step.{}", step.id),
+        format!("sequence-play-document.step.{}", step.id),
         format!("{} ({})", step.id, step.kind),
         Some(step.kind.clone()),
         sequence_cmd("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
     );
     if is_control_kind(&step.kind) {
         item.control = Some(UiControlNode::Toggle(UiToggleNode {
-            id: format!("sequence-play-hierarchy.collapse.{}", step.id),
+            id: format!("sequence-play-document.collapse.{}", step.id),
             icon_id: if step.collapsed { "chevron-right" } else { "chevron-down" }.into(),
             pressed: !step.collapsed,
             text: None,
@@ -265,7 +265,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTre
                     .map(|entry| build_step_tree_item(entry, fixture))
                     .collect();
                 UiTreeItemNode {
-                    id: format!("sequence-play-hierarchy.slot.{}.{}", step.id, slot_name),
+                    id: format!("sequence-play-document.slot.{}.{}", step.id, slot_name),
                     label: (*slot_name).into(),
                     description: Some(format!("{} slot", step.id)),
                     icon_id: Some("folder".into()),
@@ -293,7 +293,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture) -> UiTre
 //#endregion 🔖TreeHelpers
 
 //#region 🔖Panels
-fn build_hierarchy_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode {
+fn build_document_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = fixture
         .steps
         .iter()
@@ -305,7 +305,7 @@ fn build_hierarchy_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
         .iter()
         .map(|edge| {
             UiTreeItemNode {
-                id: format!("sequence-play-hierarchy.edge.{}", edge.id),
+                id: format!("sequence-play-document.edge.{}", edge.id),
                 label: format!("{} → {}", edge.from, edge.to),
                 description: Some(edge.id.clone()),
                 icon_id: None,
@@ -326,27 +326,27 @@ fn build_hierarchy_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "sequence-play-hierarchy.steps".into(),
+                id: "sequence-play-document.steps".into(),
                 label: Some("Steps".into()),
                 default_open: Some(true),
                 items: if step_items.is_empty() {
-                    vec![tree_item("sequence-play-hierarchy.steps.empty", "(none)")]
+                    vec![tree_item("sequence-play-document.steps.empty", "(none)")]
                 } else {
                     step_items
                 },
             },
             UiTreeSectionNode {
-                id: "sequence-play-hierarchy.edges".into(),
+                id: "sequence-play-document.edges".into(),
                 label: Some("Flow edges".into()),
                 default_open: Some(false),
                 items: if edge_items.is_empty() {
-                    vec![tree_item("sequence-play-hierarchy.edges.empty", "(none)")]
+                    vec![tree_item("sequence-play-document.edges.empty", "(none)")]
                 } else {
                     edge_items
                 },
             },
         ],
-        selected_ids: Some(selected.iter().map(|id| format!("sequence-play-hierarchy.step.{id}")).collect()),
+        selected_ids: Some(selected.iter().map(|id| format!("sequence-play-document.step.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
     })
@@ -407,7 +407,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String]) -> UiNod
             id: "sequence-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Select a step in the canvas or hierarchy.")],
+            children: vec![ui_text("Select a step in the canvas or document.")],
         }]);
     }
     let steps: Vec<&SequenceStep> = selected
@@ -829,7 +829,7 @@ impl PluginApp for SequencePlayApp {
             SEQUENCE_PLAY_BODY_MAIN => render_main_graph(&envelope),
             SEQUENCE_PLAY_BODY_SCRIPT => render_script(&envelope),
             SEQUENCE_PLAY_BODY_COMPILED => render_compiled_dag(&envelope),
-            SEQUENCE_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_step_ids),
+            SEQUENCE_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.fixture, &envelope.runtime.selected_step_ids),
             SEQUENCE_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope.fixture),
             SEQUENCE_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.fixture, &envelope.runtime.selected_step_ids),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -858,7 +858,7 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
 //#region 🔖Manifest
 fn create_sequence_app() -> App {
     App::from_builder(
-        App::builder(SEQUENCE_PLAY_APP_ID, "Sequence").hierarchy(["semio", "sequence"])
+        App::builder(SEQUENCE_PLAY_APP_ID, "Sequence").document(["semio", "sequence"])
             .icon_id("sequence")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -876,10 +876,10 @@ fn create_sequence_app() -> App {
                 Some(&["Sequence".into(), "Script".into(), "DSL".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                SEQUENCE_PLAY_BODY_HIERARCHY,
+                SEQUENCE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -907,7 +907,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 #[cfg(test)]

@@ -24,7 +24,7 @@ Toolbar elements (Toggle, Button) use `h-medium` (7× spacing = 1.4rem) as their
    - Icon size is `size-small` (1.0rem) 
    - This creates 0.4rem of padding around icons
 
-### Design System Hierarchy
+### Design System Document
 
 Current size tokens:
 ```

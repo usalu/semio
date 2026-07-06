@@ -292,6 +292,39 @@ pub fn apply_canvas_cursor(
     }
 }
 
+pub fn apply_window_cursor(
+    window: &winit::window::Window,
+    cursor: SemioCursor,
+    dark: bool,
+    last: &mut Option<(SemioCursor, bool)>,
+) {
+    let key = (cursor, dark);
+    if last.as_ref() == Some(&key) {
+        return;
+    }
+    *last = Some(key);
+    let _ = dark;
+    window.set_cursor(winit_cursor_icon(cursor));
+}
+
+fn winit_cursor_icon(cursor: SemioCursor) -> winit::window::CursorIcon {
+    use winit::window::CursorIcon;
+    match cursor {
+        SemioCursor::Default => CursorIcon::Default,
+        SemioCursor::Pointer | SemioCursor::Selectable | SemioCursor::Foldable => CursorIcon::Pointer,
+        SemioCursor::Grab => CursorIcon::Grab,
+        SemioCursor::Grabbing => CursorIcon::Grabbing,
+        SemioCursor::Text => CursorIcon::Text,
+        SemioCursor::EwResize => CursorIcon::EwResize,
+        SemioCursor::NsResize => CursorIcon::NsResize,
+        SemioCursor::NwseResize => CursorIcon::NwseResize,
+        SemioCursor::NeswResize => CursorIcon::NeswResize,
+        SemioCursor::Move => CursorIcon::Move,
+        SemioCursor::Crosshair => CursorIcon::Crosshair,
+        SemioCursor::NotAllowed => CursorIcon::NotAllowed,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -416,7 +449,7 @@ pub struct GlassRegion {
 pub struct SceneColorTarget {
     texture: wgpu::Texture,
     blur_scratch: wgpu::Texture,
-    blur_scratch_view: wgpu::TextureView,
+    blur_scratch_mip_views: Vec<wgpu::TextureView>,
     sample_view: wgpu::TextureView,
     mip_views: Vec<wgpu::TextureView>,
     sampler: wgpu::Sampler,
@@ -462,18 +495,25 @@ impl SceneColorTarget {
                 height,
                 depth_or_array_layers: 1,
             },
-            mip_level_count: 1,
+            mip_level_count: SCENE_MIP_LEVELS,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format,
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             view_formats: &[format],
         });
-        let blur_scratch_view = blur_scratch.create_view(&wgpu::TextureViewDescriptor {
-            label: Some("scene_blur_scratch_view"),
-            format: Some(format),
-            ..Default::default()
-        });
+        let blur_scratch_mip_views = (0..SCENE_MIP_LEVELS)
+            .map(|level| {
+                blur_scratch.create_view(&wgpu::TextureViewDescriptor {
+                    label: Some(&format!("scene_blur_scratch_mip_{level}")),
+                    format: Some(format),
+                    dimension: Some(wgpu::TextureViewDimension::D2),
+                    base_mip_level: level,
+                    mip_level_count: Some(1),
+                    ..Default::default()
+                })
+            })
+            .collect();
         let sample_view = texture.create_view(&wgpu::TextureViewDescriptor {
             label: Some("scene_color_sample"),
             format: Some(format),
@@ -504,7 +544,7 @@ impl SceneColorTarget {
         *target = Some(Self {
             texture,
             blur_scratch,
-            blur_scratch_view,
+            blur_scratch_mip_views,
             sample_view,
             mip_views,
             sampler,
@@ -525,8 +565,8 @@ impl SceneColorTarget {
         &self.sampler
     }
 
-    pub fn blur_scratch_view(&self) -> &wgpu::TextureView {
-        &self.blur_scratch_view
+    pub fn blur_scratch_mip_view(&self, level: u32) -> &wgpu::TextureView {
+        &self.blur_scratch_mip_views[level as usize]
     }
 
     fn mip_extent(&self, level: u32) -> wgpu::Extent3d {
@@ -552,7 +592,7 @@ impl SceneColorTarget {
             },
             wgpu::TexelCopyTextureInfo {
                 texture: &self.blur_scratch,
-                mip_level: 0,
+                mip_level: src_mip,
                 origin: wgpu::Origin3d::ZERO,
                 aspect: wgpu::TextureAspect::All,
             },
@@ -664,6 +704,7 @@ impl ScissorRect {
 
 pub struct DrawLayer {
     pub scissor: Option<ScissorRect>,
+    pub foreground_of: Option<usize>,
     pub ui_instances: Vec<UiInstance>,
     pub raster_instances: Vec<(String, UiInstance)>,
     pub vector_vertices: Vec<VectorVertex>,
@@ -673,6 +714,7 @@ impl Default for DrawLayer {
     fn default() -> Self {
         Self {
             scissor: None,
+            foreground_of: None,
             ui_instances: Vec::new(),
             raster_instances: Vec::new(),
             vector_vertices: Vec::new(),
@@ -685,6 +727,7 @@ pub struct DrawList {
     pub layers: Vec<DrawLayer>,
     pub glass_regions: Vec<GlassRegion>,
     scissor_stack: Vec<ScissorRect>,
+    glass_content_stack: Vec<usize>,
     screen_h: f32,
 }
 
@@ -695,6 +738,7 @@ impl Default for DrawList {
             layers: Vec::new(),
             glass_regions: Vec::new(),
             scissor_stack: Vec::new(),
+            glass_content_stack: Vec::new(),
             screen_h: 720.0,
         };
         list.layers.push(DrawLayer::default());
@@ -705,6 +749,10 @@ impl Default for DrawList {
 impl DrawList {
     pub fn set_screen_height(&mut self, height: f32) {
         self.screen_h = height;
+    }
+
+    fn active_foreground_of(&self) -> Option<usize> {
+        self.glass_content_stack.last().copied()
     }
 
     fn active_layer(&mut self) -> &mut DrawLayer {
@@ -720,6 +768,7 @@ impl DrawList {
         self.layers.push(DrawLayer::default());
         self.glass_regions.clear();
         self.scissor_stack.clear();
+        self.glass_content_stack.clear();
     }
 
     pub fn push_scissor(&mut self, rect: crate::geometry::Rect) {
@@ -730,6 +779,7 @@ impl DrawList {
         self.scissor_stack.push(scissor);
         self.layers.push(DrawLayer {
             scissor: Some(scissor),
+            foreground_of: self.active_foreground_of(),
             ui_instances: Vec::new(),
             raster_instances: Vec::new(),
             vector_vertices: Vec::new(),
@@ -741,6 +791,7 @@ impl DrawList {
         let parent = self.scissor_stack.last().cloned();
         self.layers.push(DrawLayer {
             scissor: parent,
+            foreground_of: self.active_foreground_of(),
             ui_instances: Vec::new(),
             raster_instances: Vec::new(),
             vector_vertices: Vec::new(),
@@ -771,8 +822,9 @@ impl DrawList {
             .push(UiInstance::rounded(rect, color, radius, 0.0, color));
     }
 
-    pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, tier: GlassTier, theme: &Theme) {
+    pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, tier: GlassTier, theme: &Theme) -> usize {
         let style = theme.glass(tier);
+        let index = self.glass_regions.len();
         self.glass_regions.push(GlassRegion {
             rect,
             radius,
@@ -780,6 +832,29 @@ impl DrawList {
             alpha: style.alpha,
             blur_px: style.blur_px,
             saturate: style.saturate,
+        });
+        index
+    }
+
+    pub fn begin_glass_content(&mut self, region: usize) {
+        self.glass_content_stack.push(region);
+        self.layers.push(DrawLayer {
+            scissor: None,
+            foreground_of: Some(region),
+            ui_instances: Vec::new(),
+            raster_instances: Vec::new(),
+            vector_vertices: Vec::new(),
+        });
+    }
+
+    pub fn end_glass_content(&mut self) {
+        self.glass_content_stack.pop();
+        self.layers.push(DrawLayer {
+            scissor: self.scissor_stack.last().cloned(),
+            foreground_of: self.active_foreground_of(),
+            ui_instances: Vec::new(),
+            raster_instances: Vec::new(),
+            vector_vertices: Vec::new(),
         });
     }
 
@@ -1417,13 +1492,43 @@ struct LayerBatch {
     vec_count: u32,
 }
 
-fn build_layer_batches(draw: &DrawList) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
+enum LayerBatchFilter {
+    Backdrop,
+    Foreground,
+}
+
+impl Copy for LayerBatchFilter {}
+
+impl Clone for LayerBatchFilter {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+fn layer_matches_filter(layer: &DrawLayer, filter: LayerBatchFilter) -> bool {
+    match filter {
+        LayerBatchFilter::Backdrop => layer.foreground_of.is_none(),
+        LayerBatchFilter::Foreground => layer.foreground_of.is_some(),
+    }
+}
+
+fn build_layer_batches(
+    draw: &DrawList,
+    filter: LayerBatchFilter,
+) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
     let mut all_ui = Vec::new();
     let mut all_vec = Vec::new();
     let mut batches = Vec::new();
-    let scene_layers: std::collections::HashSet<usize> =
-        draw.scene_passes.iter().map(|pass| pass.layer_index).collect();
+    let scene_layers: std::collections::HashSet<usize> = draw
+        .scene_passes
+        .iter()
+        .filter(|pass| layer_matches_filter(&draw.layers[pass.layer_index], filter))
+        .map(|pass| pass.layer_index)
+        .collect();
     for (layer_index, layer) in draw.layers.iter().enumerate() {
+        if !layer_matches_filter(layer, filter) {
+            continue;
+        }
         if layer.ui_instances.is_empty()
             && layer.vector_vertices.is_empty()
             && !scene_layers.contains(&layer_index)
@@ -2121,11 +2226,21 @@ impl UiPipelines {
 
     fn prepare_world_passes(
         draw: &DrawList,
-    ) -> (Vec<PreparedWorldPass>, Vec<World3dGpuInstance>, Vec<WorldLineGpuVertex>) {
+        filter: LayerBatchFilter,
+    ) -> (
+        Vec<PreparedWorldPass>,
+        Vec<World3dGpuInstance>,
+        Vec<WorldLineGpuVertex>,
+        Vec<Option<usize>>,
+    ) {
         let mut prepared = Vec::new();
         let mut all_instances = Vec::new();
         let mut all_lines = Vec::new();
-        for scene in &draw.scene_passes {
+        let mut pass_index_map = vec![None; draw.scene_passes.len()];
+        for (source_index, scene) in draw.scene_passes.iter().enumerate() {
+            if !layer_matches_filter(&draw.layers[scene.layer_index], filter) {
+                continue;
+            }
             let mut pass_draws = Vec::new();
             for draw_call in &scene.draws {
                 if draw_call.instances.is_empty() {
@@ -2180,6 +2295,7 @@ impl UiPipelines {
                 }
             }
             let line_count = all_lines.len() as u32 - line_start;
+            pass_index_map[source_index] = Some(prepared.len());
             prepared.push(PreparedWorldPass {
                 globals: World3dGlobals {
                     view_proj: scene.view_proj,
@@ -2197,7 +2313,7 @@ impl UiPipelines {
                 line_count,
             });
         }
-        (prepared, all_instances, all_lines)
+        (prepared, all_instances, all_lines, pass_index_map)
     }
 
     fn upload_world_passes(
@@ -2206,13 +2322,18 @@ impl UiPipelines {
         queue: &wgpu::Queue,
         draw: &DrawList,
         frame_buffers: &mut FrameBuffers,
-    ) -> Option<Vec<PreparedWorldPass>> {
+        filter: LayerBatchFilter,
+    ) -> Option<(Vec<PreparedWorldPass>, Vec<Option<usize>>)> {
         if draw.scene_passes.is_empty() {
             return None;
         }
-        let (prepared, all_instances, all_lines) = Self::prepare_world_passes(draw);
-        if all_instances.is_empty() && all_lines.is_empty() {
+        let (prepared, all_instances, all_lines, pass_index_map) =
+            Self::prepare_world_passes(draw, filter);
+        if prepared.is_empty() {
             return None;
+        }
+        if all_instances.is_empty() && all_lines.is_empty() {
+            return Some((prepared, pass_index_map));
         }
         self.world_globals_ring.ensure_slots(
             device,
@@ -2239,7 +2360,7 @@ impl UiPipelines {
                 "world3d_lines",
             );
         }
-        Some(prepared)
+        Some((prepared, pass_index_map))
     }
 
     fn draw_world_pass_at<'a>(
@@ -2353,8 +2474,12 @@ impl UiPipelines {
         queue: &wgpu::Queue,
         width: f32,
         height: f32,
+        filter: LayerBatchFilter,
     ) {
         for layer in &draw.layers {
+            if !layer_matches_filter(layer, filter) {
+                continue;
+            }
             if layer.raster_instances.is_empty() {
                 continue;
             }
@@ -2428,6 +2553,7 @@ impl UiPipelines {
         ui_buffer: Option<&wgpu::BufferSlice<'a>>,
         vector_buffer: Option<&wgpu::BufferSlice<'a>>,
         world_prepared: Option<&[PreparedWorldPass]>,
+        pass_index_map: &[Option<usize>],
         instance_buffer: Option<wgpu::BufferSlice<'a>>,
         line_buffer: Option<wgpu::BufferSlice<'a>>,
         mesh_store: &MeshGpuStore,
@@ -2485,17 +2611,21 @@ impl UiPipelines {
                     if let (Some(prepared), Some(instance_buffer)) =
                         (world_prepared, instance_buffer.as_ref())
                     {
-                        if let Some(scene) = prepared.get(pass_index) {
-                            self.draw_world_pass_at(
-                                pass,
-                                mesh_store,
-                                scene,
-                                pass_index as u32,
-                                instance_buffer.clone(),
-                                line_buffer.clone(),
-                                width,
-                                height,
-                            );
+                        if let Some(prepared_slot) =
+                            pass_index_map.get(pass_index).and_then(|slot| *slot)
+                        {
+                            if let Some(scene) = prepared.get(prepared_slot) {
+                                self.draw_world_pass_at(
+                                    pass,
+                                    mesh_store,
+                                    scene,
+                                    prepared_slot as u32,
+                                    instance_buffer.clone(),
+                                    line_buffer.clone(),
+                                    width,
+                                    height,
+                                );
+                            }
                         }
                     }
                 }
@@ -2587,12 +2717,23 @@ impl UiPipelines {
     ) {
         self.update_globals(queue, width, height);
         let scene_view = scene.mip_view(0);
-        let world_prepared = if depth_view.is_some() {
-            self.upload_world_passes(device, queue, draw, frame_buffers)
+        let world_upload = if depth_view.is_some() {
+            self.upload_world_passes(
+                device,
+                queue,
+                draw,
+                frame_buffers,
+                LayerBatchFilter::Backdrop,
+            )
         } else {
             None
         };
-        let (all_ui, all_vec, batches) = build_layer_batches(draw);
+        let (prepared_holder, pass_index_map) = match world_upload {
+            Some((prepared, map)) => (Some(prepared), map),
+            None => (None, vec![None; draw.scene_passes.len()]),
+        };
+        let world_prepared = prepared_holder.as_ref().map(|prepared| prepared.as_slice());
+        let (all_ui, all_vec, batches) = build_layer_batches(draw, LayerBatchFilter::Backdrop);
         let ui_buffer = if all_ui.is_empty() {
             None
         } else {
@@ -2650,7 +2791,8 @@ impl UiPipelines {
             &batches,
             ui_buffer.as_ref(),
             vector_buffer.as_ref(),
-            world_prepared.as_deref(),
+            world_prepared,
+            &pass_index_map,
             instance_buffer,
             line_buffer,
             mesh_store,
@@ -2659,7 +2801,9 @@ impl UiPipelines {
             depth_view.is_some(),
         );
         drop(pass);
-        if draw.layers.iter().any(|layer| !layer.raster_instances.is_empty()) {
+        if draw.layers.iter().any(|layer| {
+            layer_matches_filter(layer, LayerBatchFilter::Backdrop) && !layer.raster_instances.is_empty()
+        }) {
             let mut raster_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("ui_raster_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -2691,6 +2835,162 @@ impl UiPipelines {
                 queue,
                 width,
                 height,
+                LayerBatchFilter::Backdrop,
+            );
+        }
+    }
+
+    fn has_glass_foreground(draw: &DrawList) -> bool {
+        let layer_content = draw.layers.iter().any(|layer| {
+            layer.foreground_of.is_some()
+                && (!layer.ui_instances.is_empty()
+                    || !layer.vector_vertices.is_empty()
+                    || !layer.raster_instances.is_empty())
+        });
+        let scene_content = draw.scene_passes.iter().any(|pass| {
+            layer_matches_filter(&draw.layers[pass.layer_index], LayerBatchFilter::Foreground)
+        });
+        layer_content || scene_content
+    }
+
+    fn render_glass_foreground<'a>(
+        &'a mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        encoder: &mut wgpu::CommandEncoder,
+        view: &'a wgpu::TextureView,
+        draw: &DrawList,
+        depth_view: Option<&'a wgpu::TextureView>,
+        mesh_store: &MeshGpuStore,
+        raster_store: &RasterTextureStore,
+        frame_buffers: &mut FrameBuffers,
+        width: f32,
+        height: f32,
+    ) {
+        if !Self::has_glass_foreground(draw) {
+            return;
+        }
+        let world_upload = if depth_view.is_some() {
+            self.upload_world_passes(
+                device,
+                queue,
+                draw,
+                frame_buffers,
+                LayerBatchFilter::Foreground,
+            )
+        } else {
+            None
+        };
+        let (prepared_holder, pass_index_map) = match world_upload {
+            Some((prepared, map)) => (Some(prepared), map),
+            None => (None, vec![None; draw.scene_passes.len()]),
+        };
+        let world_prepared = prepared_holder.as_ref().map(|prepared| prepared.as_slice());
+        let (all_ui, all_vec, batches) = build_layer_batches(draw, LayerBatchFilter::Foreground);
+        if all_ui.is_empty()
+            && all_vec.is_empty()
+            && batches.is_empty()
+            && world_prepared.is_none()
+        {
+            return;
+        }
+        let ui_buffer = if all_ui.is_empty() {
+            None
+        } else {
+            frame_buffers.ui_instances.upload(
+                device,
+                queue,
+                &all_ui,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "glass_foreground_ui_instances",
+            )
+        };
+        let vector_buffer = if all_vec.is_empty() {
+            None
+        } else {
+            frame_buffers.vector_vertices.upload(
+                device,
+                queue,
+                &all_vec,
+                wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                "glass_foreground_vector_vertices",
+            )
+        };
+        let instance_buffer = frame_buffers.world_instances.slice();
+        let line_buffer = frame_buffers.world_lines.slice();
+        let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+            label: Some("glass_foreground_pass"),
+            color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                view,
+                resolve_target: None,
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: wgpu::StoreOp::Store,
+                },
+                depth_slice: None,
+            })],
+            depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment {
+                view: depth,
+                depth_ops: Some(wgpu::Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: wgpu::StoreOp::Store,
+                }),
+                stencil_ops: None,
+            }),
+            timestamp_writes: None,
+            occlusion_query_set: None,
+        });
+        self.render_interleaved_layers(
+            &mut pass,
+            draw,
+            &batches,
+            ui_buffer.as_ref(),
+            vector_buffer.as_ref(),
+            world_prepared,
+            &pass_index_map,
+            instance_buffer,
+            line_buffer,
+            mesh_store,
+            width,
+            height,
+            depth_view.is_some(),
+        );
+        drop(pass);
+        if draw.layers.iter().any(|layer| {
+            layer_matches_filter(layer, LayerBatchFilter::Foreground) && !layer.raster_instances.is_empty()
+        }) {
+            let mut raster_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("glass_foreground_raster_pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    },
+                    depth_slice: None,
+                })],
+                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment {
+                    view: depth,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            self.draw_raster_layers(
+                &mut raster_pass,
+                raster_store,
+                draw,
+                frame_buffers,
+                device,
+                queue,
+                width,
+                height,
+                LayerBatchFilter::Foreground,
             );
         }
     }
@@ -2705,6 +3005,8 @@ impl UiPipelines {
         depth_view: Option<&'a wgpu::TextureView>,
         draw: &DrawList,
         overlay: Option<&DrawList>,
+        mesh_store: &MeshGpuStore,
+        raster_store: &RasterTextureStore,
         frame_buffers: &mut FrameBuffers,
         width: f32,
         height: f32,
@@ -2721,6 +3023,19 @@ impl UiPipelines {
             frame_buffers,
             &draw.glass_regions,
             max_mip,
+            width,
+            height,
+        );
+        self.render_glass_foreground(
+            device,
+            queue,
+            encoder,
+            view,
+            draw,
+            depth_view,
+            mesh_store,
+            raster_store,
+            frame_buffers,
             width,
             height,
         );
@@ -2811,6 +3126,8 @@ impl UiPipelines {
             depth_view,
             draw,
             overlay,
+            mesh_store,
+            raster_store,
             frame_buffers,
             width,
             height,
@@ -2843,7 +3160,7 @@ impl UiPipelines {
                     },
                     wgpu::BindGroupEntry {
                         binding: 1,
-                        resource: wgpu::BindingResource::TextureView(scene.blur_scratch_view()),
+                        resource: wgpu::BindingResource::TextureView(scene.blur_scratch_mip_view(src_mip)),
                     },
                     wgpu::BindGroupEntry {
                         binding: 2,
@@ -3023,7 +3340,7 @@ impl UiPipelines {
         pass.set_pipeline(&self.ui_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
 
-        let (all_ui, all_vec, batches) = build_layer_batches(overlay);
+        let (all_ui, all_vec, batches) = build_layer_batches(overlay, LayerBatchFilter::Backdrop);
         let ui_buffer = if all_ui.is_empty() {
             None
         } else {
@@ -3175,6 +3492,66 @@ mod tests {
         let v1 = mesh_content_version(&[0.0, 0.0, 0.0], &[0.0, 1.0, 0.0], &[0, 2, 1]);
         assert_ne!(v0, v1);
     }
+
+    #[test]
+    fn glass_content_layers_tagged_with_foreground_of() {
+        use super::{GlassTier, Theme};
+        let theme = Theme::default();
+        let mut draw = DrawList::default();
+        draw.push_solid([0.0, 0.0, 100.0, 100.0], Rgba::new(0.2, 0.2, 0.2, 1.0));
+        let glass = draw.push_glass([10.0, 10.0, 80.0, 80.0], 8.0, GlassTier::Panel, &theme);
+        assert_eq!(glass, 0);
+        draw.begin_glass_content(glass);
+        draw.push_solid([10.0, 10.0, 80.0, 80.0], Rgba::new(1.0, 0.0, 0.0, 1.0));
+        draw.end_glass_content();
+        let backdrop = draw.layers.iter().filter(|layer| layer.foreground_of.is_none()).count();
+        let foreground = draw
+            .layers
+            .iter()
+            .filter(|layer| layer.foreground_of == Some(glass))
+            .count();
+        assert_eq!(backdrop, 2);
+        assert_eq!(foreground, 1);
+        assert_eq!(draw.layers[1].ui_instances.len(), 1);
+    }
+
+    #[test]
+    fn glass_foreground_layers_excluded_from_backdrop_batches() {
+        use super::{build_layer_batches, GlassTier, LayerBatchFilter, Theme};
+        let theme = Theme::default();
+        let mut draw = DrawList::default();
+        draw.push_solid([0.0, 0.0, 200.0, 200.0], Rgba::new(0.1, 0.1, 0.1, 1.0));
+        let glass = draw.push_glass([20.0, 20.0, 160.0, 160.0], 8.0, GlassTier::Panel, &theme);
+        draw.begin_glass_content(glass);
+        draw.push_solid([20.0, 20.0, 160.0, 160.0], Rgba::new(1.0, 0.0, 0.0, 1.0));
+        draw.end_glass_content();
+        let (backdrop_ui, _, backdrop_batches) = build_layer_batches(&draw, LayerBatchFilter::Backdrop);
+        let (foreground_ui, _, foreground_batches) = build_layer_batches(&draw, LayerBatchFilter::Foreground);
+        assert_eq!(backdrop_ui.len(), 1);
+        assert_eq!(foreground_ui.len(), 1);
+        assert_eq!(backdrop_batches.len(), 1);
+        assert_eq!(foreground_batches.len(), 1);
+        assert!(draw.layers[backdrop_batches[0].layer_index].foreground_of.is_none());
+        assert_eq!(
+            draw.layers[foreground_batches[0].layer_index].foreground_of,
+            Some(glass)
+        );
+    }
+
+    #[test]
+    fn glass_scissor_inherits_foreground_tag() {
+        use super::{GlassTier, Theme};
+        let theme = Theme::default();
+        let mut draw = DrawList::default();
+        let glass = draw.push_glass([0.0, 0.0, 100.0, 100.0], 8.0, GlassTier::Panel, &theme);
+        draw.begin_glass_content(glass);
+        draw.push_scissor(Rect::new(10.0, 10.0, 80.0, 80.0));
+        draw.push_solid([10.0, 10.0, 80.0, 80.0], Rgba::new(0.0, 1.0, 0.0, 1.0));
+        draw.pop_scissor();
+        draw.end_glass_content();
+        let scissor_layer = draw.layers.iter().find(|layer| layer.scissor.is_some()).expect("scissor layer");
+        assert_eq!(scissor_layer.foreground_of, Some(glass));
+    }
 }
 // #endregion draw
 }
@@ -3239,14 +3616,21 @@ pub struct GpuContext {
 }
 
 impl GpuContext {
-    #[cfg(target_arch = "wasm32")]
-    pub async fn from_canvas(canvas: web_sys::HtmlCanvasElement, dpr: f32) -> Result<Self, String> {
+    pub async fn from_window(window: std::sync::Arc<winit::window::Window>) -> Result<Self, String> {
+        let dpr = window.scale_factor() as f32;
+        let size = window.inner_size();
+        let css_width = size.width as f32 / dpr;
+        let css_height = size.height as f32 / dpr;
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
-            backends: wgpu::Backends::BROWSER_WEBGPU,
+            backends: if cfg!(target_arch = "wasm32") {
+                wgpu::Backends::BROWSER_WEBGPU
+            } else {
+                wgpu::Backends::PRIMARY
+            },
             ..Default::default()
         });
         let surface = instance
-            .create_surface(wgpu::SurfaceTarget::Canvas(canvas))
+            .create_surface(wgpu::SurfaceTarget::Window(Box::new(window)))
             .map_err(|err| format!("surface: {err:?}"))?;
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
@@ -3279,8 +3663,8 @@ impl GpuContext {
         } else {
             surface_format.add_srgb_suffix()
         };
-        let width = 1;
-        let height = 1;
+        let width = (css_width * dpr).max(1.0) as u32;
+        let height = (css_height * dpr).max(1.0) as u32;
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
             format: surface_format,
@@ -3411,6 +3795,8 @@ impl GpuContext {
             depth_view,
             draw,
             overlay,
+            &self.mesh_store,
+            &self.raster_store,
             &mut self.frame_buffers,
             self.width as f32,
             self.height as f32,
@@ -3497,7 +3883,7 @@ impl GpuContext {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn schedule_frame(callback: impl FnMut() + 'static) {
+pub fn schedule_frame(window: &winit::window::Window, callback: impl FnMut() + 'static) {
     use wasm_bindgen::closure::Closure;
     use wasm_bindgen::JsCast;
 
@@ -3508,6 +3894,12 @@ pub fn schedule_frame(callback: impl FnMut() + 'static) {
     web_sys::window()
         .and_then(|w| w.request_animation_frame(closure.as_ref().unchecked_ref()).ok());
     closure.forget();
+    let _ = window;
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn schedule_frame(window: &winit::window::Window, _callback: impl FnMut() + 'static) {
+    window.request_redraw();
 }
 // #endregion gpu
 }
@@ -3517,7 +3909,6 @@ pub mod input {
 //! 🖱️ Pointer and keyboard input state for hit testing.
 
 use crate::geometry::Rect;
-#[cfg(target_arch = "wasm32")]
 use std::rc::Rc;
 
 use std::collections::HashMap;
@@ -3789,7 +4180,7 @@ impl<E: Clone> InputState<E> {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[derive(Clone)]
 pub struct PointerCallbacks {
     pub on_move: Rc<dyn Fn(f32, f32, bool, i16, PointerModifiers)>,
     pub on_button: Rc<dyn Fn(f32, f32, bool, i16, PointerModifiers)>,
@@ -4293,10 +4684,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let diffuse = max(dot(n, normalize(globals.light_dir.xyz)), 0.28);
     var color = in.color.rgb * diffuse;
     if (in.flags.x > 0.5) {
-        color = mix(color, vec3<f32>(0.35, 0.75, 1.0), 0.45);
+        color = mix(color, vec3<f32>(0.35, 0.75, 1.0), 0.65);
     }
     if (in.flags.y > 0.5) {
-        color = mix(color, vec3<f32>(1.0, 0.85, 0.35), 0.35);
+        color = mix(color, vec3<f32>(1.0, 0.85, 0.35), 0.55);
     }
     return vec4<f32>(color, in.color.a);
 }
@@ -6714,18 +7105,160 @@ pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, 
 // #endregion widgets
 }
 
+pub mod host {
+// #region host
+//! 🪟 winit window event bridge into pointer callbacks.
 
-pub use cursor::{resolve_semio_cursor, CursorDragState, SemioCursor};
+use crate::input::{KeyAction, PointerCallbacks, PointerModifiers};
+use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
+use winit::keyboard::{Key, NamedKey};
+
+pub fn pointer_coords(window: &winit::window::Window, position: winit::dpi::PhysicalPosition<f64>) -> (f32, f32) {
+    let dpr = window.scale_factor() as f32;
+    (position.x as f32 * dpr, position.y as f32 * dpr)
+}
+
+pub fn modifiers_from_winit(modifiers: winit::keyboard::ModifiersState) -> PointerModifiers {
+    PointerModifiers {
+        shift: modifiers.shift_key(),
+        ctrl: modifiers.control_key(),
+        alt: modifiers.alt_key(),
+        meta: modifiers.super_key(),
+    }
+}
+
+pub struct WindowInputState {
+    pub pointer_x: f32,
+    pub pointer_y: f32,
+    pub pointer_down: bool,
+    pub pointer_button: i16,
+    pub modifiers: PointerModifiers,
+}
+
+impl Default for WindowInputState {
+    fn default() -> Self {
+        Self {
+            pointer_x: 0.0,
+            pointer_y: 0.0,
+            pointer_down: false,
+            pointer_button: 0,
+            modifiers: PointerModifiers::default(),
+        }
+    }
+}
+
+pub fn dispatch_window_event(
+    window: &winit::window::Window,
+    event: &WindowEvent,
+    input: &mut WindowInputState,
+    callbacks: &PointerCallbacks,
+) -> bool {
+    match event {
+        WindowEvent::ModifiersChanged(modifiers) => {
+            input.modifiers = modifiers_from_winit(modifiers.state());
+            true
+        }
+        WindowEvent::CursorMoved { position, .. } => {
+            let (x, y) = pointer_coords(window, *position);
+            input.pointer_x = x;
+            input.pointer_y = y;
+            (callbacks.on_move)(
+                x,
+                y,
+                input.pointer_down,
+                input.pointer_button,
+                input.modifiers.clone(),
+            );
+            true
+        }
+        WindowEvent::MouseInput { state, button, .. } => {
+            let down = *state == ElementState::Pressed;
+            let btn = mouse_button_to_i16(*button);
+            if down {
+                input.pointer_down = true;
+                input.pointer_button = btn;
+            } else if input.pointer_down {
+                input.pointer_down = false;
+            }
+            (callbacks.on_button)(
+                input.pointer_x,
+                input.pointer_y,
+                down,
+                btn,
+                input.modifiers.clone(),
+            );
+            true
+        }
+        WindowEvent::MouseWheel { delta, .. } => {
+            let delta_y = match delta {
+                MouseScrollDelta::LineDelta(_, y) => *y * 40.0,
+                MouseScrollDelta::PixelDelta(pos) => pos.y as f32,
+            };
+            (callbacks.on_wheel)(
+                delta_y,
+                input.pointer_x,
+                input.pointer_y,
+                input.modifiers.clone(),
+            );
+            true
+        }
+        WindowEvent::KeyboardInput { event, .. } => {
+            if event.state != ElementState::Pressed {
+                return true;
+            }
+            let action = key_action_from_event(event);
+            if let Some(action) = action {
+                (callbacks.on_key)(action, input.modifiers.clone());
+            }
+            true
+        }
+        _ => false,
+    }
+}
+
+fn mouse_button_to_i16(button: MouseButton) -> i16 {
+    match button {
+        MouseButton::Left => 0,
+        MouseButton::Right => 2,
+        MouseButton::Middle => 1,
+        MouseButton::Back => 3,
+        MouseButton::Forward => 4,
+        MouseButton::Other(id) => id as i16,
+    }
+}
+
+fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
+    match &event.logical_key {
+        Key::Named(NamedKey::Backspace) => Some(KeyAction::Backspace),
+        Key::Named(NamedKey::Delete) => Some(KeyAction::Delete),
+        Key::Named(NamedKey::Enter) => Some(KeyAction::Enter),
+        Key::Named(NamedKey::Escape) => Some(KeyAction::Escape),
+        Key::Named(NamedKey::ArrowLeft) => Some(KeyAction::ArrowLeft),
+        Key::Named(NamedKey::ArrowRight) => Some(KeyAction::ArrowRight),
+        Key::Named(NamedKey::ArrowUp) => Some(KeyAction::ArrowUp),
+        Key::Named(NamedKey::ArrowDown) => Some(KeyAction::ArrowDown),
+        Key::Named(NamedKey::Tab) => Some(KeyAction::Tab),
+        Key::Character(ch) if ch.chars().count() == 1 => {
+            Some(KeyAction::Char(ch.to_string()))
+        }
+        _ => None,
+    }
+}
+// #endregion host
+}
+
+
+pub use cursor::{resolve_semio_cursor, apply_window_cursor, CursorDragState, SemioCursor};
 #[cfg(target_arch = "wasm32")]
 pub use cursor::apply_canvas_cursor;
 pub use draw::{mesh_content_version, DrawList, IconAtlas, MeshGpuStore, RasterTextureStore, ear_clip_polygon};
 pub use geometry::Rect;
 pub use gpu::GpuContext;
-#[cfg(target_arch = "wasm32")]
 pub use gpu::schedule_frame;
-pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerModifiers, TreeDragState, TreeDropPosition};
+pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
+pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(target_arch = "wasm32")]
-pub use input::{PointerCallbacks, attach_dom_listeners};
+pub use input::attach_dom_listeners;
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 pub use kernel_3d_scene::{
     aabb_intersects_frustum, axis_rotate_angle, Camera3d, frustum_planes, gumball_axis_drag_plane_normal,

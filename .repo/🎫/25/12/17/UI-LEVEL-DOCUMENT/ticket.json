@@ -1,0 +1,7 @@
+{
+  "title": "Add window and overlay levels to UI document",
+  "emoji": "➕",
+  "status": "closed",
+  "description": "Add window and overlay levels to UI document. The document is base, window, panel, overlay, temporary. All ui elements need to work in all 5 levels with a level context, provider and useLevel hook.",
+  "goal": "🎯r2602🎯runningsketchpad"
+}

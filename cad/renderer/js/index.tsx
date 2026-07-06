@@ -2504,7 +2504,7 @@ function spatialPickTargetObjectRevealed(target: SpatialPickTarget, objectIndex:
   return ownerId !== undefined && revealedObjectIds.has(ownerId);
 }
 
-/** @emoji 🖱️ Maps a hierarchy {@link SelectionTarget} to the canvas hover key (typology object when possible). */
+/** @emoji 🖱️ Maps a document {@link SelectionTarget} to the canvas hover key (typology object when possible). */
 export function canvasHoverKeyForSelectionTarget(model: Model, modelDefinitionId: string, target: SelectionTarget): string {
   if (target.kind === "object") return selectionTargetHoverKey(target);
   for (const row of listModelObjectsForModelDefinition(model, modelDefinitionId)) {

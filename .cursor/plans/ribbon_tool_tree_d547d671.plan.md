@@ -39,7 +39,7 @@ isProject: false
 
 ## Goal
 
-Generalize the toolbar from `AppTools = Partial<Record<AppToolCategory, ToolItem[]>>` into a recursive tree. Every node is a leaf (`button` / `toggle` / `separator`) or a `collection` (has `children`). The footer ribbon renders the active path left-to-right: each hierarchy level is its own glass `ToolbarZone` separated by a small gap; among sibling collections only one is active (single-select); activating a different sibling collection replaces every zone downstream (to the right). Collection labels stay i18n-keyed; a default path auto-opens the first collection at each level.
+Generalize the toolbar from `AppTools = Partial<Record<AppToolCategory, ToolItem[]>>` into a recursive tree. Every node is a leaf (`button` / `toggle` / `separator`) or a `collection` (has `children`). The footer ribbon renders the active path left-to-right: each document level is its own glass `ToolbarZone` separated by a small gap; among sibling collections only one is active (single-select); activating a different sibling collection replaces every zone downstream (to the right). Collection labels stay i18n-keyed; a default path auto-opens the first collection at each level.
 
 ## Concept
 

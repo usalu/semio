@@ -3847,7 +3847,7 @@ mod tests {
     }
 
     #[test]
-    fn place_label_visible_covers_admin_hierarchy() {
+    fn place_label_visible_covers_admin_document() {
         let v = super::vector_tiles::place_label_visible;
         assert!(v("", 20.0));
         assert!(!v("", 8.0));

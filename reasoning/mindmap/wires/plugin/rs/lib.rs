@@ -5,7 +5,7 @@ use reasoning_mindmap_wires::{DefaultWiresExtension, RelationshipKind};
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
     Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
-    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
 const WIRES_PLAY_CONTROLLER_ID: &str = "reasoning-wires-play";
 const WIRES_PLAY_SURFACE_ID: &str = "reasoning.wires.composite";
 const WIRES_PLAY_BODY_COMPOSITE: &str = "reasoning.wires.composite";
-const WIRES_PLAY_BODY_HIERARCHY: &str = "reasoning.wires.hierarchy";
+const WIRES_PLAY_BODY_DOCUMENT: &str = "reasoning.wires.document";
 const WIRES_PLAY_BODY_CATALOGUE: &str = "reasoning.wires.catalogue";
 const WIRES_PLAY_BODY_PROPERTIES: &str = "reasoning.wires.properties";
 const WIRES_FIXTURE_SCHEMA: &str = "reasoning.wires.fixture";
@@ -25,8 +25,8 @@ const PUZZLE2D_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
 const WIRES_PLAY_EXAMPLE_METABOLISM_ID: &str = "metabolism";
 const METABOLISM_WIRES_EXAMPLE_JSON: &str = include_str!("../../example/metabolism.wires.json");
 
-const WIRES_HIERARCHY_IDENTITY_PREFIX: &str = "wires-play-hierarchy.identity.";
-const WIRES_HIERARCHY_RELATIONSHIP_PREFIX: &str = "wires-play-hierarchy.relationship.";
+const WIRES_DOCUMENT_IDENTITY_PREFIX: &str = "wires-play-document.identity.";
+const WIRES_DOCUMENT_RELATIONSHIP_PREFIX: &str = "wires-play-document.relationship.";
 //#endregion 🔖Constants
 
 //#region 🔖Envelope
@@ -193,7 +193,7 @@ fn relationship_kind_display_name(kind: &str) -> &str {
     }
 }
 
-fn wires_relationship_hierarchy_label(wires: &Value, edge_id: &str) -> Option<String> {
+fn wires_relationship_document_label(wires: &Value, edge_id: &str) -> Option<String> {
     let relationship = wires_relationships(wires).iter().find(|row| {
         row.get("edgeId").and_then(|value| value.as_str()) == Some(edge_id)
     })?;
@@ -248,7 +248,7 @@ fn wires_kind_catalog_entries(wires: &Value, key: &str) -> Vec<Value> {
         .unwrap_or_default()
 }
 
-fn hierarchy_tree_selected_ids(board: &Value, selected: &[String]) -> Vec<String> {
+fn document_tree_selected_ids(board: &Value, selected: &[String]) -> Vec<String> {
     selected
         .iter()
         .filter_map(|id| {
@@ -256,13 +256,13 @@ fn hierarchy_tree_selected_ids(board: &Value, selected: &[String]) -> Vec<String
                 .iter()
                 .any(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
             {
-                return Some(format!("{WIRES_HIERARCHY_IDENTITY_PREFIX}{id}"));
+                return Some(format!("{WIRES_DOCUMENT_IDENTITY_PREFIX}{id}"));
             }
             if fixture_edges(board)
                 .iter()
                 .any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
             {
-                return Some(format!("{WIRES_HIERARCHY_RELATIONSHIP_PREFIX}{id}"));
+                return Some(format!("{WIRES_DOCUMENT_RELATIONSHIP_PREFIX}{id}"));
             }
             None
         })
@@ -340,7 +340,7 @@ fn render_canvas(board: &Value, wires: &Value) -> UiNode {
 }
 //#endregion 🔖Canvas
 
-//#region 🔖HierarchyPanel
+//#region 🔖DocumentPanel
 fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
@@ -361,7 +361,7 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
     }
 }
 
-fn render_hierarchy_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
+fn render_document_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
     let wires = &envelope.wires_fixture;
     let board = &envelope.board_fixture;
     let identity_items: Vec<UiTreeItemNode> = wires_identities(wires)
@@ -374,7 +374,7 @@ fn render_hierarchy_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
                 .and_then(|kind| wires_identity_kind_name(wires, kind))
                 .filter(|kind_name| kind_name != label);
             Some(tree_item_with_command(
-                format!("{WIRES_HIERARCHY_IDENTITY_PREFIX}{node_id}"),
+                format!("{WIRES_DOCUMENT_IDENTITY_PREFIX}{node_id}"),
                 label,
                 description,
                 wires_cmd("setSelection", Some(json!({ "ids": [node_id] }))),
@@ -386,8 +386,8 @@ fn render_hierarchy_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
         .filter_map(|edge| {
             let edge_id = edge.get("id")?.as_str()?;
             Some(tree_item_with_command(
-                format!("{WIRES_HIERARCHY_RELATIONSHIP_PREFIX}{edge_id}"),
-                wires_relationship_hierarchy_label(wires, edge_id).unwrap_or_else(|| edge_id.into()),
+                format!("{WIRES_DOCUMENT_RELATIONSHIP_PREFIX}{edge_id}"),
+                wires_relationship_document_label(wires, edge_id).unwrap_or_else(|| edge_id.into()),
                 None,
                 wires_cmd("setSelection", Some(json!({ "ids": [edge_id] }))),
             ))
@@ -396,12 +396,12 @@ fn render_hierarchy_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "wires-play-hierarchy.identities".into(),
+                id: "wires-play-document.identities".into(),
                 label: Some("Identities".into()),
                 default_open: Some(true),
                 items: if identity_items.is_empty() {
                     vec![UiTreeItemNode {
-                        id: "wires-play-hierarchy.identities.empty".into(),
+                        id: "wires-play-document.identities.empty".into(),
                         label: "(none)".into(),
                         description: None,
                         icon_id: None,
@@ -422,12 +422,12 @@ fn render_hierarchy_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
                 },
             },
             UiTreeSectionNode {
-                id: "wires-play-hierarchy.relationships".into(),
+                id: "wires-play-document.relationships".into(),
                 label: Some("Relationships".into()),
                 default_open: Some(false),
                 items: if relationship_items.is_empty() {
                     vec![UiTreeItemNode {
-                        id: "wires-play-hierarchy.relationships.empty".into(),
+                        id: "wires-play-document.relationships.empty".into(),
                         label: "(none)".into(),
                         description: None,
                         icon_id: None,
@@ -448,12 +448,12 @@ fn render_hierarchy_panel(envelope: &ReasoningWiresPlayEnvelope) -> UiNode {
                 },
             },
         ],
-        selected_ids: Some(hierarchy_tree_selected_ids(board, &envelope.selected_ids)),
+        selected_ids: Some(document_tree_selected_ids(board, &envelope.selected_ids)),
         highlighted_ids: None,
         selection_change: Some(wires_cmd("setSelection", None)),
     })
 }
-//#endregion 🔖HierarchyPanel
+//#endregion 🔖DocumentPanel
 
 //#region 🔖CataloguePanel
 fn catalog_kind_label(entry: &Value) -> String {
@@ -645,7 +645,7 @@ impl PluginApp for WiresPlayApp {
                     }
                 }
             }
-            "setSelection" | "hierarchySelect" => {
+            "setSelection" | "documentSelect" => {
                 envelope.selected_ids = selection_ids(args);
                 return vec![set_document_op(&envelope)];
             }
@@ -762,7 +762,7 @@ impl PluginApp for WiresPlayApp {
         let envelope = parse_envelope(document_json);
         match body_key {
             WIRES_PLAY_BODY_COMPOSITE => render_canvas(&envelope.board_fixture, &envelope.wires_fixture),
-            WIRES_PLAY_BODY_HIERARCHY => render_hierarchy_panel(&envelope),
+            WIRES_PLAY_BODY_DOCUMENT => render_document_panel(&envelope),
             WIRES_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.wires_fixture),
             WIRES_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -774,12 +774,12 @@ impl PluginApp for WiresPlayApp {
 //#region 🔖AppFactory
 fn create_wires_app() -> App {
     App::from_builder(
-        App::builder(WIRES_PLAY_APP_ID, "Mindmap Wires").hierarchy(["semio", "reasoning", "mindmap", "wires"])
+        App::builder(WIRES_PLAY_APP_ID, "Mindmap Wires").document(["semio", "reasoning", "mindmap", "wires"])
             .icon_id("reasoning-wires")
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind("reasoning-wires-composite", "Canvas", WIRES_PLAY_BODY_COMPOSITE)
-            .panel_tab("framework.panel.hierarchy", FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, "workbench", WIRES_PLAY_BODY_HIERARCHY)
+            .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "workbench", WIRES_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "workbench", WIRES_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "details", WIRES_PLAY_BODY_PROPERTIES)
             .default_layout(create_default_layout(
@@ -807,7 +807,7 @@ fn wires_bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(wires_bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests
@@ -826,15 +826,15 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_has_identities_section() {
+    fn document_has_identities_section() {
         let app = WiresPlayApp;
         let envelope = envelope_from_wires_fixture(
             serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"),
         );
         let document = serde_json::to_string(&envelope).unwrap();
-        let node = app.render(WIRES_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(WIRES_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("wires-play-hierarchy.identities"));
+        assert!(json.contains("wires-play-document.identities"));
         assert!(json.contains("Metabolism"));
     }
 

@@ -39,7 +39,7 @@ Implemented three-tier hierarchical GitHub sync: root goals as milestones, first
 
 - [x] Add three-tier helper functions (goalDepth, isFirstGenGoal, isDeeperGoal, etc.)
 - [x] Add ghAddSubIssue and ghGetIssueNodeID functions
-- [x] Refactor GoalCreate for three-tier hierarchy
+- [x] Refactor GoalCreate for three-tier document
 - [x] Verify GoalClose/GoalReopen/GoalChange/GoalDelete work with three tiers
 - [x] Update SyncGithub with depth-sorted processing and sub-issue linking
 - [x] Update GraphQL schema and resolvers

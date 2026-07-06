@@ -2,8 +2,8 @@
   "title": "Raster Framework Integration",
   "emoji": "🖼️",
   "status": "closed",
-  "description": "Integrate raster technology with framework mechanisms for selection, hover, hierarchy, details, and catalogue — align with draw/play patterns.",
-  "summary": "Aligned raster play with framework integration patterns (matching draw/play): added tree-row↔layer-id mapping helpers in raster/core; selectionChange on hierarchy and masks trees with setSelection resolving tree row ids; refactored inspector to uiInspectorGroupsToTree with readonly id/kind fields; catalogue panel uses CANVAS_HOVER_SOURCE_CATALOG; RasterPlayPaneSurfaceHost wires onCommit→commitDocument. All raster core/play/react tests pass (10+8+2).",
+  "description": "Integrate raster technology with framework mechanisms for selection, hover, document, details, and catalogue — align with draw/play patterns.",
+  "summary": "Aligned raster play with framework integration patterns (matching draw/play): added tree-row↔layer-id mapping helpers in raster/core; selectionChange on document and masks trees with setSelection resolving tree row ids; refactored inspector to uiInspectorGroupsToTree with readonly id/kind fields; catalogue panel uses CANVAS_HOVER_SOURCE_CATALOG; RasterPlayPaneSurfaceHost wires onCommit→commitDocument. All raster core/play/react tests pass (10+8+2).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1774"
   },

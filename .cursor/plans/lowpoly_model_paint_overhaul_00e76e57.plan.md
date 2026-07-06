@@ -197,7 +197,7 @@ In [lowpoly/react/index.tsx](lowpoly/react/index.tsx) `LowpolyCanvas`:
 `**lowpoly/play/index.ts**`:
 
 - Paint toolbar (`buildLowpolyPlayPaintToolbarTools`): Brush / Eraser / Fill / Eyedropper toggles, "Unwrap Active Object", "Mark Seam" / "Clear Seam" (enabled when in edge-select with a selection), Undo/Redo.
-- New Layers panel tree builder (`buildLowpolyPlayLayersTree`) listing paint layers with visibility/opacity/reorder/add/remove, following the existing panel-builder pattern used for Hierarchy/Catalogue/Inspector.
+- New Layers panel tree builder (`buildLowpolyPlayLayersTree`) listing paint layers with visibility/opacity/reorder/add/remove, following the existing panel-builder pattern used for Document/Catalogue/Inspector.
 
 ## Phase 10 — Tests and verification
 

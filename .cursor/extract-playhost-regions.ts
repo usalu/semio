@@ -106,8 +106,8 @@ const PLAYGROUND_RENDERER_EXPORTS = [
   "collectUiTreeItemDragData",
   "FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID",
   "FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL",
-  "FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID",
-  "FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL",
+  "FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID",
+  "FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL",
   "FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID",
   "FRAMEWORK_PANEL_TAB_INSPECTION_LABEL",
   "FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID",
@@ -179,7 +179,7 @@ const PLATFORM_RENDERER_EXPORTS = [
 
 const UI_REACT_EXPORTS = ["reactHostPort", "cn", "Icon", "Button", "Toggle", "Select", "Tree", "LevelProvider", "getLevelBgClass", "useElementsSurfaceChrome", "bootstrapElementsSurfaceChromeDocument", "useMediaQuery", "useCommandHotkey", "createIconComponent", "ChromeAwareWindowScrollSurface", "PanelToggleGroup", "NavbarExampleSelect", "NAVBAR_NO_EXAMPLE_ID", "engagementCommandTokenEquals", "normalizeEngagementCommandText", "floatingFieldSurfaceClass", "floatingMenuSurfaceClass", "shellChromeSectionTitleClassName", "shellChromeTitleClassName", "interactiveActiveFillClass", "isCrossOriginIsolatedRuntime", "navbarFillItem", "readStoredComputeWorkerCount", "readStoredUiChromeCompact", "readStoredUiChromeExpertise", "readStoredUiChromeTheme", "writeStoredComputeWorkerCount", "writeStoredUiChromeCompact", "writeStoredUiChromeExpertise", "writeStoredUiChromeTheme", "renderControlIcon", "ButtonGroup", "ButtonGroupItem", "Input", "SelectContent", "SelectItem", "SelectTrigger", "SelectValue", "SemioLogo"];
 
-const FRAMEWORK_CORE_EXPORTS = ["downloadMediaExportResult", "NamedLayoutStore", "CANVAS_HOVER_SOURCE_CANVAS", "CANVAS_HOVER_SOURCE_CATALOG", "CANVAS_HOVER_SOURCE_HIERARCHY"];
+const FRAMEWORK_CORE_EXPORTS = ["downloadMediaExportResult", "NamedLayoutStore", "CANVAS_HOVER_SOURCE_CANVAS", "CANVAS_HOVER_SOURCE_CATALOG", "CANVAS_HOVER_SOURCE_DOCUMENT"];
 
 const PLAYGROUND_CORE_EXPORTS = ["SidePanelTabConfig", "TreePanelDefinition", "SidePanelTabDefinition", "TreePanelConfig", "TreeDataItem", "TreeDataSection", "SideTabSpec", "WindowEngagement", "WindowEngagementControl", "UiNode", "UiTreeNode", "UiSectionNode", "UiFieldNode", "UiInputNode", "UiSelectNode", "UiToggleNode", "UiTreeItemNode", "UiTreeSectionNode", "UiVec3Node", "UiKeyValueNode", "UiTableHostSurfaceNode", "UiPuzzle2dHostSurfaceNode", "UiPuzzle3dHostSurfaceNode"];
 

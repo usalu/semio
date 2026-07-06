@@ -17,8 +17,8 @@
   - [ ] Ignore empty folders.
   - [ ] Remove `json` language processor.
   - [ ] Ignore files/folders without language processor or explicitly ignored.
-- [ ] Refactor Hierarchy/IDs in `./repo/cli`:
-  - [ ] Bundle-based hierarchy (Folders, Files, Tickets).
+- [ ] Refactor Document/IDs in `./repo/cli`:
+  - [ ] Bundle-based document (Folders, Files, Tickets).
   - [ ] Orphan files in `repo/repo`.
   - [ ] Sections/Definitions parsing and IDs.
 - [ ] Update VS Code Extension (`js/vscode`):

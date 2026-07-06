@@ -64,7 +64,7 @@ flowchart LR
 
 Adopt the existing puzzle3d path for all apps:
 
-- Panel trees become core `sidePanelBodies` factories `(ctx: SidePanelBodyViewContext) => UiTreeNode` reading the controller from `ctx` (they already are pure `buildXxxPlayHierarchyTree` functions in core).
+- Panel trees become core `sidePanelBodies` factories `(ctx: SidePanelBodyViewContext) => UiTreeNode` reading the controller from `ctx` (they already are pure `buildXxxPlayDocumentTree` functions in core).
 - Tabs declared as `SideTabSpec[]` (iconId strings, bodyKey) on the app runtime in core; `PlaygroundView` already derives tabs via `sideTabsToPanelTabs`.
 - Delete all `PureSidePanelTabDefinition` / `CallbackTreePanelDefinition` subclass usage in apps (~60 lines x 20 apps). Tree drag controllers become a per-tab option on `SideTabSpec` routed through the existing `treeDragController` contribution field.
 

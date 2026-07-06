@@ -1,9 +1,9 @@
 ---
 name: Sketchpad Platform Refactor
-overview: Add a render-agnostic Component class hierarchy (Table/Puzzle2d/Puzzle3d/Puzzle5d/Cad/Panel) to @semio-tech/framework-platform-core, drive the React renderer generically from each Component's view-model, and rewrite compose/client/lib/sketchpad/js/index.ts as a pure-TypeScript Platform instance whose apps subclass those components (HomeTable, KitTable, KitDiagram, DesignScene/Diagram, TypeCad, Docs/Feedback panels) — deleting the legacy React-Router/GoldenLayout/XState/SketchpadStore shell.
+overview: Add a render-agnostic Component class document (Table/Puzzle2d/Puzzle3d/Puzzle5d/Cad/Panel) to @semio-tech/framework-platform-core, drive the React renderer generically from each Component's view-model, and rewrite compose/client/lib/sketchpad/js/index.ts as a pure-TypeScript Platform instance whose apps subclass those components (HomeTable, KitTable, KitDiagram, DesignScene/Diagram, TypeCad, Docs/Feedback panels) — deleting the legacy React-Router/GoldenLayout/XState/SketchpadStore shell.
 todos:
   - id: core-components
-    content: Add render-agnostic Component base class hierarchy (Table/Puzzle2d/Puzzle3d/Puzzle5d/Cad/Panel) + per-kind model contracts + ComponentRegistry on Platform in framework/product/platform/core/index.ts; extend inline vitest.
+    content: Add render-agnostic Component base class document (Table/Puzzle2d/Puzzle3d/Puzzle5d/Cad/Panel) + per-kind model contracts + ComponentRegistry on Platform in framework/product/platform/core/index.ts; extend inline vitest.
     status: completed
   - id: react-kind-renderers
     content: Add registerComponentKindRenderer + built-in generic per-kind renderers (driven by Component models) in framework/product/platform/renderer/react/index.tsx; wire surface resolution via Platform.getComponent; keep registerSurfaceBinding fallback; extend vitest.
@@ -44,7 +44,7 @@ Work under the reopened ticket `2026/05/30/SKETCHPAD-PLATFORM-REFACTOR` (and `FR
 - Sketchpad component subclasses read domain data via `@semio-tech/compose-react` non-hook store clients (`createKitStoreClient`, `executeComposeKitCommand`, scopes) — these are framework-agnostic subscriptions, satisfying the `compose/sketchpad → @semio-tech/compose-react` layering rule without React hooks.
 - The existing `registerSurfaceBinding(surfaceId, ReactComponent)` seam STAYS for playground/puzzle/cad play apps (out of scope). The new component-kind renderer layer is additive and is what sketchpad uses exclusively.
 
-## Phase 1 — Framework core: Component class hierarchy
+## Phase 1 — Framework core: Component class document
 File: [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts) (extend `🔖ComponentKind`/`🔖UiNode` regions; add `🔖Component` region).
 - Add `abstract class Component` with `componentKind: ComponentKind`, `surfaceId`, `controllerId`, an `ObservableCell`-backed model, `subscribe(listener)`, `getModel()`, and `abstract buildModel(): TModel`.
 - Add concrete base classes `Table`, `Puzzle2d`, `Puzzle3d`, `Puzzle5d`, `Cad`, `Panel`, each fixing `componentKind` and declaring its model contract:

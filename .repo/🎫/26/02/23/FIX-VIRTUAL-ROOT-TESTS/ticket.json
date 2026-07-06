@@ -2,7 +2,7 @@
   "title": "Fix Virtual Root Tests",
   "emoji": "🔧",
   "status": "closed",
-  "description": "Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalHierarchy",
+  "description": "Fix 4 failing tests after virtual root introduction: TestFileHeaderId, TestFixApplyAutofixes, TestFixtureBreachsByLanguage, TestGoalDocument",
   "summary": "Fixed fixture files with correct emoji-based IDs, fixed interactionKindEmoji missing edited case, fixed minute emoji in TestAllSpecIDExamples, reverted incorrect 🌱root in TestFileHeaderId. All core tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/669"

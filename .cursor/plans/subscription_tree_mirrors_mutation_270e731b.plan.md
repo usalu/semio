@@ -1,9 +1,9 @@
 ---
 name: Subscription tree mirrors mutation
-overview: Refactor `type Subscription` from a flat 95-field block into a scoped command tree that mirrors the new mutation hierarchy (`session → draft(id) → transaction(id) → kit → tag/concept/quality/type/design(id) → port/connector/piece(id)/pieces(ids)`). Every leaf is one event with a past-tense name and the existing concrete `Operation` result type as its return.
+overview: Refactor `type Subscription` from a flat 95-field block into a scoped command tree that mirrors the new mutation document (`session → draft(id) → transaction(id) → kit → tag/concept/quality/type/design(id) → port/connector/piece(id)/pieces(ids)`). Every leaf is one event with a past-tense name and the existing concrete `Operation` result type as its return.
 todos:
   - id: subscription_tree
-    content: Replace flat `type Subscription` with `Subscription { session }` + the SessionScopedSubscriptionInput / DraftScopedSubscriptionInput / TransactionScopedSubscriptionInput / KitScopedSubscriptionInput hierarchy.
+    content: Replace flat `type Subscription` with `Subscription { session }` + the SessionScopedSubscriptionInput / DraftScopedSubscriptionInput / TransactionScopedSubscriptionInput / KitScopedSubscriptionInput document.
     status: pending
   - id: scoped_subscriptions
     content: Add Tag/Concept/Quality/Type/Port/Connector/Design/Piece/Pieces ScopedSubscriptionInput types mirroring each scope's mutation leaves with past-tense names returning the existing concrete Operation result types.

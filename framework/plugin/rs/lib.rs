@@ -43,7 +43,7 @@ pub struct KeybindingSpec {
 pub struct AppBuilder {
     id: String,
     label: String,
-    hierarchy: Vec<String>,
+    document: Vec<String>,
     icon_id: Option<String>,
     controller_id: String,
     modes: Vec<ModeSpec>,
@@ -62,7 +62,7 @@ impl AppBuilder {
             controller_id: id.clone(),
             id,
             label: label.into(),
-            hierarchy: Vec::new(),
+            document: Vec::new(),
             icon_id: None,
             modes: Vec::new(),
             default_mode_id: None,
@@ -79,12 +79,12 @@ impl AppBuilder {
         self
     }
 
-    pub fn hierarchy<I, S>(mut self, hierarchy: I) -> Self
+    pub fn document<I, S>(mut self, document: I) -> Self
     where
         I: IntoIterator<Item = S>,
         S: Into<String>,
     {
-        self.hierarchy = hierarchy.into_iter().map(Into::into).collect();
+        self.document = document.into_iter().map(Into::into).collect();
         self
     }
 
@@ -177,8 +177,8 @@ impl AppBuilder {
 
     pub fn build_definition(self) -> AppDefinition {
         assert!(
-            !self.hierarchy.is_empty() && self.hierarchy.iter().all(|segment| !segment.trim().is_empty()),
-            "app hierarchy must contain non-empty segments"
+            !self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty()),
+            "app document must contain non-empty segments"
         );
         let default_mode_id = self
             .default_mode_id
@@ -186,7 +186,7 @@ impl AppBuilder {
         AppDefinition {
             id: self.id,
             label: self.label,
-            hierarchy: self.hierarchy,
+            document: self.document,
             icon_id: self.icon_id,
             controller_id: self.controller_id,
             modes: self
@@ -272,7 +272,7 @@ impl App {
             program_id: program_id.into(),
             app_id: self.definition.id.clone(),
             label: label.into(),
-            hierarchy: self.definition.hierarchy.clone(),
+            document: self.definition.document.clone(),
             yields: yields.into(),
         });
         self
@@ -292,6 +292,13 @@ pub trait PluginApp: Send {
         _document_json: &str,
         _view_state: &ViewState,
     ) -> std::collections::HashMap<String, semio_framework_core::layout::WindowEngagement> {
+        std::collections::HashMap::new()
+    }
+    fn window_measures(
+        &self,
+        _document_json: &str,
+        _view_state: &ViewState,
+    ) -> std::collections::HashMap<String, Vec<semio_framework_core::WindowMeasure>> {
         std::collections::HashMap::new()
     }
 }
@@ -1035,6 +1042,24 @@ pub fn plugin_window_engagements(
     })
 }
 
+pub fn plugin_window_measures(
+    instance_id: u32,
+    view_state_json: &str,
+) -> Result<std::collections::HashMap<String, Vec<semio_framework_core::WindowMeasure>>, String> {
+    let view_state: ViewState =
+        serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
+    INSTANCES.with(|instances| {
+        let list = instances.borrow();
+        let instance = list
+            .iter()
+            .find(|instance| instance.id == instance_id)
+            .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
+        Ok(instance
+            .app
+            .window_measures(&instance.document_json, &view_state))
+    })
+}
+
 fn apply_document_op(document_json: &str, op_json: &str) -> Result<String, String> {
     let mut document: serde_json::Value =
         serde_json::from_str(document_json).map_err(|error| error.to_string())?;
@@ -1083,7 +1108,7 @@ macro_rules! wasm_plugin_exports {
             use super::_PLUGIN_INIT;
             use semio_framework_plugin::plugin_runtime::{
                 plugin_create_app, plugin_destroy_app, plugin_handle_command, plugin_manifest, plugin_render,
-                plugin_tools, plugin_window_engagements,
+                plugin_tools, plugin_window_engagements, plugin_window_measures,
             };
             use wasm_bindgen::prelude::*;
 
@@ -1145,10 +1170,329 @@ macro_rules! wasm_plugin_exports {
                     .map_err(|error| JsValue::from_str(&error))?;
                 serde_json::to_string(&engagements).map_err(|error| JsValue::from_str(&error.to_string()))
             }
+
+            #[wasm_bindgen]
+            pub fn semio_plugin_window_measures(
+                instance_id: u32,
+                view_state_json: &str,
+            ) -> Result<String, JsValue> {
+                let measures = plugin_window_measures(instance_id, view_state_json)
+                    .map_err(|error| JsValue::from_str(&error))?;
+                serde_json::to_string(&measures).map_err(|error| JsValue::from_str(&error.to_string()))
+            }
         }
     };
 }
+
+#[macro_export]
+macro_rules! native_plugin_exports {
+    () => {
+        #[cfg(not(target_arch = "wasm32"))]
+        mod semio_native_exports {
+            use super::_PLUGIN_INIT;
+            use semio_framework_plugin::plugin_runtime::{
+                plugin_create_app, plugin_destroy_app, plugin_handle_command, plugin_manifest, plugin_render,
+                plugin_tools, plugin_window_engagements, plugin_window_measures,
+            };
+            use std::ffi::{c_char, CStr, CString};
+            use std::sync::LazyLock;
+
+            static START: LazyLock<()> = LazyLock::new(|| {
+                let _ = &*_PLUGIN_INIT;
+            });
+
+            fn to_c_string(value: String) -> *mut c_char {
+                CString::new(value)
+                    .map(|string| string.into_raw())
+                    .unwrap_or(std::ptr::null_mut())
+            }
+
+            unsafe fn read_c_str(ptr: *const c_char) -> Result<String, String> {
+                if ptr.is_null() {
+                    return Err("null c string".into());
+                }
+                CStr::from_ptr(ptr)
+                    .to_str()
+                    .map(|value| value.to_string())
+                    .map_err(|error| error.to_string())
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_manifest() -> *mut c_char {
+                let _ = &*START;
+                to_c_string(serde_json::to_string(&plugin_manifest()).unwrap_or_else(|_| "{}".into()))
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_create_app(app_id: *const c_char) -> u32 {
+                let _ = &*START;
+                let Ok(app_id) = (unsafe { read_c_str(app_id) }) else {
+                    return u32::MAX;
+                };
+                plugin_create_app(&app_id).unwrap_or(u32::MAX)
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_destroy_app(instance_id: u32) {
+                let _ = plugin_destroy_app(instance_id);
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_handle_command(
+                instance_id: u32,
+                command_json: *const c_char,
+                view_state_json: *const c_char,
+            ) -> *mut c_char {
+                let Ok(command_json) = (unsafe { read_c_str(command_json) }) else {
+                    return std::ptr::null_mut();
+                };
+                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
+                    return std::ptr::null_mut();
+                };
+                let ops = plugin_handle_command(instance_id, &command_json, &view_state_json)
+                    .unwrap_or_default();
+                to_c_string(serde_json::to_string(&ops).unwrap_or_else(|_| "[]".into()))
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_render(
+                instance_id: u32,
+                body_key: *const c_char,
+                view_state_json: *const c_char,
+            ) -> *mut c_char {
+                let Ok(body_key) = (unsafe { read_c_str(body_key) }) else {
+                    return std::ptr::null_mut();
+                };
+                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
+                    return std::ptr::null_mut();
+                };
+                let node = plugin_render(instance_id, &body_key, &view_state_json).unwrap_or_default();
+                to_c_string(serde_json::to_string(&node).unwrap_or_else(|_| "{}".into()))
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_tools(instance_id: u32, view_state_json: *const c_char) -> *mut c_char {
+                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
+                    return std::ptr::null_mut();
+                };
+                let tools = plugin_tools(instance_id, &view_state_json).unwrap_or_default();
+                to_c_string(serde_json::to_string(&tools).unwrap_or_else(|_| "[]".into()))
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_window_engagements(
+                instance_id: u32,
+                view_state_json: *const c_char,
+            ) -> *mut c_char {
+                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
+                    return std::ptr::null_mut();
+                };
+                let engagements = plugin_window_engagements(instance_id, &view_state_json).unwrap_or_default();
+                to_c_string(serde_json::to_string(&engagements).unwrap_or_else(|_| "{}".into()))
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_window_measures(
+                instance_id: u32,
+                view_state_json: *const c_char,
+            ) -> *mut c_char {
+                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
+                    return std::ptr::null_mut();
+                };
+                let measures = plugin_window_measures(instance_id, &view_state_json).unwrap_or_default();
+                to_c_string(serde_json::to_string(&measures).unwrap_or_else(|_| "{}".into()))
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_free_string(ptr: *mut c_char) {
+                if ptr.is_null() {
+                    return;
+                }
+                unsafe {
+                    drop(CString::from_raw(ptr));
+                }
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! plugin_exports {
+    () => {
+        semio_framework_plugin::wasm_plugin_exports!();
+        semio_framework_plugin::native_plugin_exports!();
+    };
+}
 // #endregion plugin_runtime
+}
+
+pub mod native_host {
+// #region native_host
+//! 🔌 Native dylib plugin loader with hot-swap support.
+
+#[cfg(not(target_arch = "wasm32"))]
+mod native {
+    use libloading::{Library, Symbol};
+    use semio_framework_core::{PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement, WindowMeasure};
+    use std::ffi::{c_char, CStr, CString};
+    use std::path::{Path, PathBuf};
+
+    type ManifestFn = unsafe extern "C" fn() -> *mut c_char;
+    type CreateAppFn = unsafe extern "C" fn(*const c_char) -> u32;
+    type DestroyAppFn = unsafe extern "C" fn(u32);
+    type CommandFn = unsafe extern "C" fn(u32, *const c_char, *const c_char) -> *mut c_char;
+    type RenderFn = unsafe extern "C" fn(u32, *const c_char, *const c_char) -> *mut c_char;
+    type ToolsFn = unsafe extern "C" fn(u32, *const c_char) -> *mut c_char;
+    type EngagementsFn = unsafe extern "C" fn(u32, *const c_char) -> *mut c_char;
+    type MeasuresFn = unsafe extern "C" fn(u32, *const c_char) -> *mut c_char;
+    type FreeStringFn = unsafe extern "C" fn(*mut c_char);
+
+    pub struct NativePluginLibrary {
+        library: Library,
+        pub path: PathBuf,
+    }
+
+    impl NativePluginLibrary {
+        pub fn load(path: impl AsRef<Path>) -> Result<Self, String> {
+            let path = path.as_ref().to_path_buf();
+            let library = unsafe { Library::new(&path).map_err(|error| error.to_string())? };
+            Ok(Self { library, path })
+        }
+
+        pub fn manifest(&self) -> Result<PluginManifest, String> {
+            let json = self.call_string(b"semio_plugin_manifest", |symbol| unsafe { symbol() })?;
+            serde_json::from_str(&json).map_err(|error| error.to_string())
+        }
+
+        pub fn create_app(&self, app_id: &str) -> Result<u32, String> {
+            let c_app = CString::new(app_id).map_err(|error| error.to_string())?;
+            let create: Symbol<CreateAppFn> = unsafe {
+                self.library
+                    .get(b"semio_plugin_create_app")
+                    .map_err(|error| error.to_string())?
+            };
+            let id = unsafe { create(c_app.as_ptr()) };
+            if id == u32::MAX {
+                return Err("create_app failed".into());
+            }
+            Ok(id)
+        }
+
+        pub fn destroy_app(&self, instance_id: u32) {
+            if let Ok(destroy) = unsafe { self.library.get::<DestroyAppFn>(b"semio_plugin_destroy_app") } {
+                unsafe { destroy(instance_id) };
+            }
+        }
+
+        pub fn handle_command(
+            &self,
+            instance_id: u32,
+            command_json: &str,
+            view_state: &ViewState,
+        ) -> Result<Vec<String>, String> {
+            let command = CString::new(command_json).map_err(|error| error.to_string())?;
+            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
+                .map_err(|error| error.to_string())?;
+            let handle: Symbol<CommandFn> = unsafe {
+                self.library
+                    .get(b"semio_plugin_handle_command")
+                    .map_err(|error| error.to_string())?
+            };
+            let json = self.call_string_ptr(unsafe {
+                handle(instance_id, command.as_ptr(), view.as_ptr())
+            })?;
+            serde_json::from_str(&json).map_err(|error| error.to_string())
+        }
+
+        pub fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewState) -> Result<UiNode, String> {
+            let body = CString::new(body_key).map_err(|error| error.to_string())?;
+            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
+                .map_err(|error| error.to_string())?;
+            let render: Symbol<RenderFn> = unsafe {
+                self.library
+                    .get(b"semio_plugin_render")
+                    .map_err(|error| error.to_string())?
+            };
+            let json = self.call_string_ptr(unsafe {
+                render(instance_id, body.as_ptr(), view.as_ptr())
+            })?;
+            serde_json::from_str(&json).map_err(|error| error.to_string())
+        }
+
+        pub fn tools(&self, instance_id: u32, view_state: &ViewState) -> Result<Vec<ToolNode>, String> {
+            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
+                .map_err(|error| error.to_string())?;
+            let tools: Symbol<ToolsFn> = unsafe {
+                self.library
+                    .get(b"semio_plugin_tools")
+                    .map_err(|error| error.to_string())?
+            };
+            let json = self.call_string_ptr(unsafe { tools(instance_id, view.as_ptr()) })?;
+            serde_json::from_str(&json).map_err(|error| error.to_string())
+        }
+
+        pub fn window_engagements(
+            &self,
+            instance_id: u32,
+            view_state: &ViewState,
+        ) -> Result<std::collections::HashMap<String, WindowEngagement>, String> {
+            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
+                .map_err(|error| error.to_string())?;
+            let engagements: Symbol<EngagementsFn> = unsafe {
+                self.library
+                    .get(b"semio_plugin_window_engagements")
+                    .map_err(|error| error.to_string())?
+            };
+            let json = self.call_string_ptr(unsafe { engagements(instance_id, view.as_ptr()) })?;
+            serde_json::from_str(&json).map_err(|error| error.to_string())
+        }
+
+        pub fn window_measures(
+            &self,
+            instance_id: u32,
+            view_state: &ViewState,
+        ) -> Result<std::collections::HashMap<String, Vec<WindowMeasure>>, String> {
+            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
+                .map_err(|error| error.to_string())?;
+            let measures: Symbol<MeasuresFn> = unsafe {
+                self.library
+                    .get(b"semio_plugin_window_measures")
+                    .map_err(|error| error.to_string())?
+            };
+            let json = self.call_string_ptr(unsafe { measures(instance_id, view.as_ptr()) })?;
+            serde_json::from_str(&json).map_err(|error| error.to_string())
+        }
+
+        fn call_string(
+            &self,
+            symbol_name: &[u8],
+            invoke: impl FnOnce(Symbol<ManifestFn>) -> *mut c_char,
+        ) -> Result<String, String> {
+            let symbol: Symbol<ManifestFn> = unsafe {
+                self.library.get(symbol_name).map_err(|error| error.to_string())?
+            };
+            self.call_string_ptr(unsafe { invoke(symbol) })
+        }
+
+        fn call_string_ptr(&self, ptr: *mut c_char) -> Result<String, String> {
+            if ptr.is_null() {
+                return Err("native plugin returned null".into());
+            }
+            let value = unsafe { CStr::from_ptr(ptr) }
+                .to_str()
+                .map_err(|error| error.to_string())?
+                .to_string();
+            if let Ok(free) = unsafe { self.library.get::<FreeStringFn>(b"semio_plugin_free_string") } {
+                unsafe { free(ptr) };
+            }
+            Ok(value)
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub use native::NativePluginLibrary;
+// #endregion native_host
 }
 
 pub mod scaffold {
@@ -1160,7 +1504,7 @@ use crate::{
     build_text_editor_scene, build_world_3d_scene, default_world3d_selection, ui_stack_vertical,
     ui_text, world3d_default_meshes_json, App, Canvas2dScene, NodeGraphScene, PluginApp,
     RasterScene, TableScene, TextEditorScene, UiNode, ViewState, World3dScene,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::Value;
@@ -1179,7 +1523,7 @@ pub enum SceneKind {
 pub struct StandardApp {
     pub app_id: &'static str,
     pub label: &'static str,
-    pub hierarchy: &'static [&'static str],
+    pub document: &'static [&'static str],
     pub program_id: Option<&'static str>,
     pub yields: Option<&'static str>,
     pub surface_id: &'static str,
@@ -1192,8 +1536,8 @@ pub struct StandardPluginApp {
     pub spec: StandardApp,
 }
 
-fn hierarchy_body_key(body_key: &str) -> String {
-    body_key.replace(".composite", ".hierarchy")
+fn document_body_key(body_key: &str) -> String {
+    body_key.replace(".composite", ".document")
 }
 
 fn properties_body_key(body_key: &str) -> String {
@@ -1355,10 +1699,10 @@ impl PluginApp for StandardPluginApp {
     }
 
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
-        let hierarchy_key = hierarchy_body_key(self.spec.body_key);
+        let document_key = document_body_key(self.spec.body_key);
         let properties_key = properties_body_key(self.spec.body_key);
-        if body_key == hierarchy_key {
-            return render_hierarchy_panel(self.spec.label, document_json);
+        if body_key == document_key {
+            return render_document_panel(self.spec.label, document_json);
         }
         if body_key == properties_key {
             return render_properties_panel(self.spec.label, document_json);
@@ -1459,7 +1803,7 @@ impl PluginApp for StandardPluginApp {
     }
 }
 
-fn render_hierarchy_panel(label: &str, document_json: &str) -> UiNode {
+fn render_document_panel(label: &str, document_json: &str) -> UiNode {
     let document: Value =
         serde_json::from_str(document_json).unwrap_or(Value::String(document_json.into()));
     let schema = document
@@ -1494,20 +1838,20 @@ fn render_properties_panel(label: &str, document_json: &str) -> UiNode {
 }
 
 pub fn standard_app(spec: StandardApp) -> App {
-    let hierarchy_key = hierarchy_body_key(spec.body_key);
+    let document_key = document_body_key(spec.body_key);
     let properties_key = properties_body_key(spec.body_key);
     let app = App::from_builder(
         App::builder(spec.app_id, spec.label)
-            .hierarchy(spec.hierarchy.iter().copied())
+            .document(spec.document.iter().copied())
             .icon_id(spec.app_id)
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind("main", "Main", spec.body_key)
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                &hierarchy_key,
+                &document_key,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -1541,7 +1885,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-canvas",
             label: "Canvas",
-            hierarchy: &["semio", "test", "canvas"],
+            document: &["semio", "test", "canvas"],
             program_id: None,
             yields: None,
             surface_id: "test.canvas",
@@ -1556,7 +1900,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-graph",
             label: "Graph",
-            hierarchy: &["semio", "test", "graph"],
+            document: &["semio", "test", "graph"],
             program_id: None,
             yields: None,
             surface_id: "test.graph",
@@ -1571,7 +1915,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-world",
             label: "World",
-            hierarchy: &["semio", "test", "world"],
+            document: &["semio", "test", "world"],
             program_id: None,
             yields: None,
             surface_id: "test.world",
@@ -1586,7 +1930,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-text",
             label: "Text",
-            hierarchy: &["semio", "test", "text"],
+            document: &["semio", "test", "text"],
             program_id: None,
             yields: None,
             surface_id: "test.text",
@@ -1601,7 +1945,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-table",
             label: "Table",
-            hierarchy: &["semio", "test", "table"],
+            document: &["semio", "test", "table"],
             program_id: None,
             yields: None,
             surface_id: "test.table",
@@ -1616,7 +1960,7 @@ mod tests {
         assert_standard_app_renders(StandardApp {
             app_id: "test-raster",
             label: "Raster",
-            hierarchy: &["semio", "test", "raster"],
+            document: &["semio", "test", "raster"],
             program_id: None,
             yields: None,
             surface_id: "test.raster",

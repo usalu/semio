@@ -7,7 +7,7 @@ import { RasterHost } from "./components/raster-host.tsx";
 import { TableHost } from "./components/table-host.tsx";
 import { TextEditorHost } from "./components/text-editor-host.tsx";
 import { World3dHost } from "./components/world-3d-host.tsx";
-import { appHierarchyLabel, appWindowHierarchyLabel } from "./os-shell.tsx";
+import { appDocumentLabel, appWindowDocumentLabel } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
 import type { UiNode } from "./os-shell.tsx";
 
@@ -22,20 +22,20 @@ describe("framework plugin runtime", () => {
 });
 
 describe("framework renderer types", () => {
-	it("formats canonical app hierarchy for chrome and window tabs", () => {
+	it("formats canonical app document for chrome and window tabs", () => {
 		const app = {
 			id: "puzzle3d-play",
 			label: "Puzzle 3D",
-			hierarchy: ["semio", "puzzle", "3d"],
+			document: ["semio", "puzzle", "3d"],
 			controllerId: "puzzle3d-play",
 			modes: [],
 			windowKinds: [],
 			panelTabs: [],
 			keybindings: [],
 		};
-		expect(appHierarchyLabel(app.hierarchy)).toBe("semio · puzzle · 3d");
-		expect(appWindowHierarchyLabel(app, "Puzzle 3D")).toBe("semio · puzzle · 3d");
-		expect(appWindowHierarchyLabel(app, "Perspective")).toBe("semio · puzzle · 3d · perspective");
+		expect(appDocumentLabel(app.document)).toBe("semio · puzzle · 3d");
+		expect(appWindowDocumentLabel(app, "Puzzle 3D")).toBe("semio · puzzle · 3d");
+		expect(appWindowDocumentLabel(app, "Perspective")).toBe("semio · puzzle · 3d · perspective");
 	});
 
 	it("accepts component scene nodes", () => {

@@ -6,7 +6,7 @@ use semio_framework_plugin::{
     build_table_scene, build_text_editor_scene, create_stack_layout, ui_declarative_sections_to_tree,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, CommandDescriptor, PluginApp, PluginBundle,
     TableScene, TextEditorScene, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ const IMPERATIVE_PLAY_SURFACE_MAIN: &str = "imperative.play.main";
 const IMPERATIVE_PLAY_SURFACE_SCRIPT: &str = "imperative.play.script";
 const IMPERATIVE_PLAY_BODY_MAIN: &str = "imperative.play.main";
 const IMPERATIVE_PLAY_BODY_SCRIPT: &str = "imperative.play.script";
-const IMPERATIVE_PLAY_BODY_HIERARCHY: &str = "imperative.play.hierarchy";
+const IMPERATIVE_PLAY_BODY_DOCUMENT: &str = "imperative.play.document";
 const IMPERATIVE_PLAY_BODY_CATALOGUE: &str = "imperative.play.catalogue";
 const IMPERATIVE_PLAY_BODY_INSPECTOR: &str = "imperative.play.inspection";
 const IMPERATIVE_PLAY_WINDOW_MAIN: &str = "imperative-main";
@@ -164,7 +164,7 @@ fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, descr
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖Panels
-fn build_hierarchy_tree(document: &ImperativeDocument, selected: &[String]) -> UiNode {
+fn build_document_tree(document: &ImperativeDocument, selected: &[String]) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = document
         .path
         .steps
@@ -172,7 +172,7 @@ fn build_hierarchy_tree(document: &ImperativeDocument, selected: &[String]) -> U
         .enumerate()
         .map(|(index, step)| {
             tree_item_with_command(
-                format!("imperative-play-hierarchy.step.{}", step.id),
+                format!("imperative-play-document.step.{}", step.id),
                 format!("{}. {}", index + 1, step.kind),
                 Some(step.id.clone()),
                 imperative_cmd("setSelection", Some(json!({ "ids": [step.id.clone()] }))),
@@ -181,16 +181,16 @@ fn build_hierarchy_tree(document: &ImperativeDocument, selected: &[String]) -> U
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
-            id: "imperative-play-hierarchy.steps".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            id: "imperative-play-document.steps".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: if step_items.is_empty() {
-                vec![tree_item("imperative-play-hierarchy.steps.empty", "(none)")]
+                vec![tree_item("imperative-play-document.steps.empty", "(none)")]
             } else {
                 step_items
             },
         }],
-        selected_ids: Some(selected.iter().map(|id| format!("imperative-play-hierarchy.step.{id}")).collect()),
+        selected_ids: Some(selected.iter().map(|id| format!("imperative-play-document.step.{id}")).collect()),
         highlighted_ids: None,
         selection_change: None,
     })
@@ -233,7 +233,7 @@ fn build_inspector_tree(document: &ImperativeDocument, selected: &[String]) -> U
             id: "imperative-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Select a step in the hierarchy.")],
+            children: vec![ui_text("Select a step in the document.")],
         }]);
     }
     let steps: Vec<&Step> = selected
@@ -458,7 +458,7 @@ impl PluginApp for ImperativePlayApp {
         match body_key {
             IMPERATIVE_PLAY_BODY_MAIN => render_main_table(&envelope),
             IMPERATIVE_PLAY_BODY_SCRIPT => render_script(&envelope),
-            IMPERATIVE_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope.document, &envelope.runtime.selected_step_ids),
+            IMPERATIVE_PLAY_BODY_DOCUMENT => build_document_tree(&envelope.document, &envelope.runtime.selected_step_ids),
             IMPERATIVE_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
             IMPERATIVE_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope.document, &envelope.runtime.selected_step_ids),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -470,7 +470,7 @@ impl PluginApp for ImperativePlayApp {
 //#region 🔖Manifest
 fn create_imperative_app() -> App {
     App::from_builder(
-        App::builder(IMPERATIVE_PLAY_APP_ID, "Imperative").hierarchy(["semio", "imperative"])
+        App::builder(IMPERATIVE_PLAY_APP_ID, "Imperative").document(["semio", "imperative"])
             .icon_id("imperative")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -481,10 +481,10 @@ fn create_imperative_app() -> App {
                 Some(&["Imperative".into(), "Script".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                IMPERATIVE_PLAY_BODY_HIERARCHY,
+                IMPERATIVE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -511,7 +511,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 #[cfg(test)]

@@ -3,7 +3,7 @@
   "emoji": "🔨",
   "status": "closed",
   "description": "Port the TypeScript exportDesignModel function to Python in compose.py. Support GLB, GLTF, OBJ, STL, PLY, OFF formats.",
-  "summary": "Ported export_design_model from TypeScript to Python in compose.py. Added Kit Model Export region with: EXPORT_MODEL_FORMATS dict, GLB parse/build helpers, blob decoder, plane-to-matrix conversion, model matching by tags, GLB model merging, box placeholder geometry, and format-specific exporters for GLB, GLTF, OBJ, STL, PLY, OFF. The main export_design_model function builds a connection graph via BFS, computes world planes for all pieces using computeChildPlane, creates glTF scene hierarchy with mesh instances per type and transforms per piece, then serializes to the requested format.",
+  "summary": "Ported export_design_model from TypeScript to Python in compose.py. Added Kit Model Export region with: EXPORT_MODEL_FORMATS dict, GLB parse/build helpers, blob decoder, plane-to-matrix conversion, model matching by tags, GLB model merging, box placeholder geometry, and format-specific exporters for GLB, GLTF, OBJ, STL, PLY, OFF. The main export_design_model function builds a connection graph via BFS, computes world planes for all pieces using computeChildPlane, creates glTF scene document with mesh instances per type and transforms per piece, then serializes to the requested format.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/883"
   },

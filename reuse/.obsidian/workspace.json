@@ -122,7 +122,7 @@
               "type": "tag",
               "state": {
                 "sortOrder": "frequency",
-                "useHierarchy": true,
+                "useDocument": true,
                 "showSearch": false,
                 "searchQuery": ""
               },

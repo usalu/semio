@@ -9,7 +9,7 @@ Generic tree-path hover highlight for the compose/sketchpad tree system. When an
 ### `elements/ui/index.tsx`
 
 - **IndentationLines**: Added `data-slot="tree-guide"` to wrapper div and `data-tree-guide-line` attribute to the actual line div for CSS targeting. Added `transition-[width,background-color] duration-150` for smooth animation.
-- **TreeHierarchyGutter**: Added `transition-[height,background-color] duration-150` to elbow connector for smooth animation.
+- **TreeDocumentGutter**: Added `transition-[height,background-color] duration-150` to elbow connector for smooth animation.
 - **TreeHoverPath region**:
   - Extracted `rowForBranch()` helper to derive the row element that owns a branch container. Handles all DOM shapes: `tree-item-row`/`control-tree-row` as previous siblings, `tree-section-row` behind `collapsible-content`, `tree-property-item` as parent.
   - Added `resolveHoverRow()` — two-pass resolution: first tries `closest(treeHoverPathRowSelector)` for direct row matches (tree-item-row, tree-section-row, tree-property-item, control-tree-row, tree-content); when no row wrapper exists (pass-through TreeRow, raw controls inside branch containers), falls back to `closest(treeHoverPathBranchSelector)` and derives the owner row via `rowForBranch()`.

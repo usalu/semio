@@ -9,7 +9,7 @@ import {
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
 } from "../../../script.ts";
-import { BundleScript, ScriptRouter, canReuseDevPort, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort } from "./index.ts";
+import { BundleScript, ScriptRouter, canReuseDevPort, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort, wgpuDevPlayUrl } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import {
   dependencyBoundaryBreachesForBundleDir,
@@ -84,6 +84,15 @@ describe("resolveDevPort", () => {
 describe("devServerUrl", () => {
   test("maps 0.0.0.0 to loopback", () => {
     expect(devServerUrl("0.0.0.0", 6019)).toBe("http://127.0.0.1:6019/");
+  });
+});
+
+describe("wgpuDevPlayUrl", () => {
+  test("builds root and legacy play urls", () => {
+    expect(wgpuDevPlayUrl("127.0.0.1", 6178, "lowpoly")).toBe("http://127.0.0.1:6178/?plugin=lowpoly");
+    expect(wgpuDevPlayUrl("127.0.0.1", 6178, "lowpoly", "/renderer-modules/wgpu/")).toBe(
+      "http://127.0.0.1:6178/renderer-modules/wgpu/?plugin=lowpoly",
+    );
   });
 });
 

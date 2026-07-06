@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🏷️ One-off: nakagin 3d fixture object kinds + catalog from kit types and 2d hierarchy names. */
+/** @emoji 🏷️ One-off: nakagin 3d fixture object kinds + catalog from kit types and 2d document names. */
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 

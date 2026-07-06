@@ -10,7 +10,7 @@ use semio_framework_plugin::{
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp,
     PluginBundle, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
     WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -930,7 +930,7 @@ fn patch_inspector_nodes(fixture: &mut Value, ids: &[String], field: &str, value
 }
 //#endregion 🔖Canvas
 
-//#region 🔖HierarchyPanel
+//#region 🔖DocumentPanel
 fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
@@ -976,7 +976,7 @@ fn edge_label(edge: &Value, fixture: &Value) -> String {
     format!("{source_label} → {target_label}")
 }
 
-fn hierarchy_tree_selected_ids(fixture: &Value, selected: &[String]) -> Vec<String> {
+fn document_tree_selected_ids(fixture: &Value, selected: &[String]) -> Vec<String> {
     selected
         .iter()
         .filter_map(|id| {
@@ -984,27 +984,27 @@ fn hierarchy_tree_selected_ids(fixture: &Value, selected: &[String]) -> Vec<Stri
                 .iter()
                 .any(|node| node.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
             {
-                return Some(format!("puzzle2d-play-hierarchy.node.{id}"));
+                return Some(format!("puzzle2d-play-document.node.{id}"));
             }
             if fixture_edges(fixture)
                 .iter()
                 .any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
             {
-                return Some(format!("puzzle2d-play-hierarchy.edge.{id}"));
+                return Some(format!("puzzle2d-play-document.edge.{id}"));
             }
             None
         })
         .collect()
 }
 
-fn render_hierarchy_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
+fn render_document_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
     let fixture = &envelope.fixture;
     let node_items: Vec<UiTreeItemNode> = fixture_nodes(fixture)
         .iter()
         .filter_map(|node| {
             let id = node.get("id")?.as_str()?;
             Some(tree_item_with_command(
-                format!("puzzle2d-play-hierarchy.node.{id}"),
+                format!("puzzle2d-play-document.node.{id}"),
                 node_label(node),
                 node.get("nodeKind").and_then(|value| value.as_str()).map(str::to_string),
                 puzzle2d_cmd("setSelection", Some(json!({ "ids": [id] }))),
@@ -1016,7 +1016,7 @@ fn render_hierarchy_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
         .filter_map(|edge| {
             let id = edge.get("id")?.as_str()?;
             Some(tree_item_with_command(
-                format!("puzzle2d-play-hierarchy.edge.{id}"),
+                format!("puzzle2d-play-document.edge.{id}"),
                 edge_label(edge, fixture),
                 edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string),
                 puzzle2d_cmd("setSelection", Some(json!({ "ids": [id] }))),
@@ -1026,12 +1026,12 @@ fn render_hierarchy_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "puzzle2d-play-hierarchy.nodes".into(),
+                id: "puzzle2d-play-document.nodes".into(),
                 label: Some("Nodes".into()),
                 default_open: Some(true),
                 items: if node_items.is_empty() {
                     vec![UiTreeItemNode {
-                        id: "puzzle2d-play-hierarchy.nodes.empty".into(),
+                        id: "puzzle2d-play-document.nodes.empty".into(),
                         label: "(none)".into(),
                         description: None,
                         icon_id: None,
@@ -1052,12 +1052,12 @@ fn render_hierarchy_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
                 },
             },
             UiTreeSectionNode {
-                id: "puzzle2d-play-hierarchy.edges".into(),
+                id: "puzzle2d-play-document.edges".into(),
                 label: Some("Edges".into()),
                 default_open: Some(false),
                 items: if edge_items.is_empty() {
                     vec![UiTreeItemNode {
-                        id: "puzzle2d-play-hierarchy.edges.empty".into(),
+                        id: "puzzle2d-play-document.edges.empty".into(),
                         label: "(none)".into(),
                         description: None,
                         icon_id: None,
@@ -1078,12 +1078,12 @@ fn render_hierarchy_panel(envelope: &Puzzle2dPlayEnvelope) -> UiNode {
                 },
             },
         ],
-        selected_ids: Some(hierarchy_tree_selected_ids(fixture, &envelope.runtime.selected_ids)),
+        selected_ids: Some(document_tree_selected_ids(fixture, &envelope.runtime.selected_ids)),
         highlighted_ids: None,
         selection_change: Some(puzzle2d_cmd("setSelection", None)),
     })
 }
-//#endregion 🔖HierarchyPanel
+//#endregion 🔖DocumentPanel
 
 //#region 🔖CataloguePanel
 fn catalog_kind_label(entry: &Value) -> String {
@@ -1395,7 +1395,7 @@ impl PluginApp for Puzzle2dPlayApp {
                 }
                 Vec::new()
             }
-            "setSelection" | "hierarchySelect" => {
+            "setSelection" | "documentSelect" => {
                 envelope.runtime.selected_ids = selection_ids(args);
                 self.host.set_selection_ids(&envelope.runtime.selected_ids);
                 vec![set_document_op(&envelope)]
@@ -1855,7 +1855,7 @@ impl PluginApp for Puzzle2dPlayApp {
             PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&envelope.fixture, &envelope.runtime.selected_ids, PUZZLE2D_PANE_OVERVIEW),
             PUZZLE2D_PLAY_BODY_DETAIL => render_canvas(&envelope.fixture, &envelope.runtime.selected_ids, PUZZLE2D_PANE_DETAIL),
             PUZZLE2D_PLAY_BODY_SELECTION => render_canvas(&envelope.fixture, &envelope.runtime.selected_ids, PUZZLE2D_PANE_SELECTION),
-            PUZZLE2D_PLAY_BODY_LAYERS => render_hierarchy_panel(&envelope),
+            PUZZLE2D_PLAY_BODY_LAYERS => render_document_panel(&envelope),
             PUZZLE2D_PLAY_BODY_CATALOGUE => render_catalogue_panel(&envelope.fixture),
             PUZZLE2D_PLAY_BODY_PROPERTIES => render_properties_panel(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -1869,6 +1869,14 @@ impl PluginApp for Puzzle2dPlayApp {
             .map(|pane| (pane.to_string(), puzzle2d_engagement(&envelope, &self.host, pane)))
             .collect()
     }
+
+    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let envelope = parse_envelope(document_json);
+        PUZZLE2D_PANES
+            .iter()
+            .map(|pane| (pane.to_string(), puzzle2d_window_measures(pane, &envelope)))
+            .collect()
+    }
 }
 //#endregion 🔖Puzzle2dPlayApp
 
@@ -1878,7 +1886,7 @@ fn create_puzzle2d_app() -> App {
     let envelope = default_envelope();
     sync_host_from_envelope(&mut host, &envelope);
     let mut app = App::from_builder(
-        App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D").hierarchy(["semio", "puzzle", "2d"])
+        App::builder(PUZZLE2D_PLAY_APP_ID, "Puzzle 2D").document(["semio", "puzzle", "2d"])
             .icon_id("puzzle2d")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1900,7 +1908,7 @@ fn create_puzzle2d_app() -> App {
                 PUZZLE2D_PLAY_BODY_SELECTION,
                 puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION),
             )
-            .panel_tab("framework.panel.hierarchy", FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, "workbench", PUZZLE2D_PLAY_BODY_LAYERS)
+            .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, "workbench", PUZZLE2D_PLAY_BODY_LAYERS)
             .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, "workbench", PUZZLE2D_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, "details", PUZZLE2D_PLAY_BODY_PROPERTIES)
             .default_layout(create_default_layout(
@@ -1952,7 +1960,7 @@ fn puzzle2d_bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(puzzle2d_bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests
@@ -2082,7 +2090,7 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_panel_lists_nodes_section() {
+    fn document_panel_lists_nodes_section() {
         let app = Puzzle2dPlayApp::default();
         let envelope = Puzzle2dPlayEnvelope {
             fixture: serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap(),
@@ -2091,7 +2099,7 @@ mod tests {
         let document = serde_json::to_string(&envelope).unwrap();
         let node = app.render(PUZZLE2D_PLAY_BODY_LAYERS, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("puzzle2d-play-hierarchy.nodes"));
+        assert!(json.contains("puzzle2d-play-document.nodes"));
         assert!(json.contains("seed-left-001"));
     }
 

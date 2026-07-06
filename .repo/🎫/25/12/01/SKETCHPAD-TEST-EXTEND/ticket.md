@@ -33,7 +33,7 @@ Task: Extend/fix tests for Type app and Design app to verify:
 ### Updated Type test
 
 - Navigate to Kit app, switch to types view
-- Attempt to expand Tambour type hierarchy to find First Storey
+- Attempt to expand Tambour type document to find First Storey
 - Falls back to Capsule type if First Storey not visible (since Capsule has models)
 - Verifies canvas is visible (3D scene rendering)
 - Checks for "No models" console warnings

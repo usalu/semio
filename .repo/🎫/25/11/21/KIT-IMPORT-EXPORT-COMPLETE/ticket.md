@@ -36,8 +36,8 @@ Complete GUID-based schema (22 tables) embedded in `kitToSqlite()`:
 - `quality`, `benchmark` - Quality system
 - `port`, `port_compatibility` - Connector compatibility
 - `folder`, `file`, `author` - Assets and attribution
-- `type`, `model`, `model_tag`, `connector`, `prop` - Type hierarchy
-- `design`, `layer`, `piece`, `piece_prop`, `group`, `group_piece`, `connection`, `stat` - Design hierarchy
+- `type`, `model`, `model_tag`, `connector`, `prop` - Type document
+- `design`, `layer`, `piece`, `piece_prop`, `group`, `group_piece`, `connection`, `stat` - Design document
 - `concept`, `type_concept`, `design_concept`, `attribute` - Metadata
 
 ### Key Fixes

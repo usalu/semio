@@ -34,7 +34,7 @@ The Kit Import Playwright test was failing due to multiple issues:
 
 ## `js/compose/sketchpad/Home.tsx`
 
-- Updated `handleFileInputChange` and `handleDrop` to properly create folder hierarchy from file paths
+- Updated `handleFileInputChange` and `handleDrop` to properly create folder document from file paths
 - Added `Folder` import from compose
 - Files now correctly reference their parent folder via `folder: { guid }` property
 

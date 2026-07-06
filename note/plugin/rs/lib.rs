@@ -5,8 +5,8 @@ use semio_framework_plugin::{
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
     Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
 };
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ const NOTE_PLAY_SURFACE_COMPOSITE: &str = "note.play.composite";
 const NOTE_PLAY_SURFACE_NAVIGATOR: &str = "note.play.navigator";
 const NOTE_PLAY_BODY_COMPOSITE: &str = "note.play.composite";
 const NOTE_PLAY_BODY_NAVIGATOR: &str = "note.play.navigator";
-const NOTE_PLAY_BODY_HIERARCHY: &str = "note.play.hierarchy";
+const NOTE_PLAY_BODY_DOCUMENT: &str = "note.play.document";
 const NOTE_PLAY_BODY_CATALOGUE: &str = "note.play.catalogue";
 const NOTE_PLAY_BODY_PROPERTIES: &str = "note.play.properties";
 const NOTE_PLAY_WINDOW_COMPOSITE: &str = "note-composite";
@@ -774,7 +774,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
     }
 }
 
-fn render_hierarchy_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_state: &ViewState) -> UiNode {
+fn render_document_panel(document: &NoteDocument, play: &NotePlayEnvelope, view_state: &ViewState) -> UiNode {
     let toolbar = vec![
         ("text", "Add Text", "type"),
         ("table", "Add Table", "table"),
@@ -833,7 +833,7 @@ fn render_hierarchy_panel(document: &NoteDocument, play: &NotePlayEnvelope, view
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "note-play-blocks".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: [toolbar, block_items].concat(),
         }],
@@ -1321,7 +1321,7 @@ impl PluginApp for NoteApp {
         match body_key {
             NOTE_PLAY_BODY_COMPOSITE => render_canvas_scene(&play.document, NOTE_PLAY_SURFACE_COMPOSITE),
             NOTE_PLAY_BODY_NAVIGATOR => render_canvas_scene(&play.document, NOTE_PLAY_SURFACE_NAVIGATOR),
-            NOTE_PLAY_BODY_HIERARCHY => render_hierarchy_panel(&play.document, &play, view_state),
+            NOTE_PLAY_BODY_DOCUMENT => render_document_panel(&play.document, &play, view_state),
             NOTE_PLAY_BODY_CATALOGUE => render_catalogue_panel(),
             NOTE_PLAY_BODY_PROPERTIES => render_properties_panel(&play.document, &play, view_state),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -1443,7 +1443,7 @@ fn register_note_exports() {
 //#region 🔖Manifest
 fn create_note_app() -> App {
     App::from_builder(
-        App::builder(NOTE_PLAY_APP_ID, "Note").hierarchy(["semio", "note"])
+        App::builder(NOTE_PLAY_APP_ID, "Note").document(["semio", "note"])
             .icon_id("note")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1456,10 +1456,10 @@ fn create_note_app() -> App {
                 Some(&["Canvas".into(), "Navigator".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                NOTE_PLAY_BODY_HIERARCHY,
+                NOTE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1493,7 +1493,7 @@ fn note_bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(note_bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -1526,10 +1526,10 @@ mod tests {
     }
 
     #[test]
-    fn renders_hierarchy_tree() {
+    fn renders_document_tree() {
         let app = NoteApp;
         let document = SEMIO_EXAMPLE_JSON.to_string();
-        let node = app.render(NOTE_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(NOTE_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Welcome"));

@@ -6,8 +6,8 @@ use semio_framework_plugin::{
     ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, App, CommandDescriptor, PluginApp, PluginBundle, RasterScene, UiControlNode,
     UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ const SHOOTING_PLAY_SURFACE_MODEL: &str = "shooting.play.model";
 const SHOOTING_PLAY_SURFACE_ICON: &str = "shooting.play.icon";
 const SHOOTING_PLAY_BODY_MODEL: &str = "shooting.play.model";
 const SHOOTING_PLAY_BODY_ICON: &str = "shooting.play.icon";
-const SHOOTING_PLAY_BODY_HIERARCHY: &str = "shooting.play.hierarchy";
+const SHOOTING_PLAY_BODY_DOCUMENT: &str = "shooting.play.document";
 const SHOOTING_PLAY_BODY_CATALOGUE: &str = "shooting.play.catalogue";
 const SHOOTING_PLAY_BODY_INSPECTION: &str = "shooting.play.inspection";
 const SHOOTING_PLAY_WINDOW_MODEL: &str = "shooting-model";
@@ -479,7 +479,7 @@ fn tree_item_with_command(
     }
 }
 
-fn build_hierarchy_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
+fn build_document_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
     let fixture = &envelope.fixture;
     let shot_items: Vec<UiTreeItemNode> = fixture
         .shots
@@ -508,13 +508,13 @@ fn build_hierarchy_tree(envelope: &ShootingPlayEnvelope) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "shooting-play-hierarchy.shots".into(),
+                id: "shooting-play-document.shots".into(),
                 label: Some("Shots".into()),
                 default_open: Some(true),
                 items: shot_items,
             },
             UiTreeSectionNode {
-                id: "shooting-play-hierarchy.assets".into(),
+                id: "shooting-play-document.assets".into(),
                 label: Some("Assets".into()),
                 default_open: Some(true),
                 items: asset_items,
@@ -1077,7 +1077,7 @@ impl PluginApp for ShootingPlayApp {
         match body_key {
             SHOOTING_PLAY_BODY_MODEL => render_model_scene(&envelope.fixture, &envelope.runtime),
             SHOOTING_PLAY_BODY_ICON => render_icon_scene(&envelope.fixture),
-            SHOOTING_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
+            SHOOTING_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             SHOOTING_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
             SHOOTING_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -1089,7 +1089,7 @@ impl PluginApp for ShootingPlayApp {
 //#region 🔖Manifest
 fn create_shooting_app() -> App {
     App::from_builder(
-        App::builder(SHOOTING_PLAY_APP_ID, "Shooting").hierarchy(["semio", "shooting"])
+        App::builder(SHOOTING_PLAY_APP_ID, "Shooting").document(["semio", "shooting"])
             .icon_id("camera")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1102,10 +1102,10 @@ fn create_shooting_app() -> App {
                 Some(&["Model".into(), "Icon".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                SHOOTING_PLAY_BODY_HIERARCHY,
+                SHOOTING_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1147,7 +1147,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -1209,10 +1209,10 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_shots_and_assets() {
+    fn document_lists_shots_and_assets() {
         let app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let node = app.render(SHOOTING_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(SHOOTING_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Overview Svg"));
         assert!(json.contains("Base"));

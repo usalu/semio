@@ -85,7 +85,7 @@ SQLAlchemy relationships cannot be set outside of a database session. The origin
    - `buildPieceGraph(design: Design | dict)` - Build networkx graph
    - `findFixedPieces(design: Design | dict)` - Find pieces with planes
    - `getConnectedComponents(design: Design | dict)` - Get connected components
-   - `getPieceHierarchy(design: Design | dict, rootGuid: str)` - Get piece hierarchy
+   - `getPieceDocument(design: Design | dict, rootGuid: str)` - Get piece document
    - `validateKitDict(kit: dict)` - Validate kit JSON dict
    - `flattenDesignDict(kit: dict, designGuid: str)` - Flatten design from JSON dict
 

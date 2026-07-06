@@ -13,9 +13,11 @@ ui_styling = { path = "../../styling/rs" }
 kernel_3d_scene = { path = "../../../kernel/3d/scene/rs" }
 fontdue = "0.9.3"
 bytemuck = { version = "1.24.0", features = ["derive"] }
-wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"] }
+winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
+wgpu = { version = "27.0.1", default-features = false, features = ["wgsl"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+wgpu = { version = "27.0.1", default-features = false, features = ["webgpu", "wgsl"] }
 js-sys = "0.3.83"
 wasm-bindgen = "0.2.106"
 wasm-bindgen-futures = "0.4.71"
@@ -32,3 +34,7 @@ web-sys = { version = "0.3.98", features = [
     "RequestMode",
     "Response",
 ] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+wgpu = { version = "27.0.1", default-features = false, features = ["metal", "vulkan", "dx12", "wgsl"] }
+pollster = "0.4.0"

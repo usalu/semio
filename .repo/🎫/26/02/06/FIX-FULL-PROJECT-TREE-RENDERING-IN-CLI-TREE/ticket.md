@@ -6,7 +6,7 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/REPO-CLI-FILTERS
 
 ## Summary
 
-Fixed full tree hierarchy rendering by adding folders root category, ensuring bundle-root path inclusion, forcing tree section inclusion, and restructuring policy tree to policy->entitykind->statute. Extended existing tree tests and validated with targeted go test runs.
+Fixed full tree document rendering by adding folders root category, ensuring bundle-root path inclusion, forcing tree section inclusion, and restructuring policy tree to policy->entitykind->statute. Extended existing tree tests and validated with targeted go test runs.
 
 ## Changes
 
@@ -22,7 +22,7 @@ Fixed full tree hierarchy rendering by adding folders root category, ensuring bu
 ## Log
 
 - Investigated tree command flow and tree builder in `repo/cli/main.go`.
-- Implemented hierarchy fixes in builder and policy grouping path.
+- Implemented document fixes in builder and policy grouping path.
 - Updated existing tree tests in `repo/cli/main_test.go`.
 - Verified with targeted test runs:
   - `go test ./... -run TestTreeCommandFlags -count=1`
@@ -32,13 +32,13 @@ Fixed full tree hierarchy rendering by adding folders root category, ensuring bu
 ## Todos
 
 - [x] Locate tree rendering/build logic gap.
-- [x] Implement complete hierarchy fix in tree builder.
-- [x] Extend existing tests for full hierarchy and policy grouping.
+- [x] Implement complete document fix in tree builder.
+- [x] Extend existing tests for full document and policy grouping.
 - [x] Run targeted tests and confirm pass.
 
 ## Plan
 
-1. Inspect current tree build/filter/render paths and reproduce missing hierarchy conditions.
-2. Fix tree assembly to guarantee complete hierarchy and expected root entity categories.
+1. Inspect current tree build/filter/render paths and reproduce missing document conditions.
+2. Fix tree assembly to guarantee complete document and expected root entity categories.
 3. Extend existing tree tests for regression coverage.
 4. Execute targeted tests and finalize ticket.

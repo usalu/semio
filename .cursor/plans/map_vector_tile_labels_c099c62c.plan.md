@@ -45,7 +45,7 @@ In [gis/map/rs/lib.rs](gis/map/rs/lib.rs):
 - Call it from:
   - Colored path with `theme.label_fill` / `theme.label_halo`.
   - `append_vector_tiles_figure` (lines ~2210-2311), after geometry, with `fill = ink`, `halo = paper` so text stays readable in both figure-ground and inverted.
-- Confirm `place_label_visible` covers the full hierarchy (region = `state`/`province`, district = `suburb`/`quarter`/`neighbourhood`); extend the match if any listed tier is missing.
+- Confirm `place_label_visible` covers the full document (region = `state`/`province`, district = `suburb`/`quarter`/`neighbourhood`); extend the match if any listed tier is missing.
 
 ### 3. Per-style default Labels toggle (TS)
 Reuse the existing `gis-map-layer-labels` toggle; add per-vector-style default and relabel it "Labels".
@@ -56,7 +56,7 @@ Reuse the existing `gis-map-layer-labels` toggle; add per-vector-style default a
 
 ### 4. Tests (extend existing files only)
 - [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) `mod tests`: add a test that `text::append_label` into a fresh `Scene` yields a non-empty encoding (e.g. `!scene.encoding().path_tags.is_empty()`), and that an empty/whitespace label yields an empty scene — locking in the `Node::Text` fix.
-- [gis/map/rs/lib.rs](gis/map/rs/lib.rs) tests: add a figure-ground render test with `labels` visible asserting the scene grows vs labels hidden, plus a `place_label_visible` hierarchy coverage assertion.
+- [gis/map/rs/lib.rs](gis/map/rs/lib.rs) tests: add a figure-ground render test with `labels` visible asserting the scene grows vs labels hidden, plus a `place_label_visible` document coverage assertion.
 
 ### 5. Verification
 - `cargo test` for `infinite_cavas` and `gis_map` (via `script.ts`/`nx`, registered in `launch.json`).

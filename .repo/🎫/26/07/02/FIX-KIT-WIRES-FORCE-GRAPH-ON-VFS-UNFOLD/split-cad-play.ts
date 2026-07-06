@@ -47,7 +47,7 @@ const coreImports = `import {
   isPlaygroundFixtureLocked,
   playgroundLockedFixtureId,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   uiDeclarativeSectionsToTree,
   type UiTreeNode,
@@ -60,7 +60,7 @@ import type { TreeDataItem, TreeDataSection } from "@semio-tech/ui-react";
 `;
 
 const coreIndex = `// #region 🧲Header
-/** @emoji 📐 CAD play app core — controller, hierarchy, inspector, runtime. */
+/** @emoji 📐 CAD play app core — controller, document, inspector, runtime. */
 // #endregion 🧲Header
 
 ${coreImports}
@@ -104,13 +104,13 @@ ${slice(1147, 1207)}
 import {
   CAD_PLAY_APP_ID,
   CAD_PLAY_CONTROLLER_ID,
-  CAD_PLAY_HIERARCHY_TAB_ID,
+  CAD_PLAY_DOCUMENT_TAB_ID,
   CAD_PLAY_PANE_SPECS,
   CAD_PLAY_CONCRETE_FOREST_FIXTURE_IDS,
   CadPlayShellController,
   buildCadPlayRuntime,
-  buildCadPlayHierarchyPendingSections,
-  buildCadPlayHierarchySections,
+  buildCadPlayDocumentPendingSections,
+  buildCadPlayDocumentSections,
   buildCadPlayDetailsTree,
   buildCadPlayCatalogTree,
   cadPlaySceneSurfaceIdForPane,

@@ -38,9 +38,9 @@ import {
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-  FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+  FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
+  FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+  FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -2419,7 +2419,7 @@ const CODA_APP_ID = "coda";
 const CODA_CONTROLLER_ID = "coda.shell";
 const CODA_SURFACE_MAIN = "coda.surface.main/v1";
 const CODA_BODY_MAIN = "coda.window.main";
-const CODA_PANEL_HIERARCHY_BODY = "coda.panel.hierarchy";
+const CODA_PANEL_DOCUMENT_BODY = "coda.panel.document";
 const CODA_PANEL_CATALOGUE_BODY = "coda.panel.catalogue";
 const CODA_PANEL_INSPECTION_BODY = "coda.panel.inspection";
 
@@ -2488,12 +2488,12 @@ function codaValidationTreeItems(nodes: readonly ValidationTreeNode[], prefix: s
   }));
 }
 
-function buildCodaHierarchyPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
+function buildCodaDocumentPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
   const snap = getCodaShellController()?.getSnapshot() ?? CODA_EMPTY_SHELL_SNAPSHOT;
   const sections: UiSectionNode[] = [
     {
       type: "section",
-      id: "coda.hierarchy.project",
+      id: "coda.document.project",
       label: "Project",
       children: [
         { type: "text", value: snap.project?.design?.id ?? "—" },
@@ -2502,23 +2502,23 @@ function buildCodaHierarchyPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
     },
     {
       type: "section",
-      id: "coda.hierarchy.run",
+      id: "coda.document.run",
       label: "Run",
       children: [{ type: "text", value: snap.run?.id ?? snap.run?.run_id ?? "—" }],
     },
     {
       type: "section",
-      id: "coda.hierarchy.iteration",
+      id: "coda.document.iteration",
       label: "Iteration",
       children: [{ type: "text", value: snap.iteration?.index != null ? String(snap.iteration.index) : "—" }],
     },
   ];
   const validationItems: UiTreeItemNode[] = (snap.report?.validations ?? []).flatMap((validation, index) => [
     {
-      id: `coda.hierarchy.validation.${index}`,
+      id: `coda.document.validation.${index}`,
       label: validation.instance,
       command: codaShellCmd("setSelection", {
-        id: `coda.hierarchy.validation.${index}`,
+        id: `coda.document.validation.${index}`,
         label: validation.instance,
         kind: "validation",
       }),
@@ -2527,7 +2527,7 @@ function buildCodaHierarchyPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
   ]);
   sections.push({
     type: "section",
-    id: "coda.hierarchy.validations",
+    id: "coda.document.validations",
     label: "Validations",
     children: validationItems.length
       ? validationItems.map((item) => ({ type: "button", id: item.id, label: item.label, command: item.command }))
@@ -2583,7 +2583,7 @@ function buildCodaInspectionPanelBody(_ctx: WindowBodyViewContext): UiTreeNode {
         type: "section",
         id: "coda.inspection.empty",
         label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-        children: [{ type: "text", value: "Select a validation node, framework, or property in the hierarchy or catalogue." }],
+        children: [{ type: "text", value: "Select a validation node, framework, or property in the document or catalogue." }],
       },
     ]);
   }
@@ -2681,7 +2681,7 @@ function registerCodaShellBodies(): void {
   codaBodiesRegistered = true;
   registerUiPanelSurfaceHost(CODA_SURFACE_MAIN, CodaMainSurfaceHost);
   registerWindowBody(CODA_BODY_MAIN, () => buildPanelWindowBody(CODA_SURFACE_MAIN, CODA_CONTROLLER_ID));
-  registerSidePanelBody(CODA_PANEL_HIERARCHY_BODY, buildCodaHierarchyPanelBody);
+  registerSidePanelBody(CODA_PANEL_DOCUMENT_BODY, buildCodaDocumentPanelBody);
   registerSidePanelBody(CODA_PANEL_CATALOGUE_BODY, buildCodaCataloguePanelBody);
   registerSidePanelBody(CODA_PANEL_INSPECTION_BODY, buildCodaInspectionPanelBody);
 }
@@ -2698,7 +2698,7 @@ function buildCodaAppRuntime(controller: CodaShellController): AppRuntime {
   app.defaultModeId = "explore";
   app.addMode(new ModeRuntime("explore", "Explore"));
   app.panelTabs = [
-    { id: FRAMEWORK_PANEL_TAB_HIERARCHY_ID, iconId: FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID, panel: "workbench", order: 0, bodyKey: CODA_PANEL_HIERARCHY_BODY, label: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL },
+    { id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID, iconId: FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID, panel: "workbench", order: 0, bodyKey: CODA_PANEL_DOCUMENT_BODY, label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL },
     { id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: CODA_PANEL_CATALOGUE_BODY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
     { id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: CODA_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },
   ];

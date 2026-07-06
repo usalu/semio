@@ -15,7 +15,7 @@ todos:
     content: "gis/map/react/index.tsx: rewrite pointer handling (left=select/marquee, middle=pan, right=context menu), SelectionMarquee overlay, ContextMenuController, push selection/hover to WASM, new props/callbacks; extend tests"
     status: completed
   - id: controller
-    content: "gis/map/play/index.ts: multi-selection + hover + mode/method state, selection/context commands, toolbar tools, hierarchy/inspector multi + hover, snapshot; extend tests"
+    content: "gis/map/play/index.ts: multi-selection + hover + mode/method state, selection/context commands, toolbar tools, document/inspector multi + hover, snapshot; extend tests"
     status: completed
   - id: host
     content: "framework playground renderer MapPlayHost: pass selection/hover/method to MapCanvas, wire callbacks, build context-menu items"
@@ -73,7 +73,7 @@ flowchart LR
 - Replace single `selectedFeatureId`/`selectedFeatureKind` (lines ~621, ~783) with `selectedPositionIds: string[]`, `selectedRouteIds: string[]`, `hoveredFeatureId`/`hoveredFeatureKind`, `selectionMode: SelectionMergeMode`, `selectionMethod: "rectangle"|"lasso"`.
 - Commands: `setSelection` (multi + mode via `selectionMergeIds` per kind), `setSelectionMode`, `setSelectionMethod`, `clearSelection`, `setHover`, plus context-menu commands `focusFeature` (center/zoom camera to feature), `deselect`, `selectAll`, `fitWorld`, `openSource`.
 - Add toolbar tools mirroring `buildProcedural2dPlayToolbarTools` (`[procedural/2d/play/index.ts](procedural/2d/play/index.ts)` line ~307): rectangle/lasso + 4 modes + clear; attach to `mainMode.tools`; rebuild on change.
-- Update `buildMapPlayHierarchyTree` (line ~268): multi `selectedIds` from both kinds, hover via `onPointerEnter`/`onPointerLeave` → `setHover`. Update `buildMapPlayInspectorTree` (line ~347) to handle 0/1/many selected (single keeps current editor; many shows count). Add selection/hover/method/mode to the snapshot + `interactionRevision` bump. Extend the play `vitest` block (multi-kind merge + toolbar build).
+- Update `buildMapPlayDocumentTree` (line ~268): multi `selectedIds` from both kinds, hover via `onPointerEnter`/`onPointerLeave` → `setHover`. Update `buildMapPlayInspectorTree` (line ~347) to handle 0/1/many selected (single keeps current editor; many shows count). Add selection/hover/method/mode to the snapshot + `interactionRevision` bump. Extend the play `vitest` block (multi-kind merge + toolbar build).
 
 ## 4. Framework host — `[framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)` (MapPlayHost ~line 6062)
 - Read selection/hover/method from controller/snapshot and pass to `MapCanvas`; wire `onSelect`/`onHoverChange` → `ctrl.run("setSelection"/"setHover")`.

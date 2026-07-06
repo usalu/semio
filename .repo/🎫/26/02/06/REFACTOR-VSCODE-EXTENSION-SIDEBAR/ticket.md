@@ -19,7 +19,7 @@ Refactored the repo/vscode extension sidebar into exactly two sections (Monorepo
 
 ### extension.ts
 
-- Rewrote `FilterTreeDataProvider`: emoji-prefixed labels, time hierarchy from available data, none/all toggles, setTimeMode
+- Rewrote `FilterTreeDataProvider`: emoji-prefixed labels, time document from available data, none/all toggles, setTimeMode
 - Rewrote `MonorepoTreeDataProvider`: emoji-prefixed root categories, kind icons, contributor expandable children, nodeId for copy support
 - Added `MonorepoTreeItem.nodeId` parameter for clipboard copy
 - Rewrote `registerCommands`: copyId, mailto, openLink, refreshMonorepo, copyCommitSha, openCommitInGitHub, ticketClose, ticketReopen, policyCheck, filter none/all toggles
@@ -32,7 +32,7 @@ Refactored the repo/vscode extension sidebar into exactly two sections (Monorepo
 ### extension.test.ts
 
 - Updated EXPECTED_COMMANDS to match new command set
-- Updated Filter Provider tests: emoji labels, time hierarchy with available values, none/all toggle tests, setTimeMode tests, search state tests
+- Updated Filter Provider tests: emoji labels, time document with available values, none/all toggle tests, setTimeMode tests, search state tests
 - Updated Monorepo Provider tests: emoji labels, contextValues, nodeId tests
 - Updated Sidebar View tests: replaced runCommand test with new command tests (copyId, mailto, openLink, refreshMonorepo, copyCommitSha, openCommitInGitHub, ticketReopen)
 

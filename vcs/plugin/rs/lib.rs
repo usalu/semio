@@ -4,7 +4,7 @@ use semio_framework_plugin::{
     build_table_scene, build_text_editor_scene, create_default_layout, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, App, CommandDescriptor, PluginApp, PluginBundle, TableScene, TextEditorScene,
     UiControlNode, UiFieldNode, UiInputNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -18,7 +18,7 @@ use vcs::{
 const VCS_PLAY_APP_ID: &str = "vcs-play";
 const VCS_PLAY_BODY_EDITOR: &str = "vcs.play.editor";
 const VCS_PLAY_BODY_HISTORY: &str = "vcs.play.history";
-const VCS_PLAY_BODY_HIERARCHY: &str = "vcs.play.hierarchy";
+const VCS_PLAY_BODY_DOCUMENT: &str = "vcs.play.document";
 const VCS_PLAY_BODY_INSPECTION: &str = "vcs.play.inspection";
 const VCS_PLAY_SURFACE_EDITOR: &str = "vcs.play.editor";
 const VCS_PLAY_SURFACE_HISTORY: &str = "vcs.play.history";
@@ -386,14 +386,14 @@ fn history_rows(envelope: &VcsDemoEnvelope) -> Vec<HistoryRow> {
 //#endregion 🔖History
 
 //#region 🔖Panels
-fn build_hierarchy_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNode {
+fn build_document_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNode {
     let checkpoint_items: Vec<UiTreeItemNode> = envelope
         .vcs
         .checkpoints
         .iter()
         .rev()
         .map(|checkpoint| UiTreeItemNode {
-            id: format!("vcs-play-hierarchy.checkpoint.{}", checkpoint.id),
+            id: format!("vcs-play-document.checkpoint.{}", checkpoint.id),
             label: checkpoint.message.clone().unwrap_or_else(|| checkpoint.id.clone()),
             description: Some(checkpoint.timestamp.clone()),
             icon_id: Some("git-commit".into()),
@@ -415,7 +415,7 @@ fn build_hierarchy_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNo
         .alternatives
         .iter()
         .map(|alt| UiTreeItemNode {
-            id: format!("vcs-play-hierarchy.alternative.{}", alt.id),
+            id: format!("vcs-play-document.alternative.{}", alt.id),
             label: alt.name.clone(),
             description: Some(format!("{} checkpoints", alt.checkpoint_ids.len())),
             icon_id: Some("git-branch".into()),
@@ -438,12 +438,12 @@ fn build_hierarchy_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNo
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "vcs-play-hierarchy.checkpoints".into(),
-                label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+                id: "vcs-play-document.checkpoints".into(),
+                label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
                 default_open: Some(true),
                 items: if checkpoint_items.is_empty() {
                     vec![UiTreeItemNode {
-                        id: "vcs-play-hierarchy.empty".into(),
+                        id: "vcs-play-document.empty".into(),
                         label: "(no checkpoints)".into(),
                         description: None,
                         icon_id: None,
@@ -464,7 +464,7 @@ fn build_hierarchy_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNo
                 },
             },
             UiTreeSectionNode {
-                id: "vcs-play-hierarchy.alternatives".into(),
+                id: "vcs-play-document.alternatives".into(),
                 label: Some("Alternatives".into()),
                 default_open: Some(true),
                 items: alternative_items,
@@ -473,7 +473,7 @@ fn build_hierarchy_tree(envelope: &VcsDemoEnvelope, selected: &[String]) -> UiNo
         selected_ids: Some(
             selected
                 .iter()
-                .map(|id| format!("vcs-play-hierarchy.checkpoint.{id}"))
+                .map(|id| format!("vcs-play-document.checkpoint.{id}"))
                 .collect(),
         ),
         highlighted_ids: None,
@@ -709,7 +709,7 @@ impl PluginApp for VcsPlayApp {
         match body_key {
             VCS_PLAY_BODY_EDITOR => render_editor(&materialized),
             VCS_PLAY_BODY_HISTORY => render_history(&play.envelope),
-            VCS_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&play.envelope, &play.selected_checkpoint_ids),
+            VCS_PLAY_BODY_DOCUMENT => build_document_tree(&play.envelope, &play.selected_checkpoint_ids),
             VCS_PLAY_BODY_INSPECTION => build_inspection_tree(&materialized),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
@@ -720,13 +720,13 @@ impl PluginApp for VcsPlayApp {
 //#region 🔖AppFactory
 fn create_vcs_app() -> App {
     App::from_builder(
-        App::builder(VCS_PLAY_APP_ID, "VCS").hierarchy(["semio", "vcs"])
+        App::builder(VCS_PLAY_APP_ID, "VCS").document(["semio", "vcs"])
             .icon_id("git-branch")
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind(VCS_PLAY_WINDOW_EDITOR, "Editor", VCS_PLAY_BODY_EDITOR)
             .window_kind(VCS_PLAY_WINDOW_HISTORY, "History", VCS_PLAY_BODY_HISTORY)
-            .panel_tab("framework.panel.hierarchy", "Hierarchy", "workbench", VCS_PLAY_BODY_HIERARCHY)
+            .panel_tab("framework.panel.document", "Document", "workbench", VCS_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.inspection", "Inspection", "details", VCS_PLAY_BODY_INSPECTION)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
@@ -745,7 +745,7 @@ fn vcs_bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(vcs_bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests
@@ -792,12 +792,12 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_checkpoints() {
+    fn document_lists_checkpoints() {
         let app = VcsPlayApp;
         let document = app.initial_document_json();
-        let node = app.render(VCS_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(VCS_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("vcs-play-hierarchy.checkpoint"));
+        assert!(json.contains("vcs-play-document.checkpoint"));
     }
 
     #[test]

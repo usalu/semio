@@ -22,7 +22,7 @@ isProject: false
 ## Root cause
 Clicking the background emits one cheap `select {ids: []}`, but every selection change triggers two O(N) operations, and background deselect fans this out to all 3 triptych panes:
 
-- UI Tree: `treeDataRenderingValue` carries `selectedIds`, so any selection change recreates the context and re-renders all ~700 hierarchy rows.
+- UI Tree: `treeDataRenderingValue` carries `selectedIds`, so any selection change recreates the context and re-renders all ~700 document rows.
 - WASM puzzle/2d: each selection setter calls `bump_content_scene_generation()`, invalidating `world_content_cache` (selection style is baked into cached geometry), forcing a full node/handle/edge rebuild. Deselect broadcasts to 3 panes -> 3 full rebuilds.
 
 ## Fix 1 - ui/react: per-row selection subscription (removes O(rows) reconcile)
@@ -46,5 +46,5 @@ In [framework/product/playground/renderer/react/index.tsx](framework/product/pla
 
 ## Validation
 - Extend existing vitest files only (no new test files): ui/react Tree test (per-row selection isolation: changing selection re-renders only affected rows), puzzle/2d/rs selection setters (no `content_scene_generation` bump; overlay draws selected chrome), puzzle/2d/react (deselect keeps descriptor/geometry cache warm), framework playground (pane canvas not re-rendered on selection).
-- Add `[DEBUG]` render/redraw counters, run the affected package tests, and runtime-verify on the Nakagin fixture that select-all then background-click deselect is instant (no multi-second freeze) with hierarchy/inspector still correct.
+- Add `[DEBUG]` render/redraw counters, run the affected package tests, and runtime-verify on the Nakagin fixture that select-all then background-click deselect is instant (no multi-second freeze) with document/inspector still correct.
 - Track under repo MCP ticket (reopen `26/06/01/PUZZLE3D-SELECTION-PERF` or open a new selection-perf ticket); close with summary and touched files.

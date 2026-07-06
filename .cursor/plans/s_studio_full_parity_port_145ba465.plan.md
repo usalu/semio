@@ -78,7 +78,7 @@ Rewrite [framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shel
 
 - Navbar: SemioLogo, app/example selects, mode toggle, `PanelToggleGroup`, theme/compact/expertise controls, `bootstrapElementsSurfaceChromeDocument`
 - Window canvas: golden-ratio layout (`windowMeasuresToGolden`), tab stacks, split panes, window engagement/focus, chrome-aware scroll surfaces
-- Side panels: left hierarchy tree panel, right tab panel (Catalogue/Parameters/Inspection with the `FRAMEWORK_PANEL_TAB_*` ids/icons/labels), `Tree` component with drag-and-drop
+- Side panels: left document tree panel, right tab panel (Catalogue/Parameters/Inspection with the `FRAMEWORK_PANEL_TAB_*` ids/icons/labels), `Tree` component with drag-and-drop
 - Footer chrome rows, keybinding dispatch (`useCommandHotkey`), URI history (`useUIHistory` port)
 - Declarative renderer: `renderUiControl` / `uiTreeNodeToTreePanelConfig` equivalents interpreting the extended UiTree
 

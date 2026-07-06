@@ -4186,8 +4186,8 @@ export const windowMeasuresStackClass = cn(
   `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden rounded-md border ${borderElementClass}/40 p-0 shadow-sm`,
 );
 
-/** @emoji 📐 Window measures rail spanning the full window body. */
-export const windowMeasuresOverlayExpandedClass = "inset-0 z-overlay items-stretch";
+/** @emoji 📐 Window measures rail spanning the full window body (stays below shell side panels). */
+export const windowMeasuresOverlayExpandedClass = "inset-0 z-panel items-stretch";
 
 /** @emoji 📐 Collapsed options chrome hugging the top-right corner. */
 export const windowMeasuresOverlayFoldedClass = "w-fit max-w-[min(14rem,calc(100%-0.5rem))]";
@@ -9661,7 +9661,7 @@ const IndentationLines: React.FC<{ level: number; showLines: boolean }> = ({ lev
   );
 };
 
-interface TreeHierarchyGutterProps {
+interface TreeDocumentGutterProps {
   level: number;
   showLines: boolean;
   slot?: React.ReactNode;
@@ -9671,7 +9671,7 @@ interface TreeHierarchyGutterProps {
   anchorOffsetPx?: number;
 }
 
-const TreeHierarchyGutter: React.FC<TreeHierarchyGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, extendCurrentLevelToBottom = false, slotOffsetPx = 0, anchorOffsetPx }) => {
+const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, extendCurrentLevelToBottom = false, slotOffsetPx = 0, anchorOffsetPx }) => {
   const { indentMultiplier } = reactHostPort.useContext(TreeContext);
   const currentGuidePx = indentationLinePx(level, indentMultiplier);
   const parentGuidePx = level > 0 ? indentationLinePx(level - 1, indentMultiplier) : 0;
@@ -9745,7 +9745,7 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
       className={cn(treeRowLayoutClassName, align === "start" ? "items-start" : "items-center", className)}
       style={treeAlignedRowStyle(level, indentMultiplier)}
     >
-      <TreeHierarchyGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendCurrentLevelToBottom={extendCurrentLevelToBottom} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
+      <TreeDocumentGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendCurrentLevelToBottom={extendCurrentLevelToBottom} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
       <div data-slot="tree-row-content" className={cn(align === "start" ? "min-w-0 h-full" : treeRowContentClassName, contentChromeClassName, contentClassName)}>
         {children}
       </div>
@@ -18576,7 +18576,7 @@ export interface TableProps<T = unknown> {
   isMobile?: boolean;
   hierarchical?: boolean;
   onToggleRow?: (rowId: string) => void;
-  renderHierarchyControls?: (row: T & HierarchicalRowData) => React.ReactNode;
+  renderDocumentControls?: (row: T & HierarchicalRowData) => React.ReactNode;
   dragDrop?: DragDropConfig;
   wrapperComponent?: React.ComponentType<{ children: React.ReactNode }>;
 }
@@ -18703,7 +18703,7 @@ const Table = <T,>({
   isMobile = false,
   hierarchical = false,
   onToggleRow,
-  renderHierarchyControls,
+  renderDocumentControls,
   dragDrop,
   wrapperComponent: WrapperComponent,
 }: TableProps<T>) => {

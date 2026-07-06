@@ -1,6 +1,6 @@
 ---
 name: Declarative Playground Class
-overview: Introduce a React-free `Playground` base class and a one-line `renderPlayground(instance)` renderer in `@elements/playground`, extend the declarative `UiNode` vocabulary so every panel (hierarchy, inspector, settings, status, footer) is declarative, and refactor the scene, topology, and board playgrounds into single `Playground` subclass instances with no React in their definitions.
+overview: Introduce a React-free `Playground` base class and a one-line `renderPlayground(instance)` renderer in `@elements/playground`, extend the declarative `UiNode` vocabulary so every panel (document, inspector, settings, status, footer) is declarative, and refactor the scene, topology, and board playgrounds into single `Playground` subclass instances with no React in their definitions.
 todos:
   - id: ticket
     content: Open repo ticket via repo MCP, read repo://goals and associate with the best-fit goal.
@@ -12,10 +12,10 @@ todos:
     content: Extend UiRenderer for new nodes; render rightTabs declaratively + drop augmentPanelTabs; add PlaygroundShell (generic surface chrome + keybindings) and renderPlayground.
     status: completed
   - id: scene
-    content: Add ScenePlayground class, convert scene inspector/setting/hierarchy/kinds panels to declarative bodies, expose registerSceneSurfaceHosts, delete PlayApp/footer/bridge, rewrite main.ts.
+    content: Add ScenePlayground class, convert scene inspector/setting/document/kinds panels to declarative bodies, expose registerSceneSurfaceHosts, delete PlayApp/footer/bridge, rewrite main.ts.
     status: in_progress
   - id: topology
-    content: Add TopologyPlayground class, convert status/hierarchy panels to declarative bodies, expose registerTopologySurfaceHosts, delete TopologyPlayApp, rewrite main.ts.
+    content: Add TopologyPlayground class, convert status/document panels to declarative bodies, expose registerTopologySurfaceHosts, delete TopologyPlayApp, rewrite main.ts.
     status: pending
   - id: board
     content: Migrate board React state + host bridge into BoardPlayShellController, convert panels to declarative bodies, add BoardPlayground, expose registerBoardSurfaceHosts, rewrite main.ts.
@@ -65,7 +65,7 @@ flowchart TB
   - `UiToggleNode` `{ type:"toggle", id, pressed, text?, onChange:CommandDescriptor }`
   - `UiVec3Node` `{ type:"vec3", id, value:[number,number,number]|null, onChange:CommandDescriptor }`
   - `UiKeyValueNode` `{ type:"keyValue", entries:[{label,value}] }`
-  - `UiTreeNode` `{ type:"tree", sections:[{id,label?,defaultOpen?,items}] }` where each item is `{ id,label,description?,selected?,defaultOpen?,command?:CommandDescriptor,items? }` (replaces the `onClick` callbacks used by hierarchy/kinds trees with declarative commands).
+  - `UiTreeNode` `{ type:"tree", sections:[{id,label?,defaultOpen?,items}] }` where each item is `{ id,label,description?,selected?,defaultOpen?,command?:CommandDescriptor,items? }` (replaces the `onClick` callbacks used by document/kinds trees with declarative commands).
 - Move the data helper `playgroundTreePanelRootItems` from `@elements/playground/react` into core (returns declarative `UiTreeNode` sections) so `play/index.ts` files stop importing the react entry for pure data.
 - Add abstract `Playground` base (new region `🔖Playground`), React-free contract:
   - `abstract readonly id: string`
@@ -92,19 +92,19 @@ flowchart TB
 
 ## 3. Scene — `elements/lib/react/scene/`
 
-- In `play/index.ts`: add `class ScenePlayground extends Playground`. `createRuntime()` reuses `buildScenePlayRuntime()`; attach `SideTabSpec`s (hierarchy, kinds, inspector, settings) to `mainMode.leftTabs/rightTabs`; `registerBodies()` registers the window body plus new declarative side-panel bodies; `registerSurfaceHosts()` calls a library `registerSceneSurfaceHosts()`; `keybindings` = Delete/Backspace → `deleteSelection`.
-- Convert the React panels in `index.tsx` (`buildScenePlayInspectorSections`, `buildScenePlaySettingsSections`, `ScenePlayInspector*`, hierarchy/kinds defs) into declarative `UiNode` side-panel body factories in `play/index.ts` using the new `section`/`field`/`input`/`select`/`vec3`/`keyValue`/`tree` nodes (each edit dispatches an existing controller command; add controller commands where inspectors currently call `patchFixture` directly, e.g. `updateObject`, `updateVortex`, `updateAttraction`).
+- In `play/index.ts`: add `class ScenePlayground extends Playground`. `createRuntime()` reuses `buildScenePlayRuntime()`; attach `SideTabSpec`s (document, kinds, inspector, settings) to `mainMode.leftTabs/rightTabs`; `registerBodies()` registers the window body plus new declarative side-panel bodies; `registerSurfaceHosts()` calls a library `registerSceneSurfaceHosts()`; `keybindings` = Delete/Backspace → `deleteSelection`.
+- Convert the React panels in `index.tsx` (`buildScenePlayInspectorSections`, `buildScenePlaySettingsSections`, `ScenePlayInspector*`, document/kinds defs) into declarative `UiNode` side-panel body factories in `play/index.ts` using the new `section`/`field`/`input`/`select`/`vec3`/`keyValue`/`tree` nodes (each edit dispatches an existing controller command; add controller commands where inspectors currently call `patchFixture` directly, e.g. `updateObject`, `updateVortex`, `updateAttraction`).
 - In `index.tsx` `🛝PlayHost`: keep only the React canvas adapter `ScenePlaySceneSurfaceHost` (+ `PlaySceneCanvas`/`Canvas3D` wiring) and export `registerSceneSurfaceHosts()`. Delete `PlayApp`/`PlayInner`/`ScenePlayProductShell`/`augmentPanelTabs`/keyboard bridge/footer chrome/`mountScenePlay`.
 - `play/main.ts`: replace `mountScenePlay()` with `renderPlayground(new ScenePlayground())`.
 
 ## 4. Topology — `elements/lib/react/topology/`
 
-- Same shape: `class TopologyPlayground extends Playground` in `play/index.ts`; convert `TopologyPlayStatusPanel` and hierarchy panel to declarative side-panel bodies; keep `TopologyBoardSurfaceHost`/`TopologySceneSurfaceHost` React adapters in `index.tsx` behind `registerTopologySurfaceHosts()`; delete `TopologyPlayApp`/`augmentPanelTabs`/`mountTopologyPlay`; `play/main.ts` → `renderPlayground(new TopologyPlayground())`.
+- Same shape: `class TopologyPlayground extends Playground` in `play/index.ts`; convert `TopologyPlayStatusPanel` and document panel to declarative side-panel bodies; keep `TopologyBoardSurfaceHost`/`TopologySceneSurfaceHost` React adapters in `index.tsx` behind `registerTopologySurfaceHosts()`; delete `TopologyPlayApp`/`augmentPanelTabs`/`mountTopologyPlay`; `play/main.ts` → `renderPlayground(new TopologyPlayground())`.
 
 ## 5. Board — `elements/lib/board/` (largest)
 
 - Migrate all React-held state out of `BoardPlayInner` into `BoardPlayShellController`: `fixture`, `selectionIds`, `camerasByPane`, `boardSelectionMethod/Mode/Targets`, `boardGridSnapEnabled`, `boardRedrawPlaying`, `effectiveLodByPane`. Implement `appendCircle/appendRectangle/clearSelection/toggle*` as real controller mutations (move geometry helpers like `triptychCamerasFromFixture`, `newBoardAuthoringId` as needed). Delete `BoardPlayHostBridge`/`setHostBridge`/`runHostCommand`.
-- Convert library/inspector/setting/hierarchy panels to declarative side-panel bodies; keep the board canvas adapter React behind `registerBoardSurfaceHosts()`.
+- Convert library/inspector/setting/document panels to declarative side-panel bodies; keep the board canvas adapter React behind `registerBoardSurfaceHosts()`.
 - Add `class BoardPlayground extends Playground`; delete `BoardPlayApp`/`BoardPlayInner`/`augmentPanelTabs`/`mountBoardPlay`; `play/main.ts` → `renderPlayground(new BoardPlayground())`.
 
 ## 6. Tests & validation

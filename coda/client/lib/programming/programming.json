@@ -2,7 +2,7 @@
     "din276": [
         {
             "de": "Wohnfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Brutto-Grundfläche",
                 "Netto-Raumfläche",
@@ -14,7 +14,7 @@
         },
         {
             "de": "Küchenfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Brutto-Grundfläche",
                 "Netto-Raumfläche",
@@ -26,7 +26,7 @@
         },
         {
             "de": "Großraumbürofläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Brutto-Grundfläche",
                 "Netto-Raumfläche",
@@ -37,7 +37,7 @@
         },
         {
             "de": "Produktionshallenfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Brutto-Grundfläche",
                 "Netto-Raumfläche",
@@ -48,7 +48,7 @@
         },
         {
             "de": "Bibliotheks- und Lesesaalfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Brutto-Grundfläche",
                 "Netto-Raumfläche",
@@ -59,7 +59,7 @@
         },
         {
             "de": "Operationsraumfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Brutto-Grundfläche",
                 "Netto-Raumfläche",
@@ -70,7 +70,7 @@
         },
         {
             "de": "Sanitärraumfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Brutto-Grundfläche",
                 "Netto-Raumfläche",
@@ -81,7 +81,7 @@
         },
         {
             "de": "Technikfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Brutto-Grundfläche",
                 "Technikfläche"
@@ -89,7 +89,7 @@
         },
         {
             "de": "Treppenraum",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Brutto-Grundfläche",
                 "Verkehrsfläche",
@@ -98,14 +98,14 @@
         },
         {
             "de": "Grundstücksfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Grundstücksfläche"
             ]
         },
         {
             "de": "Rasenfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Grundstücksfläche",
                 "Grünfläche",
@@ -114,7 +114,7 @@
         },
         {
             "de": "Terrassenfläche",
-            "hierarchy": [
+            "document": [
                 "Grundfläche",
                 "Grundstücksfläche",
                 "Befestigte Fläche",
@@ -123,38 +123,38 @@
         },
         {
             "de": "Netto-Rauminhalt",
-            "hierarchy": [
+            "document": [
                 "Netto-Rauminhalt"
             ]
         },
         {
             "de": "Einwohner",
-            "hierarchy": [
+            "document": [
                 "Einwohner"
             ]
         },
         {
             "de": "Heizlast",
-            "hierarchy": [
+            "document": [
                 "Heizlast"
             ]
         },
         {
             "de": "Betrieb (Heizung)",
-            "hierarchy": [
+            "document": [
                 "Betrieb (Heizung)"
             ]
         },
         {
             "de": "Lebenszykluskosten",
-            "hierarchy": [
+            "document": [
                 "Globale Lebenszykluskosten",
                 "Lebenszykluskosten"
             ]
         },
         {
             "de": "Grundstückswert",
-            "hierarchy": [
+            "document": [
                 "Globale Lebenszykluskosten",
                 "Lebenszykluskosten",
                 "Investitionskosten in der Bauphase",

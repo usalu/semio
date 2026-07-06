@@ -1,6 +1,6 @@
 ---
 name: Draw Vector Technology
-overview: "Introduce a new \"draw\" technology: a non-destructive, infinite-canvas vector graphics tool that extends and generalizes the existing geometry drawing kernel, mirrors the raster technology's core/play/react/fixture layout, plugs into the shared hierarchy/catalogue/inspection + selection infrastructure, and ships a sophisticated playground with the semio logo imported as a fixture."
+overview: "Introduce a new \"draw\" technology: a non-destructive, infinite-canvas vector graphics tool that extends and generalizes the existing geometry drawing kernel, mirrors the raster technology's core/play/react/fixture layout, plugs into the shared document/catalogue/inspection + selection infrastructure, and ships a sophisticated playground with the semio logo imported as a fixture."
 todos:
   - id: ticket
     content: Read repo://goals, associate, and open/reopen the draw technology ticket via repo MCP
@@ -15,7 +15,7 @@ todos:
     content: "Create draw/react (@semio-tech/draw-react): SVG infinite-canvas DrawCanvas, live boolean/trace via kernel, selection/hover/pan/zoom, tools, inline tests"
     status: completed
   - id: play
-    content: "Create draw/play (@semio-tech/draw-play): DrawPlayController, hierarchy/catalogue/inspection tree builders + DnD, fixtures glob, window kinds, PlaygroundDraw, vite/html/css/script/project configs"
+    content: "Create draw/play (@semio-tech/draw-play): DrawPlayController, document/catalogue/inspection tree builders + DnD, fixtures glob, window kinds, PlaygroundDraw, vite/html/css/script/project configs"
     status: completed
   - id: framework
     content: "Wire framework: ComponentKind 'draw', UiDrawHostSurfaceNode + buildDrawWindowBody, DrawPlayHost region (surface host, panel defs, file bridge, bootDrawPlay), renderer package exports/deps"
@@ -27,7 +27,7 @@ todos:
     content: Author draw/fixture/semio.draw.json from emblem.svg with grouped path layers + showcase boolean and trace layers; register default slug
     status: completed
   - id: verify
-    content: Run all draw + kernel + flow_core tests, dev the playground with the semio fixture, confirm selection/hierarchy/details sync and live booleans/trace via DEBUG logs, close ticket
+    content: Run all draw + kernel + flow_core tests, dev the playground with the semio fixture, confirm selection/document/details sync and live booleans/trace via DEBUG logs, close ticket
     status: completed
 isProject: false
 ---
@@ -48,7 +48,7 @@ flowchart LR
   kernel["geometry drawing kernel (booleans, trace) via flow_core WASM"]
   svg["draw-react SVG infinite canvas"]
   ctrl["DrawPlayController (selection, hover, camera)"]
-  panels["Hierarchy / Catalogue / Inspection panels"]
+  panels["Document / Catalogue / Inspection panels"]
 
   doc --> flat --> svg
   flat -->|"boolean & trace nodes"| kernel --> flat
@@ -74,7 +74,7 @@ Mirror `[raster/core/index.ts](raster/core/index.ts)` structure (regions: Header
 - Layer union `DrawLayerNode` extending `DrawLayerBase {id,name,visible,locked,opacity,blendMode,transform,attributes}`:
   - `shape` (rect/ellipse/circle/line/polygon), `path` (explicit segments / pen), `text`, `image`, `group {children}`, `boolean {op, children}` (non-destructive), `trace {sourceKey, params}` (non-destructive autotrace).
 - `DrawEditOp` union + `applyDrawEditOp`: visibility/opacity/blend/name/lock, add*/duplicate/reorder/delete, setBooleanOp, setFill/setStroke, setTraceParams, transform, setCamera, setActiveTool, plus pen point edits.
-- Factories, `parseDrawDocument`, `draw...ToJson`/`fromJson`, traversal (`findDrawLayer`, `flattenDrawLayers`), hit-testing (`resolveDrawLayerAtPoint`, marquee), tree row IDs (`DRAW_PLAY_TREE_PREFIX`, `drawPlayLayersTreeRowId`, reverse mapping, hover payloads) — mirroring raster's TreeIds region for hierarchy sync.
+- Factories, `parseDrawDocument`, `draw...ToJson`/`fromJson`, traversal (`findDrawLayer`, `flattenDrawLayers`), hit-testing (`resolveDrawLayerAtPoint`, marquee), tree row IDs (`DRAW_PLAY_TREE_PREFIX`, `drawPlayLayersTreeRowId`, reverse mapping, hover payloads) — mirroring raster's TreeIds region for document sync.
 - `flattenDrawDocumentToScene(doc)` -> `DrawingScene`, where boolean/trace nodes are emitted with the kernel-resolved geometry injected by the renderer (kernel calls live in react).
 
 ### 3. `draw/react/index.tsx` (new package `@semio-tech/draw-react`)
@@ -88,7 +88,7 @@ Mirror `[raster/react/index.tsx](raster/react/index.tsx)` contract (`DrawCanvas`
 ### 4. `draw/play/index.ts` (new package `@semio-tech/draw-play`)
 Mirror `[raster/play/index.ts](raster/play/index.ts)`.
 - `DrawPlayController extends Controller`: holds document, `selectedIds`, `hoveredId`, camera, interaction revision; commands `setSelection`, `setHover`, `setActiveTool`, `addLayer`, `dropLayerKind`, `moveLayer`, `deleteLayer`, `duplicateLayer`, `toggleLayerVisible`, `combineBoolean`, `setFill`, `setStroke`, `setTraceParams`, `setCamera`, `setActiveFixture`, `saveDownload`, `loadRequest`.
-- Tree builders using canonical tab IDs (`framework.panel.hierarchy/catalogue/inspection`): `buildDrawPlayLayersTree` (layer tree w/ visibility toggle, DnD reorder, boolean/group nesting), `buildDrawPlayCatalogueTree` (draggable shapes/tools/boolean ops), `buildDrawPlayInspectorTree` (fill/stroke/opacity/transform/trace params via `uiDeclarativeSectionsToTree`). DnD via `createDrawPlayHierarchyTreeDragController` (MIME `application/x-semio-draw-layer-id` / `-kind`).
+- Tree builders using canonical tab IDs (`framework.panel.document/catalogue/inspection`): `buildDrawPlayLayersTree` (layer tree w/ visibility toggle, DnD reorder, boolean/group nesting), `buildDrawPlayCatalogueTree` (draggable shapes/tools/boolean ops), `buildDrawPlayInspectorTree` (fill/stroke/opacity/transform/trace params via `uiDeclarativeSectionsToTree`). DnD via `createDrawPlayDocumentTreeDragController` (MIME `application/x-semio-draw-layer-id` / `-kind`).
 - Fixtures via `import.meta.glob("../fixture/*.draw.json")`; `draw/play/fixture-slugs.ts` (default `semio`). Window kinds (Canvas + Navigator), `PlaygroundDraw extends Playground`, boot entry guarded by `PUZZLE_PLAY_ENTRY === "draw"`. Add `globals.css`, `index.html`, `vite.config.ts` (`createPlaygroundPlayViteConfig({ playEntryKind: "draw", ... aliases })` mirroring `[raster/play/vite.config.ts](raster/play/vite.config.ts)`).
 
 ### 5. Framework wiring
@@ -107,4 +107,4 @@ Mirror `[raster/play/index.ts](raster/play/index.ts)`.
 
 ### 8. Verify (runtime, not assumed)
 - `bun nx run @semio-tech/draw-core:test`, `@semio-tech/draw-react:test`, `@semio-tech/draw-play:test`, plus geometry kernel + flow_core tests.
-- `bun run dev:draw`, load the semio fixture, confirm via console logs (`[DEBUG] ` prefixed) that hierarchy selection <-> canvas selection <-> inspection details sync, visibility toggles, booleans recompute live, and the trace layer derives paths. Close the ticket with a summary + file list.
+- `bun run dev:draw`, load the semio fixture, confirm via console logs (`[DEBUG] ` prefixed) that document selection <-> canvas selection <-> inspection details sync, visibility toggles, booleans recompute live, and the trace layer derives paths. Close the ticket with a summary + file list.

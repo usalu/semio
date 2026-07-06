@@ -155,7 +155,7 @@ const replacements: [string, string][] = [
   ["boardPlaySelectionKey", "puzzle2dPlaySelectionKey"],
   ["boardPlayFixtureKey", "puzzle2dPlayFixtureKey"],
   ["boardPlayLibraryTab", "puzzle2dPlayLibraryTab"],
-  ["boardPlayHierarchyTab", "puzzle2dPlayHierarchyTab"],
+  ["boardPlayDocumentTab", "puzzle2dPlayDocumentTab"],
   ["boardPlaySettingsTab", "puzzle2dPlaySettingsTab"],
   ["boardPlayInspectorTab", "puzzle2dPlayInspectorTab"],
   ["boardPlayChromeRegistered", "puzzle2dPlayChromeRegistered"],

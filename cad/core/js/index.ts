@@ -2319,24 +2319,24 @@ export function resolveStandalonePrimitiveKind(model: Model, primitiveRef: strin
 export const resolvePrimitiveRefKind = resolveKernelTopologyKind;
 
 /** @emoji 🌳 Nested primitive node under an object primitive (`solid` → `shell` → `face` → `wire` → `edge` → `vertex`). */
-export interface ModelPrimitiveHierarchyNode {
+export interface ModelPrimitiveDocumentNode {
   readonly kind: KernelTopologyKind;
   readonly id: string;
-  readonly children: readonly ModelPrimitiveHierarchyNode[];
+  readonly children: readonly ModelPrimitiveDocumentNode[];
 }
 
 function sortedPrimitiveChildIds(ids: readonly string[]): string[] {
   return [...ids].sort((a, b) => a.localeCompare(b));
 }
 
-function buildModelPrimitiveHierarchyNode(model: Model, kind: KernelTopologyKind, id: string): ModelPrimitiveHierarchyNode | null {
-  const children: ModelPrimitiveHierarchyNode[] = [];
+function buildModelPrimitiveDocumentNode(model: Model, kind: KernelTopologyKind, id: string): ModelPrimitiveDocumentNode | null {
+  const children: ModelPrimitiveDocumentNode[] = [];
   switch (kind) {
     case "solid": {
       const solid = model.solids[id];
       if (!solid) return null;
       for (const shellId of sortedPrimitiveChildIds(solid.shellIds)) {
-        const child = buildModelPrimitiveHierarchyNode(model, "shell", shellId);
+        const child = buildModelPrimitiveDocumentNode(model, "shell", shellId);
         if (child) children.push(child);
       }
       break;
@@ -2345,7 +2345,7 @@ function buildModelPrimitiveHierarchyNode(model: Model, kind: KernelTopologyKind
       const shell = model.shells[id];
       if (!shell) return null;
       for (const faceId of sortedPrimitiveChildIds(shell.faceIds)) {
-        const child = buildModelPrimitiveHierarchyNode(model, "face", faceId);
+        const child = buildModelPrimitiveDocumentNode(model, "face", faceId);
         if (child) children.push(child);
       }
       break;
@@ -2354,7 +2354,7 @@ function buildModelPrimitiveHierarchyNode(model: Model, kind: KernelTopologyKind
       const face = model.faces[id];
       if (!face) return null;
       for (const wireId of sortedPrimitiveChildIds(face.wireIds)) {
-        const child = buildModelPrimitiveHierarchyNode(model, "wire", wireId);
+        const child = buildModelPrimitiveDocumentNode(model, "wire", wireId);
         if (child) children.push(child);
       }
       break;
@@ -2363,7 +2363,7 @@ function buildModelPrimitiveHierarchyNode(model: Model, kind: KernelTopologyKind
       const wire = model.wires[id];
       if (!wire) return null;
       for (const edgeId of sortedPrimitiveChildIds(wire.edgeIds)) {
-        const child = buildModelPrimitiveHierarchyNode(model, "edge", edgeId);
+        const child = buildModelPrimitiveDocumentNode(model, "edge", edgeId);
         if (child) children.push(child);
       }
       break;
@@ -2372,7 +2372,7 @@ function buildModelPrimitiveHierarchyNode(model: Model, kind: KernelTopologyKind
       const edge = model.edges[id];
       if (!edge) return null;
       for (const vertexId of sortedPrimitiveChildIds(edge.vertexIds)) {
-        const child = buildModelPrimitiveHierarchyNode(model, "vertex", vertexId);
+        const child = buildModelPrimitiveDocumentNode(model, "vertex", vertexId);
         if (child) children.push(child);
       }
       break;
@@ -2387,11 +2387,11 @@ function buildModelPrimitiveHierarchyNode(model: Model, kind: KernelTopologyKind
   return { kind, id, children };
 }
 
-/** @emoji 🌳 Builds nested primitive hierarchy under one object primitive ref in `model`. */
-export function buildModelPrimitiveHierarchy(model: Model, primitiveRef: string): ModelPrimitiveHierarchyNode | null {
+/** @emoji 🌳 Builds nested primitive document under one object primitive ref in `model`. */
+export function buildModelPrimitiveDocument(model: Model, primitiveRef: string): ModelPrimitiveDocumentNode | null {
   const kind = resolvePrimitiveRefKind(model, primitiveRef);
   if (!kind) return null;
-  return buildModelPrimitiveHierarchyNode(model, kind, primitiveRef);
+  return buildModelPrimitiveDocumentNode(model, kind, primitiveRef);
 }
 
 /** @emoji ✅ Whether `typology` allows objects whose geometry resolves to `primitiveKind`. */
@@ -2675,9 +2675,9 @@ export function collectVertexPositionsForObjects(model: Model, objects: readonly
       if (anchor) positions.push(anchor.position);
       return;
     }
-    const tree = buildModelPrimitiveHierarchy(model, primitiveRef);
+    const tree = buildModelPrimitiveDocument(model, primitiveRef);
     if (!tree) return;
-    const walk = (node: ModelPrimitiveHierarchyNode): void => {
+    const walk = (node: ModelPrimitiveDocumentNode): void => {
       if (node.kind === "vertex") {
         const vertex = model.vertices[node.id];
         if (vertex) positions.push(vertex.position);
@@ -7154,11 +7154,11 @@ if (import.meta.vitest) {
       expect(listSelectionOperationsForModelDefinition(defaultModelDefinitionId()).some((row) => row.id === "selection.selectVertices")).toBe(true);
       expect(listSelectionOperationsForModelDefinition("aec.building.energy").length).toBe(0);
     });
-    it("buildModelPrimitiveHierarchy nests shell through vertex under solid", () => {
+    it("buildModelPrimitiveDocument nests shell through vertex under solid", () => {
       const model = new Model();
       const solid = solidRef("box-solid");
       applyModelDiff(model, M.boxModelDiff({ cornerA: [0, 0, 0], cornerB: [1, 1, 0], height: 1 }, solid));
-      const tree = buildModelPrimitiveHierarchy(model, String(solid));
+      const tree = buildModelPrimitiveDocument(model, String(solid));
       expect(tree?.kind).toBe("solid");
       expect(tree?.children).toHaveLength(1);
       const shell = tree!.children[0]!;
@@ -7886,7 +7886,7 @@ if (import.meta.vitest) {
       expect(Object.keys(model.edges).length).toBe(0);
     });
 
-    it("curve.interpolateCurve commit binds typology object rows for hierarchy", async () => {
+    it("curve.interpolateCurve commit binds typology object rows for document", async () => {
       const typology = "spatial.shape.curve.interpolate-curve";
       expect(typologyIdForInteractionCommit("curve.interpolateCurve")).toBe(typology);
       const spec = loadSpatialInteraction("curve.interpolateCurve")!;
@@ -8002,7 +8002,7 @@ if (import.meta.vitest) {
       }
     });
 
-    it("primitive.box commit binds typology object rows for hierarchy", async () => {
+    it("primitive.box commit binds typology object rows for document", async () => {
       const typology = "spatial.shape.primitive.box";
       const spec = loadSpatialInteraction("primitive.box")!;
       const model = new Model();

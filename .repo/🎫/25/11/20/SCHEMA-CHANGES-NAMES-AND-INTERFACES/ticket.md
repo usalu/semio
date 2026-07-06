@@ -130,9 +130,9 @@ This plan covers two major schema changes:
    - SQLite migration to add columns and tables
    - Data migration for existing kits (set names to null, create default ports)
 
-## 4. Hierarchy Updates
+## 4. Document Updates
 
-Update the model hierarchy order in AGENTS.md:
+Update the model document order in AGENTS.md:
 
 1. Attribute
 2. Coord
@@ -186,7 +186,7 @@ Update the model hierarchy order in AGENTS.md:
 5. ✅ .NET implementation
 6. ✅ GraphQL schema
 7. ✅ Migration scripts
-8. ✅ Update AGENTS.md hierarchy
+8. ✅ Update AGENTS.md document
 
 ## Changes
 

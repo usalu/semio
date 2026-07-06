@@ -28,7 +28,7 @@ Key changes:
 10. Updated CLAUDE.md, AGENTS.md, README.md documentation
 11. Updated all test expectations in main_test.go
 
-All relevant tests pass: ContributorDiscovery, TicketsNonEmpty, TicketTitleValidation, FilterTicketWorkspaceFiles, TicketListCommand, TicketOpenContinueKeyword, GoalCreate, GoalHierarchy, GoalList, GoalArtifactID, IdToUri, UriToId, LifecycleCommands, TicketLifecycle_NoGithub, CLI E2E Ticket/Goal Lifecycle, ToolTicketLifecycle, ToolDraftLifecycle.
+All relevant tests pass: ContributorDiscovery, TicketsNonEmpty, TicketTitleValidation, FilterTicketWorkspaceFiles, TicketListCommand, TicketOpenContinueKeyword, GoalCreate, GoalDocument, GoalList, GoalArtifactID, IdToUri, UriToId, LifecycleCommands, TicketLifecycle_NoGithub, CLI E2E Ticket/Goal Lifecycle, ToolTicketLifecycle, ToolDraftLifecycle.
 
 ## Changes
 

@@ -15,6 +15,10 @@ reports
 **dist*
 target*
 .tmp*
+#--------------------------------------PRINT--------------------------------------
+print/asset/font/
+#--------------------------------------MIT-BESTAND--------------------------------------
+mit-bestand/bericht/**/dist/
 #--------------------------------------REPO--------------------------------------
 .repo/cache
 .repo-cache
@@ -78,9 +82,11 @@ test-results
 #--------------------------------------VITE--------------------------------------
 .vite
 /framework/product/os/dev/plugin-modules/
+/framework/product/os/dev/plugin-modules-native/
 /framework/product/os/dev/public/plugin-modules/
 /framework/product/os/dev/renderer-modules/
 /framework/product/os/dev/public/plugins/
+/public/plugin-modules/
 #--------------------------------------NEXTJS--------------------------------------
 .next
 #--------------------------------------TURBO--------------------------------------

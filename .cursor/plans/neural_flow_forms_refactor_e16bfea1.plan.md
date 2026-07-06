@@ -86,7 +86,7 @@ In [flow/core/lib.rs](flow/core/lib.rs):
 
 - [flow/react/index.tsx](flow/react/index.tsx): replace `FlowFixture` TS types + `FLOW_DEFAULT_FIXTURE` with `FlowDocument` (`tree` + `ui`); update the localStorage key, catalogue (add Output node + Preview node), DOM overlays, and eval-output application.
 - [flow/worker.ts](flow/worker.ts) / [flow/worker-client.ts](flow/worker-client.ts): evaluate from `document.tree`; add a headless `evaluateFunction(treeJson, inDictJson)` entry for forms.
-- [flow/play/index.ts](flow/play/index.ts): update controller, hierarchy/inspector builders, and default document; add `flow/fixture/*.flow.json` + `flow/fixture-slugs.ts` (none today) for parity with other technologies.
+- [flow/play/index.ts](flow/play/index.ts): update controller, document/inspector builders, and default document; add `flow/fixture/*.flow.json` + `flow/fixture-slugs.ts` (none today) for parity with other technologies.
 
 ### Layer 4 - procedural (2d/3d)
 

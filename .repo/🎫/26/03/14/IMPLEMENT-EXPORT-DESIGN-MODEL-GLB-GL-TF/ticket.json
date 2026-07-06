@@ -3,7 +3,7 @@
   "emoji": "🔨",
   "status": "closed",
   "description": "Implement export_design_model function in compose.rs that exports a design's 3D model to GLB/glTF format. BFS to compute world planes, merge type meshes, build GLB binary.",
-  "summary": "Implemented export_design_model function and supporting helpers in compose.rs. The function exports a design's assembled 3D model to GLB/glTF format by: (1) BFS traversal to compute world transforms for all pieces via connection graph, (2) per-type mesh assembly by parsing embedded GLB models or generating box placeholders, (3) building a hierarchical glTF scene graph matching the connection hierarchy with local transforms. Added: EXPORT_MODEL_FORMATS constant, decode_data_uri_blob, parse_glb, build_glb, matrix4_to_gltf_column_major, append_box_mesh, select_model_for_type, merge_glb_mesh helpers. All 11 existing tests pass.",
+  "summary": "Implemented export_design_model function and supporting helpers in compose.rs. The function exports a design's assembled 3D model to GLB/glTF format by: (1) BFS traversal to compute world transforms for all pieces via connection graph, (2) per-type mesh assembly by parsing embedded GLB models or generating box placeholders, (3) building a hierarchical glTF scene graph matching the connection document with local transforms. Added: EXPORT_MODEL_FORMATS constant, decode_data_uri_blob, parse_glb, build_glb, matrix4_to_gltf_column_major, append_box_mesh, select_model_for_type, merge_glb_mesh helpers. All 11 existing tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/886"
   },

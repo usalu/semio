@@ -3,7 +3,7 @@
   "emoji": "🎀",
   "status": "closed",
   "description": "Replace the fixed two-level toolbar (category -\u003e tools) with an arbitrary-depth recursive tree of buttons, toggles, and collections, rendered as a drill-down ribbon in the footer.",
-  "summary": "Ribbon hierarchy fix: sibling leaf-only collections (e.g. selection → methods/mode/targets) now flatten into separate toolbar zones with gap-single between each segment, instead of cramming collection pickers and tool groups into one zone. Picker path stops at levels that need a collection choice (resolveDefaultToolPath returns [selection] not [selection, methods]). Root collection pickers still single-select and replace downstream zones.",
+  "summary": "Ribbon document fix: sibling leaf-only collections (e.g. selection → methods/mode/targets) now flatten into separate toolbar zones with gap-single between each segment, instead of cramming collection pickers and tool groups into one zone. Picker path stops at levels that need a collection choice (resolveDefaultToolPath returns [selection] not [selection, methods]). Root collection pickers still single-select and replace downstream zones.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1761"
   },

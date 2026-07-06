@@ -47,7 +47,7 @@ A kit is a constrained virtual file system. Model it as a single GraphQL interfa
 - `Folder` -> parent is its `Folder` or the `Kit`; children = its subFolders + files + designs + types + families.
 - `File` / `Type` / `Family` -> parent is a `Folder` or the `Kit` (root); children = empty.
 - `Design` -> parent is a `Folder` or the `Kit`; children = its pieces + connections (flat).
-- `Piece` -> parent is always its `Design` (cannot be moved out); children = empty (the piece/connection hierarchy stays a separate concern from the VFS).
+- `Piece` -> parent is always its `Design` (cannot be moved out); children = empty (the piece/connection document stays a separate concern from the VFS).
 - `Connection` -> parent is always its `Design`; children = empty even though it owns two `Side`s.
 
 ```mermaid

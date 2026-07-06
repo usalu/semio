@@ -38,7 +38,7 @@
   - **Rewrote `blueprint: Blueprint(!)?` → `blueprint: Entity(!)? # … // Type | Design`** (2 fields) and `node: Blueprint! # reference` → `node: Entity! # reference // Type | Design` on `BlueprintEdge`.
 - `compose/graphql/target.schema.graphql` — replaced `#region MutationInputs` and `type Mutation { change(transactionScope) … }` + `type KitChange { … }` with a hierarchical scoped command API:
   - **Removed `input TransactionScopeInput`** plus every per-operation single-field `*Input` wrapper (`RenameKitInput`, `RenameTagInput`, `RenameConceptInput`, `RenamePortInput`, `RenameQualityInput`, `RenameTypeInput`, `RenameConnectorInput`, `RenamePieceInput`, every `Update*DescriptionInput`, every `Update*IconInput`, `ChangeDescriptionInput`, `ChangePieceToTypeInput`, `ChangePiecesToTypeInput`). Only the multi-field `AddFixedPieceInput { blueprintId, position, name, description }` remains.
-  - **Replaced the flat `type Mutation { change(transactionScope): KitChange! }`** with `type Mutation { session: SessionScopedCommandInput! }`. The full hierarchy is:
+  - **Replaced the flat `type Mutation { change(transactionScope): KitChange! }`** with `type Mutation { session: SessionScopedCommandInput! }`. The full document is:
     - `SessionScopedCommandInput { start: ID!, end: ID!, draft(id: ID!): DraftScopedCommandInput! }`
     - `DraftScopedCommandInput { transaction(id: ID!): TransactionScopedCommandInput! }`
     - `TransactionScopedCommandInput { kit: KitScopedOperationInput! }`
@@ -82,7 +82,7 @@
 - After the scoped command refactor: `parse OK` and **`build OK`** (no errors at all).
 - `rg "^input TransactionScopeInput|^input Rename|^input Update|^input ChangeDescription|^input ChangePiece" compose/graphql/target.schema.graphql` → 0 matches.
 - `rg "^type KitChange\b" compose/graphql/target.schema.graphql` → 0 matches; `rg "^type Mutation\b" …` → 1 match.
-- `type Mutation` exposes a single field `session: SessionScopedCommandInput!`. The hierarchy `session → draft(id) → transaction(id) → kit → {tag,concept,quality,type,design,…}(id)` is the only path to every kit-changing operation; every leaf returns `ID!`.
+- `type Mutation` exposes a single field `session: SessionScopedCommandInput!`. The document `session → draft(id) → transaction(id) → kit → {tag,concept,quality,type,design,…}(id)` is the only path to every kit-changing operation; every leaf returns `ID!`.
 - After the lean-input refactor: `parse OK` and **`build OK`** (no errors at all).
 - `rg "^input (TagInput|ConceptInput|QualityInput|TypeInput|PortInput|ConnectorInput|DesignInput|AttributeInput|ChildPieceWithParentConnectionInput|HangingChildPieceWithParentConnectionInput|AddFixedPieceInput)\b" compose/graphql/target.schema.graphql` → 0 matches.
 - `rg "^input \w+" …` → 7 matches: `VectorInput`, `PointInput`, `CoordinateInput`, `OffsetInput`, `PlaneInput`, `PositionInput`, `LocationInput` — all structural value types, no entity-data wrappers.

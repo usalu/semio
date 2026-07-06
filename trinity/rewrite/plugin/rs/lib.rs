@@ -6,7 +6,7 @@ use semio_framework_plugin::{
     PluginBundle, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -31,7 +31,7 @@ const TRINITY_REWRITE_PLAY_BODY_LHS: &str = "trinity.rewrite.play.lhs";
 const TRINITY_REWRITE_PLAY_BODY_RHS: &str = "trinity.rewrite.play.rhs";
 const TRINITY_REWRITE_PLAY_BODY_JACK: &str = "trinity.rewrite.play.jack";
 const TRINITY_REWRITE_PLAY_BODY_PARAMETERS: &str = "trinity.rewrite.play.parameters";
-const TRINITY_REWRITE_PLAY_BODY_HIERARCHY: &str = "trinity.rewrite.play.hierarchy";
+const TRINITY_REWRITE_PLAY_BODY_DOCUMENT: &str = "trinity.rewrite.play.document";
 const TRINITY_REWRITE_PLAY_BODY_CATALOGUE: &str = "trinity.rewrite.play.catalogue";
 const TRINITY_REWRITE_PLAY_BODY_INSPECTION: &str = "trinity.rewrite.play.inspection";
 const TRINITY_REWRITE_PLAY_WINDOW_BEFORE: &str = "trinity-rewrite-before";
@@ -660,7 +660,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn build_hierarchy_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
+fn build_document_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
     let Some(fixture) = parse_fixture_json(&envelope.before_fixture_json) else {
         return ui_text("Invalid trinity fixture");
     };
@@ -668,7 +668,7 @@ fn build_hierarchy_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
         .nodes
         .iter()
         .map(|node| UiTreeItemNode {
-            id: format!("trinity-hierarchy.node.{}", node.id),
+            id: format!("trinity-document.node.{}", node.id),
             label: if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
             description: Some(node.kind.clone()),
             icon_id: None,
@@ -687,7 +687,7 @@ fn build_hierarchy_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
-            id: "trinity-hierarchy.nodes".into(),
+            id: "trinity-document.nodes".into(),
             label: Some("Pieces".into()),
             default_open: Some(true),
             items: node_items,
@@ -697,7 +697,7 @@ fn build_hierarchy_tree(envelope: &TrinityRewriteEnvelope) -> UiNode {
                 .runtime
                 .selected_node_ids
                 .iter()
-                .map(|id| format!("trinity-hierarchy.node.{id}"))
+                .map(|id| format!("trinity-document.node.{id}"))
                 .collect(),
         ),
         highlighted_ids: None,
@@ -1204,7 +1204,7 @@ impl PluginApp for TrinityRewritePlayApp {
                 render_text_editor(TRINITY_REWRITE_PLAY_SURFACE_JACK, &compiled_jack_query(&envelope), "jack")
             }
             TRINITY_REWRITE_PLAY_BODY_PARAMETERS => build_parameters_panel(&envelope),
-            TRINITY_REWRITE_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
+            TRINITY_REWRITE_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             TRINITY_REWRITE_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
             TRINITY_REWRITE_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -1260,7 +1260,7 @@ fn rewrite_layout() -> WindowLayout {
 
 fn create_rewrite_app() -> App {
     App::from_builder(
-        App::builder(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite").hierarchy(["semio", "trinity", "rewrite"])
+        App::builder(TRINITY_REWRITE_PLAY_APP_ID, "Trinity Rewrite").document(["semio", "trinity", "rewrite"])
             .icon_id("trinity-rewrite")
             .mode("explore", "Explore")
             .default_mode_id("explore")
@@ -1276,10 +1276,10 @@ fn create_rewrite_app() -> App {
             )
             .default_layout(rewrite_layout())
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                TRINITY_REWRITE_PLAY_BODY_HIERARCHY,
+                TRINITY_REWRITE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1306,7 +1306,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

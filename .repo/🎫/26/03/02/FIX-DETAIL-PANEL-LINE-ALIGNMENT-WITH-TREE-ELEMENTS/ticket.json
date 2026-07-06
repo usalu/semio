@@ -2,7 +2,7 @@
   "title": "Fix Detail Panel Line Alignment With Tree Elements",
   "status": "closed",
   "prompt": "Fix the indentation lines in the detail panel so they visually align with all tree element chevrons. Currently the lines are shifted left because indentationLinePx uses a midpoint formula instead of aligning to chevron centers.",
-  "summary": "Final continuation complete: TreeRow no longer wraps rows in TreeContent indentation, and tree-aware Label now renders hierarchy indentation/lines only in the left cell while controls remain fixed in a 160px right column across nesting levels. compose/js unit tests pass.",
+  "summary": "Final continuation complete: TreeRow no longer wraps rows in TreeContent indentation, and tree-aware Label now renders document indentation/lines only in the left cell while controls remain fixed in a 160px right column across nesting levels. compose/js unit tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/750"
   },

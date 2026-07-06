@@ -12,7 +12,7 @@ Create a standalone `py/compose/compose.py` package that matches the functionali
 
 1. Pure Pydantic models (no SQLModel table=True, no graphene, no FastAPI)
 2. Minimal dependencies: pydantic, numpy, networkx
-3. Same model hierarchy as other implementations
+3. Same model document as other implementations
 4. Diff types and operations for all models
 5. Validation constraints
 6. Serialization/deserialization

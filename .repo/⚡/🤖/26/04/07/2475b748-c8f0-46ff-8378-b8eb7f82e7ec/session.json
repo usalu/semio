@@ -67,7 +67,7 @@
           "hook_event_name": "UserPromptSubmit",
           "session_id": "2475b748-c8f0-46ff-8378-b8eb7f82e7ec",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2475b748-c8f0-46ff-8378-b8eb7f82e7ec.jsonl",
-          "prompt": "sketchpad In the Workbench tree only, add one extra empty-row-sized vertical gap after  abstract type rows  before the next sibling/child block begins. Apply this as a structural spacing rule in the shared Workbench tree rendering, not as a hardcoded type-name fix. Keep hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing unchanged.",
+          "prompt": "sketchpad In the Workbench tree only, add one extra empty-row-sized vertical gap after  abstract type rows  before the next sibling/child block begins. Apply this as a structural spacing rule in the shared Workbench tree rendering, not as a hardcoded type-name fix. Keep document, tree lines, expand/collapse behavior, actions, and all other spacing unchanged.",
           "cwd": "/workspaces/semio"
         }
       },
@@ -89,7 +89,7 @@
           "hook_event_name": "UserPromptSubmit",
           "session_id": "2475b748-c8f0-46ff-8378-b8eb7f82e7ec",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2475b748-c8f0-46ff-8378-b8eb7f82e7ec.jsonl",
-          "prompt": "sketchpad In the Workbench tree only, add one extra empty-row-sized vertical gap after  abstract type rows  before the next sibling/child block begins. Apply this as a structural spacing rule in the shared Workbench tree rendering, not as a hardcoded type-name fix. Keep hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing unchanged.",
+          "prompt": "sketchpad In the Workbench tree only, add one extra empty-row-sized vertical gap after  abstract type rows  before the next sibling/child block begins. Apply this as a structural spacing rule in the shared Workbench tree rendering, not as a hardcoded type-name fix. Keep document, tree lines, expand/collapse behavior, actions, and all other spacing unchanged.",
           "cwd": "/workspaces/semio"
         }
       },
@@ -2975,7 +2975,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2475b748-c8f0-46ff-8378-b8eb7f82e7ec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "updatedFiles": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3004,7 +3004,7 @@
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/2475b748-c8f0-46ff-8378-b8eb7f82e7ec.jsonl",
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "updatedFiles": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3254,7 +3254,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "id": "26/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "updatedFiles": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3284,7 +3284,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "id": "26/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "updatedFiles": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3428,7 +3428,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "id": "2026/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "updatedFiles": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3458,7 +3458,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "id": "2026/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "updatedFiles": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3488,7 +3488,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "/workspaces/semio/.repo/🎫/26/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "files": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3518,7 +3518,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "/workspaces/semio/.repo/🎫/26/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "files": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3548,7 +3548,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "files": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3578,7 +3578,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "files": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3608,7 +3608,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "files": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]
@@ -3639,7 +3639,7 @@
           "tool_name": "mcp_repo_ticket_close",
           "tool_input": {
             "path": "26/04/07/WORKBENCH-TREE-ABSTRACT-TYPE-ROW-SPACING",
-            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+            "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
             "files": [
               "/workspaces/semio/compose/sketchpad/index.tsx"
             ]

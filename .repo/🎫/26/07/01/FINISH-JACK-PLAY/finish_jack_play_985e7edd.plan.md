@@ -208,7 +208,7 @@ Update catalogue panel to list presets from controller (replace hardcoded `Piece
 ## Phase 4 — Selection + polish
 
 - Expose `selectedNodeIdsJson()` from WASM after pointer events; map engine node ids → trinity ids via existing `node_id_map`.
-- `TrinityCanvas` → `onSelectionChange` → controller `setSelection` (wire hierarchy/inspection panels).
+- `TrinityCanvas` → `onSelectionChange` → controller `setSelection` (wire document/inspection panels).
 - Extend existing vitest in [trinity/jack/play/index.ts](trinity/jack/play/index.ts) and [trinity/react/index.tsx](trinity/react/index.tsx); add cargo tests for subgraph + graph RETURN.
 - Rebuild WASM via [trinity/rewrite/engine/script.ts](trinity/rewrite/engine/script.ts).
 - Runtime verify: launch `🛠️dev🔺trinity🃏jack` (port 6054) — zoom changes LOD label in window chrome, wheel zoom works, table fixture fills Results, graph fixture shows graph in Results, CREATE query updates main graph.

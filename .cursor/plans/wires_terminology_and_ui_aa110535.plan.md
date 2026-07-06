@@ -12,7 +12,7 @@ todos:
     content: Update metabolism fixture + wiresFixtureBoard to derive edgeKind/shape from kinds; distinct identity kind shapes in demo
     status: completed
   - id: play-ui
-    content: WIRES hierarchy (Identities/Relationships) and inspector labels using relationship kind display names
+    content: WIRES document (Identities/Relationships) and inspector labels using relationship kind display names
     status: completed
   - id: validate
     content: Rust + vitest tests; runtime check on wires play; ticket close via repo MCP
@@ -58,7 +58,7 @@ flowchart TB
 | Fixture meta | `kindCatalogs.nodes` / `.edges` | Correct data ([metabolism.wires.json](reasoning/mindmap/wires/fixture/metabolism.wires.json) colors per `wires.*`) but wires-facing names are wrong |
 | Canvas edges | [`append_edges_wires_and_link`](puzzle/2d/rs/lib.rs) uses theme chrome only | All relationships look identical despite `edgeKind` + catalog colors |
 | Canvas nodes | Instance `shape` only; catalog `shape`/`color` ignored at paint | Every identity renders as theme rectangles |
-| Play shell | Generic [`buildPuzzle2dPlayHierarchySections`](puzzle/2d/play/index.ts) (“Nodes”, “Edges”, `A → B`) | Does not surface relationship kind; [`wiresPlayRelationshipEdgeLabel`](reasoning/mindmap/wires/play/index.ts) unused in UI |
+| Play shell | Generic [`buildPuzzle2dPlayDocumentSections`](puzzle/2d/play/index.ts) (“Nodes”, “Edges”, `A → B`) | Does not surface relationship kind; [`wiresPlayRelationshipEdgeLabel`](reasoning/mindmap/wires/play/index.ts) unused in UI |
 | Docs | [mindmap/AGENTS.md](reasoning/mindmap/AGENTS.md) says relationship is a “Node” | Wrong link target |
 
 Cross-window sync is already on the shared normal-graph path ([prior plan](.cursor/plans/generalize_wires_cross-window_sync_e8279886.plan.md)); this work does **not** reopen that architecture.
@@ -132,26 +132,26 @@ Metabolism fixture: give distinct `identityKind` shapes where useful (e.g. capsu
 
 ## 4. WIRES play shell UI (own terms, not Nodes/Edges)
 
-Add wires-specific hierarchy builder (new region in [reasoning/mindmap/wires/play/index.ts](reasoning/mindmap/wires/play/index.ts) or [puzzle/2d/play/index.ts](puzzle/2d/play/index.ts) behind `PUZZLE_2D_PLAY_IS_WIRES`):
+Add wires-specific document builder (new region in [reasoning/mindmap/wires/play/index.ts](reasoning/mindmap/wires/play/index.ts) or [puzzle/2d/play/index.ts](puzzle/2d/play/index.ts) behind `PUZZLE_2D_PLAY_IS_WIRES`):
 
 - Root group: **WIRES** (or kit name from fixture `source.kitName`).
 - Child groups: **Identities**, **Relationships** (not Nodes/Edges).
 - Identity items: identity label (+ optional IdentityKind name from catalog).
 - Relationship items: **`Owns: Source → Target`** using `relationshipKindDisplayName` + identity labels (wire `wiresRelationshipLabelForEdgeId` / identity label helpers).
 
-Framework playground ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)): when `isWiresPlay`, pass wires hierarchy builder + optional `fixtureObjectDisplayLabel` override so selection panel matches.
+Framework playground ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)): when `isWiresPlay`, pass wires document builder + optional `fixtureObjectDisplayLabel` override so selection panel matches.
 
 Inspector (puzzle play edge/node inspectors): for wires play, show read-only **Relationship kind** / **Identity kind** using WIRES names; keep underlying `edgeKind`/`nodeKind` fields as implementation detail in a collapsed/advanced row if needed.
 
-Optional canvas edge labels at detail LOD (later slice): mid-curve “Owns” badge—only if cheap; hierarchy labels are minimum bar.
+Optional canvas edge labels at detail LOD (later slice): mid-curve “Owns” badge—only if cheap; document labels are minimum bar.
 
 ---
 
 ## 5. Ticket and validation
 
 - Reopen or continue ticket `26/06/03/FRAMEWORK-ICON-INTERFACE` sibling: use **`WIRES-NORMAL-GRAPH`** or open **`WIRES-IDENTITY-RELATIONSHIP-UI`** via repo MCP when executing (goals resource was unavailable in plan mode).
-- **Runtime** (:6015 wires play): four visibly different edge styles; identities show distinct shapes/colors per IdentityKind; hierarchy uses Identities/Relationships with kind in relationship labels; cross-pane selection unchanged.
-- **Tests:** extend [reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts) vitest for renames + mapping fns; puzzle 2d tests for catalog paint; wires play vitest for hierarchy labels.
+- **Runtime** (:6015 wires play): four visibly different edge styles; identities show distinct shapes/colors per IdentityKind; document uses Identities/Relationships with kind in relationship labels; cross-pane selection unchanged.
+- **Tests:** extend [reasoning/mindmap/wires/react/index.ts](reasoning/mindmap/wires/react/index.ts) vitest for renames + mapping fns; puzzle 2d tests for catalog paint; wires play vitest for document labels.
 
 ---
 

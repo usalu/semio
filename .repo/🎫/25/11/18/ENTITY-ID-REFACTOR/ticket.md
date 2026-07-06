@@ -38,7 +38,7 @@ Refactor all entity references from simple GUID strings to structured ID objects
 
 ## 1. Analysis
 
-### 1.1. Entity Hierarchy
+### 1.1. Entity Document
 
 All entities that reference other entities (in order from requirements):
 
@@ -216,7 +216,7 @@ export type KitId = { guid: Guid };
    // ... all others
    ```
 
-3. **Update entity schemas** (in hierarchy order)
+3. **Update entity schemas** (in document order)
    - File: `folder?: FolderIdSchema`
    - Folder: `parent?: FolderIdSchema`
    - Prop: `quality: QualityIdSchema` (rename from `key`)
@@ -258,7 +258,7 @@ export type KitId = { guid: Guid };
    - Review all `type Y*Val` definitions
    - Change string refs to Y.Map refs for IDs
 
-2. **Update Store classes** (in hierarchy order)
+2. **Update Store classes** (in document order)
    - FileStore: folder reference
    - FolderStore: parent reference
    - PropStore: quality reference (key → quality)

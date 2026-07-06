@@ -27,7 +27,7 @@ isProject: false
 
 ## Current state (confirmed by reading the code)
 
-`trinity/rewrite/play/index.ts` today has exactly **one** window (`trinity-rewrite-main`, a `TrinityCanvas`) plus a floating `WindowEngagement` textbox holding the *entire* rule as one JSON blob. `apply_rule` in `trinity/rewrite/engine/lib.rs` mutates the graph in place — there is no LHS/RHS split, no parameters, and no before/after comparison. The side panels (hierarchy/catalogue/inspector) are also wired to `trinityJackControllerRef` instead of the rewrite controller — a pre-existing bug.
+`trinity/rewrite/play/index.ts` today has exactly **one** window (`trinity-rewrite-main`, a `TrinityCanvas`) plus a floating `WindowEngagement` textbox holding the *entire* rule as one JSON blob. `apply_rule` in `trinity/rewrite/engine/lib.rs` mutates the graph in place — there is no LHS/RHS split, no parameters, and no before/after comparison. The side panels (document/catalogue/inspector) are also wired to `trinityJackControllerRef` instead of the rewrite controller — a pre-existing bug.
 
 Reference pattern: `trinity/jack/play/index.ts` already shows the established 3-window convention (`buildTrinityWindowBody` / `buildWriterWindowBody` / `buildTableWindowBody` + `registerWindowBody` + nested `WindowLayout` row/column/stack). `forms/play/index.ts` shows the `buildFormsWindowBody(..., "preview")` + `FormRenderer` pattern for a live, fillable form — exactly what "previewed form for parameters" means.
 
@@ -102,7 +102,7 @@ In the `TrinityPlayHost` region:
 - Add `TrinityRewriteJackSurfaceHost`: `WriterCanvas` bound to `getJackQueryText()`, `languageId: "jack"` for syntax highlighting, no `onChange` wired (read-only preview).
 - Add `TrinityRewriteParametersSurfaceHost`: `FormRenderer` (same component `FormsTrySurfaceHost` uses) bound to `getParameterFormSpec()` / `getParameterValues()`, `onChange` → `setParameterValues`.
 - Add `useTrinityRewriteInteractionRevision` hook (mirrors `useTrinityJackInteractionRevision`) and use it in all 6 hosts so edits propagate.
-- Fix the pre-existing bug: rewrite's hierarchy/catalogue/inspector panels currently read `trinityJackControllerRef` — repoint them at `trinityRewriteControllerRef` and `getBeforeFixtureJson()`.
+- Fix the pre-existing bug: rewrite's document/catalogue/inspector panels currently read `trinityJackControllerRef` — repoint them at `trinityRewriteControllerRef` and `getBeforeFixtureJson()`.
 - Register all 6 surfaces in `registerTrinityRewritePlaySurfaceHosts()` (`registerUiTrinitySurfaceHost` x2, `registerUiWriterSurfaceHost` x3, `registerUiFormsSurfaceHost` x1).
 
 ## Verification

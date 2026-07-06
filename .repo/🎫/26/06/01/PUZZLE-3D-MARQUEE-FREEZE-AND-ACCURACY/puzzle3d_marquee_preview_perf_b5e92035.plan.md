@@ -54,7 +54,7 @@ During a left-drag marquee the camera never moves (`OrbitControls` `LEFT: null`,
 - `cancelGesture` (line 6086) and relocate-abort paths: also call `cancelMarqueePreview()` so an aborted drag restores the original selection.
 
 ### 4. Defer host shell on marquee/manual selection (puzzle/3d/play/index.ts)
-- In `noteSelection` (line 1087) call `this.notifySelection({ deferShell: true })` so the single commit's inspector/hierarchy rebuild no longer blocks the release. `notifySnapshot()` still fires synchronously to update the viewport/probe.
+- In `noteSelection` (line 1087) call `this.notifySelection({ deferShell: true })` so the single commit's inspector/document rebuild no longer blocks the release. `notifySnapshot()` still fires synchronously to update the viewport/probe.
 
 ## Validation
 - Extend existing in-file vitest blocks only: in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (~8285) add cases that `previewMarqueeSelection` and `commitMarqueeSelection` resolve identically from the same cached candidates, and that additive/subtractive modes merge against the captured base. In [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) (~1977) assert `noteSelection` still updates `selection`/`selectedLabel`.

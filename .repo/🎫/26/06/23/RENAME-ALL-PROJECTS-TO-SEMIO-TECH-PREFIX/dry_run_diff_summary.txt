@@ -145,7 +145,7 @@ File: .cursor/plans/per-kind_object_styling_6a64c4e0.plan.md
 File: .cursor/plans/platform_navigation_mechanism_ff158767.plan.md
   Changed. Length: 8447
 
-File: .cursor/plans/play_hierarchy_tabs_b3050808.plan.md
+File: .cursor/plans/play_document_tabs_b3050808.plan.md
   Changed. Length: 10584
 
 File: .cursor/plans/presentation_embodiments_and_dispositions_1f30a21b.plan.md
@@ -1756,7 +1756,7 @@ File: .repo/🎫/26/06/01/FIX-PUZZLE3D-MARQUEE-SELECTION/ticket.json
 File: .repo/🎫/26/06/01/FULL-VIRTUAL-FILE-SYSTEM/ticket.json
   Changed. Length: 1130
 
-File: .repo/🎫/26/06/01/PRESENTATION-CHAPTER-HIERARCHY/ticket.json
+File: .repo/🎫/26/06/01/PRESENTATION-CHAPTER-DOCUMENT/ticket.json
   Changed. Length: 767
 
 File: .repo/🎫/26/06/01/PRESENTATION-EMBODIMENTS-AND-DISPOSITIONS/ticket.json
@@ -1804,7 +1804,7 @@ File: .repo/🎫/26/06/01/VFS-TABLE-SELECTABLE-WITHOUT-NAVIGATE/ticket.json
 File: .repo/🎫/26/06/01/VIRTUAL-FILE-SYSTEM-ROW-SELECTION/ticket.json
   Changed. Length: 669
 
-File: .repo/🎫/26/06/01/projektetagesemantichierarchy/vitest.deck.config.ts
+File: .repo/🎫/26/06/01/projektetagesemanticdocument/vitest.deck.config.ts
   Changed. Length: 897
 
 File: .repo/🎫/26/06/02/BRUSH-KIND-SUGGESTION-PERCENTAGES/ticket.json
@@ -1960,7 +1960,7 @@ File: .repo/🎫/26/06/11/PUZZLE-3D-BRUSH-FILL-SUGGEST-CAMERA-STABLE/ticket.json
 File: .repo/🎫/26/06/11/PUZZLE-5D-2D-3D-HOVER-SYNC/ticket.json
   Changed. Length: 901
 
-File: .repo/🎫/26/06/11/REFERENCES-IN-CAD-MODEL-DEFINITION-HIERARCHY/summary.md
+File: .repo/🎫/26/06/11/REFERENCES-IN-CAD-MODEL-DEFINITION-DOCUMENT/summary.md
   Changed. Length: 1298
 
 File: .repo/🎫/26/06/11/SINGULAR-FOLDER-NAMES/fix-remaining-refs.ts
@@ -1972,7 +1972,7 @@ File: .repo/🎫/26/06/11/SINGULAR-FOLDER-NAMES/rename-singular-folders.ts
 File: .repo/🎫/26/06/11/SINGULAR-FOLDER-NAMES/ticket.json
   Changed. Length: 878
 
-File: .repo/🎫/26/06/11/referencesincadmodeldefinitionhierarchy/summary.md
+File: .repo/🎫/26/06/11/referencesincadmodeldefinitiondocument/summary.md
   Changed. Length: 1298
 
 File: .repo/🎫/26/06/16/ADD-IMPORT-VERARBEITUNG-SLIDE-TO-PROJEKTETAGE/vitest.config.ts

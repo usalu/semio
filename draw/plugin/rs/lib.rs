@@ -13,7 +13,7 @@ use semio_framework_plugin::{
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, UiControlNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
     layout::WindowEngagementStatus,
 };
 use serde::{Deserialize, Serialize};
@@ -697,7 +697,7 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionSta
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "draw-play-layers".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: toolbar_items.into_iter().chain(layer_items).collect(),
         }],
@@ -1276,12 +1276,12 @@ fn create_draw_app() -> App {
         possible_engagements: None,
     };
     App::from_builder(
-        App::builder(DRAW_PLAY_APP_ID, "Draw").hierarchy(["semio", "draw"])
+        App::builder(DRAW_PLAY_APP_ID, "Draw").document(["semio", "draw"])
             .icon_id("draw")
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind_with_engagement("draw-composite", "Canvas", DRAW_PLAY_BODY_COMPOSITE, engagement)
-            .panel_tab("framework.panel.hierarchy", "Hierarchy", "workbench", DRAW_PLAY_BODY_LAYERS)
+            .panel_tab("framework.panel.document", "Document", "workbench", DRAW_PLAY_BODY_LAYERS)
             .panel_tab("framework.panel.catalogue", "Catalogue", "workbench", DRAW_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", "Inspection", "details", DRAW_PLAY_BODY_PROPERTIES)
             .keybinding("mod+z", "undo")
@@ -1316,7 +1316,7 @@ static _PLUGIN_INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
     semio_framework_plugin::install_plugin_bundle(draw_bundle());
 });
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests

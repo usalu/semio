@@ -72,7 +72,7 @@ Research complete: Documented full piece creation flow, model resolution, scene 
 
 ### 3. Scene Piece Rendering
 
-**Component hierarchy:**
+**Component document:**
 - `ModelDesign` (`Design.tsx:9370-9458`) — Top-level scene design renderer
   - Iterates `flatDesign.pieces` and wraps each in `PieceScopeProvider` + `ModelPiece`
 - `ModelPiece` (`Design.tsx:9190-9366`) — Individual piece 3D renderer

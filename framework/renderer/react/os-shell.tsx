@@ -106,7 +106,7 @@ type StudioProgramEntry = {
 	readonly programId: string;
 	readonly appId: string;
 	readonly label: string;
-	readonly hierarchy: readonly string[];
+	readonly document: readonly string[];
 	readonly yields: string;
 };
 
@@ -116,7 +116,7 @@ type SpawnedAppEntry = {
 	readonly instanceId: number;
 	readonly appId: string;
 	readonly label: string;
-	readonly hierarchy: readonly string[];
+	readonly document: readonly string[];
 };
 
 type StudioPanelState = {
@@ -141,7 +141,7 @@ const NAVBAR_NO_EXAMPLE_ID = "__no_example__";
 const FRAMEWORK_SHELL_CHROME_THEME = "system" as const;
 const DEFAULT_LEFT_PANEL_SIZE = 280;
 const DEFAULT_RIGHT_PANEL_SIZE = 320;
-const APP_HIERARCHY_SEPARATOR = " · ";
+const APP_DOCUMENT_SEPARATOR = " · ";
 
 type UIHistoryEntry = { readonly uri: string };
 type UIHistory = { readonly entries: readonly UIHistoryEntry[]; readonly index: number };
@@ -233,24 +233,24 @@ function buildStudioPrograms(loaded: readonly LoadedPluginState[]): readonly Stu
 			programId: program.programId,
 			appId: program.appId,
 			label: program.label,
-			hierarchy: program.hierarchy,
+			document: program.document,
 			yields: program.yields,
 		})),
 	);
 }
 
-export function appHierarchyLabel(hierarchy: readonly string[]): string {
-	return hierarchy.join(APP_HIERARCHY_SEPARATOR);
+export function appDocumentLabel(document: readonly string[]): string {
+	return document.join(APP_DOCUMENT_SEPARATOR);
 }
 
-export function appWindowHierarchyLabel(app: AppDefinition, windowLabel: string): string {
+export function appWindowDocumentLabel(app: AppDefinition, windowLabel: string): string {
 	const normalizedWindow = windowLabel.trim().toLowerCase();
 	const normalizedApp = app.label.trim().toLowerCase();
-	const hierarchy = [...app.hierarchy];
-	if (normalizedWindow && normalizedWindow !== normalizedApp && hierarchy.at(-1)?.toLowerCase() !== normalizedWindow) {
-		hierarchy.push(normalizedWindow);
+	const document = [...app.document];
+	if (normalizedWindow && normalizedWindow !== normalizedApp && document.at(-1)?.toLowerCase() !== normalizedWindow) {
+		document.push(normalizedWindow);
 	}
-	return appHierarchyLabel(hierarchy);
+	return appDocumentLabel(document);
 }
 
 function buildStudioPanelState(
@@ -276,7 +276,7 @@ function parsePanelState(viewState: ViewState): StudioPanelState | null {
 }
 
 function panelSideForGroup(group: string): "left" | "right" {
-	if (group === "workbench" || group === "hierarchy" || group === "display") return "left";
+	if (group === "workbench" || group === "document" || group === "display") return "left";
 	return "right";
 }
 
@@ -491,7 +491,12 @@ function uiNodeToTreePanelConfig(node: UiNode, onCommand: (command: CommandDescr
 
 function shellTabIcon(iconId: string): React.FC<{ size?: number }> {
 	return function ShellTabIcon({ size = 16 }: { size?: number }) {
-		const iconName = iconId in ICONS ? (iconId as IconName) : "circle-dot";
+		let iconName: IconName = "circle-dot";
+		if (iconId === FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID) {
+			iconName = "file-text";
+		} else if (iconId in ICONS) {
+			iconName = iconId as IconName;
+		}
 		return <Icon icon={iconName} size={size} />;
 	};
 }
@@ -556,10 +561,9 @@ function renderWindowMeasure(measure: WindowMeasure, onCommand: (command: Comman
 }
 
 function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onCommand: (command: CommandDescriptor) => void): ReactNode {
-	if (!measures?.length) return undefined;
 	return (
 		<WindowMeasuresTree>
-			{measures.map((measure) => renderWindowMeasure(measure, onCommand))}
+			{(measures ?? []).map((measure) => renderWindowMeasure(measure, onCommand))}
 		</WindowMeasuresTree>
 	);
 }
@@ -616,6 +620,9 @@ export function FrameworkOsShell({
 	const [windowEngagementsByKind, setWindowEngagementsByKind] = useState<
 		Readonly<Record<string, WindowEngagement>>
 	>({});
+	const [windowMeasuresByKind, setWindowMeasuresByKind] = useState<
+		Readonly<Record<string, readonly WindowMeasure[]>>
+	>({});
 	const [panelUiByKey, setPanelUiByKey] = useState<Readonly<Record<string, UiNode>>>({});
 	const [activeToolNodes, setActiveToolNodes] = useState<readonly ToolNode[]>([]);
 	const [spawnedWindowUi, setSpawnedWindowUi] = useState<UiNode | null>(null);
@@ -657,9 +664,9 @@ export function FrameworkOsShell({
 	}, [pluginFilter, plugins, studioMode]);
 
 	const panel = session ? parsePanelState(session.viewState) : null;
-	const activeAppTitle = appHierarchyLabel(
-		panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId)?.hierarchy
-		?? session?.app.hierarchy
+	const activeAppTitle = appDocumentLabel(
+		panel?.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId)?.document
+		?? session?.app.document
 		?? [],
 	);
 
@@ -746,18 +753,21 @@ export function FrameworkOsShell({
 				...nextSession.app.panelTabs.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey, nextSession.viewState)),
 				plugin.tools(nextSession.instanceId, nextSession.viewState),
 				plugin.windowEngagements(nextSession.instanceId, nextSession.viewState),
+				plugin.windowMeasures(nextSession.instanceId, nextSession.viewState),
 			]);
 			if (generation !== refreshGenerationRef.current) return;
 			const windowNodes = rendered.slice(0, windowCount);
 			const panelNodes = rendered.slice(windowCount, windowCount + nextSession.app.panelTabs.length);
 			const dynamicTools = rendered[windowCount + nextSession.app.panelTabs.length] as readonly ToolNode[];
-			const dynamicEngagements = rendered[rendered.length - 1] as Readonly<Record<string, WindowEngagement>>;
+			const dynamicEngagements = rendered[rendered.length - 2] as Readonly<Record<string, WindowEngagement>>;
+			const dynamicMeasures = rendered[rendered.length - 1] as Readonly<Record<string, readonly WindowMeasure[]>>;
 			setWindowUiByKind(
 				Object.fromEntries(
 					nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]!]),
 				),
 			);
 			setWindowEngagementsByKind(dynamicEngagements);
+			setWindowMeasuresByKind(dynamicMeasures);
 			setPanelUiByKey(Object.fromEntries(nextSession.app.panelTabs.map((tab, index) => [tab.id, panelNodes[index]!])));
 			const activeModeId = nextSession.viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
 			const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
@@ -942,7 +952,7 @@ export function FrameworkOsShell({
 							instanceId,
 							appId: program.appId,
 							label: label ?? program.label,
-							hierarchy: program.hierarchy,
+							document: program.document,
 						},
 					],
 					currentPanel.activePanelTab,
@@ -1023,7 +1033,7 @@ export function FrameworkOsShell({
 							instanceId,
 							appId: program.appId,
 							label: program.label,
-							hierarchy: program.hierarchy,
+							document: program.document,
 						},
 					],
 					currentPanel.activePanelTab,
@@ -1214,7 +1224,7 @@ export function FrameworkOsShell({
 	const settingsHost: SettingsHostApi = useMemo(
 		() => ({
 			appId: session?.app.id,
-			appLabel: session ? appHierarchyLabel(session.app.hierarchy) : undefined,
+			appLabel: session ? appDocumentLabel(session.app.document) : undefined,
 			controllerId: session?.app.controllerId,
 			pluginId: session?.pluginId,
 			compact: uiCompact,
@@ -1292,18 +1302,18 @@ export function FrameworkOsShell({
 				tree: staticTreePanelDefinition(uiNodeToTreePanelConfig(panelUiByKey[tab.id] ?? { type: "text", value: "Loading…" }, onCommand)),
 			}));
 		if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
-		const hasPluginHierarchyTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_HIERARCHY_ID);
-		if (hasPluginHierarchyTab) return pluginLeftTabs;
-		const hierarchyTab: SidePanelTabConfig = {
-			id: FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-			icon: shellTabIcon(FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID),
-			name: FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+		const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
+		if (hasPluginDocumentTab) return pluginLeftTabs;
+		const documentTab: SidePanelTabConfig = {
+			id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+			icon: shellTabIcon(FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID),
+			name: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 			order: 0,
 			tree: staticTreePanelDefinition({
-				sections: [{ id: "hierarchy.root", label: "Scene", items: [{ id: "hierarchy.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} spawned app(s)` : "—" }] }],
+				sections: [{ id: "document.root", label: "Document", items: [{ id: "document.empty", label: studioMode ? `${panel?.spawnedApps.length ?? 0} spawned app(s)` : "—" }] }],
 			}),
 		};
-		return [hierarchyTab, ...pluginLeftTabs];
+		return [documentTab, ...pluginLeftTabs];
 	}, [onCommand, panel?.spawnedApps.length, panelUiByKey, session, studioMode]);
 
 	const detailsRightTabs = useMemo((): SidePanelTabConfig[] => {
@@ -1332,9 +1342,9 @@ export function FrameworkOsShell({
 	);
 
 	const activeLeftPanelTabId = useMemo(() => {
-		if (activeLeftPanelKind === "display") return frameworkDisplayTabs[0]?.id ?? FRAMEWORK_PANEL_TAB_HIERARCHY_ID;
+		if (activeLeftPanelKind === "display") return frameworkDisplayTabs[0]?.id ?? FRAMEWORK_PANEL_TAB_DOCUMENT_ID;
 		if (studioMode && session?.app.id === S_PLAY_APP_ID) return panel?.activePanelTab ?? S_PLAY_CATALOGUE_TAB_ID;
-		return workbenchLeftTabs[0]?.id ?? FRAMEWORK_PANEL_TAB_HIERARCHY_ID;
+		return workbenchLeftTabs[0]?.id ?? FRAMEWORK_PANEL_TAB_DOCUMENT_ID;
 	}, [activeLeftPanelKind, frameworkDisplayTabs, panel?.activePanelTab, session?.app.id, studioMode, workbenchLeftTabs]);
 
 	const activeRightPanelTabId = useMemo(() => {
@@ -1464,7 +1474,7 @@ export function FrameworkOsShell({
 					<div className="flex items-center gap-single">
 						<SemioLogo className="size-workbench shrink-0" />
 						<span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
-							{appHierarchyLabel(session.app.hierarchy)}
+							{appDocumentLabel(session.app.document)}
 						</span>
 					</div>
 				),
@@ -1552,7 +1562,7 @@ export function FrameworkOsShell({
 			for (const program of panel.programs) {
 				items.push({
 					id: `spawn.${program.programId}`,
-					label: `Spawn ${appHierarchyLabel(program.hierarchy)}`,
+					label: `Spawn ${appDocumentLabel(program.document)}`,
 					category: "Catalogue",
 					onSelect: () => onCommand({ controllerId: S_PLAY_CONTROLLER_ID, command: "spawnApp", args: { programId: program.programId } }),
 				});
@@ -1596,7 +1606,7 @@ export function FrameworkOsShell({
 		return [
 			{
 				id: "framework.footer.app",
-				text: appHierarchyLabel(session.app.hierarchy),
+				text: appDocumentLabel(session.app.document),
 				icon: <Icon icon={session.app.iconId && session.app.iconId in ICONS ? (session.app.iconId as IconName) : "app-window"} size="small" />,
 			},
 		];
@@ -1615,7 +1625,7 @@ export function FrameworkOsShell({
 				return [
 					{
 						id: spawned.id,
-						title: appHierarchyLabel(spawned.hierarchy),
+						title: appDocumentLabel(spawned.document),
 						fill: true,
 						showControls: true,
 						children: (
@@ -1630,10 +1640,10 @@ export function FrameworkOsShell({
 		if (Object.keys(windowUiByKind).length === 0) return [];
 		const baseWindows = session.app.windowKinds.map((kind) => ({
 			id: kind.id,
-			title: appWindowHierarchyLabel(session.app, kind.label),
+			title: appWindowDocumentLabel(session.app, kind.label),
 			fill: true,
 			showControls: true,
-			measures: windowMeasuresOverlay(kind.measures, onCommand),
+			measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onCommand),
 			engagement: windowEngagementToSpec(windowEngagementsByKind[kind.id] ?? kind.engagement, onCommand),
 			children: (
 				<ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
@@ -1650,7 +1660,7 @@ export function FrameworkOsShell({
 					title: instance.title,
 					fill: true,
 					showControls: true,
-					measures: windowMeasuresOverlay(kind.measures, onCommand),
+					measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onCommand),
 					engagement: windowEngagementToSpec(windowEngagementsByKind[kind.id] ?? kind.engagement, onCommand),
 					children: (
 						<ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
@@ -1668,7 +1678,7 @@ export function FrameworkOsShell({
 		if (error) return <p className="p-4 text-sm text-destructive" role="alert">{error}</p>;
 		const modes = session.app.modes.length > 0
 			? session.app.modes
-			: [{ id: session.app.id, label: appHierarchyLabel(session.app.hierarchy) }];
+			: [{ id: session.app.id, label: appDocumentLabel(session.app.document) }];
 		const studioHomeBar =
 			studioMode && session.app.id === S_PLAY_APP_ID && !panel?.activeSpawnedId ? (
 				<button
@@ -1690,7 +1700,7 @@ export function FrameworkOsShell({
 					← Back to Media Graph
 				</button>
 				<span>·</span>
-				<span>{appHierarchyLabel(focusedSpawned.hierarchy)}</span>
+				<span>{appDocumentLabel(focusedSpawned.document)}</span>
 			</div>
 		) : null;
 		return (
@@ -2324,7 +2334,7 @@ export type ViewState = {
 export type AppDefinition = {
 	readonly id: string;
 	readonly label: string;
-	readonly hierarchy: readonly string[];
+	readonly document: readonly string[];
 	readonly iconId?: string;
 	readonly controllerId: string;
 	readonly modes: readonly { readonly id: string; readonly label: string; readonly tools?: readonly ToolNode[] }[];
@@ -2348,7 +2358,7 @@ export type PluginManifest = {
 	readonly label: string;
 	readonly version: string;
 	readonly apps: readonly AppDefinition[];
-	readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly hierarchy: readonly string[]; readonly yields: string }[];
+	readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
 	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string }[];
 };
 
@@ -2434,13 +2444,13 @@ export type ToolNode =
 
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
 
-export const FRAMEWORK_PANEL_TAB_HIERARCHY_ID = "framework.panel.hierarchy";
+export const FRAMEWORK_PANEL_TAB_DOCUMENT_ID = "framework.panel.document";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_ID = "framework.panel.catalogue";
 export const FRAMEWORK_PANEL_TAB_INSPECTION_ID = "framework.panel.inspection";
-export const FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL = "Hierarchy";
+export const FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL = "Document";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL = "Catalogue";
 export const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL = "Inspection";
-export const FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID = "framework.panel.hierarchy";
+export const FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID = "framework.panel.document";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID = "framework.panel.catalogue";
 export const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID = "framework.panel.inspection";
 export const FRAMEWORK_PANEL_TAB_PARAMETERS_ID = "framework.panel.parameters";
@@ -2491,6 +2501,10 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
 		windowEngagements: async (instanceId, viewState) =>
 			(await handle.windowEngagements(instanceId, viewState)) as unknown as Readonly<
 				Record<string, WindowEngagement>
+			>,
+		windowMeasures: async (instanceId, viewState) =>
+			(await handle.windowMeasures(instanceId, viewState)) as unknown as Readonly<
+				Record<string, readonly WindowMeasure[]>
 			>,
 		dispose: () => handle.dispose(),
 	};

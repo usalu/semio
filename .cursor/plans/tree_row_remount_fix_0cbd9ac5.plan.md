@@ -1,6 +1,6 @@
 ---
 name: Tree Row Remount Fix
-overview: Eliminate the Ctrl+A ~2s 3D freeze by fixing the shared Tree component so its per-row renderers stop being redefined on every render, which currently forces React to unmount and remount all ~700 workbench hierarchy rows whenever selection changes.
+overview: Eliminate the Ctrl+A ~2s 3D freeze by fixing the shared Tree component so its per-row renderers stop being redefined on every render, which currently forces React to unmount and remount all ~700 workbench document rows whenever selection changes.
 todos:
   - id: context
     content: Add module-level TreeDataContext in ui/react carrying row maps, resolvedSelectedIds, dragAndDropController, and all row handlers
@@ -27,7 +27,7 @@ isProject: false
 
 `Tree` in [ui/react/index.tsx](ui/react/index.tsx) defines its recursive row renderers `DataItemView` (line ~8986) and `DataSectionView` (line ~9050) **inside the component body**. Each `Tree` render gives them a new function identity, so React treats them as new component types and **unmounts/remounts every row** (DOM teardown + all per-row effects rerun).
 
-On Ctrl+A, `selectAllSelection` selects ~180 objects + ~358 vortices, then `emit()` bumps `runtime.generation`. `DeclarativeSidePanelBody` ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) line ~728) rebuilds `buildPuzzle3dPlayHierarchyTree` (fully expanded via `defaultOpen: true`, ~700 rows) and re-renders `<Tree>`, remounting all rows. Since `emit()` is deferred only with `queueMicrotask` (pre-paint), the 3D highlight cannot paint until that remount finishes -> "3D frozen ~2s". The 3D scene itself is already fine.
+On Ctrl+A, `selectAllSelection` selects ~180 objects + ~358 vortices, then `emit()` bumps `runtime.generation`. `DeclarativeSidePanelBody` ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) line ~728) rebuilds `buildPuzzle3dPlayDocumentTree` (fully expanded via `defaultOpen: true`, ~700 rows) and re-renders `<Tree>`, remounting all rows. Since `emit()` is deferred only with `queueMicrotask` (pre-paint), the 3D highlight cannot paint until that remount finishes -> "3D frozen ~2s". The 3D scene itself is already fine.
 
 ## Fix: hoist row renderers out of `Tree` (ui/react)
 
@@ -52,7 +52,7 @@ Expected result: the Ctrl+A generation bump reconciles ~700 rows (no unmount/rem
 
 - Run `@semio-tech/ui-react:test` (Tree behavior: selection, expand/collapse, drag) and confirm green.
 - Run `@semio-tech/puzzle-3d-react:test` and `@semio-tech/puzzle-3d-play:test` (unchanged, sanity).
-- Runtime-check Ctrl+A on the Nakagin fixture: 3D selection should appear within ~1 frame, no multi-second freeze; expand/collapse and drag in the hierarchy still work.
+- Runtime-check Ctrl+A on the Nakagin fixture: 3D selection should appear within ~1 frame, no multi-second freeze; expand/collapse and drag in the document still work.
 
 ## Ticket
 
@@ -60,4 +60,4 @@ Expected result: the Ctrl+A generation bump reconciles ~700 rows (no unmount/rem
 
 ## Optional follow-up (not in this change unless wanted)
 
-The hierarchy still fully rebuilds its node tree on every `generation` bump. A later optimization could drive selection through `Tree`'s `selectedIds` prop instead of baking `isSelected` into rebuilt nodes, so selection changes skip the rebuild entirely.
+The document still fully rebuilds its node tree on every `generation` bump. A later optimization could drive selection through `Tree`'s `selectedIds` prop instead of baking `isSelected` into rebuilt nodes, so selection changes skip the rebuild entirely.

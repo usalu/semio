@@ -15,7 +15,7 @@ use semio_framework_plugin::{
     CommandDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle, UiControlNode,
     UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use semio_framework_core::mesh_from_indexed;
@@ -33,7 +33,7 @@ const PROCEDURAL_3D_PLAY_SURFACE_MAIN: &str = "procedural.play";
 const PROCEDURAL_3D_PLAY_SURFACE_PREVIEW: &str = "procedural.play.preview";
 const PROCEDURAL_3D_PLAY_BODY_MAIN: &str = "procedural.play.main";
 const PROCEDURAL_3D_PLAY_BODY_PREVIEW: &str = "procedural.play.preview";
-const PROCEDURAL_3D_PLAY_BODY_HIERARCHY: &str = "procedural.play.hierarchy";
+const PROCEDURAL_3D_PLAY_BODY_DOCUMENT: &str = "procedural.play.document";
 const PROCEDURAL_3D_PLAY_BODY_CATALOGUE: &str = "procedural.play.catalogue";
 const PROCEDURAL_3D_PLAY_BODY_INSPECTION: &str = "procedural.play.inspection";
 const PROCEDURAL_3D_PLAY_WINDOW_MAIN: &str = "procedural-main";
@@ -631,7 +631,7 @@ fn tree_item_with_command(
     }
 }
 
-fn build_hierarchy_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> UiNode {
+fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> UiNode {
     let items: Vec<UiTreeItemNode> = fixture
         .widgets
         .iter()
@@ -647,7 +647,7 @@ fn build_hierarchy_tree(fixture: &FlowFixture, selected_node_ids: &[String]) -> 
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
-            id: "procedural-play-hierarchy.widgets".into(),
+            id: "procedural-play-document.widgets".into(),
             label: Some("Widgets".into()),
             default_open: Some(true),
             items,
@@ -1209,8 +1209,8 @@ impl PluginApp for Procedural3dPlayApp {
             PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&envelope),
             PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM => render_generate_form(&envelope),
             PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&envelope),
-            PROCEDURAL_3D_PLAY_BODY_HIERARCHY => {
-                build_hierarchy_tree(&envelope.fixture, &envelope.runtime.selected_node_ids)
+            PROCEDURAL_3D_PLAY_BODY_DOCUMENT => {
+                build_document_tree(&envelope.fixture, &envelope.runtime.selected_node_ids)
             }
             PROCEDURAL_3D_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
             PROCEDURAL_3D_PLAY_BODY_INSPECTION => {
@@ -1246,7 +1246,7 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
 //#region 🔖Manifest
 fn create_procedural3d_app() -> App {
     App::from_builder(
-        App::builder(PROCEDURAL_3D_PLAY_APP_ID, "Procedural 3D").hierarchy(["semio", "procedural", "3d"])
+        App::builder(PROCEDURAL_3D_PLAY_APP_ID, "Procedural 3D").document(["semio", "procedural", "3d"])
             .icon_id("workflow")
             .mode("edit", "Edit")
             .mode("generate", "Generate")
@@ -1292,10 +1292,10 @@ fn create_procedural3d_app() -> App {
                 None,
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                PROCEDURAL_3D_PLAY_BODY_HIERARCHY,
+                PROCEDURAL_3D_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1349,7 +1349,7 @@ fn register_procedural3d_exports() {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

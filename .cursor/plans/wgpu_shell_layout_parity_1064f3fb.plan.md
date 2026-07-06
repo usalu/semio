@@ -15,7 +15,7 @@ todos:
     content: "Rebuild render_navbar to React slots: logo+title, spacer, panel-kind icon toggle group, mode button group, fullscreen toggle; drop breadcrumb/back/forward/S/F/theme"
     status: completed
   - id: panel-kinds
-    content: Panel kind switching (workbench/display left, details/settings right) + framework Display and Settings tabs (theme select moves here) + hierarchy fallback + tab icons
+    content: Panel kind switching (workbench/display left, details/settings right) + framework Display and Settings tabs (theme select moves here) + document fallback + tab icons
     status: completed
   - id: footer-studio-bars
     content: Footer action-group styling with app icon; studio Home / Back-to-focused canvas bars above mode dock
@@ -81,7 +81,7 @@ Rewrite `render_navbar` ([shell.rs](framework/renderer/wgpu/rs/shell.rs) lines 9
 Extend panel state in `ShellState`: `active_left_kind: PanelKind` (`Workbench | Display`), `active_right_kind` (`Details | Settings`).
 
 - **Tab routing** stays (`panel_side_for_group`), but the visible tab set now depends on the active kind:
-  - Left `workbench`: plugin left tabs + injected Hierarchy tab when missing (parity with [os-shell.tsx](framework/renderer/react/os-shell.tsx) lines 1158-1181).
+  - Left `workbench`: plugin left tabs + injected Document tab when missing (parity with [os-shell.tsx](framework/renderer/react/os-shell.tsx) lines 1158-1181).
   - Left `display`: shell-built tabs `framework.display.windows` + `framework.display.layout` — build their `UiNode` trees in Rust (window list with focus/close actions; layout summary), mirroring [os-chrome-panels.tsx](framework/renderer/react/os-chrome-panels.tsx) lines 163-189.
   - Right `details`: plugin right tabs (current behavior).
   - Right `settings`: shell-built `framework.settings.general` tab containing the **Theme select (system/light/dark)** — this is where the navbar theme dropdown moves — plus Expertise select stub (stored, not yet consumed).

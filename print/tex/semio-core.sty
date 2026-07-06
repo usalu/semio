@@ -1,0 +1,70 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-core}[2026/07/06 v0.1.0 semio core mechanisms]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-tokens}
+\RequirePackage{semio-fonts}
+
+\ExplSyntaxOn
+
+\tl_new:N \l_semio_type_tl
+\tl_new:N \l_semio_theme_tl
+\tl_new:N \l_semio_language_tl
+\tl_new:N \l_semio_title_tl
+\tl_new:N \l_semio_subtitle_tl
+\tl_new:N \l_semio_author_tl
+\tl_new:N \l_semio_date_tl
+\tl_new:N \l_semio_identifier_tl
+\tl_new:N \l_semio_aktenzeichen_tl
+\tl_new:N \l_semio_foerderzeitraum_tl
+\tl_new:N \l_semio_doi_tl
+\bool_new:N \l_semio_kompakt_draft_bool
+
+\tl_set:Nn \l_semio_type_tl { report }
+\tl_set:Nn \l_semio_theme_tl { light }
+\tl_set:Nn \l_semio_language_tl { de }
+
+\keys_define:nn { semio / setup } {
+  type .tl_set:N = \l_semio_type_tl,
+  theme .tl_set:N = \l_semio_theme_tl,
+  language .tl_set:N = \l_semio_language_tl,
+  title .tl_set:N = \l_semio_title_tl,
+  subtitle .tl_set:N = \l_semio_subtitle_tl,
+  author .tl_set:N = \l_semio_author_tl,
+  date .tl_set:N = \l_semio_date_tl,
+  identifier .tl_set:N = \l_semio_identifier_tl,
+  aktenzeichen .tl_set:N = \l_semio_aktenzeichen_tl,
+  foerderzeitraum .tl_set:N = \l_semio_foerderzeitraum_tl,
+  doi .tl_set:N = \l_semio_doi_tl,
+  kompakt-draft .bool_set:N = \l_semio_kompakt_draft_bool,
+}
+
+\cs_new_protected:Npn \semio_theme_apply: {
+  \str_if_eq:VnTF \l_semio_theme_tl { dark } {
+    \pagecolor{semio-dark}
+    \color{semio-light}
+  } {
+    \pagecolor{semio-light}
+    \color{semio-dark}
+  }
+}
+
+\NewDocumentCommand{\SemioSetup}{m}{\keys_set:nn { semio / setup } {#1}}
+
+\NewDocumentCommand{\aktenzeichen}{m}{\tl_set:Nn \l_semio_aktenzeichen_tl {#1}}
+\NewDocumentCommand{\foerderzeitraum}{m}{\tl_set:Nn \l_semio_foerderzeitraum_tl {#1}}
+\NewDocumentCommand{\doi}{m}{\tl_set:Nn \l_semio_doi_tl {#1}}
+\RenewDocumentCommand{\subtitle}{m}{\tl_set:Nn \l_semio_subtitle_tl {#1}}
+
+\cs_new_protected:Npn \semio_begindocument_hook: {
+  \semio_theme_apply:
+  \semio@set@main@fonts
+}
+
+\AddToHook{begindocument/before}{\semio_begindocument_hook:}
+
+\ExplSyntaxOff
+
+\newcommand{\SemioSpacingCompact}{\semio@spacing@compact}
+\newcommand{\SemioSpacingTouch}{\semio@spacing@touch}

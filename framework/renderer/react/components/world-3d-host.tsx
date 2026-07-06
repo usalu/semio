@@ -521,7 +521,9 @@ function WorldInstanceNode({
 							onComponentHover(null);
 						}}
 					/>
-					{(targets.edge || showEdges) && edgeGeometry ? (
+					{(targets.edge
+						|| showEdges
+						|| (selectionMode === "mesh" && selectedComponentIds.size > 0)) && edgeGeometry ? (
 						<lineSegments
 							geometry={edgeGeometry}
 							onClick={(event) => {

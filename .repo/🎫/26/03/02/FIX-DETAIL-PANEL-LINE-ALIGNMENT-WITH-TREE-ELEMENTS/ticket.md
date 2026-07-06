@@ -6,11 +6,11 @@ goal: SKETCHPAD-IMPROVEMENTS
 
 ## Summary
 
-Final continuation complete: TreeRow no longer wraps rows in TreeContent indentation, and tree-aware Label now renders hierarchy indentation/lines only in the left cell while controls remain fixed in a 160px right column across nesting levels. compose/js unit tests pass.
+Final continuation complete: TreeRow no longer wraps rows in TreeContent indentation, and tree-aware Label now renders document indentation/lines only in the left cell while controls remain fixed in a 160px right column across nesting levels. compose/js unit tests pass.
 ## Changes
 - Replaced nested `TreeContent` leaf rendering in `ControlTree` with dedicated shared grid rows.
 - Added fixed control column sizing for all rows (`minmax(0, 1fr)` + `160px`).
-- Kept folder nesting and collapse behavior while moving hierarchy-only layout concerns into left cells.
+- Kept folder nesting and collapse behavior while moving document-only layout concerns into left cells.
 - Moved control labels to left tree column and removed duplicated inline control labels in ControlTree renderer paths.
 - Added tree-aware `Label` layout switch: tree rows now use `grid-cols-[minmax(0,1fr)_160px]`, non-tree rows keep `grid-cols-[96px_1fr]`.
 - Extended `TreeContext` with `isTree` and propagated this through tree providers to scope fixed-column behavior to tree UIs.
@@ -24,7 +24,7 @@ Final continuation complete: TreeRow no longer wraps rows in TreeContent indenta
 - Implemented ControlTree-specific row components (`ControlTreeRow`, `ControlTreeFolderRow`, `ControlTreeLeafRow`) in `compose/js/sketchpad/elements.tsx`.
 - Confirmed nested folders still collapse/expand and keep indentation lines in the left column only.
 - Continued by aligning real `TreeRow` label/control rows in tree contexts via `Label` + `TreeContext.isTree`.
-- Final continuation: eliminated TreeRow depth shift by rendering children directly and letting tree-aware Label own left-side hierarchy indentation.
+- Final continuation: eliminated TreeRow depth shift by rendering children directly and letting tree-aware Label own left-side document indentation.
 - Ran JS unit tests successfully after refactor.
 
 ## Todos

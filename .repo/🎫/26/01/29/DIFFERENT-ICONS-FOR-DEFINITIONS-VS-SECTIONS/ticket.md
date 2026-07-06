@@ -31,7 +31,7 @@
 
 - **Sections** now use `symbol-folder` to represent them as containers that hold definitions and child sections
 - **Definitions** now use `symbol-variable` to clearly distinguish them as individual code elements within sections
-- The new icons provide better visual hierarchy and make it easier to distinguish between structural sections and actual code definitions
+- The new icons provide better visual document and make it easier to distinguish between structural sections and actual code definitions
 
 ## Log
 
@@ -39,4 +39,4 @@
 
 ## Summary
 
-Successfully updated tree item icons to provide better visual distinction between sections and definitions. Section items now use symbol-folder icons to represent their container nature, while definition items use symbol-variable icons to clearly identify them as individual code elements. This improves the visual hierarchy and makes the tree view easier to navigate.
+Successfully updated tree item icons to provide better visual distinction between sections and definitions. Section items now use symbol-folder icons to represent their container nature, while definition items use symbol-variable icons to clearly identify them as individual code elements. This improves the visual document and makes the tree view easier to navigate.

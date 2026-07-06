@@ -109,5 +109,5 @@ Wgpu's current `TreeItem`/`TreeSection`/`render_tree` ([ui/wgpu/rs/widgets.rs:36
 
 ## 5. Verification
 - `cargo test` (including any new dock/tree unit tests), rebuild wasm bindings for `ui_wgpu` + `semio-framework-renderer-wgpu`.
-- Run the wgpu E2E harness for at least one plugin with a real hierarchy/catalogue tree panel, confirm: Anta font renders, semio logo + navbar/footer icons are visible, panel toggle and fullscreen controls show text labels, dock focus/close show text labels, and the tree panel shows correct indentation/icons/chevrons/expand-collapse/selection.
+- Run the wgpu E2E harness for at least one plugin with a real document/catalogue tree panel, confirm: Anta font renders, semio logo + navbar/footer icons are visible, panel toggle and fullscreen controls show text labels, dock focus/close show text labels, and the tree panel shows correct indentation/icons/chevrons/expand-collapse/selection.
 - Side-by-side screenshot diff against the equivalent React shell view for the same plugin to confirm visual parity, same approach as the prior layout-parity verification pass.

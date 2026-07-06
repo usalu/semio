@@ -33,9 +33,9 @@ Introduced Territory as hierarchical intermediate tree item in policy system. Re
 
 1. Add Territory struct with Name, Description, Scopes, Children (groups or kinds)
 2. Refactor PolicyDef to use Territory instead of flat []Statute
-3. Update Statute IDs from path-based (code/file/missing-header) to flat (CODE-FILE-MISSING-HEADER) since groups provide the hierarchy
+3. Update Statute IDs from path-based (code/file/missing-header) to flat (CODE-FILE-MISSING-HEADER) since groups provide the document
 4. Update StatuteMeta.GetID() and GetURI() for new scheme
-5. Refactor buildStatuteTree to use group hierarchy instead of path splitting
+5. Refactor buildStatuteTree to use group document instead of path splitting
 6. Update GraphQL schema: add Territory type, update Policy type
 7. Update GraphQL resolvers for new types
 8. Update MCP tools and resources for statute groups

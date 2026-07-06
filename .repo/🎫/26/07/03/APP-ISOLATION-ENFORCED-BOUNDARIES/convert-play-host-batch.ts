@@ -25,7 +25,7 @@ const SPECS: Spec[] = [
     [FLOW_PLAY_SURFACE_ID_COMPILED_DAG]: FlowPlayCompiledDagSurfaceHost,
   }`,
     panelTabs: `{
-    workbench: [new FlowPlayHierarchyPanelDefinition(), new FlowPlayCataloguePanelDefinition()],
+    workbench: [new FlowPlayDocumentPanelDefinition(), new FlowPlayCataloguePanelDefinition()],
     details: [new FlowPlayInspectionPanelDefinition()],
   }`,
     preload: "ensureFlowWasmLoaded",
@@ -38,7 +38,7 @@ const SPECS: Spec[] = [
     [FORMS_PLAY_SURFACE_ID_TRY]: FormsTrySurfaceHost,
   }`,
     panelTabs: `{
-    workbench: [new FormsPlayHierarchyPanelDefinition(), new FormsPlayCataloguePanelDefinition()],
+    workbench: [new FormsPlayDocumentPanelDefinition(), new FormsPlayCataloguePanelDefinition()],
     details: [new FormsPlayInspectionPanelDefinition()],
   }`,
   },
@@ -62,7 +62,7 @@ const SPECS: Spec[] = [
     [SHOOTING_PLAY_SURFACE_ID_ICON]: ShootingIconSurfaceHost,
   }`,
     panelTabs: `{
-    workbench: [new ShootingPlayHierarchyPanelDefinition(), new ShootingPlayCataloguePanelDefinition()],
+    workbench: [new ShootingPlayDocumentPanelDefinition(), new ShootingPlayCataloguePanelDefinition()],
     details: [new ShootingPlayInspectionPanelDefinition()],
   }`,
   },
@@ -74,7 +74,7 @@ const SPECS: Spec[] = [
     [LOWPOLY_PLAY_UV_SURFACE_ID]: LowpolyUvSurfaceHost,
   }`,
     panelTabs: `{
-    workbench: [new LowpolyPlayHierarchyPanelDefinition(), new LowpolyPlayCataloguePanelDefinition()],
+    workbench: [new LowpolyPlayDocumentPanelDefinition(), new LowpolyPlayCataloguePanelDefinition()],
     details: [new LowpolyPlayInspectionPanelDefinition(), new LowpolyPlayLayersPanelDefinition()],
   }`,
     preload: "preloadLowpolyPlay",
@@ -88,7 +88,7 @@ const SPECS: Spec[] = [
     [PROCEDURAL_PLAY_SURFACE_ID_GENERATE]: Procedural3dGenerateSurfaceHost,
   }`,
     panelTabs: `{
-    workbench: [new ProceduralPlayHierarchyPanelDefinition(), new ProceduralPlayCataloguePanelDefinition()],
+    workbench: [new ProceduralPlayDocumentPanelDefinition(), new ProceduralPlayCataloguePanelDefinition()],
     details: [new ProceduralPlayInspectionPanelDefinition()],
   }`,
   },
@@ -101,7 +101,7 @@ const SPECS: Spec[] = [
     [PROCEDURAL_2D_PLAY_SURFACE_ID_GENERATE]: Procedural2dGenerateSurfaceHost,
   }`,
     panelTabs: `{
-    workbench: [new Procedural2dPlayHierarchyPanelDefinition(), new Procedural2dPlayCataloguePanelDefinition()],
+    workbench: [new Procedural2dPlayDocumentPanelDefinition(), new Procedural2dPlayCataloguePanelDefinition()],
     details: [new Procedural2dPlayInspectionPanelDefinition()],
   }`,
   },
@@ -193,7 +193,7 @@ export const ${TRINITY_SPEC.jackExport}: AppRendererContribution = {
     [TRINITY_JACK_PLAY_RESULTS_SURFACE_ID]: TrinityJackResultsSurfaceHost,
   },
   panelTabs: {
-    workbench: [new TrinityJackHierarchyPanelDefinition(), new TrinityJackCataloguePanelDefinition()],
+    workbench: [new TrinityJackDocumentPanelDefinition(), new TrinityJackCataloguePanelDefinition()],
     details: [new TrinityJackInspectionPanelDefinition()],
   },
 };
@@ -209,7 +209,7 @@ export const ${TRINITY_SPEC.rewriteExport}: AppRendererContribution = {
     [TRINITY_REWRITE_PLAY_SURFACE_ID_PARAMETERS]: TrinityRewriteParametersSurfaceHost,
   },
   panelTabs: {
-    workbench: [new TrinityRewriteHierarchyPanelDefinition(), new TrinityRewriteCataloguePanelDefinition()],
+    workbench: [new TrinityRewriteDocumentPanelDefinition(), new TrinityRewriteCataloguePanelDefinition()],
     details: [new TrinityRewriteInspectionPanelDefinition()],
   },
 };

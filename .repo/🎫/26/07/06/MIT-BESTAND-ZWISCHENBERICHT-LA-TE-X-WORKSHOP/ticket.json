@@ -1,0 +1,14 @@
+{
+  "title": "Mit Bestand Zwischenbericht LaTeX Workshop",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "Create mit-bestand zwischenbericht LaTeX document with placeholder content and configure LaTeX Workshop for Tectonic build.",
+  "summary": "Created mit-bestand/bericht/zwischenbericht with placeholder Entwerfen mit Bestand content using zukunftbau.cls, added bericht bundle with Tectonic build, configured LaTeX Workshop with semio-tectonic recipe, and fixed print/script.ts import guard.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1834"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪aa854e5f269542f686cd3915bd2a61e5"
+  ]
+}

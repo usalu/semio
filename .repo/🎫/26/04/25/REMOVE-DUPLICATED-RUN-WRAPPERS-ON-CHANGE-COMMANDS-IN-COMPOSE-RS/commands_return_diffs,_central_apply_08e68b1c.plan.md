@@ -157,6 +157,6 @@ Update the `Change flow` line to: "`change_command` produces sparse diffs; every
 
 ## Out of scope
 
-- Replaying from an `initial kit` to materialize a checkpoint (covered by [kit_vcs_command_hierarchy_cdecfba5](.cursor/plans/kit_vcs_command_hierarchy_cdecfba5.plan.md)).
+- Replaying from an `initial kit` to materialize a checkpoint (covered by [kit_vcs_command_document_cdecfba5](.cursor/plans/kit_vcs_command_document_cdecfba5.plan.md)).
 - JS/React/sketchpad consumers of the old `applyKitDiff` / `applyDesignDiff` WASM methods — handled by the follow-up `KitStore` storybook story [kit_store_story_0a521ca8](.cursor/plans/kit_store_story_0a521ca8.plan.md).
 - SQL/JSON/ZIP on-disk format migration — breaking format change accepted; old kits re-import from `KitFullDto`.

@@ -1,6 +1,6 @@
 ---
 name: 5d Terminology Decoupling
-overview: Make puzzle 5d a first-class independent model using only its AGENTS.md vocabulary (Part, Grip, Fastener, Rope), with native 5d hierarchy/kinds trees; 2d/3d nouns survive only inside the projection adapters.
+overview: Make puzzle 5d a first-class independent model using only its AGENTS.md vocabulary (Part, Grip, Fastener, Rope), with native 5d document/kinds trees; 2d/3d nouns survive only inside the projection adapters.
 todos:
   - id: ticket
     content: List repo://goals and reopen ticket 2026/05/30/PUZZLE-BUNDLE-TERMINOLOGY-CLEANUP
@@ -12,7 +12,7 @@ todos:
     content: Update hover domains, selection, connect session, and Store methods to 5d nouns
     status: completed
   - id: native-trees
-    content: Build native 5d hierarchy and kinds trees in puzzle/5d/play/index.ts
+    content: Build native 5d document and kinds trees in puzzle/5d/play/index.ts
     status: completed
   - id: consumers
     content: Update framework playground/platform renderer call sites
@@ -42,7 +42,7 @@ flowchart LR
   adapters["Projection adapters (only place with 2d/3d nouns)"]
   canvas2d["Puzzle2dCanvas (nodes, handles, edges)"]
   canvas3d["Puzzle3dCanvas (objects, vortices, attractions)"]
-  tree["5d Hierarchy + Kinds trees (Parts, Grips, Fasteners, Ropes)"]
+  tree["5d Document + Kinds trees (Parts, Grips, Fasteners, Ropes)"]
   model5d --> adapters
   adapters -->|project2d| canvas2d
   adapters -->|project3d| canvas3d
@@ -69,15 +69,15 @@ Reopen `2026/05/30/PUZZLE-BUNDLE-TERMINOLOGY-CLEANUP` (same task; it already hol
 
 ## 2. Native trees — [puzzle/5d/play/index.ts](puzzle/5d/play/index.ts)
 
-- Replace the stitched hierarchy (currently delegates to `buildPuzzle2dPlayHierarchySections` + `buildPuzzle3dPlayHierarchyTree`, producing "2d · Nodes"/"3d · Objects" sections) with a native build from the 5d model: sections **Parts** (part rows with nested grip rows) and **Fasteners**, ids `puzzle-5d-play-hierarchy.part.`* / `.grip.*` / `.fastener.*`.
-- Handlers `Puzzle5dPlayHierarchySelectHandlers` -> `onSelectPart` / `onSelectGrip` / `onSelectFastener` (driving the unified store selection, which already syncs both canvases).
+- Replace the stitched document (currently delegates to `buildPuzzle2dPlayDocumentSections` + `buildPuzzle3dPlayDocumentTree`, producing "2d · Nodes"/"3d · Objects" sections) with a native build from the 5d model: sections **Parts** (part rows with nested grip rows) and **Fasteners**, ids `puzzle-5d-play-document.part.`* / `.grip.*` / `.fastener.*`.
+- Handlers `Puzzle5dPlayDocumentSelectHandlers` -> `onSelectPart` / `onSelectGrip` / `onSelectFastener` (driving the unified store selection, which already syncs both canvases).
 - Replace `buildPuzzle5dPlayKindsTree` 2d+3d duplication with native sections **Parts, Grips, Fasteners, Ropes** from the 5d `KindCatalogBundle`; part rows carry both 2d and 3d drag payloads (built via the projections) so one row drags onto either canvas — `puzzle5dFixturePaletteTreeDragController` keeps routing by payload schema.
 - `Puzzle5dPlaySnapshot` exposes the 5d `model` + unified selection for tree building; `fixture2d`/`fixture3d` remain internal canvas projections.
-- Update in-file tests ("puzzle 5d play hierarchy", fixtures).
+- Update in-file tests ("puzzle 5d play document", fixtures).
 
 ## 3. Consumers
 
-- [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) `Puzzle5dPlayHost` region: new hierarchy handlers (~~line 2870) and `store.setSelection({ partIds: [], gripIds: [] })` (~~line 2520).
+- [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) `Puzzle5dPlayHost` region: new document handlers (~~line 2870) and `store.setSelection({ partIds: [], gripIds: [] })` (~~line 2520).
 - [framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx): `compose5d` call site unaffected; verify compile.
 
 ## 4. Fixtures — [puzzle/5d/fixture](puzzle/5d/fixture)
@@ -87,5 +87,5 @@ Reopen `2026/05/30/PUZZLE-BUNDLE-TERMINOLOGY-CLEANUP` (same task; it already hol
 ## 5. Verify
 
 - Run vitest for `@semio-tech/puzzle-5d-react`, `@semio-tech/puzzle-5d-play`, and the two framework renderer packages via nx.
-- Boot the 5d play app (`@semio-tech/puzzle-5d-play:dev`) and confirm via `[DEBUG]` console logs that hierarchy/kinds trees, selection, hover, connect, and palette drag work on both canvases; remove the debug logs after confirmation.
+- Boot the 5d play app (`@semio-tech/puzzle-5d-play:dev`) and confirm via `[DEBUG]` console logs that document/kinds trees, selection, hover, connect, and palette drag work on both canvases; remove the debug logs after confirmation.
 

@@ -1,6 +1,6 @@
 ---
 name: Draw Technology Completeness Pass
-overview: Close the remaining gaps in the Draw vector technology so all 7 layer kinds are fully modeled, renderable, hoverable and selectable, the hierarchy shows true nesting (including boolean references), the inspector exposes every editable property, and the canvas supports real authoring gestures for pen/shape/trace tools with selection mechanics matching the shared ui-react primitives used by raster (default/additive/subtractive/invertive merge, partial/full coverage).
+overview: Close the remaining gaps in the Draw vector technology so all 7 layer kinds are fully modeled, renderable, hoverable and selectable, the document shows true nesting (including boolean references), the inspector exposes every editable property, and the canvas supports real authoring gestures for pen/shape/trace tools with selection mechanics matching the shared ui-react primitives used by raster (default/additive/subtractive/invertive merge, partial/full coverage).
 todos:
   - id: selection-fix
     content: Fix marqueeModeFromModifiers/marqueeCoverageFromGesture/selectionMergeIds/screenRectFromPoints signatures in draw/react; add selectLasso tool; wire kindHover; add shift/ctrl modified direct-click select
@@ -8,7 +8,7 @@ todos:
   - id: core-model
     content: Add createDrawShapeLayer/createDrawTextLayer/createDrawImageLayer factories, ellipse/circle path segments, real text/image bounds, DrawSceneNode text/image fields, flatten image layers, boolean-child row id helpers, rgbaToHex
     status: completed
-  - id: hierarchy-catalogue
+  - id: document-catalogue
     content: Nest boolean children as read-only rows, distinct icons per kind, extend catalogue/add-layer to shape/text/image kinds with DnD
     status: completed
   - id: canvas-render
@@ -40,7 +40,7 @@ This is the literal "partial / default / invertive" the user referenced — it c
 - Fix `screenRectFromPoints(...)` to take a single array of points, not two positional points.
 - Add a `selectLasso` tool (mirrors raster's `selectLasso`): track a point path, render via `SelectionMarquee` polygon, resolve hits via path-based coverage. Add `"selectLasso"` to `DRAW_TOOL_IDS` in [draw/core/index.ts](draw/core/index.ts) and a toolbar button in [draw/play/index.ts](draw/play/index.ts) next to `selectMarquee`.
 - Add shift/ctrl-modified single click on `selectDirect` (not just marquee) so direct-select also supports additive/subtractive/invertive via `selectionMergeIds`.
-- Destructure and actually use the already-declared `kindHover` prop (currently dead) to drive cross-highlighting between canvas and the new boolean-reference hierarchy rows (section 3).
+- Destructure and actually use the already-declared `kindHover` prop (currently dead) to drive cross-highlighting between canvas and the new boolean-reference document rows (section 3).
 
 ## 2. Layer model completeness (`draw/core/index.ts`)
 
@@ -52,10 +52,10 @@ This is the literal "partial / default / invertive" the user referenced — it c
   - Keep the placeholder only as a last-resort fallback for genuinely degenerate shapes (e.g. empty polygon).
 - Extend `DrawSceneNode` with optional `text?: { content: string; size: number }` and `image?: { src: string; width: number; height: number }` fields; populate `image.src` by resolving `doc.assets[layer.imageKey]` into a `data:` URL.
 - Update `flattenDrawDocumentToSceneNodes` to stop skipping `image` layers and to carry the new `text`/`image` fields through.
-- Add a helper `drawPlayBooleanChildRowId(booleanId, childId)` / `drawPlayLayerIdFromBooleanChildRowId(rowId)` pair (format `draw-play-layers.ref.{booleanId}::{childId}`) so the hierarchy can show boolean children as distinct, non-colliding nested rows that still resolve back to the real layer id for selection/hover.
+- Add a helper `drawPlayBooleanChildRowId(booleanId, childId)` / `drawPlayLayerIdFromBooleanChildRowId(rowId)` pair (format `draw-play-layers.ref.{booleanId}::{childId}`) so the document can show boolean children as distinct, non-colliding nested rows that still resolve back to the real layer id for selection/hover.
 - Add `rgbaToHex` helper (inverse of existing `hexToRgba`) for the new inspector color fields (section 5).
 
-## 3. Hierarchy & catalogue completeness (`draw/play/index.ts`)
+## 3. Document & catalogue completeness (`draw/play/index.ts`)
 
 - `buildDrawPlayLayersTree`: for `kind === "boolean"`, resolve each id in `layer.children` via `findDrawLayer` and render them as nested, read-only rows (icon + name, no drag handle) using `drawPlayBooleanChildRowId`; clicking still issues `setSelection` for the real layer id; missing/unresolved ids render as a disabled placeholder row instead of being silently dropped.
 - Give `shape`, `text`, `image` their own icons (e.g. `"square"`, `"type"`, `"image"`) instead of falling back to the shared `"shapes"` icon for all three.
@@ -94,5 +94,5 @@ In `DrawCanvas`, add pointer-gesture state machines per tool, each ending in `on
 
 - Re-run `geometry_drawing_rs`, `@semio-tech/draw-core:test`, `@semio-tech/draw-react:test`, `@semio-tech/draw-play:test`.
 - Extend `.repo/🎫/26/06/30/DRAW-VECTOR-TECHNOLOGY/runtime-check.mjs` to also exercise: shape/text/image factories + flatten, boolean child row id round-trip, `selectionMergeIds`/`marqueeModeFromModifiers` behavior for all four modes, and `commitDocument`-style edit application for a drawn shape/path/trace.
-- Extend `.repo/🎫/26/06/30/DRAW-VECTOR-TECHNOLOGY/preview-check.mjs` (Playwright) to: hover/select a few different layer kinds and assert hierarchy highlight sync, perform a marquee with shift (additive) and shift+ctrl (invertive) and assert resulting selection set, expand a boolean row and assert its children rows are present, and exercise one shape-drawing gesture end-to-end (drag a rect, assert a new path/shape SVG element appears and hierarchy gains a row).
+- Extend `.repo/🎫/26/06/30/DRAW-VECTOR-TECHNOLOGY/preview-check.mjs` (Playwright) to: hover/select a few different layer kinds and assert document highlight sync, perform a marquee with shift (additive) and shift+ctrl (invertive) and assert resulting selection set, expand a boolean row and assert its children rows are present, and exercise one shape-drawing gesture end-to-end (drag a rect, assert a new path/shape SVG element appears and document gains a row).
 - `ticket_reopen` for `26/06/30/DRAW-VECTOR-TECHNOLOGY`, then `ticket_close` with the summary and full file list once verified.

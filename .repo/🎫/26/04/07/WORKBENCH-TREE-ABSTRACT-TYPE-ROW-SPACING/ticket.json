@@ -2,7 +2,7 @@
   "title": "Workbench Tree Abstract Type Row Spacing",
   "status": "closed",
   "description": "Add one extra empty-row-sized vertical gap after abstract type rows in the Workbench tree only, before the next sibling/child block begins. Apply as a structural spacing rule in the shared Workbench tree rendering, not as a hardcoded type-name fix.",
-  "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
+  "summary": "Added one extra empty-row-sized (24px) vertical gap after abstract type rows in the Workbench tree by applying `mb-[24px]` to the wrapper div when `type.isAbstract` is true. This is a structural spacing rule driven by the `isAbstract` property, not hardcoded to any type name. Document, tree lines, expand/collapse behavior, actions, and all other spacing remain unchanged.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1284"
   },

@@ -1,0 +1,11 @@
+[build]
+target = "index.html"
+dist = "../../product/os/dev/renderer-modules/wgpu"
+public_url = "/"
+
+[watch]
+watch = ["rs", "js", "index.html"]
+
+[serve]
+addresses = ["127.0.0.1"]
+open = false

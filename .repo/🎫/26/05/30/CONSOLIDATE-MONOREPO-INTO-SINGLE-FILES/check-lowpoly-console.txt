@@ -18,7 +18,7 @@ Settings
 Edit
 Paint
 Fullscreen
-Hierarchy
+Document
 Catalogue
 Layers
 MESHES

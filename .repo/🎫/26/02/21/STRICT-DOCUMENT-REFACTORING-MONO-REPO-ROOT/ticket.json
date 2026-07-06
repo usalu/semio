@@ -1,0 +1,11 @@
+{
+  "title": "Strict Document Refactoring mono repo root",
+  "emoji": "📏",
+  "status": "closed",
+  "description": "The id system should be changed. From now on all bundles MUST have a parent project and all folders MUST have a parent bundle and all files MUST have a parent folder. Introduce virtual 🥇mono project and 🪆repo bundle. Files and folders on the root level are children of 🪆repo bundle. Every bundle has a virtual folder called 🌱root that is the parent of all files that are on the root folder level of the bundle.",
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/642"
+  },
+  "goal": "🎯aioptimizedrepo"
+}

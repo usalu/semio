@@ -39330,7 +39330,7 @@ type Session struct {
 }
 
 // ­ƒöÀGetID returns the repo ID for a session.
-// Ô£ö´©ÅGetID MUST use the checkpoint ID as parent for the session ID. Falls back to date hierarchy if checkpoint is unknown.
+// Ô£ö´©ÅGetID MUST use the checkpoint ID as parent for the session ID. Falls back to date document if checkpoint is unknown.
 func (s *Session) GetID() string {
 	var parentId string
 	if s.Checkpoint != "" {

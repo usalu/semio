@@ -11,7 +11,7 @@ Updated all entity ID generation to match new hierarchical requirements. Added P
 ## Changes
 
 - `repo/cli/main.go`: Added `PropagateParentIDs` function, `goalArtifactID` helper, fixed `GetArtifactID` for goal/ticket/commit/line/range, excluded bundle root from folder map, removed debug log from `FileHeaderId`
-- `repo/cli/main_test.go`: Added 20+ entity ID tests (GetArtifactID for all kinds, Flat, PropagateParentIDs, verifyTreeHierarchy, live tree tests for projects/bundles/folders/files/goals/tickets/contributors/commits), fixed TestFileHeaderId/TestFileKindEmoji/TestSectionHeaderIdAndUri/TestDefinitionHeaderIdAndUri/TestPolicyTreeCommand/TestGraphQLTicketsQuery to match new spec
+- `repo/cli/main_test.go`: Added 20+ entity ID tests (GetArtifactID for all kinds, Flat, PropagateParentIDs, verifyTreeDocument, live tree tests for projects/bundles/folders/files/goals/tickets/contributors/commits), fixed TestFileHeaderId/TestFileKindEmoji/TestSectionHeaderIdAndUri/TestDefinitionHeaderIdAndUri/TestPolicyTreeCommand/TestGraphQLTicketsQuery to match new spec
 
 ## Log
 

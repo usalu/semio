@@ -38,7 +38,7 @@ const SPECS: Spec[] = [
     [DAG_PLAY_SURFACE_ID_JACK]: DagPlayJackSurfaceHost,
   }`,
     panelTabs: `{
-    workbench: [new DagPlayHierarchyPanelDefinition(), new DagPlayCataloguePanelDefinition()],
+    workbench: [new DagPlayDocumentPanelDefinition(), new DagPlayCataloguePanelDefinition()],
     details: [new DagPlayInspectionPanelDefinition()],
   }`,
   },
@@ -51,7 +51,7 @@ const SPECS: Spec[] = [
     [SEQUENCE_PLAY_SURFACE_ID_COMPILED_DAG]: SequencePlayCompiledDagSurfaceHost,
   }`,
     panelTabs: `{
-    workbench: [new SequencePlayHierarchyPanelDefinition(), new SequencePlayCataloguePanelDefinition()],
+    workbench: [new SequencePlayDocumentPanelDefinition(), new SequencePlayCataloguePanelDefinition()],
     details: [new SequencePlayInspectionPanelDefinition()],
   }`,
   },
@@ -60,7 +60,7 @@ const SPECS: Spec[] = [
     exportName: "mapAppRenderer",
     surfaceHosts: `{ [GIS_MAP_PLAY_SURFACE_ID]: MapPlayPaneSurfaceHost }`,
     panelTabs: `{
-    workbench: [new MapPlayHierarchyPanelDefinition(), new MapPlayCataloguePanelDefinition()],
+    workbench: [new MapPlayDocumentPanelDefinition(), new MapPlayCataloguePanelDefinition()],
     details: [new MapPlayInspectionPanelDefinition()],
   }`,
   },

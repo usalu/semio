@@ -59,7 +59,7 @@ this.cacheHash = undefined;
 Separated `allRows` (stable, depends only on kit data) from `rows` (visible rows, depends on `expandedRows`):
 
 ```typescript
-// allRows: builds complete hierarchy once, independent of expansion state
+// allRows: builds complete document once, independent of expansion state
 const allRows = useMemo<TableRow[]>(() => {
   // Always build all children regardless of expansion state
   // isExpanded is always set to false here (computed later)

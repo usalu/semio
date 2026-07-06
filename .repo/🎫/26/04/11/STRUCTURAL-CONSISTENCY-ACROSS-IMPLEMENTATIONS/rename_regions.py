@@ -158,9 +158,9 @@ CANONICAL = {
     "benchmark": ("\U0001f4cf", "Benchmark"),
     "benchmarks": ("\U0001f3cb\ufe0f", "Benchmarks"),
     "load or create meshes per type": ("\U0001f381", "Load Or Create Meshes Per Type"),
-    "build scene graph with connection hierarchy": (
+    "build scene graph with connection document": (
         "\U0001f9ed",
-        "Build Scene Graph With Connection Hierarchy",
+        "Build Scene Graph With Connection Document",
     ),
     "kit filter tests": ("\U0001f3f0", "Kit Filter Tests"),
     "kitkind tests": ("\U0001f6e1\ufe0f", "KitKind Tests"),

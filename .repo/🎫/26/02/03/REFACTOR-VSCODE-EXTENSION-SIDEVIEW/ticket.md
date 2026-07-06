@@ -17,7 +17,7 @@ Refactored VSCode extension sideview to consolidate into Monorepo and Filter sec
 - Created `queries.ts` to centralize all GraphQL queries and fix codegen issues.
 - Updated `codegen.ts` to point to `queries.ts`.
 - Rewrote `extension.ts` to:
-  - Implement `MonorepoTreeDataProvider` with a comprehensive hierarchy:
+  - Implement `MonorepoTreeDataProvider` with a comprehensive document:
     - Monorepo (Projects -> Bundles -> Folders -> Files -> Sections -> Definitions)
     - Goals (Goals -> Subgoals -> Tickets)
     - Tickets (Year -> Month -> Day -> Ticket)

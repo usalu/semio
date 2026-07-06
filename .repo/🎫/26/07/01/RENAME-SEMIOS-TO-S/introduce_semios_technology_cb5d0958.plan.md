@@ -86,7 +86,7 @@ flowchart TB
   ResourceRegistry --> techHosts
 ```
 
-### Domain hierarchy
+### Domain document
 
 | Concept | Role | Initial location |
 |---------|------|------------------|

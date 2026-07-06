@@ -1,6 +1,6 @@
 ---
 name: spatial doctrine refactor
-overview: Strip the brepjs `Vertex…Cluster` hierarchy and `topology` term from the public spatial framework, replace it with an extension-based `Model / Typology / Object / View / Action / Interaction / Attribute / Property` doctrine, add a new `typology` asset kind, and propagate the rename across schemas, fixtures, and all five JS packages.
+overview: Strip the brepjs `Vertex…Cluster` document and `topology` term from the public spatial framework, replace it with an extension-based `Model / Typology / Object / View / Action / Interaction / Attribute / Property` doctrine, add a new `typology` asset kind, and propagate the rename across schemas, fixtures, and all five JS packages.
 todos:
   - id: phase1-ticket
     content: Open ticket and read repo goals
@@ -21,7 +21,7 @@ todos:
     content: "Refactor spatial/js/core/index.ts: drop public Vertex...Cluster exports, add Model/Typology/Object/AttributeStore"
     status: completed
   - id: phase2-kernel
-    content: "Subagent: refactor kernel-brepjs to keep brepjs hierarchy private and rename topology-named exports"
+    content: "Subagent: refactor kernel-brepjs to keep brepjs document private and rename topology-named exports"
     status: completed
   - id: phase2-query
     content: "Subagent: rewrite query grammar around Object/Typology and view.<id>.<derived> CALLs"
@@ -48,7 +48,7 @@ isProject: false
 
 ## Goal
 
-Drop the brepjs class hierarchy (`Vertex`, `Edge`, `Wire`, `Face`, `Shell`, `Cell`, `CellComplex`, `Cluster`) from the public spatial framework and replace it with the new extension-based vocabulary defined in [spatial/AGENTS.md](spatial/AGENTS.md):
+Drop the brepjs class document (`Vertex`, `Edge`, `Wire`, `Face`, `Shell`, `Cell`, `CellComplex`, `Cluster`) from the public spatial framework and replace it with the new extension-based vocabulary defined in [spatial/AGENTS.md](spatial/AGENTS.md):
 
 - `Geometry`: brepjs (kernel-private only)
 - `Model`: container of `Object`s (replaces the old `Topology` / `TopologyGraph`)
@@ -61,7 +61,7 @@ Drop the brepjs class hierarchy (`Vertex`, `Edge`, `Wire`, `Face`, `Shell`, `Cel
 - `Property`: derived attribute
 - `Extension`: data-only namespace packaging the above
 
-The brepjs hierarchy survives only as an internal implementation detail of `spatial/js/kernel-brepjs` (never re-exported from `@spatial/js-core`).
+The brepjs document survives only as an internal implementation detail of `spatial/js/kernel-brepjs` (never re-exported from `@spatial/js-core`).
 
 ## High-level architecture (target)
 
@@ -99,7 +99,7 @@ flowchart LR
 ### Rewrite the public spec
 
 - `spatial/AGENTS.md` already matches the new doctrine; add one sentence formally introducing the `typology/` asset folder path.
-- The old `spatial/AGENTS.md` cursor-rule section under "Command / Geometry" still teaches the `Vertex…Cluster` hierarchy and is the source of the user-reported confusion. Quarantine that text behind a `<!-- legacy brepjs kernel notes; not public framework vocabulary -->` heading or move it under `spatial/js/kernel-brepjs/AGENTS.md` so the public spec only speaks the new vocabulary.
+- The old `spatial/AGENTS.md` cursor-rule section under "Command / Geometry" still teaches the `Vertex…Cluster` document and is the source of the user-reported confusion. Quarantine that text behind a `<!-- legacy brepjs kernel notes; not public framework vocabulary -->` heading or move it under `spatial/js/kernel-brepjs/AGENTS.md` so the public spec only speaks the new vocabulary.
 
 ### Rename + reshape JSON schemas under [spatial/schema/json](spatial/schema/json)
 
@@ -160,7 +160,7 @@ After Phase 1 schemas are merged, fan out to four `generalPurpose` subagents wor
 - Run `nx run-many -t test` across all five packages; extend the existing test files in place (no new test files) to cover `parseModelJson`, typology registration, attribute store, view derivation.
 - Run the renderer `play` smoke once geometry fixtures resolve.
 - Re-grep the repo for any remaining `Vertex|Edge|Wire|Face|Shell|Cell|CellComplex|Cluster|TopologyGraph|topology/v1` outside `kernel-brepjs/**` — must be zero.
-- `ticket_close` with file list and a summary that the brepjs hierarchy is now kernel-private and the doctrine is extension-based.
+- `ticket_close` with file list and a summary that the brepjs document is now kernel-private and the doctrine is extension-based.
 
 ## Out of scope
 

@@ -6,7 +6,7 @@ todos:
     content: Open/reopen ticket ELEMENTS-UI-CLASS-ABSTRACTION after listing repo://goals; pick best-fit goal
     status: completed
   - id: ui-classes
-    content: Add framework-free class hierarchy (UI, App, Mode, Toolbar/ToolGroup/ToolItem, Panel, Tab, Tree, WindowKind, WindowLayout, Controller, CommandBus, Observable, IconRegistry types) inside elements/client/lib/ui/ with regions
+    content: Add framework-free class document (UI, App, Mode, Toolbar/ToolGroup/ToolItem, Panel, Tab, Tree, WindowKind, WindowLayout, Controller, CommandBus, Observable, IconRegistry types) inside elements/client/lib/ui/ with regions
     status: completed
   - id: react-ui
     content: "In elements/client/lib/react/index.tsx: add ReactUI renderer, IconRegistry impl, WindowKindRenderer registry; refactor Navbar/Toolbar/Window/Panel/Footer/Find to read from UI/App/Mode instances; delete AppConfig/AppModeConfig/AppDefinition/PureAppDefinition/AppSource/resolveAppConfig/mountReactApp/mountAsyncReactApp"
@@ -31,7 +31,7 @@ isProject: false
 
 ## Goals
 
-- A single framework-free `UI` class hierarchy with **no DOM and no react/lucide/golden-layout imports** (purely TS classes + types + a tiny observer base).
+- A single framework-free `UI` class document with **no DOM and no react/lucide/golden-layout imports** (purely TS classes + types + a tiny observer base).
 - One renderer `ReactUI` that knows how to render any `UI` instance.
 - All user interactions flow through controller classes (no inline closures in config). Controllers expose imperative methods; the UI subscribes to controller state changes.
 - Bundles (geometry play, etc.) become pure classes that extend `App`, register `Mode`s, `WindowKind`s, `Panel`s, `Tab`s, `Toolbar`s — no React in the bundle source.

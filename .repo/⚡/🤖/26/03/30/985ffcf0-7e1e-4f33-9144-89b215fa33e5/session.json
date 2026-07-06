@@ -45,7 +45,7 @@
           "hook_event_name": "UserPromptSubmit",
           "session_id": "985ffcf0-7e1e-4f33-9144-89b215fa33e5",
           "transcript_path": "/home/vscode/.vscode-server/data/User/workspaceStorage/10f09a20a540f520512a4aa0af089115/GitHub.copilot-chat/transcripts/985ffcf0-7e1e-4f33-9144-89b215fa33e5.jsonl",
-          "prompt": "Refine the compose/sketchpad Details panel spacing in the right-side property inspector without changing the existing PanelSection architecture, section registration logic, interaction model, or tree-based inspector layout.\n\nKeep the current TreeSection, TreeItem, TreeRow, SortableTreeItems, and property row/value-column layout. Improve readability by introducing structure-driven spacing rules in the shared tree primitives: use minimal spacing between rows that belong to the same logical property group, use a clearly larger gap between sibling nested groups, and use the strongest separation plus a divider between top-level property sections. Apply this generically by hierarchy and structural role, not by section name or field name.",
+          "prompt": "Refine the compose/sketchpad Details panel spacing in the right-side property inspector without changing the existing PanelSection architecture, section registration logic, interaction model, or tree-based inspector layout.\n\nKeep the current TreeSection, TreeItem, TreeRow, SortableTreeItems, and property row/value-column layout. Improve readability by introducing structure-driven spacing rules in the shared tree primitives: use minimal spacing between rows that belong to the same logical property group, use a clearly larger gap between sibling nested groups, and use the strongest separation plus a divider between top-level property sections. Apply this generically by document and structural role, not by section name or field name.",
           "cwd": "/workspaces/semio"
         }
       },
@@ -123,7 +123,7 @@
           "tool_name": "mcp_repo_ticket_open",
           "tool_input": {
             "title": "Refine Details Panel Spacing in Sketchpad Tree Primitives",
-            "prompt": "Improve readability of the Details panel by introducing structure-driven spacing rules in shared tree primitives: minimal spacing between rows in same property group, larger gap between sibling nested groups, strongest separation plus divider between top-level property sections. Generic by hierarchy/structural role, not by section/field name.",
+            "prompt": "Improve readability of the Details panel by introducing structure-driven spacing rules in shared tree primitives: minimal spacing between rows in same property group, larger gap between sibling nested groups, strongest separation plus divider between top-level property sections. Generic by document/structural role, not by section/field name.",
             "llm": "opus-4-6",
             "client": "copilot-chat",
             "goal": "sketchpadimprovements",
@@ -154,7 +154,7 @@
           "tool_name": "mcp_repo_ticket_open",
           "tool_input": {
             "title": "Refine Details Panel Spacing in Sketchpad Tree Primitives",
-            "prompt": "Improve readability of the Details panel by introducing structure-driven spacing rules in shared tree primitives: minimal spacing between rows in same property group, larger gap between sibling nested groups, strongest separation plus divider between top-level property sections. Generic by hierarchy/structural role, not by section/field name.",
+            "prompt": "Improve readability of the Details panel by introducing structure-driven spacing rules in shared tree primitives: minimal spacing between rows in same property group, larger gap between sibling nested groups, strongest separation plus divider between top-level property sections. Generic by document/structural role, not by section/field name.",
             "llm": "opus-4-6",
             "client": "copilot-chat",
             "goal": "sketchpadimprovements",
@@ -198,7 +198,7 @@
               },
               {
                 "id": 3,
-                "title": "Implement hierarchy-based spacing",
+                "title": "Implement document-based spacing",
                 "status": "not-started"
               },
               {
@@ -250,7 +250,7 @@
               },
               {
                 "id": 3,
-                "title": "Implement hierarchy-based spacing",
+                "title": "Implement document-based spacing",
                 "status": "not-started"
               },
               {
@@ -1458,7 +1458,7 @@
               {
                 "id": 3,
                 "status": "not-started",
-                "title": "Implement hierarchy-based spacing"
+                "title": "Implement document-based spacing"
               },
               {
                 "id": 4,
@@ -1510,7 +1510,7 @@
               {
                 "id": 3,
                 "status": "not-started",
-                "title": "Implement hierarchy-based spacing"
+                "title": "Implement document-based spacing"
               },
               {
                 "id": 4,
@@ -1620,7 +1620,7 @@
               {
                 "id": 3,
                 "status": "in-progress",
-                "title": "Implement hierarchy-based spacing"
+                "title": "Implement document-based spacing"
               },
               {
                 "id": 4,
@@ -1672,7 +1672,7 @@
               {
                 "id": 3,
                 "status": "in-progress",
-                "title": "Implement hierarchy-based spacing"
+                "title": "Implement document-based spacing"
               },
               {
                 "id": 4,
@@ -1713,7 +1713,7 @@
           "tool_input": {
             "filePath": "/workspaces/semio/elements/ui/globals.css",
             "oldString": "/* #navbar {\n  -webkit-app-region: window-drag;\n} */",
-            "newString": "/* #navbar {\n  -webkit-app-region: window-drag;\n} */\n\n/* #region 🔖TreeSpacing */\n/* Structure-driven spacing for tree inspector hierarchy.\n * Tier 1 – Rows within the same property group: gap-y-[2px] (Tailwind, unchanged).\n * Tier 2 – Sibling nested groups: extra padding-top so indent lines stay continuous.\n * Tier 3 – Top-level property sections: strongest gap + visual divider.\n */\n\n/* Tier 3: Visual divider + spacing between adjacent top-level sections. */\n[data-slot=\"tree-section-wrapper\"] + [data-slot=\"tree-section-wrapper\"] {\n  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);\n  padding-top: 10px;\n  margin-top: 6px;\n}\n\n/* Tier 2: Larger gap when a new expandable group row follows another group's content. */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"] {\n  padding-top: 6px;\n}\n\n/* Tier 2: Also when two collapsed group rows are consecutive (content wasn't rendered). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group] {\n  padding-top: 6px;\n}\n\n/* Tier 2: property-item groups (grid layout items). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-property-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"] {\n  padding-top: 4px;\n}\n/* #endregion */"
+            "newString": "/* #navbar {\n  -webkit-app-region: window-drag;\n} */\n\n/* #region 🔖TreeSpacing */\n/* Structure-driven spacing for tree inspector document.\n * Tier 1 – Rows within the same property group: gap-y-[2px] (Tailwind, unchanged).\n * Tier 2 – Sibling nested groups: extra padding-top so indent lines stay continuous.\n * Tier 3 – Top-level property sections: strongest gap + visual divider.\n */\n\n/* Tier 3: Visual divider + spacing between adjacent top-level sections. */\n[data-slot=\"tree-section-wrapper\"] + [data-slot=\"tree-section-wrapper\"] {\n  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);\n  padding-top: 10px;\n  margin-top: 6px;\n}\n\n/* Tier 2: Larger gap when a new expandable group row follows another group's content. */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"] {\n  padding-top: 6px;\n}\n\n/* Tier 2: Also when two collapsed group rows are consecutive (content wasn't rendered). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group] {\n  padding-top: 6px;\n}\n\n/* Tier 2: property-item groups (grid layout items). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-property-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"] {\n  padding-top: 4px;\n}\n/* #endregion */"
           },
           "tool_use_id": "toolu_bdrk_01X8zSk2ckkDjn43JpDZpoPP__vscode-1774868943596",
           "cwd": "/workspaces/semio"
@@ -1741,7 +1741,7 @@
           "tool_input": {
             "filePath": "/workspaces/semio/elements/ui/globals.css",
             "oldString": "/* #navbar {\n  -webkit-app-region: window-drag;\n} */",
-            "newString": "/* #navbar {\n  -webkit-app-region: window-drag;\n} */\n\n/* #region 🔖TreeSpacing */\n/* Structure-driven spacing for tree inspector hierarchy.\n * Tier 1 – Rows within the same property group: gap-y-[2px] (Tailwind, unchanged).\n * Tier 2 – Sibling nested groups: extra padding-top so indent lines stay continuous.\n * Tier 3 – Top-level property sections: strongest gap + visual divider.\n */\n\n/* Tier 3: Visual divider + spacing between adjacent top-level sections. */\n[data-slot=\"tree-section-wrapper\"] + [data-slot=\"tree-section-wrapper\"] {\n  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);\n  padding-top: 10px;\n  margin-top: 6px;\n}\n\n/* Tier 2: Larger gap when a new expandable group row follows another group's content. */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"] {\n  padding-top: 6px;\n}\n\n/* Tier 2: Also when two collapsed group rows are consecutive (content wasn't rendered). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group] {\n  padding-top: 6px;\n}\n\n/* Tier 2: property-item groups (grid layout items). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-property-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"] {\n  padding-top: 4px;\n}\n/* #endregion */"
+            "newString": "/* #navbar {\n  -webkit-app-region: window-drag;\n} */\n\n/* #region 🔖TreeSpacing */\n/* Structure-driven spacing for tree inspector document.\n * Tier 1 – Rows within the same property group: gap-y-[2px] (Tailwind, unchanged).\n * Tier 2 – Sibling nested groups: extra padding-top so indent lines stay continuous.\n * Tier 3 – Top-level property sections: strongest gap + visual divider.\n */\n\n/* Tier 3: Visual divider + spacing between adjacent top-level sections. */\n[data-slot=\"tree-section-wrapper\"] + [data-slot=\"tree-section-wrapper\"] {\n  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);\n  padding-top: 10px;\n  margin-top: 6px;\n}\n\n/* Tier 2: Larger gap when a new expandable group row follows another group's content. */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"] {\n  padding-top: 6px;\n}\n\n/* Tier 2: Also when two collapsed group rows are consecutive (content wasn't rendered). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group] {\n  padding-top: 6px;\n}\n\n/* Tier 2: property-item groups (grid layout items). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-property-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"] {\n  padding-top: 4px;\n}\n/* #endregion */"
           },
           "tool_response": "",
           "tool_use_id": "toolu_bdrk_01X8zSk2ckkDjn43JpDZpoPP__vscode-1774868943596",
@@ -2384,7 +2384,7 @@
               {
                 "id": 3,
                 "status": "completed",
-                "title": "Implement hierarchy-based spacing"
+                "title": "Implement document-based spacing"
               },
               {
                 "id": 4,
@@ -2436,7 +2436,7 @@
               {
                 "id": 3,
                 "status": "completed",
-                "title": "Implement hierarchy-based spacing"
+                "title": "Implement document-based spacing"
               },
               {
                 "id": 4,
@@ -3481,7 +3481,7 @@
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "\n.fullscreen:has(#navbar:hover) #navbar,\n.fullscreen:has(#footer:hover) #footer {\n  transform: translateY(0);\n}\n\n@media (pointer: coarse) {\n  .fullscreen #navbar,\n  .fullscreen #footer {\n    transition: none;\n  }\n}\n\n/* #navbar {\n  -webkit-app-region: window-drag;\n} */\n\n/* #region 🔖TreeSpacing */\n/* Structure-driven spacing for tree inspector hierarchy.\n * Tier 1 – Rows within the same property group: gap-y-[2px] (Tailwind, unchanged).\n * Tier 2 – Sibling nested groups: extra padding-top so indent lines stay continuous.\n * Tier 3 – Top-level property sections: strongest gap + visual divider.\n */\n\n/* Tier 3: Visual divider + spacing between adjacent top-level sections. */\n[data-slot=\"tree-section-wrapper\"] + [data-slot=\"tree-section-wrapper\"] {\n  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);\n  padding-top: 10px;\n  margin-top: 6px;\n}\n\n/* Tier 2: Larger gap when a new expandable group row follows another group's content. */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"] {\n  padding-top: 6px;\n}\n\n/* Tier 2: Also when two collapsed group rows are consecutive (content wasn't rendered). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group] {\n  padding-top: 6px;\n}\n\n/* Tier 2: property-item groups (grid layout items). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-property-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"] {\n  padding-top: 4px;\n}\n/* #endregion */",
+          "tool_response": "\n.fullscreen:has(#navbar:hover) #navbar,\n.fullscreen:has(#footer:hover) #footer {\n  transform: translateY(0);\n}\n\n@media (pointer: coarse) {\n  .fullscreen #navbar,\n  .fullscreen #footer {\n    transition: none;\n  }\n}\n\n/* #navbar {\n  -webkit-app-region: window-drag;\n} */\n\n/* #region 🔖TreeSpacing */\n/* Structure-driven spacing for tree inspector document.\n * Tier 1 – Rows within the same property group: gap-y-[2px] (Tailwind, unchanged).\n * Tier 2 – Sibling nested groups: extra padding-top so indent lines stay continuous.\n * Tier 3 – Top-level property sections: strongest gap + visual divider.\n */\n\n/* Tier 3: Visual divider + spacing between adjacent top-level sections. */\n[data-slot=\"tree-section-wrapper\"] + [data-slot=\"tree-section-wrapper\"] {\n  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);\n  padding-top: 10px;\n  margin-top: 6px;\n}\n\n/* Tier 2: Larger gap when a new expandable group row follows another group's content. */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-content\"] + [data-slot=\"tree-item-row\"] {\n  padding-top: 6px;\n}\n\n/* Tier 2: Also when two collapsed group rows are consecutive (content wasn't rendered). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-item-row\"][data-tree-group] + [data-slot=\"tree-item-row\"][data-tree-group] {\n  padding-top: 6px;\n}\n\n/* Tier 2: property-item groups (grid layout items). */\n[data-slot=\"tree-section-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-item-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"],\n[data-slot=\"tree-property-content\"] \u003e [data-slot=\"tree-property-item\"] + [data-slot=\"tree-property-item\"] {\n  padding-top: 4px;\n}\n/* #endregion */",
           "tool_use_id": "toolu_bdrk_01V8RkoEwVTsH8mr1dY3MC9Y__vscode-1774868943624",
           "cwd": "/workspaces/semio"
         }
@@ -4436,7 +4436,7 @@
           "tool_name": "mcp_repo_ticket_reopen",
           "tool_input": {
             "path": "🎯🎯sketchpadimprovements🎫refinedetailspanelspacinginsketchpadtreeprimitives",
-            "prompt": "Make the spacing between tree hierarchy tiers more visible: double the CSS gap values for tier 2 (sibling groups) and tier 3 (top-level sections), and increase the section-content top padding and branch row gap.",
+            "prompt": "Make the spacing between tree document tiers more visible: double the CSS gap values for tier 2 (sibling groups) and tier 3 (top-level sections), and increase the section-content top padding and branch row gap.",
             "title": "Increase Tree Spacing Visibility",
             "llm": "opus-4-6",
             "client": "copilot-chat"
@@ -4562,7 +4562,7 @@
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "/workspaces/semio/.repo/🎫/25/11/30/STATE-MANAGEMENT-REFINEMENT/ticket.json\n/workspaces/semio/.repo/🎫/26/01/27/FIX-CODEBASE-TREE-VIEW-SECTIONS-NOT-LOADING/ticket.json\n/workspaces/semio/.repo/🎫/26/01/28/REFINE-TICKET-STRUCTURE/ticket.json\n/workspaces/semio/.repo/🎫/26/01/28/ENHANCE-SECTION-TREE-UNFOLDABILITY-AND-SORTING/ticket.json\n/workspaces/semio/.repo/🎫/26/01/19/REFINE-TICKET-SYSTEM-AND-LABELS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/30/FIX-GOAL-TREE-GRAPHQL-QUERY/ticket.json\n/workspaces/semio/.repo/🎫/26/01/25/ADD-LIST-AND-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/25/VSCODE-EXTENSION-CODEBASE-TREE-FIXES/ticket.json\n/workspaces/semio/.repo/🎫/26/01/25/VSCODE-EXTENSION-TREE-LAZY-LOADING-REFACTOR/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/EXTEND-LIST-AND-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/FIX-VSCODE-TREE-ITEM-CLICK-NAVIGATION/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/UNIFY-SECTIONS-EXPLORER-WITH-CODEBASE-FILE-TREE-ITEMS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/MIXED-SECTION-AND-DEFINITION-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/FILE-TREE-CODE-ICONS-BY-FILE-KIND/ticket.json\n/workspaces/semio/.repo/🎫/26/01/03/VIOLATION-TREE-STRUCTURE/ticket.json\n/workspaces/semio/.repo/🎫/26/01/03/VSCODE-TICKET-TREE-ACTIONS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/03/VSCODE-COMMAND-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/01/14/REPO-TREE-REFACTOR/ticket.json\n/workspaces/semio/.repo/🎫/26/01/20/FIX-VS-CODE-EXTENSION-ACTIVATION-AND-TREE-PROVIDERS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/08/FIX-DEFINITION-TREE-DUPLICATE-ITEMS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/16/CACHE-TREE-BUILD-FOR-CLI-PERFORMANCE/ticket.json\n/workspaces/semio/.repo/🎫/26/02/18/TREE-TEXT-SHORT-I-DS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/11/FIX-VIOLATION-KIND-TREE-IDS-AND-URIS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/11/VS-CODE-EXTENSION-VIOLATION-KIND-TREE-ALIGNMENT/ticket.json\n/workspaces/semio/.repo/🎫/26/02/02/EXPAND-GOAL-TREE-AND-REASSIGN-TICKETS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/02/FIX-GOAL-TREE-HIERARCHY-AND-SORTING/ticket.json\n/workspaces/semio/.repo/🎫/26/02/02/DESIGN-TOOLBAR-TOOL-TREE-PROMPT/ticket.json\n/workspaces/semio/.repo/🎫/26/02/09/HIERARCHICAL-POLICY-TREE-IN-CLI-AND-VS-CODE-EXTENSION/ticket.json\n/workspaces/semio/.repo/🎫/26/02/09/ENFORCE-SINGLE-LINE-OUTPUT-FOR-CLI-TREE-AND-LIST-ITEMS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/23/RENAME-TREE-COMMAND-TO-SEARCH/ticket.json\n/workspaces/semio/.repo/🎫/26/02/06/FIX-EXTENSION-TREE-DATA-LOADING/ticket.json\n/workspaces/semio/.repo/🎫/26/02/06/FIX-FULL-PROJECT-TREE-RENDERING-IN-CLI-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/02/06/REFACTOR-VSCODE-EXTENSION-SIDEBAR-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/02/10/ADD-BLEVE-QUERY-TO-ALL-LIST-AND-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/03/ADD-STATUS-FILTER-TO-LIST-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/03/FIX-BUNDLE-TREE-DISPLAY/ticket.json\n/workspaces/semio/.repo/🎫/26/02/03/FIX-GOAL-TREE-SHOWING-CLOSED-TICKETS-AS-OPEN/ticket.json\n/workspaces/semio/.repo/🎫/26/02/05/LAZY-LOAD-TREE-ITEMS-IN-VS-CODE-EXTENSION/ticket.json\n/workspaces/semio/.repo/🎫/26/02/07/IMPROVE-GOAL-TREE-DISPLAY-INFORMATION/ticket.json\n/workspaces/semio/.repo/🎫/26/02/04/STANDARDIZE-LIST-AND-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/04/MAKE-ALL-LIST-AND-TREE-COMMANDS-WORK-WITHOUT-FILE-ARGUMENT/ticket.json\n/workspaces/semio/.repo/🎫/26/02/26/FIX-INSTALLED-EXTENSION-USING-OLD-TREE-COMMAND/ticket.json\n/workspaces/semio/.repo/🎫/26/02/26/FIX-MONOREPO-TREE-TESTS-TO-CATCH-CLI-FAILURES/ticket.json\n/workspaces/semio/.repo/🎫/26/02/13/REMOVE-LIST-AND-TREE-MCP-TOOLS-EXCEPT-MAIN-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/03/16/VIOLATION-TREE-WITNESS-ALTERNATIVES/ticket.json\n/workspaces/semio/.repo/🎫/26/03/16/TREE-ITEM-ALTERNATIVE-BRANCHES-NAVIGATION/ticket.json\n/workspaces/semio/.repo/🎫/26/03/30/REFINE-DETAILS-PANEL-SPACING-IN-SKETCHPAD-TREE-PRIMITIVES/ticket.json\n/workspaces/semio/.repo/🎫/26/03/25/REMOVE-DETAIL-TREE-LABEL-GAP-IN-SKETCHPAD-PANEL/ticket.json\n/workspaces/semio/.repo/🎫/26/03/02/UNIFY-CODEBASE-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/03/14/ONTOLOGY-AND-VALIDATION-TREE-VIEWER-FOR-CODA/ticket.json\n/workspaces/semio/.repo/🎫/26/03/14/FIX-STORYBOOK-TREE-LABEL-RENDERING-FOR-CODA-TREES/ticket.json\n/workspaces/semio/.repo/🎫/26/03/15/TREE-SECTIONS-PROP-ONLY-API/ticket.json\n/workspaces/semio/.repo/🎫/26/03/15/REFACTOR-COMPOSE-ELEMENTS-TREE-API/ticket.json\n/workspaces/semio/.repo/🎫/26/03/15/REFINE-UI-COMPONENT-WITH-WINDOW-KINDS-AND-GOLDEN-LAYOUT/ticket.json",
+          "tool_response": "/workspaces/semio/.repo/🎫/25/11/30/STATE-MANAGEMENT-REFINEMENT/ticket.json\n/workspaces/semio/.repo/🎫/26/01/27/FIX-CODEBASE-TREE-VIEW-SECTIONS-NOT-LOADING/ticket.json\n/workspaces/semio/.repo/🎫/26/01/28/REFINE-TICKET-STRUCTURE/ticket.json\n/workspaces/semio/.repo/🎫/26/01/28/ENHANCE-SECTION-TREE-UNFOLDABILITY-AND-SORTING/ticket.json\n/workspaces/semio/.repo/🎫/26/01/19/REFINE-TICKET-SYSTEM-AND-LABELS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/30/FIX-GOAL-TREE-GRAPHQL-QUERY/ticket.json\n/workspaces/semio/.repo/🎫/26/01/25/ADD-LIST-AND-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/25/VSCODE-EXTENSION-CODEBASE-TREE-FIXES/ticket.json\n/workspaces/semio/.repo/🎫/26/01/25/VSCODE-EXTENSION-TREE-LAZY-LOADING-REFACTOR/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/EXTEND-LIST-AND-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/FIX-VSCODE-TREE-ITEM-CLICK-NAVIGATION/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/UNIFY-SECTIONS-EXPLORER-WITH-CODEBASE-FILE-TREE-ITEMS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/MIXED-SECTION-AND-DEFINITION-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/01/29/FILE-TREE-CODE-ICONS-BY-FILE-KIND/ticket.json\n/workspaces/semio/.repo/🎫/26/01/03/VIOLATION-TREE-STRUCTURE/ticket.json\n/workspaces/semio/.repo/🎫/26/01/03/VSCODE-TICKET-TREE-ACTIONS/ticket.json\n/workspaces/semio/.repo/🎫/26/01/03/VSCODE-COMMAND-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/01/14/REPO-TREE-REFACTOR/ticket.json\n/workspaces/semio/.repo/🎫/26/01/20/FIX-VS-CODE-EXTENSION-ACTIVATION-AND-TREE-PROVIDERS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/08/FIX-DEFINITION-TREE-DUPLICATE-ITEMS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/16/CACHE-TREE-BUILD-FOR-CLI-PERFORMANCE/ticket.json\n/workspaces/semio/.repo/🎫/26/02/18/TREE-TEXT-SHORT-I-DS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/11/FIX-VIOLATION-KIND-TREE-IDS-AND-URIS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/11/VS-CODE-EXTENSION-VIOLATION-KIND-TREE-ALIGNMENT/ticket.json\n/workspaces/semio/.repo/🎫/26/02/02/EXPAND-GOAL-TREE-AND-REASSIGN-TICKETS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/02/FIX-GOAL-TREE-DOCUMENT-AND-SORTING/ticket.json\n/workspaces/semio/.repo/🎫/26/02/02/DESIGN-TOOLBAR-TOOL-TREE-PROMPT/ticket.json\n/workspaces/semio/.repo/🎫/26/02/09/HIERARCHICAL-POLICY-TREE-IN-CLI-AND-VS-CODE-EXTENSION/ticket.json\n/workspaces/semio/.repo/🎫/26/02/09/ENFORCE-SINGLE-LINE-OUTPUT-FOR-CLI-TREE-AND-LIST-ITEMS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/23/RENAME-TREE-COMMAND-TO-SEARCH/ticket.json\n/workspaces/semio/.repo/🎫/26/02/06/FIX-EXTENSION-TREE-DATA-LOADING/ticket.json\n/workspaces/semio/.repo/🎫/26/02/06/FIX-FULL-PROJECT-TREE-RENDERING-IN-CLI-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/02/06/REFACTOR-VSCODE-EXTENSION-SIDEBAR-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/02/10/ADD-BLEVE-QUERY-TO-ALL-LIST-AND-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/03/ADD-STATUS-FILTER-TO-LIST-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/03/FIX-BUNDLE-TREE-DISPLAY/ticket.json\n/workspaces/semio/.repo/🎫/26/02/03/FIX-GOAL-TREE-SHOWING-CLOSED-TICKETS-AS-OPEN/ticket.json\n/workspaces/semio/.repo/🎫/26/02/05/LAZY-LOAD-TREE-ITEMS-IN-VS-CODE-EXTENSION/ticket.json\n/workspaces/semio/.repo/🎫/26/02/07/IMPROVE-GOAL-TREE-DISPLAY-INFORMATION/ticket.json\n/workspaces/semio/.repo/🎫/26/02/04/STANDARDIZE-LIST-AND-TREE-COMMANDS/ticket.json\n/workspaces/semio/.repo/🎫/26/02/04/MAKE-ALL-LIST-AND-TREE-COMMANDS-WORK-WITHOUT-FILE-ARGUMENT/ticket.json\n/workspaces/semio/.repo/🎫/26/02/26/FIX-INSTALLED-EXTENSION-USING-OLD-TREE-COMMAND/ticket.json\n/workspaces/semio/.repo/🎫/26/02/26/FIX-MONOREPO-TREE-TESTS-TO-CATCH-CLI-FAILURES/ticket.json\n/workspaces/semio/.repo/🎫/26/02/13/REMOVE-LIST-AND-TREE-MCP-TOOLS-EXCEPT-MAIN-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/03/16/VIOLATION-TREE-WITNESS-ALTERNATIVES/ticket.json\n/workspaces/semio/.repo/🎫/26/03/16/TREE-ITEM-ALTERNATIVE-BRANCHES-NAVIGATION/ticket.json\n/workspaces/semio/.repo/🎫/26/03/30/REFINE-DETAILS-PANEL-SPACING-IN-SKETCHPAD-TREE-PRIMITIVES/ticket.json\n/workspaces/semio/.repo/🎫/26/03/25/REMOVE-DETAIL-TREE-LABEL-GAP-IN-SKETCHPAD-PANEL/ticket.json\n/workspaces/semio/.repo/🎫/26/03/02/UNIFY-CODEBASE-TREE/ticket.json\n/workspaces/semio/.repo/🎫/26/03/14/ONTOLOGY-AND-VALIDATION-TREE-VIEWER-FOR-CODA/ticket.json\n/workspaces/semio/.repo/🎫/26/03/14/FIX-STORYBOOK-TREE-LABEL-RENDERING-FOR-CODA-TREES/ticket.json\n/workspaces/semio/.repo/🎫/26/03/15/TREE-SECTIONS-PROP-ONLY-API/ticket.json\n/workspaces/semio/.repo/🎫/26/03/15/REFACTOR-COMPOSE-ELEMENTS-TREE-API/ticket.json\n/workspaces/semio/.repo/🎫/26/03/15/REFINE-UI-COMPONENT-WITH-WINDOW-KINDS-AND-GOLDEN-LAYOUT/ticket.json",
           "tool_use_id": "toolu_bdrk_01FEjGk5YKk93QWkCrepY7EQ__vscode-1774868943642",
           "cwd": "/workspaces/semio"
         }
@@ -4590,7 +4590,7 @@
             "client": "copilot-chat",
             "llm": "opus-4-6",
             "path": "2026/03/30/REFINE-DETAILS-PANEL-SPACING-IN-SKETCHPAD-TREE-PRIMITIVES",
-            "prompt": "Make the spacing between tree hierarchy tiers more visible by increasing all gap values. Double the CSS tier-2 and tier-3 spacing, increase branch row gap, and increase section-content top padding.",
+            "prompt": "Make the spacing between tree document tiers more visible by increasing all gap values. Double the CSS tier-2 and tier-3 spacing, increase branch row gap, and increase section-content top padding.",
             "title": "Increase Tree Spacing Visibility"
           },
           "tool_use_id": "toolu_bdrk_015MzGCxw57JaMnTNzhQmVaG__vscode-1774868943643",
@@ -4653,7 +4653,7 @@
             "isBackground": false,
             "timeout": 5000
           },
-          "tool_response": "{\n  \"title\": \"Refine Details Panel Spacing in Sketchpad Tree Primitives\",\n  \"status\": \"closed\",\n  \"description\": \"Improve readability of the Details panel by introducing structure-driven spacing rules in shared tree primitives: minimal spacing between rows in same property group, larger gap between sibling nested groups, strongest separation plus divider between top-level property sections. Generic by hierarchy/structural role, not by section/field name.\",\n  \"summary\": \"Kept detail-panel tree guide strokes continuous by removing section-row external spacing from the painted path and moving subtree spacing into shared line-painted branch wrappers. Added a computed extra inset so item labels sit about 2x farther from the guide stroke without moving the chevron itself. Extended the existing inline UI tests to lock the new section/item/control-tree branch wrapper behavior and label inset. Verified with `npm test --workspace elements/ui`.\",\n  \"github\": {\n    \"issue\": \"https://github.com/usalu/semio/issues/1187\"\n  },\n  \"goal\": \"🎯sketchpadimprovements\",\n  \"sessions\": [\n    \"⚪89143d4f979548c6a1ae606b8559b7f9\"\n  ]",
+          "tool_response": "{\n  \"title\": \"Refine Details Panel Spacing in Sketchpad Tree Primitives\",\n  \"status\": \"closed\",\n  \"description\": \"Improve readability of the Details panel by introducing structure-driven spacing rules in shared tree primitives: minimal spacing between rows in same property group, larger gap between sibling nested groups, strongest separation plus divider between top-level property sections. Generic by document/structural role, not by section/field name.\",\n  \"summary\": \"Kept detail-panel tree guide strokes continuous by removing section-row external spacing from the painted path and moving subtree spacing into shared line-painted branch wrappers. Added a computed extra inset so item labels sit about 2x farther from the guide stroke without moving the chevron itself. Extended the existing inline UI tests to lock the new section/item/control-tree branch wrapper behavior and label inset. Verified with `npm test --workspace elements/ui`.\",\n  \"github\": {\n    \"issue\": \"https://github.com/usalu/semio/issues/1187\"\n  },\n  \"goal\": \"🎯sketchpadimprovements\",\n  \"sessions\": [\n    \"⚪89143d4f979548c6a1ae606b8559b7f9\"\n  ]",
           "tool_use_id": "toolu_bdrk_01ApAsqEnoGtKKXbe4M4AJ2P__vscode-1774868943644",
           "cwd": "/workspaces/semio"
         }
@@ -4681,7 +4681,7 @@
             "client": "copilot-chat",
             "llm": "opus-4-6",
             "path": "26/03/30/REFINE-DETAILS-PANEL-SPACING-IN-SKETCHPAD-TREE-PRIMITIVES",
-            "prompt": "Make the spacing between tree hierarchy tiers more visible by roughly doubling all tier gap values in the CSS and the JS constants.",
+            "prompt": "Make the spacing between tree document tiers more visible by roughly doubling all tier gap values in the CSS and the JS constants.",
             "title": "Increase Tree Spacing Visibility"
           },
           "tool_use_id": "toolu_bdrk_01NN5DskQf94M8EMGKVWfSvL__vscode-1774868943645",
@@ -4711,7 +4711,7 @@
             "client": "copilot-chat",
             "llm": "opus-4-6",
             "path": "26/03/30/REFINE-DETAILS-PANEL-SPACING-IN-SKETCHPAD-TREE-PRIMITIVES",
-            "prompt": "Make the spacing between tree hierarchy tiers more visible by roughly doubling all tier gap values in the CSS and the JS constants.",
+            "prompt": "Make the spacing between tree document tiers more visible by roughly doubling all tier gap values in the CSS and the JS constants.",
             "title": "Increase Tree Spacing Visibility"
           },
           "tool_response": "\n🔓 Ticket reopened: INCREASE-TREE-SPACING-VISIBILITY",
@@ -5904,7 +5904,7 @@
       },
       {
         "id": "",
-        "name": "Implement hierarchy-based spacing",
+        "name": "Implement document-based spacing",
         "status": "completed",
         "ideated": "2026-03-30T12:59:47Z",
         "started": "2026-03-30T13:04:33Z",

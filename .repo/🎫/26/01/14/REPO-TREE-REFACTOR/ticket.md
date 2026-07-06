@@ -73,7 +73,7 @@ Benefits:
 
 - Globally unique
 - Human-readable
-- Path-based (natural hierarchy)
+- Path-based (natural document)
 - Deterministic (except breachs which are ephemeral)
 - Consistent with compose naming
 
@@ -209,7 +209,7 @@ Successfully refactored the Node ID system to use a consistent, globally unique 
 - **Globally unique IDs**: No more collisions
 - **Human-readable**: IDs are clear and descriptive
 - **Deterministic**: Same codebase always generates same IDs (except ephemeral breachs)
-- **Path-based hierarchy**: Natural navigation structure
+- **Path-based document**: Natural navigation structure
 - **Consistent**: All IDs follow the same `compose/...` pattern
 
 ## Breaking Changes

@@ -1416,7 +1416,7 @@ mod tests {
             apps: vec![AppDefinition {
                 id: "draw-play".into(),
                 label: "Draw".into(),
-                hierarchy: vec!["semio".into(), "draw".into()],
+                document: vec!["semio".into(), "draw".into()],
                 icon_id: None,
                 controller_id: "draw-play".into(),
                 modes: vec![ModeDefinition {
@@ -1464,7 +1464,7 @@ mod tests {
                 apps: vec![OsPlatformAppInput {
                     id: "draw".into(),
                     label: "Draw".into(),
-                    hierarchy: vec!["semio".into(), "draw".into()],
+                    document: vec!["semio".into(), "draw".into()],
                     controller_id: "draw-play".into(),
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
@@ -3297,7 +3297,7 @@ mod tests {
             apps: vec![OsPlatformAppInput {
                 id: "draw".into(),
                 label: "Draw".into(),
-                hierarchy: vec!["semio".into(), "draw".into()],
+                document: vec!["semio".into(), "draw".into()],
                 controller_id: "draw-play".into(),
                 modes: vec![],
                 default_mode_id: None,
@@ -3480,7 +3480,7 @@ pub struct OsPortSpec {
 pub struct OsAppRegistration {
     pub id: String,
     pub label: String,
-    pub hierarchy: Vec<String>,
+    pub document: Vec<String>,
     pub controller_id: String,
     pub inputs: Vec<OsPortSpec>,
     pub outputs: Vec<OsPortSpec>,
@@ -3507,7 +3507,7 @@ pub struct OsProgramDefinition {
 pub struct OsPlatformAppInput {
     pub id: String,
     pub label: String,
-    pub hierarchy: Vec<String>,
+    pub document: Vec<String>,
     pub controller_id: String,
     pub modes: Vec<ModeDefinition>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3632,7 +3632,7 @@ pub fn merge_os_program_definition(
             OsAppRegistration {
                 id: app.id.clone(),
                 label: app.label.clone(),
-                hierarchy: app.hierarchy.clone(),
+                document: app.document.clone(),
                 controller_id: app.controller_id.clone(),
                 inputs: resource.inputs,
                 outputs: resource.outputs,
@@ -3688,7 +3688,7 @@ pub fn seed_os_program_registry_from_resource_map(
                         Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
                     }
                 },
-                hierarchy: vec!["semio".into(), app_id.to_lowercase()],
+                document: vec!["semio".into(), app_id.to_lowercase()],
                 controller_id: format!("{}-play", program_id.replace('.', "-")),
                 modes: resource.modes.clone(),
                 default_mode_id: resource.default_mode_id.clone(),
@@ -3738,7 +3738,7 @@ pub fn resolve_os_app_definition(
     Some(AppDefinition {
         id: registration.id,
         label: registration.label,
-        hierarchy: registration.hierarchy,
+        document: registration.document,
         icon_id: None,
         controller_id: registration.controller_id,
         modes: if app.modes.is_empty() {

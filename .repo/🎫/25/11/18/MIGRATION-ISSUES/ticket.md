@@ -18,7 +18,7 @@ The migration from name-based references to GUID-based ID objects is complete. A
 
 ### 1. Duplicate Type Names
 
-**Solution:** Migration script uses `name|variant` as key to distinguish types during migration, then converts to new hierarchy where variant becomes the name and parent references are created.
+**Solution:** Migration script uses `name|variant` as key to distinguish types during migration, then converts to new document where variant becomes the name and parent references are created.
 
 ### 2. Standalone Design Files
 

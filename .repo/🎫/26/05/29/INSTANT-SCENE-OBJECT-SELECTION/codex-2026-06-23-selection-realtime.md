@@ -16,7 +16,7 @@
 
 - `bun ./script.ts test -- --run index.tsx` from `cad/js/renderer`:
   - `index.tsx` passed: 66 tests.
-  - Existing dirty `play/index.tsx` hierarchy tests still failed in collection.
+  - Existing dirty `play/index.tsx` document tests still failed in collection.
 - Browser runtime on `http://127.0.0.1:6120/` with concrete fixture:
   - Four CAD canvases rendered.
   - Console showed `[DEBUG] bootstrapCadModules: spatial-shape, aec-building, aec-building-energy, aec-building-structure`.

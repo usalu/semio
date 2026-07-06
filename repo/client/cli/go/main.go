@@ -13867,6 +13867,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 				if line[j] == '`' {
 					scanState.Templates = scanState.Templates[:len(scanState.Templates)-1]
 					j++
+					continue
 				}
 				if j+1 < len(line) && line[j] == '$' && line[j+1] == '{' {
 					scanState.Templates[len(scanState.Templates)-1].ExprDepth = 1
@@ -39298,7 +39299,7 @@ type Session struct {
 }
 
 // 🔷GetID returns the repo ID for a session.
-// ✔️GetID MUST use the checkpoint ID as parent for the session ID. Falls back to date hierarchy if checkpoint is unknown.
+// ✔️GetID MUST use the checkpoint ID as parent for the session ID. Falls back to date document if checkpoint is unknown.
 func (s *Session) GetID() string {
 	var parentId string
 	if s.Checkpoint != "" {
@@ -45665,12 +45666,12 @@ var mcpDescriptionTable = map[string]map[McpClientKind]string{
 		McpClientCodex:   "Fetch when Codex must read one ticket record before closing or reopening that ticket.",
 	},
 	"res_goals": {
-		McpClientGeneric: "Fetch when goal hierarchy is required before opening or linking a ticket.",
-		McpClientCursor:  "Fetch when goal hierarchy is required before the Cursor agent opens or links a ticket.",
-		McpClientKiro:    "Fetch when goal hierarchy is required before the Kiro agent opens or links a ticket.",
-		McpClientCopilot: "Fetch when goal hierarchy is required before the Copilot agent opens or links a ticket.",
-		McpClientClaude:  "Fetch when goal hierarchy is required before Claude Code opens or links a ticket.",
-		McpClientCodex:   "Fetch when goal hierarchy is required before Codex opens or links a ticket.",
+		McpClientGeneric: "Fetch when goal document is required before opening or linking a ticket.",
+		McpClientCursor:  "Fetch when goal document is required before the Cursor agent opens or links a ticket.",
+		McpClientKiro:    "Fetch when goal document is required before the Kiro agent opens or links a ticket.",
+		McpClientCopilot: "Fetch when goal document is required before the Copilot agent opens or links a ticket.",
+		McpClientClaude:  "Fetch when goal document is required before Claude Code opens or links a ticket.",
+		McpClientCodex:   "Fetch when goal document is required before Codex opens or links a ticket.",
 	},
 	"res_goal_one": {
 		McpClientGeneric: "Fetch when one goal record must be confirmed before milestone or ticket association.",

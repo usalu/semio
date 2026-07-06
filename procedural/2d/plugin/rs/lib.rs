@@ -8,8 +8,8 @@ use semio_framework_plugin::{
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, App, Canvas2dScene, CommandDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle,
     UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -21,7 +21,7 @@ const PROCEDURAL2D_PLAY_SURFACE_MAIN: &str = "procedural2d.play.main";
 const PROCEDURAL2D_PLAY_SURFACE_PREVIEW: &str = "procedural2d.play.preview";
 const PROCEDURAL2D_PLAY_BODY_MAIN: &str = "procedural2d.play.main";
 const PROCEDURAL2D_PLAY_BODY_PREVIEW: &str = "procedural2d.play.preview";
-const PROCEDURAL2D_PLAY_BODY_HIERARCHY: &str = "procedural2d.play.hierarchy";
+const PROCEDURAL2D_PLAY_BODY_DOCUMENT: &str = "procedural2d.play.document";
 const PROCEDURAL2D_PLAY_BODY_CATALOGUE: &str = "procedural2d.play.catalogue";
 const PROCEDURAL2D_PLAY_BODY_INSPECTION: &str = "procedural2d.play.inspection";
 const PROCEDURAL2D_PLAY_WINDOW_MAIN: &str = "procedural2d-main";
@@ -406,7 +406,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>, command: Option<Co
     }
 }
 
-fn build_hierarchy_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
+fn build_document_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
     let widget_items: Vec<UiTreeItemNode> = play
         .fixture
         .widgets
@@ -414,7 +414,7 @@ fn build_hierarchy_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
         .map(|widget| {
             let id = widget_id(widget).to_string();
             tree_item(
-                format!("procedural2d-play-hierarchy.widget.{id}"),
+                format!("procedural2d-play-document.widget.{id}"),
                 id.clone(),
                 Some(procedural2d_cmd("setSelection", Some(json!({ "ids": [id] })))),
             )
@@ -422,11 +422,11 @@ fn build_hierarchy_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
-            id: "procedural2d-play-hierarchy.widgets".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            id: "procedural2d-play-document.widgets".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: if widget_items.is_empty() {
-                vec![tree_item("procedural2d-play-hierarchy.empty", "(none)", None)]
+                vec![tree_item("procedural2d-play-document.empty", "(none)", None)]
             } else {
                 widget_items
             },
@@ -435,7 +435,7 @@ fn build_hierarchy_tree(play: &Procedural2dPlayEnvelope) -> UiNode {
             play.runtime
                 .selected_ids
                 .iter()
-                .map(|id| format!("procedural2d-play-hierarchy.widget.{id}"))
+                .map(|id| format!("procedural2d-play-document.widget.{id}"))
                 .collect(),
         ),
         highlighted_ids: None,
@@ -865,7 +865,7 @@ impl PluginApp for Procedural2dPlayApp {
             PROCEDURAL2D_PLAY_BODY_GENERATIONS => render_generate_generations(&play),
             PROCEDURAL2D_PLAY_BODY_GENERATE_FORM => render_generate_form(&play),
             PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW => render_generate_preview(&play),
-            PROCEDURAL2D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&play),
+            PROCEDURAL2D_PLAY_BODY_DOCUMENT => build_document_tree(&play),
             PROCEDURAL2D_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
             PROCEDURAL2D_PLAY_BODY_INSPECTION => build_inspector_tree(&play),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -877,7 +877,7 @@ impl PluginApp for Procedural2dPlayApp {
 //#region 🔖AppFactory
 fn create_procedural2d_app() -> App {
     App::from_builder(
-        App::builder(PROCEDURAL2D_PLAY_APP_ID, "Procedural 2D").hierarchy(["semio", "procedural", "2d"])
+        App::builder(PROCEDURAL2D_PLAY_APP_ID, "Procedural 2D").document(["semio", "procedural", "2d"])
             .icon_id("procedural2d")
             .mode("edit", "Edit")
             .mode("generate", "Generate")
@@ -919,10 +919,10 @@ fn create_procedural2d_app() -> App {
                 None,
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                PROCEDURAL2D_PLAY_BODY_HIERARCHY,
+                PROCEDURAL2D_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -959,7 +959,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests
@@ -987,12 +987,12 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_widgets() {
+    fn document_lists_widgets() {
         let app = Procedural2dPlayApp;
         let document = app.initial_document_json();
-        let node = app.render(PROCEDURAL2D_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(PROCEDURAL2D_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("procedural2d-play-hierarchy.widget.rect"));
+        assert!(json.contains("procedural2d-play-document.widget.rect"));
     }
 
     #[test]

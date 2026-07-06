@@ -295,7 +295,7 @@ Remove from every `owns: EntityConnection # reference // ...` line where they ap
 
 ### 5c. Remove wrong-direction `Edit`
 
-`Edit` is listed as a possible `owner` of every `Modification` and `Modifications`, but `Operation.owner # reference // Edit` (281) makes the actual hierarchy `Edit -> Operation -> Modification(s)`. Remove `Edit` from every `owner: Entity # reference // ...` line on `Modification` interface (223), `type Modifications` (250), and every `XModification`/`XModifications` block.
+`Edit` is listed as a possible `owner` of every `Modification` and `Modifications`, but `Operation.owner # reference // Edit` (281) makes the actual document `Edit -> Operation -> Modification(s)`. Remove `Edit` from every `owner: Entity # reference // ...` line on `Modification` interface (223), `type Modifications` (250), and every `XModification`/`XModifications` block.
 
 ### 5d. Narrow per-type owner unions
 

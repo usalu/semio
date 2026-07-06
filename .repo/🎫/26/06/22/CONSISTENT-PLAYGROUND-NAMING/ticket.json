@@ -2,7 +2,7 @@
   "title": "Consistent Playground Naming",
   "emoji": "🛝",
   "status": "closed",
-  "description": "Align playground and play harness names to follow the semio · technology · subproject middle-dot hierarchy naming convention",
+  "description": "Align playground and play harness names to follow the semio · technology · subproject middle-dot document naming convention",
   "summary": "Finished recent playground rename fallout end to end: restored puzzle 3d runtime state syncing, fixed stale compose dependency aliases, updated playground export and embedded-test wiring, stabilized flow and presentation playground tests, and verified all playground builds plus testable playground scripts.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1729"

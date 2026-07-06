@@ -15,7 +15,7 @@ All succeeded on 2026-07-02:
 - `s/core/playground.ts`: static `import.meta.glob` for fixtures
 - `s/core/internal.ts`: `presentation.deck` resource map entry
 - `framework/product/presentation/core/index.ts`: `buildPresentationDeckProgramDefinition`
-- `cad/js/renderer/core/index.ts`: AppTools array test shape; model JSON schema; concrete-forest hierarchy counts
+- `cad/js/renderer/core/index.ts`: AppTools array test shape; model JSON schema; concrete-forest document counts
 
 ## Tests (scoped `bun nx run <pkg>:test`)
 
@@ -24,7 +24,7 @@ All succeeded on 2026-07-02:
 | framework-playground-core | 19/19 pass |
 | imperative-core | pass (after schema fix) |
 | forms-core | pass (after export order fix) |
-| cad-js-renderer-core | 48/52 pass (4 hierarchy integration tests remain) |
+| cad-js-renderer-core | 48/52 pass (4 document integration tests remain) |
 | s-core | 4/20 pass (16 pre-existing / fixture bootstrap failures) |
 
 Note: full `run-many` across all touched packages still reports failures in writer-core (LSP), raster-core, puzzle packages, etc. — largely pre-existing and outside playground build path.

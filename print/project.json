@@ -1,0 +1,43 @@
+{
+  "name": "@semio-tech/print",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts generate"
+      }
+    },
+    "fonts": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts fonts"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts build",
+        "forwardAllArgs": true
+      }
+    },
+    "watch": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts watch",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
+}

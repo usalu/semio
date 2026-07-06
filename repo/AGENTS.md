@@ -2276,7 +2276,7 @@ with optional suffix `.ended`.
 
 Let the following pairwise-disjoint finite sorts exist:
 
-### 3.1 Temporal hierarchy
+### 3.1 Temporal document
 
 - `Root`
 - `Years`
@@ -2292,7 +2292,7 @@ Let the following pairwise-disjoint finite sorts exist:
 - `Seconds`
 - `Second`
 
-### 3.2 Release and checkpoint hierarchy
+### 3.2 Release and checkpoint document
 
 - `Repo`
 - `Releases`
@@ -2302,7 +2302,7 @@ Let the following pairwise-disjoint finite sorts exist:
 - `Checkpoints`
 - `Checkpoint`
 
-### 3.3 Structural repository hierarchy
+### 3.3 Structural repository document
 
 - `Technologies`
 - `Technology`
@@ -2740,12 +2740,12 @@ Every concrete entity except `Root` has exactly one primary parent in the sense 
 
 For every `b ∈ Bundle`, there exists exactly one `t ∈ Technology` such that `bundleTechnologyName(b) = techName(t)`.
 
-### 7.2 Folder hierarchy consistency
+### 7.2 Folder document consistency
 
 For every `f ∈ Folder`, `folderPath(f)` is unique.
 If `f₁` is parent of `f₂`, then `folderPath(f₁)` is a strict path prefix of `folderPath(f₂)`.
 
-### 7.3 File hierarchy consistency
+### 7.3 File document consistency
 
 For every `g ∈ File`, there exists at most one parent folder `f` such that
 `folderPath(f) = dirname(filePath(g))`.
@@ -3581,7 +3581,7 @@ A test scope is a tuple
 
 ### 22.2 Resolution law
 
-A URI or ID resolves to a test scope by parsing the encoded hierarchy:
+A URI or ID resolves to a test scope by parsing the encoded document:
 
 - technology IDs/URIs resolve to `technology`,
 - bundle IDs/URIs resolve to `bundle`,

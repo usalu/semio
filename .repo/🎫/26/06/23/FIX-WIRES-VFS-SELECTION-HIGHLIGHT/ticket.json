@@ -3,7 +3,7 @@
   "emoji": "🔗",
   "status": "closed",
   "description": "Sketchpad wires group selection synchronizes VFS row selection but highlighted rows are not shown; nodes and rows are one to one.",
-  "summary": "Fixed callback tree panel caching so VFS/hierarchy row selection refreshes when selectedIds change without row structure changes. Added a regression test and verified renderer tests, WIRES play tests, WIRES Nx build, and a browser smoke on localhost:6015.",
+  "summary": "Fixed callback tree panel caching so VFS/document row selection refreshes when selectedIds change without row structure changes. Added a regression test and verified renderer tests, WIRES play tests, WIRES Nx build, and a browser smoke on localhost:6015.",
   "goal": "🎯repo",
   "sessions": [
     "⚪c22680a51ca84156b5180a03c5bf9ec8"

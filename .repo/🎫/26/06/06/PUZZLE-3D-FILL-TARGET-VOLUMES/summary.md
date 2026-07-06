@@ -10,7 +10,7 @@ Extended puzzle 3d fill with persisted oriented-box **target volumes** that cons
 - **Fill sub-mode**: `fillEditTargetVolumes` controller state, engagement toggle "Edit target volumes" + "Delete volume".
 - **Fill constraint**: TS stepper + Rust `fill_step_one` gate placements when volumes are non-empty; invalidation on volume change.
 - **Playground host**: wires props, relocate/draw handlers, fill session prep with `targetVolumes`.
-- **Hierarchy**: Target Volumes group in play tree panel.
+- **Document**: Target Volumes group in play tree panel.
 
 ## Tests
 

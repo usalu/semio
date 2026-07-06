@@ -12164,7 +12164,7 @@ const AppContent: FC = () => {
         designGroups.get(key)!.push(design);
       });
 
-      const buildDesignHierarchy = (designs: Design[], parentId: string | undefined, level: number, parentRowId?: string): void => {
+      const buildDesignDocument = (designs: Design[], parentId: string | undefined, level: number, parentRowId?: string): void => {
         const childDesigns = designsByParent.get(parentId) || [];
 
         childDesigns.forEach((design) => {
@@ -12192,7 +12192,7 @@ const AppContent: FC = () => {
           });
 
           if (hasChildren) {
-            buildDesignHierarchy(designs, design.id, level + 1, rowId);
+            buildDesignDocument(designs, design.id, level + 1, rowId);
           }
         });
       };
@@ -12213,14 +12213,14 @@ const AppContent: FC = () => {
 
         const filteredDesigns = allDesignsArray.filter((d) => includeIds.has(d.id));
 
-        buildDesignHierarchy(filteredDesigns, undefined, 0);
+        buildDesignDocument(filteredDesigns, undefined, 0);
       } else {
-        buildDesignHierarchy(allDesignsArray, undefined, 0);
+        buildDesignDocument(allDesignsArray, undefined, 0);
       }
     }
 
     if (selectedKinds.size === 0 || selectedKinds.has("types")) {
-      const buildTypeHierarchy = (types: Type[], parentId: string | undefined, level: number, parentRowId?: string): void => {
+      const buildTypeDocument = (types: Type[], parentId: string | undefined, level: number, parentRowId?: string): void => {
         const childTypes = typesByParent.get(parentId) || [];
 
         childTypes.forEach((type) => {
@@ -12248,7 +12248,7 @@ const AppContent: FC = () => {
           });
 
           if (hasChildren) {
-            buildTypeHierarchy(types, type.id, level + 1, rowId);
+            buildTypeDocument(types, type.id, level + 1, rowId);
           }
         });
       };
@@ -12269,9 +12269,9 @@ const AppContent: FC = () => {
 
         const filteredTypes = allTypesArray.filter((t) => includeIds.has(t.id));
 
-        buildTypeHierarchy(filteredTypes, undefined, 0);
+        buildTypeDocument(filteredTypes, undefined, 0);
       } else {
-        buildTypeHierarchy(allTypesArray, undefined, 0);
+        buildTypeDocument(allTypesArray, undefined, 0);
       }
     }
 
@@ -12360,7 +12360,7 @@ const AppContent: FC = () => {
         });
       }
 
-      const buildFolderHierarchy = (parentFolder: Folder | null, level: number, parentRowId?: string): void => {
+      const buildFolderDocument = (parentFolder: Folder | null, level: number, parentRowId?: string): void => {
         const parentId = parentFolder?.id;
         const childFolders = foldersByParent.get(parentId) || [];
 
@@ -12537,12 +12537,12 @@ const AppContent: FC = () => {
               });
             }
 
-            buildFolderHierarchy(folder, level + 1, folderId);
+            buildFolderDocument(folder, level + 1, folderId);
           }
         });
       };
 
-      buildFolderHierarchy(null, 0);
+      buildFolderDocument(null, 0);
     }
 
     if (selectedKinds.size === 0 || selectedKinds.has("authors")) {
@@ -23123,7 +23123,7 @@ export { Sketchpad };
 // #endregion Ôø®´©ÅImports
 
 // #region ­ƒÅù´©ÅDesign Family Helpers
-// Design family helper functions MUST traverse the design hierarchy to collect related design IDs.
+// Design family helper functions MUST traverse the design document to collect related design IDs.
 
 /** getDesignFamilyIds holds the data fields for a getDesignFamilyIds record.
  **/
@@ -27741,7 +27741,7 @@ export function HoverPiecesProvider({ children }: { children: ReactNode }) {
 }
 
 /**
- * Returns whether a piece is transitively hovered via type or design hierarchy.
+ * Returns whether a piece is transitively hovered via type or design document.
  *MUST check the transitive hover pieces for the given ID.
  **/
 export function useDesignAppIsPieceTransitiveHovered(id?: DesignAppId, pieceId?: string): boolean {
@@ -41099,7 +41099,7 @@ export function getAllSections(): SectionInfo[] {
 // #region ­ƒöæMDX Provider
 
 // #region ­ƒÄçSectionTree
-// Section tree navigation component MUST render docs file hierarchy.
+// Section tree navigation component MUST render docs file document.
 
 /**
  * Props for the SectionTree navigation component.

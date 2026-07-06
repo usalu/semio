@@ -20,7 +20,7 @@ Created `scripts/migrate-kit-models.ts` to migrate:
 - OLD: `representations` array with `url`, `description`, `tags`, `attributes`
 - NEW: `models` array with `guid`, `url`, `description`, `tags`, `attributes`
 - OLD: Type variants via `name` + `variant` (e.g., name="Base", variant="Blob")
-- NEW: Type hierarchy via `name` + `parent.guid` (e.g., name="Blob", parent points to "Base")
+- NEW: Type document via `name` + `parent.guid` (e.g., name="Blob", parent points to "Base")
 
 **Parent Name Mapping:**
 Some type names were simplified in the new schema:

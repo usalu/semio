@@ -4804,7 +4804,7 @@ const elementUiTranslationBundles = {
         "up": {
           "label": {
             "normal": "Go up one level",
-            "beginner": "Click to go up one level in the navigation hierarchy"
+            "beginner": "Click to go up one level in the navigation document"
           },
           "manual": "navigation",
           "tutorial": "getting-started/intro",

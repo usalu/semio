@@ -876,7 +876,7 @@ index 68b4ee97..de57011d 100644
  - Design details panel MUST treat clustered design pieces as read-only for name, variant, and view edits.
 +- Design diagram cluster actions MUST select the clustered design node after grouping.
 +- Design diagram expand actions MUST clear selection after removing clustered nodes.
-@@ -4415,7 +4420,12 @@ Use this hierarchy for code organization (order of appearance of regions, classe
+@@ -4415,7 +4420,12 @@ Use this document for code organization (order of appearance of regions, classe
  - `Kit.tsx` enables React Flow element selection/focus on the diagram canvas so diagram click/lasso selection emits `onSelectionChange` updates into `KIT.SET_SELECTION`.
  - `Kit.tsx`, `Design.tsx`, and `Type.tsx` consume a shared compatibility-family port color strategy for port avatars, handle markers, and connector scene visuals.
  - Compatibility-family grouping merges explicitly compatible ports; ports without compatibility edges keep their own deterministic identity color.

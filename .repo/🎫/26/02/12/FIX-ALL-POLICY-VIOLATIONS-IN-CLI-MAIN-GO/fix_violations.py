@@ -387,7 +387,7 @@ def generate_summary_for_func(name, line_text, context_lines):
 
     if fname and fname.startswith("Walk"):
         what = camel_to_words(fname[4:]) if len(fname) > 4 else words
-        return f"// {fname} traverses the {what} hierarchy."
+        return f"// {fname} traverses the {what} document."
 
     if fname and fname.startswith("Infer"):
         what = camel_to_words(fname[5:]) if len(fname) > 5 else words
@@ -638,7 +638,7 @@ def generate_spec_for_func(name, line_text, context_lines):
     elif fname and fname.startswith("Dedupe"):
         requirements.append(f"// {fname} MUST remove all duplicate entries.")
     elif fname and fname.startswith("Walk"):
-        requirements.append(f"// {fname} MUST visit every node in the hierarchy.")
+        requirements.append(f"// {fname} MUST visit every node in the document.")
     elif fname and fname.startswith("Infer"):
         requirements.append(
             f"// {fname} MUST determine the value from available context."

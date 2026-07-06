@@ -1056,7 +1056,7 @@ func TestTicketTitleValidation(t *testing.T) {
 	}{
 		{"Emoji Titleized Valid", "🎫", "Some Title on Something", false},
 		{"Emoji Single Word Valid", "🛠️", "Cleanup", false},
-		{"Emoji With Hyphen Valid", "🧩", "Refactor Resource ID System to Bundle-Based Hierarchy", false},
+		{"Emoji With Hyphen Valid", "🧩", "Refactor Resource ID System to Bundle-Based Document", false},
 		{"Emoji Lowercase Valid", "🔖", "some title", false},
 		{"Emoji Allcaps Valid", "🔥", "FIX EVERYTHING", false},
 		{"Emoji Slug Valid", "🎫", "some-slug-title", false},
@@ -6577,7 +6577,7 @@ func TestGoalCreateAndCleanup(t *testing.T) {
 	}
 }
 
-func TestGoalHierarchy(t *testing.T) {
+func TestGoalDocument(t *testing.T) {
 	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-PARENT-GOAL"))
 	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "RENAMED-PARENT"))
 	os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-CHILD-GOAL"))
@@ -6703,7 +6703,7 @@ func TestGoalList(t *testing.T) {
 		t.Fatalf("ToolGoalList Data was not []*Goal, got %T", result.Data)
 	}
 	if len(goals) == 0 {
-		t.Fatal("ToolGoalList returned no goals; expected the seeded goal hierarchy")
+		t.Fatal("ToolGoalList returned no goals; expected the seeded goal document")
 	}
 	for _, g := range goals {
 		if g.ID == "" {
@@ -7461,7 +7461,7 @@ func TestSessionGetID(t *testing.T) {
 			expected: checkpointId + emojiText(EmojiSession) + uuidFlat,
 		},
 		{
-			name:     "without checkpoint falls back to date hierarchy",
+			name:     "without checkpoint falls back to date document",
 			session:  Session{UUID: uuid, Year: 26, Month: 2, Day: 15, Kind: SessionKindCompleted},
 			expected: emojiText(EmojiYear) + "26" + emojiText(EmojiMonth) + "02" + emojiText(EmojiDay) + "15" + emojiText(EmojiSession) + uuidFlat,
 		},
@@ -7700,12 +7700,12 @@ func TestFlat(t *testing.T) {
 	}
 }
 
-func verifyTreeHierarchy(t *testing.T, node *TreeNode, parentPrefix string) {
+func verifyTreeDocument(t *testing.T, node *TreeNode, parentPrefix string) {
 	t.Helper()
 	entityKind := treeNodeKindToEntityKind(node.Kind)
 	if entityKind == "" {
 		for _, child := range node.Children {
-			verifyTreeHierarchy(t, child, parentPrefix)
+			verifyTreeDocument(t, child, parentPrefix)
 		}
 		return
 	}
@@ -7717,7 +7717,7 @@ func verifyTreeHierarchy(t *testing.T, node *TreeNode, parentPrefix string) {
 		t.Errorf("%s %q: id %q should start with parent prefix %q", entityKind, node.Label, id, parentPrefix)
 	}
 	for _, child := range node.Children {
-		verifyTreeHierarchy(t, child, id)
+		verifyTreeDocument(t, child, id)
 	}
 }
 
@@ -7821,7 +7821,7 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 			t.Errorf("bundle child %s %q: id %q should start with bundle id %q", ek, c.Label, childId, expectedClientBundleId)
 		}
 	}
-	verifyTreeHierarchy(t, tree, "")
+	verifyTreeDocument(t, tree, "")
 }
 
 func TestGoalTreeEntityIDs(t *testing.T) {
@@ -8184,7 +8184,7 @@ func TestDraftListIDs(t *testing.T) {
 	}
 }
 
-func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
+func TestMonorepoTreeFullIDDocument(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
@@ -8279,7 +8279,7 @@ func TestMonorepoTreeFullIDHierarchy(t *testing.T) {
 	for name := range bundleChecks {
 		t.Errorf("expected bundle %q not found in tree", name)
 	}
-	verifyTreeHierarchy(t, tree, "")
+	verifyTreeDocument(t, tree, "")
 }
 
 func TestGoalTreeIDs(t *testing.T) {
@@ -12159,7 +12159,7 @@ func TestCacheIndexAndTreeQuery(t *testing.T) {
 		hasComposeRepo := strings.Contains(output, "repo")
 		hasTechnologyOrBundle := strings.Contains(output, "bundle") || strings.Contains(output, "Technologies")
 		if !hasComposeRepo || !hasTechnologyOrBundle {
-			t.Errorf("tree --query cli should return technology/bundle hierarchy; got:\n%s", output)
+			t.Errorf("tree --query cli should return technology/bundle document; got:\n%s", output)
 		}
 	})
 
@@ -13763,7 +13763,7 @@ func TestBuildMonorepoTree(t *testing.T) {
 		}
 	})
 
-	t.Run("codebase category has folder and file hierarchy", func(t *testing.T) {
+	t.Run("codebase category has folder and file document", func(t *testing.T) {
 		var codebaseNode *TreeNode
 		for _, c := range treeSections.Children {
 			if c.ID == "codebase" {

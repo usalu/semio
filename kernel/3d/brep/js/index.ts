@@ -42,7 +42,7 @@ export interface ArcPlaneFrame {
 }
 
 // #region 🧱kernelGeometry
-/** @emoji 🧱 Kernel-private brep hierarchy (use `Object` / `Model` in framework code). */
+/** @emoji 🧱 Kernel-private brep document (use `Object` / `Model` in framework code). */
 export namespace kernelGeometry {
 	export type AnchorRef = string & { readonly __brand: "AnchorRef" };
 	export type VertexRef = string & { readonly __brand: "VertexRef" };

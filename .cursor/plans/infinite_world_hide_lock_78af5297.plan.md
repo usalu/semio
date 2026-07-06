@@ -30,7 +30,7 @@ todos:
     content: Add actions/contextMenu to UiTreeItemNode and map through platform + playground tree renderers.
     status: completed
   - id: wire-hierarchies
-    content: Attach actions/context menu in puzzle and CAD hierarchy builders; add toggleHidden/toggleLocked controller/chrome commands.
+    content: Attach actions/context menu in puzzle and CAD document builders; add toggleHidden/toggleLocked controller/chrome commands.
     status: completed
   - id: validate
     content: Extend in-file tests; run world/puzzle/cad/ui tests; smoke both plays with [DEBUG] logs confirming hide/reveal/lock + context menu.
@@ -88,7 +88,7 @@ Rationale: the engine stays the generic layer; storage stays per-doc; reveal-on-
 - `resolveSpatialPickTargetsToRender` (2374): skip hidden targets unless the key is the current hover key (revealed) or pinned selection.
 - `targetStyle` (2308): add a `locked` branch (dim opacity via `WORLD_LOCKED_OPACITY_SCALE`, desaturated, thin line, no select emphasis).
 - `CommittedMeshLayer`/`resolveSpatialSceneVisibility` (796): hide faces/edges for hidden solids/objects; dim for locked.
-- Reject locked targets in `dispatchSelectionTargets`/`selectHierarchyTarget`; prune selection on hide/lock.
+- Reject locked targets in `dispatchSelectionTargets`/`selectDocumentTarget`; prune selection on hide/lock.
 
 ## 4. UI
 
@@ -104,9 +104,9 @@ Rationale: the engine stays the generic layer; storage stays per-doc; reveal-on-
 ### Platform plumbing ([framework/product/platform/core/index.ts](framework/product/platform/core/index.ts))
 - Add `actions?` and `contextMenu?` to `UiTreeItemNode` (140); map them in `uiTreeItemsToTreeData` and `uiTreeNodeToTreePanelConfig` ([framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx), [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)).
 
-### Per-app hierarchy wiring
-- Puzzle [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) `buildPuzzle3dPlayHierarchySections` (1228): attach `actions` + `contextMenu` per row; add controller commands `puzzle3dPlayToggleHidden/Locked` extending `patchPuzzle3d*`/`updatePuzzle3d*InFixture`.
-- CAD [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) `buildCadPlayHierarchySections`/`cadPlayPrimitiveChildTreeItem` (356/303): attach `actions` + `contextMenu`; add chrome callbacks `toggleHidden/toggleLocked` writing `Model.metadata` + bumping revision; keep highlight registration so locked entities still cross-highlight.
+### Per-app document wiring
+- Puzzle [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) `buildPuzzle3dPlayDocumentSections` (1228): attach `actions` + `contextMenu` per row; add controller commands `puzzle3dPlayToggleHidden/Locked` extending `patchPuzzle3d*`/`updatePuzzle3d*InFixture`.
+- CAD [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) `buildCadPlayDocumentSections`/`cadPlayPrimitiveChildTreeItem` (356/303): attach `actions` + `contextMenu`; add chrome callbacks `toggleHidden/toggleLocked` writing `Model.metadata` + bumping revision; keep highlight registration so locked entities still cross-highlight.
 
 ## 5. Tests + validation
 - Extend in-file test regions: `@semio-tech/infinite-world-r3f` (helpers), puzzle/3d/react (fixture parse round-trip of flags; render visibility/selectable), cad renderer (pick-target flag filtering; locked style; metadata round-trip), ui/react (tree actions + context menu render).

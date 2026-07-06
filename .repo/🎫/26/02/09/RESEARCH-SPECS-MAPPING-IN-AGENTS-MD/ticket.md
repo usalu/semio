@@ -75,7 +75,7 @@ Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their ow
 ### Goal (lines 228–242)
 
 - **Primary bundle/file:** `repo/cli/main.go` (goal lifecycle), `.repo/goals/` (storage)
-- **Implementation-specific language:** MODERATE — references `.repo/goals/SLUG/goal.json` storage path, GitHub milestones/issues sync hierarchy.
+- **Implementation-specific language:** MODERATE — references `.repo/goals/SLUG/goal.json` storage path, GitHub milestones/issues sync document.
 
 ### Repo Dev Server (lines 244–253)
 
@@ -122,12 +122,12 @@ Mapped all 33 Business Logic + 8 UI/UX spec subsections in AGENTS.md to their ow
 ### Connection (lines 364–376)
 
 - **Primary bundle/file:** Cross-platform domain model
-- **Implementation-specific language:** NONE — pure domain language (gap, shift, rise, rotation, turn, tilt, connected, connecting, hierarchy, direction).
+- **Implementation-specific language:** NONE — pure domain language (gap, shift, rise, rotation, turn, tilt, connected, connecting, document, direction).
 
 ### Piece (lines 378–386)
 
 - **Primary bundle/file:** Cross-platform domain model
-- **Implementation-specific language:** NONE — pure domain language (fixed, linked, component, hierarchy).
+- **Implementation-specific language:** NONE — pure domain language (fixed, linked, component, document).
 
 ### Connector (lines 388–400)
 

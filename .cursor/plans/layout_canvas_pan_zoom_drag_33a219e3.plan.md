@@ -24,7 +24,7 @@ todos:
     content: Add LayoutCatalogueDropBridge (live preview + commit-on-drop) and wire onCatalogueDrop through LayoutPlayPaneSurfaceHost
     status: completed
   - id: addframe-position
-    content: Extend createDefaultFrame/addFrame in layout/core/js to accept drop x/y, remove dead hierarchy drag controller
+    content: Extend createDefaultFrame/addFrame in layout/core/js to accept drop x/y, remove dead document drag controller
     status: completed
   - id: tests
     content: Extend vitest coverage (Rust + layout-core + layout-react) for camera math, hit-test, drop preview, and pointer-drag controller
@@ -41,7 +41,7 @@ isProject: false
 
 - **No camera interactivity.** `LayoutDocument.camera` / `previewCamera` (`x,y,zoom`) exist only as static fields baked into the document JSON. [layout/rs/engine.rs](layout/rs/engine.rs) reads them once per `render_frame` and applies `Affine::translate((-x,-y)) * Affine::scale(zoom)` (lines 259-261, 385-391). Nothing ever mutates them: [layout/react/index.tsx](layout/react/index.tsx) has no `wheel` handler and [infinite/cavas/react-renderer/index.tsx](infinite/cavas/react-renderer/index.tsx)'s `GraphWasmCanvas` has no `wheel` listener at all (only `pointerdown/move/up`, and it never forwards `event.button`). The preview pane also has `enablePointer={chromeMode === "blueprint"}` in `LayoutCanvas`, so it receives **no pointer events whatsoever** today.
 - **Hit-testing ignores the camera.** `hit_test_document_json` (`layout/rs/engine.rs:394`) compares raw screen `(x,y)` against untransformed page-space bounds. Since the default camera zoom is `0.5` ([layout/core/js/internal.ts:236](layout/core/js/internal.ts)), selection is already subtly wrong today and will get worse once pan/zoom is interactive — must be fixed together.
-- **Drag-and-drop is native-HTML5-only and one-directional.** The catalogue tree (`buildLayoutPlayCatalogueTree`, [layout/core/js/index.ts:337](layout/core/js/index.ts)) marks items `draggable: true` with `dragData`. The only consumer is `createLayoutPlayHierarchyTreeDragController` ([layout/core/js/index.ts:365](layout/core/js/index.ts)), wired solely onto the **hierarchy** panel ([framework/product/playground/renderer/react/index.tsx:7814](framework/product/playground/renderer/react/index.tsx)) — you can only drop a catalogue item onto a hierarchy row, never onto the canvas. Native HTML5 DnD can't expose `dataTransfer` payload during `dragover`, so there is no way to render a live ghost preview with this mechanism, and — critically — **native drag suppresses the ordinary `pointermove`/`pointerup` events that the global ghost/dim controller relies on**, which is exactly why the side panel does not hide while dragging.
+- **Drag-and-drop is native-HTML5-only and one-directional.** The catalogue tree (`buildLayoutPlayCatalogueTree`, [layout/core/js/index.ts:337](layout/core/js/index.ts)) marks items `draggable: true` with `dragData`. The only consumer is `createLayoutPlayDocumentTreeDragController` ([layout/core/js/index.ts:365](layout/core/js/index.ts)), wired solely onto the **document** panel ([framework/product/playground/renderer/react/index.tsx:7814](framework/product/playground/renderer/react/index.tsx)) — you can only drop a catalogue item onto a document row, never onto the canvas. Native HTML5 DnD can't expose `dataTransfer` payload during `dragover`, so there is no way to render a live ghost preview with this mechanism, and — critically — **native drag suppresses the ordinary `pointermove`/`pointerup` events that the global ghost/dim controller relies on**, which is exactly why the side panel does not hide while dragging.
 - **The fix for "preview" and "panel hides on interaction" is the same fix.** Every other technology that needs a canvas-drop preview (puzzle 2d, puzzle 3d, flow, compose window templates) uses `TreeDragAndDropController.pointerPaletteDrag` (`ui/react/index.tsx:10013`) instead of relying on native DnD. The `Tree` component's own pointer-drag plumbing ([ui/react/index.tsx:12291-12309](ui/react/index.tsx)) already calls `panelGhost.begin()` / `panelGhost.end()` for us — so adding `pointerPaletteDrag` to the catalogue's drag controller fixes panel-hiding with **zero extra code**, and also gives us continuous `pointermove` client coordinates we can turn into a canvas-space ghost (mirrors `puzzle2dFixturePaletteTreeDragController`, [puzzle/2d/react/index.tsx:2820](puzzle/2d/react/index.tsx), and its `Puzzle2dFixtureDropPointerBridge`, [puzzle/2d/react/index.tsx:13199](puzzle/2d/react/index.tsx)).
 
 ```mermaid
@@ -88,8 +88,8 @@ Reuse `infinite_cavas::camera` (already a dependency of `layout_rs`, see [layout
 ## 2. Catalogue drag: live canvas preview + drop-to-place, panel hides automatically
 
 - **[layout/core/js/index.ts](layout/core/js/index.ts)**:
-  - Delete `createLayoutPlayHierarchyTreeDragController` (dead end once native drag is superseded — dropping onto a hierarchy row is no longer reachable and puzzle 2d/3d don't support that path either, only canvas-drop) and its vitest coverage.
-  - Extend `createDefaultFrame(kind, layerId, position?)` to accept an optional `{x, y}` override for `bounds.x/y` (default stays `{72,120}` when omitted, e.g. for hierarchy-driven or command-palette adds).
+  - Delete `createLayoutPlayDocumentTreeDragController` (dead end once native drag is superseded — dropping onto a document row is no longer reachable and puzzle 2d/3d don't support that path either, only canvas-drop) and its vitest coverage.
+  - Extend `createDefaultFrame(kind, layerId, position?)` to accept an optional `{x, y}` override for `bounds.x/y` (default stays `{72,120}` when omitted, e.g. for document-driven or command-palette adds).
   - Extend the `addFrame` command handler to read optional `x`/`y` args and pass them through to `createDefaultFrame`.
 - **[layout/react/index.tsx](layout/react/index.tsx)** — add (co-located with the WASM bridge, mirrors where puzzle 2d/3d keep their equivalent drag-session state):
   - `layoutCatalogueDragSessionRef = { active: boolean; kind: LayoutCatalogueKind | null }` + `LAYOUT_CATALOGUE_DRAG_SESSION_EVENT` window `CustomEvent` name, `beginLayoutCatalogueDrag(kind)` / `endLayoutCatalogueDrag()` helpers that flip the ref and dispatch the event (mirrors `puzzle2d-fixture-drag-session`, [puzzle/2d/react/index.tsx:2680](puzzle/2d/react/index.tsx)).
@@ -100,7 +100,7 @@ Reuse `infinite_cavas::camera` (already a dependency of `layout_rs`, see [layout
 - **[framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)** (`LayoutPlayHost` region):
   - `LayoutPlayCataloguePanelDefinition.buildTab()`: attach `dragAndDropController: createLayoutPlayCatalogueTreeDragController()` (imported from `@semio-tech/layout-react`) to the tree config it returns — this alone restores panel-hide-on-interaction for the catalogue drag.
   - `LayoutPlayPaneSurfaceHost`: pass `onCatalogueDrop={(kind, x, y) => kind === "page" ? ctrl?.run("addPage", {spreadId: ...}) : ctrl?.run("addFrame", {kind, pageId: ctrl?.getActivePageId(), layerId: <first layer>, x, y})}` down to `LayoutCanvas`.
-  - Remove the now-unused `createLayoutPlayHierarchyTreeDragController` import/usage on the hierarchy panel.
+  - Remove the now-unused `createLayoutPlayDocumentTreeDragController` import/usage on the document panel.
 
 ## Files touched
 
@@ -108,8 +108,8 @@ Reuse `infinite_cavas::camera` (already a dependency of `layout_rs`, see [layout
 - [layout/rs/engine.rs](layout/rs/engine.rs) — camera-aware scene transform, camera-aware hit test, ghost rendering
 - [layout/react/index.tsx](layout/react/index.tsx) — `LayoutEngineSession` pan/zoom/drop-preview wiring, catalogue drag-session refs/controller, `LayoutCatalogueDropBridge`, always-on pointer/wheel
 - [infinite/cavas/react-renderer/index.tsx](infinite/cavas/react-renderer/index.tsx) — generic `wheel` support + `button` on `pointerDown`
-- [layout/core/js/index.ts](layout/core/js/index.ts) — `addFrame` x/y passthrough, `createDefaultFrame` position override, removal of the dead hierarchy drag controller
-- [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) — wire catalogue drag controller + canvas drop callback, drop dead hierarchy wiring
+- [layout/core/js/index.ts](layout/core/js/index.ts) — `addFrame` x/y passthrough, `createDefaultFrame` position override, removal of the dead document drag controller
+- [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) — wire catalogue drag controller + canvas drop callback, drop dead document wiring
 
 ## Verification
 

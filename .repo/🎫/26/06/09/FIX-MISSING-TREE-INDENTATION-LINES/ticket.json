@@ -2,8 +2,8 @@
   "title": "Fix Missing Tree Indentation Lines",
   "emoji": "🐛",
   "status": "closed",
-  "description": "Some vertical indentation lines are missing in UI trees (e.g. puzzle 3d hierarchy: objects \u003e hexagonal cut concrete \u003e object tree items). Ensure all ancestor guide lines render consistently.",
-  "summary": "Fixed missing vertical tree indentation guides for expanded last-sibling rows (e.g. puzzle 3D hierarchy object vortices). `IndentationLines` now always draws the immediate parent-level guide through child branches while still suppressing deeper ancestor guides after last siblings. `TreeSection` also receives `isLastSection` from the data `Tree` so section-level guides stop correctly after the final section.",
+  "description": "Some vertical indentation lines are missing in UI trees (e.g. puzzle 3d document: objects \u003e hexagonal cut concrete \u003e object tree items). Ensure all ancestor guide lines render consistently.",
+  "summary": "Fixed missing vertical tree indentation guides for expanded last-sibling rows (e.g. puzzle 3D document object vortices). `IndentationLines` now always draws the immediate parent-level guide through child branches while still suppressing deeper ancestor guides after last siblings. `TreeSection` also receives `isLastSection` from the data `Tree` so section-level guides stop correctly after the final section.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1653"
   },

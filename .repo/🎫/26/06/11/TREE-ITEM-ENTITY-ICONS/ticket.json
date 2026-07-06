@@ -2,8 +2,8 @@
   "title": "Tree Item Entity Icons",
   "emoji": "🖼️",
   "status": "closed",
-  "description": "Tree items should show specific entity icons instead of generic folder/file defaults. Puzzle 3d hierarchy and kinds tabs: objects, vortices, attractions, references, target volumes, cables. Puzzle 2d/5d parity where applicable.",
-  "summary": "Tree rows now show entity-specific icons instead of generic folder/file defaults. Added optional `icon` field to `UiTreeItemNode` and wired it through platform/playground `uiTreeItemsToTreeData` via `renderControlIcon`. Puzzle 3d/2d/5d hierarchy and kinds trees assign icons per entity kind (object/box, vortex/circle-dot, attraction/link, cable/plug, reference/globe, target volume/cylinder, etc.). Puzzle 2d node rows prefer metabolism/catalog kind icons when available. Tests extended for puzzle 3d hierarchy and kinds icon assertions.",
+  "description": "Tree items should show specific entity icons instead of generic folder/file defaults. Puzzle 3d document and kinds tabs: objects, vortices, attractions, references, target volumes, cables. Puzzle 2d/5d parity where applicable.",
+  "summary": "Tree rows now show entity-specific icons instead of generic folder/file defaults. Added optional `icon` field to `UiTreeItemNode` and wired it through platform/playground `uiTreeItemsToTreeData` via `renderControlIcon`. Puzzle 3d/2d/5d document and kinds trees assign icons per entity kind (object/box, vortex/circle-dot, attraction/link, cable/plug, reference/globe, target volume/cylinder, etc.). Puzzle 2d node rows prefer metabolism/catalog kind icons when available. Tests extended for puzzle 3d document and kinds icon assertions.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1672"
   },

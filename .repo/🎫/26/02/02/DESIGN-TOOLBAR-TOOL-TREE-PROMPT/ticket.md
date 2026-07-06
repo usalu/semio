@@ -52,7 +52,7 @@ Deliverables:
    - Support single-click, keyboard navigation, and quick collapse/expand behavior.
    - Preserve active state visibility (which parent and subtool are currently selected).
 3. **UI/UX Specifications**
-   - Clean, modern, professional visual hierarchy.
+   - Clean, modern, professional visual document.
    - Clear icon + label strategy for parent and child tools.
    - Minimize cognitive load with progressive disclosure.
    - Responsive behavior for desktop and tablet.

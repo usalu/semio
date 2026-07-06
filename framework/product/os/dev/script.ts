@@ -7,7 +7,13 @@ import { fileURLToPath } from "node:url";
 import {
 	BundleScript,
 	ScriptRouter,
+	describeDevPortOccupant,
+	devServerUrl,
 	getWorkspaceRoot,
+	isDevPortInUse,
+	probeWgpuDevPort,
+	stopTrunkDevPort,
+	wgpuDevPlayUrl,
 	runBundleScriptMain,
 	runVitest,
 	runViteBunxDev,
@@ -17,6 +23,38 @@ import { PLUGIN_BUILD_TARGETS } from "./js/index.ts";
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
 const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
+const nativePluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules-native");
+
+function nativePluginFileName(packageName: string): string {
+	const libBase = packageName.replace(/-/g, "_");
+	if (process.platform === "win32") return `${libBase}.dll`;
+	if (process.platform === "darwin") return `lib${libBase}.dylib`;
+	return `lib${libBase}.so`;
+}
+
+async function buildNativePlugin(target: (typeof PLUGIN_BUILD_TARGETS)[number]): Promise<void> {
+	const packageName = await readPackageName(target.cratePath);
+	const build = spawnSync("cargo", ["build", "-p", packageName, "--release"], {
+		cwd: repoRoot,
+		stdio: "inherit",
+	});
+	if (build.status !== 0) throw new Error(`native plugin build failed: ${target.pluginId}`);
+	const artifact = join(repoRoot, "target", "release", nativePluginFileName(packageName));
+	const outDir = join(nativePluginOutRoot, target.pluginId);
+	mkdirSync(outDir, { recursive: true });
+	copyFileSync(artifact, join(outDir, basename(artifact)));
+	console.log(`[DEBUG] built native plugin ${target.pluginId} -> ${outDir}`);
+}
+
+async function buildNativePlugins(filterPlugin?: string): Promise<void> {
+	mkdirSync(nativePluginOutRoot, { recursive: true });
+	const targets = filterPlugin
+		? PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin)
+		: PLUGIN_BUILD_TARGETS;
+	for (const target of targets) {
+		await buildNativePlugin(target);
+	}
+}
 
 function ensureWasmTarget(): void {
 	const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
@@ -63,11 +101,15 @@ async function buildPlugins(filterPlugin?: string): Promise<void> {
 	if (existsSync(stalePublicPlugins)) {
 		rmSync(stalePublicPlugins, { recursive: true, force: true });
 	}
-	const targets = filterPlugin
-		? PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin)
-		: PLUGIN_BUILD_TARGETS;
+	const targets =
+		!filterPlugin || filterPlugin === "s"
+			? PLUGIN_BUILD_TARGETS
+			: PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin);
 	for (const target of targets) {
 		await buildPlugin(target);
+	}
+	if (process.env.SEMIO_NATIVE_PLUGINS === "1") {
+		await buildNativePlugins(filterPlugin);
 	}
 }
 
@@ -91,6 +133,11 @@ class PluginWatchScript extends BundleScript {
 				void buildPlugin(target).catch((error) => {
 					console.error("[DEBUG] plugin watch rebuild failed", error);
 				});
+				if (process.env.SEMIO_NATIVE_PLUGINS === "1") {
+					void buildNativePlugin(target).catch((error) => {
+						console.error("[DEBUG] native plugin watch rebuild failed", error);
+					});
+				}
 			});
 		}
 		console.log("[DEBUG] watching plugin crates for hot-swap rebuilds");
@@ -119,13 +166,54 @@ class DevScript extends BundleScript {
 			await buildPlugins(filterPlugin);
 		}
 		const renderer = process.env.SEMIO_RENDERER ?? "react";
-		if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
-			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
-			const wgpuBuild = spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
-			if (wgpuBuild.status !== 0) throw new Error("wgpu renderer build failed");
-		}
 		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 		await buildEngineWasm(plugin, renderer);
+		if (renderer === "wgpu") {
+			const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
+			const port = Number(process.env.S_OS_PORT ?? "6066");
+			const playUrl = wgpuDevPlayUrl(host, port, plugin);
+			if (isDevPortInUse(host, port)) {
+				const entry = probeWgpuDevPort(host, port);
+				if (entry?.entryPath === "/") {
+					console.log(`[dev] Port ${port} already serving wgpu trunk at ${playUrl}`);
+					return;
+				}
+				const occupant = describeDevPortOccupant(port);
+				if (occupant?.startsWith("trunk")) {
+					console.log(`[dev] Restarting stale trunk on port ${port} (${occupant})`);
+					stopTrunkDevPort(port);
+					for (let attempt = 0; attempt < 40 && isDevPortInUse(host, port); attempt++) {
+						await Bun.sleep(250);
+					}
+				} else if (entry) {
+					console.log(
+						`[dev] Port ${port} already serving legacy wgpu trunk at ${wgpuDevPlayUrl(host, port, plugin, entry.entryPath)}`,
+					);
+					return;
+				} else {
+					console.error(
+						`[dev] Port ${port} is already in use${occupant ? ` by ${occupant}` : ""}. Stop that process or set S_OS_PORT.`,
+					);
+					process.exit(1);
+				}
+			}
+			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
+			const serve = spawnSync("bun", [wgpuScript, "serve"], {
+				cwd: join(repoRoot, "framework/renderer/wgpu"),
+				stdio: "inherit",
+				env: {
+					...process.env,
+					SEMIO_PLUGIN: plugin,
+					SEMIO_RENDERER: renderer,
+					S_OS_PORT: String(port),
+				},
+			});
+			if (serve.status !== 0 && !probeWgpuDevPort(host, port)) {
+				throw new Error("wgpu trunk serve failed");
+			}
+			console.log(`[dev] wgpu trunk serving at ${playUrl}`);
+			return;
+		}
 		runViteBunxDev(this.root, segments, {
 			portEnv: "S_OS_PORT",
 			defaultPort: "6066",
@@ -133,6 +221,8 @@ class DevScript extends BundleScript {
 			env: {
 				SEMIO_PLUGIN: plugin,
 				SEMIO_RENDERER: renderer,
+				VITE_SEMIO_RENDERER: renderer,
+				VITE_SEMIO_PLUGIN: plugin,
 			},
 		});
 	}
@@ -145,7 +235,9 @@ class BuildScript extends BundleScript {
 		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 		if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
 			const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
-			spawnSync("bun", [wgpuScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
+			const wgpuBuild = spawnSync("bun", [wgpuScript, "wasm", "--release"], { cwd: repoRoot, stdio: "inherit" });
+			if (wgpuBuild.status !== 0) throw new Error("wgpu trunk build failed");
+			return;
 		}
 		await buildEngineWasm(plugin, renderer);
 		spawnSync("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...segments], {

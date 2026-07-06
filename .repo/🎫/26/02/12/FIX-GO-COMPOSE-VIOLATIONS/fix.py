@@ -59,7 +59,7 @@ section_summaries = {
     "Location": "Location MUST define geographic location entities and their diff types.",
     "Author": "Author MUST define authorship entities and their diff types.",
     "File": "File MUST define file reference entities and their diff types.",
-    "Folder": "Folder MUST define folder hierarchy entities and their diff types.",
+    "Folder": "Folder MUST define folder document entities and their diff types.",
     "Benchmark": "Benchmark MUST define benchmark threshold entities and their diff types.",
     "Quality": "Quality MUST define measurable quality entities and their diff types.",
     "Port": "Port MUST define connector port entities and their diff types.",
@@ -69,7 +69,7 @@ section_summaries = {
     "Model": "Model MUST define 3D model reference entities and their diff types.",
     "Connector": "Connector MUST define spatial connector entities and their diff types.",
     "Type": "Type MUST define component type entities and their diff types.",
-    "Layer": "Layer MUST define layer hierarchy entities and their diff types.",
+    "Layer": "Layer MUST define layer document entities and their diff types.",
     "Piece": "Piece MUST define placed piece entities and their diff types.",
     "Group": "Group MUST define piece grouping entities and their diff types.",
     "Side": "Side MUST define connection side reference entities and their diff types.",
@@ -187,7 +187,7 @@ def_summaries = {
     ),
     # Folder
     "type Folder ": (
-        "Folder represents a folder hierarchy entity with name and parent reference.",
+        "Folder represents a folder document entity with name and parent reference.",
     ),
     "type FolderDiff": ("FolderDiff represents changes to a folder entity.",),
     "type FoldersDiff": (

@@ -3527,7 +3527,7 @@
         "event": {
           "conversation_id": "079c0164-b0ba-42bd-813a-af59662fcb1f",
           "generation_id": "914e941a-db27-4d23-b66b-a88f43f0c856",
-          "text": "\nNo RTL tests in index.tsx for ComposeKit. The fix is the effect - I'll add a unit test that doesn't need RTL: we could test **behavior** by exporting a small helper or testing buildKitHierarchy with KitData - actually the bug is purely in the effect.\n\nI'll add a comment in the effect and maybe a **vitest** that tests the **logic** indirectly - e.g. if we had a testable function `shouldSyncKitDerivedData(data, onDataChange)` - overkill.\n\nAlternatively add **test** using vitest + react-test-renderer or @testing-library if available in elements/ui vitest config.\n\n",
+          "text": "\nNo RTL tests in index.tsx for ComposeKit. The fix is the effect - I'll add a unit test that doesn't need RTL: we could test **behavior** by exporting a small helper or testing buildKitDocument with KitData - actually the bug is purely in the effect.\n\nI'll add a comment in the effect and maybe a **vitest** that tests the **logic** indirectly - e.g. if we had a testable function `shouldSyncKitDerivedData(data, onDataChange)` - overkill.\n\nAlternatively add **test** using vitest + react-test-renderer or @testing-library if available in elements/ui vitest config.\n\n",
           "duration_ms": 643,
           "model": "default",
           "hook_event_name": "afterAgentThought",

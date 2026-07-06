@@ -1125,7 +1125,7 @@ suite("treeNodeContextValue Test Suite", () => {
   });
 });
 
-suite("Breach Kind Hierarchy Test Suite", () => {
+suite("Breach Kind Document Test Suite", () => {
   test("Renders nested statute tree structure correctly", () => {
     const breachNode: TreeNodeData = {
       Kind: "statute",
@@ -1680,7 +1680,7 @@ suite("Entity Emoji Registry Test Suite", () => {
     assert.ok(ENTITY_EMOJIS.has("🧪"), "should contain test definition emoji");
   });
 
-  test("ENTITY_EMOJIS contains time hierarchy emojis", () => {
+  test("ENTITY_EMOJIS contains time document emojis", () => {
     assert.ok(ENTITY_EMOJIS.has("🎆"), "should contain year emoji");
     assert.ok(ENTITY_EMOJIS.has("🌙"), "should contain month emoji");
     assert.ok(ENTITY_EMOJIS.has("☀️"), "should contain day emoji");
@@ -1830,7 +1830,7 @@ suite("Entity ID Regex Matching Test Suite", () => {
     assert.strictEqual(matches.length, 3, "should match three IDs");
   });
 
-  test("matches time hierarchy IDs", () => {
+  test("matches time document IDs", () => {
     const regex = buildEntityIdRegex();
     const text = "Time: 🎆26🌙02☀️15⏰14⌚33⏱️38";
     const matches = [...text.matchAll(regex)];

@@ -15,9 +15,9 @@ use semio_framework_plugin::{
     world3d_selection_json, App, Canvas2dScene, CommandDescriptor, MeshData, PluginApp, PluginBundle,
     tool_button, tool_collection, tool_toggle, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
-    WindowEngagementOption, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
@@ -34,7 +34,7 @@ const LOWPOLY_PLAY_SURFACE_MAIN: &str = "lowpoly.play";
 const LOWPOLY_PLAY_SURFACE_UV: &str = "lowpoly.play.uv";
 const LOWPOLY_PLAY_BODY_MAIN: &str = "lowpoly.play.main";
 const LOWPOLY_PLAY_BODY_UV: &str = "lowpoly.play.uv";
-const LOWPOLY_PLAY_BODY_HIERARCHY: &str = "lowpoly.play.hierarchy";
+const LOWPOLY_PLAY_BODY_DOCUMENT: &str = "lowpoly.play.document";
 const LOWPOLY_PLAY_BODY_CATALOGUE: &str = "lowpoly.play.catalogue";
 const LOWPOLY_PLAY_BODY_INSPECTION: &str = "lowpoly.play.inspection";
 const LOWPOLY_PLAY_BODY_LAYERS: &str = "lowpoly.play.layers";
@@ -354,8 +354,8 @@ fn merge_selection_ids(existing: &[u32], incoming: &[u32], merge: &str) -> Vec<u
     }
 }
 
-fn hierarchy_target_row_id(object_id: &str, _object_index: usize, mode: &str, id: u32) -> String {
-    format!("lowpoly-hierarchy.{object_id}.{mode}.{id}")
+fn document_target_row_id(object_id: &str, _object_index: usize, mode: &str, id: u32) -> String {
+    format!("lowpoly-document.{object_id}.{mode}.{id}")
 }
 
 fn selection_key(object_id: &str, object_index: usize, mode: &str, id: u32) -> String {
@@ -397,17 +397,17 @@ fn apply_component_selection(envelope: &mut LowpolyPlayEnvelope, mode: &str, inc
     sync_selection_keys(&mut envelope.fixture);
 }
 
-fn selected_hierarchy_ids(fixture: &LowpolyFixture) -> Vec<String> {
+fn selected_document_ids(fixture: &LowpolyFixture) -> Vec<String> {
     let object_index = object_index_for(fixture, &fixture.active_object_id);
     fixture
         .selection
         .ids
         .iter()
-        .map(|id| hierarchy_target_row_id(&fixture.active_object_id, object_index, &fixture.selection.mode, *id))
+        .map(|id| document_target_row_id(&fixture.active_object_id, object_index, &fixture.selection.mode, *id))
         .collect()
 }
 
-fn highlighted_hierarchy_ids(runtime: &LowpolyPlayRuntime, fixture: &LowpolyFixture) -> Vec<String> {
+fn highlighted_document_ids(runtime: &LowpolyPlayRuntime, fixture: &LowpolyFixture) -> Vec<String> {
     runtime
         .hovered_target
         .as_ref()
@@ -415,7 +415,7 @@ fn highlighted_hierarchy_ids(runtime: &LowpolyPlayRuntime, fixture: &LowpolyFixt
             let object_id = target.object_id.as_deref()?;
             let mode = target.mode.as_deref()?;
             let id = target.id?;
-            Some(hierarchy_target_row_id(
+            Some(document_target_row_id(
                 object_id,
                 object_index_for(fixture, object_id),
                 mode,
@@ -648,10 +648,10 @@ fn tree_item(
     }
 }
 
-fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -> UiNode {
+fn build_document_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -> UiNode {
     let active_id = envelope.fixture.active_object_id.clone();
-    let selected_ids = selected_hierarchy_ids(&envelope.fixture);
-    let highlighted_ids = highlighted_hierarchy_ids(&envelope.runtime, &envelope.fixture);
+    let selected_ids = selected_document_ids(&envelope.fixture);
+    let highlighted_ids = highlighted_document_ids(&envelope.runtime, &envelope.fixture);
     let items: Vec<semio_framework_plugin::UiTreeItemNode> = envelope
         .fixture
         .objects
@@ -666,7 +666,7 @@ fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -
             let component_group = |mode: &str, label: &str, icon: &str, count: usize| {
                 let leaves: Vec<semio_framework_plugin::UiTreeItemNode> = (0..count)
                     .map(|id| {
-                        let row_id = hierarchy_target_row_id(&object.id, object_index, mode, id as u32);
+                        let row_id = document_target_row_id(&object.id, object_index, mode, id as u32);
                         let hover_args = json!({
                             "objectId": object.id,
                             "mode": mode,
@@ -707,7 +707,7 @@ fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -
                     })
                     .collect();
                 tree_item(
-                    format!("lowpoly-hierarchy.{object_id}.{mode}.group"),
+                    format!("lowpoly-document.{object_id}.{mode}.group"),
                     label.to_string(),
                     Some(icon),
                     None,
@@ -720,7 +720,7 @@ fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -
                 )
             };
             tree_item(
-                format!("lowpoly-hierarchy.{object_id}"),
+                format!("lowpoly-document.{object_id}"),
                 object.name.clone(),
                 Some("box"),
                 Some(lowpoly_cmd(
@@ -747,7 +747,7 @@ fn build_hierarchy_tree(envelope: &LowpolyPlayEnvelope, doc: &LowpolyDocument) -
         .collect();
     UiNode::Tree(semio_framework_plugin::UiTreeNode {
         sections: vec![semio_framework_plugin::UiTreeSectionNode {
-            id: "lowpoly-play-hierarchy.meshes".into(),
+            id: "lowpoly-play-document.meshes".into(),
             label: Some("Meshes".into()),
             default_open: Some(true),
             items,
@@ -1049,6 +1049,63 @@ fn lowpoly_window_engagement(envelope: &LowpolyPlayEnvelope) -> WindowEngagement
             },
         ]),
     }
+}
+
+fn tool_param_f64(params: &Value, key: &str, default: f64) -> f64 {
+    tool_param_f32(params, key, default as f32) as f64
+}
+
+fn lowpoly_tool_param_slider(
+    id: &str,
+    label: &str,
+    key: &str,
+    params: &Value,
+    default: f64,
+    min: f64,
+    max: f64,
+    step: f64,
+) -> WindowMeasure {
+    WindowMeasure::Slider {
+        id: format!("lowpoly-measure-{id}"),
+        label: Some(label.into()),
+        value: tool_param_f64(params, key, default),
+        min,
+        max,
+        step: Some(step),
+        on_change: lowpoly_cmd("setToolParam", Some(json!({ "key": key }))),
+    }
+}
+
+fn lowpoly_window_measures(envelope: &LowpolyPlayEnvelope) -> Vec<WindowMeasure> {
+    let params = &envelope.runtime.tool_params;
+    vec![
+        WindowMeasure::Toggle {
+            id: "lowpoly-measure-show-edges".into(),
+            icon_id: "git-commit-horizontal".into(),
+            label: Some("Show Edges".into()),
+            pressed: envelope.runtime.show_edges,
+            text: None,
+            on_change: lowpoly_cmd("toggleShowEdges", None),
+        },
+        WindowMeasure::Group {
+            id: "lowpoly-measure-tool-params".into(),
+            label: "Tool Params".into(),
+            default_open: Some(true),
+            children: vec![
+                lowpoly_tool_param_slider("extrude", "Extrude Distance", "extrudeDistance", params, 0.25, 0.01, 2.0, 0.01),
+                lowpoly_tool_param_slider("inset", "Inset Amount", "insetAmount", params, 0.1, 0.01, 1.0, 0.01),
+                lowpoly_tool_param_slider("bevel", "Bevel Amount", "bevelAmount", params, 0.05, 0.01, 0.5, 0.01),
+                lowpoly_tool_param_slider("bevel-segments", "Bevel Segments", "bevelSegments", params, 1.0, 1.0, 8.0, 1.0),
+                lowpoly_tool_param_slider("loop-cuts", "Loop Cuts", "loopCuts", params, 1.0, 1.0, 16.0, 1.0),
+                lowpoly_tool_param_slider("decimate", "Decimate Ratio", "decimateRatio", params, 0.5, 0.05, 1.0, 0.05),
+                lowpoly_tool_param_slider("snap", "Snap Grid", "snapGrid", params, 0.25, 0.05, 2.0, 0.05),
+                lowpoly_tool_param_slider("mirror", "Mirror Axis", "mirrorAxis", params, 0.0, 0.0, 2.0, 1.0),
+                lowpoly_tool_param_slider("brush-size", "Brush Size", "brushSize", params, 16.0, 1.0, 128.0, 1.0),
+                lowpoly_tool_param_slider("brush-opacity", "Brush Opacity", "brushOpacity", params, 1.0, 0.0, 1.0, 0.05),
+                lowpoly_tool_param_slider("brush-hardness", "Brush Hardness", "brushHardness", params, 0.5, 0.0, 1.0, 0.05),
+            ],
+        },
+    ]
 }
 
 fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
@@ -1522,6 +1579,18 @@ impl PluginApp for LowpolyPlayApp {
         HashMap::from([
             (LOWPOLY_PLAY_WINDOW_MAIN.into(), engagement.clone()),
             (LOWPOLY_PLAY_WINDOW_UV.into(), engagement),
+        ])
+    }
+
+    fn window_measures(
+        &self,
+        document_json: &str,
+        _view_state: &ViewState,
+    ) -> HashMap<String, Vec<WindowMeasure>> {
+        let measures = lowpoly_window_measures(&parse_envelope(document_json));
+        HashMap::from([
+            (LOWPOLY_PLAY_WINDOW_MAIN.into(), measures.clone()),
+            (LOWPOLY_PLAY_WINDOW_UV.into(), measures),
         ])
     }
 
@@ -2091,11 +2160,11 @@ impl PluginApp for LowpolyPlayApp {
                     ui_text("Failed to load UV canvas")
                 }
             }
-            LOWPOLY_PLAY_BODY_HIERARCHY => {
+            LOWPOLY_PLAY_BODY_DOCUMENT => {
                 if let Some(ref loaded) = doc {
-                    build_hierarchy_tree(&envelope, loaded)
+                    build_document_tree(&envelope, loaded)
                 } else {
-                    ui_text("Failed to load lowpoly hierarchy")
+                    ui_text("Failed to load lowpoly document")
                 }
             }
             LOWPOLY_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
@@ -2112,7 +2181,7 @@ fn create_lowpoly_app() -> App {
     let default_example = serde_json::to_string(&default_envelope()).expect("lowpoly default example");
     let engagement = lowpoly_window_engagement(&default_envelope());
     App::from_builder(
-        App::builder(LOWPOLY_PLAY_APP_ID, "Lowpoly").hierarchy(["semio", "lowpoly"])
+        App::builder(LOWPOLY_PLAY_APP_ID, "Lowpoly").document(["semio", "lowpoly"])
             .icon_id("box")
             .mode("edit", "Edit")
             .mode("paint", "Paint")
@@ -2139,10 +2208,10 @@ fn create_lowpoly_app() -> App {
                 None,
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                LOWPOLY_PLAY_BODY_HIERARCHY,
+                LOWPOLY_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -2207,7 +2276,7 @@ fn register_lowpoly_exports() {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -2461,7 +2530,7 @@ mod tests {
         assert_eq!(target.object_id.as_deref(), Some(object_id.as_str()));
         assert_eq!(target.mode.as_deref(), Some("vertex"));
         assert_eq!(target.id, Some(3));
-        let highlighted = highlighted_hierarchy_ids(&hovered.runtime, &hovered.fixture);
+        let highlighted = highlighted_document_ids(&hovered.runtime, &hovered.fixture);
         assert_eq!(highlighted.len(), 1);
         assert!(highlighted[0].contains(".vertex.3"));
         let clear_ops = app.handle_command("setHover", None, &serde_json::to_string(&hovered).unwrap(), &ViewState::default());
@@ -2491,14 +2560,14 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_tree_nests_vertices_edges_and_faces() {
+    fn document_tree_nests_vertices_edges_and_faces() {
         let app = LowpolyPlayApp::default();
         let mut envelope = parse_envelope(&app.initial_document_json());
         envelope.fixture.selection.mode = "vertex".into();
         envelope.fixture.selection.ids = vec![0, 1];
         sync_selection_keys(&mut envelope.fixture);
         let document = serde_json::to_string(&envelope).unwrap();
-        let node = app.render(LOWPOLY_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(LOWPOLY_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Vertices"));
         assert!(json.contains("Edges"));
@@ -2507,7 +2576,7 @@ mod tests {
         assert!(json.contains("\"iconId\":\"minus\""));
         assert!(json.contains("\"iconId\":\"square\""));
         assert!(json.contains("flipFaces"));
-        let selected = selected_hierarchy_ids(&envelope.fixture);
+        let selected = selected_document_ids(&envelope.fixture);
         assert_eq!(selected.len(), 2);
         assert!(json.contains(&selected[0]));
     }
@@ -2522,6 +2591,17 @@ mod tests {
         let main = engagements.get(LOWPOLY_PLAY_WINDOW_MAIN).expect("main engagement");
         let status = main.status.as_ref().and_then(|rows| rows.first()).expect("status");
         assert!(status.text.contains("3 selected"));
+    }
+
+    #[test]
+    fn window_measures_expose_tool_params_for_main_window() {
+        let app = LowpolyPlayApp::default();
+        let document = app.initial_document_json();
+        let measures = app.window_measures(&document, &ViewState::default());
+        let main = measures.get(LOWPOLY_PLAY_WINDOW_MAIN).expect("main measures");
+        assert!(main.len() >= 2);
+        assert!(main.iter().any(|measure| matches!(measure, WindowMeasure::Toggle { id, .. } if id == "lowpoly-measure-show-edges")));
+        assert!(main.iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id == "lowpoly-measure-tool-params")));
     }
 
     #[test]

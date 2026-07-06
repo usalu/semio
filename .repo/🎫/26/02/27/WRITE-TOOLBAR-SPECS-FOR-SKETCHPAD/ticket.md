@@ -12,7 +12,7 @@ Write comprehensive specs for the sketchpad toolbar system documenting architect
 ## Plan
 
 1. Read all toolbar-related code across the sketchpad codebase
-2. Document toolbar architecture, component hierarchy, registration contract, layout system, sizing normalization, group mechanics, sub-tool dropdown, per-app toolbar sections, and interaction semantics
+2. Document toolbar architecture, component document, registration contract, layout system, sizing normalization, group mechanics, sub-tool dropdown, per-app toolbar sections, and interaction semantics
 3. Write specs in the existing `compose/js/sketchpad/README.md` under `### Toolbar`
 
 ## TODOs
@@ -27,4 +27,4 @@ Write comprehensive specs for the sketchpad toolbar system documenting architect
 
 ## Summary
 
-Wrote comprehensive toolbar specs covering: dual-zone layout (tools zone + settings zone), seam-anchored positioning, component hierarchy (ToolbarZone > ToolbarGroup > ToolbarItem > ToolbarDivider), registration contract via PanelSection.toolbarGroup, group ordering and rendering, sub-tool dropdown mechanics, settings zone content routing, CSS sizing normalization via data-slot selectors, per-app toolbar sections (Home, Kit, Design, Type, Quality, Feedback), toolbar state management, and interaction invariants.
+Wrote comprehensive toolbar specs covering: dual-zone layout (tools zone + settings zone), seam-anchored positioning, component document (ToolbarZone > ToolbarGroup > ToolbarItem > ToolbarDivider), registration contract via PanelSection.toolbarGroup, group ordering and rendering, sub-tool dropdown mechanics, settings zone content routing, CSS sizing normalization via data-slot selectors, per-app toolbar sections (Home, Kit, Design, Type, Quality, Feedback), toolbar state management, and interaction invariants.

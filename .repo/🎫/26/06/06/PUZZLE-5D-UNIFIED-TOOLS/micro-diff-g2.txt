@@ -21,7 +21,7 @@ index 000000000..340a32cc0
 +    content: Extend brepjs and play tests to assert BIM solid counts, per-typology classification, and Building-pane object listing
 +    status: completed
 +  - id: verify
-+    content: Run the generator and verify in CAD Play that the Building pane renders the classified BIM model and hierarchy
++    content: Run the generator and verify in CAD Play that the Building pane renders the classified BIM model and document
 +    status: completed
 +isProject: false
 +---
@@ -84,7 +84,7 @@ index 000000000..340a32cc0
 +
 +## 6. Verify at runtime
 +
-+Reload CAD Play, select "Concrete forest (left)", confirm the Building pane renders the BIM model with distinct per-class colors and that Slab/Beam/Column nodes appear in the hierarchy tree (confirm via console/log per repo rules).
++Reload CAD Play, select "Concrete forest (left)", confirm the Building pane renders the BIM model with distinct per-class colors and that Slab/Beam/Column nodes appear in the document tree (confirm via console/log per repo rules).
 \ No newline at end of file
 diff --git a/.cursor/plans/fix_3d_matrix_chain_perf_ac1d88dd.plan.md b/.cursor/plans/fix_3d_matrix_chain_perf_ac1d88dd.plan.md
 new file mode 100644
@@ -17562,9 +17562,9 @@ diff --git a/cad/js/renderer/play/index.tsx b/cad/js/renderer/play/index.tsx
 index 643044f93..fa79ccc80 100644
 --- a/cad/js/renderer/play/index.tsx
 +++ b/cad/js/renderer/play/index.tsx
-@@ -410,13 +410,12 @@ export function buildCadPlayHierarchySections(
+@@ -410,13 +410,12 @@ export function buildCadPlayDocumentSections(
    const registerHighlight = (target: SelectionTarget, itemId: string): void => {
-     registerCadPlayHierarchyHighlight(highlightKeyToItemIds, target, itemId);
+     registerCadPlayDocumentHighlight(highlightKeyToItemIds, target, itemId);
    };
 -  const modelDefinitionIds = Object.keys(modelsByDefinitionId).sort((a, b) => a.localeCompare(b));
 +  const modelDefinitionIds = [
@@ -17577,7 +17577,7 @@ index 643044f93..fa79ccc80 100644
 -      continue;
 -    }
 +    const model = modelsByDefinitionId[modelDefinitionId] ?? new Model();
-     const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, model, isSelected, onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
+     const pickCtx: CadPlayDocumentPickContext = { modelDefinitionId, model, isSelected, onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
      const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
        const objectId = String(object.id);
 @@ -952,7 +951,8 @@ import {
@@ -17698,24 +17698,24 @@ index 643044f93..fa79ccc80 100644
        expect(models[CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]).toBeInstanceOf(Model);
      });
 +
-+    it("buildCadPlayHierarchySections lists concrete forest BIM objects across play definitions", () => {
++    it("buildCadPlayDocumentSections lists concrete forest BIM objects across play definitions", () => {
 +      const models = ensureCadPlayQuadModels(
 +        modelsFromCadJson({
 +          modelSpace: geometryConcreteForestLeft,
 +          activeModelDefinitionId: defaultModelDefinitionId(),
 +        }),
 +      );
-+      const build = buildCadPlayHierarchySections(models, defaultModelDefinitionId(), [], () => {});
++      const build = buildCadPlayDocumentSections(models, defaultModelDefinitionId(), [], () => {});
 +      const modelSpaceRoot = build.sections[0]?.items[0];
-+      const buildingBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
++      const buildingBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_BUILDING_MODEL_DEFINITION_ID}`);
 +      expect(buildingBranch?.items?.length).toBe(12);
-+      const energyBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
++      const energyBranch = modelSpaceRoot?.items?.find((row) => row.id === `cad-play-document.model.${CAD_PLAY_ENERGY_MODEL_DEFINITION_ID}`);
 +      expect((energyBranch?.items?.length ?? 0) > 0).toBe(true);
 +      const structureBranch = modelSpaceRoot?.items?.find(
-+        (row) => row.id === `cad-play-hierarchy.model.${CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID}`,
++        (row) => row.id === `cad-play-document.model.${CAD_PLAY_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID}`,
 +      );
 +      expect((structureBranch?.items?.length ?? 0) > 0).toBe(true);
-+      expect(modelSpaceRoot?.items?.some((row) => row.id === `cad-play-hierarchy.model.${defaultModelDefinitionId()}`)).toBe(true);
++      expect(modelSpaceRoot?.items?.some((row) => row.id === `cad-play-document.model.${defaultModelDefinitionId()}`)).toBe(true);
 +    });
    });
  }
@@ -18020,7 +18020,7 @@ index 13e39caf5..5d7978cb8 100644
 +    }
 +
      #[test]
-     fn place_label_visible_covers_admin_hierarchy() {
+     fn place_label_visible_covers_admin_document() {
          let v = super::vector_tiles::place_label_visible;
 diff --git a/puzzle/3d/react/index.tsx b/puzzle/3d/react/index.tsx
 index f8eacccb9..912fb7f10 100644

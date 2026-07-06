@@ -42,7 +42,7 @@ When a pointer click hits multiple targets, show a **fixed DOM list** (not paint
 - Multi-hit resolution: `spatialPickTargetsFromClientPoint` → `SpatialSelectionRequest`
 - Single-hit → commit; multi-hit → `selectionMenu` DOM popover (~5910–5941)
 - List item `onPointerEnter` → `setHoveredPickKey`; canvas shows one hovered target
-- [AppPointerFocusStore](framework/core/index.ts) (~748–848) arbitrates hover between canvas and hierarchy (used in [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx))
+- [AppPointerFocusStore](framework/core/index.ts) (~748–848) arbitrates hover between canvas and document (used in [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx))
 
 This ticket **extracts** that pattern into shared infrastructure and **migrates every canvas app**, including CAD, in one pass.
 
@@ -64,7 +64,7 @@ flowchart TB
   end
   hoverFocus --> transitive["resolveTransitiveHighlights"]
   transitive --> canvasHighlight["canvas chrome"]
-  transitive --> treeHighlight["layers/hierarchy tree"]
+  transitive --> treeHighlight["layers/document tree"]
 ```
 
 ## Layer 1 — Shared protocol (`framework/core`)
@@ -81,7 +81,7 @@ Add a new `#region CanvasPick` beside existing `#region AppPointerFocus`:
 
 Extend `AppPointerFocusStore<TKey>` (or add thin `CanvasHoverFocusStore`) with:
 
-- Known source ids: `"canvas"`, `"pick-menu"`, `"hierarchy"`, `"catalog"`
+- Known source ids: `"canvas"`, `"pick-menu"`, `"document"`, `"catalog"`
 - `setHoverFocus(sourceId, focus: CanvasHoverFocus)` — **replaces** raw key when apps adopt unified model
 - Existing per-app `DrawKindHover`, `RasterKindHover`, `Puzzle2dKindHover`, etc. remain; each app maps them to/from `CanvasHoverFocus.kindHover`
 
@@ -153,7 +153,7 @@ Each play controller already has `setHover` + `kindHover` + tree highlight mappe
 1. **Single hoverable**: `hoveredId` / `targetKey` is always one instance (or `null`)
 2. **Transitive expansion**: existing helpers stay, driven by the one focus:
    - Draw/Raster: `drawPlayLayersTreeHighlightedIds`, group descendant leaf expansion
-   - Puzzle2D/3D: `puzzle2dPlayHierarchyTreeHighlightedIdsForKind`, etc.
+   - Puzzle2D/3D: `puzzle2dPlayDocumentTreeHighlightedIdsForKind`, etc.
    - Flow: widget preselect/hover chrome synced from pick focus
 
 Update [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) pane hosts (`DrawPlayPaneSurfaceHost`, raster/flow/writer/puzzle hosts) to:

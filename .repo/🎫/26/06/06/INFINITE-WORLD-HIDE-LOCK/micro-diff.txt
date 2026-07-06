@@ -36,7 +36,7 @@ index 000000000..a068d05cf
 +    content: Add actions/contextMenu to UiTreeItemNode and map through platform + playground tree renderers.
 +    status: completed
 +  - id: wire-hierarchies
-+    content: Attach actions/context menu in puzzle and CAD hierarchy builders; add toggleHidden/toggleLocked controller/chrome commands.
++    content: Attach actions/context menu in puzzle and CAD document builders; add toggleHidden/toggleLocked controller/chrome commands.
 +    status: completed
 +  - id: validate
 +    content: Extend in-file tests; run world/puzzle/cad/ui tests; smoke both plays with [DEBUG] logs confirming hide/reveal/lock + context menu.
@@ -94,7 +94,7 @@ index 000000000..a068d05cf
 +- `resolveSpatialPickTargetsToRender` (2374): skip hidden targets unless the key is the current hover key (revealed) or pinned selection.
 +- `targetStyle` (2308): add a `locked` branch (dim opacity via `WORLD_LOCKED_OPACITY_SCALE`, desaturated, thin line, no select emphasis).
 +- `CommittedMeshLayer`/`resolveSpatialSceneVisibility` (796): hide faces/edges for hidden solids/objects; dim for locked.
-+- Reject locked targets in `dispatchSelectionTargets`/`selectHierarchyTarget`; prune selection on hide/lock.
++- Reject locked targets in `dispatchSelectionTargets`/`selectDocumentTarget`; prune selection on hide/lock.
 +
 +## 4. UI
 +
@@ -110,9 +110,9 @@ index 000000000..a068d05cf
 +### Platform plumbing ([framework/product/platform/core/index.ts](framework/product/platform/core/index.ts))
 +- Add `actions?` and `contextMenu?` to `UiTreeItemNode` (140); map them in `uiTreeItemsToTreeData` and `uiTreeNodeToTreePanelConfig` ([framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx), [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)).
 +
-+### Per-app hierarchy wiring
-+- Puzzle [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) `buildPuzzle3dPlayHierarchySections` (1228): attach `actions` + `contextMenu` per row; add controller commands `puzzle3dPlayToggleHidden/Locked` extending `patchPuzzle3d*`/`updatePuzzle3d*InFixture`.
-+- CAD [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) `buildCadPlayHierarchySections`/`cadPlayPrimitiveChildTreeItem` (356/303): attach `actions` + `contextMenu`; add chrome callbacks `toggleHidden/toggleLocked` writing `Model.metadata` + bumping revision; keep highlight registration so locked entities still cross-highlight.
++### Per-app document wiring
++- Puzzle [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) `buildPuzzle3dPlayDocumentSections` (1228): attach `actions` + `contextMenu` per row; add controller commands `puzzle3dPlayToggleHidden/Locked` extending `patchPuzzle3d*`/`updatePuzzle3d*InFixture`.
++- CAD [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) `buildCadPlayDocumentSections`/`cadPlayPrimitiveChildTreeItem` (356/303): attach `actions` + `contextMenu`; add chrome callbacks `toggleHidden/toggleLocked` writing `Model.metadata` + bumping revision; keep highlight registration so locked entities still cross-highlight.
 +
 +## 5. Tests + validation
 +- Extend in-file test regions: `@infinite/world/r3f` (helpers), puzzle/3d/react (fixture parse round-trip of flags; render visibility/selectable), cad renderer (pick-target flag filtering; locked style; metadata round-trip), ui/react (tree actions + context menu render).
@@ -176,7 +176,7 @@ index 000000000..f2ca1a95d
 +- Call it from:
 +  - Colored path with `theme.label_fill` / `theme.label_halo`.
 +  - `append_vector_tiles_figure` (lines ~2210-2311), after geometry, with `fill = ink`, `halo = paper` so text stays readable in both figure-ground and inverted.
-+- Confirm `place_label_visible` covers the full hierarchy (region = `state`/`province`, district = `suburb`/`quarter`/`neighbourhood`); extend the match if any listed tier is missing.
++- Confirm `place_label_visible` covers the full document (region = `state`/`province`, district = `suburb`/`quarter`/`neighbourhood`); extend the match if any listed tier is missing.
 +
 +### 3. Per-style default Labels toggle (TS)
 +Reuse the existing `gis-map-layer-labels` toggle; add per-vector-style default and relabel it "Labels".
@@ -187,7 +187,7 @@ index 000000000..f2ca1a95d
 +
 +### 4. Tests (extend existing files only)
 +- [infinite/cavas/vello/lib.rs](infinite/cavas/vello/lib.rs) `mod tests`: add a test that `text::append_label` into a fresh `Scene` yields a non-empty encoding (e.g. `!scene.encoding().path_tags.is_empty()`), and that an empty/whitespace label yields an empty scene — locking in the `Node::Text` fix.
-+- [gis/map/rs/lib.rs](gis/map/rs/lib.rs) tests: add a figure-ground render test with `labels` visible asserting the scene grows vs labels hidden, plus a `place_label_visible` hierarchy coverage assertion.
++- [gis/map/rs/lib.rs](gis/map/rs/lib.rs) tests: add a figure-ground render test with `labels` visible asserting the scene grows vs labels hidden, plus a `place_label_visible` document coverage assertion.
 +
 +### 5. Verification
 +- `cargo test` for `infinite_cavas` and `gis_map` (via `script.ts`/`nx`, registered in `launch.json`).
@@ -352,12 +352,12 @@ index 000000000..991157276
 +- `hidden`/`locked` on `ObjectProps`, `VortexProps`, `AttractionProps` (replaces object `visible?`)
 +- `parseFixtureV1` round-trip; fingerprint + `ObjectRecord` threading
 +- Rendering: hide unless tree-hover reveal; dim + non-interactive when locked
-+- Play: hierarchy row toggles, context menu, selection pruning/filtering, `[DEBUG]` toggle logs
++- Play: document row toggles, context menu, selection pruning/filtering, `[DEBUG]` toggle logs
 +
 +### CAD
 +- Per-entity flags in `Model.metadata` via `AttributeStore`/`Model` helpers
 +- Pick-target filtering, render skip for hidden (pinned/hover reveal), locked dim in `targetStyle`
-+- Play hierarchy chrome + toggle callbacks with selection pruning
++- Play document chrome + toggle callbacks with selection pruning
 +
 +### UI
 +- Tree row hide/lock actions (`revealOnHover`), muted hidden rows, right-click context menu
@@ -5005,7 +5005,7 @@ index 3c7e186fb..643044f93 100644
 +++ b/cad/js/renderer/play/index.tsx
 @@ -287,12 +287,52 @@ export function cadPlayModelsDigest(modelsByDefinitionId: Record<string, Model>)
  
- type CadPlayHierarchyPickContext = {
+ type CadPlayDocumentPickContext = {
    readonly modelDefinitionId: string;
 +  readonly model: Model;
    readonly isSelected: (kind: SelectionTarget["kind"], id: string) => boolean;
@@ -5016,7 +5016,7 @@ index 3c7e186fb..643044f93 100644
    readonly registerHighlight: (target: SelectionTarget, itemId: string) => void;
  };
  
-+function cadPlayHierarchyEntityChrome(model: Model, target: SelectionTarget, ctx: CadPlayHierarchyPickContext): Pick<TreeDataItem, "isHidden" | "actions" | "contextMenu"> {
++function cadPlayDocumentEntityChrome(model: Model, target: SelectionTarget, ctx: CadPlayDocumentPickContext): Pick<TreeDataItem, "isHidden" | "actions" | "contextMenu"> {
 +  const flags = model.getEntityFlags(target.id);
 +  return {
 +    isHidden: flags.hidden === true,
@@ -5053,49 +5053,49 @@ index 3c7e186fb..643044f93 100644
 +  };
 +}
 +
- function cadPlayHierarchyHoverHandlers(ctx: CadPlayHierarchyPickContext, target: SelectionTarget): Pick<TreeDataItem, "onPointerEnter" | "onPointerLeave"> {
+ function cadPlayDocumentHoverHandlers(ctx: CadPlayDocumentPickContext, target: SelectionTarget): Pick<TreeDataItem, "onPointerEnter" | "onPointerLeave"> {
    return {
      onPointerEnter: () => ctx.onHover(ctx.modelDefinitionId, target),
-@@ -312,6 +352,7 @@ function cadPlayPrimitiveChildTreeItem(node: ModelPrimitiveHierarchyNode, path:
+@@ -312,6 +352,7 @@ function cadPlayPrimitiveChildTreeItem(node: ModelPrimitiveDocumentNode, path:
      defaultOpen: node.kind === "solid" || node.kind === "shell" || node.kind === "face",
      onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
-     ...cadPlayHierarchyHoverHandlers(ctx, target),
-+    ...cadPlayHierarchyEntityChrome(ctx.model, target, ctx),
+     ...cadPlayDocumentHoverHandlers(ctx, target),
++    ...cadPlayDocumentEntityChrome(ctx.model, target, ctx),
      ...(childItems.length > 0 ? { items: childItems } : {}),
    };
  }
 @@ -331,6 +372,7 @@ function cadPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string,
      defaultOpen: true,
      onClick: () => ctx.onSelect(ctx.modelDefinitionId, target),
-     ...cadPlayHierarchyHoverHandlers(ctx, target),
-+    ...cadPlayHierarchyEntityChrome(ctx.model, target, ctx),
-     items: childItems.length ? childItems : [{ id: `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}.child.empty`, label: "(empty)" }],
+     ...cadPlayDocumentHoverHandlers(ctx, target),
++    ...cadPlayDocumentEntityChrome(ctx.model, target, ctx),
+     items: childItems.length ? childItems : [{ id: `cad-play-document.primitive.${modelDefinitionId}.${objectId}.${slot}.child.empty`, label: "(empty)" }],
    };
  }
-@@ -359,6 +401,8 @@ export function buildCadPlayHierarchySections(
+@@ -359,6 +401,8 @@ export function buildCadPlayDocumentSections(
    selection: readonly SelectionTarget[],
    onSelect: (modelDefinitionId: string, target: SelectionTarget) => void,
    onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void = () => {},
 +  onToggleHidden: (modelDefinitionId: string, target: SelectionTarget) => void = () => {},
 +  onToggleLocked: (modelDefinitionId: string, target: SelectionTarget) => void = () => {},
- ): CadPlayHierarchyBuildResult {
+ ): CadPlayDocumentBuildResult {
    const selectedKeys = new Set(selection.map(cadPlaySelectionKey));
    const isSelected = (kind: SelectionTarget["kind"], id: string): boolean => selectedKeys.has(`${kind}:${id}`);
-@@ -373,7 +417,7 @@ export function buildCadPlayHierarchySections(
+@@ -373,7 +417,7 @@ export function buildCadPlayDocumentSections(
      if (!model) {
        continue;
      }
--    const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, isSelected, onSelect, onHover, registerHighlight };
-+    const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, model, isSelected, onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
+-    const pickCtx: CadPlayDocumentPickContext = { modelDefinitionId, isSelected, onSelect, onHover, registerHighlight };
++    const pickCtx: CadPlayDocumentPickContext = { modelDefinitionId, model, isSelected, onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
      const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
        const objectId = String(object.id);
        const typologyTail = object.typology.split(".").pop() ?? object.typology;
-@@ -389,6 +433,7 @@ export function buildCadPlayHierarchySections(
+@@ -389,6 +433,7 @@ export function buildCadPlayDocumentSections(
          defaultOpen: true,
          onClick: () => onSelect(modelDefinitionId, objectTarget),
-         ...cadPlayHierarchyHoverHandlers(pickCtx, objectTarget),
-+        ...cadPlayHierarchyEntityChrome(model, objectTarget, pickCtx),
-         items: primitiveItems.length ? primitiveItems : [{ id: `cad-play-hierarchy.object.${modelDefinitionId}.${objectId}.primitives.empty`, label: "(none)" }],
+         ...cadPlayDocumentHoverHandlers(pickCtx, objectTarget),
++        ...cadPlayDocumentEntityChrome(model, objectTarget, pickCtx),
+         items: primitiveItems.length ? primitiveItems : [{ id: `cad-play-document.object.${modelDefinitionId}.${objectId}.primitives.empty`, label: "(none)" }],
        };
      });
 @@ -888,11 +933,13 @@ import { BrepjsKernel, preciseSpatialKernelMath } from "@cad/js/kernel/brepjs";
@@ -5266,7 +5266,7 @@ index 3c7e186fb..643044f93 100644
      [activeModelDefinitionId, handleActiveModelDefinitionChange],
    );
  
-+  const toggleHierarchyEntityFlag = reactHostPort.useCallback(
++  const toggleDocumentEntityFlag = reactHostPort.useCallback(
 +    (modelDefinitionId: string, target: SelectionTarget, flag: "hidden" | "locked") => {
 +      const model = modelDefinitionId === activeModelDefinitionId ? liveModel : flushedModelsByDefinitionId[modelDefinitionId];
 +      if (!model) {
@@ -5284,14 +5284,14 @@ index 3c7e186fb..643044f93 100644
 +    [activeModelDefinitionId, commitModelForDefinition, flushedModelsByDefinitionId, liveModel],
 +  );
 +
-+  const toggleHierarchyHidden = reactHostPort.useCallback(
-+    (modelDefinitionId: string, target: SelectionTarget) => toggleHierarchyEntityFlag(modelDefinitionId, target, "hidden"),
-+    [toggleHierarchyEntityFlag],
++  const toggleDocumentHidden = reactHostPort.useCallback(
++    (modelDefinitionId: string, target: SelectionTarget) => toggleDocumentEntityFlag(modelDefinitionId, target, "hidden"),
++    [toggleDocumentEntityFlag],
 +  );
 +
-+  const toggleHierarchyLocked = reactHostPort.useCallback(
-+    (modelDefinitionId: string, target: SelectionTarget) => toggleHierarchyEntityFlag(modelDefinitionId, target, "locked"),
-+    [toggleHierarchyEntityFlag],
++  const toggleDocumentLocked = reactHostPort.useCallback(
++    (modelDefinitionId: string, target: SelectionTarget) => toggleDocumentEntityFlag(modelDefinitionId, target, "locked"),
++    [toggleDocumentEntityFlag],
 +  );
 +
    const onCanvasHoverTarget = reactHostPort.useCallback((target: SpatialPickTarget | null) => {
@@ -5299,19 +5299,19 @@ index 3c7e186fb..643044f93 100644
    }, []);
 @@ -1750,6 +1842,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
        hoveredKey: pointerFocus.hover,
-       selectTarget: selectHierarchyTarget,
-       hoverTarget: hoverHierarchyTarget,
-+      toggleHidden: toggleHierarchyHidden,
-+      toggleLocked: toggleHierarchyLocked,
+       selectTarget: selectDocumentTarget,
+       hoverTarget: hoverDocumentTarget,
++      toggleHidden: toggleDocumentHidden,
++      toggleLocked: toggleDocumentLocked,
      });
      return () => publishCadPlayChrome(null);
    }, [
 @@ -1762,6 +1856,8 @@ function CadPlayModelSpaceProvider({ children, runtime, shellController }: { rea
      publishCadPlayChrome,
-     selectHierarchyTarget,
+     selectDocumentTarget,
      selectionInScope,
-+    toggleHierarchyHidden,
-+    toggleHierarchyLocked,
++    toggleDocumentHidden,
++    toggleDocumentLocked,
    ]);
  
    const exportBaseName = reactHostPort.useMemo(() => {
@@ -5342,8 +5342,8 @@ index 3c7e186fb..643044f93 100644
      if (!chromeSnapshot) {
        return { sections: [] as TreeDataSection[], highlightKeyToItemIds: {} as Readonly<Record<string, readonly string[]>> };
      }
--    return buildCadPlayHierarchySections(chromeSnapshot.modelsByDefinitionId, chromeSnapshot.activeModelDefinitionId, chromeSnapshot.selection, chromeSnapshot.selectTarget, chromeSnapshot.hoverTarget);
-+    return buildCadPlayHierarchySections(
+-    return buildCadPlayDocumentSections(chromeSnapshot.modelsByDefinitionId, chromeSnapshot.activeModelDefinitionId, chromeSnapshot.selection, chromeSnapshot.selectTarget, chromeSnapshot.hoverTarget);
++    return buildCadPlayDocumentSections(
 +      chromeSnapshot.modelsByDefinitionId,
 +      chromeSnapshot.activeModelDefinitionId,
 +      chromeSnapshot.selection,
@@ -5353,14 +5353,14 @@ index 3c7e186fb..643044f93 100644
 +      chromeSnapshot.toggleLocked,
 +    );
    }, [chromeKey, chromeSnapshot]);
-   const hierarchyHighlightedIds = reactHostPort.useMemo(() => {
+   const documentHighlightedIds = reactHostPort.useMemo(() => {
      const hoveredKey = chromeSnapshot?.hoveredKey;
 @@ -2804,6 +2909,24 @@ if (import.meta.vitest) {
        expect(edgeNode?.label).toContain("edge");
        expect(edgeNode?.items?.some((row) => row.label.includes("vertex"))).toBe(true);
      });
 +
-+    it("buildCadPlayHierarchySections lists kernel-imported STEP objects", async () => {
++    it("buildCadPlayDocumentSections lists kernel-imported STEP objects", async () => {
 +      const { preciseSpatialKernelMath: M } = await import("@cad/js/kernel/brepjs");
 +      const { applyModelDiff, defaultModelDefinitionId, solidRef } = await import("@cad/js/core");
 +      const model = new Model();
@@ -5372,7 +5372,7 @@ index 3c7e186fb..643044f93 100644
 +        primitives: { solid: String(solid) },
 +      };
 +      const mdId = defaultModelDefinitionId();
-+      const build = buildCadPlayHierarchySections({ [mdId]: model }, mdId, [], () => {});
++      const build = buildCadPlayDocumentSections({ [mdId]: model }, mdId, [], () => {});
 +      const objectNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0];
 +      expect(objectNode?.label).toContain("object-imported");
 +      expect(objectNode?.description).toBe("spatial.shape.kernel.solid");
@@ -5791,7 +5791,7 @@ index 3efddc035..8a1b31177 100644
 +    }
 +
 +    #[test]
-+    fn place_label_visible_covers_admin_hierarchy() {
++    fn place_label_visible_covers_admin_document() {
 +        let v = super::vector_tiles::place_label_visible;
 +        assert!(v("continent", 50.0));
 +        assert!(!v("continent", 20.0));
@@ -6835,16 +6835,16 @@ index e58e383a3..0e10387fe 100644
  /** @emoji 🪣 Clears the cached fill session and returns the base fixture when present. */
 @@ -1042,8 +1017,65 @@ export const puzzle3dPlayHoverBridgeRef: { current: ((payload: Puzzle3dHoverPayl
  
- export type Puzzle3dPlayHierarchyHoverBuildOptions = {
+ export type Puzzle3dPlayDocumentHoverBuildOptions = {
    readonly onHover?: (payload: Puzzle3dHoverPayload) => void;
 +  readonly onToggleHidden?: (target: HoverTarget) => void;
 +  readonly onToggleLocked?: (target: HoverTarget) => void;
  };
  
-+function puzzle3dPlayHierarchyEntityChrome(
++function puzzle3dPlayDocumentEntityChrome(
 +  flags: { readonly hidden?: boolean; readonly locked?: boolean },
 +  target: HoverTarget,
-+  options: Puzzle3dPlayHierarchyHoverBuildOptions | undefined,
++  options: Puzzle3dPlayDocumentHoverBuildOptions | undefined,
 +): Pick<UiTreeItemNode, "isHidden" | "actions" | "contextMenu"> {
 +  if (!options?.onToggleHidden && !options?.onToggleLocked) {
 +    return { isHidden: flags.hidden === true };
@@ -6899,30 +6899,30 @@ index e58e383a3..0e10387fe 100644
  function puzzle3dPlayHoverSink(onHover?: (payload: Puzzle3dHoverPayload) => void): ((payload: Puzzle3dHoverPayload) => void) | undefined {
    if (onHover) {
      return onHover;
-@@ -1264,6 +1296,7 @@ export function buildPuzzle3dPlayHierarchySections(
+@@ -1264,6 +1296,7 @@ export function buildPuzzle3dPlayDocumentSections(
          ...puzzle3dPlayFixtureTreeRowFields(vortex.label, fullId),
          command: puzzle3dPlaySelectVortexCommand(fullId),
-         ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "vortex", fullId }),
-+        ...puzzle3dPlayHierarchyEntityChrome(vortex, { kind: "vortex", fullId }, options),
+         ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "vortex", fullId }),
++        ...puzzle3dPlayDocumentEntityChrome(vortex, { kind: "vortex", fullId }, options),
        };
      });
      const vorticesGroup: UiTreeItemNode = {
-@@ -1278,6 +1311,7 @@ export function buildPuzzle3dPlayHierarchySections(
+@@ -1278,6 +1311,7 @@ export function buildPuzzle3dPlayDocumentSections(
        defaultOpen: true,
        command: puzzle3dPlaySelectObjectCommand(object.id),
-       ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
-+      ...puzzle3dPlayHierarchyEntityChrome(object, { kind: "object", id: object.id }, options),
+       ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "object", id: object.id }),
++      ...puzzle3dPlayDocumentEntityChrome(object, { kind: "object", id: object.id }, options),
        items: [vorticesGroup],
      };
    });
-@@ -1293,6 +1327,7 @@ export function buildPuzzle3dPlayHierarchySections(
+@@ -1293,6 +1327,7 @@ export function buildPuzzle3dPlayDocumentSections(
      description: `${attraction.attracting} → ${attraction.attracted}`,
      command: puzzle3dPlaySelectAttractionCommand(attraction.id),
-     ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "attraction", id: attraction.id }),
-+    ...puzzle3dPlayHierarchyEntityChrome(attraction, { kind: "attraction", id: attraction.id }, options),
+     ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "attraction", id: attraction.id }),
++    ...puzzle3dPlayDocumentEntityChrome(attraction, { kind: "attraction", id: attraction.id }, options),
    }));
    const attractionsGroup: UiTreeItemNode = {
-     id: "puzzle-3d-play-hierarchy.attractions",
+     id: "puzzle-3d-play-document.attractions",
 @@ -1588,6 +1623,35 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
      }
    }
@@ -6956,17 +6956,17 @@ index e58e383a3..0e10387fe 100644
 +    console.log("[DEBUG] puzzle3d toggleEntityFlag", flag, target);
 +  }
 +
-   /** @emoji 🌳 Hierarchy panel tree with stable {@link UiTreeNode.sections} across selection-only updates. */
-   getHierarchyPanelTree(selection: Puzzle3dPlaySelection): UiNode {
+   /** @emoji 🌳 Document panel tree with stable {@link UiTreeNode.sections} across selection-only updates. */
+   getDocumentPanelTree(selection: Puzzle3dPlaySelection): UiNode {
      if (!this.fixture) {
 @@ -1596,6 +1660,8 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
-     if (this.hierarchySectionsRevision !== this.fixtureRevision || !this.hierarchySectionsCache) {
-       this.hierarchySectionsCache = buildPuzzle3dPlayHierarchySections(this.fixture, {
+     if (this.documentSectionsRevision !== this.fixtureRevision || !this.documentSectionsCache) {
+       this.documentSectionsCache = buildPuzzle3dPlayDocumentSections(this.fixture, {
          onHover: (payload) => this.setHoverFocus(payload),
 +        onToggleHidden: (target) => this.toggleEntityFlag(target, "hidden"),
 +        onToggleLocked: (target) => this.toggleEntityFlag(target, "locked"),
        });
-       this.hierarchySectionsRevision = this.fixtureRevision;
+       this.documentSectionsRevision = this.fixtureRevision;
      }
 @@ -2097,10 +2163,28 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
    }
@@ -7129,7 +7129,7 @@ index 40f745f05..f126abbd0 100644
 +export interface VortexProps extends WorldEntityFlags {
    id: string;
    vortexKind?: string;
-   /** @emoji 🏷️ Human-readable vortex label for play UI and hierarchy. */
+   /** @emoji 🏷️ Human-readable vortex label for play UI and document. */
 @@ -283,14 +288,13 @@ export interface VortexProps {
    position: Vec3;
    direction?: Vec3;

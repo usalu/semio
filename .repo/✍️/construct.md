@@ -55,9 +55,9 @@ Every entity in your model becomes a Node Label.
 
 Relationships (Directed Edges)
 
-We need a standardized set of relationships to navigate the hierarchy and derivations.
+We need a standardized set of relationships to navigate the document and derivations.
 Relationship Description Example Pattern
-[:BOUNDED_BY] Moves down the dimensional hierarchy. (f:Face)-[:BOUNDED_BY]->(w:Wire)
+[:BOUNDED_BY] Moves down the dimensional document. (f:Face)-[:BOUNDED_BY]->(w:Wire)
 [:CONTAINS] Captures collections and clusters. (c:Cluster)-[:CONTAINS]->(cel:Cell)
 [:SHARES] Expresses lateral adjacency. (w1:Wire)-[:SHARES]->(v:Vertex)<-[:SHARES]-(w2:Wire)
 [:DERIVES] Connects editable geometries to their semantic outputs. (f:Face)-[:DERIVES]->(s:Surface)
@@ -124,7 +124,7 @@ RETURN c1, c2, p.volume AS ClashVolume
 
 4. Syntactic Sugar (Language Extensions)
 
-If you are building a custom parser for this, writing out the full topological hierarchy (Cell -> Shell -> Face -> Wire -> Edge) every time can become tedious.
+If you are building a custom parser for this, writing out the full topological document (Cell -> Shell -> Face -> Wire -> Edge) every time can become tedious.
 
 I recommend introducing transitive spatial operators into your Cypher implementation. Under the hood, they expand into the full graph traversal, but they make the language much more readable for spatial engineers.
 
@@ -139,7 +139,7 @@ Cypher
 MATCH (c1:Cell)-[:ADJACENT_TO]-(c2:Cell)
 RETURN c1, c2
 
-// Bypassing the hierarchy to find all points of a Cell:
+// Bypassing the document to find all points of a Cell:
 MATCH (c:Cell {id: 'Room_101'})-[:HAS_VERTEX*1..4]->(v:Vertex)
 RETURN DISTINCT v
 
@@ -270,7 +270,7 @@ Writing a query engine that executes directly on the Boundary Representation (B-
 
 class TopologyTraverser {
 
-    // Traverses down the hierarchy: Face -> Edges
+    // Traverses down the document: Face -> Edges
     static *getEdgesOfFace(face: TopoFace): IterableIterator<TopoEdge> {
         let startHalfEdge = face.outerLoop.halfEdge;
         let current = startHalfEdge;

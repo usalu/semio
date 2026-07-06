@@ -9,7 +9,7 @@ todos:
     content: "PlaygroundView: memoize tabs/tool/footer/navbar/context value; dedupe mergePanelTabs resolveSidePanelTabSource; cache sideTabsToPlaygroundPanelTabs + augment resolveTab"
     status: completed
   - id: sidepanel-no-unmount
-    content: "ui/react Layout: hide side panels via CSS instead of conditional unmount so hierarchy/inspector trees persist across toggles"
+    content: "ui/react Layout: hide side panels via CSS instead of conditional unmount so document/inspector trees persist across toggles"
     status: completed
   - id: canvas-resize-batch
     content: "puzzle/2d/react: ResizeObserver uses rAF invalidate (not sync render), skip when size unchanged, filter MutationObserver, cache text overlay measurements"
@@ -67,7 +67,7 @@ Stop recomputing the world on every shell render in `PlaygroundView` ([framework
 ### Ticket 3 - `SIDEPANEL-HIDE-WITHOUT-UNMOUNT` (ui/react)
 Hide side panels via CSS instead of conditional unmount so heavy trees persist across toggles.
 - In `Layout` ([ui/react/index.tsx](ui/react/index.tsx) ~2276-2282), render `SidePanel` always and toggle visibility with `hidden`/`display:none` instead of `visible && <SidePanel/>`.
-- Verify `Tree`/hierarchy/inspector content (Nakagin tree) is no longer rebuilt on toggle.
+- Verify `Tree`/document/inspector content (Nakagin tree) is no longer rebuilt on toggle.
 
 ### Ticket 4 - `PUZZLE2D-CANVAS-RESIZE-BATCH` (puzzle/2d/react)
 Make canvas resize redraws async, coalesced, and skip-when-unchanged.

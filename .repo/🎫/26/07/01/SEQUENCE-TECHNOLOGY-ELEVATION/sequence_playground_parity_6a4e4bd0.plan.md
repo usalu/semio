@@ -1,6 +1,6 @@
 ---
 name: Sequence Playground Parity
-overview: Bring `sequence` to full styling and feature parity with the established `dag`/`flow` playgrounds (hierarchy/catalogue/inspection panels, reorganize + LOD toolbar, framework commands for every action), and fix the shared styling bug in `imperative/play` as well.
+overview: Bring `sequence` to full styling and feature parity with the established `dag`/`flow` playgrounds (document/catalogue/inspection panels, reorganize + LOD toolbar, framework commands for every action), and fix the shared styling bug in `imperative/play` as well.
 todos: []
 isProject: false
 ---
@@ -27,7 +27,7 @@ Every established play app (`flow/play`, `mathematical/graph/port/directed/dag/p
 
 ## Scope decisions (confirmed with dev)
 
-- **Sequence**: full parity with `dag`/`flow` — hierarchy panel, catalogue panel, inspection panel, reorganize + orientation + LOD toolbar, and a framework command for every mutating action (no more silent in-component-only state).
+- **Sequence**: full parity with `dag`/`flow` — document panel, catalogue panel, inspection panel, reorganize + orientation + LOD toolbar, and a framework command for every mutating action (no more silent in-component-only state).
 - **Imperative**: styling/shell fix only (same root cause), no new side panels/toolbar for imperative.
 - **Not in scope**: VCS/undo-redo (`DocumentVcsStore`) for sequence — dag's undo/redo isn't a general playground requirement, it is out of scope for this pass; flagged here for a future ticket if wanted.
 
@@ -131,22 +131,22 @@ toolCollection("layout", "layout-grid", [
 ])
 ```
 
-## 6. Hierarchy / Catalogue / Inspection tree builders (`sequence/play/index.ts`)
+## 6. Document / Catalogue / Inspection tree builders (`sequence/play/index.ts`)
 
-Mirror `buildDagPlayHierarchyTree` / `buildDagPlayCatalogueTree` / `buildDagPlayInspectorTree` exactly:
+Mirror `buildDagPlayDocumentTree` / `buildDagPlayCatalogueTree` / `buildDagPlayInspectorTree` exactly:
 
-- `buildSequencePlayHierarchyTree(fixtureJson, selectedStepIds)`: "Steps" section (label = kind, `command: setSelection`) + "Edges" section (label = `${from} → ${to}`, `command: disconnectSteps` on click — since there's no dedicated delete affordance otherwise, clicking an edge in the hierarchy disconnects it; document this clearly in the tab's item description e.g. `"click to disconnect"`).
+- `buildSequencePlayDocumentTree(fixtureJson, selectedStepIds)`: "Steps" section (label = kind, `command: setSelection`) + "Edges" section (label = `${from} → ${to}`, `command: disconnectSteps` on click — since there's no dedicated delete affordance otherwise, clicking an edge in the document disconnects it; document this clearly in the tab's item description e.g. `"click to disconnect"`).
 - `buildSequencePlayCatalogueTree()`: one section per catalogue section (currently just "Actions"), each item `command: addStep({ kind })` — unlike DAG's display-only catalogue, this is sequence's actual step-creation entry point now that the inline "+ button" header is removed.
-- `buildSequencePlayInspectorTree(fixtureJson, selectedStepIds)`: for the selected step, look up its catalogue entry's `inputs` (from section 3) and emit one field per input (`code === "N"` → number field, else text field) via `dagPlayInspectorTextField`/`NumberField`-equivalent helpers, plus a base group (id, kind — read-only) and a "Remove step" action row. Falls back to "Select a step in the hierarchy." when nothing is selected, matching DAG's empty-state text exactly.
+- `buildSequencePlayInspectorTree(fixtureJson, selectedStepIds)`: for the selected step, look up its catalogue entry's `inputs` (from section 3) and emit one field per input (`code === "N"` → number field, else text field) via `dagPlayInspectorTextField`/`NumberField`-equivalent helpers, plus a base group (id, kind — read-only) and a "Remove step" action row. Falls back to "Select a step in the document." when nothing is selected, matching DAG's empty-state text exactly.
 
 ## 7. Framework renderer wiring (`framework/product/playground/renderer/react/index.tsx`, `🔖SequencePlayHost` region)
 
 Mirror `🔖DagPlayHost` exactly:
 
-- Add `SequencePlayHierarchyPanelDefinition`, `SequencePlayCataloguePanelDefinition`, `SequencePlayInspectionPanelDefinition` (`PureSidePanelTabDefinition` subclasses using `CallbackTreePanelDefinition` + `uiTreeNodeToTreePanelConfig`, same as the three `DagPlay*PanelDefinition` classes).
+- Add `SequencePlayDocumentPanelDefinition`, `SequencePlayCataloguePanelDefinition`, `SequencePlayInspectionPanelDefinition` (`PureSidePanelTabDefinition` subclasses using `CallbackTreePanelDefinition` + `uiTreeNodeToTreePanelConfig`, same as the three `DagPlay*PanelDefinition` classes).
 - `useSequencePlayInteractionRevision` hook (copy of `useDagPlayInteractionRevision`) so panels refresh on canvas interaction.
 - `SequencePlayPaneSurfaceHost` gains `reorganize`, `runRequest`, LOD props (`dagLodCanvasProps` reused), `selectedStepIds`, `onSelectionChange`, `onLodChange` wired to the new controller commands — same shape as `DagPlayPaneSurfaceHost`.
-- `SequencePlayInner` passes `augmentPanelTabs={{ workbench: [hierarchy, catalogue], details: [inspection] }}` to `PlaygroundView`, exactly like `DagPlayInner`.
+- `SequencePlayInner` passes `augmentPanelTabs={{ workbench: [document, catalogue], details: [inspection] }}` to `PlaygroundView`, exactly like `DagPlayInner`.
 
 ## 8. Tests
 
@@ -160,4 +160,4 @@ Mirror `🔖DagPlayHost` exactly:
 
 Reopen `.repo/🎫/26/07/01/IMPERATIVE-AND-SEQUENCE-TECHNOLOGIES` (already covers this work), do the implementation, then close with an updated summary listing every file touched in this pass.
 </plan>
-<todos>[{"id":"ticket-reopen","content":"Reopen IMPERATIVE-AND-SEQUENCE-TECHNOLOGIES ticket for this follow-up pass"},{"id":"styling-fix","content":"Fix globals.css/index.html/package.json Tailwind wiring for sequence/play and imperative/play"},{"id":"sequence-wasm","content":"Add disconnectSteps/lodScaleJson/setAutomaticLod/setForcedDrawLodLabel/drawLodLabel to SequenceSession WASM"},{"id":"catalogue-schema","content":"Extend imperative catalogue_json with per-item inputs (name/code); update TS types and refactor StepParamForm to be catalogue-driven"},{"id":"sequence-canvas","content":"Rewrite SequenceCanvas props (reorganize, runRequest, LOD, selection) and remove inline catalogue/inspector UI"},{"id":"sequence-controller","content":"Rewrite SequencePlayController with full command surface, toolbar, LOD/engagement window measures, mirroring DagPlayController"},{"id":"sequence-panels","content":"Add buildSequencePlayHierarchyTree/CatalogueTree/InspectorTree in sequence/play/index.ts"},{"id":"renderer-wiring","content":"Wire SequencePlay hierarchy/catalogue/inspection panel definitions into 🔖SequencePlayHost region"},{"id":"tests","content":"Extend inline Rust/TS tests for all new WASM methods, commands, and catalogue fields; run cargo test, bun test, nx dev/build smoke checks"},{"id":"ticket-close","content":"Close ticket with summary and full list of files touched"}]</todos>
+<todos>[{"id":"ticket-reopen","content":"Reopen IMPERATIVE-AND-SEQUENCE-TECHNOLOGIES ticket for this follow-up pass"},{"id":"styling-fix","content":"Fix globals.css/index.html/package.json Tailwind wiring for sequence/play and imperative/play"},{"id":"sequence-wasm","content":"Add disconnectSteps/lodScaleJson/setAutomaticLod/setForcedDrawLodLabel/drawLodLabel to SequenceSession WASM"},{"id":"catalogue-schema","content":"Extend imperative catalogue_json with per-item inputs (name/code); update TS types and refactor StepParamForm to be catalogue-driven"},{"id":"sequence-canvas","content":"Rewrite SequenceCanvas props (reorganize, runRequest, LOD, selection) and remove inline catalogue/inspector UI"},{"id":"sequence-controller","content":"Rewrite SequencePlayController with full command surface, toolbar, LOD/engagement window measures, mirroring DagPlayController"},{"id":"sequence-panels","content":"Add buildSequencePlayDocumentTree/CatalogueTree/InspectorTree in sequence/play/index.ts"},{"id":"renderer-wiring","content":"Wire SequencePlay document/catalogue/inspection panel definitions into 🔖SequencePlayHost region"},{"id":"tests","content":"Extend inline Rust/TS tests for all new WASM methods, commands, and catalogue fields; run cargo test, bun test, nx dev/build smoke checks"},{"id":"ticket-close","content":"Close ticket with summary and full list of files touched"}]</todos>

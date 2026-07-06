@@ -12,7 +12,7 @@ todos:
     content: Extend ui/react with generalized Catalogue palette + catalogueTreeDragController, cross-container Tree reorder (drop position + indicators + useTreeReorder), and Field primitive; extend in-file vitest
     status: completed
   - id: forms-react
-    content: "Create forms/react (@semio-tech/forms-react): FormRenderer (kind->ui control mapping) and FormBuilder (hierarchy tree + catalogue + drag/reorder/cross-step move + inline editing + live preview)"
+    content: "Create forms/react (@semio-tech/forms-react): FormRenderer (kind->ui control mapping) and FormBuilder (document tree + catalogue + drag/reorder/cross-step move + inline editing + live preview)"
     status: completed
   - id: forms-play
     content: Create forms/play playground (controller, Playground subclass, html, vite, script, project.json, package.json) with Builder + Preview windows and ToolNode toolbar
@@ -80,7 +80,7 @@ flowchart TD
 
 ### 1b. `forms/react/index.tsx` (`@semio-tech/forms-react`, depends only on `@semio-tech/ui-react` + `@semio-tech/forms-core`)
 - `FormRenderer`: renders a `FormSpec` as an interactive multi-step form (one step at a time + progress), mapping each `kind` -> existing ui control (`Input`, `Textarea`, `Slider`, `Stepper`, `Select`, `ToggleGroup`, `Toggle`, color, date). Uses the new ui `Field` wrapper for label/description/required/validation.
-- `FormBuilder`: builder workspace combining (a) hierarchy `Tree` of steps (group items) with questions as children, (b) the new ui `Catalogue` palette listing `QUESTION_KIND_CATALOGUE` as draggable rows, (c) drag-from-catalogue-to-add and cross-step reorder via the new ui reorder controller emitting `FormEditOp`, (d) inline question property editing (selected item -> property tree), and (e) a live `FormRenderer` preview.
+- `FormBuilder`: builder workspace combining (a) document `Tree` of steps (group items) with questions as children, (b) the new ui `Catalogue` palette listing `QUESTION_KIND_CATALOGUE` as draggable rows, (c) drag-from-catalogue-to-add and cross-step reorder via the new ui reorder controller emitting `FormEditOp`, (d) inline question property editing (selected item -> property tree), and (e) a live `FormRenderer` preview.
 
 ### 1c. `forms/play/` (`@semio-tech/forms-play`)
 - `index.html`, `index.ts` (FormsPlayController + `PlaygroundForms`), `fixture-slugs.ts`, `script.ts`, `vite.config.ts` (`playEntryKind: "forms"`), `project.json`, `package.json`, `globals.css` — mirror [procedural/2d/play](procedural/2d/play/index.ts).

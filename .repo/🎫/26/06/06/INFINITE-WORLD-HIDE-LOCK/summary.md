@@ -13,12 +13,12 @@ Implemented a shared persisted hide/lock mechanism for CAD and puzzle 3d, wired 
 - `hidden`/`locked` on `ObjectProps`, `VortexProps`, `AttractionProps` (replaces object `visible?`)
 - `parseFixtureV1` round-trip; fingerprint + `ObjectRecord` threading
 - Rendering: hide unless tree-hover reveal; dim + non-interactive when locked
-- Play: hierarchy row toggles, context menu, selection pruning/filtering, `[DEBUG]` toggle logs
+- Play: document row toggles, context menu, selection pruning/filtering, `[DEBUG]` toggle logs
 
 ### CAD
 - Per-entity flags in `Model.metadata` via `AttributeStore`/`Model` helpers
 - Pick-target filtering, render skip for hidden (pinned/hover reveal), locked dim in `targetStyle`
-- Play hierarchy chrome + toggle callbacks with selection pruning
+- Play document chrome + toggle callbacks with selection pruning
 
 ### UI
 - Tree row hide/lock actions (`revealOnHover`), muted hidden rows, right-click context menu

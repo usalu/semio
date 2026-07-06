@@ -41,7 +41,7 @@ isProject: false
 - `TreeDataSection.content?: ReactNode` in [ui/react/index.tsx](ui/react/index.tsx) (~9147) lets a section bypass items entirely.
 - `playgroundPanelSection` + `PlaygroundPanelBody` in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) (~~1557-1569) wrap whole React forms (`p-single`) into one property row. Puzzle 2d inspector batches add `border-l pl-2 space-y-3` (~~4195), settings adds `p-3 gap-2 space-y-4` (~~3670), puzzle 5d status a raw `<dl class="p-2">` (~~2559), CAD play asides similar (~2680-2727 in [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx)).
 
-The declarative path (puzzle 3d, sketchpad, hierarchy/kinds tabs) already enforces `UiTreeNode -> UiTreeSectionNode -> UiTreeItemNode -> UiControlNode` via `uiTreeNodeToTreePanelConfig` ([framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx) ~1231). The fix: make that the only path.
+The declarative path (puzzle 3d, sketchpad, document/kinds tabs) already enforces `UiTreeNode -> UiTreeSectionNode -> UiTreeItemNode -> UiControlNode` via `uiTreeNodeToTreePanelConfig` ([framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx) ~1231). The fix: make that the only path.
 
 ## Enforced containment
 
@@ -71,7 +71,7 @@ flowchart LR
 ## 3. Delete the escape hatches (playground renderer)
 
 - Delete `playgroundPanelSection` and `PlaygroundPanelBody`; drop their wrappers in `DeclarativeSidePanelBody`/`DeclarativeTreeWorkbenchPanel` (~948-1008) and assert side-panel bodies are `type: "tree"`.
-- Playground tab definitions only accept `UiTreeNode` (static or callback); the conversion to `TreePanelConfig` happens centrally via `uiTreeNodeToTreePanelConfig`. Removes the raw `TreeDataSection[]` callbacks and the unsafe `sections as TreeDataSection[]` cast in `Puzzle5dPlayHierarchyPanelDefinition` (~2609).
+- Playground tab definitions only accept `UiTreeNode` (static or callback); the conversion to `TreePanelConfig` happens centrally via `uiTreeNodeToTreePanelConfig`. Removes the raw `TreeDataSection[]` callbacks and the unsafe `sections as TreeDataSection[]` cast in `Puzzle5dPlayDocumentPanelDefinition` (~2609).
 
 ## 4. Migrate every offending panel to items + controls
 

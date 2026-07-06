@@ -89,7 +89,7 @@ Each `*/react/play-host.tsx` replaces `registerXxxPlaySurfaceHosts` / `mountXxxP
 ```ts
 export const flowAppRenderer: AppRendererContribution = {
   surfaceHosts: { [FLOW_PLAY_SURFACE_ID]: FlowPlayPaneSurfaceHost, ... },
-  panelTabs: [ { group: "workbench", definition: flowHierarchyPanel }, ... ],
+  panelTabs: [ { group: "workbench", definition: flowDocumentPanel }, ... ],
   preload: ensureFlowWasm,        // where applicable (layout, flow, puzzle 2d, ...)
   instanceHost: FlowInstanceHost, // apps that appear in the OS studio
 };

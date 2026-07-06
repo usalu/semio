@@ -24,13 +24,13 @@ index 000000000..a4464fee9
 +    content: Render WorldReferenceLayer in puzzle 3d scene with registry selection/hover and relocate wiring
 +    status: pending
 +  - id: puzzle-play
-+    content: "Puzzle 3d play: import-reference command, file drop placement, hierarchy References group with hide/lock toggles, toolbar/launch.json entries"
++    content: "Puzzle 3d play: import-reference command, file drop placement, document References group with hide/lock toggles, toolbar/launch.json entries"
 +    status: pending
 +  - id: cad-scene
 +    content: "CAD: add cad.references WorldLayer in InteractionSpatialView + references store + selection/gumball commit + flags filtering"
 +    status: pending
 +  - id: cad-play
-+    content: "CAD play: import-reference command, hierarchy References group with hide/lock, toolbar/launch.json entries, .model.json references sidecar"
++    content: "CAD play: import-reference command, document References group with hide/lock, toolbar/launch.json entries, .model.json references sidecar"
 +    status: pending
 +  - id: assets-fixtures
 +    content: Add Vite static alias for infinite/fixture and seed puzzle + CAD fixtures referencing sketch.png and site.pdf
@@ -103,7 +103,7 @@ index 000000000..a4464fee9
 +In [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts):
 +
 +- Add an "Import reference" command (file path/picker) + drop support that places at grid-plane hit using `puzzle3dClientToGridPlaneCad`.
-+- Hierarchy tree: a "References" group with per-item hidden/locked toggles (reuse `toggleEntityFlag` path) and select.
++- Document tree: a "References" group with per-item hidden/locked toggles (reuse `toggleEntityFlag` path) and select.
 +- Register toolbar entries in `launch.json`-driven play UI following existing grouping.
 +
 +In [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): extend the puzzle3d drop handler to also resolve reference-file drops to `addReferenceToFixture`.
@@ -116,7 +116,7 @@ index 000000000..a4464fee9
 +- References stored in a renderer-host references collection (CAD model is geometry-only); persisted in the CAD play shell state and `.model.json` fixture sidecar `references[]`. Per-entity hide/lock reuse `worldEntitySelectable` filtering already used for pick targets ([cad/js/renderer/index.tsx](cad/js/renderer/index.tsx) lines 680-687).
 +- Selection + gumball: reference picks feed the host selection; `WorldReferenceGumball` commits pose back to the references store.
 +
-+In [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx): add import-reference command, hierarchy "References" group with hidden/locked toggles (mirror `toggleHierarchyEntityFlag`), and toolbar registration.
++In [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx): add import-reference command, document "References" group with hidden/locked toggles (mirror `toggleDocumentEntityFlag`), and toolbar registration.
 +
 +## 5. Asset serving + fixtures (for testing)
 +
@@ -374,7 +374,7 @@ index a81cb4d7e..b6d93decb 100644
 @@ -2198,8 +2200,11 @@ import {
    type Puzzle5dPlayHostBridge,
    buildPuzzle5d2dDeclarativeBody,
-   buildPuzzle5dPlayHierarchySections,
+   buildPuzzle5dPlayDocumentSections,
 +  buildPuzzle5dPlayKindsTree,
    buildPuzzle5dPlayRuntime,
    buildPuzzle5d3dDeclarativeBody,
@@ -419,7 +419,7 @@ index a81cb4d7e..b6d93decb 100644
              break;
            }
            case "toggleSelectionTarget": {
-@@ -2412,6 +2424,24 @@ class Puzzle5dPlayHierarchyPanelDefinition extends PureSidePanelTabDefinition {
+@@ -2412,6 +2424,24 @@ class Puzzle5dPlayDocumentPanelDefinition extends PureSidePanelTabDefinition {
    }
  }
  
@@ -1180,42 +1180,42 @@ index cb5b2b2b2..83205fa41 100644
    return true;
  }
  
-@@ -1314,6 +1329,9 @@ export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelectio
+@@ -1314,6 +1329,9 @@ export function puzzle3dPlayDocumentSelectedIds(selection: Puzzle3dPlaySelectio
    for (const attractionId of selection.attractionIds) {
-     ids.push(`puzzle-3d-play-hierarchy.attraction.${attractionId}`);
+     ids.push(`puzzle-3d-play-document.attraction.${attractionId}`);
    }
 +  for (const referenceId of selection.referenceIds) {
-+    ids.push(`puzzle-3d-play-hierarchy.reference.${referenceId}`);
++    ids.push(`puzzle-3d-play-document.reference.${referenceId}`);
 +  }
    return ids;
  }
  
-@@ -1370,11 +1388,25 @@ export function buildPuzzle3dPlayHierarchySections(
+@@ -1370,11 +1388,25 @@ export function buildPuzzle3dPlayDocumentSections(
      defaultOpen: true,
-     items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-hierarchy.attractions.empty", label: "(none)" }],
+     items: attractionItems.length ? attractionItems : [{ id: "puzzle-3d-play-document.attractions.empty", label: "(none)" }],
    };
 +  const referenceItems: UiTreeItemNode[] = (fixture.references ?? []).map((reference) => ({
-+    id: `puzzle-3d-play-hierarchy.reference.${reference.id}`,
++    id: `puzzle-3d-play-document.reference.${reference.id}`,
 +    label: reference.id,
 +    description: reference.source.url,
 +    command: puzzle3dPlaySelectReferenceCommand(reference.id),
-+    ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "reference", id: reference.id }),
-+    ...puzzle3dPlayHierarchyEntityChrome(reference, { kind: "reference", id: reference.id }, options),
++    ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "reference", id: reference.id }),
++    ...puzzle3dPlayDocumentEntityChrome(reference, { kind: "reference", id: reference.id }, options),
 +  }));
 +  const referencesGroup: UiTreeItemNode = {
-+    id: "puzzle-3d-play-hierarchy.references",
++    id: "puzzle-3d-play-document.references",
 +    label: "References",
 +    defaultOpen: true,
-+    items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-hierarchy.references.empty", label: "(none)" }],
++    items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-document.references.empty", label: "(none)" }],
 +  };
    const viewportRoot: UiTreeItemNode = {
-     id: "puzzle-3d-play-hierarchy.viewport",
+     id: "puzzle-3d-play-document.viewport",
      label: "Puzzle 3D",
      defaultOpen: true,
 -    items: [objectsGroup, attractionsGroup],
 +    items: [objectsGroup, referencesGroup, attractionsGroup],
    };
-   return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [viewportRoot]).sections;
+   return playgroundTreePanelRootItems("puzzle-3d-play-document.root", [viewportRoot]).sections;
  }
 @@ -1660,6 +1692,13 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
  
@@ -1457,9 +1457,9 @@ index cb5b2b2b2..83205fa41 100644
        const objectId = fixture!.objects[0]!.id;
 -      ctrl.run("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [] } });
 +      ctrl.run("setSelection", { selection: { objectIds: [objectId], vortexIds: [], attractionIds: [], referenceIds: [] } });
-       const treeA = ctrl.getHierarchyPanelTree(ctrl.getSnapshot().selection);
+       const treeA = ctrl.getDocumentPanelTree(ctrl.getSnapshot().selection);
        ctrl.run("setSelection", { selection: PUZZLE_3D_PLAY_EMPTY_SELECTION });
-       const treeB = ctrl.getHierarchyPanelTree(ctrl.getSnapshot().selection);
+       const treeB = ctrl.getDocumentPanelTree(ctrl.getSnapshot().selection);
 diff --git a/puzzle/3d/react/index.tsx b/puzzle/3d/react/index.tsx
 index 912fb7f10..f2620165a 100644
 --- a/puzzle/3d/react/index.tsx
@@ -1991,8 +1991,8 @@ index 0db41ac8e..b82424b3c 100644
    enforcePlaygroundWindowEngagementInput,
  } from "@framework/playground/core";
  
--import { buildPuzzle2dPlayHierarchySections, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
-+import { buildPuzzle2dPlayHierarchySections, buildPuzzle2dPlayKindsTree, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
+-import { buildPuzzle2dPlayDocumentSections, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
++import { buildPuzzle2dPlayDocumentSections, buildPuzzle2dPlayKindsTree, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
  import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
  import {
    PUZZLE_2D_LOD_MODE_AUTOMATIC,
@@ -2000,8 +2000,8 @@ index 0db41ac8e..b82424b3c 100644
  } from "../../2d/react/index.tsx";
  import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
  import { DEFAULT_GUMBALL_CONFIG, type GumballConfig } from "@ui/react";
--import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
-+import { buildPuzzle3dPlayHierarchyTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
+-import { buildPuzzle3dPlayDocumentTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
++import { buildPuzzle3dPlayDocumentTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
  import {
    DEFAULT_MANUAL_LOD,
    PUZZLE_3D_LOD_SLIDER_MAX,
@@ -2020,15 +2020,15 @@ index 0db41ac8e..b82424b3c 100644
 @@ -97,6 +101,8 @@ export const PUZZLE_5D_PLAY_3D_BODY_KEY = "puzzle.5d.play.3d";
  export const PUZZLE_5D_PLAY_2D_SURFACE_ID = "puzzle.5d.play.2d/v1";
  export const PUZZLE_5D_PLAY_3D_SURFACE_ID = "puzzle.5d.play.3d/v1";
- export const PUZZLE_5D_PLAY_HIERARCHY_TAB_ID = "puzzle-5d-play-hierarchy";
+ export const PUZZLE_5D_PLAY_DOCUMENT_TAB_ID = "puzzle-5d-play-document";
 +export const PUZZLE_5D_PLAY_KINDS_TAB_ID = "puzzle-5d-play-kinds";
 +export const PUZZLE_5D_PLAY_ICON_KINDS = "puzzle.5d-play.icon.kinds";
  
  export const PUZZLE_5D_PLAY_FIXTURE_NAKAGIN_ID = "nakagin";
  
-@@ -159,6 +165,52 @@ export function buildPuzzle5dPlayHierarchySections(snapshot: Puzzle5dPlaySnapsho
+@@ -159,6 +165,52 @@ export function buildPuzzle5dPlayDocumentSections(snapshot: Puzzle5dPlaySnapsho
  }
- //#endregion 🔖Puzzle5dPlayHierarchy
+ //#endregion 🔖Puzzle5dPlayDocument
  
 +//#region 🔖Puzzle5dPlayKinds
 +function puzzle5dPlayKindTreeItem(domain: "2d" | "3d", item: UiTreeItemNode): UiTreeItemNode {
@@ -2140,7 +2140,7 @@ index 0db41ac8e..b82424b3c 100644
 @@ -932,6 +992,18 @@ export function buildPuzzle5d3dDeclarativeBody(ctx: WindowBodyViewContext): UiNo
  if (import.meta.vitest) {
    const { describe, expect, it } = import.meta.vitest;
-   describe("puzzle 5d play hierarchy", () => {
+   describe("puzzle 5d play document", () => {
 +    it("buildPuzzle5dPlayKindsTree exposes draggable flat and volume palette rows", () => {
 +      const runtime = buildPuzzle5dPlayRuntime();
 +      const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
@@ -2153,7 +2153,7 @@ index 0db41ac8e..b82424b3c 100644
 +      expect(volumeObjects?.items?.some((row) => row.draggable === true && row.dragData)).toBe(true);
 +    });
 +
-     it("buildPuzzle5dPlayHierarchySections includes 2d and 3d branches", () => {
+     it("buildPuzzle5dPlayDocumentSections includes 2d and 3d branches", () => {
        const runtime = buildPuzzle5dPlayRuntime();
        const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
 diff --git a/puzzle/5d/react/index.tsx b/puzzle/5d/react/index.tsx

@@ -57,7 +57,7 @@ index 000000000..664ee6036
 +- **Fill sub-mode**: `fillEditTargetVolumes` controller state, engagement toggle "Edit target volumes" + "Delete volume".
 +- **Fill constraint**: TS stepper + Rust `fill_step_one` gate placements when volumes are non-empty; invalidation on volume change.
 +- **Playground host**: wires props, relocate/draw handlers, fill session prep with `targetVolumes`.
-+- **Hierarchy**: Target Volumes group in play tree panel.
++- **Document**: Target Volumes group in play tree panel.
 +
 +## Tests
 +
@@ -86,7 +86,7 @@ index 8dc53f037..0b2da1c6a 100644
    "goal": "🎯puzzle3d🎯puzzle3dplay",
 -  "summary": "",
 -  "sessions": []
-+  "summary": "Implemented fill target volumes end-to-end: shared WorldVolume* primitive with AABB containment; FixtureV1.targetVolumes; 3-point+height draw tool; fillEditTargetVolumes sub-mode; TS + Rust fill gating; playground host wiring; hierarchy Target Volumes group. All tests passing.",
++  "summary": "Implemented fill target volumes end-to-end: shared WorldVolume* primitive with AABB containment; FixtureV1.targetVolumes; 3-point+height draw tool; fillEditTargetVolumes sub-mode; TS + Rust fill gating; playground host wiring; document Target Volumes group. All tests passing.",
 +  "sessions": [],
 +  "files": [
 +    "infinite/world/r3f/index.tsx",
@@ -563,56 +563,56 @@ index 50997b362..c11e75ca3 100644
        return false;
      }
    }
-@@ -1211,6 +1226,10 @@ export function puzzle3dPlayHierarchyTreeHighlightedIdsForTarget(target: HoverTa
-       return [`puzzle-3d-play-hierarchy.vortex.${target.fullId}`];
+@@ -1211,6 +1226,10 @@ export function puzzle3dPlayDocumentTreeHighlightedIdsForTarget(target: HoverTa
+       return [`puzzle-3d-play-document.vortex.${target.fullId}`];
      case "attraction":
-       return [`puzzle-3d-play-hierarchy.attraction.${target.id}`];
+       return [`puzzle-3d-play-document.attraction.${target.id}`];
 +    case "reference":
-+      return [`puzzle-3d-play-hierarchy.reference.${target.id}`];
++      return [`puzzle-3d-play-document.reference.${target.id}`];
 +    case "targetVolume":
-+      return [`puzzle-3d-play-hierarchy.target-volume.${target.id}`];
++      return [`puzzle-3d-play-document.target-volume.${target.id}`];
      default:
        return [];
    }
-@@ -1369,9 +1388,12 @@ export function puzzle3dPlayHierarchySelectedIds(selection: Puzzle3dPlaySelectio
+@@ -1369,9 +1388,12 @@ export function puzzle3dPlayDocumentSelectedIds(selection: Puzzle3dPlaySelectio
    for (const attractionId of selection.attractionIds) {
-     ids.push(`puzzle-3d-play-hierarchy.attraction.${attractionId}`);
+     ids.push(`puzzle-3d-play-document.attraction.${attractionId}`);
    }
 -  for (const referenceId of selection.referenceIds) {
 +  for (const referenceId of selection.referenceIds ?? []) {
-     ids.push(`puzzle-3d-play-hierarchy.reference.${referenceId}`);
+     ids.push(`puzzle-3d-play-document.reference.${referenceId}`);
    }
 +  for (const volumeId of selection.targetVolumeIds ?? []) {
-+    ids.push(`puzzle-3d-play-hierarchy.targetVolume.${volumeId}`);
++    ids.push(`puzzle-3d-play-document.targetVolume.${volumeId}`);
 +  }
    return ids;
  }
  
-@@ -1442,11 +1464,24 @@ export function buildPuzzle3dPlayHierarchySections(
+@@ -1442,11 +1464,24 @@ export function buildPuzzle3dPlayDocumentSections(
      defaultOpen: true,
-     items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-hierarchy.references.empty", label: "(none)" }],
+     items: referenceItems.length ? referenceItems : [{ id: "puzzle-3d-play-document.references.empty", label: "(none)" }],
    };
 +  const targetVolumeItems: UiTreeItemNode[] = (fixture.targetVolumes ?? []).map((volume) => ({
-+    id: `puzzle-3d-play-hierarchy.target-volume.${volume.id}`,
++    id: `puzzle-3d-play-document.target-volume.${volume.id}`,
 +    label: volume.id,
 +    command: puzzle3dPlaySelectTargetVolumeCommand(volume.id),
-+    ...puzzle3dPlayHierarchyInstanceHoverHandlers(onHover, { kind: "targetVolume", id: volume.id }),
-+    ...puzzle3dPlayHierarchyEntityChrome(volume, { kind: "targetVolume", id: volume.id }, options),
++    ...puzzle3dPlayDocumentInstanceHoverHandlers(onHover, { kind: "targetVolume", id: volume.id }),
++    ...puzzle3dPlayDocumentEntityChrome(volume, { kind: "targetVolume", id: volume.id }, options),
 +  }));
 +  const targetVolumesGroup: UiTreeItemNode = {
-+    id: "puzzle-3d-play-hierarchy.target-volumes",
++    id: "puzzle-3d-play-document.target-volumes",
 +    label: "Target Volumes",
 +    defaultOpen: true,
-+    items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-hierarchy.target-volumes.empty", label: "(none)" }],
++    items: targetVolumeItems.length ? targetVolumeItems : [{ id: "puzzle-3d-play-document.target-volumes.empty", label: "(none)" }],
 +  };
    const viewportRoot: UiTreeItemNode = {
-     id: "puzzle-3d-play-hierarchy.viewport",
+     id: "puzzle-3d-play-document.viewport",
      label: "Puzzle 3D",
      defaultOpen: true,
 -    items: [objectsGroup, referencesGroup, attractionsGroup],
 +    items: [objectsGroup, referencesGroup, targetVolumesGroup, attractionsGroup],
    };
-   return playgroundTreePanelRootItems("puzzle-3d-play-hierarchy.root", [viewportRoot]).sections;
+   return playgroundTreePanelRootItems("puzzle-3d-play-document.root", [viewportRoot]).sections;
  }
 @@ -2396,11 +2431,11 @@ export class Puzzle3dPlayShellController extends Controller implements Playgroun
          this.selectableKinds.attraction && this.visibleKinds.attraction

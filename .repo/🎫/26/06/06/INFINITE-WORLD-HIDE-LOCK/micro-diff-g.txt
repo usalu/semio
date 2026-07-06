@@ -134,7 +134,7 @@ index 000000000..adc35ef88
 +## Tests
 +
 +- `infinite_cavas`: `append_label_renders_glyphs`
-+- `gis_map`: place hierarchy, colored/figure-ground label scene growth, camera/tile fixture setup
++- `gis_map`: place document, colored/figure-ground label scene growth, camera/tile fixture setup
 +- `gis/map/play`: per-vector-style default labels visibility
 +
 +## Files
@@ -279,12 +279,12 @@ index a5c67d568..f5fca033c 100644
  import {
    PUZZLE_5D_PLAY_APP_ID,
 @@ -2171,12 +2190,25 @@ import {
-   PUZZLE_5D_PLAY_HIERARCHY_TAB_ID,
+   PUZZLE_5D_PLAY_DOCUMENT_TAB_ID,
    Puzzle5dPlayShellController,
    Puzzle5dStoreBridge,
 +  type Puzzle5dPlayHostBridge,
    buildPuzzle5d2dDeclarativeBody,
-   buildPuzzle5dPlayHierarchySections,
+   buildPuzzle5dPlayDocumentSections,
    buildPuzzle5dPlayRuntime,
    buildPuzzle5d3dDeclarativeBody,
    type Puzzle5dPlaySnapshot,
@@ -652,7 +652,7 @@ index 4a3936c33..13e39caf5 100644
 +    }
 +
      #[test]
-     fn place_label_visible_covers_admin_hierarchy() {
+     fn place_label_visible_covers_admin_document() {
          let v = super::vector_tiles::place_label_visible;
 @@ -3522,6 +3530,23 @@ mod tests {
          assert!(v("neighbourhood", 0.05));
@@ -1179,8 +1179,8 @@ index 8696c28db..b4543886d 100644
    enforcePlaygroundWindowEngagementInput,
  } from "@framework/playground/core";
  
--import { buildPuzzle2dPlayHierarchySections } from "../../2d/play/index.ts";
-+import { buildPuzzle2dPlayHierarchySections, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
+-import { buildPuzzle2dPlayDocumentSections } from "../../2d/play/index.ts";
++import { buildPuzzle2dPlayDocumentSections, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
  import nakagin2dJson from "../../2d/fixture/nakagin-capsule-tower.2d.json";
 -import { PUZZLE_2D_LOD_MODE_AUTOMATIC, puzzle2dLodAutomaticSelectLabel, puzzle2dLodCanvasProps, isPuzzle2dDrawLodKind, parsePuzzle2dFixtureV1, type Puzzle2dDrawLodKind, type Puzzle2dFixtureV1, type Puzzle2dLodModeKind, type CameraState } from "../../2d/react/index.tsx";
 +import {
@@ -1200,7 +1200,7 @@ index 8696c28db..b4543886d 100644
 +} from "../../2d/react/index.tsx";
  import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
  import { DEFAULT_GUMBALL_CONFIG, type GumballConfig } from "@ui/react";
- import { buildPuzzle3dPlayHierarchyTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
+ import { buildPuzzle3dPlayDocumentTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
 @@ -47,8 +61,27 @@ import {
    puzzle3dLodCanvasProps,
    sliderValueFromLod,
@@ -1246,7 +1246,7 @@ index 8696c28db..b4543886d 100644
 +}
  //#endregion 🔖Ids
  
- //#region 🔖Puzzle5dPlayHierarchy
+ //#region 🔖Puzzle5dPlayDocument
 @@ -151,6 +194,11 @@ export interface Puzzle5dPlaySnapshot {
    readonly connect3d: number;
    readonly proximity2d: number;

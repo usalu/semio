@@ -12,7 +12,7 @@ todos:
     content: Verify and fix any remaining gaps in tree expand/collapse, hover fill/commands, label click/selection_change, and drag-and-drop now that hits reach their targets
     status: completed
   - id: tree-visual-diff
-    content: Screenshot-diff tree indentation guide lines/chevrons against React for a hierarchy-heavy plugin and fix any real mismatch found
+    content: Screenshot-diff tree indentation guide lines/chevrons against React for a document-heavy plugin and fix any real mismatch found
     status: completed
   - id: table-vfs-interaction-verify
     content: Verify Table selectRow and VFS selectRows/openInstance/drag-drop now work end-to-end for representative plugins
@@ -89,7 +89,7 @@ Structs, mapping, and rendering are already largely correct (`ui/wgpu/rs/widgets
 - Verify hover fill and `tree_hover_commands`/`tree_unhover_commands` dispatch (existing logic at [shell.rs:1399-1417](framework/renderer/wgpu/rs/shell.rs)).
 - Verify label click dispatches `item.event` and `selection_change` (existing logic at [shell.rs:1374-1380](framework/renderer/wgpu/rs/shell.rs)).
 - Verify drag-and-drop initiation for `draggable` items (existing logic at [shell.rs:855-908, 1519-1580](framework/renderer/wgpu/rs/shell.rs)).
-- Screenshot-diff indentation guide lines and chevron icons against React's `IndentationLines`/`TreeHierarchyGutter` ([ui/js/react/index.tsx:9648-9707](ui/js/react/index.tsx)) for a hierarchy-heavy plugin (e.g. `s`, `lowpoly`) — fix any remaining depth/spacing mismatch found only now that the tree is actually interactive.
+- Screenshot-diff indentation guide lines and chevron icons against React's `IndentationLines`/`TreeDocumentGutter` ([ui/js/react/index.tsx:9648-9707](ui/js/react/index.tsx)) for a document-heavy plugin (e.g. `s`, `lowpoly`) — fix any remaining depth/spacing mismatch found only now that the tree is actually interactive.
 - Verify Table (`selectRow`) and VFS (`selectRows`/`openInstance`/drag-drop) click/hover now work end-to-end for a plugin using each (e.g. `vcs`/`forms` for Table, `s` for VFS).
 
 ## 3. Dock/window chrome parity

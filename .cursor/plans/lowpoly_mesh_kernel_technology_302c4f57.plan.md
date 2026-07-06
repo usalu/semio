@@ -15,7 +15,7 @@ todos:
     content: "Create lowpoly/react: LowpolyCanvas using infinite-world-r3f + UnifiedGumball/SelectionMarquee from ui/react, vertex/edge/face raycasting picking, mesh buffer building from tessellateActive()"
     status: completed
   - id: phase5-lowpoly-play
-    content: "Create lowpoly/play: LowpolyPlayController, toolbar tools, hierarchy/catalogue/inspector tree builders, window kind, PlaygroundLowpoly, default rock fixture"
+    content: "Create lowpoly/play: LowpolyPlayController, toolbar tools, document/catalogue/inspector tree builders, window kind, PlaygroundLowpoly, default rock fixture"
     status: completed
   - id: phase6-wiring
     content: Wire lowpoly into framework playground renderer host (bootLowpolyPlay region), vite-elements-assets.ts, root package.json/script.ts/launch.json, regenerate bun.lock, add lowpoly/AGENTS.md
@@ -115,9 +115,9 @@ Single-file bundle `lowpoly/react/index.tsx` (`@semio-tech/lowpoly-react`), foll
 
 Single-file `lowpoly/play/index.ts` (`@semio-tech/lowpoly-play`), directly modeled on [sequence/play/index.ts](sequence/play/index.ts):
 
-- IDs/consts: `LOWPOLY_PLAY_APP_ID`, `_CONTROLLER_ID`, `_WINDOW_KIND_ID = "lowpoly-main"`, `_SURFACE_ID`, `_HIERARCHY_TAB_ID`, `_CATALOGUE_TAB_ID`, `_INSPECTION_TAB_ID`, `LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON`.
+- IDs/consts: `LOWPOLY_PLAY_APP_ID`, `_CONTROLLER_ID`, `_WINDOW_KIND_ID = "lowpoly-main"`, `_SURFACE_ID`, `_DOCUMENT_TAB_ID`, `_CATALOGUE_TAB_ID`, `_INSPECTION_TAB_ID`, `LOWPOLY_PLAY_DEFAULT_FIXTURE_JSON`.
 - `buildLowpolyPlayToolbarTools`: tool groups for Selection mode (Object/Vertex/Edge/Face), Transform (Move/Rotate/Scale), Edit (Extrude, Inset, Bevel, Loop Cut, Knife, Merge, Dissolve, Subdivide, Triangulate, Mirror, Decimate), and toggles (Snap, Proportional Editing, Smooth Shading) — each a `ToolLeaf` dispatching a `LowpolyPlayController` command.
-- `buildLowpolyPlayHierarchyTree` (object list + click-to-select), `buildLowpolyPlayCatalogueTree` (primitives: Cube/Plane/Cylinder/Cone/IcoSphere, click/drag-to-add), `buildLowpolyPlayInspectorTree` (active tool's numeric params: extrude distance, inset amount, bevel amount/segments, loop-cut count, mirror axis, decimate ratio, snap grid size, proportional radius; plus transform fields for the active object/selection).
+- `buildLowpolyPlayDocumentTree` (object list + click-to-select), `buildLowpolyPlayCatalogueTree` (primitives: Cube/Plane/Cylinder/Cone/IcoSphere, click/drag-to-add), `buildLowpolyPlayInspectorTree` (active tool's numeric params: extrude distance, inset amount, bevel amount/segments, loop-cut count, mirror axis, decimate ratio, snap grid size, proportional radius; plus transform fields for the active object/selection).
 - `LowpolyPlayController extends Controller`: owns a `LowpolySession` wasm instance (or fixture JSON if state stays fully in TS and only tessellation goes through wasm — decide based on Phase 3 API; state ownership lives in the Rust `LowpolySession` since geometry operations are non-trivial, TS just holds `fixtureJson` synced from `session.fixtureJson()` after each command, matching how `SequencePlayController` treats `fixtureJson` as the single source of truth), `run(command, args)` dispatches to session methods and calls `commitFixture`.
 - One window kind `lowpoly-main` with a canvas-only declarative body (`buildLowpolyWindowBody`-equivalent) rendering `LowpolyCanvas`.
 - `PlaygroundLowpoly extends Playground`, `registerLowpolyPlayDeclarativeBodies`.
@@ -139,7 +139,7 @@ Single-file `lowpoly/play/index.ts` (`@semio-tech/lowpoly-play`), directly model
 - `cargo test -p kernel_3d_mesh` and `-p lowpoly_core`.
 - `bun nx run @semio-tech/lowpoly-core:wasm` builds the wasm package.
 - `bun nx run @semio-tech/lowpoly-play:test` / relevant vitest suites for core/react/play.
-- Manually boot `bun run dev:lowpoly` and confirm the playground loads with a visible low-poly object, toolbar, hierarchy/catalogue/inspector panels.
+- Manually boot `bun run dev:lowpoly` and confirm the playground loads with a visible low-poly object, toolbar, document/catalogue/inspector panels.
 
 ## Notes / scope boundaries
 

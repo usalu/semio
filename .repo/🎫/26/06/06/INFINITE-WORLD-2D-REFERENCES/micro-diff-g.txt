@@ -21,7 +21,7 @@ index a4464fee9..5adba5396 100644
 -    status: pending
 +    status: completed
    - id: puzzle-play
-     content: "Puzzle 3d play: import-reference command, file drop placement, hierarchy References group with hide/lock toggles, toolbar/launch.json entries"
+     content: "Puzzle 3d play: import-reference command, file drop placement, document References group with hide/lock toggles, toolbar/launch.json entries"
 -    status: pending
 +    status: completed
    - id: cad-scene
@@ -29,7 +29,7 @@ index a4464fee9..5adba5396 100644
 -    status: pending
 +    status: completed
    - id: cad-play
-     content: "CAD play: import-reference command, hierarchy References group with hide/lock, toolbar/launch.json entries, .model.json references sidecar"
+     content: "CAD play: import-reference command, document References group with hide/lock, toolbar/launch.json entries, .model.json references sidecar"
 -    status: pending
 +    status: completed
    - id: assets-fixtures

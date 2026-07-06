@@ -8,7 +8,7 @@
 
 ## Overview
 
-Expanded the log system from flat file structure to a nested date-based hierarchy with YAML frontmatter for metadata tracking.
+Expanded the log system from flat file structure to a nested date-based document with YAML frontmatter for metadata tracking.
 
 ## Changes Made
 
@@ -79,7 +79,7 @@ Added comprehensive "Log System" section covering:
 - Environment variables
 - Git configuration
 
-Updated file structure documentation to show new hierarchy.
+Updated file structure documentation to show new document.
 
 Updated general policies to reference new log creation command.
 
@@ -93,7 +93,7 @@ Added `gray-matter` for YAML frontmatter parsing.
 
 ## Benefits
 
-1. **Better Organization**: Date-based hierarchy makes logs easier to browse
+1. **Better Organization**: Date-based document makes logs easier to browse
 2. **Rich Metadata**: Frontmatter enables filtering, searching, and attribution
 3. **Version Control**: Logs now tracked in git for history and collaboration
 4. **Automation Ready**: Programmatic API enables automated log management

@@ -63,4 +63,4 @@ The catalogue passes through `FlowSession` (`set_host_catalogue_json` → `catal
 
 ## Notes / decisions
 - WASM flow modules (math/text/etc.) stay flat by default; the optional Rust `NeuronKindInfo.group` field for them is an out-of-scope follow-up — the mechanism already supports them via the recursive model.
-- Group node ids are derived by slugifying the authored title path purely for stable React keys; the hierarchy itself is fully author-declared, never inferred from the kind ID.
+- Group node ids are derived by slugifying the authored title path purely for stable React keys; the document itself is fully author-declared, never inferred from the kind ID.

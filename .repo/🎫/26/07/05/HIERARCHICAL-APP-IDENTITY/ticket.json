@@ -3,7 +3,7 @@
   "emoji": "🪜",
   "status": "open",
   "description": "Create a clean shared mechanism for hierarchical app identity labels such as semio · puzzle · 3d, and use it consistently for tab names and the OS app catalogue tree.",
-  "summary": "Add #[serde(default)] to all hierarchy fields in Rust structs to prevent missing field hierarchy errors during manifest/plugin deserialization",
+  "summary": "Add #[serde(default)] to all document fields in Rust structs to prevent missing field document errors during manifest/plugin deserialization",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1823"
   },

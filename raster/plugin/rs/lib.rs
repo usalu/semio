@@ -5,8 +5,8 @@ use semio_framework_plugin::{
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, RasterScene, UiInspectorFieldGroup,
     UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
 };
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
@@ -795,7 +795,7 @@ fn render_layers_panel(document: &RasterDocument, play: &RasterPlayEnvelope, vie
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "raster-play-layers".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: [toolbar, layer_items].concat(),
         }],
@@ -1273,7 +1273,7 @@ impl PluginApp for RasterApp {
 //#region 🔖Manifest
 fn create_raster_app() -> App {
     App::from_builder(
-        App::builder(RASTER_PLAY_APP_ID, "Raster").hierarchy(["semio", "raster"])
+        App::builder(RASTER_PLAY_APP_ID, "Raster").document(["semio", "raster"])
             .icon_id("raster")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1286,8 +1286,8 @@ fn create_raster_app() -> App {
                 Some(&["Composite".into(), "Navigator".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
                 RASTER_PLAY_BODY_LAYERS,
             )
@@ -1327,7 +1327,7 @@ fn raster_bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(raster_bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

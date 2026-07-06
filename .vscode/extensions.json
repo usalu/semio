@@ -35,7 +35,8 @@
     "openai.chatgpt",
     "mermaidchart.vscode-mermaid-chart",
     "gruntfuggly.todo-tree",
-    "jock.svg"
+    "jock.svg",
+    "James-Yu.latex-workshop"
   ],
   "unwantedRecommendations": []
 }

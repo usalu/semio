@@ -519,7 +519,7 @@ Added React hooks:
 - `useFlatPiecePlane(id?)` - Returns flattened plane
 - `useFlatPieceCenter(id?)` - Returns flattened center
 - `useIsConnectedPiece(id?)` - Returns connection status
-- `usePieceDepth(id?)` - Returns hierarchy depth
+- `usePieceDepth(id?)` - Returns document depth
 - `useFixedPieceId(id?)` - Returns fixed piece ID (component root)
 - `useParentPieceId(id?)` - Returns parent piece ID
 

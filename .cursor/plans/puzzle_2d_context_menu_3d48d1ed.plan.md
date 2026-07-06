@@ -1,6 +1,6 @@
 ---
 name: Puzzle 2D Context Menu
-overview: Replicate puzzle3d's viewport selection context menu and hierarchy tree context menu in puzzle2d, with full hidden/locked flag parity across fixture, renderer, WASM hit-testing, and play controller.
+overview: Replicate puzzle3d's viewport selection context menu and document tree context menu in puzzle2d, with full hidden/locked flag parity across fixture, renderer, WASM hit-testing, and play controller.
 todos:
   - id: ticket
     content: Read repo://goals and open ticket via repo MCP
@@ -20,11 +20,11 @@ todos:
   - id: play-commands
     content: Add setSelectionFlag, deleteSelection, duplicateSelection, selectSameKind, toggleEntityFlag controller commands
     status: completed
-  - id: hierarchy-chrome
-    content: Add puzzle2dPlayHierarchyEntityChrome with contextMenu/actions/isHidden on tree rows
+  - id: document-chrome
+    content: Add puzzle2dPlayDocumentEntityChrome with contextMenu/actions/isHidden on tree rows
     status: completed
   - id: playground-wiring
-    content: Wire playground renderer dispatches for 2d selection actions and hierarchy toggles
+    content: Wire playground renderer dispatches for 2d selection actions and document toggles
     status: completed
   - id: tests
     content: Extend vitest and Rust test regions; run nx vitest and cargo tests
@@ -40,10 +40,10 @@ isProject: false
 ## Reference (puzzle3d)
 
 - Viewport menu: region `🖱️SelectionContextMenu` in [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx) (lines ~7746–7938) — store + `puzzle3dSelectionActionsRef` + `buildPuzzle3dSelectionMenuItems` (Hide/Show, Lock/Unlock, Duplicate, Select all of same kind, Zoom to selection, Delete) rendered via `ContextMenuController`, with right-click committing selection first (`SelectionContextMenuBinder`, ~9725).
-- Hierarchy menu: `puzzle3dPlayHierarchyEntityChrome` in [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) (~1142–1195) — per-row `contextMenu` + inline `actions` (Show/Hide, Lock/Unlock) wired to `toggleEntityFlag`.
+- Document menu: `puzzle3dPlayDocumentEntityChrome` in [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) (~1142–1195) — per-row `contextMenu` + inline `actions` (Show/Hide, Lock/Unlock) wired to `toggleEntityFlag`.
 - Action wiring: playground renderer dispatches `setSelectionFlag` / `deleteSelection` / `duplicateSelection` / `selectSameKind` to the play controller.
 
-Puzzle2d already has the generic plumbing: canvas `contextmenu` → `surfaceContextMenu` state → `ContextMenuController` in `Puzzle2dCanvas` ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) ~12955, ~13280). What's missing: selection commit on right-click, the selection menu items, `hidden`/`locked` entity flags, play controller actions, and hierarchy row chrome. The "Suggest objects" vortex item has no 2d equivalent and is skipped.
+Puzzle2d already has the generic plumbing: canvas `contextmenu` → `surfaceContextMenu` state → `ContextMenuController` in `Puzzle2dCanvas` ([puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) ~12955, ~13280). What's missing: selection commit on right-click, the selection menu items, `hidden`/`locked` entity flags, play controller actions, and document row chrome. The "Suggest objects" vortex item has no 2d equivalent and is skipped.
 
 ## Data flow
 
@@ -101,21 +101,21 @@ New commands on `Puzzle2dPlayShellController` (region `🔖Controller`, ~742):
 - `deleteSelection` — reuse the existing structural-delete pipeline (~1590–1656).
 - `duplicateSelection` — clone selected nodes (+ handles, fresh ids, position offset); select the clones.
 - `selectSameKind` — expand selection to all entities sharing the kind ids (`nodeKind`/`handleKind`/`edgeKind`) of the current selection.
-- `toggleEntityFlag(graphId, flag)` — per-row toggle for the hierarchy menu (mirrors 3d `toggleEntityFlag`).
+- `toggleEntityFlag(graphId, flag)` — per-row toggle for the document menu (mirrors 3d `toggleEntityFlag`).
 
-## 6. Hierarchy tree menu ([puzzle/2d/play/index.ts](puzzle/2d/play/index.ts))
+## 6. Document tree menu ([puzzle/2d/play/index.ts](puzzle/2d/play/index.ts))
 
-- Add `puzzle2dPlayHierarchyEntityChrome(flags, graphId, options)` returning `{ isHidden, actions, contextMenu }` (Show/Hide with `eye`/`eye-off`, Lock/Unlock with `lock-open`/`lock`), mirroring 3d ~1142–1195.
-- Extend `buildPuzzle2dPlayHierarchySections` options (~324–635) with `onToggleHidden` / `onToggleLocked` and spread the chrome onto node, handle, and edge rows.
+- Add `puzzle2dPlayDocumentEntityChrome(flags, graphId, options)` returning `{ isHidden, actions, contextMenu }` (Show/Hide with `eye`/`eye-off`, Lock/Unlock with `lock-open`/`lock`), mirroring 3d ~1142–1195.
+- Extend `buildPuzzle2dPlayDocumentSections` options (~324–635) with `onToggleHidden` / `onToggleLocked` and spread the chrome onto node, handle, and edge rows.
 
 ## 7. Playground renderer wiring ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx))
 
 - For 2d panes: populate `puzzle2dSelectionActionsRef` (or equivalent `Puzzle2dCanvas` props, matching how 3d's `PlayCanvas` does it at ~2273–2277) with `bus.dispatch(PUZZLE_2D_PLAY_CONTROLLER_ID, ...)` calls for the five actions.
-- Hierarchy panel (~3340–3383): pass `onToggleHidden` / `onToggleLocked` dispatching `toggleEntityFlag`.
+- Document panel (~3340–3383): pass `onToggleHidden` / `onToggleLocked` dispatching `toggleEntityFlag`.
 
 ## 8. Tests
 
-- Extend existing vitest regions only (no new test files): `buildPuzzle2dSelectionMenuItems` label/condition cases in [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) (mirroring 3d tests at ~13866–13914), controller command tests in [puzzle/2d/play/index.ts](puzzle/2d/play/index.ts), hierarchy chrome tests, and Rust locked hit-test tests in the engine crate + [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs).
+- Extend existing vitest regions only (no new test files): `buildPuzzle2dSelectionMenuItems` label/condition cases in [puzzle/2d/react/index.tsx](puzzle/2d/react/index.tsx) (mirroring 3d tests at ~13866–13914), controller command tests in [puzzle/2d/play/index.ts](puzzle/2d/play/index.ts), document chrome tests, and Rust locked hit-test tests in the engine crate + [puzzle/2d/rs/lib.rs](puzzle/2d/rs/lib.rs).
 - Run via nx: puzzle/2d react + play vitest, cargo tests for the touched crates.
 
 ## Process

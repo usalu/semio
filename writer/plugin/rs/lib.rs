@@ -109,8 +109,8 @@ use semio_framework_plugin::{
     build_text_editor_scene, ui_declarative_sections_to_tree, ui_text, App,
     CommandDescriptor, PluginApp, PluginBundle, TextEditorScene, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, create_default_layout,
 };
 use serde::{Deserialize, Serialize};
@@ -122,7 +122,7 @@ const WRITER_PLAY_APP_ID: &str = "writer-play";
 const WRITER_PLAY_CONTROLLER_ID: &str = "writer-play";
 const WRITER_PLAY_SURFACE_ID: &str = "writer.play";
 const WRITER_PLAY_BODY_MAIN: &str = "writer.play.main";
-const WRITER_PLAY_BODY_HIERARCHY: &str = "writer.play.hierarchy";
+const WRITER_PLAY_BODY_DOCUMENT: &str = "writer.play.document";
 const WRITER_PLAY_BODY_CATALOGUE: &str = "writer.play.catalogue";
 const WRITER_PLAY_BODY_INSPECTION: &str = "writer.play.inspection";
 const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";
@@ -446,10 +446,10 @@ fn selection_from_view(view_state: &ViewState) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn render_hierarchy_panel(document: &WriterDocument, runtime: &WriterPlayRuntime) -> UiNode {
+fn render_document_panel(document: &WriterDocument, runtime: &WriterPlayRuntime) -> UiNode {
     if document.language_id != "jack" {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
-            id: "writer-hierarchy".into(),
+            id: "writer-document".into(),
             label: Some("Document".into()),
             default_open: Some(true),
             children: vec![
@@ -466,12 +466,12 @@ fn render_hierarchy_panel(document: &WriterDocument, runtime: &WriterPlayRuntime
     };
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
-            id: "writer-play-hierarchy.ast".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            id: "writer-play-document.ast".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: if items.is_empty() {
                 vec![UiTreeItemNode {
-                    id: "writer-play-hierarchy.empty".into(),
+                    id: "writer-play-document.empty".into(),
                     label: "(empty query)".into(),
                     description: None,
                     icon_id: None,
@@ -899,7 +899,7 @@ impl PluginApp for WriterApp {
         let play = parse_envelope(document_json);
         match body_key {
             WRITER_PLAY_BODY_MAIN => render_main_scene(&play.document, &play.runtime),
-            WRITER_PLAY_BODY_HIERARCHY => render_hierarchy_panel(&play.document, &play.runtime),
+            WRITER_PLAY_BODY_DOCUMENT => render_document_panel(&play.document, &play.runtime),
             WRITER_PLAY_BODY_CATALOGUE => render_catalogue_panel(),
             WRITER_PLAY_BODY_INSPECTION => render_inspection_panel(&play.document),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -911,7 +911,7 @@ impl PluginApp for WriterApp {
 //#region 🔖Manifest
 fn create_writer_app() -> App {
     App::from_builder(
-        App::builder(WRITER_PLAY_APP_ID, "Writer").hierarchy(["semio", "writer"])
+        App::builder(WRITER_PLAY_APP_ID, "Writer").document(["semio", "writer"])
             .icon_id("writer")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -923,10 +923,10 @@ fn create_writer_app() -> App {
                 Some(&["Jack".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                WRITER_PLAY_BODY_HIERARCHY,
+                WRITER_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -954,7 +954,7 @@ fn writer_bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(writer_bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -972,10 +972,10 @@ mod tests {
     }
 
     #[test]
-    fn renders_hierarchy_tree_for_jack() {
+    fn renders_document_tree_for_jack() {
         let app = WriterApp;
         let document = JACK_EXAMPLE_JSON.to_string();
-        let node = app.render(WRITER_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(WRITER_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("MATCH"));

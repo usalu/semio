@@ -10,8 +10,8 @@ use semio_framework_plugin::{
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App,
     Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,7 @@ const PRESENTATION_PLAY_APP_ID: &str = "presentation-tile-play";
 const PRESENTATION_PLAY_CONTROLLER_ID: &str = "presentation-tile-play";
 const PRESENTATION_PLAY_SURFACE_ID: &str = "presentation.tile.play";
 const PRESENTATION_PLAY_BODY_MAIN: &str = "presentation.tile.play.main";
-const PRESENTATION_PLAY_BODY_HIERARCHY: &str = "presentation.tile.play.hierarchy";
+const PRESENTATION_PLAY_BODY_DOCUMENT: &str = "presentation.tile.play.document";
 const PRESENTATION_PLAY_BODY_CATALOGUE: &str = "presentation.tile.play.catalogue";
 const PRESENTATION_PLAY_BODY_DETAILS: &str = "presentation.tile.play.details";
 const PRESENTATION_PLAY_WINDOW_MAIN: &str = "tile-editor";
@@ -173,7 +173,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn build_hierarchy_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
+fn build_document_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
     let items: Vec<UiTreeItemNode> = envelope
         .deck
         .tiles
@@ -249,7 +249,7 @@ fn build_details_tree(envelope: &PresentationPlayEnvelope) -> UiNode {
             id: "presentation.play.details.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            children: vec![ui_text("Select a tile in the canvas or workbench hierarchy.")],
+            children: vec![ui_text("Select a tile in the canvas or workbench document.")],
         }]);
     }
     let tiles: Vec<&FigureTileDraft> = envelope
@@ -706,7 +706,7 @@ impl PluginApp for PresentationPlayApp {
         let envelope = parse_envelope(document_json);
         match body_key {
             PRESENTATION_PLAY_BODY_MAIN => render_main_canvas(&envelope),
-            PRESENTATION_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
+            PRESENTATION_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             PRESENTATION_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope),
             PRESENTATION_PLAY_BODY_DETAILS => build_details_tree(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -718,7 +718,7 @@ impl PluginApp for PresentationPlayApp {
 //#region 🔖Manifest
 fn create_presentation_app() -> App {
     App::from_builder(
-        App::builder(PRESENTATION_PLAY_APP_ID, "Presentation").hierarchy(["semio", "presentation"])
+        App::builder(PRESENTATION_PLAY_APP_ID, "Presentation").document(["semio", "presentation"])
             .icon_id("presentation")
             .mode("main", "Edit")
             .default_mode_id("main")
@@ -730,10 +730,10 @@ fn create_presentation_app() -> App {
                 Some(&["Tile editor".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                PRESENTATION_PLAY_BODY_HIERARCHY,
+                PRESENTATION_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -769,7 +769,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -833,7 +833,7 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_seeded_tiles() {
+    fn document_lists_seeded_tiles() {
         let mut app = PresentationPlayApp;
         let mut document = app.initial_document_json();
         for op in app.handle_command("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
@@ -843,7 +843,7 @@ mod tests {
                 }
             }
         }
-        let node = app.render(PRESENTATION_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(PRESENTATION_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("tile-r0-c0"));
     }

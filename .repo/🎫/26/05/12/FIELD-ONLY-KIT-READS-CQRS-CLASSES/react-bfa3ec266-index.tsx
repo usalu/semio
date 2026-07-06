@@ -4715,7 +4715,7 @@ export function useUpdateConnections(): {
   return { run, status };
 }
 
-/** @emoji 🧾 Normalizes live-read snapshot data into a piece hierarchy metadata map (Map or plain record from older hubs). */
+/** @emoji 🧾 Normalizes live-read snapshot data into a piece document metadata map (Map or plain record from older hubs). */
 function __composePiecesPlacementMapFromReadSnap(data: unknown): ReadonlyMap<string, PiecePlacementRowDto> {
   if (data instanceof Map) return data as ReadonlyMap<string, PiecePlacementRowDto>;
   if (data && typeof data === "object" && !Array.isArray(data)) {
@@ -4724,7 +4724,7 @@ function __composePiecesPlacementMapFromReadSnap(data: unknown): ReadonlyMap<str
   return new Map();
 }
 
-/** Piece hierarchy + flat pose map from the Rust GraphQL worker (`getPiecesMetadata`) via {@link DesignStore.readPiecesPlacementMetadataMap}. */
+/** Piece document + flat pose map from the Rust GraphQL worker (`getPiecesMetadata`) via {@link DesignStore.readPiecesPlacementMetadataMap}. */
 export function usePiecesMetadataMap(designId?: string): HookRead<ReadonlyMap<string, PiecePlacementRowDto>> {
   const runtime = useKitRuntime();
   const readPoint = useKitReadPoint();

@@ -88,7 +88,7 @@ struct StudioProgramEntry {
     program_id: String,
     app_id: String,
     label: String,
-    hierarchy: Vec<String>,
+    document: Vec<String>,
     yields: String,
 }
 
@@ -100,7 +100,7 @@ struct SpawnedAppEntry {
     instance_id: u32,
     app_id: String,
     label: String,
-    hierarchy: Vec<String>,
+    document: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -563,7 +563,7 @@ fn app_catalogue_item(path: &[String], label: &str, node: AppCatalogueNode) -> U
         );
     }
     UiTreeItemNode {
-        id: format!("s-play-catalogue.hierarchy.{id_path}"),
+        id: format!("s-play-catalogue.document.{id_path}"),
         label: label.into(),
         description: app.as_ref().and_then(|entry| (!entry.yields.is_empty()).then(|| entry.yields.clone())),
         icon_id: app.as_ref().map(|entry| entry.app_id.clone()),
@@ -594,7 +594,7 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
                     program_id: program.id.clone(),
                     app_id: app.id,
                     label: app.label,
-                    hierarchy: app.hierarchy,
+                    document: app.document,
                     yields: app
                         .outputs
                         .first()
@@ -607,10 +607,10 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
     } else {
         panel.programs.clone()
     };
-    let mut hierarchy = AppCatalogueNode::default();
+    let mut document = AppCatalogueNode::default();
     for program in programs {
-        let mut node = &mut hierarchy;
-        for segment in &program.hierarchy {
+        let mut node = &mut document;
+        for segment in &program.document {
             node = node.children.entry(segment.clone()).or_default();
         }
         node.app = Some(program);
@@ -619,7 +619,7 @@ fn build_catalogue_tree(panel: &StudioPanelState) -> UiNode {
         id: S_PLAY_CATALOGUE_TAB_ID.into(),
         label: Some("Apps".into()),
         default_open: Some(true),
-        items: hierarchy
+        items: document
             .children
             .into_iter()
             .map(|(segment, node)| app_catalogue_item(&[segment.clone()], &segment, node))
@@ -2197,6 +2197,15 @@ impl PluginApp for SStudioApp {
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
+
+    fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let envelope = parse_studio_envelope(document_json);
+        let projection = projection_from_document(&envelope.document);
+        HashMap::from([(
+            S_PLAY_WINDOW_MEDIA_GRAPH.into(),
+            media_graph_measures(&envelope.runtime, &projection.app_instances),
+        )])
+    }
 }
 //#endregion 🔖SStudioApp
 
@@ -2261,7 +2270,7 @@ fn media_graph_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance
 
 fn create_home_app() -> App {
     let mut app = App::from_builder(
-        App::builder(S_HOME_APP_ID, "Home").hierarchy(["semio", "s", "home"])
+        App::builder(S_HOME_APP_ID, "Home").document(["semio", "s", "home"])
             .icon_id("home")
             .mode("explore", "Explore")
             .default_mode_id("explore")
@@ -2296,7 +2305,7 @@ fn create_studio_app() -> App {
         projection.app_instances.len(),
     );
     let measures = media_graph_measures(&runtime, &projection.app_instances);
-    let mut builder = App::builder(S_PLAY_APP_ID, "Studio").hierarchy(["semio", "s", "studio"])
+    let mut builder = App::builder(S_PLAY_APP_ID, "Studio").document(["semio", "s", "studio"])
         .icon_id("s")
         .mode("main", "Studio")
         .default_mode_id("main")
@@ -2385,7 +2394,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -2414,7 +2423,7 @@ mod tests {
                 apps: vec![OsPlatformAppInput {
                     id: "draw".into(),
                     label: "Draw".into(),
-                    hierarchy: vec!["semio".into(), "draw".into()],
+                    document: vec!["semio".into(), "draw".into()],
                     controller_id: "draw-play".into(),
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
@@ -2572,7 +2581,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_tree_nests_apps_by_canonical_hierarchy() {
+    fn catalogue_tree_nests_apps_by_canonical_document() {
         let panel = StudioPanelState {
             programs: vec![
                 StudioProgramEntry {
@@ -2580,7 +2589,7 @@ mod tests {
                     program_id: "puzzle2d".into(),
                     app_id: "puzzle2d-play".into(),
                     label: "Puzzle 2D".into(),
-                    hierarchy: vec!["semio".into(), "puzzle".into(), "2d".into()],
+                    document: vec!["semio".into(), "puzzle".into(), "2d".into()],
                     yields: "layout".into(),
                 },
                 StudioProgramEntry {
@@ -2588,7 +2597,7 @@ mod tests {
                     program_id: "puzzle3d".into(),
                     app_id: "puzzle3d-play".into(),
                     label: "Puzzle 3D".into(),
-                    hierarchy: vec!["semio".into(), "puzzle".into(), "3d".into()],
+                    document: vec!["semio".into(), "puzzle".into(), "3d".into()],
                     yields: "model".into(),
                 },
             ],
@@ -2596,8 +2605,8 @@ mod tests {
         };
         let tree = build_catalogue_tree(&panel);
         let json = serde_json::to_string(&tree).unwrap();
-        assert!(json.contains("s-play-catalogue.hierarchy.semio.puzzle.2d"));
-        assert!(json.contains("s-play-catalogue.hierarchy.semio.puzzle.3d"));
+        assert!(json.contains("s-play-catalogue.document.semio.puzzle.2d"));
+        assert!(json.contains("s-play-catalogue.document.semio.puzzle.3d"));
         assert_eq!(json.matches("\"label\":\"puzzle\"").count(), 1);
     }
 
@@ -2753,7 +2762,7 @@ mod tests {
                 apps: vec![OsPlatformAppInput {
                     id: "puzzle5d".into(),
                     label: "Puzzle 5D".into(),
-                    hierarchy: vec!["semio".into(), "puzzle".into(), "5d".into()],
+                    document: vec!["semio".into(), "puzzle".into(), "5d".into()],
                     controller_id: "puzzle5d-play".into(),
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
@@ -2793,7 +2802,7 @@ mod tests {
                 apps: vec![OsPlatformAppInput {
                     id: "shooting".into(),
                     label: "Shooting".into(),
-                    hierarchy: vec!["semio".into(), "shooting".into()],
+                    document: vec!["semio".into(), "shooting".into()],
                     controller_id: "shooting-play".into(),
                     modes: vec![ModeDefinition {
                         id: "edit".into(),

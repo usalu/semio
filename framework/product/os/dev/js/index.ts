@@ -54,12 +54,7 @@ if (typeof document !== "undefined" && document.getElementById("root") != null &
 		pluginId: target.pluginId,
 		moduleUrl: pluginModuleUrl(target.pluginId, target.wasmOut),
 	}));
-	if (renderer === "wgpu") {
-		const { bootFrameworkOsWgpu } = await import("@semio-tech/framework-renderer-wgpu");
-		void bootFrameworkOsWgpu({ plugin: pluginFilter, plugins }).catch((error) => {
-			console.error("[DEBUG] os-dev wgpu boot failed", error);
-		});
-	} else {
+	if (renderer !== "wgpu") {
 		const { bootstrapElementsSurfaceChromeDocument } = await import("@semio-tech/ui-react");
 		const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
 		bootstrapElementsSurfaceChromeDocument("system");

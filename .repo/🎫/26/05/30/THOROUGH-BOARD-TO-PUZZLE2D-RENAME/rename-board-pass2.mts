@@ -139,7 +139,7 @@ const replacements: [string, string][] = [
   ["Board play lod", "Puzzle 2d play lod"],
   ["Board play fixture", "Puzzle 2d play fixture"],
   ["Board play selection", "Puzzle 2d play selection"],
-  ["Board play hierarchy", "Puzzle 2d play hierarchy"],
+  ["Board play document", "Puzzle 2d play document"],
   ["Board play settings", "Puzzle 2d play settings"],
   ["Board play inspector", "Puzzle 2d play inspector"],
   ["Board play library", "Puzzle 2d play library"],

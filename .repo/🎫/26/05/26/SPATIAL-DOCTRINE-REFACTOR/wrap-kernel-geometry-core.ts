@@ -7,7 +7,7 @@ let s = readFileSync(path, "utf8");
 if (!s.includes("export namespace kernelGeometry")) {
 	s = s.replace(
 		"// #region 🪪Refs\n/** @emoji 🪪 Opaque branded string ids for editable topology entities. */\nexport type AnchorRef",
-		"// #region 🧱kernelGeometry\n/** @emoji 🧱 Kernel-private brep hierarchy (use `Object` / `Model` in framework code). */\nexport namespace kernelGeometry {\n/** @emoji 🪪 Opaque branded string ids for editable topology entities. */\nexport type AnchorRef",
+		"// #region 🧱kernelGeometry\n/** @emoji 🧱 Kernel-private brep document (use `Object` / `Model` in framework code). */\nexport namespace kernelGeometry {\n/** @emoji 🪪 Opaque branded string ids for editable topology entities. */\nexport type AnchorRef",
 	);
 	s = s.replace(
 		"/** @emoji 🪪 Builds a branded `CellRef` from an opaque id string. */\nexport function cellRef(id: string): CellRef {\n\treturn id as CellRef;\n}\n// #endregion 🪪Refs",

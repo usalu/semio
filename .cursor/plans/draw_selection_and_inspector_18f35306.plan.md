@@ -52,7 +52,7 @@ Fix:
 
 ## 3. Canvas: groups must actually highlight when selected/hovered
 
-`flattenDrawDocumentToSceneNodes` (`draw/core/index.ts:537+`) recurses into `group` layers but never emits a scene node for the group itself. In `DrawCanvas`, `selected = selectedIds.includes(node.id)` / `hovered = effectiveHoveredId === node.id` (`draw/react/index.tsx:769-770`) only match leaf scene-node ids, so selecting or hovering a group in the hierarchy currently highlights nothing on canvas.
+`flattenDrawDocumentToSceneNodes` (`draw/core/index.ts:537+`) recurses into `group` layers but never emits a scene node for the group itself. In `DrawCanvas`, `selected = selectedIds.includes(node.id)` / `hovered = effectiveHoveredId === node.id` (`draw/react/index.tsx:769-770`) only match leaf scene-node ids, so selecting or hovering a group in the document currently highlights nothing on canvas.
 
 Fix:
 - Add `drawLayerDescendantLeafIds(doc, layerId)` to `draw/core/index.ts`: returns `[layerId]` for any non-group layer, and the recursive list of rendered descendant leaf ids for a `group`.

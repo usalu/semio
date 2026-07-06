@@ -66,7 +66,7 @@ export const DataDisabled: Story = {
   render: (args) => frame(<Kit {...args} />),
 };
 
-/** Shallow kit has no `files` / embedded GLTF — viewers fall back to placeholders; use for hierarchy/metadata-only checks. */
+/** Shallow kit has no `files` / embedded GLTF — viewers fall back to placeholders; use for document/metadata-only checks. */
 export const ShallowKitArtifactsOnly: Story = {
   args: { kit: shallowKit },
   render: (args) => frame(<Kit {...args} />),

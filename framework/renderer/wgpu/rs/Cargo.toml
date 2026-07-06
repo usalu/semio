@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
 description = "Raw wgpu WASM renderer for declarative framework UiNode trees"
+build = "build.rs"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -17,11 +18,28 @@ infinite_cavas = { path = "../../../../infinite/cavas/rs" }
 infinite_world = { path = "../../../../infinite/world/rs" }
 flow_core = { path = "../../../../flow/core/rs" }
 ui_wgpu = { path = "../../../../ui/wgpu/rs" }
+semio-framework-plugin = { path = "../../../plugin/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
 vello = { version = "0.7.0", default-features = false, features = ["wgpu"] }
+winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
+pollster = "0.4.0"
+resvg = "0.45.1"
+tiny-skia = "0.11.4"
+usvg = "0.45.1"
+
+[features]
+native-bin = []
+
+[[bin]]
+name = "semio-wgpu-native"
+path = "bin.rs"
+required-features = ["native-bin"]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+libloading = "0.8.9"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

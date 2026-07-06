@@ -78,7 +78,7 @@ All four currently early-return a "N selected" message and use raw `uiDeclarativ
 
 ## Phase 3 — Shooting: generalize selection model
 
-[shooting/play/index.ts](shooting/play/index.ts:230) stores one `selectedId`/`selectedKind` pair. Change controller state to `selectedShotIds: readonly string[]` + `selectedAssetIds: readonly string[]` (hierarchy already supports multi-highlight elsewhere in the repo's pattern); inspector renders a Shots group (when any shot ids selected) and/or Assets group, each with Mixed-aware batch `patchShots({ shotIds, field, value })` / `patchAssets({ assetIds, field, value })`.
+[shooting/play/index.ts](shooting/play/index.ts:230) stores one `selectedId`/`selectedKind` pair. Change controller state to `selectedShotIds: readonly string[]` + `selectedAssetIds: readonly string[]` (document already supports multi-highlight elsewhere in the repo's pattern); inspector renders a Shots group (when any shot ids selected) and/or Assets group, each with Mixed-aware batch `patchShots({ shotIds, field, value })` / `patchAssets({ assetIds, field, value })`.
 
 ## Phase 4 — Trinity: make fields real and batch-editable
 

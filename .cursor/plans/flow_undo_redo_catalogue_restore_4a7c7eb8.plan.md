@@ -35,7 +35,7 @@ Comparing the uncommitted working tree of [flow/plugin/rs/lib.rs](flow/plugin/rs
 
 The same audit plan also flags an "async eval-bridge/worker path" gap (`set_eval_bridge`, `apply_eval_outputs_json`, `set_computing_progress` unused). Investigation shows `neural_engine`'s `Registry::dispatch` already evaluates all current operators natively and synchronously in Rust, and the entire plugin runtime ([framework/plugin/rs/plugin_runtime.rs](framework/plugin/rs/plugin_runtime.rs)) is synchronous end-to-end for all 25 apps — there is no worker-thread invocation path anywhere in the new architecture to wire into. Re-introducing genuine off-main-thread evaluation would be a cross-cutting plugin-runtime change, not a flow-specific fix, so it is **not** part of this plan.
 
-`.hierarchy(["semio", "flow"])` on the `App::builder` call (added in the working tree, not in HEAD) belongs to the separate in-flight "Hierarchical App Identity" ticket and is left untouched.
+`.document(["semio", "flow"])` on the `App::builder` call (added in the working tree, not in HEAD) belongs to the separate in-flight "Hierarchical App Identity" ticket and is left untouched.
 
 ## Changes
 

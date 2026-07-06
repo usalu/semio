@@ -1,6 +1,6 @@
 ---
 name: Note Infinite Canvas App
-overview: Create a new fully-featured S technology app "note" — an infinite canvas with text, image, table, math, and pencil-ink blocks — fully integrated with hover/selection/hierarchy/window options, VCS persistence, playground dev host, and S program registration.
+overview: Create a new fully-featured S technology app "note" — an infinite canvas with text, image, table, math, and pencil-ink blocks — fully integrated with hover/selection/document/window options, VCS persistence, playground dev host, and S program registration.
 todos:
   - id: ticket
     content: Read repo://goals and open ticket via ticket_open
@@ -39,7 +39,7 @@ isProject: false
 
 ## Context
 
-"S apps" are technology packages (like `draw`, `writer`, `raster`) that ship a playground app definition and register into S as a program. Draw ([draw/core/playground.ts](draw/core/playground.ts), [draw/react/index.tsx](draw/react/index.tsx)) is the closest full template: infinite pan/zoom camera, pen tool, layer hierarchy, hover/selection sync via `AppPointerFocusStore`, window measures/engagement, VCS-backed document. There is no existing table-block or math typesetting on canvas — those are new.
+"S apps" are technology packages (like `draw`, `writer`, `raster`) that ship a playground app definition and register into S as a program. Draw ([draw/core/playground.ts](draw/core/playground.ts), [draw/react/index.tsx](draw/react/index.tsx)) is the closest full template: infinite pan/zoom camera, pen tool, layer document, hover/selection sync via `AppPointerFocusStore`, window measures/engagement, VCS-backed document. There is no existing table-block or math typesetting on canvas — those are new.
 
 Work happens inside a repo ticket (open via `ticket_open` after reading `repo://goals`, associate with the most fitting goal).
 
@@ -56,7 +56,7 @@ Mirror draw's layout: `note/core/` (`index.ts`, `internal.ts`, `playground.ts`, 
   - `table` — structured `{ columns, rows, cells }`, editable per cell
   - `math` — TeX source string, display/inline mode
   - `ink` — freehand pencil strokes (points + width + color), from pen-drag like draw's `pen` → path
-  - `group` — nesting for hierarchy
+  - `group` — nesting for document
 - Edit ops (`NoteEditOp`) + VCS envelope + `createNoteAppVcsHandler()` following `createDrawAppVcsHandler` ([draw/core/internal.ts](draw/core/internal.ts) ~line 1386).
 - Pointer-focus key encoding `note:${kind}:${id}`, `NoteHoverPayload`, in-file vitest tests via `import.meta.vitest`.
 
@@ -69,7 +69,7 @@ Follow `PlaygroundDraw` / `DrawPlayController`:
   - Measures: zoom slider, grid toggle, pencil width slider, snap toggle
   - Engagement: command input (rename block, quick-add), status (selection count, zoom)
 - Tools: `selectDirect`, `selectMarquee`, `pan`, `text`, `image`, `table`, `math`, `pencil`, `eraser`.
-- Side-panel trees: `buildNotePlayHierarchyTree()` (blocks with hover sync via `CANVAS_HOVER_SOURCE_HIERARCHY`, selection, reorder/delete actions), `buildNotePlayCatalogueTree()` (drag block templates), `buildNotePlayInspectorTree()` (per-kind property groups).
+- Side-panel trees: `buildNotePlayDocumentTree()` (blocks with hover sync via `CANVAS_HOVER_SOURCE_DOCUMENT`, selection, reorder/delete actions), `buildNotePlayCatalogueTree()` (drag block templates), `buildNotePlayInspectorTree()` (per-kind property groups).
 - `notePlayAppDefinition: PlaygroundAppDefinition` with `devHost.playEntryKind: "note"`, `bootRenderer` importing `@semio-tech/framework-playground-renderer-react/note`.
 
 ### React renderer (`note/react/index.tsx`)
@@ -81,7 +81,7 @@ Follow `PlaygroundDraw` / `DrawPlayController`:
 ## Framework integration (fully integrated)
 
 - [framework/product/platform/core/index.ts](framework/product/platform/core/index.ts): add `ComponentKind` `"note"`, `UiNoteHostSurfaceNode`, `buildNoteWindowBody()` (mirror `buildDrawWindowBody`, line ~931).
-- [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): `bootNotePlay`, `NotePlayPaneSurfaceHost` wiring `NoteCanvas`, side panel tabs (hierarchy/catalogue/inspection) — mirror the draw sections; add `"./note"` export + deps in its `package.json`.
+- [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): `bootNotePlay`, `NotePlayPaneSurfaceHost` wiring `NoteCanvas`, side panel tabs (document/catalogue/inspection) — mirror the draw sections; add `"./note"` export + deps in its `package.json`.
 - [framework/product/playground/core/app-registry.ts](framework/product/playground/core/app-registry.ts): add `note` loader.
 - [framework/product/playground/dev/script.ts](framework/product/playground/dev/script.ts): `PACKAGE_ROOT_BY_ENTRY.note = "note"`.
 - [repo/lib/js/index.ts](repo/lib/js/index.ts): `PLAYGROUND_PORTS.note = { dev: 6080, test: 6081, env: "NOTE_PLAY_PORT" }` + `PlaygroundHostKind`.
@@ -103,6 +103,6 @@ Follow `PlaygroundDraw` / `DrawPlayController`:
 ## Verification
 
 - Run in-file vitest for `note/core` and `note/react`.
-- Boot `dev:note` and confirm runtime behavior with `[DEBUG]`-prefixed logs: block creation for all kinds, pencil drawing, hover/selection sync canvas <-> hierarchy, window measures, undo.
+- Boot `dev:note` and confirm runtime behavior with `[DEBUG]`-prefixed logs: block creation for all kinds, pencil drawing, hover/selection sync canvas <-> document, window measures, undo.
 - Boot `dev:s`, spawn a note app on the media graph, confirm the VCS handler persists edits.
 - Close the ticket with summary and file list.

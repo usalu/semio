@@ -364,7 +364,7 @@ export class DocsAppStore extends AppStore<DocsState, DocsDiff, DocsSelectionDif
 - Predictable navigation across all apps
 - Easy to find corresponding sections
 - Tool-friendly structure
-- Clear hierarchy
+- Clear document
 
 #### 2.2. Apply to All Apps
 
@@ -700,7 +700,7 @@ const DetailsSection: FC = () => {
 
 - Still single file (adheres to "NEVER create new files")
 - Better navigation via nested regions
-- Clear component hierarchy
+- Clear component document
 
 ### Phase 10: Documentation & Enforcement
 

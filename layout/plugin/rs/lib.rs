@@ -10,8 +10,8 @@ use semio_framework_plugin::{
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene,
     CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
     UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -23,7 +23,7 @@ const LAYOUT_PLAY_SURFACE_BLUEPRINT: &str = "layout.play.blueprint";
 const LAYOUT_PLAY_SURFACE_PREVIEW: &str = "layout.play.preview";
 const LAYOUT_PLAY_BODY_BLUEPRINT: &str = "layout.play.blueprint";
 const LAYOUT_PLAY_BODY_PREVIEW: &str = "layout.play.preview";
-const LAYOUT_PLAY_BODY_HIERARCHY: &str = "layout.play.hierarchy";
+const LAYOUT_PLAY_BODY_DOCUMENT: &str = "layout.play.document";
 const LAYOUT_PLAY_BODY_CATALOGUE: &str = "layout.play.catalogue";
 const LAYOUT_PLAY_BODY_INSPECTION: &str = "layout.play.inspection";
 const LAYOUT_PLAY_BODY_PREFLIGHT: &str = "layout.play.preflight";
@@ -180,15 +180,15 @@ fn frame_icon(kind: &str) -> &str {
 }
 
 fn page_row_id(page_id: &str) -> String {
-    format!("layout-hierarchy.page.{page_id}")
+    format!("layout-document.page.{page_id}")
 }
 
 fn frame_row_id(frame_id: &str) -> String {
-    format!("layout-hierarchy.frame.{frame_id}")
+    format!("layout-document.frame.{frame_id}")
 }
 
 fn layer_row_id(page_id: &str, layer_id: &str) -> String {
-    format!("layout-hierarchy.layer.{page_id}.{layer_id}")
+    format!("layout-document.layer.{page_id}.{layer_id}")
 }
 
 fn push_undo(play: &mut LayoutPlayEnvelope) {
@@ -404,7 +404,7 @@ fn tree_item(
     }
 }
 
-fn build_hierarchy_tree(play: &LayoutPlayEnvelope) -> UiNode {
+fn build_document_tree(play: &LayoutPlayEnvelope) -> UiNode {
     let doc = &play.document;
     let page_items: Vec<UiTreeItemNode> = doc
         .pages
@@ -453,11 +453,11 @@ fn build_hierarchy_tree(play: &LayoutPlayEnvelope) -> UiNode {
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "layout-hierarchy.document".into(),
+                id: "layout-document.document".into(),
                 label: Some("Document".into()),
                 default_open: Some(true),
                 items: vec![tree_item(
-                    "layout-hierarchy.document.root",
+                    "layout-document.document.root",
                     doc.name.clone(),
                     Some(LAYOUT_FIXTURE_SCHEMA.into()),
                     Some("file-text".into()),
@@ -465,13 +465,13 @@ fn build_hierarchy_tree(play: &LayoutPlayEnvelope) -> UiNode {
                 )],
             },
             UiTreeSectionNode {
-                id: "layout-hierarchy.pages".into(),
-                label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+                id: "layout-document.pages".into(),
+                label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
                 default_open: Some(true),
                 items: page_items,
             },
             UiTreeSectionNode {
-                id: "layout-hierarchy.layers".into(),
+                id: "layout-document.layers".into(),
                 label: Some("Layers".into()),
                 default_open: Some(false),
                 items: layer_items,
@@ -481,7 +481,7 @@ fn build_hierarchy_tree(play: &LayoutPlayEnvelope) -> UiNode {
             play.runtime
                 .selected_ids
                 .iter()
-                .flat_map(|id| vec![page_row_id(id), frame_row_id(id), format!("layout-hierarchy.layer.{}.{}", play.runtime.active_page_id, id)])
+                .flat_map(|id| vec![page_row_id(id), frame_row_id(id), format!("layout-document.layer.{}.{}", play.runtime.active_page_id, id)])
                 .collect(),
         ),
         highlighted_ids: if highlighted_ids.is_empty() { None } else { Some(highlighted_ids) },
@@ -1260,7 +1260,7 @@ impl PluginApp for LayoutPlayApp {
         match body_key {
             LAYOUT_PLAY_BODY_BLUEPRINT => render_blueprint(&play),
             LAYOUT_PLAY_BODY_PREVIEW => render_preview(&play),
-            LAYOUT_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&play),
+            LAYOUT_PLAY_BODY_DOCUMENT => build_document_tree(&play),
             LAYOUT_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
             LAYOUT_PLAY_BODY_INSPECTION => build_inspector_tree(&play),
             LAYOUT_PLAY_BODY_PREFLIGHT => build_preflight_tree(&play),
@@ -1273,7 +1273,7 @@ impl PluginApp for LayoutPlayApp {
 //#region 🔖AppFactory
 fn create_layout_app() -> App {
     App::from_builder(
-        App::builder(LAYOUT_PLAY_APP_ID, "Layout").hierarchy(["semio", "layout"])
+        App::builder(LAYOUT_PLAY_APP_ID, "Layout").document(["semio", "layout"])
             .icon_id("layout")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1286,10 +1286,10 @@ fn create_layout_app() -> App {
                 Some(&["Blueprint".into(), "Preview".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                LAYOUT_PLAY_BODY_HIERARCHY,
+                LAYOUT_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1326,7 +1326,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests
@@ -1354,12 +1354,12 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_sample_pages() {
+    fn document_lists_sample_pages() {
         let app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let node = app.render(LAYOUT_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(LAYOUT_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("layout-hierarchy.page.page-1"));
+        assert!(json.contains("layout-document.page.page-1"));
         assert!(json.contains("Page 1"));
     }
 

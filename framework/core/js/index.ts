@@ -5,15 +5,15 @@
 export const CANVAS_HOVER_SOURCE_CANVAS = "canvas";
 export const CANVAS_HOVER_SOURCE_PICK_MENU = "pick-menu";
 export const CANVAS_HOVER_SOURCE_CATALOG = "catalog";
-export const CANVAS_HOVER_SOURCE_HIERARCHY = "hierarchy";
+export const CANVAS_HOVER_SOURCE_DOCUMENT = "document";
 
-export const FRAMEWORK_PANEL_TAB_HIERARCHY_ID = "framework.panel.hierarchy";
+export const FRAMEWORK_PANEL_TAB_DOCUMENT_ID = "framework.panel.document";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_ID = "framework.panel.catalogue";
 export const FRAMEWORK_PANEL_TAB_INSPECTION_ID = "framework.panel.inspection";
-export const FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL = "Hierarchy";
+export const FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL = "Document";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL = "Catalogue";
 export const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL = "Inspection";
-export const FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID = "framework.panel.hierarchy";
+export const FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID = "framework.panel.document";
 export const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID = "framework.panel.catalogue";
 export const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID = "framework.panel.inspection";
 export const FRAMEWORK_PANEL_TAB_PARAMETERS_ID = "framework.panel.parameters";
@@ -647,6 +647,10 @@ export type PluginWasmHandle = {
 		instanceId: number,
 		viewState: PluginViewState,
 	) => Promise<Readonly<Record<string, Record<string, unknown>>>>;
+	readonly windowMeasures: (
+		instanceId: number,
+		viewState: PluginViewState,
+	) => Promise<Readonly<Record<string, readonly Record<string, unknown>[]>>>;
 	readonly dispose: () => void;
 };
 
@@ -669,6 +673,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 		semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
 		semio_plugin_tools?: (instanceId: number, viewStateJson: string) => string;
 		semio_plugin_window_engagements?: (instanceId: number, viewStateJson: string) => string;
+		semio_plugin_window_measures?: (instanceId: number, viewStateJson: string) => string;
 	};
 	if (module.default) await module.default();
 	if (!module.semio_plugin_manifest) {
@@ -707,6 +712,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 			if (!engagements) return {};
 			return JSON.parse(engagements(instanceId, JSON.stringify(viewState))) as Record<string, Record<string, unknown>>;
 		},
+		async windowMeasures(instanceId: number, viewState: PluginViewState) {
+			const measures = module.semio_plugin_window_measures;
+			if (!measures) return {};
+			return JSON.parse(measures(instanceId, JSON.stringify(viewState))) as Record<string, readonly Record<string, unknown>[]>;
+		},
 		dispose() {},
 	};
 }
@@ -730,6 +740,10 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
 			handle
 				.windowEngagements(instanceId, JSON.parse(viewStateJson) as PluginViewState)
 				.then((engagements) => JSON.stringify(engagements)),
+		windowMeasures: (instanceId: number, viewStateJson: string) =>
+			handle
+				.windowMeasures(instanceId, JSON.parse(viewStateJson) as PluginViewState)
+				.then((measures) => JSON.stringify(measures)),
 	};
 }
 //#endregion PluginRuntime

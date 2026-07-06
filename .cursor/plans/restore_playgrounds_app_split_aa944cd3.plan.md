@@ -27,10 +27,10 @@ Work happens inside the existing (reopened) ticket `.repo/🎫/26/07/02/FIX-KIT-
 
 ## Phase 1 — Migrate `cad` into the shared playground registry
 
-`cad` has no `core` package; its entire app (fixtures, `CadPlayShellController`, hierarchy/inspector builders, `buildCadProgramDefinition`, and the React root `CadPlayRoot`) lives in one 190k-character file [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx).
+`cad` has no `core` package; its entire app (fixtures, `CadPlayShellController`, document/inspector builders, `buildCadProgramDefinition`, and the React root `CadPlayRoot`) lives in one 190k-character file [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx).
 
 - Create `cad/js/renderer/core/{index.ts,playground.ts,package.json,project.json,vitest.config.ts}` following the `draw/core` package as the template (`@semio-tech/cad-js-core` is already taken by the spatial model package, so name this one distinctly, e.g. `@semio-tech/cad-js-renderer-core`, nested under the existing `cad/js/renderer` workspace umbrella like `framework/product/platform/{core,renderer/react}` does).
-- Split `play/index.tsx` per the Phase 2 rule below: Controller/tools/hierarchy/inspector/`buildCadProgramDefinition` → `core/index.ts`; fixture ids/options/`devHost`/`createPlayground`/`bootRenderer`/`cadPlayAppDefinition` → `core/playground.ts`; pure-JSX (`CadPlayRoot`, `registerCadPlaySurfaceHosts`) → `cad/js/renderer/react/index.tsx` (new, parallel to other technologies' `*/react` packages) or merge into existing `cad/js/renderer/index.tsx`.
+- Split `play/index.tsx` per the Phase 2 rule below: Controller/tools/document/inspector/`buildCadProgramDefinition` → `core/index.ts`; fixture ids/options/`devHost`/`createPlayground`/`bootRenderer`/`cadPlayAppDefinition` → `core/playground.ts`; pure-JSX (`CadPlayRoot`, `registerCadPlaySurfaceHosts`) → `cad/js/renderer/react/index.tsx` (new, parallel to other technologies' `*/react` packages) or merge into existing `cad/js/renderer/index.tsx`.
 - Register `cadPlayAppDefinition` in [framework/product/playground/core/app-registry.ts](framework/product/playground/core/app-registry.ts).
 - Add `cad` to `PACKAGE_ROOT_BY_ENTRY`/`ENTRY_TO_HOST` in [framework/product/playground/dev/script.ts](framework/product/playground/dev/script.ts).
 - Add `dev:cad`/`dev:cad:*` fixture scripts to root `package.json` (mirroring `dev:puzzle:3d:concrete-forest`) and a matching `resolvePlaygroundDevApp` case in [script.ts](script.ts).
@@ -43,7 +43,7 @@ Work happens inside the existing (reopened) ticket `.repo/🎫/26/07/02/FIX-KIT-
 
 - `core/index.ts` ("the app" — used by both the playground harness and `s`/os hosting):
   - The `Controller` subclass (selection, hover payload handling, `toggleSelectableKind`/`toggleVisibleKind`-style commands).
-  - Tools, panel tabs, and all window/panel declarative body builders (hierarchy trees, inspector trees, settings trees, kinds trees).
+  - Tools, panel tabs, and all window/panel declarative body builders (document trees, inspector trees, settings trees, kinds trees).
   - `build<X>AppRuntime` / `build<X>Runtime` / `register<X>DeclarativeBodies` / `register<X>SurfaceHosts`.
   - `build<X>ProgramDefinition()` (os/`s` wiring) — already here in most technologies; keep and simplify since it can now reference the app pieces directly instead of importing the whole `<x>PlayAppDefinition`.
   - Pure domain-model types/helpers stay wherever they already live (`internal.ts` if the technology has one — don't relocate those, they're already correctly separated).

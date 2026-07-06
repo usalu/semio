@@ -12,7 +12,7 @@ todos:
     content: Move effect log into Inspection side panel as Run Log section; add controller getCompiledText/getEffectLog
     status: completed
   - id: selection-diagnose
-    content: Runtime-diagnose and fix bidirectional selection sync (canvas<->hierarchy<->inspector) with console-log verification
+    content: Runtime-diagnose and fix bidirectional selection sync (canvas<->document<->inspector) with console-log verification
     status: completed
   - id: world-from-screen
     content: Add worldFromScreen WASM export to SequenceSession for drop coordinate conversion
@@ -78,7 +78,7 @@ flowchart TB
             scriptWin["Compiled Script window\n(sequence-script)\nread-only WriterCanvas"]
         end
         subgraph panels [Side panel tabs]
-            hierarchy["Hierarchy"]
+            document["Document"]
             catalogue["Catalogue\n(drag source)"]
             inspection["Inspection + Run Log"]
         end
@@ -110,9 +110,9 @@ flowchart TB
 
 ## 2. Selection parity
 
-- Runtime-verify current wiring first (click a step in canvas → check hierarchy highlight; click hierarchy item → check canvas highlight) using console logs (`[DEBUG]` prefixed per repo rules) before assuming a fix.
+- Runtime-verify current wiring first (click a step in canvas → check document highlight; click document item → check canvas highlight) using console logs (`[DEBUG]` prefixed per repo rules) before assuming a fix.
 - Likely fix areas based on code review: DAG's port-based hit testing (`try_node_rectangle_pointer_down`, [mathematical/graph/port/directed/dag/lib.rs:2759](mathematical/graph/port/directed/dag/lib.rs)) may treat step widgets' P/N ports as separate interactive handles that intercept plain clicks. Since sequence steps don't need per-port wiring UX (edges are managed by the sequence path model, not manual port-dragging), evaluate rendering steps with a simpler non-ported DAG node style, or adjust hit-testing precedence so body clicks always resolve to node selection first.
-- Ensure `SequencePlayHierarchyPanelDefinition`/`SequencePlayInspectionPanelDefinition` re-render on `interactionRevision` bumps (already wired via `augmentPanelTabs` dependency array — confirm it still holds after the rewrite).
+- Ensure `SequencePlayDocumentPanelDefinition`/`SequencePlayInspectionPanelDefinition` re-render on `interactionRevision` bumps (already wired via `augmentPanelTabs` dependency array — confirm it still holds after the rewrite).
 - Verify with actual pointer interaction in the running dev server (port 6077), not just code inspection, before closing this out.
 
 ## 3. Catalogue drag-and-drop
@@ -148,6 +148,6 @@ Imperative's execution model (`Executor::run(path, scope)` threads a `Dictionary
 
 - `cargo test` for `sequence_core`, `imperative_module_core`, new `imperative_module_text`
 - `bun test` for `sequence/react`, `imperative/core`
-- Runtime check on the sequence dev server (port 6077): drag a catalogue item onto the canvas and confirm a step appears at the drop point; click a step and confirm hierarchy + inspector highlight it; click a hierarchy item and confirm the canvas highlights it; confirm exactly two top-level windows (Sequence, Compiled Script) with no nested chrome; confirm the Inspection panel shows a Run Log after clicking Run.
+- Runtime check on the sequence dev server (port 6077): drag a catalogue item onto the canvas and confirm a step appears at the drop point; click a step and confirm document + inspector highlight it; click a document item and confirm the canvas highlights it; confirm exactly two top-level windows (Sequence, Compiled Script) with no nested chrome; confirm the Inspection panel shows a Run Log after clicking Run.
 - Close/reopen the `IMPERATIVE-AND-SEQUENCE-TECHNOLOGIES` ticket per repo workflow once verified.
 

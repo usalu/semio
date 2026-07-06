@@ -5,7 +5,7 @@
 
 # Plan
 
-Here is your document converted into **clean, structured, proper Markdown**, preserving hierarchy, code blocks, tables, and formatting.
+Here is your document converted into **clean, structured, proper Markdown**, preserving document, code blocks, tables, and formatting.
 
 ---
 
@@ -439,7 +439,7 @@ Remove:
 
 Update `AGENTS.md` with:
 
-- machine hierarchy diagrams
+- machine document diagrams
 - spawning patterns
 - event naming conventions
 - selector guidelines
@@ -483,7 +483,7 @@ If you'd like, I can also:
 
 ✅ Generate a **PDF** / **Notion-friendly** version
 ✅ Turn this into an **interactive checklist**
-✅ Create **diagrams** (statecharts, actor hierarchy, migration flow)
+✅ Create **diagrams** (statecharts, actor document, migration flow)
 ✅ Produce an **engineering roadmap with timeline & team assignments**
 
 # Changes

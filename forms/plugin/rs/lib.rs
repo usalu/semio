@@ -19,7 +19,7 @@ use semio_framework_plugin::{
     UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
     UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, world3d_default_camera, world3d_scene, world3d_selection_json,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -38,7 +38,7 @@ const FORMS_PLAY_SURFACE_PREVIEW: &str = "forms.play.preview";
 const FORMS_PLAY_BODY_EDIT: &str = "forms.play.edit";
 const FORMS_PLAY_BODY_TRY: &str = "forms.play.try";
 const FORMS_PLAY_BODY_PREVIEW: &str = "forms.play.preview";
-const FORMS_PLAY_BODY_HIERARCHY: &str = "forms.play.hierarchy";
+const FORMS_PLAY_BODY_DOCUMENT: &str = "forms.play.document";
 const FORMS_PLAY_BODY_CATALOGUE: &str = "forms.play.catalogue";
 const FORMS_PLAY_BODY_INSPECTION: &str = "forms.play.inspection";
 const FORMS_PLAY_WINDOW_EDIT: &str = "forms-edit";
@@ -1244,7 +1244,7 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope) -> UiNode {
 //#endregion 🔖TryWizard
 
 //#region 🔖Panels
-fn build_hierarchy_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
+fn build_document_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
     let step_items: Vec<UiTreeItemNode> = spec
         .steps
         .iter()
@@ -1289,12 +1289,12 @@ fn build_hierarchy_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
-            id: "forms-play-hierarchy.steps".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            id: "forms-play-document.steps".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: if step_items.is_empty() {
                 vec![UiTreeItemNode {
-                    id: "forms-play-hierarchy.empty".into(),
+                    id: "forms-play-document.empty".into(),
                     label: "(no steps)".into(),
                     description: None,
                     icon_id: None,
@@ -2119,7 +2119,7 @@ impl PluginApp for FormsPlayApp {
             FORMS_PLAY_BODY_EDIT => render_edit_table(&spec),
             FORMS_PLAY_BODY_TRY => render_try_wizard(&spec, &play),
             FORMS_PLAY_BODY_PREVIEW => render_preview_body(&spec, &play),
-            FORMS_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&spec, &play.selected_ids),
+            FORMS_PLAY_BODY_DOCUMENT => build_document_tree(&spec, &play.selected_ids),
             FORMS_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
             FORMS_PLAY_BODY_INSPECTION => build_inspector_tree(&spec, &play),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -2131,14 +2131,14 @@ impl PluginApp for FormsPlayApp {
 //#region 🔖AppFactory
 fn create_forms_app() -> App {
     App::from_builder(
-        App::builder(FORMS_PLAY_APP_ID, "Forms").hierarchy(["semio", "forms"])
+        App::builder(FORMS_PLAY_APP_ID, "Forms").document(["semio", "forms"])
             .icon_id("forms")
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind(FORMS_PLAY_WINDOW_EDIT, "Edit", FORMS_PLAY_BODY_EDIT)
             .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY)
             .window_kind(FORMS_PLAY_WINDOW_PREVIEW, "Preview", FORMS_PLAY_BODY_PREVIEW)
-            .panel_tab("framework.panel.hierarchy", "Hierarchy", "workbench", FORMS_PLAY_BODY_HIERARCHY)
+            .panel_tab("framework.panel.document", "Document", "workbench", FORMS_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.catalogue", "Catalogue", "workbench", FORMS_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", "Inspection", "details", FORMS_PLAY_BODY_INSPECTION)
             .keybinding("mod+z", "undo")
@@ -2167,7 +2167,7 @@ fn forms_bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(forms_bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests
@@ -2203,12 +2203,12 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_steps() {
+    fn document_lists_steps() {
         let app = FormsPlayApp;
         let document = app.initial_document_json();
-        let node = app.render(FORMS_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(FORMS_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("forms-play-hierarchy.steps"));
+        assert!(json.contains("forms-play-document.steps"));
         assert!(json.contains("Inputs"));
     }
 

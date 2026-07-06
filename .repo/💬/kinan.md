@@ -59,13 +59,13 @@ implement fix piece :it flattens the selected pieces by removing all connections
 
 ---
 
-Implement an adaptive shared property-row layout in the sketchpad Details panel so deep/narrow rows never let the label collide with the value field. Keep the normal inline property row/value-column layout by default, but when the available horizontal space at a given tree depth is too small for label + control to fit cleanly, automatically switch that row into a stacked mode: first line = tree gutter + label, second line = value-side control below it in normal flow. Apply this generically based on measured available width or collision threshold, not by field name. Preserve TreeSection, TreeItem, TreeRow, TreeContent, IndentationLines, hierarchy, tree lines, spacing rhythm, and actions. Do not use absolute positioning or one-off width hacks.
+Implement an adaptive shared property-row layout in the sketchpad Details panel so deep/narrow rows never let the label collide with the value field. Keep the normal inline property row/value-column layout by default, but when the available horizontal space at a given tree depth is too small for label + control to fit cleanly, automatically switch that row into a stacked mode: first line = tree gutter + label, second line = value-side control below it in normal flow. Apply this generically based on measured available width or collision threshold, not by field name. Preserve TreeSection, TreeItem, TreeRow, TreeContent, IndentationLines, document, tree lines, spacing rhythm, and actions. Do not use absolute positioning or one-off width hacks.
 
 ---
 
 ---
 
-Refine the shared compose/sketchpad tree spacing so that whenever a sibling transition goes from a leaf/property row to an expandable/group row at the same depth, insert one empty-row-sized gap before the group row. Apply this generically based on row kind and sibling transition, not by field names. Keep compact spacing within consecutive property rows, preserve hierarchy, tree lines, property row/value-column layout, and actions, and do not hardcode specific sections.
+Refine the shared compose/sketchpad tree spacing so that whenever a sibling transition goes from a leaf/property row to an expandable/group row at the same depth, insert one empty-row-sized gap before the group row. Apply this generically based on row kind and sibling transition, not by field names. Keep compact spacing within consecutive property rows, preserve document, tree lines, property row/value-column layout, and actions, and do not hardcode specific sections.
 
 default should illustrate compatable connectors in the entire design in compose colors
 when selected a single connector all other connectors grey out and it gets highlighted and show the compatible and incompatible connectors in the design in compose red/green
@@ -178,7 +178,7 @@ Rules:
 - apply only to true value-side text fields in the property row/value-column layout
 - trigger overflow only when the rendered text actually exceeds the available inner field width
 - never apply it to a field that still fits
-- never affect TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, actions, hierarchy, or tree spacing rules
+- never affect TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, actions, document, or tree spacing rules
 
 Required behavior:
 
@@ -204,7 +204,7 @@ This should be a strict reimplementation of the overflow behavior, not a styling
 
 ---
 
-## Fix the `Ring` row in the compose/sketchpad Details panel so it follows the same shared tree/header structure as the rest of the right-side property inspector. `Ring` should render as a normal collection/group `TreeItem` header: correct name, correct label-start alignment, correct action placement, correct gutter/chevron spacing, and no drift into the value-column area. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, hierarchy, and property row/value-column layout unchanged. Apply the fix generically at the shared Details panel tree layout level so group rows like `Ring` do not become one-off misaligned headers.
+## Fix the `Ring` row in the compose/sketchpad Details panel so it follows the same shared tree/header structure as the rest of the right-side property inspector. `Ring` should render as a normal collection/group `TreeItem` header: correct name, correct label-start alignment, correct action placement, correct gutter/chevron spacing, and no drift into the value-column area. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, document, and property row/value-column layout unchanged. Apply the fix generically at the shared Details panel tree layout level so group rows like `Ring` do not become one-off misaligned headers.
 
 Fix the single-line overflow state in the compose/sketchpad Details panel. The current implementation is overlapping adjacent rows and the explicit `MORE` label is too heavy. Rework this at the field-widget level only.
 
@@ -216,7 +216,7 @@ Also fix truncation quality:
 - truncate at a clean visible boundary, not at an awkward slice point
 - keep fields that still fit as normal single-line controls
 
-Do not affect TreeSection, TreeItem, TreeRow, headers, actions, hierarchy, tree lines, Textarea, Stepper, Slider, Toggle, Button, or the shared property row/value-column layout. This should be a narrow correction of the single-line text-field overflow behavior only.
+Do not affect TreeSection, TreeItem, TreeRow, headers, actions, document, tree lines, Textarea, Stepper, Slider, Toggle, Button, or the shared property row/value-column layout. This should be a narrow correction of the single-line text-field overflow behavior only.
 
 ---
 
@@ -236,24 +236,24 @@ Requirements:
 Constraints:
 
 - apply this only to true single-line value-side text fields in the Details panel
-- do not affect Textarea, Stepper, Slider, Toggle, Button, tree headers, actions, hierarchy, tree lines, or the shared property row/value-column layout
+- do not affect Textarea, Stepper, Slider, Toggle, Button, tree headers, actions, document, tree lines, or the shared property row/value-column layout
 - do not change overall panel structure; this is only a correction of the field overflow behavior
 
 ---
 
-## In the Workbench tree only, add one extra empty-row-sized vertical gap after abstract type rows before the next sibling/child block begins. Apply this as a structural spacing rule in the shared Workbench tree rendering, not as a hardcoded type-name fix. Keep hierarchy, tree lines, expand/collapse behavior, actions, and all other spacing unchanged.
+## In the Workbench tree only, add one extra empty-row-sized vertical gap after abstract type rows before the next sibling/child block begins. Apply this as a structural spacing rule in the shared Workbench tree rendering, not as a hardcoded type-name fix. Keep document, tree lines, expand/collapse behavior, actions, and all other spacing unchanged.
 
 Refine the global compose/sketchpad Details panel empty-state styling for editable value-side controls in the right-side property inspector. Any editable field/control on the value side that currently has no value should render in a muted/grayed state while empty (compose styling), but it must remain fully editable. As soon as the user focuses, types, or the control has a real value, it should return to the normal active styling qautomatically.
 
-Apply this generically across editable Input, Textarea, Combobox, slider, Stepper value display, and similar editable value-side widgets used in TreeRow / TreeItem property rows. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, hierarchy, spacing, and property row/value-column layout unchanged. Do not treat empty editable fields as disabled or readOnly; this is only an empty-value visual state that clears immediately on input/value presence. Do not hardcode section names or field names.
+Apply this generically across editable Input, Textarea, Combobox, slider, Stepper value display, and similar editable value-side widgets used in TreeRow / TreeItem property rows. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, document, spacing, and property row/value-column layout unchanged. Do not treat empty editable fields as disabled or readOnly; this is only an empty-value visual state that clears immediately on input/value presence. Do not hardcode section names or field names.
 
 ---
 
-Refactor the global compose/sketchpad Details panel tree ordering so structural depth controls render priority. As a general rule, within any TreeSection or parent subtree, all first-level direct child rows / group headers must render before any second-level or deeper nested rows. Expanded nested content must not interrupt remaining first-level sibling rows. In practice, render the first-level skeleton of the section first, then render the bodies of expanded nested TreeItems / SortableTreeItems after all direct-child siblings have been placed. Apply this generically across TreeSection, TreeItem, TreeRow, TreeContent, and collection/group nodes in the right-side property inspector. Keep PanelSection architecture, hierarchy, expand/collapse behavior, actions, spacing, and tree lines unchanged, and do not hardcode section names or field names.
+Refactor the global compose/sketchpad Details panel tree ordering so structural depth controls render priority. As a general rule, within any TreeSection or parent subtree, all first-level direct child rows / group headers must render before any second-level or deeper nested rows. Expanded nested content must not interrupt remaining first-level sibling rows. In practice, render the first-level skeleton of the section first, then render the bodies of expanded nested TreeItems / SortableTreeItems after all direct-child siblings have been placed. Apply this generically across TreeSection, TreeItem, TreeRow, TreeContent, and collection/group nodes in the right-side property inspector. Keep PanelSection architecture, document, expand/collapse behavior, actions, spacing, and tree lines unchanged, and do not hardcode section names or field names.
 
 ---
 
-Refine the global compose/sketchpad Details panel overflow behavior for single-line text fields without changing the current layout system. For any value-side field that currently renders as a one-row text control and whose text exceeds the available width, do not keep it as a normal single truncated row with `...` at the end. Instead, switch that field into a compact two-row overflow state: keep the truncated text on the first row, add a second empty row inside the same field box, and render the ellipsis vertically stacked / centered in that second row so it is clearly readable as overflow. Apply this generically to all single-line text-style fields in the right-side property inspector (editable, readOnly, disabled, and similar text-field variants), while preserving the existing PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, property row/value-column layout, widths, alignment, hierarchy, and spacing. Do not affect real multiline Textarea controls or non-text widgets. This should be a narrow global overflow affordance improvement, not a redesign
+Refine the global compose/sketchpad Details panel overflow behavior for single-line text fields without changing the current layout system. For any value-side field that currently renders as a one-row text control and whose text exceeds the available width, do not keep it as a normal single truncated row with `...` at the end. Instead, switch that field into a compact two-row overflow state: keep the truncated text on the first row, add a second empty row inside the same field box, and render the ellipsis vertically stacked / centered in that second row so it is clearly readable as overflow. Apply this generically to all single-line text-style fields in the right-side property inspector (editable, readOnly, disabled, and similar text-field variants), while preserving the existing PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, property row/value-column layout, widths, alignment, document, and spacing. Do not affect real multiline Textarea controls or non-text widgets. This should be a narrow global overflow affordance improvement, not a redesign
 
 ---
 
@@ -287,13 +287,13 @@ analyze all different ui elements in the toolbar. i want all of them to be visua
 
 Fix the compose/sketchpad Details panel layout regression globally, including the Type app. The current implementation works perfectly in design app but in type app it is breaking the shared Details panel structure in nested sections such as connectors/point/direction, causing rows, controls, and tree guides to drift, overlap, or stop following the standard property row/value-column layout. the Details panel implementation must be consistent across all apps and all section types.
 
-Refactor the shared Details panel tree/layout primitives so TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, and IndentationLines all resolve through the same global structure: tree header rows stay tree headers, property rows stay property rows, nested groups keep hierarchy, and all value-side controls stay within the same shared value-column bounds. Preserve PanelSection architecture, hierarchy, spacing rhythm, actions, and tree lines. Do not hardcode section names or field names. Apply the fix generically so nested connector content in the Type app follows the same stable Details panel structure as every other panel subtree. importaant is dont break the deign app structure only fix the type app structure to follow the same structure as design app by applaying global layout rules and not one off fixes.
+Refactor the shared Details panel tree/layout primitives so TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, and IndentationLines all resolve through the same global structure: tree header rows stay tree headers, property rows stay property rows, nested groups keep document, and all value-side controls stay within the same shared value-column bounds. Preserve PanelSection architecture, document, spacing rhythm, actions, and tree lines. Do not hardcode section names or field names. Apply the fix generically so nested connector content in the Type app follows the same stable Details panel structure as every other panel subtree. importaant is dont break the deign app structure only fix the type app structure to follow the same structure as design app by applaying global layout rules and not one off fixes.
 
 ---
 
 Extend the tree-path hover highlight so it also includes the terminal branch segment of the hovered lowest-level row. Right now the ancestor path highlights, but the final local connector for the hovered TreeRow / leaf-level row is missing. When a row is hovered, highlight the complete path: the vertical ancestor chain, the final vertical segment at the hovered depth, and the small horizontal branch/elbow segment that connects into the hovered row label. Keep the existing TreeContext, TreeSection, TreeItem, TreeRow, TreeContent, and IndentationLines behavior unchanged; this is only a completion fix for the active path rendering. Apply it generically to all leaf and non-leaf rows without hardcoding section names or field names.
 
-Implement a generic tree-path hover highlight for the compose/sketchpad tree system. When any TreeSection, TreeItem, or TreeRow is hovered, highlight the full ancestor path in the tree gutter from that row up to the highest visible parent/root. Use the existing tree infrastructure — TreeContext, TreeContent, IndentationLines, and current guide rendering — without changing hierarchy, spacing, or layout behavior.
+Implement a generic tree-path hover highlight for the compose/sketchpad tree system. When any TreeSection, TreeItem, or TreeRow is hovered, highlight the full ancestor path in the tree gutter from that row up to the highest visible parent/root. Use the existing tree infrastructure — TreeContext, TreeContent, IndentationLines, and current guide rendering — without changing document, spacing, or layout behavior.
 
 Behavior:
 
@@ -313,7 +313,7 @@ goal is
 
 very last refactor happened to Details panel have introduced a misalignment and different input fields. goal is to restore one consistent property row / value-column layout across the entire right-side property inspector. The same value-side field widget must not change width, x-position, or box model depending on subtree depth, local TreeItem header structure, or nearby actions. Input, Textarea, Combobox, disabled/readOnly Input, Stepper, Slider value/control area, Toggle, and Button when used as a field control must all resolve through the same shared value-column sizing rules.
 
-Fix the regression narrowly in the layout plumbing introduced by the last refactor: nested collection items, nested field rows, and flat sibling rows must use the same field-column start and end lines, and the same field sizing logic. Tree hierarchy, TreeSection, TreeItem, TreeRow, TreeContent, IndentationLines, SortableTreeItems, actions, spacing rhythm, and tree lines should remain intact. Do not hardcode section names or field names. The adaptation should only remove the unintended subtree-dependent field sizing and restore a single consistent Details panel field layout.
+Fix the regression narrowly in the layout plumbing introduced by the last refactor: nested collection items, nested field rows, and flat sibling rows must use the same field-column start and end lines, and the same field sizing logic. Tree document, TreeSection, TreeItem, TreeRow, TreeContent, IndentationLines, SortableTreeItems, actions, spacing rhythm, and tree lines should remain intact. Do not hardcode section names or field names. The adaptation should only remove the unintended subtree-dependent field sizing and restore a single consistent Details panel field layout.
 
 /////////////////////////////////////////////////////////////
 
@@ -332,7 +332,7 @@ Make the tree read more like the Ant-style tree from the reference: cleaner swit
 
 Implementation guidance:
 
-- keep hierarchy depth in the tree gutter
+- keep document depth in the tree gutter
 - keep connector lines in IndentationLines
 - keep expand/collapse icons in a fixed switcher slot
 - make the tree item label start position predictable and clean at each depth
@@ -345,13 +345,13 @@ Specific refactor intent:
 - stop the current layout from over-shifting labels because padding/indent is being applied in multiple places
 - preserve indentationLinePx(i) and the existing guide rendering model, but tune the gutter/label spacing so the lines and labels feel closer to the Ant tree reference
 - reserve a consistent switcher slot even when a row is not expanded/collapsible, so sibling labels at the same depth align correctly
-- make property-level expandable headers in the Details panel align more naturally with nearby sibling rows at the same hierarchy level
+- make property-level expandable headers in the Details panel align more naturally with nearby sibling rows at the same document level
 - keep child rows clearly nested, but do not let chevron spacing create awkward label drift
 - keep tree connector lines continuous and visually clean through nested groups
 
 Constraints:
 
-- do not flatten the hierarchy
+- do not flatten the document
 - do not redesign the inspector
 - do not introduce new UI elements
 - do not hardcode section names or field names
@@ -361,13 +361,13 @@ This should be a narrow spatial refactor: adapt the tree gutter, switcher slot, 
 
 //////////////////////////////////////////////////////////////
 
-Fix Details panel alignment for expandable property-level `TreeItem`s. In the right-side property inspector, a property-group header like `Location` is at the same hierarchy level as sibling property rows, so its label must start on the same vertical label line as nearby non-expandable rows such as the surrounding field rows. Do not let the chevron/icon slot shift the whole header inward. Instead, keep the chevron inside a reserved control slot within the existing tree gutter / left label area, while preserving the same label-start alignment for sibling rows at that level. fix for all property-level expandable headers across all sections in the Details panel, without affecting the alignment of nested child rows, tree lines, or spacing elsewhere in the tree.
+Fix Details panel alignment for expandable property-level `TreeItem`s. In the right-side property inspector, a property-group header like `Location` is at the same document level as sibling property rows, so its label must start on the same vertical label line as nearby non-expandable rows such as the surrounding field rows. Do not let the chevron/icon slot shift the whole header inward. Instead, keep the chevron inside a reserved control slot within the existing tree gutter / left label area, while preserving the same label-start alignment for sibling rows at that level. fix for all property-level expandable headers across all sections in the Details panel, without affecting the alignment of nested child rows, tree lines, or spacing elsewhere in the tree.
 
 ---
 
-Keep the current PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, TreeContext, hierarchy, and property row/value-column layout. Do not flatten the tree and do not rework unrelated alignment behavior. This should be a narrow adaptation: fix property-level expandable headers so they align with sibling rows of the same depth, while preserving all existing nested child alignment, actions, tree lines, and spacing everywhere else.
+Keep the current PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, TreeContext, document, and property row/value-column layout. Do not flatten the tree and do not rework unrelated alignment behavior. This should be a narrow adaptation: fix property-level expandable headers so they align with sibling rows of the same depth, while preserving all existing nested child alignment, actions, tree lines, and spacing everywhere else.
 
-Keep the current PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, TreeContext, hierarchy, and property row/value-column layout. Do not flatten the tree and do not rework unrelated alignment behavior. This should be a narrow adaptation: fix property-level expandable headers so they align with sibling rows of the same depth, while preserving all existing nested child alignment, actions, tree lines, and spacing everywhere else.
+Keep the current PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, TreeContext, document, and property row/value-column layout. Do not flatten the tree and do not rework unrelated alignment behavior. This should be a narrow adaptation: fix property-level expandable headers so they align with sibling rows of the same depth, while preserving all existing nested child alignment, actions, tree lines, and spacing everywhere else.
 
 ---
 
@@ -375,7 +375,7 @@ Fix the compose/sketchpad Details panel tree rendering regression . remove the d
 
 Also remove the small rectangular element currently overlapping the chevron in nested `TreeItem` / `SortableTreeItems` headers. Eliminate that box visually and structurally from the shared tree/header layout while preserving expand/collapse, drag-reorder behavior, hit targets, alignment, and spacing. If it is tied to a sortable drag handle or wrapper, refactor that handle so it no longer renders as a separate rectangle in the tree gutter and instead integrates cleanly with the existing header row.
 
-Apply this generically across `PanelSection`, `TreeSection`, `TreeItem`, `TreeRow`, `TreeContent`, `SortableTreeItems`, `IndentationLines`, and `TreeContext` without hardcoding section names or one-off fixes. Keep the existing hierarchy, chevrons, property row/value-column layout, and continuous tree lines, but remove the overlapping background guides and the rectangular gutter artifact everywhere in the Details panel.
+Apply this generically across `PanelSection`, `TreeSection`, `TreeItem`, `TreeRow`, `TreeContent`, `SortableTreeItems`, `IndentationLines`, and `TreeContext` without hardcoding section names or one-off fixes. Keep the existing document, chevrons, property row/value-column layout, and continuous tree lines, but remove the overlapping background guides and the rectangular gutter artifact everywhere in the Details panel.
 
 .........................................................................................
 
@@ -383,19 +383,19 @@ The previous refactor applied the shared right-edge alignment rule too broadly a
 
 Apply one shared vertical end line only to value-side field widgets: Input, Textarea, Combobox, Stepper, Slider value/control area, Toggle, and Button when used as a field control. Do NOT force TreeSection / TreeItem / SortableTreeItems header rows or `actions[]` into that same property field column. Collection/container headers and nested item headers must remain tree headers: chevron, drag handle, label, and add/remove actions should read as one header row and should not be stretched or positioned like value-field rows.
 
-Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, TreeContext, the existing hierarchy, and tree lines unchanged. Preserve the current property row/value-column layout for actual field rows only. Refactor the layout rules generically so tree headers use header alignment, field rows use value-column alignment, and only real value widgets terminate on the shared vertical right edge.
+Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, TreeContext, the existing document, and tree lines unchanged. Preserve the current property row/value-column layout for actual field rows only. Refactor the layout rules generically so tree headers use header alignment, field rows use value-column alignment, and only real value widgets terminate on the shared vertical right edge.
 
 ---
 
 sketchpad workbench fix the name of add piece to show as add piece when hover currenly compose.sketchpad...types..addpiece
 
-Refactor the compose/sketchpad Details panel so the right edge of every value-side UI widget ends on the same exact x-coordinate, regardless of widget type or nesting level. In the right-side property inspector, all Input, Textarea, Combobox, Stepper, Slider, Toggle, Button, and tree add/remove action controls must share one common vertical end line. For composite controls, align the outermost rendered control boundary: the right border of Input/Textarea/Combobox, the right edge of the plus button in Stepper, the right edge of the value/action area for Slider, the right edge of Toggle/Button, and the right edge of TreeSection/TreeItem action buttons. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, the existing hierarchy, and the property row/value-column layout unchanged. Apply this generically by shared layout rules, not by hardcoded section names or one-off fixes, so every control in the Details panel terminates on one shared vertical line.
+Refactor the compose/sketchpad Details panel so the right edge of every value-side UI widget ends on the same exact x-coordinate, regardless of widget type or nesting level. In the right-side property inspector, all Input, Textarea, Combobox, Stepper, Slider, Toggle, Button, and tree add/remove action controls must share one common vertical end line. For composite controls, align the outermost rendered control boundary: the right border of Input/Textarea/Combobox, the right edge of the plus button in Stepper, the right edge of the value/action area for Slider, the right edge of Toggle/Button, and the right edge of TreeSection/TreeItem action buttons. Keep PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, the existing document, and the property row/value-column layout unchanged. Apply this generically by shared layout rules, not by hardcoded section names or one-off fixes, so every control in the Details panel terminates on one shared vertical line.
 
 sketchpad kit app tags should be never visible in the ui. remove from the diagram and table views and make sure they are not rendered anywhere in the app. also make sure that they are not selectable or interactable in any way, and that they do not cause any visual glitches or layout issues when present in the data. if they are used for internal logic or data management, ensure that they are properly filtered out before rendering and that their presence does not affect the user experience in any negative way. overall, ensure that the kit app maintains a clean and professional appearance without any unintended tag elements visible to the user. remove the tag from the toolbar filter as well.
 
 sketchpad details panel, align `TreeSection` / `TreeItem` add/remove actions so the `AddIcon` / `RemoveIcon` buttons sit flush with the right edge of the property value field column. Treat these as tree actions, not Stepper controls. Keep the existing PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, TreeContext, and property row/value-column layout unchanged. Apply this generically to collection nodes in the right-side property inspector so action buttons share the same right boundary as the field column and do not drift or misalign across nested groups.
 
-make the default right-side property inspector width 1.3x the current default, resize all Stepper to match Input/Combobox height and control scale, and always show the current numeric value. Make sure all input fields have the same size, currently some of them are longer or shorter than others. Keep the existing PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, TreeContext, and property row/value-column layout. Fix nested alignment mismatches in Parent Connection and similar subtrees so labels, row starts, widths, and controls follow one consistent property-layout structure without flattening the hierarchy or breaking tree lines. Apply this generically, not through hardcoded section-specific fixes.
+make the default right-side property inspector width 1.3x the current default, resize all Stepper to match Input/Combobox height and control scale, and always show the current numeric value. Make sure all input fields have the same size, currently some of them are longer or shorter than others. Keep the existing PanelSection, TreeSection, TreeItem, TreeRow, TreeContent, SortableTreeItems, IndentationLines, TreeContext, and property row/value-column layout. Fix nested alignment mismatches in Parent Connection and similar subtrees so labels, row starts, widths, and controls follow one consistent property-layout structure without flattening the document or breaking tree lines. Apply this generically, not through hardcoded section-specific fixes.
 
 Make node sizing noticeably smaller, Do not scale the text; instead, size each circle from the text’s bounding box so the circle is roughly twice as large as the label footprint, with the label centered and enough inner padding to feel balanced, then optimize the remaining D3 force parameters—charge, link distance/strength, collision, centering, alpha decay, and velocity decay—for a compact, balanced, readable relational layout with minimal overlap and crossings, while maintaining clear visual distinction between nodes and labels. Test various parameter combinations to find the best fit for the new smaller node/label sizes, ensuring the graph remains legible and aesthetically pleasing without excessive whitespace or clutter. Document the final parameter values and their impact on the layout for future reference and adjustments.
 
@@ -403,7 +403,7 @@ Make node sizing noticeably smaller, Do not scale the text; instead, size each c
 
 Refine the compose/sketchpad Details panel spacing in the right-side property inspector without changing the existing PanelSection architecture, section registration logic, interaction model, or tree-based inspector layout.
 
-Keep the current TreeSection, TreeItem, TreeRow, SortableTreeItems, and property row/value-column layout. Improve readability by introducing structure-driven spacing rules in the shared tree primitives: use minimal spacing between rows that belong to the same logical property group, use a clearly larger gap between sibling nested groups, and use the strongest separation plus a divider between top-level property sections. Apply this generically by hierarchy and structural role, not by section name or field name.
+Keep the current TreeSection, TreeItem, TreeRow, SortableTreeItems, and property row/value-column layout. Improve readability by introducing structure-driven spacing rules in the shared tree primitives: use minimal spacing between rows that belong to the same logical property group, use a clearly larger gap between sibling nested groups, and use the strongest separation plus a divider between top-level property sections. Apply this generically by document and structural role, not by section name or field name.
 
 Make sure indentation guides / tree connector lines remain continuous across the full subtree height and never break because of row gaps, group spacing, section spacing, or sortable list spacing. Do not use spacing techniques that interrupt the vertical guide stroke. Also increase the horizontal offset between the tree guide / chevron column and the item label to about 2x the current spacing.
 
@@ -1149,9 +1149,9 @@ The left toolbar is the primary tool strip. It is anchored at the bottom center 
 
 The right toolbar is a contextual tool settings bar that displays tool settings for the currently selected tool, sub-tool, or sub-sub-tool. This bar expands from left to right, starting near the center of the screen and extending to the far right edge. The content of the tool settings bar must always stay fully synchronized with the current selection state, updating immediately whenever the selected tool level changes.
 
-The interaction model must ensure that only one node in the tool hierarchy is active at any time and that all tool settings shown are driven solely by that active selection. The overall design should clearly express hierarchy through spatial layout (vertical for depth, horizontal for categories) without relying on animation.
+The interaction model must ensure that only one node in the tool document is active at any time and that all tool settings shown are driven solely by that active selection. The overall design should clearly express document through spatial layout (vertical for depth, horizontal for categories) without relying on animation.
 
-Use the provided sketch as a structural reference and deconstruct it alongside this description to fully understand the intended layout, hierarchy, and interaction model. Generate a professional, extremely detailed prompt that precisely describes this toolbar system, its behavior, and its design intent.
+Use the provided sketch as a structural reference and deconstruct it alongside this description to fully understand the intended layout, document, and interaction model. Generate a professional, extremely detailed prompt that precisely describes this toolbar system, its behavior, and its design intent.
 
 create a plan to change the current visual look of the nodes and edges in the diagram window in kit editor. I want to change how nodes look and how they connect to each other through the current proximity connect
 each shape should have N points which functions as snapping point where edges connect to the nearest of these N points of each shape. A circle would have 4 points. A rectangle 4 as well one on the middle of each edge. try two other shapes. i want to implement it as a strategie where later on new shapes will e defined in the future. For now Designs should be a circle, Types are rectangular, files are triangles with three points and all the rest would be long rectangle with four points as well

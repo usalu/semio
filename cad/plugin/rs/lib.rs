@@ -9,7 +9,7 @@ use semio_framework_plugin::{
     UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementOption,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
     WindowLayoutWindowNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use semio_framework_plugin::layout::WindowEngagementStatus;
@@ -29,7 +29,7 @@ const CAD_PLAY_BODY_SHAPE: &str = "cad.play.shape";
 const CAD_PLAY_BODY_BUILDING: &str = "cad.play.building";
 const CAD_PLAY_BODY_ENERGY: &str = "cad.play.energy";
 const CAD_PLAY_BODY_STRUCTURE_CLASSIC: &str = "cad.play.structure-classic";
-const CAD_PLAY_BODY_HIERARCHY: &str = "cad.play.hierarchy";
+const CAD_PLAY_BODY_DOCUMENT: &str = "cad.play.document";
 const CAD_PLAY_BODY_CATALOGUE: &str = "cad.play.catalogue";
 const CAD_PLAY_BODY_PROPERTIES: &str = "cad.play.properties";
 const CAD_PLAY_SURFACE_SHAPE: &str = "cad.play.scene3d/shape";
@@ -768,9 +768,9 @@ fn tree_item_with_command(
     }
 }
 
-fn pane_hierarchy_section(label: &str, id_suffix: &str, objects: &[CadObject]) -> UiTreeSectionNode {
+fn pane_document_section(label: &str, id_suffix: &str, objects: &[CadObject]) -> UiTreeSectionNode {
     UiTreeSectionNode {
-        id: format!("cad-play-hierarchy.{id_suffix}"),
+        id: format!("cad-play-document.{id_suffix}"),
         label: Some(label.into()),
         default_open: Some(true),
         items: objects
@@ -787,7 +787,7 @@ fn pane_hierarchy_section(label: &str, id_suffix: &str, objects: &[CadObject]) -
     }
 }
 
-fn build_hierarchy_tree(envelope: &CadPlayEnvelope) -> UiNode {
+fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
     let node_items: Vec<UiTreeItemNode> = envelope
         .document
         .nodes
@@ -803,12 +803,12 @@ fn build_hierarchy_tree(envelope: &CadPlayEnvelope) -> UiNode {
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![
-            pane_hierarchy_section("Shape", "shape", &envelope.document.objects),
-            pane_hierarchy_section("Building", "building", &envelope.document.building_objects),
-            pane_hierarchy_section("Energy", "energy", &envelope.document.energy_objects),
-            pane_hierarchy_section("Structure Classic", "structure-classic", &envelope.document.structure_classic_objects),
+            pane_document_section("Shape", "shape", &envelope.document.objects),
+            pane_document_section("Building", "building", &envelope.document.building_objects),
+            pane_document_section("Energy", "energy", &envelope.document.energy_objects),
+            pane_document_section("Structure Classic", "structure-classic", &envelope.document.structure_classic_objects),
             UiTreeSectionNode {
-                id: "cad-play-hierarchy.nodes".into(),
+                id: "cad-play-document.nodes".into(),
                 label: Some("Nodes".into()),
                 default_open: Some(true),
                 items: node_items,
@@ -1247,7 +1247,7 @@ impl PluginApp for CadApp {
                     world_selection_json(&envelope.document, &envelope.runtime),
                 ),
             ),
-            CAD_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
+            CAD_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
             CAD_PLAY_BODY_PROPERTIES => build_properties_panel(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -1314,7 +1314,7 @@ fn cad_quad_layout() -> WindowLayout {
 
 fn create_cad_app() -> App {
     App::from_builder(
-        App::builder(CAD_PLAY_APP_ID, "CAD").hierarchy(["semio", "cad"])
+        App::builder(CAD_PLAY_APP_ID, "CAD").document(["semio", "cad"])
             .icon_id("box")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1326,10 +1326,10 @@ fn create_cad_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                CAD_PLAY_BODY_HIERARCHY,
+                CAD_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1383,7 +1383,7 @@ fn register_cad_exports() {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -1429,10 +1429,10 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_objects_and_nodes() {
+    fn document_lists_objects_and_nodes() {
         let app = CadApp;
         let document = app.initial_document_json();
-        let node = app.render(CAD_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(CAD_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("cad-object:"));
         assert!(json.contains("cad-node:"));

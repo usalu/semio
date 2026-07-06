@@ -1523,7 +1523,7 @@ It replaced the old artifact (type or design) parent mechanism.
 The shift is from artifact inheritance to family composition.
 A type or a design can have multiple families.
 e.g. capsule->balcony->Z type becomes has three families.
-Families dont have hierarchy.
+Families dont have document.
 Dont make family string. It is a proper entity as first-class citizen with name, description, icon etc.
 Ports have family as parent. They are no longer a kit entity but part of the family.
 You MUST refactor/extend/update everything (implementation, assets, tests, docs) for all programming languages.
@@ -5265,12 +5265,12 @@ e.g.
 
 The ticket mechanism should be refactored/extended/changed:
 
-- Introduce goals (in github they are milestones). A goal has a title, a description, a due date, a status (open, closed) and interactions (same as tickets). Every ticket can optionally be assigned to a goal. The commands are goal open, goal close, goal reopen, goal list, goal tree (also showing ticket tree beneath each goal). Synchronize goals with github milestones (create, edit, close, delete). Goals are stored different to tickets not according creation date but reflect directly the hierarchy of the goals. E.g. `repo/clials/GOALTITLE/SUBGOALTITLE` goal id has file `.repo/goals/GOALTITLE/SUBGOALTITLE/goal.json` with the goal data.
+- Introduce goals (in github they are milestones). A goal has a title, a description, a due date, a status (open, closed) and interactions (same as tickets). Every ticket can optionally be assigned to a goal. The commands are goal open, goal close, goal reopen, goal list, goal tree (also showing ticket tree beneath each goal). Synchronize goals with github milestones (create, edit, close, delete). Goals are stored different to tickets not according creation date but reflect directly the document of the goals. E.g. `repo/clials/GOALTITLE/SUBGOALTITLE` goal id has file `.repo/goals/GOALTITLE/SUBGOALTITLE/goal.json` with the goal data.
 - Every ticket can have optional a parent ticket (in github it becomes a subissue).
 
 Here a list of changes to made to repo cli file and vscode extension file along with the tests for each of them:
 
-Create ticket shouldnt throw an error on a title like this: "Refactor Resource ID System to Bundle-Based Hierarchy". Only throw if the title is equal to the lower or uppercase slug of it: "refactor-resource-id-system-to-bundle-based-hierarchy" or "REFACTOR-RESOURCE-ID-SYSTEM-TO-BUNDLE-BASED-HIERARCHY". Extend test. Make sure that all tests cleanup the created tickets and that no github issue is created.
+Create ticket shouldnt throw an error on a title like this: "Refactor Resource ID System to Bundle-Based Document". Only throw if the title is equal to the lower or uppercase slug of it: "refactor-resource-id-system-to-bundle-based-document" or "REFACTOR-RESOURCE-ID-SYSTEM-TO-BUNDLE-BASED-DOCUMENT". Extend test. Make sure that all tests cleanup the created tickets and that no github issue is created.
 
 The author string that is put to ticket.json should first try to find one of the contributors in the `.repo/contributors/` if one of the emails match. If a match is found it, use the GitHub username as author. If no match is found, use the git config NAME <EMAIL> format.
 
@@ -6766,7 +6766,7 @@ Refactor the current hardcoded switch statements to use a new approach where lan
 The general scope mechanism should now always be @REPO[compose]/BUNDLE[js|go|net|desktop|engine|assistant|play|docs|assets|…]/FOLDER[js/compose|net/Compose|…]/FILE[Compose.cs|main.go|…]/SECTION[State Management|…]/DEFINITION[createMachine|…] and only right part cans be omitted but not parts on the left.
 E.g. "js/compose/sketchpad/Sketchpad.tsx" becomes "compose/js/sketchpad/Sketchpad.tsx"
 
-The contribution of every interaction should be stored with full scope hierarchy. Add an ignore flag to ticket and interations (e.g. formatting tickets or itations should be ignored)
+The contribution of every interaction should be stored with full scope document. Add an ignore flag to ticket and interations (e.g. formatting tickets or itations should be ignored)
 ignore: false
 interactions:
 
@@ -8893,7 +8893,7 @@ e.g. 🏘️compose🏪assets🌱root🗃️repo🗃️some🗃️folder💻file
 The id system should be changed. From now on all bundles MUST have a parent project and all folders MUST have a parent bundle and all files MUST have a parent folder.
 For this purpose introduce the virtual `🥇mono` project and virtual `🪆repo` bundle. Files and folders that are on the root level are children of the `🪆repo` bundle.
 Every bundle has a virtual folder called `🌱root` that is the parent of all files that are on the root folder level of the bundle.
-This makes it much easier because the hierarchy PROJECT - BUNDLE - FOLDER - FILE is now strict.
+This makes it much easier because the document PROJECT - BUNDLE - FOLDER - FILE is now strict.
 Adjust the cli and the vscode extension accordingly.
 
 ---
@@ -9745,7 +9745,7 @@ Extend all storybook stories for all ui elements to have after the default story
 All panels touch the current border and navbar and footer. They should have a single unit margin towards the border and navbar and footer.
 
 Another ui level is added: window
-The hierarchy is base, window, panel, overlay, temporary (every one is on top of the previous one and has a darker background color [in light mode] or a lighter background color [in dark mode]. Overlay is an exeption because it it is transparent and only affects z-index). All ui elements need to work in all 5 levels. Work with a level context, provider and useLevel hook for all elements to fetch the level.
+The document is base, window, panel, overlay, temporary (every one is on top of the previous one and has a darker background color [in light mode] or a lighter background color [in dark mode]. Overlay is an exeption because it it is transparent and only affects z-index). All ui elements need to work in all 5 levels. Work with a level context, provider and useLevel hook for all elements to fetch the level.
 
 Extend ticket api to be able to reopen a ticket. This should remove the total files and lines from the ticket (not from the individual interactions) and set the status to open.
 
@@ -10476,7 +10476,7 @@ Consolidate all tests. The checked features should be the same but the tests sho
 sketchpad.tests.ts should in the end just have one test per app (currently only Home, Kit, Design, Type, Docs). Make sure that all child apps use inititalition of parent. E.g. Home should import kit before each child test (Kit, Design, Type).
 Adjust all tests to check for the same functionality but with the new strucutre. Finish when all tests are complying.
 
-There is an app hierarchy such as sketchpad -> home -> kit -> design | type and each app has certain settings, details, etc.
+There is an app document such as sketchpad -> home -> kit -> design | type and each app has certain settings, details, etc.
 The panel system works like this that panels from the same kind have different section from most specific (top) to least specific (bottom).
 E.g. for settings: Home - Sketchpad section; Kit - Kit section, Sketchpad section; Design - Design section, Kit section, Sketchpad section; etc
 Update docs, code, extend tests for checking all panels that checks for all apps if the settings are available and if the order is correct. Make the code comply to the test. Use playwright mcp. You will need to iterate because currently it doesnt always work. Adjust/refactor/extend all code neccessary.
@@ -10494,7 +10494,7 @@ Fix the code and make sure that the warning in the console disappears.
 The files and folders of the kit are missing (not visible in rows) after dropping.
 Adding files is extremly slow. Investigate why and fix it.
 
-There is an app hierarchy such as sketchpad -> home -> kit -> design | type and each app has certain settings, details, etc.
+There is an app document such as sketchpad -> home -> kit -> design | type and each app has certain settings, details, etc.
 The panel system works like this that panels from the same kind have different section from most specific (top) to least specific (bottom).
 E.g. for settings: Home - Sketchpad section; Kit - Kit section, Sketchpad section; Design - Design section, Kit section, Sketchpad section; etc
 Update docs, code, create a test for settings panel that checks for all apps if the settings are available and if the order is correct. Make the code comply to the test. Use playwright mcp. You will need to iterate because currently it doesnt always work. Adjust/refactor/extend all code neccessary.
@@ -10613,7 +10613,7 @@ unit test are directly next to the module with .test.ts extension.
 sketchpad:
 e2e:
 Policies:
-There is a neested seeding according app hierarchy. Seed include only the bear minimum to get the subtests working.
+There is a neested seeding according app document. Seed include only the bear minimum to get the subtests working.
 sketchpad -> kit -> design | type | quality)
 sketchpad -> docs
 Only use id locators e.g. `page.locator('\\\[id="compose.sketchpad.navbar.back"]')`
@@ -10785,8 +10785,8 @@ is shiftet starting with TEMPORARY > KITNAME
 All options from there on should be moved up one item.
 
 The old system used Type -> Variant or Design -> Variant -> View. The new system just uses parents. The variant or the view name is just the name of the child type or design. When a type or a design has no default view or variant but has children in the old schema then create a new abstract type or design in the new schema.
-The new capsule hierarchy is like this: Capsule [abstract] -> (Box [abstract] | Ellipsoid [abstract] | Trapezoid [abstract] | Balcony [abstract]) -> ( / | \ | p | q | s | z | L | J )
-The new tambour hierarchy is like this: Tambour [default] -> First Storey | Last Storey | Single Storey
+The new capsule document is like this: Capsule [abstract] -> (Box [abstract] | Ellipsoid [abstract] | Trapezoid [abstract] | Balcony [abstract]) -> ( / | \ | p | q | s | z | L | J )
+The new tambour document is like this: Tambour [default] -> First Storey | Last Storey | Single Storey
 Restore only the compose assets from 3 commits ago. Run the migration until you succesfully migrated. Restore the compose assets as many times as necessary.
 
 The breadcrumb api should be refactored. Only two components should remain: Breadcrumb and BreadcrumbItem
@@ -11596,7 +11596,7 @@ All react hooks should start with use and be named as concise as possible.
 
 The protoype is finished. Now it is time to cleanup and refactor.
 
-Showing additional design rows based on the hierarchy name -> variant -> view in kit editors still doesnt work. There is just one row and it cant be expanded despite the chevron showing.
+Showing additional design rows based on the document name -> variant -> view in kit editors still doesnt work. There is just one row and it cant be expanded despite the chevron showing.
 In kit editor when clicking the the design kind, then clicking one of the names, an empty toggle (probably it should be default in italics same as in navbar) but then the name again repeats instead of showing new toggles for the unique variant name. Same problem once more for view.
 
 The previous kit name repeating is because the new variant are called New Design for both new variant and design. It should be New Variant and New Design.

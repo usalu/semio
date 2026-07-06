@@ -7,7 +7,7 @@ use semio_framework_plugin::{
     TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -26,7 +26,7 @@ const TRINITY_JACK_PLAY_SURFACE_RESULTS: &str = "trinity.jack.results";
 const TRINITY_JACK_PLAY_BODY_GRAPH: &str = "trinity.jack.play.main";
 const TRINITY_JACK_PLAY_BODY_EDITOR: &str = "trinity.jack.play.editor";
 const TRINITY_JACK_PLAY_BODY_RESULTS: &str = "trinity.jack.play.results";
-const TRINITY_JACK_PLAY_BODY_HIERARCHY: &str = "trinity.jack.play.hierarchy";
+const TRINITY_JACK_PLAY_BODY_DOCUMENT: &str = "trinity.jack.play.document";
 const TRINITY_JACK_PLAY_BODY_CATALOGUE: &str = "trinity.jack.play.catalogue";
 const TRINITY_JACK_PLAY_BODY_INSPECTION: &str = "trinity.jack.play.inspection";
 const TRINITY_JACK_PLAY_WINDOW_GRAPH: &str = "trinity-jack-graph";
@@ -478,7 +478,7 @@ fn tree_item_with_command(
     }
 }
 
-fn build_hierarchy_tree(envelope: &TrinityJackEnvelope) -> UiNode {
+fn build_document_tree(envelope: &TrinityJackEnvelope) -> UiNode {
     let Some(fixture) = parse_fixture_json(&envelope.fixture_json) else {
         return ui_text("Invalid trinity fixture");
     };
@@ -487,7 +487,7 @@ fn build_hierarchy_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         .iter()
         .map(|node| {
             tree_item_with_command(
-                format!("trinity-hierarchy.node.{}", node.id),
+                format!("trinity-document.node.{}", node.id),
                 if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
                 Some(node.kind.clone()),
                 jack_cmd("setSelection", Some(json!({ "ids": [node.id] }))),
@@ -498,20 +498,20 @@ fn build_hierarchy_tree(envelope: &TrinityJackEnvelope) -> UiNode {
         .edges
         .iter()
         .map(|edge| tree_item(
-            format!("trinity-hierarchy.edge.{}", edge.id),
+            format!("trinity-document.edge.{}", edge.id),
             format!("{} → {}", edge.source, edge.target),
         ))
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![
             UiTreeSectionNode {
-                id: "trinity-hierarchy.nodes".into(),
+                id: "trinity-document.nodes".into(),
                 label: Some("Pieces".into()),
                 default_open: Some(true),
                 items: node_items,
             },
             UiTreeSectionNode {
-                id: "trinity-hierarchy.edges".into(),
+                id: "trinity-document.edges".into(),
                 label: Some("Connections".into()),
                 default_open: Some(false),
                 items: edge_items,
@@ -522,7 +522,7 @@ fn build_hierarchy_tree(envelope: &TrinityJackEnvelope) -> UiNode {
                 .runtime
                 .selected_node_ids
                 .iter()
-                .map(|id| format!("trinity-hierarchy.node.{id}"))
+                .map(|id| format!("trinity-document.node.{id}"))
                 .collect(),
         ),
         highlighted_ids: None,
@@ -962,7 +962,7 @@ impl PluginApp for TrinityJackPlayApp {
             TRINITY_JACK_PLAY_BODY_GRAPH => render_graph(&envelope),
             TRINITY_JACK_PLAY_BODY_EDITOR => render_editor(&envelope),
             TRINITY_JACK_PLAY_BODY_RESULTS => render_results(&envelope),
-            TRINITY_JACK_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
+            TRINITY_JACK_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             TRINITY_JACK_PLAY_BODY_CATALOGUE => build_catalogue_tree(&envelope),
             TRINITY_JACK_PLAY_BODY_INSPECTION => build_inspector_tree(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -1020,7 +1020,7 @@ fn jack_layout() -> WindowLayout {
 
 fn create_trinity_jack_app() -> App {
     App::from_builder(
-        App::builder(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack").hierarchy(["semio", "trinity", "jack"])
+        App::builder(TRINITY_JACK_PLAY_APP_ID, "Trinity Jack").document(["semio", "trinity", "jack"])
             .icon_id("trinity")
             .mode("explore", "Explore")
             .default_mode_id("explore")
@@ -1029,10 +1029,10 @@ fn create_trinity_jack_app() -> App {
             .window_kind(TRINITY_JACK_PLAY_WINDOW_RESULTS, "Results", TRINITY_JACK_PLAY_BODY_RESULTS)
             .default_layout(jack_layout())
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                TRINITY_JACK_PLAY_BODY_HIERARCHY,
+                TRINITY_JACK_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1062,7 +1062,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

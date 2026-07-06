@@ -88,7 +88,7 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧊wgpu",
+      "name": "🛠️dev📐cad🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts dev cad",
@@ -105,6 +105,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6120)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📐cad🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native cad",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 10.2
       }
     },
     {
@@ -128,7 +139,7 @@
       }
     },
     {
-      "name": "🛠️dev📐cad🧩concrete🌲forest🧊wgpu",
+      "name": "🛠️dev📐cad🧩concrete🌲forest🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun ./script.ts dev cad fixture concrete",
@@ -145,6 +156,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6120)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📐cad🧩concrete🌲forest🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native cad",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 20.2
       }
     },
     {
@@ -401,7 +423,7 @@
       }
     },
     {
-      "name": "🛠️dev🌳dag🧊wgpu",
+      "name": "🛠️dev🌳dag🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:dag",
@@ -418,6 +440,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6117)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌳dag🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native dag",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 140.2
       }
     },
     {
@@ -441,7 +474,7 @@
       }
     },
     {
-      "name": "🛠️dev🌊flow🧊wgpu",
+      "name": "🛠️dev🌊flow🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:flow",
@@ -458,6 +491,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6116)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌊flow🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native flow",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 150.2
       }
     },
     {
@@ -481,7 +525,7 @@
       }
     },
     {
-      "name": "🛠️dev⚙️imperative🧊wgpu",
+      "name": "🛠️dev⚙️imperative🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:imperative",
@@ -498,6 +542,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6176)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev⚙️imperative🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native imperative",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 155.2
       }
     },
     {
@@ -521,7 +576,7 @@
       }
     },
     {
-      "name": "🛠️dev📜sequence🧊wgpu",
+      "name": "🛠️dev📜sequence🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:sequence",
@@ -538,6 +593,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6177)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📜sequence🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native sequence",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 156.2
       }
     },
     {
@@ -561,13 +627,14 @@
       }
     },
     {
-      "name": "🛠️dev🔷lowpoly🧊wgpu",
+      "name": "🛠️dev🔷lowpoly🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:lowpoly",
       "cwd": "${workspaceFolder}",
       "env": {
         "LOWPOLY_PLAY_PORT": "6178",
+        "SEMIO_PLUGIN": "lowpoly",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -577,7 +644,18 @@
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6178)",
-        "uriFormat": "%s"
+        "uriFormat": "%s?plugin=lowpoly"
+      }
+    },
+    {
+      "name": "🛠️dev🔷lowpoly🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native lowpoly",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 157.2
       }
     },
     {
@@ -601,7 +679,7 @@
       }
     },
     {
-      "name": "🛠️dev📄layout🧊wgpu",
+      "name": "🛠️dev📄layout🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:layout",
@@ -618,6 +696,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6179)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📄layout🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native layout",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 158.2
       }
     },
     {
@@ -641,7 +730,7 @@
       }
     },
     {
-      "name": "🛠️dev🌐gis📍2d🧊wgpu",
+      "name": "🛠️dev🌐gis📍2d🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:gis:2d",
@@ -658,6 +747,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6140)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🌐gis📍2d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native gis2d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 160.2
       }
     },
     {
@@ -681,7 +781,7 @@
       }
     },
     {
-      "name": "🛠️dev📽️presentationplay🧊wgpu",
+      "name": "🛠️dev📽️presentationplay🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:presentation",
@@ -698,6 +798,28 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6151)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📽️presentationplay🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native presentation",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 170.2
+      }
+    },
+    {
+      "name": "🛠️dev🖨️print",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:print",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 175
       }
     },
     {
@@ -721,7 +843,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🩻2d🧊wgpu",
+      "name": "🛠️dev🔧procedural🩻2d🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:2d",
@@ -738,6 +860,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6121)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔧procedural🩻2d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native procedural2d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 180.2
       }
     },
     {
@@ -761,7 +894,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d🧊wgpu",
+      "name": "🛠️dev🔧procedural🏙️3d🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:3d",
@@ -778,6 +911,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6118)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔧procedural🏙️3d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native procedural3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 190.2
       }
     },
     {
@@ -801,7 +945,7 @@
       }
     },
     {
-      "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column🧊wgpu",
+      "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:procedural:3d:hexagonal-column",
@@ -821,6 +965,17 @@
       }
     },
     {
+      "name": "🛠️dev🔧procedural🏙️3d🧩hexagonal🧱column🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native procedural3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 200.2
+      }
+    },
+    {
       "name": "🛠️dev📽️projektetage",
       "type": "node-terminal",
       "request": "launch",
@@ -837,6 +992,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6050)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🏚️mitbestand📄zwischenbericht",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/mit-bestand-bericht:watch",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 211
       }
     },
     {
@@ -860,7 +1026,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🩻2d🧊wgpu",
+      "name": "🛠️dev🧩puzzle🩻2d🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:2d",
@@ -877,6 +1043,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6112)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle🩻2d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native puzzle2d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 220.2
       }
     },
     {
@@ -900,7 +1077,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d🧊wgpu",
+      "name": "🛠️dev🧩puzzle🏙️3d🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d",
@@ -917,6 +1094,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6113)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle🏙️3d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native puzzle3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 230.2
       }
     },
     {
@@ -940,7 +1128,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle🏙️3d🎛️concrete🌲forest🧊wgpu",
+      "name": "🛠️dev🧩puzzle🏙️3d🎛️concrete🌲forest🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:3d:concrete-forest",
@@ -957,6 +1145,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6113)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle🏙️3d🎛️concrete🌲forest🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native puzzle3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 240.2
       }
     },
     {
@@ -980,7 +1179,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🧊wgpu",
+      "name": "🛠️dev🧩puzzle👯5d🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d",
@@ -997,6 +1196,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6114)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle👯5d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native puzzle5d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 250.2
       }
     },
     {
@@ -1020,7 +1230,7 @@
       }
     },
     {
-      "name": "🛠️dev🧩puzzle👯5d🎛️concrete🌲forest🧊wgpu",
+      "name": "🛠️dev🧩puzzle👯5d🎛️concrete🌲forest🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:puzzle:5d:concrete-forest",
@@ -1037,6 +1247,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6114)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧩puzzle👯5d🎛️concrete🌲forest🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native puzzle5d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 260.2
       }
     },
     {
@@ -1060,7 +1281,7 @@
       }
     },
     {
-      "name": "🛠️dev🧠reasoning🔗wires🧊wgpu",
+      "name": "🛠️dev🧠reasoning🔗wires🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:reasoning:wires",
@@ -1077,6 +1298,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6115)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧠reasoning🔗wires🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native reasoning-wires",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 270.2
       }
     },
     {
@@ -1120,7 +1352,7 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting🧊wgpu",
+      "name": "🛠️dev📸shooting🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting",
@@ -1137,6 +1369,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6119)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📸shooting🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native shooting",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 290.2
       }
     },
     {
@@ -1160,7 +1403,7 @@
       }
     },
     {
-      "name": "🛠️dev📸shooting🎛️base🧊wgpu",
+      "name": "🛠️dev📸shooting🎛️base🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:shooting:base-icon",
@@ -1177,6 +1420,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6119)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📸shooting🎛️base🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native shooting",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 300.2
       }
     },
     {
@@ -1295,7 +1549,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity🃏jack🧊wgpu",
+      "name": "🛠️dev🔺trinity🃏jack🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:jack",
@@ -1312,6 +1566,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6154)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔺trinity🃏jack🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native trinity",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 360.2
       }
     },
     {
@@ -1346,7 +1611,7 @@
       }
     },
     {
-      "name": "🛠️dev🔺trinity♻️rewrite🧊wgpu",
+      "name": "🛠️dev🔺trinity♻️rewrite🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:trinity:rewrite",
@@ -1363,6 +1628,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6156)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🔺trinity♻️rewrite🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native trinity-rewrite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 380.2
       }
     },
     {
@@ -1386,7 +1662,7 @@
       }
     },
     {
-      "name": "🛠️dev📋forms🧊wgpu",
+      "name": "🛠️dev📋forms🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:forms",
@@ -1403,6 +1679,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6158)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📋forms🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native forms",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 385.2
       }
     },
     {
@@ -1426,7 +1713,7 @@
       }
     },
     {
-      "name": "🛠️dev🖼️raster🧊wgpu",
+      "name": "🛠️dev🖼️raster🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:raster",
@@ -1443,6 +1730,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6160)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🖼️raster🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native raster",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.2
       }
     },
     {
@@ -1466,7 +1764,7 @@
       }
     },
     {
-      "name": "🛠️dev🗄️vcs🎛️play🧊wgpu",
+      "name": "🛠️dev🗄️vcs🎛️play🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:vcs",
@@ -1483,6 +1781,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6175)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🗄️vcs🎛️play🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native vcs",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 385.2
       }
     },
     {
@@ -1507,7 +1816,7 @@
       }
     },
     {
-      "name": "🛠️dev🖥️s🧊wgpu",
+      "name": "🛠️dev🖥️s🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -1525,6 +1834,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6066)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🖥️s🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native s",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 386.1
       }
     },
     {
@@ -1591,7 +1911,7 @@
       }
     },
     {
-      "name": "🛠️dev✏️draw🧊wgpu",
+      "name": "🛠️dev✏️draw🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:dev",
@@ -1609,6 +1929,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6164)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev✏️draw🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native s",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.2
       }
     },
     {
@@ -1632,7 +1963,7 @@
       }
     },
     {
-      "name": "🛠️dev📝note🧊wgpu",
+      "name": "🛠️dev📝note🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:note",
@@ -1649,6 +1980,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6180)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📝note🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native note",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 388.2
       }
     },
     {
@@ -1672,7 +2014,7 @@
       }
     },
     {
-      "name": "🛠️dev✍️writer🧊wgpu",
+      "name": "🛠️dev✍️writer🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun run dev:writer",
@@ -1689,6 +2031,17 @@
         "action": "openExternally",
         "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6162)",
         "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev✍️writer🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/renderer/wgpu/script.ts native writer",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.2
       }
     },
     {
@@ -1835,6 +2188,17 @@
       }
     },
     {
+      "name": "📦build🖨️print",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:print",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 102
+      }
+    },
+    {
       "name": "📦audit🛝playground",
       "type": "node-terminal",
       "request": "launch",
@@ -1876,6 +2240,17 @@
       "presentation": {
         "group": "4_build",
         "order": 130
+      }
+    },
+    {
+      "name": "📦build🏚️mitbestand📄zwischenbericht",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:mit-bestand:zwischenbericht",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 131
       }
     },
     {

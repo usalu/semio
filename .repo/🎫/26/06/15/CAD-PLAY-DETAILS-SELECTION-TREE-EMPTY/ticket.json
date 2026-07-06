@@ -2,7 +2,7 @@
   "title": "Cad Play Details Selection Tree Empty",
   "emoji": "🐛",
   "status": "open",
-  "description": "CAD play details (Selection) side panel tree is empty and does not update when canvas/hierarchy selection changes.",
+  "description": "CAD play details (Selection) side panel tree is empty and does not update when canvas/document selection changes.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1696"
   },

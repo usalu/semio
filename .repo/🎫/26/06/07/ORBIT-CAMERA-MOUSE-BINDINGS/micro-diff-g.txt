@@ -221,7 +221,7 @@ index 4a64da3c2..6e971b0c0 100644
 +  return spatialHoverKeyAliases(left).has(right);
 +}
 +
-+/** @emoji 🖱️ Maps a hierarchy {@link SelectionTarget} to the canvas hover key (typology object when possible). */
++/** @emoji 🖱️ Maps a document {@link SelectionTarget} to the canvas hover key (typology object when possible). */
 +export function canvasHoverKeyForSelectionTarget(model: Model, modelDefinitionId: string, target: SelectionTarget): string {
 +  if (target.kind === "object") return selectionTargetHoverKey(target);
 +  for (const row of listModelObjectsForModelDefinition(model, modelDefinitionId)) {
@@ -294,7 +294,7 @@ diff --git a/cad/js/renderer/play/index.tsx b/cad/js/renderer/play/index.tsx
 index ec8920cd0..260cbe5c2 100644
 --- a/cad/js/renderer/play/index.tsx
 +++ b/cad/js/renderer/play/index.tsx
-@@ -303,7 +303,7 @@ type CadPlayHierarchyPickContext = {
+@@ -303,7 +303,7 @@ type CadPlayDocumentPickContext = {
    readonly onHover: (modelDefinitionId: string, target: SelectionTarget | null) => void;
    readonly onToggleHidden: (modelDefinitionId: string, target: SelectionTarget) => void;
    readonly onToggleLocked: (modelDefinitionId: string, target: SelectionTarget) => void;
@@ -302,17 +302,17 @@ index ec8920cd0..260cbe5c2 100644
 +  readonly registerHighlight: (target: SelectionTarget, itemId: string, extraKeys?: readonly string[]) => void;
  };
  
- function cadPlayHierarchyEntityChrome(model: Model, target: SelectionTarget, ctx: CadPlayHierarchyPickContext): Pick<TreeDataItem, "isHidden" | "actions" | "contextMenu"> {
-@@ -350,11 +350,11 @@ function cadPlayHierarchyHoverHandlers(ctx: CadPlayHierarchyPickContext, target:
+ function cadPlayDocumentEntityChrome(model: Model, target: SelectionTarget, ctx: CadPlayDocumentPickContext): Pick<TreeDataItem, "isHidden" | "actions" | "contextMenu"> {
+@@ -350,11 +350,11 @@ function cadPlayDocumentHoverHandlers(ctx: CadPlayDocumentPickContext, target:
    };
  }
  
--function cadPlayPrimitiveChildTreeItem(node: ModelPrimitiveHierarchyNode, path: string, ctx: CadPlayHierarchyPickContext): TreeDataItem {
+-function cadPlayPrimitiveChildTreeItem(node: ModelPrimitiveDocumentNode, path: string, ctx: CadPlayDocumentPickContext): TreeDataItem {
 -  const childItems = node.children.map((child) => cadPlayPrimitiveChildTreeItem(child, `${path}.${child.kind}.${child.id}`, ctx));
-+function cadPlayPrimitiveChildTreeItem(node: ModelPrimitiveHierarchyNode, path: string, ctx: CadPlayHierarchyPickContext, objectId?: string): TreeDataItem {
++function cadPlayPrimitiveChildTreeItem(node: ModelPrimitiveDocumentNode, path: string, ctx: CadPlayDocumentPickContext, objectId?: string): TreeDataItem {
 +  const childItems = node.children.map((child) => cadPlayPrimitiveChildTreeItem(child, `${path}.${child.kind}.${child.id}`, ctx, objectId));
    const target: SelectionTarget = { kind: node.kind, id: node.id, editable: true };
-   const itemId = `cad-play-hierarchy.child.${path}`;
+   const itemId = `cad-play-document.child.${path}`;
 -  ctx.registerHighlight(target, itemId);
 +  ctx.registerHighlight(target, itemId, objectId ? [selectionTargetHoverKey({ kind: "object", id: objectId, editable: true })] : []);
    return {
@@ -321,28 +321,28 @@ index ec8920cd0..260cbe5c2 100644
 @@ -371,10 +371,11 @@ function cadPlayPrimitiveSlotTreeItems(model: Model, modelDefinitionId: string,
    const kind = resolvePrimitiveRefKind(model, primitiveRef) ?? "solid";
    const primitiveId = String(primitiveRef);
-   const primitiveHierarchy = buildModelPrimitiveHierarchy(model, primitiveId);
--  const childItems = (primitiveHierarchy?.children ?? []).map((child) => cadPlayPrimitiveChildTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx));
-+  const childItems = (primitiveHierarchy?.children ?? []).map((child) => cadPlayPrimitiveChildTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx, objectId));
+   const primitiveDocument = buildModelPrimitiveDocument(model, primitiveId);
+-  const childItems = (primitiveDocument?.children ?? []).map((child) => cadPlayPrimitiveChildTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx));
++  const childItems = (primitiveDocument?.children ?? []).map((child) => cadPlayPrimitiveChildTreeItem(child, `${modelDefinitionId}.${objectId}.${slot}.${child.kind}.${child.id}`, ctx, objectId));
    const target: SelectionTarget = { kind, id: primitiveId, editable: true };
 +  const objectTarget: SelectionTarget = { kind: "object", id: objectId, editable: true };
-   const itemId = `cad-play-hierarchy.primitive.${modelDefinitionId}.${objectId}.${slot}`;
+   const itemId = `cad-play-document.primitive.${modelDefinitionId}.${objectId}.${slot}`;
 -  ctx.registerHighlight(target, itemId);
 +  ctx.registerHighlight(target, itemId, [selectionTargetHoverKey(objectTarget)]);
    return {
      id: itemId,
      label: `${slot}: ${kind} ${primitiveId}`,
-@@ -393,16 +394,35 @@ export interface CadPlayHierarchyBuildResult {
+@@ -393,16 +394,35 @@ export interface CadPlayDocumentBuildResult {
    readonly highlightKeyToItemIds: Readonly<Record<string, readonly string[]>>;
  }
  
--function registerCadPlayHierarchyHighlight(index: Record<string, string[]>, target: SelectionTarget, itemId: string): void {
+-function registerCadPlayDocumentHighlight(index: Record<string, string[]>, target: SelectionTarget, itemId: string): void {
 -  const key = selectionTargetHoverKey(target);
 -  const bucket = index[key];
 -  if (bucket) {
 -    if (!bucket.includes(itemId)) {
 -      bucket.push(itemId);
-+function registerCadPlayHierarchyHighlight(index: Record<string, string[]>, target: SelectionTarget, itemId: string, extraKeys: readonly string[] = []): void {
++function registerCadPlayDocumentHighlight(index: Record<string, string[]>, target: SelectionTarget, itemId: string, extraKeys: readonly string[] = []): void {
 +  const keys = new Set<string>();
 +  for (const seed of [selectionTargetHoverKey(target), ...extraKeys]) {
 +    for (const alias of spatialHoverKeyAliases(seed)) keys.add(alias);
@@ -375,10 +375,10 @@ index ec8920cd0..260cbe5c2 100644
 +  return keys;
  }
  
- export function buildCadPlayHierarchySections(
-@@ -415,10 +435,18 @@ export function buildCadPlayHierarchySections(
+ export function buildCadPlayDocumentSections(
+@@ -415,10 +435,18 @@ export function buildCadPlayDocumentSections(
    onToggleLocked: (modelDefinitionId: string, target: SelectionTarget) => void = () => {},
- ): CadPlayHierarchyBuildResult {
+ ): CadPlayDocumentBuildResult {
    const selectedKeys = new Set(selection.map(cadPlaySelectionKey));
 -  const isSelected = (kind: SelectionTarget["kind"], id: string): boolean => selectedKeys.has(`${kind}:${id}`);
 +  const isSelected = (kind: SelectionTarget["kind"], id: string, expandedKeys?: ReadonlySet<string>): boolean => {
@@ -392,23 +392,23 @@ index ec8920cd0..260cbe5c2 100644
 +  };
    const highlightKeyToItemIds: Record<string, string[]> = {};
 -  const registerHighlight = (target: SelectionTarget, itemId: string): void => {
--    registerCadPlayHierarchyHighlight(highlightKeyToItemIds, target, itemId);
+-    registerCadPlayDocumentHighlight(highlightKeyToItemIds, target, itemId);
 +  const registerHighlight = (target: SelectionTarget, itemId: string, extraKeys: readonly string[] = []) => {
-+    registerCadPlayHierarchyHighlight(highlightKeyToItemIds, target, itemId, extraKeys);
++    registerCadPlayDocumentHighlight(highlightKeyToItemIds, target, itemId, extraKeys);
    };
    const modelDefinitionIds = [
      ...new Set([...CAD_PLAY_PANE_SPECS.map((row) => row.modelDefinitionId), ...Object.keys(modelsByDefinitionId)]),
-@@ -426,7 +454,8 @@ export function buildCadPlayHierarchySections(
+@@ -426,7 +454,8 @@ export function buildCadPlayDocumentSections(
    const modelBranches: TreeDataItem[] = [];
    for (const modelDefinitionId of modelDefinitionIds) {
      const model = modelsByDefinitionId[modelDefinitionId] ?? new Model();
--    const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, model, isSelected, onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
+-    const pickCtx: CadPlayDocumentPickContext = { modelDefinitionId, model, isSelected, onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
 +    const expandedSelectionKeys = buildCadPlayExpandedSelectionKeys(model, modelDefinitionId, selection);
-+    const pickCtx: CadPlayHierarchyPickContext = { modelDefinitionId, model, isSelected: (kind, id) => isSelected(kind, id, expandedSelectionKeys), onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
++    const pickCtx: CadPlayDocumentPickContext = { modelDefinitionId, model, isSelected: (kind, id) => isSelected(kind, id, expandedSelectionKeys), onSelect, onHover, onToggleHidden, onToggleLocked, registerHighlight };
      const objectItems: TreeDataItem[] = listModelObjectsForModelDefinition(model, modelDefinitionId).map((object) => {
        const objectId = String(object.id);
        const typologyTail = object.typology.split(".").pop() ?? object.typology;
-@@ -438,7 +467,7 @@ export function buildCadPlayHierarchySections(
+@@ -438,7 +467,7 @@ export function buildCadPlayDocumentSections(
          id: objectItemId,
          label: `${typologyObjectPascalFromLabel(typologyTail.replace(/[._-]+/g, " "))} (${objectId})`,
          description: object.typology,
@@ -416,7 +416,7 @@ index ec8920cd0..260cbe5c2 100644
 +        isSelected: isSelected("object", objectId, expandedSelectionKeys),
          defaultOpen: true,
          onClick: () => onSelect(modelDefinitionId, objectTarget),
-         ...cadPlayHierarchyHoverHandlers(pickCtx, objectTarget),
+         ...cadPlayDocumentHoverHandlers(pickCtx, objectTarget),
 @@ -969,6 +998,9 @@ import {
    replWithRendererSelectionTargets,
    pruneSelectionTargetsForEntityFlags,
@@ -448,39 +448,39 @@ index ec8920cd0..260cbe5c2 100644
        if (target && modelDefinitionId !== activeModelDefinitionId) {
          handleActiveModelDefinitionChange(modelDefinitionId);
        }
--      pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_HIERARCHY, target ? selectionTargetHoverKey(target) : null);
+-      pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_DOCUMENT, target ? selectionTargetHoverKey(target) : null);
 +      const model = flushedModelsByDefinitionId[modelDefinitionId] ?? new Model();
 +      const hoverKey = target ? canvasHoverKeyForSelectionTarget(model, modelDefinitionId, target) : null;
-+      pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_HIERARCHY, hoverKey);
++      pointerFocusRef.current!.setHoverFromSource(CAD_PLAY_HOVER_SOURCE_DOCUMENT, hoverKey);
      },
 -    [activeModelDefinitionId, handleActiveModelDefinitionChange],
 +    [activeModelDefinitionId, flushedModelsByDefinitionId, handleActiveModelDefinitionChange],
    );
  
-   const toggleHierarchyEntityFlag = reactHostPort.useCallback(
+   const toggleDocumentEntityFlag = reactHostPort.useCallback(
 @@ -2573,7 +2605,11 @@ function CadPlayRoot(): ReactNode {
      if (!hoveredKey) {
        return [];
      }
--    return [...(hierarchyBuild.highlightKeyToItemIds[hoveredKey] ?? [])];
+-    return [...(documentBuild.highlightKeyToItemIds[hoveredKey] ?? [])];
 +    const ids = new Set<string>();
 +    for (const alias of spatialHoverKeyAliases(hoveredKey)) {
-+      for (const itemId of hierarchyBuild.highlightKeyToItemIds[alias] ?? []) ids.add(itemId);
++      for (const itemId of documentBuild.highlightKeyToItemIds[alias] ?? []) ids.add(itemId);
 +    }
 +    return [...ids];
-   }, [chromeSnapshot?.hoveredKey, hierarchyBuild.highlightKeyToItemIds]);
+   }, [chromeSnapshot?.hoveredKey, documentBuild.highlightKeyToItemIds]);
    const workbenchTabs = reactHostPort.useMemo(
      () => [
 @@ -3010,8 +3046,7 @@ if (import.meta.vitest) {
        };
-       const build = buildCadPlayHierarchySections({ "spatial.shape": model }, "spatial.shape", [], () => {});
-       expect(build.highlightKeyToItemIds["object:box1"]).toEqual(["cad-play-hierarchy.object.spatial.shape.box1"]);
+       const build = buildCadPlayDocumentSections({ "spatial.shape": model }, "spatial.shape", [], () => {});
+       expect(build.highlightKeyToItemIds["object:box1"]).toEqual(["cad-play-document.object.spatial.shape.box1"]);
 -      const objectNode = build.sections[0]?.items?.[0]?.items?.[0]?.items?.[0];
 -      expect(objectNode?.isHighlighted).toBeUndefined();
-+      expect(build.highlightKeyToItemIds["solid:solid-1"]).toContain("cad-play-hierarchy.primitive.spatial.shape.box1.solid");
++      expect(build.highlightKeyToItemIds["solid:solid-1"]).toContain("cad-play-document.primitive.spatial.shape.box1.solid");
      });
  
-     it("buildCadPlayHierarchySections nests child primitives under primitive slots", async () => {
+     it("buildCadPlayDocumentSections nests child primitives under primitive slots", async () => {
 diff --git a/framework/product/platform/renderer/react/index.tsx b/framework/product/platform/renderer/react/index.tsx
 index 767184543..7de753958 100644
 --- a/framework/product/platform/renderer/react/index.tsx
@@ -3063,7 +3063,7 @@ index b82424b3c..648416bf9 100644
 +  collectUiTreeItemDragData,
  } from "@framework/playground/core";
  
- import { buildPuzzle2dPlayHierarchySections, buildPuzzle2dPlayKindsTree, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
+ import { buildPuzzle2dPlayDocumentSections, buildPuzzle2dPlayKindsTree, buildPuzzle2dPlayToolbarTools, type Puzzle2dPlayToolbarState } from "../../2d/play/index.ts";
 +import {
 +  PUZZLE_2D_FIXTURE_DRAG_V1_MIME,
 +  beginPuzzle2dFixturePalettePointerDrag,
@@ -3076,7 +3076,7 @@ index b82424b3c..648416bf9 100644
 @@ -53,6 +60,12 @@ import {
  import nakagin3dJson from "../../3d/fixture/nakagin-capsule-tower.3d.json";
  import { DEFAULT_GUMBALL_CONFIG, type GumballConfig } from "@ui/react";
- import { buildPuzzle3dPlayHierarchyTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
+ import { buildPuzzle3dPlayDocumentTree, buildPuzzle3dPlayKindsTree, PUZZLE_3D_GUMBALL_GROUPS, PUZZLE_3D_PLAY_EMPTY_SELECTION, type Puzzle3dGumballGroupKey } from "../../3d/play/index.ts";
 +import {
 +  FIXTURE_DRAG_V1_MIME,
 +  beginPuzzle3dFixturePalettePointerDrag,
@@ -3208,7 +3208,7 @@ index b82424b3c..648416bf9 100644
 +      expect(dragController.pointerPaletteDrag?.readEncodedDragPayload(volumeRow!.dragData!)).toBeTruthy();
 +    });
 +
-     it("buildPuzzle5dPlayHierarchySections includes 2d and 3d branches", () => {
+     it("buildPuzzle5dPlayDocumentSections includes 2d and 3d branches", () => {
        const runtime = buildPuzzle5dPlayRuntime();
        const controller = runtime.getActiveApp()?.controller as Puzzle5dPlayShellController;
 diff --git a/puzzle/5d/react/index.tsx b/puzzle/5d/react/index.tsx

@@ -9,7 +9,7 @@ use semio_framework_plugin::{
     ui_inspector_readonly_field, ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp,
     PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode,
     UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ use vcs::{create_document_vcs_envelope, materialize_document_projection, Documen
 const GIS2D_PLAY_APP_ID: &str = "gis2d-play";
 const GIS2D_PLAY_SURFACE: &str = "gis2d.play.composite";
 const GIS2D_PLAY_BODY_COMPOSITE: &str = "gis2d.play.composite";
-const GIS2D_PLAY_BODY_HIERARCHY: &str = "gis2d.play.hierarchy";
+const GIS2D_PLAY_BODY_DOCUMENT: &str = "gis2d.play.document";
 const GIS2D_PLAY_BODY_CATALOGUE: &str = "gis2d.play.catalogue";
 const GIS2D_PLAY_BODY_INSPECTION: &str = "gis2d.play.inspection";
 const GIS2D_PLAY_WINDOW_MAIN: &str = "gis2d-main";
@@ -366,14 +366,14 @@ fn tree_item(
     }
 }
 
-fn build_hierarchy_tree(play: &Gis2dPlayEnvelope) -> UiNode {
+fn build_document_tree(play: &Gis2dPlayEnvelope) -> UiNode {
     let projection = materialized_projection(play);
     let layer_items: Vec<UiTreeItemNode> = if projection.layers.is_empty() {
         GIS_MAP_LAYER_IDS
             .iter()
             .map(|(id, label, icon)| {
                 tree_item(
-                    format!("gis2d-play-hierarchy.layer.{id}"),
+                    format!("gis2d-play-document.layer.{id}"),
                     *label,
                     Some((*id).into()),
                     Some((*icon).into()),
@@ -389,7 +389,7 @@ fn build_hierarchy_tree(play: &Gis2dPlayEnvelope) -> UiNode {
                 let id = layer.get("id").and_then(|value| value.as_str())?;
                 let label = layer.get("name").and_then(|value| value.as_str()).unwrap_or(id);
                 Some(tree_item(
-                    format!("gis2d-play-hierarchy.layer.{id}"),
+                    format!("gis2d-play-document.layer.{id}"),
                     label,
                     Some(id.into()),
                     Some("layers".into()),
@@ -400,8 +400,8 @@ fn build_hierarchy_tree(play: &Gis2dPlayEnvelope) -> UiNode {
     };
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
-            id: "gis2d-play-hierarchy.layers".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL.into()),
+            id: "gis2d-play-document.layers".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
             default_open: Some(true),
             items: layer_items,
         }],
@@ -409,7 +409,7 @@ fn build_hierarchy_tree(play: &Gis2dPlayEnvelope) -> UiNode {
             play.runtime
                 .selected_ids
                 .iter()
-                .map(|id| format!("gis2d-play-hierarchy.layer.{id}"))
+                .map(|id| format!("gis2d-play-document.layer.{id}"))
                 .collect(),
         ),
         highlighted_ids: None,
@@ -805,7 +805,7 @@ impl PluginApp for Gis2dPlayApp {
         let play = parse_envelope(document_json);
         match body_key {
             GIS2D_PLAY_BODY_COMPOSITE => render_canvas(&play),
-            GIS2D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&play),
+            GIS2D_PLAY_BODY_DOCUMENT => build_document_tree(&play),
             GIS2D_PLAY_BODY_CATALOGUE => build_catalogue_tree(&play),
             GIS2D_PLAY_BODY_INSPECTION => build_inspector_tree(&play),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -817,7 +817,7 @@ impl PluginApp for Gis2dPlayApp {
 //#region 🔖AppFactory
 fn create_gis2d_app() -> App {
     App::from_builder(
-        App::builder(GIS2D_PLAY_APP_ID, "GIS 2D").hierarchy(["semio", "gis", "2d"])
+        App::builder(GIS2D_PLAY_APP_ID, "GIS 2D").document(["semio", "gis", "2d"])
             .icon_id("gis2d")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -829,10 +829,10 @@ fn create_gis2d_app() -> App {
                 Some(&["Map".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                GIS2D_PLAY_BODY_HIERARCHY,
+                GIS2D_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -868,7 +868,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests
@@ -887,12 +887,12 @@ mod tests {
     }
 
     #[test]
-    fn hierarchy_lists_map_layers() {
+    fn document_lists_map_layers() {
         let app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let node = app.render(GIS2D_PLAY_BODY_HIERARCHY, &document, &ViewState::default());
+        let node = app.render(GIS2D_PLAY_BODY_DOCUMENT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("gis2d-play-hierarchy.layer.raster"));
+        assert!(json.contains("gis2d-play-document.layer.raster"));
     }
 
     #[test]

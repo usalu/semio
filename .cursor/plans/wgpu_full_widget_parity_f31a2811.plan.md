@@ -1,6 +1,6 @@
 ---
 name: Wgpu Full Widget Parity
-overview: "Bring every framework-used UI component in the wgpu renderer to full visual and interaction parity with React: all 16 declarative widgets (Section collapse, working Select/Input/Slider/Ring/Stepper, icons on Button/Toggle, editable Vec3, Field/KeyValue layout), remaining Tree gaps, and the ComponentScene Table and VirtualFileSystem specializations (row chrome, selection, hierarchy, icons, multi-select, double-click)."
+overview: "Bring every framework-used UI component in the wgpu renderer to full visual and interaction parity with React: all 16 declarative widgets (Section collapse, working Select/Input/Slider/Ring/Stepper, icons on Button/Toggle, editable Vec3, Field/KeyValue layout), remaining Tree gaps, and the ComponentScene Table and VirtualFileSystem specializations (row chrome, selection, document, icons, multi-select, double-click)."
 todos:
   - id: interpreter-fields
     content: "Carry all dropped wire fields through interpreter.rs and widget structs: button/toggle icon_id, input kind/commit/on_change, slider/stepper step/uniform/on_delta, ring disabled, section default_open"
@@ -21,7 +21,7 @@ todos:
     content: "Table scene: remove zebra + column separators, hairline row borders, React row heights/padding, empty message, single-click double-fire guard"
     status: completed
   - id: vfs-parity
-    content: "VFS scene: expand/collapse hierarchy with visibility filtering + chevrons, glyph icons, schema column labels + 32% name column, typed descriptor formatting, shift/meta multi-select, selected text emphasis, drag affordance, empty message"
+    content: "VFS scene: expand/collapse document with visibility filtering + chevrons, glyph icons, schema column labels + 32% name column, typed descriptor formatting, shift/meta multi-select, selected text emphasis, drag affordance, empty message"
     status: completed
   - id: text-editor-commands
     content: "Text editor scene: rename setDocument to textEdit, add submit (Cmd+Enter) and formatDocument (Cmd+S) dispatch"
@@ -80,7 +80,7 @@ React `Table` ([ui/js/react/index.tsx](ui/js/react/index.tsx) ~18679-18912) has:
 
 React `VirtualFileSystem` ([ui/js/react/index.tsx](ui/js/react/index.tsx) ~19396-19507) is a hierarchical Table: expand/collapse chevron buttons per folder row, visibility filtering by `expandedIds`, 14px per-node glyph icons chosen from schema/kind/extension (`VirtualFileSystemNodeGlyph`, ~19222-19298), indent `level * 14px`, Name column ~32% width, schema-driven descriptor columns with typed rendering (text / formatted time), shift/meta multi-select, selected rows with emphasized text, drag-drop. Wgpu today renders a flat list with path-derived indent only, zebra stripes, raw column ids as headers, single-select, no chevrons, no icons.
 
-- **Hierarchy**: maintain an `expanded_ids` set in scene state (client-side, like React - expand/collapse is not a wire command); build visible rows by filtering children of collapsed nodes (port `buildVirtualFileSystemVisibleRows` logic); render a clickable chevron (`chevron-right`/`chevron-down`) per row that has children, indent by `level * 14`.
+- **Document**: maintain an `expanded_ids` set in scene state (client-side, like React - expand/collapse is not a wire command); build visible rows by filtering children of collapsed nodes (port `buildVirtualFileSystemVisibleRows` logic); render a clickable chevron (`chevron-right`/`chevron-down`) per row that has children, indent by `level * 14`.
 - **Icons**: port the glyph mapping (schema `iconId` → kind → file-extension fallback) and draw a 14px atlas icon before the name.
 - **Columns**: use schema column *labels* for headers (not raw ids), Name column fixed ~32% width, descriptor columns share the rest; format time-kind descriptor values like React does.
 - **Selection**: selected fill + emphasized text; multi-select with shift (range from anchor) and meta/ctrl (additive) using `InputState.modifiers`, dispatching `selectRows { surfaceId, ids }` with the full computed set (command name/args already match React).

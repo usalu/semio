@@ -45,7 +45,7 @@ Create a standalone `py/compose/compose.py` module with pure domain types, diffs
 5. Add validation engine (ValidationContext, validateKit)
 6. Update engine.py to import from compose and define SQLModel tables separately
 
-## Entities to Define (following hierarchy from AGENTS.md)
+## Entities to Define (following document from AGENTS.md)
 
 1. Attribute
 2. Coord

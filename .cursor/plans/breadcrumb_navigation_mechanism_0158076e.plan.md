@@ -1,6 +1,6 @@
 ---
 name: Breadcrumb Navigation Mechanism
-overview: Introduce a framework-level navigation-tree mechanism (breadcrumb decoupled from URL and VFS) whose separators dynamically suggest alternatives, then wire sketchpad to it with the Home > Kits > {Kit} > Typologies > {Typology} > Designs > {Design} hierarchy.
+overview: Introduce a framework-level navigation-tree mechanism (breadcrumb decoupled from URL and VFS) whose separators dynamically suggest alternatives, then wire sketchpad to it with the Home > Kits > {Kit} > Typologies > {Typology} > Designs > {Design} document.
 todos:
   - id: core-model
     content: "framework/core: replace PlatformBreadcrumbItem/breadcrumb with NavigationDestination, NavigationLevel, and Platform.navigation hook"

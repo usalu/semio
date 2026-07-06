@@ -41,7 +41,7 @@ Events do **not** have a single `scope: Entity!`. A general event commonly invol
 
 `FailedOperation` cannot implement `Operation` because `Operation`'s `modification: Modification!` (with required `before`/`after`) does not exist for a failure — so the split into a generic `Event` parent is the natural shape.
 
-## Type Hierarchy (after change)
+## Type Document (after change)
 
 ```mermaid
 graph TD

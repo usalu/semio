@@ -73,7 +73,9 @@
     "compose/dev/*",
     "compose/server/*",
     "compose/site/*",
-    "mit-bestand/präsentation/*"
+    "mit-bestand/präsentation/*",
+    "mit-bestand/bericht",
+    "print"
   ],
   "engines": {
     "bun": ">=1.2.0"
@@ -118,6 +120,9 @@
     "dev:s": "bun ./script.ts dev s",
     "dev:vcs": "bun ./script.ts dev vcs",
     "dev:writer": "bun ./script.ts dev writer",
+    "dev:print": "bun nx run @semio-tech/print:watch",
+    "build:print": "bun nx run @semio-tech/print:build",
+    "build:mit-bestand:zwischenbericht": "bun nx run @semio-tech/mit-bestand-bericht:build",
     "build:forms": "bun nx run @semio-tech/framework-playground-dev:build -- --app forms",
     "build:raster": "bun nx run @semio-tech/framework-playground-dev:build -- --app raster",
     "build:draw": "bun nx run @semio-tech/framework-playground-dev:build -- --app draw",

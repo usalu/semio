@@ -3,7 +3,7 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Fix sketchpad bug: capsule types do not appear under capsule typology.",
-  "summary": "Nakagin 3d fixture used generic Capsule J (and duplicates) from mesh stems while kit/2d palette has Capsule With Balcony J, Trapezoid Capsule J, etc. Added puzzle3dPreferSpecificMetabolismKindName (balcony before trapezoid). Rebuilt nakagin 3d catalog from 2d hierarchy names + kit meshes; upgraded 154 placed objects from design kit types to specific names (e.g. Capsule With Balcony J). Regenerated 5d fixture. Tests updated.",
+  "summary": "Nakagin 3d fixture used generic Capsule J (and duplicates) from mesh stems while kit/2d palette has Capsule With Balcony J, Trapezoid Capsule J, etc. Added puzzle3dPreferSpecificMetabolismKindName (balcony before trapezoid). Rebuilt nakagin 3d catalog from 2d document names + kit meshes; upgraded 154 placed objects from design kit types to specific names (e.g. Capsule With Balcony J). Regenerated 5d fixture. Tests updated.",
   "goal": "🎯r2602🎯runningsketchpad",
   "sessions": [
     "⚪8e838cfdeead49bbbaceee1810ec1f00",

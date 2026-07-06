@@ -422,7 +422,7 @@ def fix_design():
             "// MUST compute and provide the set of piece GUIDs that are transitively hovered.",
         ),
         2576: (
-            "Returns whether a piece is transitively hovered via type or design hierarchy.",
+            "Returns whether a piece is transitively hovered via type or design document.",
             "// MUST check the transitive hover pieces for the given GUID.",
         ),
         2582: (
@@ -584,7 +584,7 @@ def fix_kit():
 
     section_summaries = {
         29: "Imports for Kit app MUST include all shared sketchpad, React, DnD, and UI dependencies.",
-        205: "Design family helper functions MUST traverse the design hierarchy to collect related design GUIDs.",
+        205: "Design family helper functions MUST traverse the design document to collect related design GUIDs.",
         232: "Constants MUST define artifact kinds and toolbar sub-tool configurations for the Kit app.",
         269: "Internal state management MUST define all Kit app types, interfaces, store, and Y.js synchronization.",
         1050: "Kit app plugin registration MUST register the Kit app plugin with machine actions, guards, and default state.",

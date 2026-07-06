@@ -105,13 +105,13 @@ pub struct StyleSpec {
 //#endregion 🔖Command
 
 //#region 🔖PanelTabConstants
-pub const FRAMEWORK_PANEL_TAB_HIERARCHY_ID: &str = "framework.panel.hierarchy";
+pub const FRAMEWORK_PANEL_TAB_DOCUMENT_ID: &str = "framework.panel.document";
 pub const FRAMEWORK_PANEL_TAB_CATALOGUE_ID: &str = "framework.panel.catalogue";
 pub const FRAMEWORK_PANEL_TAB_INSPECTION_ID: &str = "framework.panel.inspection";
-pub const FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL: &str = "Hierarchy";
+pub const FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL: &str = "Document";
 pub const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL: &str = "Catalogue";
 pub const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL: &str = "Inspection";
-pub const FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID: &str = "framework.panel.hierarchy";
+pub const FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID: &str = "framework.panel.document";
 pub const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID: &str = "framework.panel.catalogue";
 pub const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID: &str = "framework.panel.inspection";
 pub const FRAMEWORK_PANEL_TAB_PARAMETERS_ID: &str = "framework.panel.parameters";
@@ -1276,7 +1276,7 @@ mod tests {
         platform.add_app(AppDefinition {
             id: "draw-play".into(),
             label: "Draw".into(),
-            hierarchy: vec!["semio".into(), "draw".into()],
+            document: vec!["semio".into(), "draw".into()],
             icon_id: None,
             controller_id: "draw-play".into(),
             modes: vec![ModeDefinition {
@@ -2322,6 +2322,12 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
     })
 }
 
+impl Default for UiNode {
+    fn default() -> Self {
+        ui_stack_vertical(vec![])
+    }
+}
+
 pub fn ui_text(value: impl Into<String>) -> UiNode {
     UiNode::Text(UiTextNode {
         value: value.into(),
@@ -2555,7 +2561,7 @@ pub struct PanelTabDefinition {
 pub struct AppDefinition {
     pub id: String,
     pub label: String,
-    pub hierarchy: Vec<String>,
+    pub document: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_id: Option<String>,
     pub controller_id: String,
@@ -2577,27 +2583,27 @@ pub struct ProgramDefinition {
     pub program_id: String,
     pub app_id: String,
     pub label: String,
-    pub hierarchy: Vec<String>,
+    pub document: Vec<String>,
     pub yields: String,
 }
 
-/// 🪜 Formats a canonical app hierarchy for chrome.
-pub fn app_hierarchy_label(hierarchy: &[String]) -> String {
-    hierarchy.join(" · ")
+/// 🪜 Formats a canonical app document for chrome.
+pub fn app_document_label(document: &[String]) -> String {
+    document.join(" · ")
 }
 
-/// 🗂️ Formats a window tab within its canonical app hierarchy.
-pub fn app_window_hierarchy_label(app: &AppDefinition, window_label: &str) -> String {
-    let mut hierarchy = app.hierarchy.clone();
+/// 🗂️ Formats a window tab within its canonical app document.
+pub fn app_window_document_label(app: &AppDefinition, window_label: &str) -> String {
+    let mut document = app.document.clone();
     let normalized_window = window_label.trim().to_lowercase();
     let normalized_app = app.label.trim().to_lowercase();
     if !normalized_window.is_empty()
         && normalized_window != normalized_app
-        && hierarchy.last().is_none_or(|segment| segment.to_lowercase() != normalized_window)
+        && document.last().is_none_or(|segment| segment.to_lowercase() != normalized_window)
     {
-        hierarchy.push(normalized_window);
+        document.push(normalized_window);
     }
-    app_hierarchy_label(&hierarchy)
+    app_document_label(&document)
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2633,13 +2639,13 @@ pub struct ViewState {
 }
 
 #[cfg(test)]
-mod app_hierarchy_tests {
-    use super::app_hierarchy_label;
+mod app_document_tests {
+    use super::app_document_label;
 
     #[test]
-    fn formats_app_hierarchy_for_chrome() {
+    fn formats_app_document_for_chrome() {
         assert_eq!(
-            app_hierarchy_label(&["semio".into(), "puzzle".into(), "3d".into()]),
+            app_document_label(&["semio".into(), "puzzle".into(), "3d".into()]),
             "semio · puzzle · 3d"
         );
     }
@@ -2657,8 +2663,8 @@ pub use layout::{
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
-    FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
     FRAMEWORK_PANEL_TAB_PARAMETERS_ID, FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,

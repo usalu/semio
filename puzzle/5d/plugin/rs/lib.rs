@@ -8,7 +8,7 @@ use semio_framework_plugin::{
     world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json,
     App, Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup,
     UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_HIERARCHY_ID, FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+    FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use std::collections::{HashMap, HashSet};
@@ -24,7 +24,7 @@ const PUZZLE5D_PLAY_SURFACE_2D: &str = "puzzle.5d.play.2d";
 const PUZZLE5D_PLAY_SURFACE_3D: &str = "puzzle.5d.play.3d";
 const PUZZLE5D_PLAY_BODY_2D: &str = "puzzle.5d.play.2d";
 const PUZZLE5D_PLAY_BODY_3D: &str = "puzzle.5d.play.3d";
-const PUZZLE5D_PLAY_BODY_HIERARCHY: &str = "puzzle.5d.play.hierarchy";
+const PUZZLE5D_PLAY_BODY_DOCUMENT: &str = "puzzle.5d.play.document";
 const PUZZLE5D_PLAY_BODY_KINDS: &str = "puzzle.5d.play.kinds";
 const PUZZLE5D_PLAY_BODY_INSPECTOR: &str = "puzzle.5d.play.inspector";
 const PUZZLE5D_PLAY_WINDOW_2D: &str = "puzzle5d-2d";
@@ -808,7 +808,7 @@ fn tree_item_with_command(
     }
 }
 
-fn build_hierarchy_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
+fn build_document_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
     let items: Vec<UiTreeItemNode> = envelope
         .document
         .parts
@@ -824,7 +824,7 @@ fn build_hierarchy_tree(envelope: &Puzzle5dEnvelope) -> UiNode {
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
-            id: "puzzle5d-play-hierarchy.parts".into(),
+            id: "puzzle5d-play-document.parts".into(),
             label: Some("Parts".into()),
             default_open: Some(true),
             items,
@@ -1411,7 +1411,7 @@ impl PluginApp for Puzzle5dPlayApp {
                     ),
                 )
             }
-            PUZZLE5D_PLAY_BODY_HIERARCHY => build_hierarchy_tree(&envelope),
+            PUZZLE5D_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             PUZZLE5D_PLAY_BODY_KINDS => build_kinds_tree(),
             PUZZLE5D_PLAY_BODY_INSPECTOR => build_inspector_tree(&envelope),
             _ => ui_text(format!("Unknown body: {body_key}")),
@@ -1423,7 +1423,7 @@ impl PluginApp for Puzzle5dPlayApp {
 //#region 🔖Manifest
 fn create_puzzle5d_app() -> App {
     App::from_builder(
-        App::builder(PUZZLE5D_PLAY_APP_ID, "Puzzle 5D").hierarchy(["semio", "puzzle", "5d"])
+        App::builder(PUZZLE5D_PLAY_APP_ID, "Puzzle 5D").document(["semio", "puzzle", "5d"])
             .icon_id("puzzle")
             .mode("edit", "Edit")
             .default_mode_id("edit")
@@ -1436,10 +1436,10 @@ fn create_puzzle5d_app() -> App {
                 Some(&["Puzzle 2D".into(), "Puzzle 3D".into()]),
             ))
             .panel_tab(
-                FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-                FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
+                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
                 "workbench",
-                PUZZLE5D_PLAY_BODY_HIERARCHY,
+                PUZZLE5D_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1480,7 +1480,7 @@ fn bundle() -> PluginBundle {
 
 static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
 
-semio_framework_plugin::wasm_plugin_exports!();
+semio_framework_plugin::plugin_exports!();
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

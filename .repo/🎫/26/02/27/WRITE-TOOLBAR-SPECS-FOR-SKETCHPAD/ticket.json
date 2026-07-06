@@ -2,7 +2,7 @@
   "title": "Write Toolbar Specs for Sketchpad",
   "status": "closed",
   "prompt": "Write comprehensive specs for the sketchpad toolbar system",
-  "summary": "Wrote comprehensive toolbar specs covering dual-zone layout, seam-anchored positioning, component hierarchy, registration contract, group ordering, sub-tool dropdown mechanics, CSS sizing normalization, per-app toolbar sections, toolbar state management, and interaction invariants.",
+  "summary": "Wrote comprehensive toolbar specs covering dual-zone layout, seam-anchored positioning, component document, registration contract, group ordering, sub-tool dropdown mechanics, CSS sizing normalization, per-app toolbar sections, toolbar state management, and interaction invariants.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/730"
   },
@@ -111,7 +111,7 @@
           "renamed": [
             {
               "from": "compose/js/sketchpad/README.md#Specs#Toolbar#Toolbar Sizing Normalization",
-              "to": "compose/js/sketchpad/README.md#Specs#Toolbar#Component Hierarchy",
+              "to": "compose/js/sketchpad/README.md#Specs#Toolbar#Component Document",
               "lines": {
                 "added": 9,
                 "removed": 9
@@ -227,7 +227,7 @@
               }
             },
             {
-              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Component Hierarchy",
+              "path": "📃compose/js/sketchpad/README.md#Specs#Toolbar#Component Document",
               "lines": {
                 "added": 6,
                 "removed": 0

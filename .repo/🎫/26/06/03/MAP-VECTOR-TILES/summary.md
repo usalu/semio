@@ -17,7 +17,7 @@ Fixed map labels not rendering and extended label support across all vector styl
 ## Tests
 
 - `infinite_cavas`: `append_label_renders_glyphs`
-- `gis_map`: place hierarchy, colored/figure-ground label scene growth, camera/tile fixture setup
+- `gis_map`: place document, colored/figure-ground label scene growth, camera/tile fixture setup
 - `gis/map/play`: per-vector-style default labels visibility
 
 ## Files

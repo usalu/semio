@@ -118,5 +118,39 @@
   "inlineChat.showDiff": false,
   "inlineChat.accessibleDiffView": "off",
   "cursor.composer.shouldAutoAcceptDiffs": true,
-  "cursor.diffs.useCharacterLevelDiffs": false
+  "cursor.diffs.useCharacterLevelDiffs": false,
+  "latex-workshop.latex.recipe.default": "semio-tectonic",
+  "latex-workshop.latex.autoBuild.run": "onSave",
+  "latex-workshop.latex.autoClean.run": "onFailed",
+  "latex-workshop.latex.outDir": "%DIR%/dist",
+  "latex-workshop.latex.search.rootFiles.include": [
+    "mit-bestand/bericht/**/*.tex",
+    "print/template/**/*.tex"
+  ],
+  "latex-workshop.latex.tools": [
+    {
+      "name": "semio-tectonic",
+      "command": "bun",
+      "args": [
+        "${workspaceFolder}/mit-bestand/bericht/script.ts",
+        "latex",
+        "%DOC%",
+        "%OUTDIR%"
+      ]
+    }
+  ],
+  "latex-workshop.latex.recipes": [
+    {
+      "name": "semio-tectonic",
+      "tools": ["semio-tectonic"]
+    }
+  ],
+  "latex-workshop.intellisense.package.env": {
+    "TEXINPUTS": "${workspaceFolder}/print/tex//:"
+  },
+  "latex-workshop.view.pdf.viewer": "tab",
+  "latex-workshop.synctex.afterBuild.enabled": true,
+  "[latex]": {
+    "editor.defaultFormatter": "James-Yu.latex-workshop"
+  }
 }

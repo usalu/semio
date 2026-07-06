@@ -1,0 +1,109 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-components}[2026/07/06 v0.1.0 semio document components]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-core}
+\RequirePackage{semio-logo}
+\RequirePackage{fancyhdr}
+\RequirePackage{graphicx}
+\RequirePackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+
+\ExplSyntaxOn
+
+\tcbset{
+  semio box/.style={
+    enhanced,
+    boxrule=\semio@stroke@default,
+    colback=semio-light,
+    colframe=semio-dark,
+    left=\semio@spacing@compact,
+    right=\semio@spacing@compact,
+    top=\semio@spacing@touch,
+    bottom=\semio@spacing@touch,
+    arc=0mm,
+  },
+}
+
+\NewDocumentEnvironment{Semiobox}{O{}}{%
+  \begin{tcolorbox}[semio box,#1]%
+}{%
+  \end{tcolorbox}%
+}
+
+\cs_new_protected:Npn \semio_maketitle: {
+  \begin{titlepage}
+    \semio_theme_apply:
+    \centering
+    \semioemblem[2.5cm]\par\vspace{\semio@spacing@touch}
+    {\SemioSerif\LARGE\@title\par}
+    \tl_if_empty:NTF \l_semio_subtitle_tl {} {{\large\tl_use:N \l_semio_subtitle_tl\par}}
+    \vfill
+    {\SemioSans\@author\par}
+    {\SemioMono\@date\par}
+    \tl_if_empty:NTF \l_semio_doi_tl {} {{\SemioMono DOI:~ \tl_use:N \l_semio_doi_tl\par}}
+  \end{titlepage}
+}
+
+\RenewDocumentCommand{\maketitle}{}{\semio_maketitle:}
+
+\cs_new_protected:Npn \semio_header_footer_apply: {
+  \pagestyle{fancy}
+  \fancyhf{}
+  \fancyhead[L]{\semioemblem[0.8cm]}
+  \fancyhead[R]{\SemioSans\leftmark}
+  \fancyfoot[C]{\SemioMono\thepage}
+  \renewcommand{\headrulewidth}{\semio@stroke@hairline}
+  \renewcommand{\footrulewidth}{\semio@stroke@hairline}
+}
+
+\NewDocumentCommand{\makecoverpages}{}{%
+  \begin{titlepage}
+    \semio_theme_apply:
+    \centering
+    \vfill
+    {\SemioSerif\Huge\@title\par}
+    \vspace{\semio@spacing@touch}
+    \tl_if_empty:NTF \l_semio_aktenzeichen_tl {} {{\SemioSans Aktenzeichen:~ \tl_use:N \l_semio_aktenzeichen_tl\par}}
+    \tl_if_empty:NTF \l_semio_foerderzeitraum_tl {} {{\SemioSans Förderzeitraum:~ \tl_use:N \l_semio_foerderzeitraum_tl\par}}
+    \tl_if_empty:NTF \l_semio_doi_tl {} {{\SemioMono DOI:~ \tl_use:N \l_semio_doi_tl\par}}
+    \vfill
+    \semio@logo@slot[3.5cm]{zukunftbau-logo.pdf}\hfill
+    \semio@logo@slot[3.5cm]{bbsr-logo.pdf}\hfill
+    \semio@logo@slot[3.5cm]{bundesbauministerium-logo.pdf}
+    \vfill
+  \end{titlepage}
+}
+
+\NewDocumentCommand{\makefundingacknowledgement}{}{%
+  \chapter*{Förderhinweis}
+  \addcontentsline{toc}{chapter}{Förderhinweis}
+  \begin{Semiobox}
+    Dieses Projekt wurde gefördert vom Bundesinstitut für Bau-, Stadt- und Raumforschung (BBSR) im Rahmen des Forschungsprogramms Zukunft Bau
+  \end{Semiobox}
+  \begin{Semiobox}
+    The project was funded by the German Federal Institute for Research on Building, Urban Affairs and Spatial Development (BBSR) within the research programme Zukunft Bau
+  \end{Semiobox}
+}
+
+\NewDocumentCommand{\makeworkpackages}{m}{%
+  \section*{Arbeitspaketzuordnung}
+  \begin{Semiobox}[title=Netzwerk]
+    #1
+  \end{Semiobox}
+}
+
+\cs_new_protected:Npn \semio_kompakt_draft_report: {
+  \bool_if:NT \l_semio_kompakt_draft_bool {
+    \typeout{[DEBUG] semio kompaktbericht draft: pages=\the\value{page} chars=\semio_char_count:}
+  }
+}
+
+\newcount\semio@char@count
+\cs_new_protected:Npn \semio_char_count: { \the\semio@char@count }
+
+\AddToHook{enddocument/after}{\semio_kompakt_draft_report:}
+\AddToHook{begindocument}{\semio_header_footer_apply:}
+
+\ExplSyntaxOff

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧊 `@semio-tech/framework-renderer-wgpu` task router. */
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, getWorkspaceRoot, runBundleScriptMain, runVitest } from "../../../repo/lib/js/index.ts";
 
@@ -9,6 +9,14 @@ const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
 const crateName = "semio-framework-renderer-wgpu";
 const outDir = join(repoRoot, "framework/product/os/dev/renderer-modules/wgpu");
+const nativePluginOut = join(repoRoot, "framework/product/os/dev/plugin-modules-native");
+
+function trunkEnv(): NodeJS.ProcessEnv {
+	const env = { ...process.env };
+	delete env.NO_COLOR;
+	delete env.FORCE_COLOR;
+	return env;
+}
 
 function ensureWasmTarget(): void {
 	const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
@@ -17,28 +25,123 @@ function ensureWasmTarget(): void {
 	}
 }
 
-class WasmBuildScript extends BundleScript {
-	async run(_segments: string[]): Promise<void> {
+function ensureTrunk(): void {
+	const probe = spawnSync("trunk", ["--version"], { encoding: "utf8" });
+	if (probe.status !== 0) {
+		spawnSync("cargo", ["install", "trunk", "--locked"], { stdio: "inherit" });
+	}
+}
+
+function syncStableRendererArtifacts(): void {
+	const js = readdirSync(outDir).find((name) => name.startsWith("semio-framework-renderer-wgpu-") && name.endsWith(".js"));
+	const wasm = readdirSync(outDir).find((name) => name.startsWith("semio-framework-renderer-wgpu-") && name.endsWith("_bg.wasm"));
+	if (!js) throw new Error("missing trunk wgpu renderer js artifact");
+	copyFileSync(join(outDir, js), join(outDir, "semio_framework_renderer_wgpu.js"));
+	if (wasm) copyFileSync(join(outDir, wasm), join(outDir, "semio-framework-renderer-wgpu_bg.wasm"));
+}
+
+function buildBootScript(bundleRoot: string): void {
+	const bootTs = join(bundleRoot, "js/boot.ts");
+	const bootJs = join(bundleRoot, "js/boot.js");
+	const pluginFilter = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+	const build = spawnSync(
+		"bun",
+		[
+			"build",
+			bootTs,
+			"--outfile",
+			bootJs,
+			"--target",
+			"browser",
+			"--format",
+			"esm",
+			"--define",
+			`DEFAULT_PLUGIN_FILTER=${JSON.stringify(pluginFilter)}`,
+		],
+		{ cwd: bundleRoot, stdio: "inherit" },
+	);
+	if (build.status !== 0) throw new Error("boot.js build failed");
+}
+
+class TrunkBuildScript extends BundleScript {
+	async run(segments: string[]): Promise<void> {
+		ensureTrunk();
 		ensureWasmTarget();
+		buildBootScript(this.root);
 		mkdirSync(outDir, { recursive: true });
-		const build = spawnSync(
+		const release = segments.includes("--release") || segments.includes("--dist");
+		const args = ["build", "--config", "Trunk.toml"];
+		if (release) args.push("--release");
+		const build = spawnSync("trunk", args, { cwd: this.root, stdio: "inherit", env: trunkEnv() });
+		if (build.status !== 0) throw new Error("trunk build failed for wgpu renderer");
+		syncStableRendererArtifacts();
+		console.log(`[DEBUG] trunk built wgpu renderer -> ${outDir}`);
+	}
+}
+
+class TrunkServeScript extends BundleScript {
+	async run(segments: string[]): Promise<void> {
+		ensureTrunk();
+		ensureWasmTarget();
+		buildBootScript(this.root);
+		const port = process.env.S_OS_PORT ?? "6066";
+		const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
+		const args = ["serve", "--config", "Trunk.toml", "--port", port, ...extra];
+		const serve = spawnSync("trunk", args, { cwd: this.root, stdio: "inherit", env: trunkEnv() });
+		if (serve.status !== 0) throw new Error("trunk serve failed for wgpu renderer");
+	}
+}
+
+class NativeBuildScript extends BundleScript {
+	async run(segments: string[]): Promise<void> {
+		const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
+		mkdirSync(nativePluginOut, { recursive: true });
+		const renderer = spawnSync(
 			"cargo",
-			["build", "-p", crateName, "--target", wasmTarget, "--release"],
+			["build", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin"],
 			{ cwd: repoRoot, stdio: "inherit" },
 		);
-		if (build.status !== 0) throw new Error("wgpu renderer wasm build failed");
-		const artifact = join(repoRoot, "target", wasmTarget, "release", `${crateName.replace(/-/g, "_")}.wasm`);
-		const wasmBindgen = spawnSync("wasm-bindgen", ["--version"], { encoding: "utf8" });
-		if (wasmBindgen.status !== 0) {
-			spawnSync("cargo", ["install", "wasm-bindgen-cli", "--locked"], { stdio: "inherit" });
-		}
-		const bindgen = spawnSync(
-			"wasm-bindgen",
-			["--target", "web", "--out-dir", outDir, "--out-name", "semio_framework_renderer_wgpu", artifact],
-			{ cwd: repoRoot, stdio: "inherit" },
+		if (renderer.status !== 0) throw new Error("native wgpu renderer build failed");
+		const osDevScript = join(repoRoot, "framework/product/os/dev/script.ts");
+		const plugin = spawnSync("bun", [osDevScript, "plugin", filterPlugin], {
+			cwd: join(repoRoot, "framework/product/os/dev"),
+			stdio: "inherit",
+			env: { ...process.env, SEMIO_RENDERER: "wgpu", SEMIO_NATIVE_PLUGINS: "1", SEMIO_PLUGIN: filterPlugin },
+		});
+		if (plugin.status !== 0) throw new Error(`native plugin build failed: ${filterPlugin}`);
+		console.log(`[DEBUG] built native wgpu renderer and plugin ${filterPlugin}`);
+	}
+}
+
+class NativeRunScript extends BundleScript {
+	async run(segments: string[]): Promise<void> {
+		const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
+		await new NativeBuildScript(this.root).run([filterPlugin]);
+		const run = spawnSync(
+			"cargo",
+			[
+				"run",
+				"-p",
+				crateName,
+				"--bin",
+				"semio-wgpu-native",
+				"--release",
+				"--features",
+				"native-bin",
+				"--",
+				"--plugin",
+				filterPlugin,
+			],
+			{
+				cwd: repoRoot,
+				stdio: "inherit",
+				env: {
+					...process.env,
+					SEMIO_NATIVE_PLUGIN_MODULES: nativePluginOut,
+				},
+			},
 		);
-		if (bindgen.status !== 0) throw new Error("wasm-bindgen failed for wgpu renderer");
-		console.log(`[DEBUG] built wgpu renderer -> ${outDir}`);
+		if (run.status !== 0) throw new Error("native wgpu renderer run failed");
 	}
 }
 
@@ -49,7 +152,12 @@ class TestScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir)
-	.register("wasm", WasmBuildScript)
+	.register("wasm", TrunkBuildScript)
+	.register("build", TrunkBuildScript)
+	.register("serve", TrunkServeScript)
+	.register("dev", TrunkServeScript)
+	.register("native", NativeRunScript)
+	.register("native-build", NativeBuildScript)
 	.register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

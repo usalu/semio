@@ -27,7 +27,7 @@ Created `fix-ports-in-kit.ps1` script to convert all single-object connectors to
 Modified `getConnector()` function in `compose.ts`:
 
 - When no connector GUID specified → returns first available connector
-- When connector GUID specified but not found in hierarchy → falls back to first connector
+- When connector GUID specified but not found in document → falls back to first connector
 - Maintains recursive parent type lookup for connector inheritance
 
 ### 3. Regenerated Expected Flat Designs

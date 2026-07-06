@@ -1,0 +1,15 @@
+{
+  "title": "Default Workbench Tab to Document in CAD Play",
+  "emoji": "🗂️",
+  "status": "closed",
+  "description": "In the CAD play workbench, the catalogue tab is currently active by default. It should default to the document tab instead. This requires making the document panel always present (not conditionally rendered based on chromeSnapshot) and placing it first in the workbenchTabs array so it becomes the default active tab in SidePanel.",
+  "summary": "Fixed runtime crash: when cadPlayChromeSnapshotRef.current is null on initial mount, the document CallbackTreePanelDefinition callback now returns a placeholder section `[{ id: \"cad-play-document.empty\", label: \"Document\", items: [] }]` instead of `[]`. This satisfies enforcePlaygroundTreePanel's requirement for at least one section.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1697"
+  },
+  "goal": "🎯r2603🎯runningnet",
+  "sessions": [
+    "⚪e903fb945a4348a7811e96de9cb2ad00",
+    "⚪48b73fc3063f4dc48a953f17bc4d9762"
+  ]
+}

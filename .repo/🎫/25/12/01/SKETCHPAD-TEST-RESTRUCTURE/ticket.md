@@ -10,9 +10,9 @@ The `sketchpad.test.ts` had a nested structure with `test.describe` blocks:
   - `Type` describe with `beforeEach` that creates type (3 tests)
 - `Kit Import Drag and Drop` describe (1 test)
 - `Docs` describe (5 tests)
-- `Settings Panel Hierarchy` describe (5 tests)
+- `Settings Panel Document` describe (5 tests)
 
-This structure caused unnecessary test isolation and didn't reflect the app hierarchy clearly.
+This structure caused unnecessary test isolation and didn't reflect the app document clearly.
 
 # Plan
 
@@ -28,10 +28,10 @@ This structure caused unnecessary test isolation and didn't reflect the app hier
 - Created `initHome`, `initKit`, `initDesign`, `initType`, `initDocs` helper functions
 - `initKit` calls `initHome` first, `initDesign` calls `initKit` first, `initType` calls `initKit` first
 - Consolidated all tests into 5 single tests:
-  - **Home**: Settings panel hierarchy test
-  - **Kit**: Imports metabolism.zip, verifies content, tests files view, performance test for expand/collapse, settings panel hierarchy
-  - **Design**: Windows visibility, drag-and-drop pieces functionality, settings panel hierarchy
-  - **Type**: Toolbar visibility, selection/connector tool tests, settings panel hierarchy
+  - **Home**: Settings panel document test
+  - **Kit**: Imports metabolism.zip, verifies content, tests files view, performance test for expand/collapse, settings panel document
+  - **Design**: Windows visibility, drag-and-drop pieces functionality, settings panel document
+  - **Type**: Toolbar visibility, selection/connector tool tests, settings panel document
   - **Docs**: Content loading, workbench panel sections, pages in sections, details panel, navigation
 
 ## Changes

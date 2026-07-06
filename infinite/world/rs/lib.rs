@@ -440,8 +440,11 @@ fn push_line_segment(
 
 fn push_vertex_marker(lines: &mut Vec<LineVertex3d>, center: Vec3, color: [f32; 4], size: f32) {
     push_line_segment(lines, center, center.add(Vec3::new(size, 0.0, 0.0)), color);
+    push_line_segment(lines, center, center.add(Vec3::new(-size, 0.0, 0.0)), color);
     push_line_segment(lines, center, center.add(Vec3::new(0.0, size, 0.0)), color);
+    push_line_segment(lines, center, center.add(Vec3::new(0.0, -size, 0.0)), color);
     push_line_segment(lines, center, center.add(Vec3::new(0.0, 0.0, size)), color);
+    push_line_segment(lines, center, center.add(Vec3::new(0.0, 0.0, -size)), color);
 }
 
 fn mesh_vertex(mesh: &Mesh3d, index: u32) -> Vec3 {
@@ -456,7 +459,11 @@ fn append_component_overlays(
     preview: &[String],
     hovered: &Option<String>,
 ) {
-    if state.interaction_mode == "paint" || component_mode_active(state) || state.show_edges {
+    if state.interaction_mode == "paint"
+        || component_mode_active(state)
+        || state.show_edges
+        || (state.granularity == "mesh" && !state.component_ids.is_empty())
+    {
         let wire_color = [0.55, 0.65, 0.8, 0.75];
         for draw in &state.draws {
             let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -520,7 +527,7 @@ fn append_component_overlays(
                         let center = instance.model.transform_point(Vec3::new(
                             chunk[0], chunk[1], chunk[2],
                         ));
-                        push_vertex_marker(lines, center, color, 0.04);
+                        push_vertex_marker(lines, center, color, 0.06);
                     }
                 }
                 "edge" => {
@@ -1198,26 +1205,32 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
 }
 
 fn apply_runtime_draw_flags(state: &mut World3dState) {
-    let mut index_map = HashMap::new();
+    let granularity = state.granularity.clone();
+    let component_ids: std::collections::HashSet<String> =
+        state.component_ids.iter().cloned().collect();
+    let local_hover_id = state.local_hover_id.clone();
+    let hovered_component_object_id = state.hovered_component_object_id.clone();
+    let selected_ids: std::collections::HashSet<String> =
+        state.selected_ids.iter().cloned().collect();
+    let mut object_index_map = std::collections::HashMap::new();
     let mut index = 0u32;
     for draw in &state.draws {
         for instance in &draw.instances {
-            index_map.insert(instance.id.clone(), index);
+            object_index_map.insert(instance.id.clone(), index);
             index += 1;
         }
     }
     for draw in &mut state.draws {
         for instance in &mut draw.instances {
-            instance.hovered = state.local_hover_id.as_deref() == Some(instance.id.as_str())
-                || state.hovered_component_object_id.as_deref() == Some(instance.id.as_str());
-            let mesh_selected = state.granularity == "mesh"
-                && index_map.get(&instance.id).is_some_and(|object_index| {
-                    state
-                        .component_ids
-                        .iter()
-                        .any(|id| id == &object_index.to_string())
+            let mesh_selected = granularity == "mesh"
+                && object_index_map.get(&instance.id).is_some_and(|object_index| {
+                    component_ids.contains(&object_index.to_string())
                 });
-            instance.selected = state.selected_ids.iter().any(|id| id == &instance.id) || mesh_selected;
+            let local_hovered = local_hover_id.as_deref() == Some(instance.id.as_str())
+                || hovered_component_object_id.as_deref() == Some(instance.id.as_str());
+            let local_selected = selected_ids.contains(&instance.id) || mesh_selected;
+            instance.hovered = instance.hovered || local_hovered;
+            instance.selected = instance.selected || local_selected;
         }
     }
 }
@@ -1274,23 +1287,6 @@ pub fn render_world_3d(
                 instances,
             });
         }
-    }
-    #[cfg(target_arch = "wasm32")]
-    if culled_draws.is_empty() {
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "[DEBUG] world3d empty surface={} sync_draws={} culled={} bounds={:.0}x{:.0}",
-            state.surface_id,
-            state.draws.len(),
-            culled_count,
-            inner.w,
-            inner.h,
-        )));
-    }
-    if culled_count > 0 {
-        #[cfg(target_arch = "wasm32")]
-        web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(&format!(
-            "[DEBUG] world3d culled {culled_count} instances",
-        )));
     }
     let mut line_vertices = Vec::new();
     append_component_overlays(state, &mut line_vertices, &state.component_ids, &state.marquee_preview_ids, &state.hovered_component_id);
@@ -2638,7 +2634,33 @@ pub async fn fetch_pending_glb_meshes(states: &mut HashMap<String, World3dState>
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn fetch_pending_glb_meshes(_states: &mut HashMap<String, World3dState>) {}
+pub async fn fetch_url_bytes(url: &str) -> Option<Vec<u8>> {
+    if let Some(path) = url.strip_prefix("file://") {
+        return std::fs::read(path).ok();
+    }
+    if url.starts_with('/') {
+        let workspace_relative = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../..")
+            .join(url.trim_start_matches('/'));
+        if workspace_relative.exists() {
+            return std::fs::read(workspace_relative).ok();
+        }
+    }
+    None
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub async fn fetch_pending_glb_meshes(states: &mut HashMap<String, World3dState>) {
+    let pending = collect_pending_glb_fetches(states);
+    for item in pending {
+        let Some(bytes) = fetch_url_bytes(&item.url).await else {
+            continue;
+        };
+        if let Some(state) = states.get_mut(&item.surface_id) {
+            apply_glb_bytes(state, &item.url, &bytes);
+        }
+    }
+}
 
 pub fn apply_reference_image_bytes(state: &mut World3dState, url: &str, bytes: &[u8]) {
     let reader = image::ImageReader::new(std::io::Cursor::new(bytes))
