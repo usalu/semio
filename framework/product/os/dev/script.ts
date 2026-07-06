@@ -12,7 +12,7 @@ import {
 	runVitest,
 	runViteBunxDev,
 } from "../../../../repo/lib/js/index.ts";
-import { PLUGIN_BUILD_TARGETS } from "./js/plugin-registry.ts";
+import { PLUGIN_BUILD_TARGETS } from "./js/index.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";

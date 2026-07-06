@@ -1,9 +1,9 @@
 {
   "title": "Wgpu Panel Glass Blur",
   "emoji": "🪟",
-  "status": "open",
+  "status": "closed",
   "description": "Restore real frosted-glass panels in the wgpu renderer (side panel, context menus/dropdowns, window measures/engagement rails) via GPU backdrop-blur + saturate + tint composite.",
-  "summary": "Restored real frosted-glass panels in the wgpu renderer via GPU backdrop-blur + saturate + tint composite. Added glass menu/window-options alpha and blur/saturate metrics to tokens.json and regenerated styling artifacts. Replaced opaque glass_panel_fill/overlay_bg fills with per-tier GlassStyle (Panel/Menu/WindowOptions) and DrawList::push_glass. Implemented offscreen mip-chained scene_color_texture, blur downsample chain, scene blit, and glass composite passes in ui/wgpu draw/gpu pipeline. Migrated side panel, context menus/dropdowns/palette, window measures/engagement rails, and select popups to push_glass. cargo test -p ui_wgpu -p ui_styling passed; wasm rebuild succeeded.",
+  "summary": "Fixed wgpu glass-blur pipeline end-to-end. Root causes: (1) blur_globals uniform buffer was 16 bytes but WGSL required 32 — expanded Rust BlurGlobals padding and set min_binding_size; (2) after world3d passes ui_pipeline kept world3d_bind_group bound — restore glyph_bind_group in draw_world_pass_at and draw_vector_vertices; (3) WebGPU rejected scene_color used as render attachment and texture binding in the same command buffer — split frame into scene + composite submits, added blur_scratch texture with per-mip copy before downsample, and submit each blur mip separately. Verified via headless Playwright: zero WebGPU warnings, canvas renders fully (maxLuma 235).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1830"
   },

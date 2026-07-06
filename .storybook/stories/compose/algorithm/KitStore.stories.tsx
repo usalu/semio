@@ -12,14 +12,20 @@ import * as React from "react";
 import { MetabolismKit as metabolismKit } from "@semio-tech/semio-asset";
 import { AlgorithmApp, NAKAGIN_CAPSULE_TOWER_DESIGN_ID, WindowKind, designFromKit, kitSurface, type AlgorithmContextValue, type AlgorithmWindowDef } from "@semio-tech/compose-algorithm";
 
-import { CommandForm } from "../../../compose/algorithm/kit-store/CommandForm";
-import { ALL_CHANGE_KIT_ROOT_KEYS, CHANGE_TYPE_COMMAND_KEYS, KIT_STORE_COVERAGE_ROWS } from "../../../compose/algorithm/kit-store/commandSchema";
-import { DiffViewer } from "../../../compose/algorithm/kit-store/DiffViewer";
-import { applyEntityPlaceholders, EntityPicker } from "../../../compose/algorithm/kit-store/EntityPicker";
-import { EventsFeed } from "../../../compose/algorithm/kit-store/EventsFeed";
-import { HistoryControls, KitTreeGraph } from "../../../compose/algorithm/kit-store/HistoryControls";
-import { SnapshotViewer } from "../../../compose/algorithm/kit-store/SnapshotViewer";
-import { useKitStore } from "../../../compose/algorithm/kit-store/useKitStore";
+import {
+	ALL_CHANGE_KIT_ROOT_KEYS,
+	applyEntityPlaceholders,
+	CHANGE_TYPE_COMMAND_KEYS,
+	CommandForm,
+	DiffViewer,
+	EntityPicker,
+	EventsFeed,
+	HistoryControls,
+	KIT_STORE_COVERAGE_ROWS,
+	KitTreeGraph,
+	SnapshotViewer,
+	useKitStore,
+} from "../../../compose/algorithm/kit-store/index.tsx";
 
 const kitJson = metabolismKit;
 const seedDesignPlain = designFromKit(kitJson, NAKAGIN_CAPSULE_TOWER_DESIGN_ID);

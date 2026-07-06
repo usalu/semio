@@ -1,3 +1,7 @@
-(no errors)
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[log] [DEBUG] wgpu renderer booted
+[log] [DEBUG] dag draw lod=normal zoom=1.000 icon=false label=Name
 
-sample={"w":1280,"h":720,"nav":[0,0,0],"mid":[0,0,0]}
+webgpu=0
+screenshot=1280x720 nonZero=1.0000 bgLike=0.0000 maxLuma=235.5

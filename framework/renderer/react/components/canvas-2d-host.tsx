@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from "react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
-import type { CommandDescriptor, UiComponentSceneNode } from "../types.ts";
+import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
 //#region JsonLayersCanvasSession
 type CanvasLayerRecord = {

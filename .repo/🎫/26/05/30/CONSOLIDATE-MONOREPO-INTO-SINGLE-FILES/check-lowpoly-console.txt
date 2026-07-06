@@ -1,0 +1,54 @@
+[debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] [.WebGL-0x11c004d0c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warning] [.WebGL-0x11c004d0c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warning] [.WebGL-0x11c004d0c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warning] [.WebGL-0x11c004d0c00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+
+rootLen=130865
+rootPreview=<div class="flex h-screen min-h-0 w-screen flex-col bg-window"><div class="flex flex-col overflow-hidden h-screen w-screen"><div class="flex-shrink-0"><nav id="ui.navbar" data-slot="navbar" class="border-b !border-normal relative h-large z-navbar bg-window"><div class="p-single flex gap-single items-center min-w-0 h-full"><div class="h-medium min-w-0 shrink-0 flex items-center gap-single"><div class="flex items-center gap-single"><svg viewBox="0 0 350 350" class="size-workbench shrink-0" xmlns="http://www.w3.org/2000/svg"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"></path><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"
+bodyText=semio · lowpoly
+Example
+Default
+Display
+Workbench
+Details
+Settings
+Edit
+Paint
+Fullscreen
+Hierarchy
+Catalogue
+Layers
+MESHES
+Rock obj-1
+Vertices 45
+Edges 99
+Faces 65
+Model
+Focus
+Close
+Command
+Suggestions
+mesh · · 1 selected
+Move
+Rotate
+Scale
+Snap
+Smooth
+ShowEdges
+semio · lowpoly · uv
+Focus
+Close
+Command
+Inspection
+OBJECT
+Name
+Smooth Shading
+Selection
+Selection Mode
+TRANSFORM
+Tool
+TOOL PARAMS
+Extrude

@@ -1197,6 +1197,31 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         .collect();
 }
 
+fn apply_runtime_draw_flags(state: &mut World3dState) {
+    let mut index_map = HashMap::new();
+    let mut index = 0u32;
+    for draw in &state.draws {
+        for instance in &draw.instances {
+            index_map.insert(instance.id.clone(), index);
+            index += 1;
+        }
+    }
+    for draw in &mut state.draws {
+        for instance in &mut draw.instances {
+            instance.hovered = state.local_hover_id.as_deref() == Some(instance.id.as_str())
+                || state.hovered_component_object_id.as_deref() == Some(instance.id.as_str());
+            let mesh_selected = state.granularity == "mesh"
+                && index_map.get(&instance.id).is_some_and(|object_index| {
+                    state
+                        .component_ids
+                        .iter()
+                        .any(|id| id == &object_index.to_string())
+                });
+            instance.selected = state.selected_ids.iter().any(|id| id == &instance.id) || mesh_selected;
+        }
+    }
+}
+
 pub fn render_world_3d(
     scene: &UiComponentSceneNode,
     bounds: Rect,
@@ -1206,6 +1231,7 @@ pub fn render_world_3d(
 ) {
     let theme = ctx.theme;
     sync_world3d_state(state, scene, bounds);
+    apply_runtime_draw_flags(state);
     apply_gumball_preview(state);
     let inner = bounds;
     ctx.draw
@@ -1759,8 +1785,10 @@ pub fn handle_world3d_pointer_drag(
             return;
         }
     }
-    if button == 1 || (button == 2 && (modifiers.shift || modifiers.alt || modifiers.meta)) {
-        state.orbit.pan(dx, dy);
+    if button == 1 || (button == 2 && modifiers.shift) {
+        state.orbit.pan(-dx, -dy);
+    } else if button == 2 && (modifiers.alt || modifiers.meta) {
+        state.orbit.orbit(dx, dy);
     }
 }
 
@@ -1802,7 +1830,6 @@ pub fn apply_world_command_preview(state: &mut World3dState, command: &CommandDe
             state.hovered_component_object_id = None;
             state.hovered_component_mode = None;
             state.local_hover_id = None;
-            state.scene_selection_json = None;
         }
         return;
     };
@@ -1828,7 +1855,6 @@ pub fn apply_world_command_preview(state: &mut World3dState, command: &CommandDe
                 state.hovered_component_id = id;
                 state.local_hover_id = object_id;
             }
-            state.scene_selection_json = None;
         }
         "worldPick" => {
             let merge = args
@@ -1845,7 +1871,6 @@ pub fn apply_world_command_preview(state: &mut World3dState, command: &CommandDe
             } else if let Some(id) = args.get("id").and_then(json_id_to_string) {
                 state.component_ids = merge_string_ids(&state.component_ids, &[id], merge);
             }
-            state.scene_selection_json = None;
         }
         "worldSelect" => {
             let merge = args
@@ -1857,14 +1882,12 @@ pub fn apply_world_command_preview(state: &mut World3dState, command: &CommandDe
                 .and_then(|value| serde_json::from_value(value.clone()).ok())
                 .unwrap_or_default();
             state.selected_ids = merge_string_ids(&state.selected_ids, &ids, merge);
-            state.scene_selection_json = None;
         }
         "worldHover" => {
             state.local_hover_id = args
                 .get("id")
                 .and_then(|value| value.as_str())
                 .map(str::to_string);
-            state.scene_selection_json = None;
         }
         _ => {}
     }
@@ -2919,5 +2942,45 @@ mod tests {
         );
         assert_eq!(state.component_ids, vec!["4".to_string()]);
         assert_eq!(state.granularity, "vertex");
+    }
+
+    #[test]
+    fn preview_survives_sync_when_scene_json_unchanged() {
+        let selection = r#"{"granularity":"vertex","componentIds":[1],"hoveredComponent":{"objectId":"obj-1","mode":"vertex","id":2}}"#;
+        let scene = scene_with_selection(selection);
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        sync_world3d_state(
+            &mut state,
+            &scene,
+            Rect {
+                x: 0.0,
+                y: 0.0,
+                w: 400.0,
+                h: 400.0,
+            },
+        );
+        apply_world_command_preview(
+            &mut state,
+            &CommandDescriptor {
+                controller_id: "controller-1".into(),
+                command: "worldPick".into(),
+                args: Some(json!({
+                    "granularity": "vertex",
+                    "id": 5,
+                    "merge": "replace",
+                })),
+            },
+        );
+        sync_world3d_state(
+            &mut state,
+            &scene,
+            Rect {
+                x: 0.0,
+                y: 0.0,
+                w: 400.0,
+                h: 400.0,
+            },
+        );
+        assert_eq!(state.component_ids, vec!["5".to_string()]);
     }
 }

@@ -8,7 +8,7 @@ import {
   joinNeo4jGraphDatabaseName,
   parseExtraNeo4jGraphDatabaseNamesFromEnv,
   partitionNeo4jGraphCliArgv,
-} from "../../../generate.neo4j.gen.ts";
+} from "../../../script.ts";
 import { BundleScript, ScriptRouter, canReuseDevPort, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import {

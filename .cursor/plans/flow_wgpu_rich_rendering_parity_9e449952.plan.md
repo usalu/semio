@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: verify-build-and-visual
     content: Run cargo tests, rebuild wgpu wasm, and visually verify in browser (default zoom, zoomed LOD, selection) against React reference for flow and one other DAG playground
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

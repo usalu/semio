@@ -1,16 +1,16 @@
 {
-  "schema": "spatial.modelspace/v1",
+  "schema": "spatial.modelspace",
   "revision": 1,
   "models": [
     {
-      "id": "spatial.shape",
+      "id": "",
       "model": {
-        "schema": "spatial.model/v1",
+        "schema": "spatial.model",
         "revision": 1,
         "objects": [
           {
             "id": "object-hexagonal-cut-concrete-forest-right",
-            "typology": "spatial.shape.kernel.solid",
+            "typology": "",
             "primitives": [
               {
                 "kind": "vertex",

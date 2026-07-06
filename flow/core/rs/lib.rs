@@ -4827,6 +4827,17 @@ mod tests {
     }
 
     #[test]
+    fn set_canvas_theme_dark_applies_board_dark_strokes() {
+        let mut host = FlowHost::default();
+        host.set_canvas_theme_dark(true);
+        let stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+        assert!(stroke.r > 80 || stroke.g > 80);
+        host.set_canvas_theme_dark(false);
+        let light_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+        assert!(light_stroke.r < 80);
+    }
+
+    #[test]
     fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
         let mut host = host_with_test_bridge();
         host.replace_fixture(FlowFixture {

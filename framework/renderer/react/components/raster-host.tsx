@@ -1,4 +1,4 @@
-import type { CommandDescriptor, UiComponentSceneNode } from "../types.ts";
+import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
 //#region RasterHost
 export function RasterHost({

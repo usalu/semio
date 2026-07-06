@@ -9,7 +9,7 @@ import { TextEditorHost } from "./components/text-editor-host.tsx";
 import { World3dHost } from "./components/world-3d-host.tsx";
 import { appHierarchyLabel, appWindowHierarchyLabel } from "./os-shell.tsx";
 import { interpretUiNode } from "./ui-interpreter.tsx";
-import type { UiNode } from "./types.ts";
+import type { UiNode } from "./os-shell.tsx";
 
 const noopCommand = () => {};
 

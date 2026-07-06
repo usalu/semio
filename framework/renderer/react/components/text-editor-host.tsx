@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { ContextMenuController, Textarea } from "@semio-tech/ui-react";
 import { GraphWasmCanvas, type GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
-import type { CommandDescriptor, TextEditorScene, UiComponentSceneNode } from "../types.ts";
-import { textEditorCommands } from "../types.ts";
-import { createEditorSession, type EditorWasmSession } from "../wasm-session-loader.ts";
+import type { CommandDescriptor, TextEditorScene, UiComponentSceneNode } from "../os-shell.tsx";
+import { textEditorCommands } from "../os-shell.tsx";
+import { createEditorSession, type EditorWasmSession } from "../os-shell.tsx";
 
 //#region Types
 type GrammarToken = { readonly class: string; readonly start: number; readonly end: number };

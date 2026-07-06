@@ -1,12 +1,23 @@
-import { Component, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Component, createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
+import Fuse, { type FuseResult } from "fuse.js";
+import type { GraphWasmSession } from "@semio-tech/infinite-cavas-react-renderer";
 import {
 	App,
+	Button,
 	ButtonGroup,
 	ButtonGroupItem,
 	ChromeAwareWindowScrollSurface,
+	COMPOSE_WINDOW_TEMPLATE_MIME,
+	CommandDialog,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
 	Footer,
 	Icon,
+	Input,
 	Layout,
 	LevelProvider,
 	Mode,
@@ -21,6 +32,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 	Toggle,
+	ToolbarDivider,
+	ToolbarGroup,
+	ToolbarItem,
+	ToolbarZone,
 	WindowMeasureTreeGroup,
 	WindowMeasureTreeLeaf,
 	WindowMeasuresTree,
@@ -42,6 +57,7 @@ import {
 	writeStoredUiChromeCompact,
 	writeStoredUiChromeExpertise,
 	writeStoredUiChromeTheme,
+	windowTemplatePaletteTreeDragController,
 	Expertise,
 	type ElementsSurfaceTheme,
 	type EngagementControl,
@@ -51,47 +67,25 @@ import {
 	type NavbarItem,
 	type PanelToggleItem,
 	type SidePanelTabConfig,
+	type TreeDataItem,
 	type TreePanelConfig,
 	type WindowLayoutNode,
 	type ModeCanvasDropTarget,
 	type WindowTemplateDropPayload,
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
-import { DEFAULT_PLUGIN_REGISTRY, loadPluginModule, type PluginWasmHandle } from "./plugin-runtime.ts";
-import {
-	FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
-	FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID,
-	FRAMEWORK_PANEL_TAB_HIERARCHY_ID,
-	FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL,
-	FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
-	FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
-	type AppDefinition,
-	type CommandDescriptor,
-	type PluginManifest,
-	type UiNode,
-	type UiTreeNode,
-	type ViewState,
-	type WindowEngagement,
-	type WindowEngagementControl,
-	type WindowLayout,
-	type WindowLayoutAxisNode,
-	type WindowLayoutStackNode,
-	type WindowLayoutWindowNode,
-	type WindowMeasure,
-	type ToolNode,
-} from "./types.ts";
 import { interpretUiNode, uiTreeNodeToTreePanelConfig } from "./ui-interpreter.tsx";
-import { ToolTree } from "./tool-tree.tsx";
-import { UISearch, UIFind, UIFindProvider } from "./ui-search-find.tsx";
 import {
-	createFrameworkDisplayPanelTabs,
-	createFrameworkSettingsPanelTab,
-	useNamedLayoutHost,
-	type SettingsHostApi,
-} from "./os-chrome-panels.tsx";
-import {
+	DEFAULT_PLUGIN_REGISTRY,
 	NamedLayoutStore,
 	createBrowserStoragePort,
+	createNamedLayout,
+	loadPluginModule as loadCorePluginModule,
+	loadPluginWasm as loadCorePluginWasm,
+	type NamedLayout,
+	type PluginRegistryEntry,
+	type PluginWasmHandle as CorePluginWasmHandle,
+	type WindowLayout,
 } from "@semio-tech/framework-core";
 
 //#region ShellTypes
@@ -1526,7 +1520,7 @@ export function FrameworkOsShell({
 
 	const searchItems = useMemo(() => {
 		if (!session) return [];
-		const items: import("./ui-search-find.tsx").UISearchItem[] = [];
+		const items: UISearchItem[] = [];
 		for (const tab of session.app.panelTabs) {
 			items.push({
 				id: `panel.${tab.id}`,
@@ -1804,3 +1798,1526 @@ export function FrameworkOsShell({
 	);
 }
 //#endregion FrameworkOsShell
+
+//#region 🔖types
+export type CommandDescriptor = {
+	readonly controllerId: string;
+	readonly command: string;
+	readonly args?: unknown;
+};
+
+export type StyleSpec = {
+	readonly variant?: string;
+	readonly size?: string;
+	readonly density?: string;
+};
+
+export type UiStackNode = {
+	readonly type: "stack";
+	readonly direction: string;
+	readonly gap?: string;
+	readonly padding?: string;
+	readonly children: readonly UiNode[];
+};
+
+export type UiTextNode = {
+	readonly type: "text";
+	readonly value: string;
+	readonly emphasize?: boolean;
+	readonly dataAttributes?: Readonly<Record<string, string>>;
+};
+
+export type UiButtonNode = {
+	readonly type: "button";
+	readonly id?: string;
+	readonly iconId: string;
+	readonly label: string;
+	readonly command: CommandDescriptor;
+	readonly style?: StyleSpec;
+};
+
+export type UiSeparatorNode = { readonly type: "separator" };
+
+export type UiInputNode = {
+	readonly type: "input";
+	readonly id: string;
+	readonly inputKind: string;
+	readonly value: string;
+	readonly placeholder?: string;
+	readonly commit?: string;
+	readonly onChange: CommandDescriptor;
+};
+
+export type UiSelectItem = {
+	readonly value: string;
+	readonly label: string;
+};
+
+export type UiSelectNode = {
+	readonly type: "select";
+	readonly id: string;
+	readonly value: string;
+	readonly items: readonly UiSelectItem[];
+	readonly placeholder?: string;
+	readonly onChange: CommandDescriptor;
+};
+
+export type UiToggleNode = {
+	readonly type: "toggle";
+	readonly id: string;
+	readonly iconId: string;
+	readonly pressed: boolean;
+	readonly text?: string;
+	readonly onChange: CommandDescriptor;
+};
+
+export type UiVec3Node = {
+	readonly type: "vec3";
+	readonly id: string;
+	readonly value: readonly [number, number, number] | null;
+	readonly onChange: CommandDescriptor;
+};
+
+export type UiKeyValueEntry = {
+	readonly label: string;
+	readonly value: string;
+};
+
+export type UiKeyValueNode = {
+	readonly type: "keyValue";
+	readonly entries: readonly UiKeyValueEntry[];
+};
+
+export type UiSliderNode = {
+	readonly type: "slider";
+	readonly id: string;
+	readonly value: number;
+	readonly min: number;
+	readonly max: number;
+	readonly step: number;
+	readonly onChange: CommandDescriptor;
+};
+
+export type UiNumberStepperNode = {
+	readonly type: "numberStepper";
+	readonly id: string;
+	readonly value: number;
+	readonly step: number;
+	readonly uniform: boolean;
+	readonly onAbsolute: CommandDescriptor;
+	readonly onDelta: CommandDescriptor;
+};
+
+export type UiRingNode = {
+	readonly type: "ring";
+	readonly id: string;
+	readonly orbId: string;
+	readonly t: number;
+	readonly disabled?: boolean;
+	readonly onChange: CommandDescriptor;
+};
+
+export type UiIconSelectNode = {
+	readonly type: "iconSelect";
+	readonly id: string;
+	readonly value: string;
+	readonly uniform: boolean;
+	readonly classifierKind: string;
+	readonly onChange: CommandDescriptor;
+};
+
+export type UiControlNode =
+	| UiInputNode
+	| UiSelectNode
+	| UiToggleNode
+	| UiVec3Node
+	| UiButtonNode
+	| UiKeyValueNode
+	| UiSliderNode
+	| UiNumberStepperNode
+	| UiRingNode
+	| UiIconSelectNode;
+
+export type UiFieldNode = {
+	readonly type: "field";
+	readonly id: string;
+	readonly label: string;
+	readonly child: UiControlNode;
+};
+
+export type UiSectionNode = {
+	readonly type: "section";
+	readonly id: string;
+	readonly label?: string;
+	readonly defaultOpen?: boolean;
+	readonly children: readonly UiNode[];
+};
+
+export type UiTreeItemAction = {
+	readonly iconId: string;
+	readonly label?: string;
+	readonly command: CommandDescriptor;
+	readonly revealOnHover?: boolean;
+};
+
+export type UiTreeItemNode = {
+	readonly id: string;
+	readonly label: string;
+	readonly description?: string;
+	readonly iconId?: string;
+	readonly selected?: boolean;
+	readonly defaultOpen?: boolean;
+	readonly command?: CommandDescriptor;
+	readonly hoverCommand?: CommandDescriptor;
+	readonly unhoverCommand?: CommandDescriptor;
+	readonly actions?: readonly UiTreeItemAction[];
+	readonly draggable?: boolean;
+	readonly dragData?: Readonly<Record<string, string>>;
+	readonly items?: readonly UiTreeItemNode[];
+	readonly control?: UiControlNode;
+	readonly isHidden?: boolean;
+};
+
+export type UiTreeSectionNode = {
+	readonly id: string;
+	readonly label?: string;
+	readonly defaultOpen?: boolean;
+	readonly items: readonly UiTreeItemNode[];
+};
+
+export type UiTreeNode = {
+	readonly type: "tree";
+	readonly sections: readonly UiTreeSectionNode[];
+	readonly selectedIds?: readonly string[];
+	readonly highlightedIds?: readonly string[];
+	readonly selectionChange?: CommandDescriptor;
+};
+
+export type UiInspectorFieldGroup = {
+	readonly id: string;
+	readonly label: string;
+	readonly defaultOpen?: boolean;
+	readonly fields: readonly UiNode[];
+};
+
+export type Canvas2dScene = {
+	readonly cameraX: number;
+	readonly cameraY: number;
+	readonly zoom: number;
+	readonly layersJson: string;
+};
+
+export type World3dScene = {
+	readonly cameraJson: string;
+	readonly meshesJson: string;
+	readonly instancesJson: string;
+	readonly selectionJson: string;
+};
+
+export type NodeGraphScene = {
+	readonly nodesJson: string;
+	readonly edgesJson: string;
+	readonly viewportJson: string;
+	readonly editable?: boolean;
+	readonly operatorsJson?: string;
+	readonly contextMenuJson?: string;
+	readonly findItemsJson?: string;
+	readonly selectionJson?: string;
+	readonly hoverJson?: string;
+	readonly previewOffJson?: string;
+	readonly lodJson?: string;
+	readonly catalogueJson?: string;
+	readonly controlsJson?: string;
+	readonly clustersJson?: string;
+	readonly computingJson?: string;
+	readonly capabilitiesJson?: string;
+	readonly fixtureJson?: string;
+	readonly presencePeersJson?: string;
+};
+
+export type PresencePeer = {
+	readonly clientId: string;
+	readonly name: string;
+	readonly selectionCount: number;
+};
+
+export type TextEditorScene = {
+	readonly buffer: string;
+	readonly language?: string;
+	readonly selectionJson?: string;
+	readonly tokensJson?: string;
+	readonly diagnosticsJson?: string;
+	readonly completionsJson?: string;
+	readonly overlaysJson?: string;
+	readonly occurrencesJson?: string;
+	readonly placeholdersJson?: string;
+	readonly extraCaretsJson?: string;
+	readonly selectableSpansJson?: string;
+	readonly settingsJson?: string;
+	readonly cameraJson?: string;
+};
+
+export const nodeGraphCommands = {
+	select: "nodeGraphSelect",
+	hover: "nodeGraphHover",
+	edit: "nodeGraphEdit",
+	viewport: "nodeGraphViewport",
+	spotlightCommit: "spotlightCommit",
+} as const;
+
+export const textEditorCommands = {
+	edit: "textEdit",
+	select: "textSelect",
+	hover: "textHover",
+	requestCompletions: "requestCompletions",
+	commitRename: "commitRename",
+	formatDocument: "formatDocument",
+} as const;
+
+export type TableScene = {
+	readonly columnsJson: string;
+	readonly rowsJson: string;
+};
+
+export type RasterScene = {
+	readonly width: number;
+	readonly height: number;
+	readonly pixelsBase64: string;
+};
+
+export type VirtualFileSystemScene = {
+	readonly schemaJson: string;
+	readonly rowsJson: string;
+	readonly selectedRowIdsJson?: string;
+	readonly hoveredRowId?: string;
+	readonly emptyMessage?: string;
+	readonly dragDropEnabled?: boolean;
+};
+
+export type UiComponentSceneNode = {
+	readonly type: "componentScene";
+	readonly surfaceId: string;
+	readonly controllerId: string;
+	readonly componentKind: string;
+	readonly paneId?: string;
+	readonly bindingId?: string;
+	readonly canvas2d?: Canvas2dScene;
+	readonly world3d?: World3dScene;
+	readonly nodeGraph?: NodeGraphScene;
+	readonly textEditor?: TextEditorScene;
+	readonly table?: TableScene;
+	readonly raster?: RasterScene;
+	readonly virtualFileSystem?: VirtualFileSystemScene;
+};
+
+export type UiNode =
+	| UiStackNode
+	| UiTextNode
+	| UiButtonNode
+	| UiSeparatorNode
+	| UiInputNode
+	| UiSelectNode
+	| UiToggleNode
+	| UiVec3Node
+	| UiKeyValueNode
+	| UiSliderNode
+	| UiNumberStepperNode
+	| UiRingNode
+	| UiIconSelectNode
+	| UiFieldNode
+	| UiSectionNode
+	| UiTreeNode
+	| UiComponentSceneNode;
+
+export type WindowLayoutWindowNode = {
+	readonly kind: "window";
+	readonly windowKindId: string;
+	readonly title?: string;
+	readonly instanceId?: string;
+	readonly templateId?: string;
+};
+
+export type WindowLayoutStackNode = {
+	readonly kind: "stack";
+	readonly size?: number;
+	readonly children: readonly WindowLayoutWindowNode[];
+};
+
+export type WindowLayoutAxisNode = {
+	readonly kind: "row" | "column";
+	readonly size?: number;
+	readonly children: readonly (WindowLayoutAxisNode | WindowLayoutStackNode)[];
+};
+
+export type WindowLayout = {
+	readonly root: WindowLayoutAxisNode | WindowLayoutStackNode;
+};
+
+export type NamedLayout = {
+	readonly id: string;
+	readonly label: string;
+	readonly iconId?: string;
+	readonly layout: WindowLayout;
+	readonly origin: "builtin" | "user";
+	readonly groupPath?: readonly string[];
+};
+
+export type WindowEngagementOption = {
+	readonly id: string;
+	readonly label?: string;
+	readonly iconId?: string;
+	readonly pressed?: boolean;
+	readonly disabled?: boolean;
+	readonly command?: CommandDescriptor;
+};
+
+export type WindowEngagementInput = {
+	readonly id?: string;
+	readonly value?: string;
+	readonly placeholder?: string;
+	readonly disabled?: boolean;
+	readonly onChange?: CommandDescriptor;
+	readonly onSubmit?: CommandDescriptor;
+	readonly onRepeatLast?: CommandDescriptor;
+	readonly onAbort?: CommandDescriptor;
+};
+
+export type WindowEngagementStatus = {
+	readonly id: string;
+	readonly text: string;
+};
+
+export type WindowEngagementPossible = {
+	readonly id: string;
+	readonly label: string;
+	readonly detail?: string;
+	readonly command?: CommandDescriptor;
+};
+
+export type WindowEngagementRingOption = {
+	readonly id: string;
+	readonly label: string;
+	readonly disabled?: boolean;
+};
+
+export type WindowEngagementToggleGroupOption = {
+	readonly id: string;
+	readonly label: string;
+	readonly disabled?: boolean;
+};
+
+export type WindowEngagementSelectItem = {
+	readonly id: string;
+	readonly value: string;
+	readonly label: string;
+};
+
+export type WindowEngagementControl =
+	| {
+			readonly kind: "slider";
+			readonly id?: string;
+			readonly label?: string;
+			readonly value: number;
+			readonly min: number;
+			readonly max: number;
+			readonly step?: number;
+			readonly unit?: string;
+			readonly disabled?: boolean;
+			readonly onChange?: CommandDescriptor;
+			readonly onCommit?: CommandDescriptor;
+	  }
+	| {
+			readonly kind: "stepper";
+			readonly id?: string;
+			readonly label?: string;
+			readonly value: number;
+			readonly min?: number;
+			readonly max?: number;
+			readonly step?: number;
+			readonly unit?: string;
+			readonly disabled?: boolean;
+			readonly onChange?: CommandDescriptor;
+			readonly onCommit?: CommandDescriptor;
+	  }
+	| {
+			readonly kind: "ring";
+			readonly id?: string;
+			readonly label?: string;
+			readonly value?: string;
+			readonly options: readonly WindowEngagementRingOption[];
+			readonly disabled?: boolean;
+			readonly onSelect?: CommandDescriptor;
+	  }
+	| {
+			readonly kind: "toggleGroup";
+			readonly id?: string;
+			readonly label?: string;
+			readonly value?: string;
+			readonly options: readonly WindowEngagementToggleGroupOption[];
+			readonly disabled?: boolean;
+			readonly onSelect?: CommandDescriptor;
+	  }
+	| {
+			readonly kind: "select";
+			readonly id?: string;
+			readonly label?: string;
+			readonly value?: string;
+			readonly placeholder?: string;
+			readonly items: readonly WindowEngagementSelectItem[];
+			readonly disabled?: boolean;
+			readonly onChange?: CommandDescriptor;
+	  };
+
+export type WindowEngagement = {
+	readonly sessionActive?: boolean;
+	readonly options?: readonly WindowEngagementOption[];
+	readonly input?: WindowEngagementInput;
+	readonly control?: WindowEngagementControl;
+	readonly controls?: readonly WindowEngagementControl[];
+	readonly status?: readonly WindowEngagementStatus[];
+	readonly possibleEngagements?: readonly WindowEngagementPossible[];
+};
+
+export type WindowMeasure =
+	| {
+			readonly kind: "select";
+			readonly id: string;
+			readonly label?: string;
+			readonly value: string;
+			readonly items: readonly { readonly id: string; readonly value: string; readonly label: string }[];
+			readonly onChange: CommandDescriptor;
+	  }
+	| {
+			readonly kind: "slider";
+			readonly id: string;
+			readonly label?: string;
+			readonly value: number;
+			readonly min: number;
+			readonly max: number;
+			readonly step?: number;
+			readonly onChange: CommandDescriptor;
+	  }
+	| {
+			readonly kind: "toggle";
+			readonly id: string;
+			readonly iconId: string;
+			readonly label?: string;
+			readonly pressed: boolean;
+			readonly text?: string;
+			readonly onChange: CommandDescriptor;
+	  }
+	| {
+			readonly kind: "group";
+			readonly id: string;
+			readonly label: string;
+			readonly defaultOpen?: boolean;
+			readonly children: readonly WindowMeasure[];
+	  };
+
+export type ViewState = {
+	readonly activeModeId?: string;
+	readonly activeWindowKindId?: string;
+	readonly selectionJson?: string;
+	readonly panelJson?: string;
+};
+
+export type AppDefinition = {
+	readonly id: string;
+	readonly label: string;
+	readonly hierarchy: readonly string[];
+	readonly iconId?: string;
+	readonly controllerId: string;
+	readonly modes: readonly { readonly id: string; readonly label: string; readonly tools?: readonly ToolNode[] }[];
+	readonly defaultModeId?: string;
+	readonly windowKinds: readonly {
+		readonly id: string;
+		readonly label: string;
+		readonly bodyKey: string;
+		readonly iconId?: string;
+		readonly measures?: readonly WindowMeasure[];
+		readonly engagement?: WindowEngagement;
+	}[];
+	readonly panelTabs: readonly { readonly id: string; readonly label: string; readonly group: string; readonly bodyKey: string }[];
+	readonly keybindings: readonly { readonly keys: string; readonly command: CommandDescriptor }[];
+	readonly namedLayouts?: readonly NamedLayout[];
+	readonly defaultLayout?: WindowLayout;
+};
+
+export type PluginManifest = {
+	readonly pluginId: string;
+	readonly label: string;
+	readonly version: string;
+	readonly apps: readonly AppDefinition[];
+	readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly hierarchy: readonly string[]; readonly yields: string }[];
+	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string }[];
+};
+
+export type PluginHotSwapEvent = {
+	readonly pluginId: string;
+	readonly version: string;
+	readonly addedApps: readonly string[];
+	readonly removedApps: readonly string[];
+};
+
+export enum Expertise {
+	BEGINNER = "beginner",
+	NORMAL = "normal",
+	EXPERT = "expert",
+}
+
+export type ToolLeaf =
+	| { readonly id: string; readonly kind: "separator"; readonly order?: number; readonly disabled?: boolean }
+	| {
+			readonly id: string;
+			readonly kind: "button";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly disabled?: boolean;
+			readonly controllerId?: string;
+			readonly command?: string;
+			readonly args?: unknown;
+	  }
+	| {
+			readonly id: string;
+			readonly kind: "toggle";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly pressed?: boolean;
+			readonly disabled?: boolean;
+			readonly controllerId?: string;
+			readonly command?: string;
+			readonly args?: unknown;
+	  };
+
+export type ToolNode =
+	| ToolLeaf
+	| {
+			readonly id: string;
+			readonly kind: "collection";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly disabled?: boolean;
+			readonly children: readonly ToolNode[];
+	  }
+	| {
+			readonly id: string;
+			readonly kind: "button";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly disabled?: boolean;
+			readonly onPress: CommandDescriptor;
+	  }
+	| {
+			readonly id: string;
+			readonly kind: "toggle";
+			readonly iconId: string;
+			readonly label?: string;
+			readonly text?: string;
+			readonly title?: string;
+			readonly order?: number;
+			readonly pressed?: boolean;
+			readonly disabled?: boolean;
+			readonly onChange: CommandDescriptor;
+	  };
+
+export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
+
+export const FRAMEWORK_PANEL_TAB_HIERARCHY_ID = "framework.panel.hierarchy";
+export const FRAMEWORK_PANEL_TAB_CATALOGUE_ID = "framework.panel.catalogue";
+export const FRAMEWORK_PANEL_TAB_INSPECTION_ID = "framework.panel.inspection";
+export const FRAMEWORK_PANEL_TAB_HIERARCHY_LABEL = "Hierarchy";
+export const FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL = "Catalogue";
+export const FRAMEWORK_PANEL_TAB_INSPECTION_LABEL = "Inspection";
+export const FRAMEWORK_PANEL_TAB_HIERARCHY_ICON_ID = "framework.panel.hierarchy";
+export const FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID = "framework.panel.catalogue";
+export const FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID = "framework.panel.inspection";
+export const FRAMEWORK_PANEL_TAB_PARAMETERS_ID = "framework.panel.parameters";
+export const FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL = "Parameters";
+export const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID = "framework.panel.parameters";
+//#endregion 🔖types
+
+//#region 🔖plugin-runtime
+
+export type PluginWasmHandle = {
+	readonly pluginId: string;
+	readonly manifest: PluginManifest;
+	readonly createApp: (appId: string) => Promise<number>;
+	readonly destroyApp: (instanceId: number) => Promise<void>;
+	readonly handleCommand: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<string[]>;
+	readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
+	readonly tools: (instanceId: number, viewState: ViewState) => Promise<readonly ToolNode[]>;
+	readonly windowEngagements: (
+		instanceId: number,
+		viewState: ViewState,
+	) => Promise<Readonly<Record<string, WindowEngagement>>>;
+	readonly dispose: () => void;
+};
+
+export type { PluginRegistryEntry };
+export { DEFAULT_PLUGIN_REGISTRY };
+
+export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+	return adaptPluginHandle(await loadCorePluginModule(pluginId, moduleUrl));
+}
+
+export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+	return adaptPluginHandle(await loadCorePluginWasm(pluginId, moduleUrl));
+}
+
+function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
+	return {
+		pluginId: handle.pluginId,
+		manifest: handle.manifest as unknown as PluginManifest,
+		createApp: (appId) => handle.createApp(appId),
+		destroyApp: (instanceId) => handle.destroyApp(instanceId),
+		handleCommand: (instanceId, commandJson, viewState) =>
+			handle.handleCommand(instanceId, commandJson, viewState),
+		render: async (instanceId, bodyKey, viewState) =>
+			(await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
+		tools: async (instanceId, viewState) =>
+			(await handle.tools(instanceId, viewState)) as unknown as ToolNode[],
+		windowEngagements: async (instanceId, viewState) =>
+			(await handle.windowEngagements(instanceId, viewState)) as unknown as Readonly<
+				Record<string, WindowEngagement>
+			>,
+		dispose: () => handle.dispose(),
+	};
+}
+//#endregion 🔖plugin-runtime
+
+//#region 🔖wasm-session-loader
+
+//#region GraphSession
+type GraphSessionModule = {
+	readonly default: (input?: unknown) => Promise<unknown>;
+	readonly GraphSession: new () => GraphWasmSession;
+};
+
+let graphSessionPromise: Promise<GraphSessionModule> | null = null;
+
+export async function createGraphSession(): Promise<GraphWasmSession> {
+	if (!graphSessionPromise) {
+		graphSessionPromise = import("@semio-tech/framework-graph-rs/pkg/framework_graph.js").then(async (mod) => {
+			await mod.default();
+			return mod as GraphSessionModule;
+		});
+	}
+	const mod = await graphSessionPromise;
+	return new mod.GraphSession();
+}
+//#endregion GraphSession
+
+//#region FlowSession
+export type FlowWasmSession = GraphWasmSession & {
+	loadFixtureJson(json: string): void;
+	fixtureJson(): string;
+	syncFromSceneJson?(json: string): void;
+	setSelection(json: string): void;
+	setPreviewOff(json: string): void;
+	setCatalogueJson(json: string): void;
+	setNeuronKindInfosJson(json: string): void;
+	setComputingProgress(json: string): void;
+	setAutomaticLod(enabled: boolean): void;
+	setForcedDrawLodLabel(label: string): void;
+	setCanvasThemeJson(json: string): void;
+	setCamera(x: number, y: number, zoom: number): void;
+	pointerDownScreen(sx: number, sy: number, button: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean, pan: boolean): void;
+	pointerMoveScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
+	pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
+	wheelScreen(sx: number, sy: number, deltaX: number, deltaY: number, zoomGesture: boolean): void;
+	labelOverlayPaintStateJson(): string;
+	paramOverlayPaintStateJson(): string;
+	stepperOverlayStateJson(): string;
+	selectionUnionBoundsScreenJson(): string;
+	selectionPreviewPointsJson(): string;
+	selectionPreviewCrossing(): boolean;
+	selectedWidgetIds(): string;
+	hoveredWidgetId(): string | undefined;
+	hoveredChannelJson(): string;
+	pickTargetsAtScreenJson(sx: number, sy: number): string;
+	previewText(): string;
+	preselectWidgetIdsJson(): string;
+	previewOffWidgetIds(): string;
+	alignSelection(mode: string): void;
+	undo(): boolean;
+	redo(): boolean;
+	selectAll(): void;
+	deleteSelection(): void;
+	addWidget(descriptorJson: string, worldX: number, worldY: number): string;
+	setGhostWidget(descriptorJson: string, worldX: number, worldY: number): void;
+	clearGhostWidget(): void;
+	worldFromScreen(sx: number, sy: number): string;
+	evaluateSync(): string;
+	noteInsertText(chunk: string): void;
+	noteBackspace(): void;
+	noteDeleteForward(): void;
+	noteCommitEdit(): void;
+	noteMoveCaret(direction: string, extend: boolean): void;
+	setSliderValue(widgetId: string, value: number): void;
+	setStepperFieldValue(widgetId: string, fieldKey: string, value: number): void;
+	setNeuronParams(widgetId: string, paramsJson: string): void;
+	setHover?(widgetId: string | null): void;
+	setHoverChannel?(widgetId: string | null, port?: string | null): void;
+	cameraJson?(): string;
+};
+
+type FlowSessionModule = {
+	readonly default: (input?: unknown) => Promise<unknown>;
+	readonly FlowSession: new () => FlowWasmSession;
+};
+
+let flowSessionPromise: Promise<FlowSessionModule> | null = null;
+
+export async function createFlowSession(): Promise<FlowWasmSession> {
+	if (!flowSessionPromise) {
+		flowSessionPromise = import("@semio-tech/flow-core/pkg/flow_core.js").then(async (mod) => {
+			await mod.default();
+			return mod as FlowSessionModule;
+		});
+	}
+	const mod = await flowSessionPromise;
+	return new mod.FlowSession();
+}
+//#endregion FlowSession
+
+//#region EditorSession
+export type EditorWasmSession = GraphWasmSession & {
+	syncFromSceneJson(json: string): void;
+	setText(text: string): void;
+	text(): string;
+	caret(): number;
+	anchor(): number;
+	pointerDownScreen(sx: number, sy: number, button: number): void;
+	pointerMoveScreen(sx: number, sy: number, buttons: number): void;
+	pointerUpScreen(sx: number, sy: number, buttons: number): void;
+	wheelScrollScreen(deltaY: number): void;
+	insertText(text: string): void;
+	backspace(): void;
+	deleteForward(): void;
+	selectAll(): void;
+	replaceSelection(text: string): void;
+	selectionText(): string;
+	setCanvasThemeJson(json: string): void;
+	hoverTokenRangeJson(): string;
+	setHoverRange(start: number, end: number): void;
+	cameraJson(): string;
+};
+
+type EditorSessionModule = {
+	readonly default: (input?: unknown) => Promise<unknown>;
+	readonly EditorSession: new () => EditorWasmSession;
+};
+
+let editorSessionPromise: Promise<EditorSessionModule> | null = null;
+
+export async function createEditorSession(): Promise<EditorWasmSession> {
+	if (!editorSessionPromise) {
+		editorSessionPromise = import("@semio-tech/framework-editor-rs/pkg/framework_editor.js").then(async (mod) => {
+			await mod.default();
+			return mod as EditorSessionModule;
+		});
+	}
+	const mod = await editorSessionPromise;
+	return new mod.EditorSession();
+}
+//#endregion EditorSession
+
+//#region SceneHelpers
+export function isFlowGraphScene(capabilitiesJson?: string): boolean {
+	if (!capabilitiesJson) return false;
+	try {
+		const caps = JSON.parse(capabilitiesJson) as { readonly engine?: string; readonly spotlight?: boolean; readonly noteEdit?: boolean };
+		return caps.engine === "flow" || caps.spotlight === true || caps.noteEdit === true;
+	} catch {
+		return false;
+	}
+}
+//#endregion SceneHelpers
+//#endregion 🔖wasm-session-loader
+
+//#region 🔖ui-search-find
+
+//#region UISearch
+export type UISearchItem = {
+	readonly id: string;
+	readonly label: string;
+	readonly description?: string;
+	readonly icon?: ReactNode;
+	readonly category?: string;
+	readonly onSelect: () => void;
+};
+
+export function UISearch({
+	items,
+	open,
+	onOpenChange,
+	placeholder = "Search commands…",
+	emptyMessage = "No results.",
+}: {
+	readonly items: readonly UISearchItem[];
+	readonly open: boolean;
+	readonly onOpenChange: (open: boolean) => void;
+	readonly placeholder?: string;
+	readonly emptyMessage?: string;
+}) {
+	const [query, setQuery] = useState("");
+	const fuse = useMemo(
+		() =>
+			new Fuse(items, {
+				keys: [
+					{ name: "label", weight: 2 },
+					{ name: "description", weight: 1 },
+					{ name: "category", weight: 0.5 },
+				],
+				threshold: 0.4,
+				includeScore: true,
+			}),
+		[items],
+	);
+	const results = useMemo(() => {
+		if (query.trim()) return fuse.search(query).slice(0, 20);
+		return items.slice(0, 20).map((item, idx) => ({ item, refIndex: idx, score: 0 }) as FuseResult<UISearchItem>);
+	}, [fuse, items, query]);
+	const grouped = useMemo(() => {
+		const groups: Record<string, FuseResult<UISearchItem>[]> = {};
+		for (const result of results) {
+			const category = result.item.category || "";
+			if (!groups[category]) groups[category] = [];
+			groups[category].push(result);
+		}
+		return groups;
+	}, [results]);
+	const handleSelect = useCallback(
+		(item: UISearchItem) => {
+			onOpenChange(false);
+			setQuery("");
+			item.onSelect();
+		},
+		[onOpenChange],
+	);
+
+	return (
+		<CommandDialog title="Search" description="Global command palette" open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+			<CommandInput id="ui.search.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
+			<CommandList>
+				<CommandEmpty>{emptyMessage}</CommandEmpty>
+				{Object.entries(grouped).map(([category, categoryResults]) => (
+					<CommandGroup key={category || "__default"} heading={category || undefined}>
+						{categoryResults.map((result, idx) => (
+							<CommandItem
+								key={`${result.item.id}-${idx}`}
+								value={`${result.item.label} ${result.item.description ?? ""} ${result.item.category ?? ""}`.trim()}
+								onSelect={() => handleSelect(result.item)}
+							>
+								<div className="flex items-center gap-single">
+									{result.item.icon}
+									<div className="flex flex-col">
+										<span>{result.item.label}</span>
+										{result.item.description ? <span className="text-xs text-muted-foreground">{result.item.description}</span> : null}
+									</div>
+								</div>
+							</CommandItem>
+						))}
+					</CommandGroup>
+				))}
+			</CommandList>
+		</CommandDialog>
+	);
+}
+//#endregion UISearch
+
+//#region UIFind
+export type UIFindItem = {
+	readonly id: string;
+	readonly label: string;
+	readonly description?: string;
+	readonly category?: string;
+};
+
+export type UIFindContextValue = {
+	readonly findItems: readonly UIFindItem[];
+	readonly setFindItems: (items: readonly UIFindItem[]) => void;
+	readonly setOnFindItem: (callback: ((itemId: string) => void) | undefined) => void;
+	readonly triggerFindItem: (itemId: string) => void;
+};
+
+const UIFindContext = createContext<UIFindContextValue | null>(null);
+
+function areFindItemsShallowEqual(previousItems: readonly UIFindItem[], nextItems: readonly UIFindItem[]): boolean {
+	if (previousItems === nextItems) return true;
+	if (previousItems.length !== nextItems.length) return false;
+	for (let index = 0; index < nextItems.length; index += 1) {
+		const previous = previousItems[index];
+		const next = nextItems[index];
+		if (
+			!previous ||
+			!next ||
+			previous.id !== next.id ||
+			previous.label !== next.label ||
+			previous.description !== next.description ||
+			previous.category !== next.category
+		) {
+			return false;
+		}
+	}
+	return true;
+}
+
+export function UIFindProvider({ children }: { readonly children: ReactNode }) {
+	const [findItems, setFindItemsState] = useState<readonly UIFindItem[]>([]);
+	const onFindItemCallbackRef = useRef<((itemId: string) => void) | undefined>(undefined);
+	const setFindItems = useCallback((items: readonly UIFindItem[]) => {
+		setFindItemsState((previousItems) => (areFindItemsShallowEqual(previousItems, items) ? previousItems : items));
+	}, []);
+	const setOnFindItem = useCallback((callback: ((itemId: string) => void) | undefined) => {
+		onFindItemCallbackRef.current = callback;
+	}, []);
+	const triggerFindItem = useCallback((itemId: string) => {
+		onFindItemCallbackRef.current?.(itemId);
+	}, []);
+	const contextValue = useMemo(
+		() => ({ findItems, setFindItems, setOnFindItem, triggerFindItem }),
+		[findItems, setFindItems, setOnFindItem, triggerFindItem],
+	);
+	return <UIFindContext.Provider value={contextValue}>{children}</UIFindContext.Provider>;
+}
+
+export function useUIFind(): UIFindContextValue {
+	const context = useContext(UIFindContext);
+	if (!context) throw new Error("useUIFind must be used within UIFindProvider");
+	return context;
+}
+
+export function useUIFindSafe(): UIFindContextValue | null {
+	return useContext(UIFindContext);
+}
+
+export function UIFind({
+	open,
+	onOpenChange,
+	placeholder = "Find in window…",
+	emptyMessage = "No results.",
+}: {
+	readonly open: boolean;
+	readonly onOpenChange: (open: boolean) => void;
+	readonly placeholder?: string;
+	readonly emptyMessage?: string;
+}) {
+	const [query, setQuery] = useState("");
+	const findContext = useContext(UIFindContext);
+	const findItems = findContext?.findItems ?? [];
+	const triggerFindItem = findContext?.triggerFindItem;
+	const fuse = useMemo(
+		() =>
+			new Fuse(findItems, {
+				keys: [
+					{ name: "label", weight: 2 },
+					{ name: "description", weight: 1 },
+					{ name: "category", weight: 0.5 },
+				],
+				threshold: 0.4,
+				includeScore: true,
+			}),
+		[findItems],
+	);
+	const results = useMemo(() => {
+		if (query.trim()) return fuse.search(query).slice(0, 20);
+		return findItems.slice(0, 20).map((item, idx) => ({ item, refIndex: idx, score: 0 }) as FuseResult<UIFindItem>);
+	}, [findItems, fuse, query]);
+	const grouped = useMemo(() => {
+		const groups: Record<string, FuseResult<UIFindItem>[]> = {};
+		for (const result of results) {
+			const category = result.item.category || "";
+			if (!groups[category]) groups[category] = [];
+			groups[category].push(result);
+		}
+		return groups;
+	}, [results]);
+	const handleSelect = useCallback(
+		(item: UIFindItem) => {
+			onOpenChange(false);
+			setQuery("");
+			triggerFindItem?.(item.id);
+		},
+		[onOpenChange, triggerFindItem],
+	);
+
+	if (!findContext) return null;
+
+	return (
+		<CommandDialog title="Find" description="Find in active window" open={open} onOpenChange={onOpenChange} shouldFilter={false}>
+			<CommandInput id="ui.find.input" placeholder={placeholder} value={query} onValueChange={setQuery} />
+			<CommandList>
+				<CommandEmpty>{emptyMessage}</CommandEmpty>
+				{Object.entries(grouped).map(([category, categoryResults]) => (
+					<CommandGroup key={category || "__default"} heading={category || undefined}>
+						{categoryResults.map((result, idx) => (
+							<CommandItem
+								key={`${result.item.id}-${idx}`}
+								value={`${result.item.label} ${result.item.description ?? ""} ${result.item.category ?? ""}`.trim()}
+								onSelect={() => handleSelect(result.item)}
+							>
+								<div className="flex flex-col">
+									<span>{result.item.label}</span>
+									{result.item.description ? <span className="text-xs text-muted-foreground">{result.item.description}</span> : null}
+								</div>
+							</CommandItem>
+						))}
+					</CommandGroup>
+				))}
+			</CommandList>
+		</CommandDialog>
+	);
+}
+//#endregion UIFind
+//#endregion 🔖ui-search-find
+
+//#region 🔖tool-tree
+
+type ToolTreeProps = {
+	readonly tools: readonly ToolNode[];
+	readonly onCommand: (command: CommandDescriptor) => void;
+};
+
+function resolveLeafCommand(
+	node: ToolLeaf | Extract<ToolNode, { readonly kind: "button" | "toggle" }>,
+): CommandDescriptor | null {
+	if ("onPress" in node && node.onPress) return node.onPress;
+	if ("onChange" in node && node.onChange) return node.onChange;
+	if (node.kind === "button" || node.kind === "toggle") {
+		if (!node.command || !node.controllerId) return null;
+		return { controllerId: node.controllerId, command: node.command, args: node.args as Record<string, unknown> | undefined };
+	}
+	return null;
+}
+
+function toolIcon(iconId: string): IconName {
+	return iconId in ICONS ? (iconId as IconName) : "circle";
+}
+
+function renderToolLeaf(node: ToolNode, onCommand: (command: CommandDescriptor) => void): ReactElement | null {
+	if (node.kind === "separator") return <ToolbarDivider key={node.id} />;
+	if (node.kind === "button") {
+		const command = resolveLeafCommand(node);
+		if (!command) return null;
+		return (
+			<ToolbarItem key={node.id}>
+				<ButtonGroupItem
+					aria-label={node.title ?? node.label ?? node.id}
+					title={node.title ?? node.label}
+					disabled={node.disabled}
+					onClick={() => onCommand(command)}
+				>
+					<Icon icon={toolIcon(node.iconId)} size="small" />
+				</ButtonGroupItem>
+			</ToolbarItem>
+		);
+	}
+	if (node.kind === "toggle") {
+		const command = resolveLeafCommand(node);
+		if (!command) return null;
+		return (
+			<ToolbarItem key={node.id}>
+				<Toggle
+					aria-label={node.title ?? node.label ?? node.id}
+					title={node.title ?? node.label}
+					icon={<Icon icon={toolIcon(node.iconId)} size="small" />}
+					pressed={node.pressed ?? false}
+					disabled={node.disabled}
+					onPressedChange={() => onCommand(command)}
+				/>
+			</ToolbarItem>
+		);
+	}
+	return null;
+}
+
+function ToolCollection({
+	node,
+	onCommand,
+}: {
+	readonly node: Extract<ToolNode, { readonly kind: "collection" }>;
+	readonly onCommand: (command: CommandDescriptor) => void;
+}): ReactElement {
+	const [open, setOpen] = useState(false);
+	const leaves = node.children.filter((child) => child.kind !== "collection");
+	return (
+		<ToolbarGroup key={node.id}>
+			<ToolbarItem>
+				<Toggle
+					aria-label={node.title ?? node.label ?? node.id}
+					title={node.title ?? node.label}
+					icon={<Icon icon={toolIcon(node.iconId)} size="small" />}
+					pressed={open}
+					disabled={node.disabled}
+					onPressedChange={setOpen}
+				/>
+			</ToolbarItem>
+			{open
+				? leaves.map((child) => {
+						if (child.kind === "separator") return <ToolbarDivider key={child.id} />;
+						if (child.kind === "button") return renderToolLeaf(child, onCommand);
+						if (child.kind === "toggle") return renderToolLeaf(child, onCommand);
+						return null;
+					})
+				: null}
+		</ToolbarGroup>
+	);
+}
+
+export function ToolTree({ tools, onCommand }: ToolTreeProps): ReactElement | null {
+	const content = useMemo(() => {
+		if (!tools.length) return null;
+		return (
+			<ToolbarZone>
+				<ButtonGroup>
+					{tools.map((node) => {
+						if (node.kind === "collection") {
+							return <ToolCollection key={node.id} node={node} onCommand={onCommand} />;
+						}
+						return renderToolLeaf(node, onCommand);
+					})}
+				</ButtonGroup>
+			</ToolbarZone>
+		);
+	}, [onCommand, tools]);
+	return content;
+}
+//#endregion 🔖tool-tree
+
+//#region 🔖os-chrome-panels
+
+//#region DisplayPanel
+export type DisplayHostApi = {
+	readonly windowKinds: readonly { readonly id: string; readonly label: string }[];
+	readonly namedLayouts: readonly NamedLayout[];
+	readonly userLayouts: readonly NamedLayout[];
+	readonly saveCurrentLayout: (label: string) => void;
+	readonly applyNamedLayout: (layoutId: string) => void;
+	readonly deleteUserLayout: (layoutId: string) => void;
+};
+
+const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID = "framework.display.windows";
+const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID = "framework.display.layout";
+const FRAMEWORK_SETTINGS_GENERAL_TAB_ID = "framework.settings.general";
+
+let displayLayoutSaveLabel = "";
+
+function groupNamedLayoutsToTreeItems(
+	layouts: readonly NamedLayout[],
+	onApply: (layoutId: string) => void,
+	onDeleteUser?: (layoutId: string) => void,
+): TreeDataItem[] {
+	const root: TreeDataItem[] = [];
+	const folderByKey = new Map<string, TreeDataItem>();
+	const layoutLeaf = (entry: NamedLayout): TreeDataItem => ({
+		id: `framework.display.layout.${entry.id}`,
+		label: entry.label,
+		onClick: () => onApply(entry.id),
+		...(entry.origin === "user" && onDeleteUser
+			? {
+					actions: [
+						{
+							id: `framework.display.delete.${entry.id}`,
+							icon: <Icon icon="trash-2" size="small" />,
+							onClick: () => onDeleteUser(entry.id),
+						},
+					],
+				}
+			: {}),
+	});
+	for (const entry of layouts) {
+		if (!entry.groupPath?.length) {
+			root.push(layoutLeaf(entry));
+			continue;
+		}
+		let siblings = root;
+		let pathKey = "";
+		for (let index = 0; index < entry.groupPath.length; index += 1) {
+			const segment = entry.groupPath[index]!;
+			pathKey = pathKey ? `${pathKey}/${segment}` : segment;
+			let folder = folderByKey.get(pathKey);
+			if (!folder) {
+				folder = { id: `framework.display.layout.group.${pathKey}`, label: segment, defaultOpen: false, items: [] };
+				folderByKey.set(pathKey, folder);
+				siblings.push(folder);
+			}
+			const folderItems = folder.items ?? (folder.items = []);
+			if (index === entry.groupPath.length - 1) folder.items = [...folderItems, layoutLeaf(entry)];
+			else siblings = folderItems;
+		}
+	}
+	return root;
+}
+
+function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
+	return {
+		dragAndDropController: windowTemplatePaletteTreeDragController(),
+		sections: host.windowKinds.length
+			? host.windowKinds.map((kind) => ({
+					id: `framework.display.windows.${kind.id}`,
+					label: kind.label,
+					defaultOpen: false,
+					items: [
+						{
+							id: `framework.display.windows.${kind.id}.kind`,
+							label: kind.label,
+							dragData: {
+								[COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }),
+							},
+						},
+					],
+				}))
+			: [{ id: "framework.display.windows.empty", items: [{ id: "empty", label: "—" }] }],
+	};
+}
+
+function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
+	const builtinLayouts = host.namedLayouts.filter((entry) => entry.origin === "builtin");
+	const userLayouts = host.userLayouts;
+	const builtinItems = groupNamedLayoutsToTreeItems(builtinLayouts, (layoutId) => host.applyNamedLayout(layoutId));
+	const userItems = userLayouts.length
+		? [
+				{
+					id: "framework.display.layout.group.saved",
+					label: "Saved",
+					defaultOpen: false,
+					items: groupNamedLayoutsToTreeItems(userLayouts, (layoutId) => host.applyNamedLayout(layoutId), (layoutId) => host.deleteUserLayout(layoutId)),
+				},
+			]
+		: [];
+	return {
+		sections: [
+			{
+				id: "framework.display.layout.save",
+				label: "Save layout",
+				defaultOpen: false,
+				items: [
+					{
+						id: "framework.display.layout.save.label",
+						label: "Name",
+						control: (
+							<Input
+								id="framework.display.save-label"
+								defaultValue={displayLayoutSaveLabel}
+								onChange={(event) => {
+									displayLayoutSaveLabel = event.target.value;
+								}}
+								placeholder="Layout name"
+							/>
+						),
+					},
+					{
+						id: "framework.display.layout.save.action",
+						label: "Save",
+						control: (
+							<Button
+								id="framework.display.save"
+								size="sm"
+								text="Save current layout"
+								disabled={!displayLayoutSaveLabel.trim()}
+								onClick={() => {
+									const label = displayLayoutSaveLabel.trim();
+									if (!label) return;
+									host.saveCurrentLayout(label);
+									displayLayoutSaveLabel = "";
+								}}
+							/>
+						),
+					},
+				],
+			},
+			{
+				id: "framework.display.layout.list",
+				label: "Layouts",
+				defaultOpen: true,
+				items: [...builtinItems, ...userItems],
+			},
+		],
+	};
+}
+
+export function createFrameworkDisplayPanelTabs(getHost: () => DisplayHostApi | null): SidePanelTabConfig[] {
+	return [
+		{
+			id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID,
+			icon: shellTabIcon("framework.display.windows"),
+			name: "Windows",
+			order: -100,
+			tree: {
+				resolveTree: () => {
+					const host = getHost();
+					return host ? buildDisplayWindowsTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
+				},
+			},
+		},
+		{
+			id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID,
+			icon: shellTabIcon("framework.display.layout"),
+			name: "Layout",
+			order: -99,
+			tree: {
+				resolveTree: () => {
+					const host = getHost();
+					return host ? buildDisplayLayoutTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Display unavailable" }] }] };
+				},
+			},
+		},
+	];
+}
+//#endregion DisplayPanel
+
+//#region SettingsPanel
+export type SettingsHostApi = {
+	readonly appId?: string;
+	readonly appLabel?: string;
+	readonly controllerId?: string;
+	readonly pluginId?: string;
+	readonly compact: boolean;
+	readonly setCompact: (compact: boolean) => void;
+	readonly expertise: string;
+	readonly setExpertise: (expertise: string) => void;
+	readonly theme: string;
+	readonly setTheme: (theme: string) => void;
+};
+
+function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
+	return {
+		sections: [
+			...(host.appId || host.appLabel || host.controllerId || host.pluginId
+				? [
+						{
+							id: "framework.settings.app",
+							label: "App",
+							defaultOpen: true,
+							items: [
+								...(host.appLabel
+									? [{ id: "framework.settings.app.label", label: `Name: ${host.appLabel}` }]
+									: []),
+								...(host.appId ? [{ id: "framework.settings.app.id", label: `App id: ${host.appId}` }] : []),
+								...(host.controllerId
+									? [{ id: "framework.settings.app.controller", label: `Controller: ${host.controllerId}` }]
+									: []),
+								...(host.pluginId
+									? [{ id: "framework.settings.app.plugin", label: `Plugin: ${host.pluginId}` }]
+									: []),
+							],
+						},
+					]
+				: []),
+			{
+				id: "framework.settings.general",
+				label: "General",
+				defaultOpen: true,
+				items: [
+					{
+						id: "framework.settings.theme",
+						label: "Theme",
+						control: (
+							<select
+								id="framework.settings.theme"
+								className="h-small w-full rounded border border-border bg-background px-2 text-sm"
+								value={host.theme}
+								onChange={(event) => host.setTheme(event.target.value)}
+							>
+								<option value="system">System</option>
+								<option value="light">Light</option>
+								<option value="dark">Dark</option>
+							</select>
+						),
+					},
+					{
+						id: "framework.settings.compact",
+						label: "Compact UI",
+						control: (
+							<input
+								id="framework.settings.compact"
+								type="checkbox"
+								checked={host.compact}
+								onChange={(event) => host.setCompact(event.target.checked)}
+							/>
+						),
+					},
+					{
+						id: "framework.settings.expertise",
+						label: "Expertise",
+						control: (
+							<select
+								id="framework.settings.expertise"
+								className="h-small w-full rounded border border-border bg-background px-2 text-sm"
+								value={host.expertise}
+								onChange={(event) => host.setExpertise(event.target.value)}
+							>
+								<option value="beginner">Beginner</option>
+								<option value="normal">Normal</option>
+								<option value="expert">Expert</option>
+							</select>
+						),
+					},
+				],
+			},
+		],
+	};
+}
+
+export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi | null): SidePanelTabConfig {
+	return {
+		id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID,
+		icon: shellTabIcon("framework.settings.general"),
+		name: "Settings",
+		order: -98,
+		tree: {
+			resolveTree: () => {
+				const host = getHost();
+				return host ? buildSettingsGeneralTree(host) : { sections: [{ id: "unavailable", items: [{ id: "unavailable", label: "Settings unavailable" }] }] };
+			},
+		},
+	};
+}
+
+export function useNamedLayoutHost(options: {
+	readonly appId: string;
+	readonly windowKinds: readonly { readonly id: string; readonly label: string }[];
+	readonly builtinLayouts: readonly NamedLayout[];
+	readonly currentLayout: WindowLayout | undefined;
+	readonly onApplyLayout: (layout: WindowLayout) => void;
+	readonly namedLayoutStore: { getSnapshot: () => readonly NamedLayout[]; save: (layout: NamedLayout) => void; remove: (layoutId: string) => void; subscribe: (listener: () => void) => () => void };
+}): DisplayHostApi {
+	const userLayouts = useSyncExternalStore(
+		(listener) => options.namedLayoutStore.subscribe(listener),
+		() => options.namedLayoutStore.getSnapshot(),
+		() => options.namedLayoutStore.getSnapshot(),
+	);
+	return useMemo(
+		(): DisplayHostApi => ({
+			windowKinds: options.windowKinds,
+			namedLayouts: options.builtinLayouts,
+			userLayouts,
+			saveCurrentLayout: (label) => {
+				if (!options.currentLayout) return;
+				const id = `user-${Date.now()}`;
+				options.namedLayoutStore.save(createNamedLayout(id, label, options.currentLayout, "user"));
+			},
+			applyNamedLayout: (layoutId) => {
+				const layout = [...options.builtinLayouts, ...userLayouts].find((entry) => entry.id === layoutId);
+				if (layout) options.onApplyLayout(layout.layout);
+			},
+			deleteUserLayout: (layoutId) => options.namedLayoutStore.remove(layoutId),
+		}),
+		[options, userLayouts],
+	);
+}
+//#endregion SettingsPanel
+//#endregion 🔖os-chrome-panels

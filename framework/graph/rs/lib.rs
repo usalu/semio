@@ -716,5 +716,15 @@ mod tests {
         host.sync_from_payload(&payload).expect("sync");
         assert_eq!(host.dag.selected_node_ids(), vec!["a"]);
     }
+
+    #[test]
+    fn set_canvas_theme_dark_applies_board_palette() {
+        let mut host = GraphHost::default();
+        host.set_canvas_theme_dark(true);
+        let dark_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+        host.set_canvas_theme_dark(false);
+        let light_stroke = host.dag.canvas_theme.node_stroke.to_rgba8();
+        assert_ne!(dark_stroke.r, light_stroke.r);
+    }
 }
 //#endregion 🔖Tests

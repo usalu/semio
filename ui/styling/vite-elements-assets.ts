@@ -374,12 +374,12 @@ function createUiAssetsMiddleware(assetsRoot: string): Connect.NextHandleFunctio
 /** @emoji 📂 Kit fixture GLB roots for puzzle 3d `/mesh/*` URLs. */
 export function puzzle3dKitMeshRoots(repoRoot: string): { readonly meshRoots: readonly string[]; readonly placeholderMesh: string } {
   const metabolismMeshCandidates = [
-    resolve(repoRoot, "compose/fixture/kit/folder/metabolism/representation"),
-    resolve(repoRoot, "compose/fixture/kit/folder/metabolism/representations"),
+    resolve(repoRoot, "asset/metabolism/representation"),
+    resolve(repoRoot, "asset/metabolism/representations"),
   ];
   const metabolismMeshRoot = metabolismMeshCandidates.find((candidate) => existsSync(candidate)) ?? metabolismMeshCandidates[0]!;
   return {
-    meshRoots: [metabolismMeshRoot, resolve(repoRoot, "compose/fixture/kit/folder/abbau-aufbau")],
+    meshRoots: [metabolismMeshRoot, resolve(repoRoot, "asset/abbau-aufbau")],
     placeholderMesh: resolve(repoRoot, "asset/mesh/placeholder.glb"),
   };
 }

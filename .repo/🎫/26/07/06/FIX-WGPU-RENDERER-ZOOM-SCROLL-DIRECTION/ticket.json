@@ -3,12 +3,14 @@
   "emoji": "🔍",
   "status": "closed",
   "description": "Fix the inverted scroll wheel zoom direction in the wgpu renderer",
-  "summary": "Fixed zoom scroll direction, added alt/meta+rightclick pan, suppressed context menu on modifier click, and resolved ui_wgpu compile issues.",
+  "summary": "Fixed UI mirroring issue by restoring shader clip_position calculation in BLUR_DOWNSAMPLE_SHADER and SCENE_BLIT_SHADER.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1829"
   },
   "goal": "🎯r2603",
   "sessions": [
-    "⚪262642a2381f4d3b995718ef4b274123"
+    "⚪262642a2381f4d3b995718ef4b274123",
+    "⚪3cb7e0a4b0554f18bdd71decaef95319",
+    "⚪10315d276cdd4646a042e177a15208f3"
   ]
 }

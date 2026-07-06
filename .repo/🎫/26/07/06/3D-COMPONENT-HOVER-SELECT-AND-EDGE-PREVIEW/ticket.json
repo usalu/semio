@@ -1,9 +1,9 @@
 {
   "title": "3D Component Hover Select and Edge Preview",
   "emoji": "🎯",
-  "status": "open",
+  "status": "closed",
   "description": "Fix vertex/edge/face hover and selection in WGPU world engine and lowpoly plugin; add Show Edges window option toggle.",
-  "summary": "Fixed 3D hover/selection not appearing after pick commands. Root cause: renderer-local World3dState only updated on next plugin round-trip via sync_world3d_state, so overlays and instance flags lagged or never showed until JSON changed. Added apply_world_command_preview() to apply setHover/worldPick/worldSelect/worldHover payloads immediately before async dispatch; wired into WGPU dispatch_commands. Component hover now updates local state optimistically in pick_hover_command. Mesh-mode clicks now route through worldPick (not worldSelect) so lowpoly fixture.selection.ids drives selection. world_instances_json derives selected/hovered from fixture selection and hovered_target (removed always-selected active object). worldPick with null id clears selection. React host clears selection on background click. Fixed ui_wgpu input.rs on_button clone for WASM build. Tests: apply_world_command_preview, world_pick_null_clears_selection; updated mesh click test to expect worldPick. Rebuilt WGPU WASM renderer.",
+  "summary": "Fixed regression where apply_world_command_preview set scene_selection_json=None, forcing sync_world3d_state to re-parse stale cached selection JSON every frame and wipe optimistic hover/selection before the plugin round-trip completed. Removed cache invalidation; preview state now survives sync when scene JSON is unchanged. Added apply_runtime_draw_flags after sync to apply mesh hover/selection GPU flags without waiting for instances_json refresh. Apply preview synchronously when collecting world commands (before async dispatch) so the next frame sees updated state. React mesh clicks use worldPick with object index. Rebuilt WGPU WASM. Tests: preview_survives_sync_when_scene_json_unchanged plus existing suite.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1827"
   },

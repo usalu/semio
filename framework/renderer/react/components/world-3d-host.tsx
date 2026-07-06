@@ -39,7 +39,7 @@ import {
 	type SelectionMarqueePoint,
 } from "@semio-tech/ui-react";
 import { resolveSemanticColorHex } from "@semio-tech/ui-styling";
-import type { CommandDescriptor, UiComponentSceneNode } from "../types.ts";
+import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
 //#region WorldSceneParsing
 type WorldMeshData = {
@@ -431,7 +431,7 @@ function WorldInstanceNode({
 		event: ThreeEvent<PointerEvent> & { faceIndex?: number | null; uv?: { x: number; y: number } },
 	) => void;
 	readonly flatShading?: boolean;
-	readonly onInstancePointerDown: (id: string, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
+	readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
 	readonly onInstancePointerMove: (id: string | null) => void;
 	readonly onWorldPick: (args: { granularity: string; id: number; merge: string }) => void;
 	readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
@@ -496,7 +496,7 @@ function WorldInstanceNode({
 									merge: mergeMode(event),
 								});
 							} else if (targets.mesh) {
-								onInstancePointerDown(instance.id, event);
+								onInstancePointerDown(instance.id, index, event);
 							}
 						}}
 						onPointerMove={(event) => {
@@ -643,7 +643,7 @@ function WorldInstanceNode({
 				<group
 					onPointerDown={(event) => {
 						event.stopPropagation();
-						onInstancePointerDown(instance.id, event);
+						onInstancePointerDown(instance.id, index, event);
 					}}
 					onPointerMove={(event) => {
 						event.stopPropagation();
@@ -659,7 +659,7 @@ function WorldInstanceNode({
 				<mesh
 					onPointerDown={(event) => {
 						event.stopPropagation();
-						onInstancePointerDown(instance.id, event);
+						onInstancePointerDown(instance.id, index, event);
 					}}
 				>
 					<boxGeometry args={[1, 1, 1]} />
@@ -691,7 +691,7 @@ function WorldInstancesLayer({
 	readonly meshes: readonly WorldMeshRecord[];
 	readonly selection: WorldSelectionRecord;
 	readonly colors: SemanticColors;
-	readonly onInstancePointerDown: (id: string, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
+	readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
 	readonly onInstancePointerMove: (id: string | null) => void;
 	readonly onWorldPick: (args: { granularity: string; id: number; merge: string }) => void;
 	readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
@@ -973,13 +973,18 @@ export function World3dHost({
 	);
 
 	const handleInstancePointerDown = useCallback(
-		(id: string, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => {
+		(id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => {
+			const merge = mergeModeToArg(marqueeModeFromModifiers(event));
+			if (selectionMode === "mesh" || selectionMode === "object") {
+				dispatch("worldPick", { granularity: "mesh", id: index, merge });
+				return;
+			}
 			dispatch("worldSelect", {
 				ids: [id],
-				merge: mergeModeToArg(marqueeModeFromModifiers(event)),
+				merge,
 			});
 		},
-		[dispatch],
+		[dispatch, selectionMode],
 	);
 
 	const handleInstancePointerMove = useCallback(

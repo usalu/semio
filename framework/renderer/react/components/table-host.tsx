@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Table, type TableColumn } from "@semio-tech/ui-react";
-import type { CommandDescriptor, UiComponentSceneNode } from "../types.ts";
+import type { CommandDescriptor, UiComponentSceneNode } from "../os-shell.tsx";
 
 //#region TableHost
 type TableColumnRecord = { readonly id: string; readonly label: string };
