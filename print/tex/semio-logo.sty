@@ -1,31 +1,88 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{semio-logo}[2026/07/06 v0.1.0 semio emblem]
+\ProvidesPackage{semio-logo}[2026/07/07 v0.4.1 semio emblem]
 
+\RequirePackage{expl3}
+\RequirePackage{xparse}
 \RequirePackage{tikz}
 \RequirePackage{semio-tokens}
+\RequirePackage{semio-core}
+\RequirePackage{graphicx}
+
+\ExplSyntaxOn
+
+\tl_new:N \l_semio_logo_path_tl
+
+\cs_new_protected:Npn \semio_logo_dark_variant:nN #1 #2 {
+  \group_begin:
+  \filename@parse { #1 }
+  \tl_set:Nx #2 { \filename@base -dark . \filename@ext }
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_logo_resolve_path:nN #1 #2 {
+  \str_if_eq:VnTF \l_semio_theme_tl { dark } {
+    \semio_logo_dark_variant:nN {#1} \l_tmpa_tl
+    \exp_args:NV \file_if_exist:nTF \l_tmpa_tl {
+      \tl_set_eq:NN #2 \l_tmpa_tl
+    } {
+      \tl_set:Nn #2 {#1}
+    }
+  } {
+    \tl_set:Nn #2 {#1}
+  }
+}
+
+\cs_new_protected:Npn \semio_logo_slot:nn #1 #2 {
+  \semio_logo_resolve_path:nN {#2} \l_semio_logo_path_tl
+  \exp_args:NV \file_if_exist:nTF \l_semio_logo_path_tl {
+    \includegraphics[width=\linewidth]{\tl_use:N \l_semio_logo_path_tl}
+  } {
+    \fbox{\rule{0pt}{#1}\rule{\linewidth}{0pt}}%
+    \par\small\texttt{\tl_use:N \l_semio_logo_path_tl}%
+  }
+}
+
+\NewDocumentCommand{\semio@logo@slot}{O{4cm} m}{%
+  \begin{minipage}[c]{#1}%
+    \centering%
+    \semio_logo_slot:nn {#1} {#2}%
+  \end{minipage}%
+}
+
+\ExplSyntaxOff
+
+\newcommand{\semio@emblem@unit}{0.005cm}
+\newcommand{\semio@emblem@stroke}{0.0125cm}
+
+\newcommand{\semio@emblem@draw}{%
+  \begin{scope}[x=\semio@emblem@unit, y=\semio@emblem@unit]%
+    \clip (0,0) rectangle (200,200);%
+    \path[use as bounding box] (0,0) rectangle (200,200);%
+    \draw[line width=\semio@emblem@stroke, line join=miter, draw=semio-chrome-border-emphasized, fill=semio-tertiary]%
+      (1.25,3.067)--(36.25,38.875)--(36.25,156.25)--(1.25,156.25)--cycle;%
+    \draw[line width=\semio@emblem@stroke, line join=miter, draw=semio-chrome-border-emphasized, fill=semio-primary]%
+      (1.25,161.25)--(156.813,161.25)--(194.473,198.75)--(1.25,198.75)--cycle;%
+    \draw[line width=\semio@emblem@stroke, line join=miter, draw=semio-chrome-border-emphasized, fill=semio-primary]%
+      (161.263,1.25)--(161.25,156.856)--(198.75,194.476)--(198.75,1.25)--cycle;%
+    \draw[line width=\semio@emblem@stroke, line join=miter, draw=semio-chrome-border-emphasized, fill=semio-secondary]%
+      (85.467,1.25)--(156.25,1.25)--(156.25,38.75)--(122.081,38.75)--cycle;%
+    \draw[line width=\semio@emblem@stroke, line join=miter, draw=semio-chrome-border-emphasized, fill=semio-secondary]%
+      (85.468,81.25)--(156.25,81.25)--(156.25,118.75)--(122.081,118.75)--cycle;%
+  \end{scope}%
+}
 
 \newcommand{\semioemblem}[1][1cm]{%
-  \resizebox{#1}{!}{%
-    \tikz[baseline=-0.6ex]{%
-      \begin{scope}[scale=0.005, x=1cm, y=-1cm]%
-        \draw[line width=2.5, draw=semio-dark, fill=semio-tertiary] (1.25,3.067)--(36.25,38.875)--(36.25,161.25)--(1.25,161.25)--cycle;%
-        \draw[line width=2.5, draw=semio-dark, fill=semio-primary] (1.25,161.25)--(156.813,161.25)--(194.473,123.75)--(1.25,123.75)--cycle;%
-        \draw[line width=2.5, draw=semio-dark, fill=semio-primary] (161.263,1.25)--(161.25,156.856)--(198.75,119.236)--(198.75,1.25)--cycle;%
-        \draw[line width=2.5, draw=semio-dark, fill=semio-secondary] (85.467,1.25)--(156.25,1.25)--(156.25,38.75)--(122.081,38.75)--cycle;%
-        \draw[line width=2.5, draw=semio-dark, fill=semio-secondary] (85.468,81.25)--(156.25,81.25)--(156.25,118.75)--(122.081,118.75)--cycle;%
-      \end{scope}%
-    }%
+  \resizebox{\dimexpr#1\relax}{!}{%
+    \begin{tikzpicture}[baseline=(current bounding box.center), inner sep=0pt]%
+      \semio@emblem@draw
+    \end{tikzpicture}%
   }%
 }
 
-\newcommand{\semio@logo@slot}[2][4cm]{%
-  \begin{minipage}[c]{#1}%
-    \centering%
-    \IfFileExists{#2}{%
-      \includegraphics[width=\linewidth]{#2}%
-    }{%
-      \fbox{\rule{0pt}{#1}\rule{\linewidth}{0pt}}%
-      \par\small\texttt{#2}%
-    }%
-  \end{minipage}%
+\newcommand{\semioemblemheight}[1]{%
+  \resizebox{!}{\dimexpr#1\relax}{%
+    \begin{tikzpicture}[baseline=(current bounding box.south), inner sep=0pt]%
+      \semio@emblem@draw
+    \end{tikzpicture}%
+  }%
 }

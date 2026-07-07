@@ -14,8 +14,8 @@ use semio_framework_core::{
 use std::collections::HashMap;
 use ui_wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_border, push_chrome_group_border,
-    push_window_cap_border, DrawList, DragAxis, FontAtlas, HitKind, HitTarget, IconAtlas,
-    InputState, Rect, Rgba, Theme,
+    push_window_cap_border, DrawList, DragAxis, FontAtlas, GlassTier, HitKind, HitTarget,
+    IconAtlas, InputState, Rect, Rgba, Theme,
 };
 
 pub type DockPath = Vec<usize>;
@@ -1222,7 +1222,13 @@ fn render_stack(
     };
     let cap_y = bounds.y;
     let cap_rect = Rect::new(bounds.x, cap_y, bounds.w, tab_h);
-    ctx.draw.push_solid([cap_rect.x, cap_rect.y, cap_rect.w, cap_rect.h], theme.navbar);
+    let cap_glass = ctx.draw.push_glass(
+        [cap_rect.x, cap_rect.y, cap_rect.w, cap_rect.h],
+        0.0,
+        GlassTier::Toolbar,
+        theme,
+    );
+    ctx.draw.begin_glass_content(cap_glass);
 
     let focus_label = if maximized { "Unfocus" } else { "Focus" };
     let focus_icon = if maximized { "minimize-2" } else { "maximize-2" };
@@ -1247,16 +1253,11 @@ fn render_stack(
         let stack_active_tab = is_active && globally_active;
         let is_last_before_gap = per_tab_chrome && index + 1 == windows.len();
         let hovered = tab_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
-        let bg = if stack_active_tab {
-            theme.selected
-        } else if is_active && hovered {
-            theme.button_hover
+        if stack_active_tab {
+            ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], theme.selected);
         } else if hovered {
-            theme.button_hover
-        } else {
-            theme.navbar
-        };
-        ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], bg);
+            ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], theme.button_hover);
+        }
         if per_tab_chrome {
             let tab_border = if stack_active_tab {
                 theme.accent
@@ -1310,7 +1311,6 @@ fn render_stack(
     let controls_x = cap_rect.x + cap_rect.w - controls_w;
     let gap_w = (controls_x - gap_x).max(0.0);
     let gap_rect = Rect::new(gap_x, cap_y, gap_w, tab_h);
-    ctx.draw.push_solid([gap_rect.x, gap_rect.y, gap_rect.w, gap_rect.h], theme.canvas_clear);
     push_chrome_border(
         ctx.draw,
         gap_rect,
@@ -1331,10 +1331,6 @@ fn render_stack(
     });
 
     let controls_rect = Rect::new(controls_x, cap_y, controls_w, tab_h);
-    ctx.draw.push_solid(
-        [controls_rect.x, controls_rect.y, controls_rect.w, controls_rect.h],
-        theme.navbar,
-    );
     push_window_cap_border(ctx.draw, controls_rect, stroke, border);
     render_cap_action_group(
         ctx,
@@ -1346,6 +1342,7 @@ fn render_stack(
         path,
         false,
     );
+    ctx.draw.end_glass_content();
 
     let body_y = cap_y + tab_h;
     let body_x = if per_tab_chrome { active_tab_x } else { bounds.x };
@@ -1835,7 +1832,7 @@ pub mod engine_canvas {
 //! 🎨 Embeds GraphHost, FlowHost, and EditorHost via vello offscreen compositing.
 
 use crate::interpreter::FrameworkWidgetContext;
-use flow_core::FlowHost;
+use flow_core::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_graph::GraphHost;
 use infinite_cavas as cavas;
@@ -1843,10 +1840,13 @@ use semio_framework_core::{CommandDescriptor, UiComponentSceneNode};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::{draw_text, FontAtlas, GpuContext, HitKind, HitTarget, Rect, Rgba, Theme};
+use ui_wgpu::{draw_text, draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Theme};
 use vello::peniko::Color;
 use vello::wgpu;
 use vello::{AaConfig, AaSupport, RenderParams, Renderer, RendererOptions};
+
+#[cfg(target_arch = "wasm32")]
+use js_sys;
 
 fn vello_clear(theme: &Theme) -> Color {
     let c = theme.canvas_clear;
@@ -1870,6 +1870,14 @@ struct NodeGraphSyncCache {
     lod_json: Option<String>,
     viewport_json: Option<String>,
     scene_json: Option<String>,
+    evaluated: bool,
+}
+
+fn flow_fixture_semantic_eq(left: &FlowFixture, right: &FlowFixture) -> bool {
+    left.schema == right.schema
+        && left.widgets == right.widgets
+        && left.synapses == right.synapses
+        && left.layout == right.layout
 }
 
 struct EngineSurface {
@@ -1883,6 +1891,7 @@ struct EngineSurface {
     view: wgpu::TextureView,
     width: u32,
     height: u32,
+    last_note_click: Option<(String, f64)>,
 }
 
 #[derive(Default)]
@@ -2007,8 +2016,19 @@ fn sync_flow_host(host: &mut FlowHost, graph: &semio_framework_core::NodeGraphSc
     if let Some(fixture_json) = &graph.fixture_json {
         if sync_field(&mut cache.fixture_json, fixture_json) {
             if let Ok(fixture) = FlowHost::parse_fixture_json(fixture_json) {
-                host.replace_fixture(fixture);
+                if flow_fixture_semantic_eq(&host.fixture, &fixture) {
+                    host.set_camera(fixture.camera.x, fixture.camera.y, fixture.camera.zoom);
+                } else {
+                    host.replace_fixture(fixture);
+                    let _ = host.evaluate();
+                }
             }
+        } else if !cache.evaluated {
+            let _ = host.evaluate();
+        }
+        if !cache.evaluated {
+            let _ = host.evaluate();
+            cache.evaluated = true;
         }
     }
     if let Some(json) = &graph.catalogue_json {
@@ -2107,6 +2127,7 @@ fn ensure_surface(
                     view,
                     width: pw.max(1),
                     height: ph.max(1),
+                    last_note_click: None,
                 },
             );
             return Ok(());
@@ -2277,6 +2298,174 @@ pub fn paint_node_graph(
     });
 }
 
+fn note_widget_hit_at_screen(host: &flow_core::FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
+    use flow_core::dag::DagNodeKind;
+    let (world_x, world_y) = dag_screen_to_world(&host.dag, sx, sy);
+    let node = host.dag.fixture.nodes.iter().find(|node| {
+        matches!(node.kind, DagNodeKind::Note { .. })
+            && world_x >= node.x
+            && world_x <= node.x + node.width
+            && world_y >= node.y
+            && world_y <= node.y + node.height
+    })?;
+    Some((node.id.clone(), world_x, world_y))
+}
+
+#[cfg(target_arch = "wasm32")]
+fn engine_now_ms() -> f64 {
+    js_sys::Date::now()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn engine_now_ms() -> f64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_secs_f64() * 1000.0)
+        .unwrap_or(0.0)
+}
+
+pub fn node_graph_apply_note_edit_key(action: KeyAction, modifiers: &PointerModifiers) -> bool {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        for entry in map.values_mut() {
+            let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() else {
+                continue;
+            };
+            if host.dag.editing_note_id().is_none() {
+                continue;
+            }
+            match action {
+                KeyAction::Char(ch) if !modifiers.ctrl_or_meta() => host.note_insert_text(&ch),
+                KeyAction::Backspace => host.note_backspace(),
+                KeyAction::Delete => host.note_delete_forward(),
+                KeyAction::ArrowLeft => {
+                    let _ = host.note_move_caret("left", modifiers.shift);
+                }
+                KeyAction::ArrowRight => {
+                    let _ = host.note_move_caret("right", modifiers.shift);
+                }
+                KeyAction::Enter | KeyAction::Escape => host.note_commit_edit(),
+                _ => return false,
+            }
+            return true;
+        }
+        false
+    })
+}
+
+pub fn node_graph_sync_caret_blink(visible: bool) {
+    ENGINE_SURFACES.with(|cell| {
+        for entry in cell.borrow_mut().values_mut() {
+            if let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() {
+                if host.dag.editing_note_id().is_some() {
+                    host.set_note_caret_visible(visible);
+                }
+            }
+        }
+    });
+}
+
+fn node_graph_pan_gesture(button: i16, alt: bool, space_pressed: bool) -> bool {
+    button == 1 || (button == 0 && (alt || space_pressed))
+}
+
+fn node_graph_set_wheel_zoom_active(entry: &mut EngineSurface, active: bool) {
+    match entry.node_graph.as_mut() {
+        Some(NodeGraphEngine::Flow(host)) => host.dag.set_wheel_zoom_active(active),
+        Some(NodeGraphEngine::Dag(host)) => host.dag.set_wheel_zoom_active(active),
+        None => {}
+    }
+}
+
+pub fn node_graph_clear_wheel_zoom_active() {
+    ENGINE_SURFACES.with(|cell| {
+        for entry in cell.borrow_mut().values_mut() {
+            node_graph_set_wheel_zoom_active(entry, false);
+        }
+    });
+}
+
+const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
+
+pub fn node_graph_clear_all_ghost_widgets() {
+    ENGINE_SURFACES.with(|cell| {
+        for entry in cell.borrow_mut().values_mut() {
+            if let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() {
+                host.clear_ghost_widget();
+            }
+        }
+    });
+}
+
+pub fn node_graph_sync_flow_widget_ghost(
+    x: f32,
+    y: f32,
+    drag_data: &HashMap<String, String>,
+    surfaces: &[(&str, Rect)],
+) {
+    let Some(raw) = drag_data.get(FLOW_WIDGET_DRAG_MIME) else {
+        node_graph_clear_all_ghost_widgets();
+        return;
+    };
+    let mut over_graph = false;
+    for (surface_id, bounds) in surfaces {
+        if !bounds.contains(x, y) {
+            continue;
+        }
+        let sx = (x - bounds.x) as f64;
+        let sy = (y - bounds.y) as f64;
+        ENGINE_SURFACES.with(|cell| {
+            if let Some(entry) = cell.borrow_mut().get_mut(*surface_id) {
+                if let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() {
+                    let (world_x, world_y) = dag_screen_to_world(&host.dag, sx, sy);
+                    let _ = host.set_ghost_widget(raw, world_x, world_y);
+                    over_graph = true;
+                }
+            }
+        });
+        break;
+    }
+    if !over_graph {
+        node_graph_clear_all_ghost_widgets();
+    }
+}
+
+pub fn node_graph_flow_widget_drop_command(
+    x: f32,
+    y: f32,
+    drag_data: &HashMap<String, String>,
+    surfaces: &[(&str, Rect, &str)],
+) -> Option<CommandDescriptor> {
+    let raw = drag_data.get(FLOW_WIDGET_DRAG_MIME)?;
+    let descriptor: Value = serde_json::from_str(raw).ok()?;
+    for (surface_id, bounds, controller_id) in surfaces {
+        if !bounds.contains(x, y) {
+            continue;
+        }
+        let sx = (x - bounds.x) as f64;
+        let sy = (y - bounds.y) as f64;
+        let world = ENGINE_SURFACES.with(|cell| {
+            cell.borrow().get(*surface_id).and_then(|entry| {
+                let NodeGraphEngine::Flow(host) = entry.node_graph.as_ref()? else {
+                    return None;
+                };
+                Some(dag_screen_to_world(&host.dag, sx, sy))
+            })
+        })?;
+        return Some(CommandDescriptor {
+            controller_id: (*controller_id).to_string(),
+            command: "addWidget".into(),
+            args: Some(json!({
+                "kind": descriptor.get("kind").and_then(|value| value.as_str()).unwrap_or("inputSlider"),
+                "neuronKind": descriptor.get("neuronKind").and_then(|value| value.as_str()),
+                "x": world.0,
+                "y": world.1,
+            })),
+        });
+    }
+    None
+}
+
 pub fn node_graph_wheel(
     surface_id: &str,
     controller_id: &str,
@@ -2284,7 +2473,7 @@ pub fn node_graph_wheel(
     x: f32,
     y: f32,
     delta: f32,
-    ctrl: bool,
+    _ctrl: bool,
 ) -> Vec<CommandDescriptor> {
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
@@ -2295,9 +2484,11 @@ pub fn node_graph_wheel(
         };
         match entry.node_graph.as_mut() {
             Some(NodeGraphEngine::Flow(host)) => {
-                host.wheel_screen(sx, sy, 0.0, delta as f64, ctrl);
+                host.dag.set_wheel_zoom_active(true);
+                host.wheel_screen(sx, sy, 0.0, delta as f64, true);
             }
             Some(NodeGraphEngine::Dag(host)) => {
+                host.dag.set_wheel_zoom_active(true);
                 host.wheel_screen(sx, sy, delta as f64, true);
             }
             None => return Vec::new(),
@@ -2316,7 +2507,9 @@ pub fn node_graph_pointer_down(
     shift: bool,
     ctrl: bool,
     alt: bool,
+    space_pressed: bool,
 ) -> Vec<CommandDescriptor> {
+    let pan = node_graph_pan_gesture(button, alt, space_pressed);
     let sx = (x - inner.x) as f64;
     let sy = (y - inner.y) as f64;
     ENGINE_SURFACES.with(|cell| {
@@ -2324,12 +2517,29 @@ pub fn node_graph_pointer_down(
         let Some(entry) = map.get_mut(surface_id) else {
             return Vec::new();
         };
+        if button == 0 && !pan && !shift && !ctrl {
+            if let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() {
+                if let Some((widget_id, world_x, world_y)) = note_widget_hit_at_screen(host, sx, sy) {
+                    let now = engine_now_ms();
+                    if let Some((last_id, last_ms)) = entry.last_note_click.clone() {
+                        if last_id == widget_id && now - last_ms < 400.0 {
+                            host.begin_note_edit(&widget_id, world_x, world_y);
+                            entry.last_note_click = None;
+                            return graph_interaction_commands(surface_id, controller_id, entry);
+                        }
+                    }
+                    entry.last_note_click = Some((widget_id, now));
+                } else {
+                    entry.last_note_click = None;
+                }
+            }
+        }
         match entry.node_graph.as_mut() {
             Some(NodeGraphEngine::Flow(host)) => {
-                host.pointer_down_screen(sx, sy, button as u8, shift, ctrl, alt, button == 1);
+                host.pointer_down_screen(sx, sy, button as u8, shift, ctrl, alt, pan);
             }
             Some(NodeGraphEngine::Dag(host)) => {
-                host.pointer_down_screen(sx, sy, button as u8, shift, ctrl, alt);
+                host.pointer_down_screen(sx, sy, button as u8, shift, ctrl, alt, pan);
             }
             None => return Vec::new(),
         }
@@ -2650,7 +2860,7 @@ fn paint_label_overlay_row(
     } else {
         1.0
     };
-    draw_text(ctx, text, tx, ty, font_px, fill.with_alpha(fill.a * alpha));
+    draw_text_overlay(ctx, text, tx, ty, font_px, fill.with_alpha(fill.a * alpha));
 }
 
 pub fn paint_node_graph_labels(
@@ -2744,7 +2954,7 @@ fn paint_node_graph_selection_marquee(
         for window in points.windows(2) {
             let (x0, y0) = window[0];
             let (x1, y1) = window[1];
-            ctx.draw.push_line(
+            ctx.draw.push_line_overlay(
                 inner.x + x0,
                 inner.y + y0,
                 inner.x + x1,
@@ -2755,7 +2965,7 @@ fn paint_node_graph_selection_marquee(
         }
         let (fx, fy) = points[0];
         let (lx, ly) = points[points.len() - 1];
-        ctx.draw.push_line(inner.x + lx, inner.y + ly, inner.x + fx, inner.y + fy, stroke, 1.5);
+        ctx.draw.push_line_overlay(inner.x + lx, inner.y + ly, inner.x + fx, inner.y + fy, stroke, 1.5);
         return;
     }
     let (x0, y0) = points[0];
@@ -2764,14 +2974,14 @@ fn paint_node_graph_selection_marquee(
     let ry = inner.y + y0.min(y1);
     let rw = (x1 - x0).abs();
     let rh = (y1 - y0).abs();
-    ctx.draw.push_solid([rx, ry, rw, rh], fill);
+    ctx.draw.push_solid_overlay([rx, ry, rw, rh], fill);
     ctx.draw
-        .push_line(rx, ry, rx + rw, ry, stroke, 1.5);
+        .push_line_overlay(rx, ry, rx + rw, ry, stroke, 1.5);
     ctx.draw
-        .push_line(rx + rw, ry, rx + rw, ry + rh, stroke, 1.5);
+        .push_line_overlay(rx + rw, ry, rx + rw, ry + rh, stroke, 1.5);
     ctx.draw
-        .push_line(rx + rw, ry + rh, rx, ry + rh, stroke, 1.5);
-    ctx.draw.push_line(rx, ry + rh, rx, ry, stroke, 1.5);
+        .push_line_overlay(rx + rw, ry + rh, rx, ry + rh, stroke, 1.5);
+    ctx.draw.push_line_overlay(rx, ry + rh, rx, ry, stroke, 1.5);
 }
 
 fn paint_node_graph_selection_bounds(
@@ -2796,10 +3006,10 @@ fn paint_node_graph_selection_bounds(
     let rx = inner.x + x;
     let ry = inner.y + y;
     let stroke = theme.text_element.with_alpha(0.95);
-    ctx.draw.push_line(rx, ry, rx + w, ry, stroke, 1.0);
-    ctx.draw.push_line(rx + w, ry, rx + w, ry + h, stroke, 1.0);
-    ctx.draw.push_line(rx + w, ry + h, rx, ry + h, stroke, 1.0);
-    ctx.draw.push_line(rx, ry + h, rx, ry, stroke, 1.0);
+    ctx.draw.push_line_overlay(rx, ry, rx + w, ry, stroke, 1.0);
+    ctx.draw.push_line_overlay(rx + w, ry, rx + w, ry + h, stroke, 1.0);
+    ctx.draw.push_line_overlay(rx + w, ry + h, rx, ry + h, stroke, 1.0);
+    ctx.draw.push_line_overlay(rx, ry + h, rx, ry, stroke, 1.0);
 }
 
 pub fn paint_node_graph_overlays(
@@ -3811,6 +4021,7 @@ pub fn framework_widget_context<'a>(
         collapsed_sections,
         open_selects,
         interaction_maps,
+        pick_clip: None,
     }
 }
 // #endregion interpreter
@@ -4804,6 +5015,7 @@ pub fn handle_scene_pointer_button(
                     y,
                     button,
                     shift,
+                    false,
                     false,
                     false,
                 ));
@@ -7401,10 +7613,14 @@ impl ShellState {
     }
 
     pub async fn apply_ops(&mut self, ops: &[String]) -> Result<(), String> {
+        let mut pending: Vec<String> = ops.to_vec();
         let mut view_state = self.session.as_ref().map(|s| s.view_state.clone());
         let mut document_changed = false;
-        for op_json in ops {
-            let op: serde_json::Value = serde_json::from_str(op_json).unwrap_or(serde_json::Value::Null);
+        while !pending.is_empty() {
+            let batch = std::mem::take(&mut pending);
+            let mut follow_up_ops: Vec<String> = Vec::new();
+            for op_json in batch {
+            let op: serde_json::Value = serde_json::from_str(&op_json).unwrap_or(serde_json::Value::Null);
             if op.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
                 document_changed = true;
             }
@@ -7425,10 +7641,42 @@ impl ShellState {
                     download_media_export(filename, mime_type, data);
                 }
             }
+            if op.get("op").and_then(|v| v.as_str()) == Some("requestFileOpen") {
+                if let Some(import_command) = op.get("importCommand").and_then(|v| v.as_str()) {
+                    let accept = op
+                        .get("accept")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or(".json");
+                    if let (Some(session), Some(contents)) = (self.session.clone(), request_file_open(accept)) {
+                        let payload = serde_json::from_str::<serde_json::Value>(&contents)
+                            .unwrap_or_else(|_| serde_json::Value::String(contents));
+                        let command = CommandDescriptor {
+                            controller_id: session.app.controller_id.clone(),
+                            command: import_command.to_string(),
+                            args: Some(serde_json::json!({ "payload": payload })),
+                        };
+                        if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
+                            if let Ok(command_json) = serde_json::to_string(&command) {
+                                if let Ok(import_ops) = plugin
+                                    .handle_command(session.instance_id, &command_json, &session.view_state)
+                                    .await
+                                {
+                                    follow_up_ops.extend(import_ops);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             if op.get("op").and_then(|v| v.as_str()) == Some("spawnProgram") {
                 if let (Some(program_id), Some(session)) = (op.get("programId").and_then(|v| v.as_str()), &self.session) {
                     self.spawn_program(program_id, session.view_state.clone()).await?;
                 }
+            }
+            }
+            if !follow_up_ops.is_empty() {
+                pending.extend(follow_up_ops);
+                document_changed = true;
             }
         }
         if let (Some(mut session), Some(vs)) = (self.session.take(), view_state) {
@@ -7816,6 +8064,16 @@ impl ShellState {
         if let Some(drag) = &mut self.tree_drag {
             drag.x = x;
             drag.y = y;
+            crate::engine_canvas::node_graph_sync_flow_widget_ghost(
+                x,
+                y,
+                &drag.drag_data,
+                &self
+                    .node_graph_states
+                    .iter()
+                    .map(|(id, surface)| (id.as_str(), surface.bounds))
+                    .collect::<Vec<_>>(),
+            );
             if let Some(hit) = input.hit_at(x, y) {
                 if let Some(target_id) = hit.control_id.as_deref().and_then(|id| id.strip_prefix("tree.label.")) {
                     drag.drop_target_id = Some(target_id.to_string());
@@ -8555,6 +8813,21 @@ impl ShellState {
         let Some(drag) = self.tree_drag.take() else {
             return Ok(());
         };
+        if let Some(command) = crate::engine_canvas::node_graph_flow_widget_drop_command(
+            x,
+            y,
+            &drag.drag_data,
+            &self
+                .node_graph_states
+                .iter()
+                .map(|(id, surface)| (id.as_str(), surface.bounds, surface.controller_id.as_str()))
+                .collect::<Vec<_>>(),
+        ) {
+            crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+            self.dispatch_command(command).await?;
+            return Ok(());
+        }
+        crate::engine_canvas::node_graph_clear_all_ghost_widgets();
         if let Some(hit) = input.hit_at(x, y) {
             if hit.kind == HitKind::World3d || hit.kind == HitKind::Window {
                 if let Some(raw) = drag.drag_data.get("application/x-semio-catalogue-item") {
@@ -10024,14 +10297,11 @@ impl ShellState {
             }
             let active = tab.id == active_tab_id;
             let hovered = rect.contains(input.pointer_x, input.pointer_y);
-            let bg = if active {
-                theme.selected
+            if active {
+                panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.selected);
             } else if hovered {
-                theme.button_hover
-            } else {
-                theme.panel
-            };
-            panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], bg);
+                panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.button_hover);
+            }
             let icon_x = rect.x + theme.padding_standard;
             let icon_y = rect.y + (rect.h - CHROME_ICON_TINY) * 0.5;
             chrome_icon(
@@ -10096,19 +10366,20 @@ impl ShellState {
             let collapsed_sections = &mut self.collapsed_sections;
             let open_selects = &mut self.open_selects;
             let widget_maps = &mut self.widget_maps;
-            let mut ctx = framework_widget_context(
-                panel_draw,
-                None,
-                atlas,
-                Some(icons),
-                input,
-                theme,
-                scroll_offsets,
-                collapsed_sections,
-                open_selects,
-                Some(widget_maps),
-            );
-            render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states);
+        let mut ctx = framework_widget_context(
+            panel_draw,
+            None,
+            atlas,
+            Some(icons),
+            input,
+            theme,
+            scroll_offsets,
+            collapsed_sections,
+            open_selects,
+            Some(widget_maps),
+        );
+        ctx.pick_clip = Some(content);
+        render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states);
         }
         panel_draw.pop_scissor();
         panel_draw.end_glass_content();
@@ -10474,6 +10745,7 @@ impl ShellState {
             open_selects,
             Some(widget_maps),
         );
+        ctx.pick_clip = Some(content);
         render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states);
         draw.pop_scissor();
     }
@@ -11592,7 +11864,33 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn download_media_export(_filename: &str, _mime_type: &str, _data: &str) {}
+fn download_media_export(filename: &str, mime_type: &str, data: &str) {
+    if let Some(path) = rfd::FileDialog::new()
+        .set_file_name(filename)
+        .add_filter("export", &[mime_type.rsplit_once('/').map(|(_, ext)| ext).unwrap_or("dat")])
+        .save_file()
+    {
+        let _ = std::fs::write(path, data.as_bytes());
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn request_file_open(accept: &str) -> Option<String> {
+    let extensions: Vec<&str> = accept
+        .split(',')
+        .filter_map(|entry| entry.trim().strip_prefix('.'))
+        .collect();
+    let mut dialog = rfd::FileDialog::new();
+    if !extensions.is_empty() {
+        dialog = dialog.add_filter("import", &extensions);
+    }
+    dialog.pick_file().and_then(|path| std::fs::read_to_string(path).ok())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn request_file_open(_accept: &str) -> Option<String> {
+    None
+}
 
 #[cfg(target_arch = "wasm32")]
 fn toggle_fullscreen() {
@@ -11780,6 +12078,19 @@ fn theme_is_dark(theme_id: &str) -> bool {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+fn app_now_ms() -> f64 {
+    js_sys::Date::now()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn app_now_ms() -> f64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_secs_f64() * 1000.0)
+        .unwrap_or(0.0)
+}
+
 struct AppRuntime {
     gpu: GpuContext,
     atlas: FontAtlas,
@@ -11798,6 +12109,10 @@ struct AppRuntime {
     pointer_button: i16,
     modifiers: PointerModifiers,
     wheel_delta: f32,
+    space_pressed: bool,
+    wheel_zoom_deadline_ms: f64,
+    caret_blink_at_ms: f64,
+    caret_blink_visible: bool,
     asset_poll_pending: bool,
     self_weak: std::rc::Weak<RefCell<AppRuntime>>,
     #[cfg(not(target_arch = "wasm32"))]
@@ -11885,6 +12200,15 @@ impl AppRuntime {
         }
         self.input.update_hover(self.last_pointer_x, self.last_pointer_y);
         self.input.clear_frame();
+        if self.wheel_zoom_deadline_ms > 0.0 && app_now_ms() >= self.wheel_zoom_deadline_ms {
+            self.wheel_zoom_deadline_ms = 0.0;
+            engine_canvas::node_graph_clear_wheel_zoom_active();
+        }
+        if app_now_ms() - self.caret_blink_at_ms >= 500.0 {
+            self.caret_blink_at_ms = app_now_ms();
+            self.caret_blink_visible = !self.caret_blink_visible;
+            engine_canvas::node_graph_sync_caret_blink(self.caret_blink_visible);
+        }
         self.draw.clear();
         self.overlay.clear();
         let wheel_delta = self.wheel_delta;
@@ -11915,6 +12239,7 @@ impl AppRuntime {
                 }
             }
             if !graph_commands.is_empty() {
+                self.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
                 let runtime = self.self_weak.clone();
                 spawn_app_task(async move {
                     if let Some(runtime) = runtime.upgrade() {
@@ -12044,6 +12369,13 @@ impl AppRuntime {
     }
 
     fn handle_key(&mut self, action: KeyAction, modifiers: PointerModifiers) {
+        if let KeyAction::Space(pressed) = action {
+            self.space_pressed = pressed;
+            return;
+        }
+        if engine_canvas::node_graph_apply_note_edit_key(action.clone(), &modifiers) {
+            return;
+        }
         let activate_search = matches!(self.shell.overlay_state, shell::OverlayState::Search)
             && action == KeyAction::Enter;
         let activate_find = matches!(self.shell.overlay_state, shell::OverlayState::Find)
@@ -12147,7 +12479,7 @@ impl AppRuntime {
                     x,
                     y,
                     modifiers.shift,
-                    modifiers.ctrl,
+                    modifiers.ctrl_or_meta(),
                     modifiers.alt,
                 ));
             }
@@ -12215,8 +12547,9 @@ impl AppRuntime {
                     y,
                     button,
                     modifiers.shift,
-                    modifiers.ctrl,
+                    modifiers.ctrl_or_meta(),
                     modifiers.alt,
+                    self.space_pressed,
                 ));
             } else {
                 graph_commands.extend(engine_canvas::node_graph_pointer_up(
@@ -12226,7 +12559,7 @@ impl AppRuntime {
                     x,
                     y,
                     modifiers.shift,
-                    modifiers.ctrl,
+                    modifiers.ctrl_or_meta(),
                     modifiers.alt,
                 ));
             }
@@ -12312,16 +12645,10 @@ impl AppRuntime {
         }
         let mut world_commands = Vec::new();
         for state in self.shell.world3d_states.values_mut() {
-            log_debug(&format!(
-                "[DEBUG] pointer_move x={x} y={y} bounds={:?} contains={}",
-                state.bounds,
-                state.bounds.contains(x, y)
-            ));
             if !state.bounds.contains(x, y) {
                 continue;
             }
             if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
-                log_debug(&format!("[DEBUG] pointer_move produced command={:?}", command));
                 apply_world_command_preview(state, &command);
                 world_commands.push(command);
             }
@@ -12340,7 +12667,7 @@ impl AppRuntime {
                     x,
                     y,
                     modifiers.shift,
-                    modifiers.ctrl,
+                    modifiers.ctrl_or_meta(),
                     modifiers.alt,
                 ));
             }
@@ -12618,6 +12945,10 @@ async fn boot_runtime(
         pointer_button: 0,
         modifiers: PointerModifiers::default(),
         wheel_delta: 0.0,
+        space_pressed: false,
+        wheel_zoom_deadline_ms: 0.0,
+        caret_blink_at_ms: 0.0,
+        caret_blink_visible: true,
         asset_poll_pending: false,
         self_weak: std::rc::Weak::new(),
         #[cfg(not(target_arch = "wasm32"))]

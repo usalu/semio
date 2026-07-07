@@ -360,8 +360,8 @@ impl GraphHost {
         self.dag.set_camera(nx, ny, new_zoom);
     }
 
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) {
-        self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt);
+    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
+        self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, pan);
     }
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
@@ -502,7 +502,7 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = pointerDownScreen)]
         pub fn pointer_down_screen(&self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) {
-            self.state.borrow_mut().host.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt);
+            self.state.borrow_mut().host.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, false);
         }
 
         #[wasm_bindgen(js_name = pointerMoveScreen)]

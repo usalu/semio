@@ -9,3 +9,9 @@ watch = ["rs", "js", "index.html"]
 [serve]
 addresses = ["127.0.0.1"]
 open = false
+
+[[proxy]]
+backend = "http://127.0.0.1:6141/osm/"
+
+[[proxy]]
+backend = "http://127.0.0.1:6141/vt/"

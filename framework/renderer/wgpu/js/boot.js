@@ -98,7 +98,7 @@ function pluginHandleForBridge(handle) {
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-var pluginFilter = pluginFromUrl ?? "s";
+var pluginFilter = pluginFromUrl ?? "lowpoly";
 var studioMode = pluginFilter === "s";
 var pluginTargets = studioMode ? PLUGIN_TARGETS : PLUGIN_TARGETS.filter((entry) => entry.pluginId === pluginFilter);
 async function pluginModuleAvailable(moduleUrl) {

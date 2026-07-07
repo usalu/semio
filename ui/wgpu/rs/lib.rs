@@ -708,6 +708,8 @@ pub struct DrawLayer {
     pub ui_instances: Vec<UiInstance>,
     pub raster_instances: Vec<(String, UiInstance)>,
     pub vector_vertices: Vec<VectorVertex>,
+    pub overlay_ui_instances: Vec<UiInstance>,
+    pub overlay_vector_vertices: Vec<VectorVertex>,
 }
 
 impl Default for DrawLayer {
@@ -718,6 +720,8 @@ impl Default for DrawLayer {
             ui_instances: Vec::new(),
             raster_instances: Vec::new(),
             vector_vertices: Vec::new(),
+            overlay_ui_instances: Vec::new(),
+            overlay_vector_vertices: Vec::new(),
         }
     }
 }
@@ -780,9 +784,7 @@ impl DrawList {
         self.layers.push(DrawLayer {
             scissor: Some(scissor),
             foreground_of: self.active_foreground_of(),
-            ui_instances: Vec::new(),
-            raster_instances: Vec::new(),
-            vector_vertices: Vec::new(),
+            ..DrawLayer::default()
         });
     }
 
@@ -792,9 +794,7 @@ impl DrawList {
         self.layers.push(DrawLayer {
             scissor: parent,
             foreground_of: self.active_foreground_of(),
-            ui_instances: Vec::new(),
-            raster_instances: Vec::new(),
-            vector_vertices: Vec::new(),
+            ..DrawLayer::default()
         });
     }
 
@@ -841,9 +841,7 @@ impl DrawList {
         self.layers.push(DrawLayer {
             scissor: None,
             foreground_of: Some(region),
-            ui_instances: Vec::new(),
-            raster_instances: Vec::new(),
-            vector_vertices: Vec::new(),
+            ..DrawLayer::default()
         });
     }
 
@@ -852,9 +850,7 @@ impl DrawList {
         self.layers.push(DrawLayer {
             scissor: self.scissor_stack.last().cloned(),
             foreground_of: self.active_foreground_of(),
-            ui_instances: Vec::new(),
-            raster_instances: Vec::new(),
-            vector_vertices: Vec::new(),
+            ..DrawLayer::default()
         });
     }
 
@@ -862,6 +858,18 @@ impl DrawList {
         self.active_layer()
             .ui_instances
             .push(UiInstance::glyph(rect, color, uv_rect));
+    }
+
+    pub fn push_glyph_overlay(&mut self, rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) {
+        self.active_layer()
+            .overlay_ui_instances
+            .push(UiInstance::glyph(rect, color, uv_rect));
+    }
+
+    pub fn push_solid_overlay(&mut self, rect: [f32; 4], color: Rgba) {
+        self.active_layer()
+            .overlay_ui_instances
+            .push(UiInstance::solid(rect, color));
     }
 
     pub fn push_textured(&mut self, rect: [f32; 4], uv_rect: [f32; 4], color: Rgba) {
@@ -886,6 +894,24 @@ impl DrawList {
         let c = [color.r, color.g, color.b, color.a];
         let layer = self.active_layer();
         layer.vector_vertices.extend_from_slice(&[
+            VectorVertex { position: [x0 + nx, y0 + ny], color: c },
+            VectorVertex { position: [x1 + nx, y1 + ny], color: c },
+            VectorVertex { position: [x0 - nx, y0 - ny], color: c },
+            VectorVertex { position: [x1 + nx, y1 + ny], color: c },
+            VectorVertex { position: [x1 - nx, y1 - ny], color: c },
+            VectorVertex { position: [x0 - nx, y0 - ny], color: c },
+        ]);
+    }
+
+    pub fn push_line_overlay(&mut self, x0: f32, y0: f32, x1: f32, y1: f32, color: Rgba, width: f32) {
+        let dx = x1 - x0;
+        let dy = y1 - y0;
+        let len = (dx * dx + dy * dy).sqrt().max(0.001);
+        let nx = -dy / len * width * 0.5;
+        let ny = dx / len * width * 0.5;
+        let c = [color.r, color.g, color.b, color.a];
+        let layer = self.active_layer();
+        layer.overlay_vector_vertices.extend_from_slice(&[
             VectorVertex { position: [x0 + nx, y0 + ny], color: c },
             VectorVertex { position: [x1 + nx, y1 + ny], color: c },
             VectorVertex { position: [x0 - nx, y0 - ny], color: c },
@@ -1551,6 +1577,36 @@ fn build_layer_batches(
     (all_ui, all_vec, batches)
 }
 
+fn build_overlay_layer_batches(
+    draw: &DrawList,
+    filter: LayerBatchFilter,
+) -> (Vec<UiInstance>, Vec<VectorVertex>, Vec<LayerBatch>) {
+    let mut all_ui = Vec::new();
+    let mut all_vec = Vec::new();
+    let mut batches = Vec::new();
+    for (layer_index, layer) in draw.layers.iter().enumerate() {
+        if !layer_matches_filter(layer, filter) {
+            continue;
+        }
+        if layer.overlay_ui_instances.is_empty() && layer.overlay_vector_vertices.is_empty() {
+            continue;
+        }
+        let ui_start = all_ui.len() as u32;
+        all_ui.extend_from_slice(&layer.overlay_ui_instances);
+        let vec_start = all_vec.len() as u32;
+        all_vec.extend_from_slice(&layer.overlay_vector_vertices);
+        batches.push(LayerBatch {
+            layer_index,
+            scissor: layer.scissor,
+            ui_start,
+            ui_count: layer.overlay_ui_instances.len() as u32,
+            vec_start,
+            vec_count: layer.overlay_vector_vertices.len() as u32,
+        });
+    }
+    (all_ui, all_vec, batches)
+}
+
 fn set_pass_scissor(pass: &mut wgpu::RenderPass<'_>, scissor: Option<ScissorRect>, width: f32, height: f32) {
     if let Some(scissor) = scissor {
         pass.set_scissor_rect(scissor.x, scissor.y, scissor.w, scissor.h);
@@ -1877,7 +1933,18 @@ impl UiPipelines {
         let translucent_depth_state = Some(wgpu::DepthStencilState {
             format: wgpu::TextureFormat::Depth24Plus,
             depth_write_enabled: false,
-            depth_compare: wgpu::CompareFunction::Less,
+            depth_compare: wgpu::CompareFunction::LessEqual,
+            stencil: wgpu::StencilState::default(),
+            bias: wgpu::DepthBiasState {
+                constant: -2,
+                slope_scale: -1.0,
+                clamp: 0.0,
+            },
+        });
+        let world_line_depth_state = Some(wgpu::DepthStencilState {
+            format: wgpu::TextureFormat::Depth24Plus,
+            depth_write_enabled: false,
+            depth_compare: wgpu::CompareFunction::LessEqual,
             stencil: wgpu::StencilState::default(),
             bias: wgpu::DepthBiasState::default(),
         });
@@ -1976,7 +2043,7 @@ impl UiPipelines {
                 topology: wgpu::PrimitiveTopology::LineList,
                 ..Default::default()
             },
-            depth_stencil: translucent_depth_state.clone(),
+            depth_stencil: world_line_depth_state.clone(),
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
             cache: None,
@@ -2838,6 +2905,69 @@ impl UiPipelines {
                 LayerBatchFilter::Backdrop,
             );
         }
+        let (overlay_ui, overlay_vec, overlay_batches) =
+            build_overlay_layer_batches(draw, LayerBatchFilter::Backdrop);
+        if !overlay_ui.is_empty() || !overlay_vec.is_empty() {
+            let overlay_ui_buffer = if overlay_ui.is_empty() {
+                None
+            } else {
+                frame_buffers.ui_instances.upload(
+                    device,
+                    queue,
+                    &overlay_ui,
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                    "overlay_ui_instances",
+                )
+            };
+            let overlay_vector_buffer = if overlay_vec.is_empty() {
+                None
+            } else {
+                frame_buffers.vector_vertices.upload(
+                    device,
+                    queue,
+                    &overlay_vec,
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                    "overlay_vector_vertices",
+                )
+            };
+            let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("ui_overlay_pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view: scene_view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    },
+                    depth_slice: None,
+                })],
+                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment {
+                    view: depth,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            self.render_interleaved_layers(
+                &mut overlay_pass,
+                draw,
+                &overlay_batches,
+                overlay_ui_buffer.as_ref(),
+                overlay_vector_buffer.as_ref(),
+                None,
+                &[],
+                None,
+                None,
+                mesh_store,
+                width,
+                height,
+                depth_view.is_some(),
+            );
+        }
     }
 
     fn has_glass_foreground(draw: &DrawList) -> bool {
@@ -2991,6 +3121,69 @@ impl UiPipelines {
                 width,
                 height,
                 LayerBatchFilter::Foreground,
+            );
+        }
+        let (overlay_ui, overlay_vec, overlay_batches) =
+            build_overlay_layer_batches(draw, LayerBatchFilter::Foreground);
+        if !overlay_ui.is_empty() || !overlay_vec.is_empty() {
+            let overlay_ui_buffer = if overlay_ui.is_empty() {
+                None
+            } else {
+                frame_buffers.ui_instances.upload(
+                    device,
+                    queue,
+                    &overlay_ui,
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                    "glass_foreground_overlay_ui_instances",
+                )
+            };
+            let overlay_vector_buffer = if overlay_vec.is_empty() {
+                None
+            } else {
+                frame_buffers.vector_vertices.upload(
+                    device,
+                    queue,
+                    &overlay_vec,
+                    wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+                    "glass_foreground_overlay_vector_vertices",
+                )
+            };
+            let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                label: Some("glass_foreground_overlay_pass"),
+                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                    view,
+                    resolve_target: None,
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    },
+                    depth_slice: None,
+                })],
+                depth_stencil_attachment: depth_view.map(|depth| wgpu::RenderPassDepthStencilAttachment {
+                    view: depth,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Load,
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),
+                timestamp_writes: None,
+                occlusion_query_set: None,
+            });
+            self.render_interleaved_layers(
+                &mut overlay_pass,
+                draw,
+                &overlay_batches,
+                overlay_ui_buffer.as_ref(),
+                overlay_vector_buffer.as_ref(),
+                None,
+                &[],
+                None,
+                None,
+                mesh_store,
+                width,
+                height,
+                depth_view.is_some(),
             );
         }
     }
@@ -3507,6 +3700,23 @@ mod tests {
     }
 
     #[test]
+    fn overlay_layers_collected_separately_from_backdrop_ui() {
+        use super::{build_layer_batches, build_overlay_layer_batches, LayerBatchFilter};
+        let mut draw = DrawList::default();
+        draw.push_solid([0.0, 0.0, 100.0, 100.0], Rgba::new(0.1, 0.1, 0.1, 1.0));
+        draw.push_glyph_overlay([10.0, 10.0, 20.0, 12.0], Rgba::new(1.0, 1.0, 1.0, 1.0), [0.0, 0.0, 0.1, 0.1]);
+        draw.push_line_overlay(0.0, 0.0, 50.0, 50.0, Rgba::new(1.0, 0.0, 0.0, 1.0), 1.0);
+        let (backdrop_ui, _, _) = build_layer_batches(&draw, LayerBatchFilter::Backdrop);
+        let (overlay_ui, overlay_vec, overlay_batches) =
+            build_overlay_layer_batches(&draw, LayerBatchFilter::Backdrop);
+        assert_eq!(backdrop_ui.len(), 1);
+        assert_eq!(overlay_ui.len(), 1);
+        assert_eq!(overlay_vec.len(), 6);
+        assert_eq!(overlay_batches.len(), 1);
+        assert_eq!(draw.layers[overlay_batches[0].layer_index].overlay_ui_instances.len(), 1);
+    }
+
+    #[test]
     fn glass_content_layers_tagged_with_foreground_of() {
         use super::{GlassTier, Theme};
         let theme = Theme::default();
@@ -3991,6 +4201,12 @@ pub struct PointerModifiers {
     pub meta: bool,
 }
 
+impl PointerModifiers {
+    pub fn ctrl_or_meta(&self) -> bool {
+        self.ctrl || self.meta
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct DragState {
     pub active: bool,
@@ -4034,6 +4250,7 @@ pub enum KeyAction {
     ArrowUp,
     ArrowDown,
     Tab,
+    Space(bool),
 }
 
 pub struct InputState<E> {
@@ -5480,6 +5697,7 @@ pub struct WidgetContext<'a, E> {
     pub collapsed_sections: &'a mut HashMap<String, bool>,
     pub open_selects: &'a mut HashMap<String, bool>,
     pub interaction_maps: Option<&'a mut WidgetInteractionMaps<E>>,
+    pub pick_clip: Option<crate::geometry::Rect>,
 }
 
 #[derive(Clone, Debug)]
@@ -6913,6 +7131,36 @@ pub fn draw_text_on(
     }
 }
 
+pub fn draw_text_overlay_on(
+    draw: &mut DrawList,
+    atlas: &mut FontAtlas,
+    text: &str,
+    x: f32,
+    y: f32,
+    size: f32,
+    color: Rgba,
+) {
+    let scale = size / 16.0;
+    let atlas_w = atlas.width as f32;
+    let atlas_h = atlas.height as f32;
+    let mut cursor_x = x;
+    for ch in text.chars() {
+        let glyph = atlas.ensure_glyph(ch);
+        let gw = glyph.width as f32 * scale;
+        let gh = glyph.height as f32 * scale;
+        let gx = cursor_x + glyph.bearing_x * scale;
+        let gy = y - gh - glyph.bearing_y * scale;
+        let uv_rect = [
+            glyph.atlas_x as f32 / atlas_w,
+            glyph.atlas_y as f32 / atlas_h,
+            (glyph.atlas_x + glyph.width) as f32 / atlas_w,
+            (glyph.atlas_y + glyph.height) as f32 / atlas_h,
+        ];
+        draw.push_glyph_overlay([gx, gy, gw.max(1.0), gh.max(1.0)], color, uv_rect);
+        cursor_x += glyph.advance * scale;
+    }
+}
+
 pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
     let scale = size / 16.0;
     let atlas_w = ctx.atlas.width as f32;
@@ -6933,6 +7181,10 @@ pub fn draw_text<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, 
         ctx.draw.push_glyph([gx, gy, gw.max(1.0), gh.max(1.0)], color, uv_rect);
         cursor_x += glyph.advance * scale;
     }
+}
+
+pub fn draw_text_overlay<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, y: f32, size: f32, color: Rgba) {
+    draw_text_overlay_on(ctx.draw, ctx.atlas, text, x, y, size, color);
 }
 // #endregion widgets
 }
@@ -6978,16 +7230,6 @@ impl Default for WindowInputState {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
-fn debug_log_pointer(message: &str) {
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(message));
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn debug_log_pointer(message: &str) {
-    eprintln!("{message}");
-}
-
 pub fn dispatch_window_event(
     window: &winit::window::Window,
     event: &WindowEvent,
@@ -7001,10 +7243,6 @@ pub fn dispatch_window_event(
         }
         WindowEvent::CursorMoved { position, .. } => {
             let (x, y) = pointer_coords(window, *position);
-            debug_log_pointer(&format!(
-                "[DEBUG] CursorMoved raw_physical=({:.1},{:.1}) scale_factor={} pointer_coords=({x},{y})",
-                position.x, position.y, window.scale_factor()
-            ));
             input.pointer_x = x;
             input.pointer_y = y;
             (callbacks.on_move)(
@@ -7048,6 +7286,13 @@ pub fn dispatch_window_event(
             true
         }
         WindowEvent::KeyboardInput { event, .. } => {
+            if let Key::Named(NamedKey::Space) = &event.logical_key {
+                (callbacks.on_key)(
+                    KeyAction::Space(event.state == ElementState::Pressed),
+                    input.modifiers.clone(),
+                );
+                return true;
+            }
             if event.state != ElementState::Pressed {
                 return true;
             }
@@ -7117,7 +7362,7 @@ pub use chrome::{
     push_chrome_group_border, push_control_border, push_icon, push_window_cap_border, ICON_TINY,
 };
 pub use widgets::{
-    draw_icon, draw_text, draw_text_wrapped, measure_widget, render_scroll_region, render_widget,
+    draw_icon, draw_text, draw_text_overlay, draw_text_wrapped, measure_widget, render_scroll_region, render_widget,
     wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta,
     TreeItem, TreeItemAction, TreeSection, Vec3Meta, WidgetContext, WidgetInteractionMaps, WidgetNode,
 };

@@ -1315,6 +1315,36 @@ pub fn flow_operator_catalogue_json() -> String {
 pub fn flow_neuron_kind_infos_json() -> String {
     serde_json::to_string(&flow_registry().operator_catalogue()).unwrap_or_else(|_| "[]".into())
 }
+
+/// 🌊 Default LOD mode id for automatic camera-driven detail.
+pub const FLOW_LOD_MODE_AUTOMATIC: &str = "automatic";
+
+/// 🌊 Flow-backed NodeGraphScene fields required for wgpu FlowHost sync.
+#[derive(Clone, Debug)]
+pub struct FlowBackedNodeGraphExtras {
+    pub fixture_json: Option<String>,
+    pub operators_json: Option<String>,
+    pub capabilities_json: Option<String>,
+    pub lod_json: Option<String>,
+}
+
+/// 🌊 Builds shared NodeGraphScene fields for flow-backed plugins.
+pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, proximity_distance: f64) -> FlowBackedNodeGraphExtras {
+    let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
+    FlowBackedNodeGraphExtras {
+        fixture_json: serde_json::to_string(fixture).ok(),
+        operators_json: Some(flow_neuron_kind_infos_json()),
+        capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
+        lod_json: Some(
+            serde_json::json!({
+                "automatic": automatic,
+                "forcedLabel": if automatic { serde_json::Value::Null } else { serde_json::json!(lod_mode) },
+                "proximityDistance": proximity_distance,
+            })
+            .to_string(),
+        ),
+    }
+}
 // #endregion 🔖Catalogue
 
 // #region 🔖ModuleRegistry
@@ -2281,7 +2311,7 @@ impl FlowHost {
         self.clear_ghost_widget();
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.history.pending = Some(self.fixture.clone());
-        self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt);
+        self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, false);
         if let Some((side, widget_id, index)) = self.dag.take_pending_port_insert() {
             match side {
                 dag::DagPortSide::Input => {
@@ -2412,9 +2442,8 @@ impl FlowHost {
         }
     }
 
-    /// 🧵 Runs channel eval on native hosts; wasm UI defers to the orchestrator worker.
+    /// 🧵 Recomputes channel outputs after graph edits.
     fn touch_channel_eval(&mut self) {
-        #[cfg(not(target_arch = "wasm32"))]
         self.evaluate_internal();
     }
 
@@ -4896,6 +4925,31 @@ mod tests {
     }
 
     #[test]
+    fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
+        let host = host_with_test_bridge();
+        let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0);
+        assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
+        assert!(extras.operators_json.as_ref().is_some_and(|json| json.contains("math.add")));
+        assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
+        assert!(extras.lod_json.as_ref().is_some_and(|json| json.contains(r#""automatic":true"#)));
+    }
+
+    #[test]
+    fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
+        let mut host = host_with_test_bridge();
+        host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+        host.replace_fixture(FlowHost::parse_fixture_json(include_str!("../../example/default.flow.json")).expect("fixture"));
+        assert!(!host.dag.fixture.edges.is_empty(), "synapses should become dag edges");
+        let add = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
+        assert_eq!(add.inputs().len(), 2);
+        assert_eq!(add.outputs().len(), 1);
+        let mut scene = cavas::Scene::new();
+        host.set_canvas_theme_dark(true);
+        host.paint_scene(&mut scene, 1280, 800, 1.0);
+        assert!(scene.path_count() > 8, "rich flow graph should paint edges and handles");
+    }
+
+    #[test]
     fn add_widget_and_connect() {
         let mut host = host_with_test_bridge();
         let id = host.add_widget(r#"{"kind":"neuron","neuronKind":"math.passThrough"}"#, 100.0, 50.0).unwrap();
@@ -5096,6 +5150,14 @@ mod tests {
             panic!("expected note widget");
         };
         assert_eq!(restored, "hi");
+    }
+
+    #[test]
+    fn wheel_screen_zoom_gesture_changes_zoom() {
+        let mut host = host_with_test_bridge();
+        let z0 = host.fixture.camera.zoom;
+        host.wheel_screen(400.0, 300.0, 0.0, -10.0, true);
+        assert_ne!(host.fixture.camera.zoom, z0);
     }
 
     #[test]

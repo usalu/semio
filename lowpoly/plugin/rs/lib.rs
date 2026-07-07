@@ -517,11 +517,14 @@ fn world_instances_json(fixture: &LowpolyFixture, runtime: &LowpolyPlayRuntime) 
                         .ids
                         .iter()
                         .any(|id| *id as usize == object_index));
-            let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str())
-                || runtime
-                    .hovered_target
-                    .as_ref()
-                    .is_some_and(|target| target.object_id.as_deref() == Some(object.id.as_str()));
+            let hovered = runtime
+                .hovered_target
+                .as_ref()
+                .map(|target| {
+                    target.mode.as_deref() == Some("mesh")
+                        && target.object_id.as_deref() == Some(object.id.as_str())
+                })
+                .unwrap_or_else(|| runtime.hovered_object_id.as_deref() == Some(object.id.as_str()));
             let rotation = euler_degrees_to_quaternion(object.transform.rotation);
             json!({
                 "id": object.id,
@@ -1125,11 +1128,11 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "mesh" }))),
                 ),
                 tool_toggle(
-                    "lowpoly-tools-selection-vertex",
-                    "circle",
-                    "Vertex",
-                    targets.vertex,
-                    lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "vertex" }))),
+                    "lowpoly-tools-selection-face",
+                    "square",
+                    "Face",
+                    targets.face,
+                    lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "face" }))),
                 ),
                 tool_toggle(
                     "lowpoly-tools-selection-edge",
@@ -1139,11 +1142,11 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "edge" }))),
                 ),
                 tool_toggle(
-                    "lowpoly-tools-selection-face",
-                    "square",
-                    "Face",
-                    targets.face,
-                    lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "face" }))),
+                    "lowpoly-tools-selection-vertex",
+                    "circle",
+                    "Vertex",
+                    targets.vertex,
+                    lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "vertex" }))),
                 ),
             ],
         ),
@@ -1662,6 +1665,8 @@ impl PluginApp for LowpolyPlayApp {
                 };
                 if enabled {
                     envelope.fixture.selection.mode = LowpolyDocument::normalize_selection_mode(kind);
+                    envelope.runtime.hovered_target = None;
+                    envelope.runtime.hovered_object_id = None;
                 }
                 return vec![set_document_op(&envelope)];
             }
@@ -2511,6 +2516,23 @@ mod tests {
         assert!(next.fixture.selection.targets.face);
         assert_eq!(next.fixture.selection.keys.len(), 1);
         assert!(next.fixture.selection.keys[0].contains(":face:0"));
+    }
+
+    #[test]
+    fn world_instances_json_keeps_mesh_unhovered_for_component_hover() {
+        let app = LowpolyPlayApp::default();
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        let object_id = envelope.fixture.active_object_id.clone();
+        envelope.runtime.hovered_object_id = Some(object_id.clone());
+        envelope.runtime.hovered_target = Some(LowpolyHoverTarget {
+            object_id: Some(object_id),
+            mode: Some("face".into()),
+            id: Some(2),
+        });
+        let instances: Vec<serde_json::Value> =
+            serde_json::from_str(&world_instances_json(&envelope.fixture, &envelope.runtime))
+                .unwrap();
+        assert_eq!(instances[0].get("hovered").and_then(|value| value.as_bool()), Some(false));
     }
 
     #[test]

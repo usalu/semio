@@ -1,4 +1,9 @@
-## Outline fix (v2)
+## Outline fix (v3)
+- Cap row: `\hfill` pins hierarchy number to the right; gap bottom stroke is a separate overlay (`\semio_window_gap_rule:`) with explicit width — no gap `tcbox` that collapsed to zero
+- Body: `frame~hidden` + `borderline~west/east/south` only — no top frame segment (U cutout stays open)
+- Caps keep `toprule/leftrule/rightrule` at `\semio@stroke@hairline` with `colframe=semio-chrome-border-normal` to match body borderlines
+- `begindocument` hook exports `\SemioHeaderFooterApply` under `\ExplSyntaxOn`
+
 - Header row moved **outside** body `tcolorbox` — outer L/R/B frame no longer duplicates tab cap borders (was the offset double-rectangle)
 - Body (`semio~window`) draws only L+R+B with `top=-hairline` overlap onto gap bottom stroke → single continuous U outline
 - Gap segment uses same `colframe=semio-chrome-border-normal` as tab/controls caps (no `\rule` color drift)
@@ -13,3 +18,8 @@
 - `bun ./script.ts build forschungsbericht` — OK
 - `bun ./script.ts build report report-dark` — OK (prior run)
 - Removed 218.99994pt header overfull (was caused by `linewidth + 2*padding` bleed at wrong scope)
+
+## Border unification (v4)
+- Caps, gap, and body all use tcolorbox `borderline` with identical `{\semio@stroke@hairline}{0pt}{semio-chrome-border-normal}`
+- Caps: north/west/east; gap: south only; body: west/east/south only
+- `bun ./script.ts build zwischenbericht forschungsbericht kompaktbericht` — OK

@@ -851,10 +851,28 @@ fn ray_triangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Option<f3
 
 pub fn project_point(view_proj: Mat4, point: Vec3, width: f32, height: f32) -> Option<[f32; 2]> {
     let clip = view_proj.transform_point(point);
-    if clip.z < -1.0 || clip.z > 1.0 {
+    if clip.z < 0.0 || clip.z > 1.0 {
         return None;
     }
     Some([(clip.x * 0.5 + 0.5) * width, (1.0 - (clip.y * 0.5 + 0.5)) * height])
+}
+
+pub fn screen_segment_distance(px: f32, py: f32, ax: f32, ay: f32, bx: f32, by: f32) -> f32 {
+    let abx = bx - ax;
+    let aby = by - ay;
+    let len_sq = abx * abx + aby * aby;
+    if len_sq < 1e-6 {
+        let dx = px - ax;
+        let dy = py - ay;
+        return (dx * dx + dy * dy).sqrt();
+    }
+    let t = ((px - ax) * abx + (py - ay) * aby) / len_sq;
+    let t = t.clamp(0.0, 1.0);
+    let cx = ax + abx * t;
+    let cy = ay + aby * t;
+    let dx = px - cx;
+    let dy = py - cy;
+    (dx * dx + dy * dy).sqrt()
 }
 
 pub fn point_in_polygon(point: [f32; 2], polygon: &[[f32; 2]]) -> bool {

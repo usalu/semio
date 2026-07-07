@@ -950,7 +950,7 @@ mod wasm_session {
                 inner.pointer_down_sy = sy;
                 inner.pointer_down_button = button;
             }
-            self.state.borrow_mut().host.dag.pointer_down_screen(sx, sy, button, shift, ctrl, alt);
+            self.state.borrow_mut().host.dag.pointer_down_screen(sx, sy, button, shift, ctrl, alt, false);
         }
 
         #[wasm_bindgen(js_name = pointerMoveScreen)]

@@ -1,6 +1,6 @@
 //! 🎲 Procedural 2D plugin — procedural flow play app bundled as a hot-swappable WASM component.
 
-use flow_core::{dag::DagFixture, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, FlowFixture, FlowHost, Widget};
+use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, FlowFixture, FlowHost, Widget};
 use flow_module_draw::render_scene_json;
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, handle_generation_command,
@@ -98,7 +98,9 @@ fn procedural2d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
 }
 
 fn host_from_envelope(envelope: &Procedural2dPlayEnvelope) -> FlowHost {
-    FlowHost::from_fixture(envelope.fixture.clone())
+    let mut host = FlowHost::from_fixture(envelope.fixture.clone());
+    host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+    host
 }
 
 fn push_undo(play: &mut Procedural2dPlayEnvelope) {
@@ -550,11 +552,16 @@ fn render_main_graph(play: &Procedural2dPlayEnvelope) -> UiNode {
     } else {
         serde_json::to_string(&play.runtime.selected_ids).ok()
     };
+    let flow_extras = flow_backed_node_graph_extras(&play.fixture, "", 0.0);
     build_node_graph_scene(
         PROCEDURAL2D_PLAY_SURFACE_MAIN,
         PROCEDURAL2D_PLAY_APP_ID,
         NodeGraphScene {
             editable: Some(true),
+            operators_json: flow_extras.operators_json,
+            capabilities_json: flow_extras.capabilities_json,
+            lod_json: flow_extras.lod_json,
+            fixture_json: flow_extras.fixture_json,
             selection_json,
             context_menu_json: Some(
                 r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
@@ -975,6 +982,18 @@ mod tests {
         let node = app.render(PROCEDURAL2D_PLAY_BODY_MAIN, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("node-graph"));
+    }
+
+    #[test]
+    fn main_graph_scene_exports_flow_backed_node_graph_fields() {
+        let app = Procedural2dPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(PROCEDURAL2D_PLAY_BODY_MAIN, &document, &ViewState::default());
+        let value: Value = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("ui node json");
+        let graph = value.get("nodeGraph").expect("nodeGraph");
+        assert!(graph.get("fixtureJson").and_then(|v| v.as_str()).is_some_and(|s| s.contains("flow.fixture")));
+        assert!(graph.get("operatorsJson").and_then(|v| v.as_str()).is_some());
+        assert!(graph.get("capabilitiesJson").and_then(|v| v.as_str()).is_some_and(|s| s.contains("flow")));
     }
 
     #[test]

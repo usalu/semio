@@ -43,20 +43,24 @@
 \cs_new_protected:Npn \semio_chrome_apply_aliases: {
   \str_case:VnF \l_semio_theme_tl {
     { dark } {
+      \colorlet{semio-chrome-base}{semio-chrome-dark-base}
       \colorlet{semio-chrome-window}{semio-chrome-dark-window}
       \colorlet{semio-chrome-canvas}{semio-chrome-dark-canvas}
       \colorlet{semio-chrome-border-normal}{semio-chrome-dark-border-normal}
       \colorlet{semio-chrome-border-emphasized}{semio-chrome-dark-border-emphasized}
       \colorlet{semio-chrome-active-base}{semio-chrome-dark-active-base}
       \colorlet{semio-chrome-active-foreground}{semio-chrome-dark-active-foreground}
+      \colorlet{semio-chrome-foreground}{semio-chrome-dark-foreground}
     }
   } {
+    \colorlet{semio-chrome-base}{semio-chrome-light-base}
     \colorlet{semio-chrome-window}{semio-chrome-light-window}
     \colorlet{semio-chrome-canvas}{semio-chrome-light-canvas}
     \colorlet{semio-chrome-border-normal}{semio-chrome-light-border-normal}
     \colorlet{semio-chrome-border-emphasized}{semio-chrome-light-border-emphasized}
     \colorlet{semio-chrome-active-base}{semio-chrome-light-active-base}
     \colorlet{semio-chrome-active-foreground}{semio-chrome-light-active-foreground}
+    \colorlet{semio-chrome-foreground}{semio-chrome-light-foreground}
   }
 }
 

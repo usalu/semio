@@ -584,6 +584,15 @@ fn build_inspector_tree(play: &Gis2dPlayEnvelope) -> UiNode {
 //#endregion 🔖Panels
 
 //#region 🔖Render
+fn apply_gis_map_tile_base_url(scene: &mut GisMapScene) {
+    let Ok(base) = std::env::var("SEMIO_GIS_MAP_TILE_BASE_URL") else {
+        return;
+    };
+    let base = base.trim_end_matches('/');
+    scene.tile_url_template = format!("{base}/osm/{{z}}/{{x}}/{{y}}.png");
+    scene.vector_tile_url_template = format!("{base}/vt/{{z}}/{{x}}/{{y}}.pbf");
+}
+
 fn render_canvas(play: &Gis2dPlayEnvelope) -> UiNode {
     let mut scene = GisMapScene::base(
         play.runtime.map_fixture_json.clone(),
@@ -598,6 +607,7 @@ fn render_canvas(play: &Gis2dPlayEnvelope) -> UiNode {
     scene.hover_json = play.runtime.hover_json.clone();
     scene.selection_method = play.runtime.selection_method.clone();
     scene.selection_mode = play.runtime.selection_mode.clone();
+    apply_gis_map_tile_base_url(&mut scene);
     build_gis_map_scene(GIS2D_PLAY_SURFACE, GIS2D_PLAY_APP_ID, scene)
 }
 //#endregion 🔖Render
@@ -961,6 +971,18 @@ mod tests {
         let node = app.render(GIS2D_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("gis2d-map"));
+    }
+
+    #[test]
+    fn render_canvas_uses_absolute_tile_urls_when_env_set() {
+        unsafe { std::env::set_var("SEMIO_GIS_MAP_TILE_BASE_URL", "http://127.0.0.1:6141") };
+        let app = Gis2dPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(GIS2D_PLAY_BODY_COMPOSITE, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("http://127.0.0.1:6141/osm/{z}/{x}/{y}.png"));
+        assert!(json.contains("http://127.0.0.1:6141/vt/{z}/{x}/{y}.pbf"));
+        unsafe { std::env::remove_var("SEMIO_GIS_MAP_TILE_BASE_URL") };
     }
 
     #[test]

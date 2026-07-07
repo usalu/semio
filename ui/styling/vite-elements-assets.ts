@@ -11,6 +11,7 @@ import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
+import { createServer, type Server } from "node:http";
 import { cpSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
@@ -1085,6 +1086,28 @@ function createVtTileMiddleware(cacheRoot: string, mode: GisMapTileServeMode): C
       res.end();
     }
   };
+}
+
+/** @emoji 🗺 Standalone HTTP server for GIS map raster/vector tiles (wgpu Trunk / native-bin dev). */
+export function startGisMapTileProxyServer(
+  repoRoot: string,
+  port: number,
+  mode: GisMapTileServeMode = "fetch",
+  host = "127.0.0.1",
+): Server {
+  const { osm, vt } = mapTileCacheRoots(repoRoot);
+  const serveOsm = createOsmTileMiddleware(osm, mode);
+  const serveVt = createVtTileMiddleware(vt, mode);
+  const server = createServer((req, res) => {
+    serveOsm(req, res, () => {
+      serveVt(req, res, () => {
+        res.statusCode = 404;
+        res.end();
+      });
+    });
+  });
+  server.listen(port, host);
+  return server;
 }
 
 /** @emoji 🗺 Vite plugins for GIS map raster/vector tiles (`fetch` or offline `bundle`). */

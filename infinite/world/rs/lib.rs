@@ -88,6 +88,34 @@ struct WorldInstanceRecord {
     smooth_shading: Option<bool>,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WorldSelectionTargets {
+    #[serde(default = "default_true")]
+    mesh: bool,
+    #[serde(default)]
+    vertex: bool,
+    #[serde(default)]
+    edge: bool,
+    #[serde(default)]
+    face: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+impl Default for WorldSelectionTargets {
+    fn default() -> Self {
+        Self {
+            mesh: true,
+            vertex: false,
+            edge: false,
+            face: false,
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct WorldSelectionRecord {
@@ -104,6 +132,8 @@ struct WorldSelectionRecord {
     selection_mode: Option<String>,
     hovered_component: Option<serde_json::Value>,
     show_edges: Option<bool>,
+    targets: Option<WorldSelectionTargets>,
+    active_object_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -168,6 +198,7 @@ pub struct World3dState {
     pub surface_id: String,
     pub controller_id: String,
     pub bounds: Rect,
+    pub pick_bounds: Rect,
     pub orbit: OrbitController,
     pub meshes: HashMap<String, Mesh3d>,
     pub mesh_versions: HashMap<String, u64>,
@@ -219,6 +250,8 @@ pub struct World3dState {
     hovered_component_object_id: Option<String>,
     hovered_component_mode: Option<String>,
     show_edges: bool,
+    selection_targets: WorldSelectionTargets,
+    active_object_id: Option<String>,
     press_object_id: Option<String>,
     mesh_paint_textures: HashMap<String, (u32, u32, Vec<u8>)>,
 }
@@ -229,6 +262,7 @@ impl World3dState {
             surface_id,
             controller_id,
             bounds: Rect::default(),
+            pick_bounds: Rect::default(),
             orbit: OrbitController::default(),
             meshes: HashMap::new(),
             mesh_versions: HashMap::new(),
@@ -280,6 +314,8 @@ impl World3dState {
             hovered_component_object_id: None,
             hovered_component_mode: None,
             show_edges: false,
+            selection_targets: WorldSelectionTargets::default(),
+            active_object_id: None,
             press_object_id: None,
             mesh_paint_textures: HashMap::new(),
         }
@@ -408,6 +444,33 @@ fn component_mode_active(state: &World3dState) -> bool {
 }
 
 const CLICK_DRAG_THRESHOLD_PX: f32 = 4.0;
+const PICK_VERTEX_SCREEN_PX: f32 = 14.0;
+const PICK_EDGE_SCREEN_PX: f32 = 18.0;
+const PICK_FACE_SCREEN_PX: f32 = 18.0;
+const FACE_OVERLAY_OFFSET: f32 = 0.003;
+
+fn world_pick_rect(state: &World3dState) -> Rect {
+    if state.pick_bounds.w > 0.0 && state.pick_bounds.h > 0.0 {
+        state.pick_bounds
+    } else {
+        state.bounds
+    }
+}
+
+fn pointer_in_pick_rect(state: &World3dState, x: f32, y: f32) -> Option<(f32, f32, Rect)> {
+    let rect = world_pick_rect(state);
+    if !rect.contains(x, y) {
+        return None;
+    }
+    Some((x - rect.x, y - rect.y, rect))
+}
+
+fn pick_targets_instance(state: &World3dState, instance_id: &str) -> bool {
+    state
+        .active_object_id
+        .as_deref()
+        .is_none_or(|active_id| active_id == instance_id)
+}
 
 fn pointer_drag_distance(state: &World3dState, x: f32, y: f32) -> f32 {
     let Some(start) = state.marquee_points.first() else {
@@ -438,13 +501,39 @@ fn push_line_segment(
     });
 }
 
-fn push_vertex_marker(lines: &mut Vec<LineVertex3d>, center: Vec3, color: [f32; 4], size: f32) {
-    push_line_segment(lines, center, center.add(Vec3::new(size, 0.0, 0.0)), color);
-    push_line_segment(lines, center, center.add(Vec3::new(-size, 0.0, 0.0)), color);
-    push_line_segment(lines, center, center.add(Vec3::new(0.0, size, 0.0)), color);
-    push_line_segment(lines, center, center.add(Vec3::new(0.0, -size, 0.0)), color);
-    push_line_segment(lines, center, center.add(Vec3::new(0.0, 0.0, size)), color);
-    push_line_segment(lines, center, center.add(Vec3::new(0.0, 0.0, -size)), color);
+const VERTEX_MARKER_MESH: &str = "vertex-marker";
+const VERTEX_BASE_SCALE: f32 = 0.05;
+const VERTEX_HOVER_SCALE: f32 = 0.09;
+const VERTEX_SELECT_SCALE: f32 = 0.09;
+
+fn ensure_vertex_marker_mesh(state: &mut World3dState) {
+    if state.meshes.contains_key(VERTEX_MARKER_MESH) {
+        return;
+    }
+    let primitive = mesh_from_kind(VERTEX_MARKER_MESH);
+    store_mesh(
+        state,
+        VERTEX_MARKER_MESH.into(),
+        Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices),
+    );
+}
+
+fn component_overlay_color(
+    id: &str,
+    selected: &HashSet<String>,
+    preview: &HashSet<String>,
+    hovered: &Option<String>,
+) -> Option<([f32; 4], f32)> {
+    if preview.contains(id) {
+        return Some(([1.0, 0.85, 0.35, 1.0], VERTEX_HOVER_SCALE));
+    }
+    if hovered.as_deref() == Some(id) {
+        return Some(([0.35, 0.75, 1.0, 0.9], VERTEX_HOVER_SCALE));
+    }
+    if selected.contains(id) {
+        return Some(([0.35, 0.75, 1.0, 1.0], VERTEX_SELECT_SCALE));
+    }
+    None
 }
 
 fn mesh_vertex(mesh: &Mesh3d, index: u32) -> Vec3 {
@@ -452,19 +541,79 @@ fn mesh_vertex(mesh: &Mesh3d, index: u32) -> Vec3 {
     Vec3::new(mesh.positions[i], mesh.positions[i + 1], mesh.positions[i + 2])
 }
 
-fn append_component_overlays(
-    state: &World3dState,
-    lines: &mut Vec<LineVertex3d>,
-    selected: &[String],
-    preview: &[String],
-    hovered: &Option<String>,
-) {
+fn instance_hovered_component_id(state: &World3dState, instance_id: &str) -> Option<String> {
+    if !pick_targets_instance(state, instance_id) {
+        return None;
+    }
+    if state.hovered_component_mode.as_deref() != Some(state.granularity.as_str()) {
+        return None;
+    }
+    if state
+        .hovered_component_object_id
+        .as_deref()
+        .is_some_and(|object_id| object_id != instance_id)
+    {
+        return None;
+    }
+    state.hovered_component_id.clone()
+}
+
+fn append_component_vertex_spheres(state: &mut World3dState) -> Vec<Instance3d> {
+    if !state.selection_targets.vertex && state.granularity != "vertex" {
+        return Vec::new();
+    }
+    ensure_vertex_marker_mesh(state);
+    let wire_color = [0.55, 0.65, 0.8, 0.9];
+    let selected: HashSet<String> = state.component_ids.iter().cloned().collect();
+    let preview: HashSet<String> = state.marquee_preview_ids.iter().cloned().collect();
+    let mut instances = Vec::new();
+    for draw in &state.draws {
+        let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
+            continue;
+        };
+        for instance in &draw.instances {
+            let hovered = instance_hovered_component_id(state, &instance.id);
+            for (vertex_index, chunk) in mesh.positions.chunks_exact(3).enumerate() {
+                let id = mesh
+                    .vertex_ids
+                    .get(vertex_index)
+                    .map(|value| value.to_string())
+                    .unwrap_or_else(|| vertex_index.to_string());
+                let center = instance.model.transform_point(Vec3::new(
+                    chunk[0], chunk[1], chunk[2],
+                ));
+                let (color, scale) = component_overlay_color(&id, &selected, &preview, &hovered)
+                    .unwrap_or_else(|| (wire_color, VERTEX_BASE_SCALE));
+                if !state.selection_targets.vertex
+                    && component_overlay_color(&id, &selected, &preview, &hovered).is_none()
+                {
+                    continue;
+                }
+                instances.push(Instance3d {
+                    id: format!("vertex-{id}"),
+                    model: Instance3d::model_from_trs(
+                        center.to_array(),
+                        [0.0, 0.0, 0.0, 1.0],
+                        [scale, scale, scale],
+                    ),
+                    color,
+                    selected: false,
+                    hovered: false,
+                });
+            }
+        }
+    }
+    instances
+}
+
+fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>) {
+    let wire_color = [0.55, 0.65, 0.8, 0.75];
     if state.interaction_mode == "paint"
         || component_mode_active(state)
         || state.show_edges
+        || state.selection_targets.edge
         || (state.granularity == "mesh" && !state.component_ids.is_empty())
     {
-        let wire_color = [0.55, 0.65, 0.8, 0.75];
         for draw in &state.draws {
             let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
                 continue;
@@ -492,58 +641,30 @@ fn append_component_overlays(
             }
         }
     }
-    let highlight = [0.35, 0.75, 1.0, 1.0];
-    let preview_color = [1.0, 0.85, 0.35, 1.0];
-    let ids: HashSet<String> = selected
-        .iter()
-        .chain(preview.iter())
-        .chain(hovered.iter())
-        .cloned()
-        .collect();
-    if ids.is_empty() {
-        return;
-    }
+    let selected: HashSet<String> = state.component_ids.iter().cloned().collect();
+    let preview: HashSet<String> = state.marquee_preview_ids.iter().cloned().collect();
     for draw in &state.draws {
         let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
             continue;
         };
         for instance in &draw.instances {
-            match state.granularity.as_str() {
-                "vertex" => {
-                    for (vertex_index, chunk) in mesh.positions.chunks_exact(3).enumerate() {
-                        let id = mesh
-                            .vertex_ids
-                            .get(vertex_index)
-                            .map(|value| value.to_string())
-                            .unwrap_or_else(|| vertex_index.to_string());
-                        if !ids.contains(&id) {
-                            continue;
-                        }
-                        let color = if preview.contains(&id) {
-                            preview_color
-                        } else {
-                            highlight
-                        };
-                        let center = instance.model.transform_point(Vec3::new(
-                            chunk[0], chunk[1], chunk[2],
-                        ));
-                        push_vertex_marker(lines, center, color, 0.06);
-                    }
-                }
-                "edge" => {
-                    for (edge_index, chunk) in mesh.edge_positions.chunks_exact(6).enumerate() {
+            let hovered = instance_hovered_component_id(state, &instance.id);
+            if state.granularity.as_str() != "edge" {
+                continue;
+            }
+            if hovered.is_none() && selected.is_empty() && preview.is_empty() {
+                continue;
+            }
+            for (edge_index, chunk) in mesh.edge_positions.chunks_exact(6).enumerate() {
                         let id = mesh
                             .edge_ids
                             .get(edge_index)
                             .map(|value| value.to_string())
                             .unwrap_or_else(|| edge_index.to_string());
-                        if !ids.contains(&id) {
+                        let Some((color, _)) =
+                            component_overlay_color(&id, &selected, &preview, &hovered)
+                        else {
                             continue;
-                        }
-                        let color = if preview.contains(&id) {
-                            preview_color
-                        } else {
-                            highlight
                         };
                         let a = instance.model.transform_point(Vec3::new(
                             chunk[0], chunk[1], chunk[2],
@@ -552,36 +673,107 @@ fn append_component_overlays(
                             chunk[3], chunk[4], chunk[5],
                         ));
                         push_line_segment(lines, a, b, color);
-                    }
-                }
-                "face" => {
-                    for (tri_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
-                        let id = mesh
-                            .face_ids
-                            .get(tri_index)
-                            .map(|value| value.to_string())
-                            .unwrap_or_else(|| tri_index.to_string());
-                        if !ids.contains(&id) {
-                            continue;
-                        }
-                        let color = if preview.contains(&id) {
-                            preview_color
-                        } else {
-                            highlight
-                        };
-                        let verts = [
-                            instance.model.transform_point(mesh_vertex(mesh, tri[0])),
-                            instance.model.transform_point(mesh_vertex(mesh, tri[1])),
-                            instance.model.transform_point(mesh_vertex(mesh, tri[2])),
-                        ];
-                        push_line_segment(lines, verts[0], verts[1], color);
-                        push_line_segment(lines, verts[1], verts[2], color);
-                        push_line_segment(lines, verts[2], verts[0], color);
-                    }
-                }
-                _ => {}
             }
         }
+    }
+}
+
+fn append_component_face_translucent_overlays(
+    state: &mut World3dState,
+    gpu: &mut GpuContext,
+    translucent: &mut Vec<SceneDraw3d>,
+) {
+    if state.granularity != "face" {
+        return;
+    }
+    let selected: HashSet<String> = state.component_ids.iter().cloned().collect();
+    let preview: HashSet<String> = state.marquee_preview_ids.iter().cloned().collect();
+    let mut buckets: Vec<([f32; 4], Vec<f32>, Vec<f32>, Vec<u32>)> = Vec::new();
+    for draw in &state.draws {
+        let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
+            continue;
+        };
+        for instance in &draw.instances {
+            let hovered = instance_hovered_component_id(state, &instance.id);
+            for (tri_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
+                let id = mesh
+                    .face_ids
+                    .get(tri_index)
+                    .map(|value| value.to_string())
+                    .unwrap_or_else(|| tri_index.to_string());
+                let color = if preview.contains(&id) {
+                    [1.0, 0.85, 0.35, 0.48]
+                } else if hovered.as_deref() == Some(id.as_str()) {
+                    [0.35, 0.75, 1.0, 0.48]
+                } else if selected.contains(&id) {
+                    [0.35, 0.75, 1.0, 0.62]
+                } else {
+                    continue;
+                };
+                let verts = [
+                    instance.model.transform_point(mesh_vertex(mesh, tri[0])),
+                    instance.model.transform_point(mesh_vertex(mesh, tri[1])),
+                    instance.model.transform_point(mesh_vertex(mesh, tri[2])),
+                ];
+                let normal = verts[1]
+                    .sub(verts[0])
+                    .cross(verts[2].sub(verts[0]))
+                    .normalize();
+                let offset = if hovered.as_deref() == Some(id.as_str()) {
+                    FACE_OVERLAY_OFFSET
+                } else {
+                    FACE_OVERLAY_OFFSET * 0.5
+                };
+                let verts = verts.map(|vert| vert.add(normal.scale(offset)));
+                let bucket = buckets
+                    .iter_mut()
+                    .find(|(bucket_color, _, _, _)| *bucket_color == color);
+                let bucket = if let Some(bucket) = bucket {
+                    bucket
+                } else {
+                    buckets.push((color, Vec::new(), Vec::new(), Vec::new()));
+                    buckets.last_mut().expect("bucket")
+                };
+                let base = bucket.1.len() as u32 / 3;
+                for vert in verts {
+                    bucket.1.extend_from_slice(&vert.to_array());
+                    bucket.2.extend_from_slice(&normal.to_array());
+                }
+                bucket.3.extend_from_slice(&[base, base + 1, base + 2]);
+            }
+        }
+    }
+    for (index, (color, positions, normals, indices)) in buckets.into_iter().enumerate() {
+        if positions.is_empty() {
+            continue;
+        }
+        let mesh_key = format!("component-face-overlay:{}:{index}", state.surface_id);
+        store_mesh(
+            state,
+            mesh_key.clone(),
+            Mesh3d::from_buffers(positions, normals, indices),
+        );
+        let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
+        if let Some(mesh) = state.meshes.get(&mesh_key) {
+            gpu.ensure_mesh(
+                &mesh_key,
+                mesh_version,
+                &mesh.positions,
+                &mesh.normals,
+                &mesh.indices,
+            );
+        }
+        translucent.push(SceneDraw3d {
+            mesh_key,
+            mesh_version,
+            instances: vec![Instance3d {
+                id: format!("face-overlay-{index}"),
+                model: Mat4::identity(),
+                color,
+                selected: false,
+                hovered: false,
+            }],
+        });
     }
 }
 
@@ -1131,7 +1323,14 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         .and_then(|value| value.get("mode"))
         .and_then(|value| value.as_str())
         .map(str::to_string);
+    if state.hovered_component_mode.as_deref() != Some(state.granularity.as_str()) {
+        state.hovered_component_id = None;
+        state.hovered_component_object_id = None;
+        state.hovered_component_mode = None;
+    }
     state.show_edges = selection.show_edges.unwrap_or(false);
+    state.selection_targets = selection.targets.unwrap_or_default();
+    state.active_object_id = selection.active_object_id;
     state.transform_tool = selection
         .transform_tool
         .unwrap_or_else(|| "translate".into());
@@ -1175,8 +1374,12 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
             }
         }
         let selected = instance.selected.unwrap_or(false);
-        let hovered = instance.hovered.unwrap_or(false)
-            || state.local_hover_id.as_deref() == Some(instance.id.as_str());
+        let hovered = if component_mode_active(state) {
+            false
+        } else {
+            instance.hovered.unwrap_or(false)
+                || state.local_hover_id.as_deref() == Some(instance.id.as_str())
+        };
         grouped.entry(mesh_id).or_default().push(Instance3d {
             id: instance.id,
             model: Instance3d::model_from_trs(
@@ -1220,14 +1423,19 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
             index += 1;
         }
     }
+    let component_mode = component_mode_active(state);
     for draw in &mut state.draws {
         for instance in &mut draw.instances {
             let mesh_selected = granularity == "mesh"
                 && object_index_map.get(&instance.id).is_some_and(|object_index| {
                     component_ids.contains(&object_index.to_string())
                 });
-            let local_hovered = local_hover_id.as_deref() == Some(instance.id.as_str())
-                || hovered_component_object_id.as_deref() == Some(instance.id.as_str());
+            let local_hovered = if component_mode {
+                false
+            } else {
+                local_hover_id.as_deref() == Some(instance.id.as_str())
+                    || hovered_component_object_id.as_deref() == Some(instance.id.as_str())
+            };
             let local_selected = selected_ids.contains(&instance.id) || mesh_selected;
             instance.hovered = instance.hovered || local_hovered;
             instance.selected = instance.selected || local_selected;
@@ -1243,6 +1451,7 @@ pub fn render_world_3d(
     gpu: &mut GpuContext,
 ) {
     let theme = ctx.theme;
+    state.pick_bounds = ctx.pick_clip.unwrap_or(bounds);
     sync_world3d_state(state, scene, bounds);
     apply_runtime_draw_flags(state);
     apply_gumball_preview(state);
@@ -1289,7 +1498,7 @@ pub fn render_world_3d(
         }
     }
     let mut line_vertices = Vec::new();
-    append_component_overlays(state, &mut line_vertices, &state.component_ids, &state.marquee_preview_ids, &state.hovered_component_id);
+    append_component_overlays(state, &mut line_vertices);
     for attraction in &state.attractions {
         let Some(from) = attraction.from else { continue };
         let Some(to) = attraction.to else { continue };
@@ -1358,7 +1567,26 @@ pub fn render_world_3d(
             instances: vortex_instances,
         });
     }
+    let vertex_instances = append_component_vertex_spheres(state);
+    if !vertex_instances.is_empty() {
+        let mesh_version = *state.mesh_versions.get(VERTEX_MARKER_MESH).unwrap_or(&0);
+        if let Some(mesh) = state.meshes.get(VERTEX_MARKER_MESH) {
+            gpu.ensure_mesh(
+                VERTEX_MARKER_MESH,
+                mesh_version,
+                &mesh.positions,
+                &mesh.normals,
+                &mesh.indices,
+            );
+        }
+        extra_draws.push(SceneDraw3d {
+            mesh_key: VERTEX_MARKER_MESH.into(),
+            mesh_version,
+            instances: vertex_instances,
+        });
+    }
     let mut translucent_draws = Vec::new();
+    append_component_face_translucent_overlays(state, gpu, &mut translucent_draws);
     if let Some(preview) = state.brush_preview.clone() {
         if let Some(mesh_url) = preview.mesh_url.as_deref() {
             let mesh_id = mesh_id_from_url(mesh_url);
@@ -1537,10 +1765,10 @@ pub fn handle_world3d_pointer_move(
     down: bool,
     button: i16,
 ) -> Option<CommandDescriptor> {
-    if !state.bounds.contains(x, y) {
+    let inner = world_pick_rect(state);
+    if !inner.contains(x, y) {
         return None;
     }
-    let inner = state.bounds;
     if down && button == 0 {
         if state.marquee_active {
             state.marquee_points.push([x, y]);
@@ -1581,7 +1809,7 @@ pub fn handle_world3d_paint_commands(
     if state.interaction_mode != "paint" || button != 0 {
         return Vec::new();
     }
-    let inner = state.bounds;
+    let inner = world_pick_rect(state);
     if !inner.contains(x, y) {
         return Vec::new();
     }
@@ -1611,7 +1839,7 @@ pub fn handle_world3d_pointer_button(
     button: i16,
     modifiers: &PointerModifiers,
 ) -> Option<CommandDescriptor> {
-    let inner = state.bounds;
+    let inner = world_pick_rect(state);
     if !inner.contains(x, y) {
         return None;
     }
@@ -1747,7 +1975,7 @@ pub fn handle_world3d_pointer_drag(
     button: i16,
     modifiers: &PointerModifiers,
 ) {
-    let inner = state.bounds;
+    let inner = world_pick_rect(state);
     if button == 0 {
         if state.gumball_handle.is_some() && inner.contains(x, y) {
             gumball_drag_update(state, x, y, inner);
@@ -1847,9 +2075,13 @@ pub fn apply_world_command_preview(state: &mut World3dState, command: &CommandDe
                     .map(str::to_string);
                 let id = args.get("id").and_then(json_id_to_string);
                 state.hovered_component_object_id = object_id.clone();
-                state.hovered_component_mode = mode;
+                state.hovered_component_mode = mode.clone();
                 state.hovered_component_id = id;
-                state.local_hover_id = object_id;
+                if mode.as_deref() == Some("mesh") {
+                    state.local_hover_id = object_id;
+                } else {
+                    state.local_hover_id = None;
+                }
             }
         }
         "worldPick" => {
@@ -1894,28 +2126,7 @@ pub fn ingest_glb_mesh(state: &mut World3dState, url: &str, mesh: MeshData, mesh
     store_mesh(state, mesh_id, mesh_from_data(&mesh));
 }
 
-#[cfg(target_arch = "wasm32")]
-fn debug_log_world(message: &str) {
-    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(message));
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn debug_log_world(message: &str) {
-    eprintln!("{message}");
-}
-
 fn pick_hover_command(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> Option<CommandDescriptor> {
-    let debug_hit = pick_instance_at(state, x, y, inner);
-    debug_log_world(&format!(
-        "[DEBUG] pick_hover_command x={x} y={y} inner={:?} granularity={} component_mode_active={} debug_pick_instance_at={:?} local_hover_id={:?} draws_len={} meshes_len={}",
-        inner,
-        state.granularity,
-        component_mode_active(state),
-        debug_hit,
-        state.local_hover_id,
-        state.draws.len(),
-        state.meshes.len(),
-    ));
     if state.active_tool == "brush" {
         let hit = pick_vortex_at(state, x, y, inner);
         if state.hovered_vortex_id == hit {
@@ -1939,7 +2150,6 @@ fn pick_hover_command(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> 
             state.hovered_component_id = Some(id.clone());
             state.hovered_component_object_id = Some(object_id.clone());
             state.hovered_component_mode = Some(mode.clone());
-            state.local_hover_id = Some(object_id.clone());
             let id_num = id.parse::<u64>().unwrap_or(0);
             return Some(CommandDescriptor {
                 controller_id: state.controller_id.clone(),
@@ -2238,12 +2448,12 @@ fn pick_component_at(
     state: &World3dState,
     x: f32,
     y: f32,
-    inner: Rect,
+    _inner: Rect,
 ) -> Option<(String, String, String)> {
+    let (local_x, local_y, rect) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
-    let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let local_x = x - inner.x;
-    let local_y = y - inner.y;
+    let aspect = (rect.w / rect.h.max(1.0)).max(0.1);
+    let view_proj = camera.view_proj(aspect);
     let granularity = state.granularity.as_str();
     match granularity {
         "vertex" => {
@@ -2253,19 +2463,22 @@ fn pick_component_at(
                     continue;
                 };
                 for instance in &draw.instances {
+                    if !pick_targets_instance(state, &instance.id) {
+                        continue;
+                    }
                     for (vertex_index, chunk) in mesh.positions.chunks_exact(3).enumerate() {
                         let world = instance.model.transform_point(Vec3::new(
                             chunk[0], chunk[1], chunk[2],
                         ));
                         let Some(screen) =
-                            kernel_3d_scene::project_point(camera.view_proj(aspect), world, inner.w, inner.h)
+                            kernel_3d_scene::project_point(view_proj, world, rect.w, rect.h)
                         else {
                             continue;
                         };
                         let dx = screen[0] - local_x;
                         let dy = screen[1] - local_y;
                         let dist = (dx * dx + dy * dy).sqrt();
-                        if dist <= 12.0
+                        if dist <= PICK_VERTEX_SCREEN_PX
                             && best.as_ref().map_or(true, |(best_dist, _, _)| dist < *best_dist)
                         {
                             let id = mesh
@@ -2278,17 +2491,21 @@ fn pick_component_at(
                     }
                 }
             }
-            debug_log_world(&format!("[DEBUG] pick_component_at vertex best={:?}", best));
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "edge" => {
-            let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
             let mut best: Option<(f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
                     continue;
                 };
+                if mesh.edge_positions.is_empty() {
+                    continue;
+                }
                 for instance in &draw.instances {
+                    if !pick_targets_instance(state, &instance.id) {
+                        continue;
+                    }
                     for (edge_index, chunk) in mesh.edge_positions.chunks_exact(6).enumerate() {
                         let a = instance.model.transform_point(Vec3::new(
                             chunk[0], chunk[1], chunk[2],
@@ -2296,46 +2513,77 @@ fn pick_component_at(
                         let b = instance.model.transform_point(Vec3::new(
                             chunk[3], chunk[4], chunk[5],
                         ));
-                        if let Some(dist) = ray_segment_distance(origin, dir, a, b) {
-                            if dist <= 0.08
-                                && best.as_ref().map_or(true, |(best_dist, _, _)| dist < *best_dist)
-                            {
-                                let id = mesh
-                                    .edge_ids
-                                    .get(edge_index)
-                                    .map(|value| value.to_string())
-                                    .unwrap_or_else(|| edge_index.to_string());
-                                best = Some((dist, id, instance.id.clone()));
-                            }
+                        let Some(screen_a) =
+                            kernel_3d_scene::project_point(view_proj, a, rect.w, rect.h)
+                        else {
+                            continue;
+                        };
+                        let Some(screen_b) =
+                            kernel_3d_scene::project_point(view_proj, b, rect.w, rect.h)
+                        else {
+                            continue;
+                        };
+                        let dist = kernel_3d_scene::screen_segment_distance(
+                            local_x,
+                            local_y,
+                            screen_a[0],
+                            screen_a[1],
+                            screen_b[0],
+                            screen_b[1],
+                        );
+                        if dist <= PICK_EDGE_SCREEN_PX
+                            && best.as_ref().map_or(true, |(best_dist, _, _)| dist < *best_dist)
+                        {
+                            let id = mesh
+                                .edge_ids
+                                .get(edge_index)
+                                .map(|value| value.to_string())
+                                .unwrap_or_else(|| edge_index.to_string());
+                            best = Some((dist, id, instance.id.clone()));
                         }
                     }
                 }
             }
-            debug_log_world(&format!("[DEBUG] pick_component_at edge best={:?}", best));
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "face" => {
-            let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
             let mut best: Option<(f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
                     continue;
                 };
                 for instance in &draw.instances {
-                    if let Some(hit) = ray_pick_mesh_detail(origin, dir, mesh, instance) {
-                        if best.as_ref().map_or(true, |(best_dist, _, _)| hit.distance < *best_dist)
+                    if !pick_targets_instance(state, &instance.id) {
+                        continue;
+                    }
+                    for (tri_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
+                        let id = mesh
+                            .face_ids
+                            .get(tri_index)
+                            .map(|value| value.to_string())
+                            .unwrap_or_else(|| tri_index.to_string());
+                        let centroid = instance.model.transform_point(
+                            mesh_vertex(mesh, tri[0])
+                                .add(mesh_vertex(mesh, tri[1]))
+                                .add(mesh_vertex(mesh, tri[2]))
+                                .scale(1.0 / 3.0),
+                        );
+                        let Some(screen) =
+                            kernel_3d_scene::project_point(view_proj, centroid, rect.w, rect.h)
+                        else {
+                            continue;
+                        };
+                        let dx = screen[0] - local_x;
+                        let dy = screen[1] - local_y;
+                        let dist = (dx * dx + dy * dy).sqrt();
+                        if dist <= PICK_FACE_SCREEN_PX
+                            && best.as_ref().map_or(true, |(best_dist, _, _)| dist < *best_dist)
                         {
-                            let id = mesh
-                                .face_ids
-                                .get(hit.triangle_index)
-                                .map(|value| value.to_string())
-                                .unwrap_or_else(|| hit.triangle_index.to_string());
-                            best = Some((hit.distance, id, instance.id.clone()));
+                            best = Some((dist, id, instance.id.clone()));
                         }
                     }
                 }
             }
-            debug_log_world(&format!("[DEBUG] pick_component_at face best={:?}", best));
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         _ => {}
@@ -2416,65 +2664,15 @@ fn pick_instance_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option
     let local_x = x - inner.x;
     let local_y = y - inner.y;
     let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
-    debug_log_world(&format!(
-        "[DEBUG] pick_instance_at local=({local_x},{local_y}) origin={:?} dir={:?} draws={}",
-        origin, dir, state.draws.len()
-    ));
     let mut best: Option<(f32, String)> = None;
     for draw in &state.draws {
         let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
-            debug_log_world(&format!(
-                "[DEBUG] pick_instance_at MISSING mesh_key={} available_keys={:?}",
-                draw.mesh_key,
-                state.meshes.keys().collect::<Vec<_>>()
-            ));
             continue;
         };
-        debug_log_world(&format!(
-            "[DEBUG] pick_instance_at mesh_key={} aabb_min={:?} aabb_max={:?} instances={} tris={}",
-            draw.mesh_key, mesh.aabb_min, mesh.aabb_max, draw.instances.len(), mesh.indices.len() / 3
-        ));
         for instance in &draw.instances {
-            let (world_min, world_max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
-            let aabb_hit = ray_aabb_slab(origin, dir, world_min, world_max);
-            debug_log_world(&format!(
-                "[DEBUG] pick_instance_at instance.id={} world_min={:?} world_max={:?} aabb_hit={:?}",
-                instance.id, world_min, world_max, aabb_hit
-            ));
             if let Some(distance) = ray_pick_instance(origin, dir, mesh, instance) {
                 if best.as_ref().map_or(true, |(best_distance, _)| distance < *best_distance) {
                     best = Some((distance, instance.id.clone()));
-                }
-            } else {
-                for (ti, tri) in mesh.indices.chunks_exact(3).enumerate() {
-                    let get = |idx: u32| {
-                        let i = idx as usize * 3;
-                        instance.model.transform_point(Vec3::new(
-                            mesh.positions[i],
-                            mesh.positions[i + 1],
-                            mesh.positions[i + 2],
-                        ))
-                    };
-                    let a = get(tri[0]);
-                    let b = get(tri[1]);
-                    let c = get(tri[2]);
-                    let edge1 = Vec3::new(b.x - a.x, b.y - a.y, b.z - a.z);
-                    let edge2 = Vec3::new(c.x - a.x, c.y - a.y, c.z - a.z);
-                    let h = dir.cross(edge2);
-                    let det = edge1.dot(h);
-                    if det.abs() < 1e-8 {
-                        continue;
-                    }
-                    let f = 1.0 / det;
-                    let s = Vec3::new(origin.x - a.x, origin.y - a.y, origin.z - a.z);
-                    let u = f * s.dot(h);
-                    let q = s.cross(edge1);
-                    let v = f * dir.dot(q);
-                    let t = f * edge2.dot(q);
-                    debug_log_world(&format!(
-                        "[DEBUG] tri#{ti} u={u} v={v} t={t} accept={}",
-                        (0.0..=1.0).contains(&u) && v >= 0.0 && u + v <= 1.0 && t > 1e-4
-                    ));
                 }
             }
         }
@@ -2828,6 +3026,29 @@ mod tests {
     }
 
     #[test]
+    fn sync_parses_selection_targets_and_active_object() {
+        let selection = r#"{
+            "granularity":"vertex",
+            "targets":{"mesh":true,"vertex":true,"edge":false,"face":false},
+            "activeObjectId":"obj-1"
+        }"#;
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        sync_world3d_state(
+            &mut state,
+            &scene_with_selection(selection),
+            Rect {
+                x: 0.0,
+                y: 0.0,
+                w: 400.0,
+                h: 400.0,
+            },
+        );
+        assert!(state.selection_targets.vertex);
+        assert!(!state.selection_targets.edge);
+        assert_eq!(state.active_object_id.as_deref(), Some("obj-1"));
+    }
+
+    #[test]
     fn sync_parses_numeric_component_ids_and_hovered_component() {
         let selection = r#"{
             "granularity":"vertex",
@@ -2855,10 +3076,36 @@ mod tests {
     }
 
     #[test]
-    fn append_component_overlays_draws_vertex_and_face_highlights() {
+    fn append_component_vertex_spheres_render_base_vertices() {
         let mesh = topology_mesh();
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
         state.granularity = "vertex".into();
+        state.selection_targets.vertex = true;
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let instances = append_component_vertex_spheres(&mut state);
+        assert_eq!(instances.len(), 4);
+    }
+
+    #[test]
+    fn append_component_overlays_highlights_only_hovered_edge() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "edge".into();
+        state.selection_targets.edge = true;
+        state.hovered_component_id = Some("5".into());
+        state.hovered_component_object_id = Some("obj-1".into());
+        state.hovered_component_mode = Some("edge".into());
         state.meshes.insert("mesh-1".into(), mesh);
         state.draws.push(SceneDraw3d {
             mesh_key: "mesh-1".into(),
@@ -2872,13 +3119,54 @@ mod tests {
             }],
         });
         let mut lines = Vec::new();
-        append_component_overlays(&state, &mut lines, &["1".into()], &[], &None);
-        assert!(!lines.is_empty());
+        append_component_overlays(&state, &mut lines);
+        assert!(lines.len() >= 2);
+        assert!(lines.iter().any(|vertex| vertex.color[2] > 0.9));
+    }
 
+    #[test]
+    fn append_component_overlays_highlights_selected_edge() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "edge".into();
+        state.component_ids = vec!["6".into()];
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let mut lines = Vec::new();
+        append_component_overlays(&state, &mut lines);
+        assert!(lines.len() >= 2);
+        assert!(lines.iter().any(|vertex| vertex.color[2] > 0.9));
+    }
+
+    #[test]
+    fn component_mode_does_not_apply_mesh_instance_hover() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
         state.granularity = "face".into();
-        let mut face_lines = Vec::new();
-        append_component_overlays(&state, &mut face_lines, &["10".into()], &[], &None);
-        assert!(!face_lines.is_empty());
+        state.hovered_component_object_id = Some("obj-1".into());
+        state.local_hover_id = None;
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        apply_runtime_draw_flags(&mut state);
+        assert!(!state.draws[0].instances[0].hovered);
     }
 
     #[test]
@@ -2916,6 +3204,8 @@ mod tests {
             w: 400.0,
             h: 400.0,
         };
+        state.bounds = inner;
+        state.pick_bounds = inner;
         let camera = state.orbit.to_camera();
         let screen = kernel_3d_scene::project_point(
             camera.view_proj(1.0),
@@ -2994,6 +3284,7 @@ mod tests {
             h: 400.0,
         };
         state.bounds = inner;
+        state.pick_bounds = inner;
         let command = handle_world3d_pointer_button(
             &mut state,
             120.0,
@@ -3024,6 +3315,7 @@ mod tests {
         );
         assert_eq!(state.hovered_component_id.as_deref(), Some("2"));
         assert_eq!(state.hovered_component_mode.as_deref(), Some("vertex"));
+        assert!(state.local_hover_id.is_none());
 
         apply_world_command_preview(
             &mut state,
@@ -3079,5 +3371,88 @@ mod tests {
             },
         );
         assert_eq!(state.component_ids, vec!["5".to_string()]);
+    }
+
+    #[test]
+    fn pick_component_at_face_mode_uses_screen_space() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "face".into();
+        state.active_object_id = Some("obj-1".into());
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let inner = Rect {
+            x: 0.0,
+            y: 0.0,
+            w: 400.0,
+            h: 400.0,
+        };
+        state.bounds = inner;
+        state.pick_bounds = inner;
+        let camera = state.orbit.to_camera();
+        let mesh_ref = state.meshes.get("mesh-1").expect("mesh");
+        let tri = mesh_ref.indices.get(0..3).expect("triangle");
+        let centroid = mesh_vertex(mesh_ref, tri[0])
+            .add(mesh_vertex(mesh_ref, tri[1]))
+            .add(mesh_vertex(mesh_ref, tri[2]))
+            .scale(1.0 / 3.0);
+        let screen = kernel_3d_scene::project_point(camera.view_proj(1.0), centroid, inner.w, inner.h)
+            .expect("face centroid projects");
+        let picked = pick_component_at(&state, screen[0], screen[1], inner)
+            .expect("face pick");
+        assert_eq!(picked.0, "face");
+        assert_eq!(picked.2, "obj-1");
+    }
+
+    #[test]
+    fn pick_component_at_edge_mode_uses_screen_space() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "edge".into();
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let inner = Rect {
+            x: 0.0,
+            y: 0.0,
+            w: 400.0,
+            h: 400.0,
+        };
+        state.bounds = inner;
+        state.pick_bounds = inner;
+        let camera = state.orbit.to_camera();
+        let chunk = state
+            .meshes
+            .get("mesh-1")
+            .and_then(|mesh| mesh.edge_positions.get(0..6))
+            .expect("edge");
+        let a = Vec3::new(chunk[0], chunk[1], chunk[2]);
+        let b = Vec3::new(chunk[3], chunk[4], chunk[5]);
+        let mid = a.add(b).scale(0.5);
+        let screen = kernel_3d_scene::project_point(camera.view_proj(1.0), mid, inner.w, inner.h)
+            .expect("edge midpoint projects");
+        let picked = pick_component_at(&state, screen[0], screen[1], inner)
+            .expect("edge pick");
+        assert_eq!(picked.0, "edge");
+        assert_eq!(picked.2, "obj-1");
     }
 }

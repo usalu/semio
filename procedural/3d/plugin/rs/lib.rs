@@ -2,6 +2,7 @@
 
 use flow_core::{
     dag::DagFixture,
+    flow_backed_node_graph_extras,
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     FlowFixture, FlowHost, Widget,
 };
@@ -315,6 +316,14 @@ fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
                 "y": node.y,
                 "width": node.width,
                 "height": node.height,
+                "inputs": node.inputs().iter().filter(|port| port.visible).map(|port| json!({
+                    "id": format!("{}:{}", node.id, port.id),
+                    "label": port.label,
+                })).collect::<Vec<_>>(),
+                "outputs": node.outputs().iter().filter(|port| port.visible).map(|port| json!({
+                    "id": format!("{}:{}", node.id, port.id),
+                    "label": port.label,
+                })).collect::<Vec<_>>(),
             })
         })
         .collect();
@@ -1180,11 +1189,16 @@ impl PluginApp for Procedural3dPlayApp {
                 } else {
                     serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
                 };
+                let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, 0.0);
                 build_node_graph_scene(
                     PROCEDURAL_3D_PLAY_SURFACE_MAIN,
                     PROCEDURAL_3D_PLAY_APP_ID,
                     NodeGraphScene {
                         editable: Some(true),
+                        operators_json: flow_extras.operators_json,
+                        capabilities_json: flow_extras.capabilities_json,
+                        lod_json: flow_extras.lod_json,
+                        fixture_json: flow_extras.fixture_json,
                         selection_json,
                         context_menu_json: Some(
                             r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
@@ -1368,6 +1382,20 @@ mod tests {
         let node = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("node-graph"));
+    }
+
+    #[test]
+    fn main_graph_scene_exports_flow_backed_node_graph_fields() {
+        let app = Procedural3dPlayApp;
+        let document = app.initial_document_json();
+        let node = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        let value: Value = serde_json::from_str(&json).expect("ui node json");
+        let graph = value.get("nodeGraph").expect("nodeGraph");
+        assert!(graph.get("fixtureJson").and_then(|v| v.as_str()).is_some_and(|s| s.contains("flow.fixture")));
+        assert!(graph.get("operatorsJson").and_then(|v| v.as_str()).is_some_and(|s| s.contains("math.add") || s.contains("brep.")));
+        let capabilities = graph.get("capabilitiesJson").and_then(|v| v.as_str()).unwrap_or_default();
+        assert!(capabilities.contains("flow"), "missing flow engine capability: {capabilities}");
     }
 
     #[test]

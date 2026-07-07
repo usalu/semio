@@ -1,5 +1,5 @@
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesPackage{semio-window}[2026/07/06 v0.3.0 semio OS window chrome]
+\ProvidesPackage{semio-window}[2026/07/07 v0.9.2 semio OS window chrome]
 
 \RequirePackage{expl3}
 \RequirePackage{xparse}
@@ -19,6 +19,8 @@
 \providecommand{\semio@chrome@font@title}{0.7em}
 \providecommand{\semio@chrome@font@number}{0.6em}
 \providecommand{\semio@chrome@font@body}{0.8em}
+\providecommand{\semio@chrome@icon@scale}{1}
+\providecommand{\semio@chrome@icon@scale@footer}{1}
 
 \ExplSyntaxOn
 
@@ -26,68 +28,27 @@
 \bool_new:N \l_semio_window_section_open_bool
 \tl_new:N \l_semio_semiobox_title_tl
 \tl_new:N \g_semio_current_heading_tl
-\dim_new:N \l_semio_window_gap_dim
-\dim_new:N \l_semio_window_header_width_dim
-\box_new:N \l_semio_window_tab_box
-\box_new:N \l_semio_window_controls_box
 
 \tl_gset:Nn \g_semio_current_heading_tl { }
 
+\cs_new_protected:Npn \semio_window_header:nn #1 #2 {
+  \semio@window@header {#1} {#2}
+}
+
 \tcbset{
-  semio~window~tab/.style={
-    enhanced,
-    nobeforeafter,
-    arc=0mm,
-    toprule=\semio@stroke@hairline,
-    leftrule=\semio@stroke@hairline,
-    rightrule=\semio@stroke@hairline,
-    bottomrule=0pt,
-    boxrule=0pt,
-    colframe=semio-chrome-border-normal,
-    colback=semio-chrome-window,
-    coltext=semio-chrome-border-emphasized,
-    fontupper={\SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@titlebar@height}\selectfont},
-    height=\semio@chrome@titlebar@height,
-    valign=center,
-    left=\semio@chrome@padding,
-    right=\semio@chrome@padding,
-    top=0pt,
-    bottom=0pt,
-  },
-  semio~window~controls/.style={
-    semio~window~tab,
-    fontupper={\SemioSans\fontsize{\semio@chrome@font@number}{\semio@chrome@titlebar@height}\selectfont},
-  },
-  semio~window~gap/.style={
-    enhanced,
-    nobeforeafter,
-    arc=0mm,
-    toprule=0pt,
-    leftrule=0pt,
-    rightrule=0pt,
-    bottomrule=\semio@stroke@hairline,
-    boxrule=0pt,
-    colframe=semio-chrome-border-normal,
-    colback=semio-chrome-canvas,
-    height=\semio@chrome@titlebar@height,
-    valign=bottom,
-    top=0pt,
-    bottom=0pt,
-    left=0pt,
-    right=0pt,
-  },
   semio~window/.style={
     enhanced,
     breakable,
     arc=0mm,
-    colback=semio-chrome-canvas,
+    boxrule=\semio@stroke@hairline,
     colframe=semio-chrome-border-normal,
-    boxrule=0pt,
     toprule=0pt,
     leftrule=\semio@stroke@hairline,
     rightrule=\semio@stroke@hairline,
     bottomrule=\semio@stroke@hairline,
-    top=-\semio@stroke@hairline,
+    colback=semio-chrome-canvas,
+    coltext=semio-chrome-foreground,
+    top=0pt,
     left=\semio@chrome@padding,
     right=\semio@chrome@padding,
     bottom=\semio@chrome@padding,
@@ -96,6 +57,10 @@
     parbox=false,
   },
   semio~window~chapter/.style={
+    semio~window,
+    breakable=false,
+  },
+  semio~window~section/.style={
     semio~window,
     breakable=false,
   },
@@ -111,87 +76,16 @@
     boxrule=0pt,
     colframe=semio-chrome-canvas,
     colback=semio-chrome-canvas,
+    coltext=semio-chrome-foreground,
     left=\semio@chrome@padding,
     right=\semio@chrome@padding,
     top=\semio@chrome@padding,
     bottom=\semio@chrome@padding,
   },
-  semio~chrome~bar~navbar/.style={
-    enhanced,
-    nobeforeafter,
-    arc=0mm,
-    boxrule=0pt,
-    toprule=0pt,
-    leftrule=0pt,
-    rightrule=0pt,
-    bottomrule=\semio@stroke@hairline,
-    colframe=semio-chrome-border-normal,
-    colback=semio-chrome-window,
-    height=\semio@chrome@navbar@height,
-    valign=center,
-    left=\semio@chrome@padding,
-    right=\semio@chrome@padding,
-    top=0pt,
-    bottom=0pt,
-  },
-  semio~chrome~bar~footer/.style={
-    enhanced,
-    nobeforeafter,
-    arc=0mm,
-    boxrule=0pt,
-    toprule=\semio@stroke@hairline,
-    leftrule=0pt,
-    rightrule=0pt,
-    bottomrule=0pt,
-    colframe=semio-chrome-border-normal,
-    colback=semio-chrome-window,
-    height=\semio@chrome@footer@height,
-    valign=center,
-    left=\semio@chrome@padding,
-    right=\semio@chrome@padding,
-    top=0pt,
-    bottom=0pt,
-  },
-  semio~chrome~group/.style={
-    enhanced,
-    nobeforeafter,
-    arc=0mm,
-    boxrule=\semio@stroke@hairline,
-    colframe=semio-chrome-border-normal,
-    colback=semio-chrome-window,
-    coltext=semio-chrome-border-emphasized,
-    fontupper={\SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@titlebar@height}\selectfont},
-    height=\semio@chrome@titlebar@height,
-    valign=center,
-    left=\semio@chrome@padding,
-    right=\semio@chrome@padding,
-    top=0pt,
-    bottom=0pt,
-  },
 }
 
 \keys_define:nn { semio / semiobox } {
   title .tl_set:N = \l_semio_semiobox_title_tl,
-}
-
-\cs_new_protected:Npn \semio_window_header:nn #1 #2 {
-  \hbox_set:Nn \l_semio_window_tab_box { \tcbox[semio~window~tab]{#1} }
-  \hbox_set:Nn \l_semio_window_controls_box { \tcbox[semio~window~controls]{#2} }
-  \dim_set:Nn \l_semio_window_header_width_dim { \linewidth }
-  \dim_set:Nn \l_semio_window_gap_dim {
-    \dimexpr\l_semio_window_header_width_dim
-      - \box_wd:N \l_semio_window_tab_box
-      - \box_wd:N \l_semio_window_controls_box \relax
-  }
-  \noindent
-  \vtop{%
-    \hbox to \l_semio_window_header_width_dim {%
-      \box_use:N \l_semio_window_tab_box
-      \tcbox[semio~window~gap, width=\l_semio_window_gap_dim]{~}%
-      \box_use:N \l_semio_window_controls_box
-    }%
-  }%
-  \par\nointerlineskip
 }
 
 \cs_new_protected:Npn \semio_window_close_chapter_body: {
@@ -219,6 +113,7 @@
   \refstepcounter{chapter}
   \chaptermark{#1}
   \tl_gset:Nn \g_semio_current_heading_tl {#1}
+  \tex_gdef:D \semio@chrome@heading {#1}
   \addcontentsline{toc}{chapter}{\protect\numberline{\thechapter}#1}
   \semio_window_header:nn {#1} { \thechapter }
   \begin{tcolorbox}[semio~window~chapter]
@@ -228,12 +123,14 @@
 \cs_new_protected:Npn \semio_window_open_section:n #1 {
   \semio_window_close_section:
   \semio_window_close_chapter_body:
+  \clearpage
   \refstepcounter{section}
   \sectionmark{#1}
   \tl_gset:Nn \g_semio_current_heading_tl {#1}
+  \tex_gdef:D \semio@chrome@heading {#1}
   \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}
   \semio_window_header:nn {#1} { \thesection }
-  \begin{tcolorbox}[semio~window]
+  \begin{tcolorbox}[semio~window~section]
   \bool_set_true:N \l_semio_window_section_open_bool
 }
 
@@ -313,109 +210,279 @@
   \semio_window_close_chapter_body:
 }
 
-\cs_new_protected:Npn \semio_chrome_navbar_icon_dim: {
-  \dimexpr\semio@chrome@navbar@height - 2 \semio@chrome@padding \relax
-}
-
-\cs_new_protected:Npn \semio_chrome_group_icon_dim: {
-  \dimexpr\semio@chrome@titlebar@height - 2 \semio@chrome@padding \relax
-}
-
-\cs_new_protected:Npn \semio_chrome_group:nn #1 #2 {
-  \tcbox[
-    semio~chrome~group,
-    nobeforeafter,
-    boxsep=0pt,
-    #1,
-  ] { #2 }
-}
-
-\cs_new_protected:Npn \semio_chrome_navbar_bar:n #1 {
-  \vbox {%
-    \nointerlineskip
-    \hbox {%
-      \setlength { \fboxsep } { 0pt }%
-      \colorbox { semio-chrome-window } {%
-        \parbox [ c ] [ \semio@chrome@navbar@height ] [ c ] { \headwidth } { #1 }%
-      }%
-    }%
-    \nointerlineskip
-    \hbox to \headwidth {%
-      \color { semio-chrome-border-normal }%
-      \rule { \headwidth } { \semio@stroke@hairline }%
-    }%
-  }%
-}
-
-\cs_new_protected:Npn \semio_chrome_footer_bar:n #1 {
-  \vbox {%
-    \nointerlineskip
-    \hbox to \headwidth {%
-      \color { semio-chrome-border-normal }%
-      \rule { \headwidth } { \semio@stroke@hairline }%
-    }%
-    \nointerlineskip
-    \hbox {%
-      \setlength { \fboxsep } { 0pt }%
-      \colorbox { semio-chrome-window } {%
-        \parbox [ c ] [ \semio@chrome@footer@height ] [ c ] { \headwidth } { #1 }%
-      }%
-    }%
-  }%
-}
-
-\cs_new_protected:Npn \semio_navbar_apply: {
-  \fancyhead[C] {%
-    \semio_chrome_navbar_bar:n {%
-      \hbox to \headwidth {%
-        \hspace { \semio@chrome@padding }%
-        \semioemblem [ 1em ]%
-        \hspace { \semio@spacing@compact }%
-        { \SemioSans \fontsize { \semio@chrome@font@body } { \semio@chrome@navbar@height } \selectfont \@title }%
-        \hfil
-        \tl_if_empty:NF \g_semio_current_heading_tl {
-          \semio_chrome_group:nn { } { \tl_use:N \g_semio_current_heading_tl }
-        }%
-        \hspace { \semio@chrome@padding }%
-      }%
-    }%
-  }%
-}
-
-\cs_new_protected:Npn \semio_footer_apply: {
-  \fancyfoot[C] {%
-    \semio_chrome_footer_bar:n {%
-      \hbox to \headwidth {%
-        \hspace { \semio@chrome@padding }%
-        \semio_chrome_group:nn { } {%
-          \semioemblem [ 0.75em ]%
-          \hspace { \semio@spacing@compact }%
-          { \SemioSans \fontsize { \semio@chrome@font@number } { \semio@chrome@titlebar@height } \selectfont \@author }%
-        }%
-        \hfil
-        { \SemioMono \fontsize { \semio@chrome@font@number } { \semio@chrome@footer@height } \selectfont \thepage }%
-        \hspace { \semio@chrome@padding }%
-      }%
-    }%
-  }%
-}
-
 \cs_new_protected:Npn \semio_header_footer_apply: {
   \pagestyle { fancy }
   \fancyhf { }
-  \semio_navbar_apply:
-  \semio_footer_apply:
+  \fancyhead[C] { \SemioChromeNavbarHead }
+  \fancyfoot[C] { \SemioChromeFooterHead }
   \renewcommand { \headrulewidth } { 0pt }
   \renewcommand { \footrulewidth } { 0pt }
 }
 
-\AddToHook{begindocument}{\semio_header_footer_apply:}
+\AtBeginDocument{%
+  \semio@chrome@dims@compute
+  \semio_header_footer_apply:
+}
 
 \ExplSyntaxOff
 
-\setlength{\headheight}{\dimexpr\semio@chrome@navbar@height+\semio@stroke@hairline+2pt\relax}
+\def\semio@chrome@heading{}
+
+\newsavebox{\semio@window@cap@slot}
+\newsavebox{\semio@window@tab@box}
+\newsavebox{\semio@window@ctrl@box}
+\newlength{\semio@window@gap@w}
+\newlength{\semio@window@cap@w}
+\newlength{\semio@window@cap@body@h}
+
+\newcommand{\semio@window@cap@body@h@set}{%
+  \setlength{\semio@window@cap@body@h}{%
+    \dimexpr\semio@chrome@titlebar@height-\semio@stroke@hairline\relax
+  }%
+}
+
+\newcommand{\semio@window@stroke@v}{%
+  \color{semio-chrome-border-normal}%
+  \rule{\semio@stroke@hairline}{\semio@chrome@titlebar@height}%
+}
+
+\newcommand{\semio@window@stroke@h}[1]{%
+  \color{semio-chrome-border-normal}%
+  \rule{\dimexpr#1\relax}{\semio@stroke@hairline}%
+}
+
+\newcommand{\semio@window@cap}[2]{%
+  \semio@window@cap@body@h@set
+  \sbox{\semio@window@cap@slot}{%
+    \setlength{\fboxsep}{\semio@chrome@padding}%
+    \begingroup
+    #2\relax
+    #1%
+    \endgroup
+  }%
+  \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  \hbox{%
+    \semio@window@stroke@v
+    \vbox to \semio@chrome@titlebar@height{%
+      \nointerlineskip
+      \hbox{\semio@window@stroke@h{\semio@window@cap@w}}%
+      \nointerlineskip
+      \hbox{%
+        \begingroup
+        \setlength{\fboxsep}{0pt}%
+        \colorbox{semio-chrome-canvas}{%
+          \vbox to \semio@window@cap@body@h{%
+            \vfil
+            \nointerlineskip
+            \hbox to \semio@window@cap@w{%
+              \hfil\usebox{\semio@window@cap@slot}\hfil
+            }%
+            \vfil
+          }%
+        }%
+        \endgroup
+      }%
+    }%
+    \semio@window@stroke@v
+  }%
+}
+
+\newcommand{\semio@window@tab}[1]{%
+  \semio@window@cap{#1}{%
+    \SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@titlebar@height}\selectfont\color{semio-chrome-border-emphasized}%
+  }%
+}
+
+\newcommand{\semio@window@ctrl}[1]{%
+  \semio@window@cap{#1}{%
+    \SemioSans\fontsize{\semio@chrome@font@number}{\semio@chrome@titlebar@height}\selectfont\color{semio-chrome-border-emphasized}%
+  }%
+}
+
+\newcommand{\semio@window@gap}{%
+  \semio@window@cap@body@h@set
+  \hbox to \dimexpr\semio@window@gap@w\relax{%
+    \vbox to \semio@chrome@titlebar@height{%
+      \nointerlineskip
+      \hbox to \dimexpr\semio@window@gap@w\relax{%
+        \begingroup
+        \setlength{\fboxsep}{0pt}%
+        \colorbox{semio-chrome-canvas}{%
+          \vbox to \semio@window@cap@body@h{%
+            \vfil\null\vfil
+          }%
+        }%
+        \endgroup
+      }%
+      \nointerlineskip
+      \hbox to \dimexpr\semio@window@gap@w\relax{%
+        \semio@window@stroke@h{\semio@window@gap@w}%
+      }%
+    }%
+  }%
+}
+
+\newcommand{\semio@window@header}[2]{%
+  \sbox{\semio@window@tab@box}{\semio@window@tab{#1}}%
+  \sbox{\semio@window@ctrl@box}{%
+    \if\relax\detokenize{#2}\relax
+      \hbox{}%
+    \else
+      \semio@window@ctrl{#2}%
+    \fi
+  }%
+  \setlength{\semio@window@gap@w}{%
+    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+  }%
+  \noindent
+  \hbox to \linewidth{%
+    \usebox{\semio@window@tab@box}%
+    \semio@window@gap
+    \usebox{\semio@window@ctrl@box}%
+  }%
+  \par\nointerlineskip
+}
+
+\newsavebox{\semio@chrome@navbar@emblem@box}
+\newsavebox{\semio@chrome@footer@emblem@box}
+\newlength{\semio@chrome@row@height}
+\newlength{\semio@chrome@row@height@footer}
+\newlength{\semio@chrome@icon@height}
+\newlength{\semio@chrome@icon@height@footer}
+
+\newcommand{\semio@chrome@vcenter}[2]{%
+  \vbox to #1{\vfil\nointerlineskip\hbox{#2}\vfil}%
+}
+
+\newcommand{\semio@chrome@emblem@rebuild}{%
+  \sbox{\semio@chrome@navbar@emblem@box}{\semioemblemheight{\semio@chrome@icon@height}}%
+  \sbox{\semio@chrome@footer@emblem@box}{\semioemblemheight{\semio@chrome@icon@height@footer}}%
+}
+
+\newcommand{\semio@chrome@dims@compute}{%
+  \begingroup
+  \normalfont
+  \xdef\semio@chrome@tmp@row{\the\dimexpr\semio@chrome@font@body\relax}%
+  \xdef\semio@chrome@tmp@row@footer{\the\dimexpr\semio@chrome@font@number\relax}%
+  \endgroup
+  \setlength{\semio@chrome@row@height}{\semio@chrome@tmp@row}%
+  \setlength{\semio@chrome@row@height@footer}{\semio@chrome@tmp@row@footer}%
+  \setlength{\semio@chrome@icon@height}{\semio@chrome@row@height}%
+  \setlength{\semio@chrome@icon@height@footer}{\semio@chrome@row@height@footer}%
+  \semio@chrome@emblem@rebuild
+}
+
+\newcommand{\semio@chrome@chip}[1]{%
+  \begingroup
+  \setlength{\fboxsep}{\semio@chrome@padding}%
+  \setlength{\fboxrule}{\semio@stroke@hairline}%
+  \fcolorbox{semio-chrome-border-normal}{semio-chrome-base}{#1}%
+  \endgroup
+}
+
+\newcommand{\semio@chrome@navbar@bar}[1]{%
+  \vbox{%
+    \nointerlineskip
+    \hbox to \headwidth{%
+      \setlength{\fboxsep}{0pt}%
+      \colorbox{semio-chrome-base}{%
+        \parbox[c][\semio@chrome@navbar@height][c]{\headwidth}{#1}%
+      }%
+    }%
+    \nointerlineskip
+    \hbox to \headwidth{%
+      \color{semio-chrome-border-normal}\rule{\headwidth}{\semio@stroke@hairline}%
+    }%
+  }%
+}
+
+\newcommand{\semio@chrome@footer@bar}[1]{%
+  \vbox{%
+    \nointerlineskip
+    \hbox to \headwidth{%
+      \color{semio-chrome-border-normal}\rule{\headwidth}{\semio@stroke@hairline}%
+    }%
+    \nointerlineskip
+    \hbox to \headwidth{%
+      \setlength{\fboxsep}{0pt}%
+      \colorbox{semio-chrome-base}{%
+        \parbox[c][\semio@chrome@footer@height][c]{\headwidth}{#1}%
+      }%
+    }%
+  }%
+}
+
+\newcommand{\SemioChromeNavbarHead}{%
+  \semio@chrome@navbar@bar{%
+    \hbox to \headwidth{%
+      \semio@chrome@chip{%
+        \hbox{%
+          \semio@chrome@vcenter{\semio@chrome@row@height}{\usebox{\semio@chrome@navbar@emblem@box}}%
+          \hspace{\semio@spacing@compact}%
+          \semio@chrome@vcenter{\semio@chrome@row@height}{%
+            {\SemioSans\fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont\@title}%
+          }%
+        }%
+      }%
+      \hfil
+      \if\relax\detokenize{\semio@chrome@heading}\relax
+      \else
+        \semio@chrome@chip{%
+          \semio@chrome@vcenter{\semio@chrome@row@height}{%
+            {\SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@font@title}\selectfont\semio@chrome@heading}%
+          }%
+        }%
+      \fi
+    }%
+  }%
+}
+
+\newcommand{\SemioChromeFooterHead}{%
+  \semio@chrome@footer@bar{%
+    \hbox to \headwidth{%
+      \semio@chrome@chip{%
+        \hbox{%
+          \semio@chrome@vcenter{\semio@chrome@row@height@footer}{\usebox{\semio@chrome@footer@emblem@box}}%
+          \hspace{\semio@spacing@compact}%
+          \semio@chrome@vcenter{\semio@chrome@row@height@footer}{%
+            {\SemioSans\fontsize{\semio@chrome@font@number}{\semio@chrome@font@number}\selectfont\@author}%
+          }%
+        }%
+      }%
+      \hfil
+      \semio@chrome@chip{%
+        \semio@chrome@vcenter{\semio@chrome@row@height@footer}{%
+          {\SemioMono\fontsize{\semio@chrome@font@number}{\semio@chrome@font@number}\selectfont\thepage}%
+        }%
+      }%
+    }%
+  }%
+}
+
+\newcommand{\SemioChromeIconSize}[1]{%
+  \setlength{\semio@chrome@row@height}{\dimexpr#1\relax}%
+  \setlength{\semio@chrome@icon@height}{\semio@chrome@row@height}%
+  \semio@chrome@emblem@rebuild
+}
+\newcommand{\SemioChromeFooterIconSize}[1]{%
+  \setlength{\semio@chrome@row@height@footer}{\dimexpr#1\relax}%
+  \setlength{\semio@chrome@icon@height@footer}{\semio@chrome@row@height@footer}%
+  \semio@chrome@emblem@rebuild
+}
+
+\NewDocumentCommand{\SemioChromeIconScale}{m}{%
+  \renewcommand{\semio@chrome@icon@scale}{#1}%
+  \semio@chrome@dims@compute
+}
+\NewDocumentCommand{\SemioChromeFooterIconScale}{m}{%
+  \renewcommand{\semio@chrome@icon@scale@footer}{#1}%
+  \semio@chrome@dims@compute
+}
+
+\setlength{\headheight}{38.14006pt}
+\addtolength{\topmargin}{-21.14006pt}
 \setlength{\headsep}{\semio@spacing@touch}
-\setlength{\footskip}{\dimexpr\semio@chrome@footer@height+\semio@stroke@hairline+2pt+\semio@spacing@touch\relax}
+\setlength{\footskip}{\dimexpr\semio@chrome@footer@height+\semio@stroke@hairline+3pt+\semio@spacing@touch\relax}
 
 \AddToHook{enddocument/before}{\SemioWindowCloseAll}
 \AtEndDocument{\SemioWindowCloseAll}

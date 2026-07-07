@@ -13,10 +13,10 @@ todos:
     status: completed
   - id: instrument-verify
     content: Add temporary [DEBUG] logs around CursorMoved position, pointer_coords output, and World3dState bounds; drive dev server and capture real console/screenshot evidence of hover+select working for mesh/vertex/edge/face with all selection targets on
-    status: in_progress
+    status: completed
   - id: cleanup-tests
     content: Remove temporary debug logs, rerun cargo test, report concrete verified results
-    status: pending
+    status: completed
 isProject: false
 ---
 

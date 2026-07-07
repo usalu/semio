@@ -41,14 +41,11 @@
 \RequirePackage{semio-components}
 \RequirePackage{semio-window}
 
-\edef\semio@setup@type{\semio@type}
-\edef\semio@setup@theme{\semio@theme}
-\edef\semio@setup@language{\semio@language}
 \ExplSyntaxOn
-\keys_set:nn { semio / setup } {
-  type = \semio@setup@type,
-  theme = \semio@setup@theme,
-  language = \semio@setup@language,
+\keys_set:nx { semio / setup } {
+  type = \semio@type,
+  theme = \semio@theme,
+  language = \semio@language,
 }
 \ExplSyntaxOff
 

@@ -2,7 +2,7 @@
 
 use flow_core::{
     dag::{dag_lod_scale_json, DagDrawLod, DagFixture},
-    flow_neuron_kind_infos_json, flow_operator_catalogue_json,
+    flow_backed_node_graph_extras, flow_neuron_kind_infos_json, flow_operator_catalogue_json, FLOW_LOD_MODE_AUTOMATIC,
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     CameraJson, FlowFixture, FlowHost, Widget,
 };
@@ -40,9 +40,7 @@ const FLOW_PLAY_BODY_GENERATIONS: &str = "flow.play.generations";
 const FLOW_PLAY_BODY_GENERATE_FORM: &str = "flow.play.generate-form";
 const FLOW_PLAY_BODY_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 const FLOW_PLAY_SURFACE_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
-
-/// 📶 Window LOD select value: camera zoom picks the DAG draw tier.
-const FLOW_LOD_MODE_AUTOMATIC: &str = "automatic";
+const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 
 /// 🧩 Built-in flow extensions: (id, name, commandId, commandTitle, effect).
 const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] = &[
@@ -311,6 +309,33 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
+fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
+    if kind == "neuron" {
+        json!({ "kind": "neuron", "neuronKind": neuron_kind.unwrap_or(kind) })
+    } else {
+        json!({ "kind": kind })
+    }
+}
+
+fn flow_widget_drag_data(descriptor: &Value) -> HashMap<String, String> {
+    let mut drag_data = HashMap::new();
+    drag_data.insert(FLOW_WIDGET_DRAG_MIME.into(), descriptor.to_string());
+    drag_data
+}
+
+fn tree_item_with_command_draggable(
+    id: impl Into<String>,
+    label: impl Into<String>,
+    description: Option<String>,
+    command: CommandDescriptor,
+    descriptor: &Value,
+) -> UiTreeItemNode {
+    let mut item = tree_item_with_command(id, label, description, command);
+    item.draggable = Some(true);
+    item.drag_data = Some(flow_widget_drag_data(descriptor));
+    item
+}
+
 fn tree_item_with_command(id: impl Into<String>, label: impl Into<String>, description: Option<String>, command: CommandDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
@@ -427,22 +452,21 @@ fn build_catalogue_tree(envelope: &FlowPlayEnvelope) -> UiNode {
                                 .or_else(|| entry.get("abbreviation"))
                                 .and_then(|value| value.as_str())
                                 .unwrap_or(kind);
-                            let command = if kind == "neuron" {
-                                flow_cmd(
-                                    "addWidget",
-                                    Some(json!({
-                                        "kind": "neuron",
-                                        "neuronKind": entry.get("neuronKind").and_then(|value| value.as_str()).unwrap_or(kind),
-                                    })),
+                            let descriptor = if kind == "neuron" {
+                                flow_widget_descriptor(
+                                    "neuron",
+                                    entry.get("neuronKind").and_then(|value| value.as_str()),
                                 )
                             } else {
-                                flow_cmd("addWidget", Some(json!({ "kind": kind })))
+                                flow_widget_descriptor(kind, None)
                             };
-                            Some(tree_item_with_command(
+                            let command = flow_cmd("addWidget", Some(descriptor.clone()));
+                            Some(tree_item_with_command_draggable(
                                 format!("flow-play-catalogue.{id}.{kind}.{label}"),
                                 label,
                                 Some(kind.to_string()),
                                 command,
+                                &descriptor,
                             ))
                         })
                         .collect()
@@ -521,11 +545,13 @@ fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
             items: sources
                 .iter()
                 .map(|(kind, label)| {
-                    tree_item_with_command(
+                    let descriptor = flow_widget_descriptor(kind, None);
+                    tree_item_with_command_draggable(
                         format!("flow-play-catalogue.source.{kind}"),
                         *label,
                         Some((*kind).into()),
-                        flow_cmd("addWidget", Some(json!({ "kind": kind }))),
+                        flow_cmd("addWidget", Some(descriptor.clone())),
+                        &descriptor,
                     )
                 })
                 .collect(),
@@ -537,11 +563,13 @@ fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
             items: components
                 .iter()
                 .map(|(kind, label)| {
-                    tree_item_with_command(
+                    let descriptor = flow_widget_descriptor("neuron", Some(kind));
+                    tree_item_with_command_draggable(
                         format!("flow-play-catalogue.component.{kind}"),
                         *label,
                         Some((*kind).into()),
-                        flow_cmd("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind }))),
+                        flow_cmd("addWidget", Some(descriptor.clone())),
+                        &descriptor,
                     )
                 })
                 .collect(),
@@ -553,11 +581,13 @@ fn catalogue_tree_sections_fallback() -> Vec<UiTreeSectionNode> {
             items: sinks
                 .iter()
                 .map(|(kind, label)| {
-                    tree_item_with_command(
+                    let descriptor = flow_widget_descriptor(kind, None);
+                    tree_item_with_command_draggable(
                         format!("flow-play-catalogue.sink.{kind}"),
                         *label,
                         Some((*kind).into()),
-                        flow_cmd("addWidget", Some(json!({ "kind": kind }))),
+                        flow_cmd("addWidget", Some(descriptor.clone())),
+                        &descriptor,
                     )
                 })
                 .collect(),
@@ -712,26 +742,20 @@ fn render_main_graph(envelope: &FlowPlayEnvelope) -> UiNode {
     } else {
         serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
     };
+    let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, envelope.runtime.proximity_distance);
     build_node_graph_scene(
         FLOW_PLAY_SURFACE_MAIN,
         FLOW_PLAY_APP_ID,
         NodeGraphScene {
             editable: Some(true),
-            operators_json: Some(flow_neuron_kind_infos_json()),
+            operators_json: flow_extras.operators_json,
             context_menu_json: Some(
                 r#"[{"id":"delete-selection","label":"Delete selection","command":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
             ),
             find_items_json: None,
-            capabilities_json: Some(r#"{"engine":"flow","spotlight":true,"noteEdit":true,"clusters":true,"previewToggle":true}"#.into()),
-            lod_json: Some(
-                json!({
-                    "automatic": envelope.runtime.lod_mode == FLOW_LOD_MODE_AUTOMATIC,
-                    "forcedLabel": if envelope.runtime.lod_mode == FLOW_LOD_MODE_AUTOMATIC { Value::Null } else { json!(envelope.runtime.lod_mode) },
-                    "proximityDistance": envelope.runtime.proximity_distance,
-                })
-                .to_string(),
-            ),
-            fixture_json,
+            capabilities_json: flow_extras.capabilities_json,
+            lod_json: flow_extras.lod_json,
+            fixture_json: flow_extras.fixture_json.or(fixture_json),
             selection_json,
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
@@ -1332,6 +1356,16 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("flow-play-catalogue.math"), "expected math module section: {json}");
         assert!(json.contains("math.add"), "expected math.add operator: {json}");
+    }
+
+    #[test]
+    fn catalogue_items_export_flow_widget_drag_payload() {
+        let app = FlowPlayApp { host: None };
+        let document = app.initial_document_json();
+        let node = app.render(FLOW_PLAY_BODY_CATALOGUE, &document, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains(FLOW_WIDGET_DRAG_MIME), "missing drag mime: {json}");
+        assert!(json.contains(r#""draggable":true"#) || json.contains(r#""draggable": true"#));
     }
 
     #[test]

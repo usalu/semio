@@ -845,6 +845,7 @@ fn torus_point(major: f32, minor: f32, phi: f32, theta: f32) -> [f32; 3] {
 pub fn mesh_from_kind(kind: &str) -> MeshData {
     match kind {
         "vortex-marker" => mesh_ico_sphere(0.12, 1),
+        "vertex-marker" => mesh_ico_sphere(1.0, 1),
         "sphere" | "uvSphere" => mesh_uv_sphere(0.5, 16, 12),
         "icoSphere" => mesh_ico_sphere(0.5, 1),
         "plane" => mesh_plane(1.0, 1.0),

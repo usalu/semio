@@ -64,6 +64,8 @@ pub struct CadObject {
     pub mesh_url: Option<String>,
     #[serde(default)]
     pub extent: Option<[f64; 3]>,
+    #[serde(default, rename = "solidHandle")]
+    pub solid_handle: Option<String>,
     #[serde(default)]
     pub primitives: Vec<CadPrimitiveSlot>,
 }
@@ -242,6 +244,8 @@ pub struct CadObjectPatch {
     #[serde(rename = "meshUrl")]
     pub mesh_url: Option<String>,
     pub extent: Option<[f64; 3]>,
+    #[serde(rename = "solidHandle")]
+    pub solid_handle: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -383,6 +387,9 @@ fn apply_object_patch(object: &mut CadObject, patch: &CadObjectPatch) {
     }
     if let Some(extent) = patch.extent {
         object.extent = Some(extent);
+    }
+    if let Some(solid_handle) = &patch.solid_handle {
+        object.solid_handle = Some(solid_handle.clone());
     }
 }
 
@@ -831,6 +838,7 @@ fn reverse_object_patch(before: &CadObject, patch: &CadObjectPatch) -> CadObject
         scale: patch.scale.map(|_| before.scale.unwrap_or([1.0, 1.0, 1.0])),
         mesh_url: patch.mesh_url.as_ref().map(|_| before.mesh_url.clone().unwrap_or_default()),
         extent: patch.extent.map(|_| before.extent).flatten(),
+        solid_handle: patch.solid_handle.as_ref().map(|_| before.solid_handle.clone()).flatten(),
     }
 }
 
@@ -1033,6 +1041,7 @@ mod tests {
             scale: None,
             mesh_url: None,
             extent: None,
+            solid_handle: None,
             primitives: vec![CadPrimitiveSlot {
                 slot: "solid".into(),
                 primitive_id: "solid-1".into(),
@@ -1076,6 +1085,7 @@ mod tests {
                         scale: None,
                         mesh_url: None,
                         extent: None,
+                        solid_handle: None,
                         primitives: Vec::new(),
                     },
                 }],

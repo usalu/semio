@@ -1,5 +1,8 @@
 //! 📏 CAD plugin — spatial model play app bundled as a hot-swappable WASM component.
 
+mod interaction;
+mod transformation;
+
 use cad_document::{
     cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects,
     empty_cad_projection, CadCamera, CadEnvelope, CadNode, CadObject, CadObjectPatch, CadOp, CadPaneId,
@@ -27,6 +30,13 @@ use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::LazyLock;
+use interaction::{
+    apply_event, can_commit, commit_object, keyed_transitions, list_interactions_for_model_definition,
+    parse_repl_line, preview_display_items, resolve_interaction_key, start_session, CadEngagementSession,
+};
+use transformation::{
+    apply_from_building, apply_typology_fallback, run_derive_from_geometry, solid_for_object,
+};
 use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
 
 //#region 🔖Constants
@@ -63,15 +73,68 @@ const TYPOLOGY_MESH_URLS: &[(&str, &str)] = &[
     ("building.building.column", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
     ("building.building.beam", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
     ("building.building.wall", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
-    ("spatial.shape.box", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
+    ("structure.structure.onewayreinforcedconcreteslab", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
+    ("structure.structure.reinforcedconcretecolumn", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
+    ("energy.energy.externalwall", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
+    ("spatial.shape.primitive.box", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
 ];
 
-const TYPOLOGY_CATALOG: &[(&str, &str, &str)] = &[
-    ("building.building.slab", "Slab", "square"),
-    ("building.building.column", "Column", "columns"),
-    ("building.building.beam", "Beam", "minus"),
-    ("building.building.wall", "Wall", "panel-top"),
-    ("spatial.shape.box", "Box", "box"),
+struct CadTypologyEntry {
+    typology: &'static str,
+    label: &'static str,
+    icon: &'static str,
+    model_definition_id: &'static str,
+}
+
+const TYPOLOGY_CATALOG: &[CadTypologyEntry] = &[
+    CadTypologyEntry {
+        typology: "spatial.shape.primitive.box",
+        label: "Box",
+        icon: "box",
+        model_definition_id: CAD_MODEL_DEFINITION_SHAPE,
+    },
+    CadTypologyEntry {
+        typology: "building.building.slab",
+        label: "Slab",
+        icon: "square",
+        model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
+    },
+    CadTypologyEntry {
+        typology: "building.building.column",
+        label: "Column",
+        icon: "columns",
+        model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
+    },
+    CadTypologyEntry {
+        typology: "building.building.beam",
+        label: "Beam",
+        icon: "minus",
+        model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
+    },
+    CadTypologyEntry {
+        typology: "building.building.wall",
+        label: "Wall",
+        icon: "panel-top",
+        model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
+    },
+    CadTypologyEntry {
+        typology: "energy.energy.externalwall",
+        label: "External Wall",
+        icon: "panel-top",
+        model_definition_id: CAD_MODEL_DEFINITION_ENERGY,
+    },
+    CadTypologyEntry {
+        typology: "structure.structure.onewayreinforcedconcreteslab",
+        label: "Slab",
+        icon: "square",
+        model_definition_id: CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
+    },
+    CadTypologyEntry {
+        typology: "structure.structure.reinforcedconcretecolumn",
+        label: "Column",
+        icon: "columns",
+        model_definition_id: CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
+    },
 ];
 
 const FOREST_LEFT_MODEL_JSON: &str =
@@ -89,6 +152,14 @@ struct CadTransformationSpec {
     label: &'static str,
     source_model_definition_id: &'static str,
     target_model_definition_id: &'static str,
+    mode: TransformationMode,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum TransformationMode {
+    DeriveFromGeometry,
+    FromBuilding,
+    TypologyFallback,
 }
 
 const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
@@ -97,18 +168,21 @@ const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
         label: "From Geometry",
         source_model_definition_id: CAD_MODEL_DEFINITION_SHAPE,
         target_model_definition_id: CAD_MODEL_DEFINITION_ENERGY,
+        mode: TransformationMode::DeriveFromGeometry,
     },
     CadTransformationSpec {
         id: "from_building",
         label: "From Building",
         source_model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
         target_model_definition_id: CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
+        mode: TransformationMode::FromBuilding,
     },
     CadTransformationSpec {
         id: "classic",
         label: "Classic",
         source_model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
         target_model_definition_id: CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
+        mode: TransformationMode::TypologyFallback,
     },
 ];
 //#endregion 🔖Constants
@@ -130,10 +204,16 @@ fn cad_brep_kernel() -> &'static Mutex<BrepkitKernel> {
 
 /// @emoji 📐 Tessellates a typology's primitive sized from authored geometry (or a universal
 /// fallback extent when no geometry was captured), instead of hardcoded per-typology constants.
-fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>) -> MeshData {
+fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Option<&str>) -> MeshData {
     let Ok(mut kernel) = cad_brep_kernel().lock() else {
         return mesh_from_kind(typology_mesh_kind(typology));
     };
+    if let Some(handle_id) = solid_handle {
+        let handle = kernel_3d_engine::GeometryHandle(handle_id.into());
+        if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
+            return mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index);
+        }
+    }
     let [ex, ey, ez] = extent.unwrap_or(CAD_DEFAULT_TYPOLOGY_EXTENT);
     let (width, depth, height) = (ex.max(0.05), ey.max(0.05), ez.max(0.05));
     let is_cylindrical = typology_mesh_kind(typology) == "cylinder";
@@ -263,6 +343,7 @@ fn cad_document_pane_objects(source_json: &str, model_index: usize) -> Vec<CadOb
                     .find(|(kind, _)| *kind == typology)
                     .map(|(_, url)| url.to_string()),
                 extent: object_extent_from_vertices(object_id, vertices),
+                solid_handle: None,
                 primitives: primitives_from_json(entry),
             })
         })
@@ -354,8 +435,14 @@ struct CadPlayRuntime {
     selected_reference_id: Option<String>,
     #[serde(default)]
     engagement_pane: Option<String>,
+    #[serde(default)]
+    engagement_session: Option<CadEngagementSession>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pending_export: Option<Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pending_export_filename: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pending_export_mime: Option<String>,
 }
 
 fn default_selection_method() -> String {
@@ -380,7 +467,10 @@ impl Default for CadPlayRuntime {
             selected_reference_model_definition_id: None,
             selected_reference_id: None,
             engagement_pane: None,
+            engagement_session: None,
             pending_export: None,
+            pending_export_filename: None,
+            pending_export_mime: None,
         }
     }
 }
@@ -401,7 +491,9 @@ struct CadPlayEnvelope {
 
 fn typology_mesh_kind(typology: &str) -> &'static str {
     match typology {
-        "building.building.column" | "structure.structure.reinforcedconcretecolumn" => "cylinder",
+        "building.building.column"
+        | "structure.structure.reinforcedconcretecolumn"
+        | "aec.building.column" => "cylinder",
         _ => "box",
     }
 }
@@ -419,14 +511,15 @@ fn default_document() -> CadScene {
         objects: vec![CadObject {
             id: "object-box-1".into(),
             label: "Box".into(),
-            typology: "spatial.shape.box".into(),
+            typology: "spatial.shape.primitive.box".into(),
             visible: true,
             locked: false,
             origin: [0.0, 0.0, 0.0],
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
             scale: None,
             mesh_url: Some("/mesh/hexagonal-cut-concrete-forest-left.glb".into()),
-            extent: None,
+            extent: Some([1.0, 1.0, 1.0]),
+            solid_handle: None,
             primitives: vec![CadPrimitiveSlot {
                 slot: "solid".into(),
                 primitive_id: "box-solid".into(),
@@ -620,6 +713,23 @@ fn transfers_from_for_model_definition(active_model_definition_id: &str) -> Vec<
         .collect()
 }
 
+fn ensure_object_solid_handle(kernel: &mut BrepkitKernel, object: &mut CadObject) {
+    if object.solid_handle.is_some() {
+        return;
+    }
+    if let Some(handle) = solid_for_object(kernel, object) {
+        let primitive_id = handle.0.clone();
+        object.solid_handle = Some(primitive_id.clone());
+        if object.primitives.is_empty() {
+            object.primitives.push(CadPrimitiveSlot {
+                slot: "solid".into(),
+                primitive_id,
+                kind: "solid".into(),
+            });
+        }
+    }
+}
+
 fn apply_transformation_to_envelope(envelope: &mut CadPlayEnvelope, qid: &str) -> bool {
     let Some((model_definition_id, transformation_id)) = qid.rsplit_once('.') else {
         return false;
@@ -644,24 +754,86 @@ fn apply_transformation_to_envelope(envelope: &mut CadPlayEnvelope, qid: &str) -
         };
         cad_document_pane_objects(FOREST_LEFT_MODEL_JSON, model_index)
     } else {
-        cad_pane_objects(&envelope.document, source_pane)
+        let source_objects: Vec<CadObject> = cad_pane_objects(&envelope.document, source_pane)
             .iter()
-            .map(|object| {
-                let mut next = object.clone();
-                if spec.target_model_definition_id == CAD_MODEL_DEFINITION_ENERGY {
-                    next.typology = "energy.energy.hull".into();
-                }
-                next
-            })
-            .collect()
+            .cloned()
+            .collect();
+        let Ok(mut kernel) = cad_brep_kernel().lock() else {
+            return false;
+        };
+        let mut prepared = source_objects;
+        for object in &mut prepared {
+            ensure_object_solid_handle(&mut kernel, object);
+        }
+        match spec.mode {
+            TransformationMode::DeriveFromGeometry => {
+                run_derive_from_geometry(&mut kernel, &prepared, "derived-energy")
+            }
+            TransformationMode::FromBuilding => apply_from_building(&prepared, "derived-structure"),
+            TransformationMode::TypologyFallback => apply_typology_fallback(
+                &prepared,
+                &[
+                    "building.building.slab",
+                    "building.building.column",
+                    "building.building.beam",
+                    "building.building.wall",
+                ],
+                "derived-fallback",
+            ),
+        }
     };
-    dispatch_cad_ops(
+    let ops_ok = dispatch_cad_ops(
         envelope,
         vec![CadOp::SetPaneObjects {
             pane: target_pane,
             objects,
         }],
-    )
+    );
+    if ops_ok {
+        envelope.document.active_model_definition_id = spec.target_model_definition_id.into();
+    }
+    ops_ok
+}
+
+fn export_step_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId) -> Option<(String, String)> {
+    let objects = cad_pane_objects(&envelope.document, pane);
+    let Ok(mut kernel) = cad_brep_kernel().lock() else {
+        return None;
+    };
+    let mut solids = Vec::new();
+    for object in objects {
+        let mut next = object.clone();
+        if let Some(handle) = solid_for_object(&mut kernel, &mut next) {
+            solids.push(handle);
+        }
+    }
+    if solids.is_empty() {
+        return None;
+    }
+    let step = kernel.export_step_sync(&solids).ok()?;
+    let stem = pane.model_definition_id().replace('.', "-");
+    Some((format!("cad-{}.stp", stem), step))
+}
+
+fn export_step_modelspace(envelope: &CadPlayEnvelope) -> Option<(String, String)> {
+    let Ok(kernel_mutex) = cad_brep_kernel().lock() else {
+        return None;
+    };
+    let mut kernel = kernel_mutex;
+    let mut solids = Vec::new();
+    for pane in CadPaneId::all() {
+        for object in cad_pane_objects(&envelope.document, pane) {
+            let mut next = object.clone();
+            if let Some(handle) = solid_for_object(&mut kernel, &mut next) {
+                solids.push(handle);
+            }
+        }
+    }
+    if solids.is_empty() {
+        return None;
+    }
+    let step = kernel.export_step_sync(&solids).ok()?;
+    Some(("cad.modelspace.stp".into(), step))
 }
 
 fn export_spatial_json(envelope: &CadPlayEnvelope, mode: &str) -> Value {
@@ -673,34 +845,42 @@ fn export_spatial_json(envelope: &CadPlayEnvelope, mode: &str) -> Value {
                 "model": {
                     "schema": "spatial.model",
                     "revision": 1,
-                    "objects": cad_pane_objects(&envelope.document, pane).iter().map(|object| json!({
-                        "id": object.id,
-                        "typology": object.typology,
-                        "primitives": object.primitives.iter().map(|primitive| json!({
-                            "kind": primitive.kind,
-                            "slot": primitive.slot,
-                            "id": primitive.primitive_id,
-                        })).collect::<Vec<_>>(),
-                    })).collect::<Vec<_>>(),
+                    "objects": cad_pane_objects(&envelope.document, pane),
                 }
             })
         })
         .collect();
     match mode {
         "selected" => {
+            let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id)
+                .unwrap_or(CadPaneId::Shape);
             let selected: Vec<&CadObject> = envelope
                 .runtime
                 .selected_object_ids
                 .iter()
-                .filter_map(|id| cad_all_objects(&envelope.document).find(|(object, _)| &object.id == id).map(|(object, _)| object))
+                .filter_map(|id| {
+                    cad_all_objects(&envelope.document)
+                        .find(|(object, _)| &object.id == id)
+                        .map(|(object, _)| object)
+                })
                 .collect();
-            json!({
+            let model = json!({
                 "schema": "spatial.model",
                 "revision": 1,
-                "objects": selected.iter().map(|object| json!({
-                    "id": object.id,
-                    "typology": object.typology,
-                })).collect::<Vec<_>>(),
+                "objects": selected,
+            });
+            let model_space = json!({
+                "schema": "spatial.modelspace",
+                "revision": 1,
+                "models": [{
+                    "id": pane.model_definition_id(),
+                    "model": model,
+                }],
+            });
+            json!({
+                "model": model,
+                "modelSpace": model_space,
+                "activeModelDefinitionId": pane.model_definition_id(),
             })
         }
         "current" => {
@@ -720,6 +900,87 @@ fn export_spatial_json(envelope: &CadPlayEnvelope, mode: &str) -> Value {
             "models": models,
         }),
     }
+}
+
+fn unwrap_spatial_load_payload(raw: &Value) -> Option<Value> {
+    if raw.get("modelSpace").is_some() {
+        return raw.get("modelSpace").cloned();
+    }
+    if raw.get("model").is_some() {
+        return raw.get("model").cloned();
+    }
+    if raw.get("raw").is_some() {
+        return raw.get("raw").cloned();
+    }
+    Some(raw.clone())
+}
+
+fn scene_from_spatial_payload(payload: &Value) -> Option<CadScene> {
+    if payload.get("schema").and_then(|value| value.as_str()) == Some("spatial.modelspace") {
+        let models = payload.get("models")?.as_array()?;
+        let mut scene = default_document();
+        for entry in models {
+            let model_definition_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("");
+            let objects_value = entry.pointer("/model/objects")?;
+            let objects: Vec<CadObject> = serde_json::from_value(objects_value.clone()).ok()?;
+            match model_definition_id {
+                CAD_MODEL_DEFINITION_SHAPE => scene.objects = objects,
+                CAD_MODEL_DEFINITION_BUILDING => scene.building_objects = objects,
+                CAD_MODEL_DEFINITION_ENERGY => scene.energy_objects = objects,
+                CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC => scene.structure_classic_objects = objects,
+                _ => {}
+            }
+        }
+        if let Some(active) = payload.get("activeModelDefinitionId").and_then(|value| value.as_str()) {
+            scene.active_model_definition_id = active.into();
+        }
+        return Some(scene);
+    }
+    if payload.get("schema").and_then(|value| value.as_str()) == Some("spatial.model") {
+        let objects: Vec<CadObject> = serde_json::from_value(payload.get("objects")?.clone()).ok()?;
+        let mut scene = default_document();
+        let pane = payload
+            .get("modelDefinitionId")
+            .and_then(|value| value.as_str())
+            .and_then(cad_pane_from_model_definition_id)
+            .unwrap_or(CadPaneId::Shape);
+        match pane {
+            CadPaneId::Shape => scene.objects = objects,
+            CadPaneId::Building => scene.building_objects = objects,
+            CadPaneId::Energy => scene.energy_objects = objects,
+            CadPaneId::StructureClassic => scene.structure_classic_objects = objects,
+        }
+        scene.active_model_definition_id = pane.model_definition_id().into();
+        return Some(scene);
+    }
+    None
+}
+
+fn export_download_ops(envelope: &CadPlayEnvelope) -> Vec<String> {
+    let Some(data) = envelope.runtime.pending_export.clone() else {
+        return Vec::new();
+    };
+    let filename = envelope
+        .runtime
+        .pending_export_filename
+        .clone()
+        .unwrap_or_else(|| "cad.spatial.json".into());
+    let mime_type = envelope
+        .runtime
+        .pending_export_mime
+        .clone()
+        .unwrap_or_else(|| "application/json".into());
+    let payload = match data {
+        Value::String(text) => text,
+        other => serde_json::to_string(&other).unwrap_or_default(),
+    };
+    vec![json!({
+        "op": "downloadMediaExport",
+        "filename": filename,
+        "mimeType": mime_type,
+        "data": payload,
+    })
+    .to_string()]
 }
 //#endregion 🔖PaneHelpers
 
@@ -821,9 +1082,10 @@ fn world_meshes_json(objects: &[CadObject]) -> String {
         .iter()
         .map(|kind| {
             let representative = objects.iter().find(|object| typology_mesh_kind(&object.typology) == kind.as_str());
-            let typology = representative.map(|object| object.typology.as_str()).unwrap_or("spatial.shape.box");
+            let typology = representative.map(|object| object.typology.as_str()).unwrap_or("spatial.shape.primitive.box");
             let extent = representative.and_then(|object| object.extent);
-            let data = typology_brep_mesh(typology, extent);
+            let solid_handle = representative.and_then(|object| object.solid_handle.as_deref());
+            let data = typology_brep_mesh(typology, extent, solid_handle);
             json!({ "id": kind, "data": data })
         })
         .collect();
@@ -874,6 +1136,14 @@ fn world_references_json(document: &CadScene, pane: CadPaneId) -> Option<String>
 
 fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surface_id: &str) -> UiNode {
     let objects = cad_pane_objects(&envelope.document, pane);
+    let preview = envelope
+        .runtime
+        .engagement_session
+        .as_ref()
+        .filter(|session| session.pane == pane)
+        .map(preview_display_items)
+        .filter(|items| !items.is_empty())
+        .map(|items| serde_json::to_string(&items).unwrap_or_else(|_| "[]".into()));
     build_world_3d_scene(
         surface_id,
         CAD_PLAY_APP_ID,
@@ -887,7 +1157,7 @@ fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surfa
             None,
             world_references_json(&envelope.document, pane),
             None,
-            None,
+            preview,
         ),
     )
 }
@@ -895,9 +1165,12 @@ fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surfa
 fn export_mesh_from_envelope(envelope: &CadPlayEnvelope) -> MeshData {
     let selected = cad_all_objects(&envelope.document)
         .find(|(object, _)| envelope.runtime.selected_object_ids.contains(&object.id));
-    let typology = selected.map(|(object, _)| object.typology.as_str()).unwrap_or("spatial.shape.box");
+    let typology = selected
+        .map(|(object, _)| object.typology.as_str())
+        .unwrap_or("spatial.shape.primitive.box");
     let extent = selected.and_then(|(object, _)| object.extent);
-    typology_brep_mesh(typology, extent)
+    let solid_handle = selected.and_then(|(object, _)| object.solid_handle.as_deref());
+    typology_brep_mesh(typology, extent, solid_handle)
 }
 
 //#region 🔖NodeHistory
@@ -1180,12 +1453,12 @@ fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
 fn build_catalogue_tree() -> UiNode {
     let items: Vec<UiTreeItemNode> = TYPOLOGY_CATALOG
         .iter()
-        .map(|(typology, label, icon)| {
+        .map(|entry| {
             tree_item_with_command(
-                format!("cad-play-catalogue.{typology}"),
-                *label,
-                Some(icon),
-                cad_cmd("addObject", Some(json!({ "typology": typology }))),
+                format!("cad-play-catalogue.{}", entry.typology),
+                entry.label,
+                Some(entry.icon),
+                cad_cmd("addObject", Some(json!({ "typology": entry.typology }))),
             )
         })
         .collect();
@@ -1359,9 +1632,9 @@ fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
                     value: typology_mixed.value.clone(),
                     items: TYPOLOGY_CATALOG
                         .iter()
-                        .map(|(typology, label, _)| UiSelectItem {
-                            value: (*typology).into(),
-                            label: (*label).into(),
+                        .map(|entry| UiSelectItem {
+                            value: entry.typology.into(),
+                            label: entry.label.into(),
                         })
                         .collect(),
                     placeholder: typology_mixed.placeholder.clone(),
@@ -1488,20 +1761,47 @@ fn node_inspector_group(node: &CadNode) -> UiInspectorFieldGroup {
 fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowEngagement {
     let transform = envelope.runtime.transform_tool.clone();
     let selected_count = envelope.runtime.selected_object_ids.len();
-    let possible_engagements: Vec<WindowEngagementPossible> = TYPOLOGY_CATALOG
-        .iter()
-        .map(|(typology, label, _)| WindowEngagementPossible {
-            id: typology.to_string(),
-            label: (*label).into(),
-            detail: Some((*typology).into()),
-            command: Some(cad_cmd(
-                "engagementPossibleSelect",
-                Some(json!({ "pane": cad_pane_suffix(pane), "possibleId": typology })),
-            )),
-        })
-        .collect();
+    let model_definition_id = pane.model_definition_id();
+    let session_active = envelope.runtime.engagement_session.is_some();
+    let possible_engagements: Vec<WindowEngagementPossible> =
+        if let Some(session) = envelope.runtime.engagement_session.as_ref() {
+            keyed_transitions(session)
+                .into_iter()
+                .map(|transition| WindowEngagementPossible {
+                    id: transition.event_kind.clone(),
+                    label: transition.label,
+                    detail: Some(transition.key),
+                    command: Some(cad_cmd(
+                        "engagementPossibleSelect",
+                        Some(json!({
+                            "pane": cad_pane_suffix(pane),
+                            "possibleId": transition.event_kind,
+                        })),
+                    )),
+                })
+                .collect()
+        } else {
+            list_interactions_for_model_definition(model_definition_id)
+                .into_iter()
+                .map(|entry| WindowEngagementPossible {
+                    id: entry.id.into(),
+                    label: entry.label.into(),
+                    detail: Some(entry.key.into()),
+                    command: Some(cad_cmd(
+                        "engagementPossibleSelect",
+                        Some(json!({ "pane": cad_pane_suffix(pane), "possibleId": entry.id })),
+                    )),
+                })
+                .collect()
+        };
+    let step_text = envelope
+        .runtime
+        .engagement_session
+        .as_ref()
+        .map(|session| session.state.clone())
+        .unwrap_or_else(|| envelope.runtime.engagement_step.clone());
     WindowEngagement {
-        session_active: Some(true),
+        session_active: Some(session_active || true),
         options: Some(vec![
             WindowEngagementOption {
                 id: "cad.opt.move".into(),
@@ -1559,7 +1859,16 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
             },
             WindowEngagementStatus {
                 id: "cad-step".into(),
-                text: format!("Step: {}", envelope.runtime.engagement_step),
+                text: format!("Step: {step_text}"),
+            },
+            WindowEngagementStatus {
+                id: "cad-response".into(),
+                text: envelope
+                    .runtime
+                    .engagement_session
+                    .as_ref()
+                    .and_then(|session| session.last_response.clone())
+                    .unwrap_or_else(|| "OK".into()),
             },
         ]),
         possible_engagements: Some(possible_engagements),
@@ -1789,13 +2098,19 @@ fn patch_objects_in_envelope(
     dispatch_cad_ops(envelope, operations)
 }
 
-fn make_object_for_typology(typology: &str, label_count: usize) -> CadObject {
+fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId) -> CadObject {
     let label = TYPOLOGY_CATALOG
         .iter()
-        .find(|(id, _, _)| *id == typology)
-        .map(|(_, name, _)| *name)
+        .find(|entry| entry.typology == typology)
+        .map(|entry| entry.label)
         .unwrap_or("Object");
-    CadObject {
+    let extent = match typology {
+        t if t.contains("column") => Some([0.5, 0.5, 3.0]),
+        t if t.contains("slab") => Some([4.0, 4.0, 0.25]),
+        t if t.contains("wall") => Some([4.0, 0.2, 3.0]),
+        _ => Some([1.0, 1.0, 1.0]),
+    };
+    let mut object = CadObject {
         id: next_cad_id("object"),
         label: format!("{label} {}", label_count + 1),
         typology: typology.into(),
@@ -1808,13 +2123,84 @@ fn make_object_for_typology(typology: &str, label_count: usize) -> CadObject {
             .iter()
             .find(|(entry, _)| *entry == typology)
             .map(|(_, url)| url.to_string()),
-        extent: None,
-        primitives: vec![CadPrimitiveSlot {
-            slot: "solid".into(),
-            primitive_id: next_cad_id("primitive"),
-            kind: "solid".into(),
-        }],
+        extent,
+        solid_handle: None,
+        primitives: Vec::new(),
+    };
+    if let Ok(mut kernel) = cad_brep_kernel().lock() {
+        ensure_object_solid_handle(&mut kernel, &mut object);
     }
+    let _ = pane;
+    object
+}
+
+fn engagement_submit_line(envelope: &mut CadPlayEnvelope, pane: CadPaneId) -> bool {
+    let input = envelope.runtime.engagement_input.trim();
+    if input.is_empty() {
+        envelope.runtime.engagement_step = "Idle".into();
+        return false;
+    }
+    let model_definition_id = pane.model_definition_id();
+    if let Some((event_kind, payload)) = parse_repl_line(input) {
+        if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+            if apply_event(session, &event_kind, payload.as_ref()) {
+                envelope.runtime.engagement_step = session.state.clone();
+                let ready = can_commit(session);
+                let session_snapshot = if ready { Some(session.clone()) } else { None };
+                if let Some(session_snapshot) = session_snapshot {
+                    let label_count = cad_pane_objects(&envelope.document, pane).len();
+                    if let Ok(mut kernel) = cad_brep_kernel().lock() {
+                        if let Some(object) = commit_object(
+                            &mut kernel,
+                            &session_snapshot,
+                            label_count,
+                            |prefix| next_cad_id(prefix),
+                        ) {
+                            let id = object.id.clone();
+                            if dispatch_cad_ops(
+                                envelope,
+                                vec![CadOp::AddObject { pane, object }],
+                            ) {
+                                envelope.runtime.selected_object_ids = vec![id];
+                                envelope.runtime.engagement_input.clear();
+                                envelope.runtime.engagement_session = None;
+                                envelope.runtime.engagement_step = "Idle".into();
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+        if let Some(entry) = resolve_interaction_key(&event_kind, model_definition_id) {
+            envelope.runtime.engagement_session = start_session(entry.id, pane);
+            if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+                let _ = apply_event(session, "start", None);
+            }
+            envelope.runtime.engagement_step = envelope
+                .runtime
+                .engagement_session
+                .as_ref()
+                .map(|session| session.state.clone())
+                .unwrap_or_else(|| "Idle".into());
+            envelope.runtime.engagement_input.clear();
+            return true;
+        }
+        if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+            for transition in keyed_transitions(session) {
+                if transition.key.eq_ignore_ascii_case(input) || transition.event_kind.eq_ignore_ascii_case(input) {
+                    if apply_event(session, &transition.event_kind, None) {
+                        envelope.runtime.engagement_step = session.state.clone();
+                        envelope.runtime.engagement_input.clear();
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    envelope.runtime.engagement_step = format!("Unknown: {input}");
+    false
 }
 
 //#region 🔖CadApp
@@ -1963,15 +2349,14 @@ impl PluginApp for CadApp {
                 let typology = args
                     .and_then(|value| value.get("typology"))
                     .and_then(|value| value.as_str())
-                    .unwrap_or("spatial.shape.box");
-                let object = make_object_for_typology(typology, envelope.document.objects.len());
+                    .unwrap_or("spatial.shape.primitive.box");
+                let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id)
+                    .unwrap_or(CadPaneId::Shape);
+                let object = make_object_for_typology(typology, cad_pane_objects(&envelope.document, pane).len(), pane);
                 let id = object.id.clone();
                 if dispatch_cad_ops(
                     &mut envelope,
-                    vec![CadOp::AddObject {
-                        pane: CadPaneId::Shape,
-                        object,
-                    }],
+                    vec![CadOp::AddObject { pane, object }],
                 ) {
                     envelope.runtime.selected_object_ids = vec![id];
                     return vec![set_document_op(&envelope)];
@@ -2123,23 +2508,70 @@ impl PluginApp for CadApp {
             }
             "saveSelected" => {
                 envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "selected"));
-                return vec![set_document_op(&envelope)];
+                envelope.runtime.pending_export_filename = Some("cad.selected.spatial.json".into());
+                envelope.runtime.pending_export_mime = Some("application/json".into());
+                let mut ops = vec![set_document_op(&envelope)];
+                ops.extend(export_download_ops(&envelope));
+                return ops;
             }
             "saveInPlay" => {
-                envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "modelspace"));
-                return vec![set_document_op(&envelope)];
+                if let Some((filename, step)) = export_step_modelspace(&envelope) {
+                    envelope.runtime.pending_export = Some(Value::String(step));
+                    envelope.runtime.pending_export_filename = Some(filename);
+                    envelope.runtime.pending_export_mime = Some("application/step".into());
+                } else {
+                    envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "modelspace"));
+                    envelope.runtime.pending_export_filename = Some("cad.modelspace.spatial.json".into());
+                    envelope.runtime.pending_export_mime = Some("application/json".into());
+                }
+                let mut ops = vec![set_document_op(&envelope)];
+                ops.extend(export_download_ops(&envelope));
+                return ops;
             }
             "saveCurrent" => {
-                envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "current"));
-                return vec![set_document_op(&envelope)];
+                let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id)
+                    .unwrap_or(CadPaneId::Shape);
+                if let Some((filename, step)) = export_step_for_pane(&envelope, pane) {
+                    envelope.runtime.pending_export = Some(Value::String(step));
+                    envelope.runtime.pending_export_filename = Some(filename);
+                    envelope.runtime.pending_export_mime = Some("application/step".into());
+                } else {
+                    envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "current"));
+                    envelope.runtime.pending_export_filename = Some("cad.current.spatial.json".into());
+                    envelope.runtime.pending_export_mime = Some("application/json".into());
+                }
+                let mut ops = vec![set_document_op(&envelope)];
+                ops.extend(export_download_ops(&envelope));
+                return ops;
             }
             "loadRawRequest" => {
                 envelope.runtime.pending_export = None;
-                return vec![json!({ "op": "cadLoadRequest" }).to_string()];
+                envelope.runtime.pending_export_filename = None;
+                envelope.runtime.pending_export_mime = None;
+                return vec![json!({
+                    "op": "requestFileOpen",
+                    "accept": ".json,.spatial.json,.stp,.step",
+                    "importCommand": "importSpatialJson",
+                })
+                .to_string()];
             }
             "importSpatialJson" => {
-                if let Some(model_space) = args.and_then(|value| value.get("modelSpace")) {
-                    if let Ok(scene) = serde_json::from_value::<CadScene>(model_space.clone()) {
+                let payload = args
+                    .and_then(|value| value.get("payload").or_else(|| value.get("modelSpace")))
+                    .cloned()
+                    .or_else(|| args.cloned());
+                if let Some(payload) = payload {
+                    let unwrapped = unwrap_spatial_load_payload(&payload).unwrap_or(payload);
+                    if let Some(scene) = scene_from_spatial_payload(&unwrapped) {
+                        envelope.document = scene;
+                        envelope.history = seed_cad_history(&envelope.document);
+                        envelope.applied_edit_ids.clear();
+                        envelope.redo_edit_ids.clear();
+                        envelope.runtime.selected_object_ids.clear();
+                        envelope.runtime.engagement_session = None;
+                        return vec![set_document_op(&envelope)];
+                    }
+                    if let Ok(scene) = serde_json::from_value::<CadScene>(unwrapped) {
                         envelope.document = scene;
                         envelope.history = seed_cad_history(&envelope.document);
                         envelope.applied_edit_ids.clear();
@@ -2227,49 +2659,86 @@ impl PluginApp for CadApp {
                 return vec![set_document_op(&envelope)];
             }
             "engagementSubmit" => {
-                let input = envelope.runtime.engagement_input.trim().to_lowercase();
-                envelope.runtime.engagement_step = if input.is_empty() {
-                    "Idle".into()
-                } else if TYPOLOGY_CATALOG.iter().any(|(typology, _, _)| *typology == input || typology.ends_with(&format!(".{input}"))) {
-                    format!("Create {input}")
-                } else {
-                    format!("Unknown: {input}")
-                };
-                if let Some((typology, _, _)) = TYPOLOGY_CATALOG
-                    .iter()
-                    .find(|(typology, _, _)| *typology == input.as_str() || typology.ends_with(&format!(".{input}")))
-                {
-                    let object = make_object_for_typology(typology, envelope.document.objects.len());
-                    let id = object.id.clone();
-                    if dispatch_cad_ops(
-                        &mut envelope,
-                        vec![CadOp::AddObject {
-                            pane: CadPaneId::Shape,
-                            object,
-                        }],
-                    ) {
-                        envelope.runtime.selected_object_ids = vec![id];
-                        envelope.runtime.engagement_input.clear();
-                        envelope.runtime.engagement_step = "Idle".into();
-                    }
+                let pane = args
+                    .and_then(|value| value.get("pane"))
+                    .and_then(|value| value.as_str())
+                    .map(cad_pane_id_from_suffix)
+                    .unwrap_or(CadPaneId::Shape);
+                if engagement_submit_line(&mut envelope, pane) {
+                    return vec![set_document_op(&envelope)];
                 }
                 return vec![set_document_op(&envelope)];
             }
             "engagementPossibleSelect" => {
+                let pane = args
+                    .and_then(|value| value.get("pane"))
+                    .and_then(|value| value.as_str())
+                    .map(cad_pane_id_from_suffix)
+                    .unwrap_or(CadPaneId::Shape);
                 if let Some(possible_id) = args
                     .and_then(|value| value.get("possibleId"))
                     .and_then(|value| value.as_str())
                 {
-                    envelope.runtime.engagement_input = possible_id.into();
-                    envelope.runtime.engagement_step = format!("Create {possible_id}");
+                    if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+                        if apply_event(session, possible_id, None) {
+                            envelope.runtime.engagement_step = session.state.clone();
+                        }
+                    } else if let Some(entry) = interaction::interaction_by_id(possible_id) {
+                        envelope.runtime.engagement_session = start_session(entry.id, pane);
+                        if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+                            let _ = apply_event(session, "start", None);
+                        }
+                        envelope.runtime.engagement_step = envelope
+                            .runtime
+                            .engagement_session
+                            .as_ref()
+                            .map(|session| session.state.clone())
+                            .unwrap_or_else(|| "Idle".into());
+                    } else {
+                        envelope.runtime.engagement_input = possible_id.into();
+                    }
                 }
                 return vec![set_document_op(&envelope)];
             }
             "engagementRepeatLast" | "engagementAbort" => {
                 if command == "engagementAbort" {
                     envelope.runtime.engagement_input.clear();
+                    envelope.runtime.engagement_session = None;
                 }
                 envelope.runtime.engagement_step = "Idle".into();
+                return vec![set_document_op(&envelope)];
+            }
+            "engagementPointerDown" => {
+                let pane = args
+                    .and_then(|value| value.get("pane"))
+                    .and_then(|value| value.as_str())
+                    .map(cad_pane_id_from_suffix)
+                    .unwrap_or(CadPaneId::Shape);
+                let point = args.and_then(|value| value.get("position"));
+                if let Some(session) = envelope.runtime.engagement_session.as_mut() {
+                    if apply_event(session, "pointer.down", point) {
+                        envelope.runtime.engagement_step = session.state.clone();
+                        if can_commit(session) {
+                            let label_count = cad_pane_objects(&envelope.document, pane).len();
+                            if let Ok(mut kernel) = cad_brep_kernel().lock() {
+                                if let Some(object) =
+                                    commit_object(&mut kernel, session, label_count, |prefix| next_cad_id(prefix))
+                                {
+                                    let id = object.id.clone();
+                                    if dispatch_cad_ops(
+                                        &mut envelope,
+                                        vec![CadOp::AddObject { pane, object }],
+                                    ) {
+                                        envelope.runtime.selected_object_ids = vec![id];
+                                        envelope.runtime.engagement_session = None;
+                                        envelope.runtime.engagement_step = "Idle".into();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                let _ = pane;
                 return vec![set_document_op(&envelope)];
             }
             "setPrimitiveSelection" => {
@@ -2519,7 +2988,8 @@ mod tests {
             .document
             .objects
             .iter()
-            .any(|object| object.typology == "building.building.column"));
+            .any(|object| object.typology == "building.building.column")
+            || envelope.document.building_objects.iter().any(|object| object.typology == "building.building.column"));
     }
 
     #[test]
@@ -2535,7 +3005,7 @@ mod tests {
         let before_count = parse_envelope(&document).document.objects.len();
         let add_ops = app.handle_command(
             "addObject",
-            Some(&json!({ "typology": "spatial.shape.box" })),
+            Some(&json!({ "typology": "spatial.shape.primitive.box" })),
             &document,
             &ViewState::default(),
         );
@@ -2680,6 +3150,82 @@ mod tests {
         let extent = column.extent.expect("column extent derived from geometry");
         assert!(extent[2] > 0.05, "authored column height should be measurable");
         assert_ne!(extent, CAD_DEFAULT_TYPOLOGY_EXTENT, "should differ from the universal fallback");
+    }
+
+    #[test]
+    fn derive_transformation_populates_energy_pane() {
+        let mut app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
+        envelope.document.objects = vec![object];
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command(
+            "applyTransformation",
+            Some(&json!({ "qid": "spatial.shape.from_geometry" })),
+            &document,
+            &ViewState::default(),
+        );
+        let next = apply_ops(&envelope, &ops);
+        assert!(!next.document.energy_objects.is_empty());
+        assert!(next
+            .document
+            .energy_objects
+            .iter()
+            .any(|object| object.typology.starts_with("energy.energy.")));
+    }
+
+    #[test]
+    fn save_selected_emits_download_op() {
+        let mut app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.selected_object_ids = vec!["object-box-1".into()];
+        let document = serde_json::to_string(&envelope).unwrap();
+        let ops = app.handle_command("saveSelected", None, &document, &ViewState::default());
+        assert!(ops.iter().any(|op| op.contains("downloadMediaExport")));
+        assert!(ops.iter().any(|op| op.contains("activeModelDefinitionId")));
+    }
+
+    #[test]
+    fn engagement_starts_box_interaction_session() {
+        let mut app = CadApp;
+        let mut envelope = parse_envelope(&app.initial_document_json());
+        envelope.runtime.engagement_input = "b".into();
+        let ops = app.handle_command(
+            "engagementSubmit",
+            Some(&json!({ "pane": "shape" })),
+            &serde_json::to_string(&envelope).unwrap(),
+            &ViewState::default(),
+        );
+        let next = apply_ops(&envelope, &ops);
+        assert!(next.runtime.engagement_session.is_some());
+    }
+
+    #[test]
+    fn import_spatial_modelspace_round_trips() {
+        let payload = json!({
+            "schema": "spatial.modelspace",
+            "revision": 1,
+            "activeModelDefinitionId": "spatial.shape",
+            "models": [{
+                "id": "spatial.shape",
+                "model": {
+                    "schema": "spatial.model",
+                    "revision": 1,
+                    "objects": [{
+                        "id": "object-imported",
+                        "label": "Imported",
+                        "typology": "spatial.shape.primitive.box",
+                        "visible": true,
+                        "locked": false,
+                        "origin": [1.0, 2.0, 3.0],
+                        "primitives": []
+                    }]
+                }
+            }]
+        });
+        let scene = scene_from_spatial_payload(&payload).expect("scene");
+        assert_eq!(scene.objects.len(), 1);
+        assert_eq!(scene.objects[0].id, "object-imported");
     }
 
     fn apply_ops(envelope: &CadPlayEnvelope, ops: &[String]) -> CadPlayEnvelope {

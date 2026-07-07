@@ -1,0 +1,21 @@
+{
+  "title": "Per-Component Hover and Vertex Spheres",
+  "emoji": "🖱️",
+  "status": "open",
+  "description": "Wgpu renderer cursor parity with React: theme-aware custom SVG cursors (selectable, grab, resize, text, etc.) applied to canvas based on hit targets and drag state.",
+  "summary": "Fixed 3D component picking coordinates and edge hover. Picking now uses a visible clip rect (pick_bounds) aligned with the scissored viewport instead of scrolled layout bounds, fixing vertex hover offset in scrollable panels. Edge hover uses screen-space distance to projected edge segments. project_point depth check corrected for WGPU NDC (0..1). All infinite_world tests pass; WGPU WASM rebuilt.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1826"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪e30425a42aca449b919382fe82b12cb7",
+    "⚪108b2ce34a134100924df5c65a41e02b",
+    "⚪c9a273f5e5464d389fd7e37fffcd65a0",
+    "⚪f0a68e1ace4846b8b6f039811d9d6611",
+    "⚪ab6d89c6c89e498797d35f1f14a6c626",
+    "⚪d463485e98694f7fb1e8d8717dd51942",
+    "⚪f29b68565a4f4de388a63e1fd7c17701",
+    "⚪119b042902ba4d0db51d5e74978e058e"
+  ]
+}

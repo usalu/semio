@@ -41,20 +41,24 @@ const PRINT_FONTS: readonly { readonly family: string; readonly dir: string; rea
 	},
 ];
 
-const TEMPLATES: readonly { readonly id: string; readonly tex: string; readonly pdf: string }[] = [
-	{ id: "report", tex: "template/report/report.tex", pdf: "report.pdf" },
-	{ id: "report-dark", tex: "template/report/report-dark.tex", pdf: "report-dark.pdf" },
-	{ id: "paper", tex: "template/paper/paper.tex", pdf: "paper.pdf" },
-	{ id: "paper-dark", tex: "template/paper/paper-dark.tex", pdf: "paper-dark.pdf" },
-	{ id: "flyer", tex: "template/flyer/flyer.tex", pdf: "flyer.pdf" },
-	{ id: "flyer-dark", tex: "template/flyer/flyer-dark.tex", pdf: "flyer-dark.pdf" },
-	{ id: "forschungsbericht", tex: "template/zukunftbau/forschungsbericht.tex", pdf: "forschungsbericht.pdf" },
-	{ id: "forschungsbericht-dark", tex: "template/zukunftbau/forschungsbericht-dark.tex", pdf: "forschungsbericht-dark.pdf" },
-	{ id: "zwischenbericht", tex: "template/zukunftbau/zwischenbericht.tex", pdf: "zwischenbericht.pdf" },
-	{ id: "zwischenbericht-dark", tex: "template/zukunftbau/zwischenbericht-dark.tex", pdf: "zwischenbericht-dark.pdf" },
-	{ id: "kompaktbericht", tex: "template/zukunftbau/kompaktbericht.tex", pdf: "kompaktbericht.pdf" },
-	{ id: "kompaktbericht-dark", tex: "template/zukunftbau/kompaktbericht-dark.tex", pdf: "kompaktbericht-dark.pdf" },
+const TEMPLATES: readonly { readonly id: string; readonly tex: string }[] = [
+	{ id: "report", tex: "template/report/report.tex" },
+	{ id: "paper", tex: "template/paper/paper.tex" },
+	{ id: "flyer", tex: "template/flyer/flyer.tex" },
+	{ id: "forschungsbericht", tex: "template/zukunftbau/forschungsbericht.tex" },
+	{ id: "zwischenbericht", tex: "template/zukunftbau/zwischenbericht.tex" },
+	{ id: "kompaktbericht", tex: "template/zukunftbau/kompaktbericht.tex" },
 ];
+
+function deriveDarkTexSource(lightSource: string): string {
+	if (!/\btheme=light\b/.test(lightSource)) throw new Error("template missing theme=light; cannot derive dark variant");
+	return lightSource.replace(/\btheme=light\b/, "theme=dark");
+}
+
+function templatePdfNames(texRel: string): { readonly light: string; readonly dark: string } {
+	const base = basename(texRel, ".tex");
+	return { light: `${base}.pdf`, dark: `${base}-dark.pdf` };
+}
 
 type PaintRef = {
 	readonly token?: string;
@@ -84,6 +88,7 @@ type Tokens = {
 };
 
 const CHROME_PAINT_KEYS = [
+	"base",
 	"window",
 	"canvas",
 	"borderNormal",
@@ -201,6 +206,8 @@ export function emitSemioTokensSty(): void {
 		lines.push(`\\newcommand{\\semio@chrome@padding}{${+chromePadding.toFixed(3)}em}`);
 		lines.push(`\\newcommand{\\semio@chrome@navbar@height}{${+navbarHeight.toFixed(3)}em}`);
 		lines.push(`\\newcommand{\\semio@chrome@footer@height}{${+footerHeight.toFixed(3)}em}`);
+		lines.push(`\\newcommand{\\semio@chrome@icon@scale}{1}`);
+		lines.push(`\\newcommand{\\semio@chrome@icon@scale@footer}{1}`);
 	}
 	const typography = tokens.metrics?.typography;
 	if (typography) {
@@ -345,11 +352,16 @@ export async function buildPrintDocument(texAbs: string, outDir = join(dirname(t
 function compileTemplate(tectonic: string, template: (typeof TEMPLATES)[number]): void {
 	const texAbs = join(printRoot, template.tex);
 	compilePrintDocument(tectonic, texAbs, distDir);
+	const lightSource = readFileSync(texAbs, "utf8");
+	const darkSource = deriveDarkTexSource(lightSource);
+	const darkTexAbs = join(dirname(texAbs), `${basename(texAbs, ".tex")}-dark.tex`);
+	writeFileSync(darkTexAbs, darkSource, "utf8");
+	compilePrintDocument(tectonic, darkTexAbs, distDir);
 }
 
 function resolveTemplates(filter: string[]): (typeof TEMPLATES)[number][] {
 	if (filter.length === 0) return [...TEMPLATES];
-	const wanted = new Set(filter);
+	const wanted = new Set(filter.map((id) => id.replace(/-dark$/, "")));
 	const resolved = TEMPLATES.filter((template) => wanted.has(template.id));
 	if (resolved.length === 0) throw new Error(`unknown template id(s): ${filter.join(", ")}`);
 	return resolved;
@@ -386,6 +398,7 @@ async function watchTemplates(filter: string[]): Promise<void> {
 			watch(root, { recursive: true }, (_event, file) => {
 				if (!file) return;
 				const abs = join(root, file);
+				if (/-dark\.tex$/i.test(abs)) return;
 				if (!/\.(tex|sty|cls|ttf|json)$/i.test(abs)) return;
 				try {
 					const mtime = statSync(abs).mtimeMs;
@@ -436,10 +449,12 @@ class TestScript extends BundleScript {
 		const tectonic = await ensureTectonic();
 		for (const template of TEMPLATES) compileTemplate(tectonic, template);
 		for (const template of TEMPLATES) {
-			const pdf = join(distDir, template.pdf);
-			if (!existsSync(pdf)) throw new Error(`test missing PDF: ${pdf}`);
+			for (const pdf of Object.values(templatePdfNames(template.tex))) {
+				const pdfPath = join(distDir, pdf);
+				if (!existsSync(pdfPath)) throw new Error(`test missing PDF: ${pdfPath}`);
+			}
 		}
-		console.log(`print: all ${TEMPLATES.length} template PDFs built`);
+		console.log(`print: all ${TEMPLATES.length * 2} template PDFs built`);
 	}
 }
 

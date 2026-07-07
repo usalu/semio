@@ -1811,6 +1811,7 @@ pub struct DagHost {
     computing_stale_anim_phase: Cell<f64>,
     editing_note: Option<NoteEditState>,
     caret_visible: bool,
+    pan_anchor: Option<(f64, f64, f64, f64)>,
 }
 
 fn pointer_event_now_ms() -> f64 {
@@ -2059,6 +2060,7 @@ impl DagHost {
             computing_stale_anim_phase: Cell::new(0.0),
             editing_note: None,
             caret_visible: true,
+            pan_anchor: None,
         };
         host.rebuild_engine_with_layout(apply_layout);
         host
@@ -3398,10 +3400,23 @@ impl DagHost {
     }
 
     pub fn pointer_down(&mut self, x: f64, y: f64, extend: bool) {
-        self.pointer_down_screen(x, y, 0, extend, false, false);
+        self.pointer_down_screen(x, y, 0, extend, false, false, false);
     }
 
-    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool) {
+    pub fn pointer_down_screen(
+        &mut self,
+        sx: f64,
+        sy: f64,
+        button: u8,
+        shift: bool,
+        ctrl_or_meta: bool,
+        alt: bool,
+        pan: bool,
+    ) {
+        if pan {
+            self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
+            return;
+        }
         self.sync_connection_hit_picking_for_lod();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
@@ -3473,6 +3488,15 @@ impl DagHost {
     }
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        if let Some((start_sx, start_sy, cam_x, cam_y)) = self.pan_anchor {
+            let zoom = self.fixture.camera.zoom.max(1e-9);
+            let dx = (sx - start_sx) / zoom;
+            let dy = (sy - start_sy) / zoom;
+            self.set_camera(cam_x - dx, cam_y - dy, zoom);
+            self.last_screen_x = sx;
+            self.last_screen_y = sy;
+            return;
+        }
         self.sync_connection_hit_picking_for_lod();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
@@ -3499,6 +3523,7 @@ impl DagHost {
     }
 
     pub fn pointer_up_screen(&mut self, sx: f64, sy: f64, shift: bool, ctrl_or_meta: bool, alt: bool) {
+        self.pan_anchor = None;
         self.sync_connection_hit_picking_for_lod();
         self.last_screen_x = sx;
         self.last_screen_y = sy;
@@ -5579,7 +5604,7 @@ mod tests {
         let start_sy = 24.0;
         let end_sx = 1100.0;
         let end_sy = 700.0;
-        host.pointer_down_screen(start_sx, start_sy, 0, false, false, false);
+        host.pointer_down_screen(start_sx, start_sy, 0, false, false, false, false);
         host.pointer_move_screen(end_sx, end_sy, false, false, false);
         assert!(matches!(host.engine.interaction, InteractionMode::AreaSelect { .. }), "expected area-select after marquee threshold");
         let preselect = host.preselect_widget_ids();
@@ -5645,7 +5670,7 @@ mod tests {
         let cam = CavasCamera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
         let viewport = Viewport { width: 800, height: 600, dpr: 1.0 };
         let start = world_to_screen(&cam, &viewport, gap);
-        host.pointer_down_screen(start.x, start.y, 0, false, false, false);
+        host.pointer_down_screen(start.x, start.y, 0, false, false, false, false);
         assert!(matches!(host.engine.interaction, InteractionMode::DragNodes { .. }), "expected bounded drag inside selection union at minimap LOD");
         host.pointer_move_screen(start.x + 50.0, start.y + 30.0, false, false, false);
         host.pointer_up_screen(start.x + 50.0, start.y + 30.0, false, false, false);
@@ -5727,7 +5752,7 @@ mod tests {
         host.set_forced_draw_lod_label("normal");
         let src_center = cavas::Point::new(0.0, 0.0);
         let (sx, sy) = world_to_screen_px(&host, src_center);
-        host.pointer_down_screen(sx, sy, 0, false, false, false);
+        host.pointer_down_screen(sx, sy, 0, false, false, false, false);
         host.pointer_move_screen(sx + 200.0, sy, false, false, false);
         assert!(host.engine.render_snapshot().pending_edge.is_some(), "proximity drag should preview edge");
         host.pointer_up_screen(sx + 200.0, sy, false, false, false);
@@ -5759,7 +5784,7 @@ mod tests {
         host.set_forced_draw_lod_label("normal");
         let cut_center = cavas::Point::new(240.0, 0.0);
         let (sx, sy) = world_to_screen_px(&host, cut_center);
-        host.pointer_down_screen(sx, sy, 0, false, false, false);
+        host.pointer_down_screen(sx, sy, 0, false, false, false, false);
         host.pointer_move_screen(sx - 180.0, sy, false, false, false);
         assert!(host.engine.render_snapshot().pending_edge.is_none(), "dragging wired cut near sources must not preview proximity edges to occupied inputs");
         host.pointer_up_screen(sx - 180.0, sy, false, false, false);
@@ -5815,7 +5840,7 @@ mod tests {
         host.set_automatic_lod(false);
         host.set_forced_draw_lod_label("normal");
         let (sx, sy) = world_to_screen_px(&host, cavas::Point::new(0.0, 0.0));
-        host.pointer_down_screen(sx, sy, 0, false, false, false);
+        host.pointer_down_screen(sx, sy, 0, false, false, false, false);
         host.pointer_move_screen(sx + 200.0, sy, false, false, false);
         assert!(host.engine.render_snapshot().pending_edge.is_none());
         host.pointer_up_screen(sx + 200.0, sy, false, false, false);
@@ -6342,6 +6367,15 @@ mod tests {
         assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Normal);
         host.set_wheel_zoom_active(false);
         assert_eq!(host.draw_lod_for_frame(), DagDrawLod::Overview);
+    }
+
+    #[test]
+    fn pointer_pan_gesture_moves_camera() {
+        let mut host = DagHost::default_demo();
+        host.set_camera(0.0, 0.0, 2.0);
+        host.pointer_down_screen(100.0, 100.0, 1, false, false, false, true);
+        host.pointer_move_screen(150.0, 100.0, false, false, false);
+        assert!((host.fixture.camera.x - -25.0).abs() < 1e-6);
     }
 
     #[test]

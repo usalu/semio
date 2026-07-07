@@ -3,7 +3,17 @@
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, getWorkspaceRoot, runBundleScriptMain, runVitest, frameworkOsPlaygroundDefaultPort } from "../../../repo/lib/js/index.ts";
+import {
+	BundleScript,
+	ScriptRouter,
+	GIS_MAP_WGPU_TILE_PROXY_PORT,
+	SEMIO_GIS_MAP_TILE_BASE_URL_ENV,
+	getWorkspaceRoot,
+	runBundleScriptMain,
+	runVitest,
+	frameworkOsPlaygroundDefaultPort,
+} from "../../../repo/lib/js/index.ts";
+import { startGisMapTileProxyServer } from "../../../ui/styling/vite-elements-assets.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
@@ -38,6 +48,16 @@ function syncStableRendererArtifacts(): void {
 	if (!js) throw new Error("missing trunk wgpu renderer js artifact");
 	copyFileSync(join(outDir, js), join(outDir, "semio_framework_renderer_wgpu.js"));
 	if (wasm) copyFileSync(join(outDir, wasm), join(outDir, "semio-framework-renderer-wgpu_bg.wasm"));
+}
+
+function gisMapTileProxyBaseUrl(): string {
+	return `http://127.0.0.1:${GIS_MAP_WGPU_TILE_PROXY_PORT}`;
+}
+
+function ensureGisMapTileProxyServer(plugin: string): void {
+	if (plugin !== "gis2d") return;
+	startGisMapTileProxyServer(repoRoot, GIS_MAP_WGPU_TILE_PROXY_PORT);
+	console.log(`[DEBUG] gis2d tile proxy serving at ${gisMapTileProxyBaseUrl()}`);
 }
 
 function buildBootScript(bundleRoot: string): void {
@@ -85,6 +105,7 @@ class TrunkServeScript extends BundleScript {
 		ensureWasmTarget();
 		buildBootScript(this.root);
 		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+		ensureGisMapTileProxyServer(plugin);
 		const defaultPort = String(frameworkOsPlaygroundDefaultPort(plugin, "wgpu"));
 		const port = process.env.S_OS_PORT ?? defaultPort;
 		const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
@@ -119,6 +140,14 @@ class NativeRunScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
 		await new NativeBuildScript(this.root).run([filterPlugin]);
+		ensureGisMapTileProxyServer(filterPlugin);
+		const nativeEnv: NodeJS.ProcessEnv = {
+			...process.env,
+			SEMIO_NATIVE_PLUGIN_MODULES: nativePluginOut,
+		};
+		if (filterPlugin === "gis2d") {
+			nativeEnv[SEMIO_GIS_MAP_TILE_BASE_URL_ENV] = gisMapTileProxyBaseUrl();
+		}
 		const run = spawnSync(
 			"cargo",
 			[
@@ -137,10 +166,7 @@ class NativeRunScript extends BundleScript {
 			{
 				cwd: repoRoot,
 				stdio: "inherit",
-				env: {
-					...process.env,
-					SEMIO_NATIVE_PLUGIN_MODULES: nativePluginOut,
-				},
+				env: nativeEnv,
 			},
 		);
 		if (run.status !== 0) throw new Error("native wgpu renderer run failed");

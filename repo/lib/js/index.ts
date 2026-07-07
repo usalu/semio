@@ -1253,6 +1253,12 @@ export const FRAMEWORK_OS_PLAYGROUND_DEFAULT_PORTS: Readonly<Record<string, { re
 	note: { react: 6080, wgpu: 6180 },
 };
 
+/** @emoji 🗺 Local tile proxy for wgpu gis2d dev (Trunk forwards `/osm` + `/vt` here). */
+export const GIS_MAP_WGPU_TILE_PROXY_PORT = 6141;
+
+/** @emoji 🗺 Process env for absolute GIS map tile URL base (native-bin wgpu). */
+export const SEMIO_GIS_MAP_TILE_BASE_URL_ENV = "SEMIO_GIS_MAP_TILE_BASE_URL";
+
 /** @emoji 🔌 Resolves the default dev port for a given plugin and renderer. */
 export function frameworkOsPlaygroundDefaultPort(plugin: string, renderer: string): number {
 	const spec = FRAMEWORK_OS_PLAYGROUND_DEFAULT_PORTS[plugin];
