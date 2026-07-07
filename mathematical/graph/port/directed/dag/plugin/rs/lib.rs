@@ -5,7 +5,7 @@ use mathematical_graph_port_directed_dag::{
     stepper_widget_height, stepper_widget_width, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost,
     DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,
 };
-use semio_framework_plugin::{
+use semio_framework_plugin::{PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field,
     ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode,
@@ -971,19 +971,19 @@ fn create_dag_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 DAG_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 DAG_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 DAG_PLAY_BODY_INSPECTOR,
             )
             .keybinding("mod+z", "undo")

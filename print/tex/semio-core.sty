@@ -6,6 +6,9 @@
 \RequirePackage{semio-tokens}
 \RequirePackage{semio-fonts}
 
+\providecolor{semio-chrome-light-panel}{HTML}{c9c8bd}
+\providecolor{semio-chrome-dark-panel}{HTML}{1d2b2f}
+
 \ExplSyntaxOn
 
 \tl_new:N \l_semio_type_tl
@@ -46,33 +49,36 @@
       \colorlet{semio-chrome-base}{semio-chrome-dark-base}
       \colorlet{semio-chrome-window}{semio-chrome-dark-window}
       \colorlet{semio-chrome-canvas}{semio-chrome-dark-canvas}
+      \colorlet{semio-chrome-panel}{semio-chrome-dark-panel}
       \colorlet{semio-chrome-border-normal}{semio-chrome-dark-border-normal}
       \colorlet{semio-chrome-border-emphasized}{semio-chrome-dark-border-emphasized}
       \colorlet{semio-chrome-active-base}{semio-chrome-dark-active-base}
       \colorlet{semio-chrome-active-foreground}{semio-chrome-dark-active-foreground}
       \colorlet{semio-chrome-foreground}{semio-chrome-dark-foreground}
+      \colorlet{semio-chrome-text-normal}{semio-chrome-dark-border-normal}
     }
   } {
     \colorlet{semio-chrome-base}{semio-chrome-light-base}
     \colorlet{semio-chrome-window}{semio-chrome-light-window}
     \colorlet{semio-chrome-canvas}{semio-chrome-light-canvas}
+    \colorlet{semio-chrome-panel}{semio-chrome-light-panel}
     \colorlet{semio-chrome-border-normal}{semio-chrome-light-border-normal}
     \colorlet{semio-chrome-border-emphasized}{semio-chrome-light-border-emphasized}
     \colorlet{semio-chrome-active-base}{semio-chrome-light-active-base}
     \colorlet{semio-chrome-active-foreground}{semio-chrome-light-active-foreground}
     \colorlet{semio-chrome-foreground}{semio-chrome-light-foreground}
+    \colorlet{semio-chrome-text-normal}{semio-chrome-light-border-normal}
   }
 }
 
 \cs_new_protected:Npn \semio_theme_apply: {
+  \semio_chrome_apply_aliases:
   \str_if_eq:VnTF \l_semio_theme_tl { dark } {
     \pagecolor{semio-dark}
-    \color{semio-light}
   } {
     \pagecolor{semio-light}
-    \color{semio-dark}
   }
-  \semio_chrome_apply_aliases:
+  \color{semio-chrome-text-normal}
 }
 
 \NewDocumentCommand{\SemioSetup}{m}{\keys_set:nn { semio / setup } {#1}}

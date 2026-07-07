@@ -298,6 +298,35 @@ pub fn merge_named_layouts(base: &[NamedLayout], extension: &[NamedLayout]) -> V
     }
     merged.into_values().collect()
 }
+
+/// 🧭 Collects every `window_kind_id` referenced by a layout tree.
+pub fn collect_window_kind_ids_from_layout(layout: &WindowLayout) -> Vec<String> {
+    let mut ids = Vec::new();
+    collect_window_kind_ids_from_root(&layout.root, &mut ids);
+    ids
+}
+
+fn collect_window_kind_ids_from_root(root: &WindowLayoutRoot, out: &mut Vec<String>) {
+    match root {
+        WindowLayoutRoot::Axis(axis) => collect_window_kind_ids_from_children(&axis.children, out),
+        WindowLayoutRoot::Stack(stack) => collect_window_kind_ids_from_stack(stack, out),
+    }
+}
+
+fn collect_window_kind_ids_from_children(children: &[WindowLayoutChild], out: &mut Vec<String>) {
+    for child in children {
+        match child {
+            WindowLayoutChild::Axis(axis) => collect_window_kind_ids_from_children(&axis.children, out),
+            WindowLayoutChild::Stack(stack) => collect_window_kind_ids_from_stack(stack, out),
+        }
+    }
+}
+
+fn collect_window_kind_ids_from_stack(stack: &WindowLayoutStackNode, out: &mut Vec<String>) {
+    for window in &stack.children {
+        out.push(window.window_kind_id.clone());
+    }
+}
 //#endregion 🔖WindowLayout
 
 //#region 🔖WindowMeasure
@@ -2048,6 +2077,39 @@ fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
 //#endregion 🔖InspectorHelpers
 
 //#region 🔖ComponentScenes
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum SurfaceKind {
+    #[serde(rename = "canvas-2d")]
+    Canvas2d,
+    #[serde(rename = "world-3d")]
+    World3d,
+    #[serde(rename = "node-graph")]
+    NodeGraph,
+    #[serde(rename = "text-editor")]
+    TextEditor,
+    Table,
+    Raster,
+    #[serde(rename = "virtualFileSystem")]
+    VirtualFileSystem,
+    #[serde(rename = "gis2d-map")]
+    GisMap,
+}
+
+impl SurfaceKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Canvas2d => "canvas-2d",
+            Self::World3d => "world-3d",
+            Self::NodeGraph => "node-graph",
+            Self::TextEditor => "text-editor",
+            Self::Table => "table",
+            Self::Raster => "raster",
+            Self::VirtualFileSystem => "virtualFileSystem",
+            Self::GisMap => "gis2d-map",
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Canvas2dScene {
@@ -2375,7 +2437,7 @@ impl GisMapScene {
 pub struct UiComponentSceneNode {
     pub surface_id: String,
     pub controller_id: String,
-    pub component_kind: String,
+    pub component_kind: SurfaceKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pane_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2532,7 +2594,7 @@ pub fn ui_text(value: impl Into<String>) -> UiNode {
 fn component_scene(
     surface_id: impl Into<String>,
     controller_id: impl Into<String>,
-    component_kind: impl Into<String>,
+    component_kind: SurfaceKind,
     pane_id: Option<String>,
     binding_id: Option<String>,
     canvas_2d: Option<Canvas2dScene>,
@@ -2547,7 +2609,7 @@ fn component_scene(
     UiNode::ComponentScene(UiComponentSceneNode {
         surface_id: surface_id.into(),
         controller_id: controller_id.into(),
-        component_kind: component_kind.into(),
+        component_kind,
         pane_id,
         binding_id,
         canvas_2d,
@@ -2569,7 +2631,7 @@ pub fn build_canvas_2d_scene(
     component_scene(
         surface_id,
         controller_id,
-        "canvas-2d",
+        SurfaceKind::Canvas2d,
         None,
         None,
         Some(scene),
@@ -2591,7 +2653,7 @@ pub fn build_world_3d_scene(
     component_scene(
         surface_id,
         controller_id,
-        "world-3d",
+        SurfaceKind::World3d,
         None,
         None,
         None,
@@ -2613,7 +2675,7 @@ pub fn build_node_graph_scene(
     component_scene(
         surface_id,
         controller_id,
-        "node-graph",
+        SurfaceKind::NodeGraph,
         None,
         None,
         None,
@@ -2635,7 +2697,7 @@ pub fn build_text_editor_scene(
     component_scene(
         surface_id,
         controller_id,
-        "text-editor",
+        SurfaceKind::TextEditor,
         None,
         None,
         None,
@@ -2657,7 +2719,7 @@ pub fn build_table_scene(
     component_scene(
         surface_id,
         controller_id,
-        "table",
+        SurfaceKind::Table,
         None,
         None,
         None,
@@ -2679,7 +2741,7 @@ pub fn build_raster_scene(
     component_scene(
         surface_id,
         controller_id,
-        "raster",
+        SurfaceKind::Raster,
         None,
         None,
         None,
@@ -2703,7 +2765,7 @@ pub fn build_virtual_file_system_scene(
     component_scene(
         surface_id,
         controller_id,
-        "virtualFileSystem",
+        SurfaceKind::VirtualFileSystem,
         pane_id,
         binding_id,
         None,
@@ -2725,7 +2787,7 @@ pub fn build_gis_map_scene(
     component_scene(
         surface_id,
         controller_id,
-        "gis2d-map",
+        SurfaceKind::GisMap,
         None,
         None,
         None,
@@ -2771,12 +2833,39 @@ pub struct WindowKindDefinition {
     pub engagement: Option<WindowEngagement>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum PanelGroup {
+    Workbench,
+    Details,
+    Display,
+    Settings,
+}
+
+impl PanelGroup {
+    pub fn side(&self) -> &'static str {
+        match self {
+            PanelGroup::Workbench | PanelGroup::Display => "left",
+            PanelGroup::Details | PanelGroup::Settings => "right",
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            PanelGroup::Workbench => "workbench",
+            PanelGroup::Details => "details",
+            PanelGroup::Display => "display",
+            PanelGroup::Settings => "settings",
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PanelTabDefinition {
     pub id: String,
     pub label: String,
-    pub group: String,
+    pub group: PanelGroup,
     pub body_key: String,
 }
 
@@ -2838,6 +2927,12 @@ pub struct ExampleDefinition {
     pub document_json: String,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Capability {
+    LocalBackboneStorage,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginManifest {
@@ -2847,6 +2942,8 @@ pub struct PluginManifest {
     pub apps: Vec<AppDefinition>,
     pub programs: Vec<ProgramDefinition>,
     pub examples: Vec<ExampleDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capabilities: Vec<Capability>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -2881,9 +2978,9 @@ mod app_document_tests {
 
 pub use command_bus::{CommandBus, CommandHandler};
 pub use layout::{
-    create_default_layout, create_named_layout, create_stack_layout, create_tab_stack_layout,
-    create_window_layout, merge_named_layouts, CommandDescriptor, NamedLayout, StyleSpec,
-    WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
+    collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout,
+    create_tab_stack_layout, create_window_layout, merge_named_layouts, CommandDescriptor, NamedLayout,
+    StyleSpec, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,

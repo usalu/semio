@@ -994,7 +994,7 @@ fn vertex(mesh: &Mesh3d, index: u32) -> Vec3 {
     Vec3::new(mesh.positions[i], mesh.positions[i + 1], mesh.positions[i + 2])
 }
 
-fn ray_triangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Option<f32> {
+pub fn ray_triangle(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3, c: Vec3) -> Option<f32> {
     let edge1 = b.sub(a);
     let edge2 = c.sub(a);
     let h = dir.cross(edge2);

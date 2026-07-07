@@ -11,5 +11,10 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "print"
   },
-  "bundleKind": "asset"
+  "bundleKind": "asset",
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.2",
+    "pdfjs-dist": "^6.1.200",
+    "sharp": "^0.34.5"
+  }
 }

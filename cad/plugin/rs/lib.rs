@@ -9,7 +9,7 @@ use cad_document::{
     CadPrimitiveSlot, CadReference, CadReferencePatch, CadScene, CadStore, CAD_DOCUMENT_SCHEMA,
     CAD_PLAY_DOCUMENT_SCHEMA,
 };
-use semio_framework_plugin::{
+use semio_framework_plugin::{PanelGroup, 
     build_world_3d_scene, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind,
     tool_button, tool_collection, tool_separator, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_readonly_field,
@@ -2865,19 +2865,19 @@ fn create_cad_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 CAD_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 CAD_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 CAD_PLAY_BODY_PROPERTIES,
             ),
     )

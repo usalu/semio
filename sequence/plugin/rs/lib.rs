@@ -2,7 +2,7 @@
 
 use mathematical_graph_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use sequence_core::{default_fixture, SequenceFixture, SequenceHost, SequenceStep};
-use semio_framework_plugin::{
+use semio_framework_plugin::{PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, tool_button, tool_collection,
     tool_toggle, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
     App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiControlNode,
@@ -878,19 +878,19 @@ fn create_sequence_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 SEQUENCE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 SEQUENCE_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 SEQUENCE_PLAY_BODY_INSPECTOR,
             )
             .mode_tools("edit", edit_tools(&default_envelope()))

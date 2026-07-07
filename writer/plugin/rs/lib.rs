@@ -105,7 +105,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 
 use grammar::tokenize_language;
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
-use semio_framework_plugin::{
+use semio_framework_plugin::{PanelGroup, 
     build_text_editor_scene, ui_declarative_sections_to_tree, ui_text, App,
     CommandDescriptor, PluginApp, PluginBundle, TextEditorScene, UiNode, UiSectionNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -925,19 +925,19 @@ fn create_writer_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 WRITER_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 WRITER_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 WRITER_PLAY_BODY_INSPECTION,
             )
             .keybinding("mod+z", "undo")

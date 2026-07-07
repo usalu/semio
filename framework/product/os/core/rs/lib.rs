@@ -1439,6 +1439,7 @@ mod tests {
                 default_layout: None,
             }],
             programs: vec![],
+            capabilities: vec![],
             examples: vec![],
         };
         host.load_plugin(LoadedPlugin {
@@ -1447,6 +1448,96 @@ mod tests {
             artifact_uri: "plugin://draw".into(),
         });
         assert_eq!(host.apps().len(), 1);
+    }
+
+    #[test]
+    fn hot_swap_bumps_instance_generation_and_tracks_app_changes() {
+        let mut host = PluginHost::new();
+        let draw_app = AppDefinition {
+            id: "draw-play".into(),
+            label: "Draw".into(),
+            document: vec!["semio".into(), "draw".into()],
+            icon_id: None,
+            controller_id: "draw-play".into(),
+            modes: vec![ModeDefinition {
+                id: "edit".into(),
+                label: "Edit".into(),
+                tools: Vec::new(),
+            }],
+            default_mode_id: Some("edit".into()),
+            window_kinds: vec![WindowKindDefinition {
+                id: "composite".into(),
+                label: "Canvas".into(),
+                body_key: "composite".into(),
+                icon_id: None,
+                measures: Vec::new(),
+                engagement: None,
+            }],
+            panel_tabs: vec![],
+            keybindings: vec![],
+            named_layouts: Vec::new(),
+            default_layout: None,
+        };
+        let note_app = AppDefinition {
+            id: "note-play".into(),
+            label: "Note".into(),
+            document: vec!["semio".into(), "note".into()],
+            icon_id: None,
+            controller_id: "note-play".into(),
+            modes: vec![ModeDefinition {
+                id: "edit".into(),
+                label: "Edit".into(),
+                tools: Vec::new(),
+            }],
+            default_mode_id: Some("edit".into()),
+            window_kinds: vec![WindowKindDefinition {
+                id: "composite".into(),
+                label: "Canvas".into(),
+                body_key: "composite".into(),
+                icon_id: None,
+                measures: Vec::new(),
+                engagement: None,
+            }],
+            panel_tabs: vec![],
+            keybindings: vec![],
+            named_layouts: Vec::new(),
+            default_layout: None,
+        };
+        host.load_plugin(LoadedPlugin {
+            plugin_id: "draw".into(),
+            manifest: PluginManifest {
+                plugin_id: "draw".into(),
+                label: "Draw".into(),
+                version: "0.1.0".into(),
+                apps: vec![draw_app.clone()],
+                programs: vec![],
+                capabilities: vec![],
+                examples: vec![],
+            },
+            artifact_uri: "plugin://draw".into(),
+        });
+        let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
+        let generation_before = host.instance(instance_id).expect("instance").generation;
+        let event = host.hot_swap_plugin(LoadedPlugin {
+            plugin_id: "draw".into(),
+            manifest: PluginManifest {
+                plugin_id: "draw".into(),
+                label: "Draw".into(),
+                version: "0.2.0".into(),
+                apps: vec![draw_app, note_app],
+                programs: vec![],
+                capabilities: vec![],
+                examples: vec![],
+            },
+            artifact_uri: "plugin://draw".into(),
+        });
+        assert_eq!(event.added_apps, vec!["note-play".to_string()]);
+        assert!(event.removed_apps.is_empty());
+        assert!(
+            host.instance(instance_id).expect("instance").generation > generation_before,
+            "hot swap must bump instance generation"
+        );
+        assert_eq!(host.apps().len(), 2);
     }
 
     fn seed_draw_program() {
@@ -1532,6 +1623,115 @@ mod tests {
     }
 }
 // #endregion host
+}
+
+pub mod backbone {
+// #region backbone
+//! 🗄️ Trusted host-side backbone ports for local studio storage.
+
+#[cfg(not(target_arch = "wasm32"))]
+use std::path::PathBuf;
+#[cfg(not(target_arch = "wasm32"))]
+use std::sync::Mutex;
+use crate::host::OsBackbonePort;
+use vcs::VcsError;
+
+#[cfg(not(target_arch = "wasm32"))]
+pub struct NativeFileBackbonePort {
+    path: PathBuf,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl NativeFileBackbonePort {
+    pub fn new(path: impl Into<PathBuf>) -> Self {
+        Self { path: path.into() }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl OsBackbonePort for NativeFileBackbonePort {
+    fn read(&self, uri: &str) -> Result<String, VcsError> {
+        let path = uri
+            .strip_prefix("local://")
+            .map(std::path::Path::new)
+            .unwrap_or(self.path.as_path());
+        std::fs::read_to_string(path).map_err(|err| VcsError::Backbone(err.to_string()))
+    }
+
+    fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
+        let path = uri
+            .strip_prefix("local://")
+            .map(std::path::Path::new)
+            .unwrap_or(self.path.as_path());
+        std::fs::write(path, payload).map_err(|err| VcsError::Backbone(err.to_string()))
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub struct SqliteFolderBackbonePort {
+    connection: Mutex<rusqlite::Connection>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl SqliteFolderBackbonePort {
+    pub fn open(path: &std::path::Path) -> Result<Self, VcsError> {
+        let connection =
+            rusqlite::Connection::open(path).map_err(|err| VcsError::Backbone(err.to_string()))?;
+        connection
+            .execute(
+                "CREATE TABLE IF NOT EXISTS documents (
+                    uri TEXT PRIMARY KEY NOT NULL,
+                    payload TEXT NOT NULL
+                )",
+                [],
+            )
+            .map_err(|err| VcsError::Backbone(err.to_string()))?;
+        Ok(Self {
+            connection: Mutex::new(connection),
+        })
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl OsBackbonePort for SqliteFolderBackbonePort {
+    fn read(&self, uri: &str) -> Result<String, VcsError> {
+        let guard = self
+            .connection
+            .lock()
+            .map_err(|_| VcsError::Backbone("sqlite lock poisoned".into()))?;
+        let payload: String = guard
+            .query_row(
+                "SELECT payload FROM documents WHERE uri = ?1",
+                [uri],
+                |row| row.get(0),
+            )
+            .map_err(|err| VcsError::Backbone(err.to_string()))?;
+        Ok(payload)
+    }
+
+    fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
+        let guard = self
+            .connection
+            .lock()
+            .map_err(|_| VcsError::Backbone("sqlite lock poisoned".into()))?;
+        guard
+            .execute(
+                "INSERT OR REPLACE INTO documents (uri, payload) VALUES (?1, ?2)",
+                [uri, payload],
+            )
+            .map_err(|err| VcsError::Backbone(err.to_string()))?;
+        Ok(())
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn open_folder_studio_backbone(folder_path: &str) -> Result<std::sync::Arc<dyn OsBackbonePort>, VcsError> {
+    let semio_dir = std::path::Path::new(folder_path).join(".semio");
+    std::fs::create_dir_all(&semio_dir).map_err(|err| VcsError::Backbone(err.to_string()))?;
+    let db_path = semio_dir.join("studio.db");
+    Ok(std::sync::Arc::new(SqliteFolderBackbonePort::open(&db_path)?))
+}
+// #endregion backbone
 }
 
 pub mod instance {
@@ -3858,12 +4058,14 @@ mod tests {
 }
 
 
+#[cfg(not(target_arch = "wasm32"))]
+pub use backbone::{NativeFileBackbonePort, SqliteFolderBackbonePort, open_folder_studio_backbone};
 pub use host::{
     apply_os_operation, create_empty_os_document, create_os_studio, default_os_projection,
     delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries,
     load_os_studio_document, materialize_os_projection, os_document_from_json, os_document_to_json,
     seed_os_studio_catalog_if_empty, DevJsonBackbone, LoadedPlugin, LocalJsonBackbone, OsBackbonePort, OsBackboneRef,
-    OsConflict, OsDiff, OsDocument, OsEnvelope, OsOp, OsProjection, OsStore, OsVcs, PluginHost,
+    OsConflict, OsDiff, OsDocument, OsEnvelope, OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost,
     PluginHotSwapEvent, RemoteOsBackbone, OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
 };
 pub use instance::{

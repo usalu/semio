@@ -45,20 +45,19 @@
 
 \NewDocumentCommand{\makefundingacknowledgement}{}{%
   \chapter*{Förderhinweis}
-  \begin{Semiobox}
+  \begin{Blockquote}
     Dieses Projekt wurde gefördert vom Bundesinstitut für Bau-, Stadt- und Raumforschung (BBSR) im Rahmen des Forschungsprogramms Zukunft Bau
-  \end{Semiobox}
-  \begin{Semiobox}
+  \end{Blockquote}
+  \begin{Blockquote}
     The project was funded by the German Federal Institute for Research on Building, Urban Affairs and Spatial Development (BBSR) within the research programme Zukunft Bau
-  \end{Semiobox}
-  \SemioWindowCloseChapter
+  \end{Blockquote}
 }
 
 \NewDocumentCommand{\makeworkpackages}{m}{%
   \section*{Arbeitspaketzuordnung}
-  \begin{Semiobox}[title=Netzwerk]
+  \begin{Table}[title=Netzwerk]
     #1
-  \end{Semiobox}
+  \end{Table}
 }
 
 \cs_new_protected:Npn \semio_kompakt_draft_report: {

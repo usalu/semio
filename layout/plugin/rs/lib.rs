@@ -8,7 +8,7 @@ use layout_rs::{
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene,
-    CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
+    CommandDescriptor, PanelGroup, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
     UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1288,20 +1288,20 @@ fn create_layout_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 LAYOUT_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 LAYOUT_PLAY_BODY_CATALOGUE,
             )
-            .panel_tab(LAYOUT_PLAY_PREFLIGHT_TAB_ID, "Preflight", "workbench", LAYOUT_PLAY_BODY_PREFLIGHT)
+            .panel_tab(LAYOUT_PLAY_PREFLIGHT_TAB_ID, "Preflight", PanelGroup::Workbench, LAYOUT_PLAY_BODY_PREFLIGHT)
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 LAYOUT_PLAY_BODY_INSPECTION,
             )
             .keybinding("mod+z", "undo")

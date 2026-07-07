@@ -21,5 +21,8 @@ resvg = "0.45.1"
 tiny-skia = "0.11.4"
 usvg = "0.45.1"
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+rusqlite = { version = "0.38.0", features = ["bundled"] }
+
 [dev-dependencies]
 pretty_assertions = "1.4.1"

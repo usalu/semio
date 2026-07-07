@@ -8,13 +8,29 @@
 \maketitle
 \tableofcontents
 
+\begin{Panel}[anchor=top-right, x=1cm, y=5cm, width=5.5cm]
+  Semio print framework with frosted glass panels
+\end{Panel}
+
 \chapter{Introduction}
 This report demonstrates the semio print framework with shared tokens, fonts, and components
 
+\section{Background}
+The print stack shares design tokens with the live UI
+
+\subsection{Design Tokens}
+Colors, spacing, and strokes are generated from \texttt{ui/styling/tokens.json}
+
+\subsubsection{Chrome Themes}
+Light and dark themes resolve foreground, border, and fill aliases at document start
+
+\paragraph{Token Pipeline}
+Run \texttt{bun ./script.ts generate} to refresh \texttt{semio-tokens.sty}
+
 \chapter{Results}
-\begin{Semiobox}
+\begin{Blockquote}
   Key findings are presented in bordered boxes with sharp corners and semio brand colors
-\end{Semiobox}
+\end{Blockquote}
 
 \chapter{Conclusion}
 The print technology keeps reports consistent with the semio design language

@@ -1,0 +1,22 @@
+[package]
+name = "reasoning-mindmap-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[package.metadata.component]
+package = "semio:reasoning-mindmap"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
+reasoning_mindmap_wires = { path = "../../wires/rs" }
+puzzle_2d = { path = "../../../../puzzle/2d/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.126"

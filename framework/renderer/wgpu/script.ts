@@ -19,7 +19,7 @@ const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
 const crateName = "semio-framework-renderer-wgpu";
 const outDir = join(repoRoot, "framework/product/os/dev/renderer-modules/wgpu");
-const nativePluginOut = join(repoRoot, "framework/product/os/dev/plugin-modules-native");
+const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
 
 function trunkEnv(): NodeJS.ProcessEnv {
 	const env = { ...process.env };
@@ -55,9 +55,9 @@ function gisMapTileProxyBaseUrl(): string {
 }
 
 function ensureGisMapTileProxyServer(plugin: string): void {
-	if (plugin !== "gis2d") return;
+	if (plugin !== "gis") return;
 	startGisMapTileProxyServer(repoRoot, GIS_MAP_WGPU_TILE_PROXY_PORT);
-	console.log(`[DEBUG] gis2d tile proxy serving at ${gisMapTileProxyBaseUrl()}`);
+	console.log(`[DEBUG] gis tile proxy serving at ${gisMapTileProxyBaseUrl()}`);
 }
 
 function buildBootScript(bundleRoot: string): void {
@@ -118,7 +118,6 @@ class TrunkServeScript extends BundleScript {
 class NativeBuildScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
-		mkdirSync(nativePluginOut, { recursive: true });
 		const renderer = spawnSync(
 			"cargo",
 			["build", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin"],
@@ -129,10 +128,10 @@ class NativeBuildScript extends BundleScript {
 		const plugin = spawnSync("bun", [osDevScript, "plugin", filterPlugin], {
 			cwd: join(repoRoot, "framework/product/os/dev"),
 			stdio: "inherit",
-			env: { ...process.env, SEMIO_RENDERER: "wgpu", SEMIO_NATIVE_PLUGINS: "1", SEMIO_PLUGIN: filterPlugin },
+			env: { ...process.env, SEMIO_RENDERER: "wgpu", SEMIO_PLUGIN: filterPlugin },
 		});
-		if (plugin.status !== 0) throw new Error(`native plugin build failed: ${filterPlugin}`);
-		console.log(`[DEBUG] built native wgpu renderer and plugin ${filterPlugin}`);
+		if (plugin.status !== 0) throw new Error(`wasm plugin build failed: ${filterPlugin}`);
+		console.log(`[DEBUG] built native wgpu renderer and wasm plugins for ${filterPlugin}`);
 	}
 }
 
@@ -143,9 +142,9 @@ class NativeRunScript extends BundleScript {
 		ensureGisMapTileProxyServer(filterPlugin);
 		const nativeEnv: NodeJS.ProcessEnv = {
 			...process.env,
-			SEMIO_NATIVE_PLUGIN_MODULES: nativePluginOut,
+			SEMIO_PLUGIN_MODULES: pluginOutRoot,
 		};
-		if (filterPlugin === "gis2d") {
+		if (filterPlugin === "gis") {
 			nativeEnv[SEMIO_GIS_MAP_TILE_BASE_URL_ENV] = gisMapTileProxyBaseUrl();
 		}
 		const run = spawnSync(

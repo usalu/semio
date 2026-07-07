@@ -5,20 +5,21 @@ use semio_framework_os::{
     import_os_studio_from_json, list_os_media_graph_vfs_children, list_os_programs,
     list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, media_port_spec_id,
     os_app_registration,
-    os_document_from_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json,
+    os_document_from_json, os_document_to_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json,
     os_media_graph_to_node_graph_payload, os_media_graph_vfs_schema,
     os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
-    register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, DevJsonBackbone, MediaGraphPosition,
+    register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, DevJsonBackbone, LocalJsonBackbone,
+    MediaGraphPosition,
     OsAppInstance, OsBackbonePort, OsDocument, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
     OsParameterType, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
-    OS_STUDIO_BACKBONE_URI_PREFIX,
+    OS_STUDIO_BACKBONE_URI_PREFIX, MemoryBackbonePort, VcsError,
 };
-use semio_framework_plugin::{
+use semio_framework_plugin::{PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
     create_default_layout, create_tab_stack_layout, layout::MeasureSelectItem,
     layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
-    App, CommandDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene,
+    App, Capability, CommandDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, SurfaceKind, TextEditorScene,
     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
     UiSelectItem, UiSelectNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, VirtualFileSystemScene,
@@ -28,8 +29,8 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::{BTreeMap, HashMap};
-use std::sync::{Arc, LazyLock};
+use std::collections::{BTreeMap, HashMap, HashSet};
+use std::sync::{Arc, LazyLock, Mutex};
 use vcs::{create_document_vcs_envelope, DocumentBackboneRef, LocalStorageBackbonePort};
 use mathematical_graph_port_directed_dag::{
     dag_fixture_to_wire_literal, DagCamera, DagFixture, DagFixtureEdge, DagNodeKind, DagNodeSpec, IoPortSpec,
@@ -171,8 +172,102 @@ static CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
     port
 });
 
+static TEMP_CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> =
+    LazyLock::new(|| Arc::new(MemoryBackbonePort::new()));
+
+static STUDIO_PORTS: LazyLock<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
 fn catalog_port() -> Arc<dyn OsBackbonePort> {
     CATALOG_PORT.clone()
+}
+
+fn temp_catalog_port() -> Arc<dyn OsBackbonePort> {
+    TEMP_CATALOG_PORT.clone()
+}
+
+fn register_studio_port(studio_id: &str, port: Arc<dyn OsBackbonePort>) {
+    if let Ok(mut guard) = STUDIO_PORTS.lock() {
+        guard.insert(studio_id.into(), port);
+    }
+}
+
+fn resolve_studio_port(studio_id: &str) -> Arc<dyn OsBackbonePort> {
+    if let Ok(guard) = STUDIO_PORTS.lock() {
+        if let Some(port) = guard.get(studio_id) {
+            return port.clone();
+        }
+    }
+    if load_os_studio_document(studio_id, catalog_port()).is_ok() {
+        return catalog_port();
+    }
+    if load_os_studio_document(studio_id, temp_catalog_port()).is_ok() {
+        return temp_catalog_port();
+    }
+    catalog_port()
+}
+
+fn load_studio_document(studio_id: &str) -> Result<OsDocument, VcsError> {
+    load_os_studio_document(studio_id, resolve_studio_port(studio_id))
+}
+
+fn list_all_studio_catalog_entries() -> Vec<semio_framework_os::OsStudioCatalogEntry> {
+    let mut seen = HashSet::new();
+    let mut entries = Vec::new();
+    for port in [catalog_port(), temp_catalog_port()] {
+        if let Ok(rows) = list_os_studio_catalog_entries(port) {
+            for entry in rows {
+                if seen.insert(entry.id.clone()) {
+                    entries.push(entry);
+                }
+            }
+        }
+    }
+    entries
+}
+
+fn studio_navigate_op(studio_id: &str) -> String {
+    json!({
+        "op": "navigate",
+        "uri": format!("/studios/{studio_id}")
+    })
+    .to_string()
+}
+
+fn finish_create_ops(document: &mut SHomeDocument, entry: &semio_framework_os::OsStudioCatalogEntry) -> Vec<String> {
+    document.catalog_generation += 1;
+    vec![
+        set_home_document_op(document),
+        studio_navigate_op(&entry.id),
+    ]
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn create_folder_studio(
+    name: &str,
+    folder_path: &str,
+) -> Result<semio_framework_os::OsStudioCatalogEntry, VcsError> {
+    let port = semio_framework_os::open_folder_studio_backbone(folder_path)?;
+    let entry = create_os_studio(name, port.clone())?;
+    register_studio_port(&entry.id, port);
+    Ok(entry)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn bind_studio_file(studio_id: &str, file_path: &str) -> Result<(), VcsError> {
+    let port = Arc::new(semio_framework_os::NativeFileBackbonePort::new(file_path));
+    register_studio_port(studio_id, port.clone());
+    let mut document = load_os_studio_document(studio_id, catalog_port())?;
+    let uri = format!("local://{file_path}");
+    let mut backbone = LocalJsonBackbone::new(port);
+    backbone.attach(&uri)?;
+    backbone.sync(&document)?;
+    document = backbone.load_attached()?.unwrap_or(document);
+    let mut dev_backbone = DevJsonBackbone::new(catalog_port());
+    let catalog_uri = format!("{OS_STUDIO_BACKBONE_URI_PREFIX}{studio_id}");
+    dev_backbone.attach(&catalog_uri);
+    dev_backbone.sync(&document)?;
+    Ok(())
 }
 //#endregion 🔖CatalogBackbone
 
@@ -431,8 +526,7 @@ fn home_vfs_rows() -> Vec<Value> {
         "navigateUri": null,
         "descriptorValues": { "apps": "" }
     })];
-    if let Ok(entries) = list_os_studio_catalog_entries(catalog_port()) {
-        for entry in entries {
+    for entry in list_all_studio_catalog_entries() {
             rows.push(json!({
                 "id": format!("studio:{}", entry.id),
                 "fileNodeKindId": "studio",
@@ -445,7 +539,6 @@ fn home_vfs_rows() -> Vec<Value> {
                     "apps": format!("{} apps · {} nodes", entry.app_count, entry.node_count)
                 }
             }));
-        }
     }
     rows
 }
@@ -1358,24 +1451,118 @@ impl PluginApp for SHomeApp {
                     .and_then(|value| value.get("name"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("Untitled Studio");
-                if let Ok(entry) = create_os_studio(name, port.clone()) {
-                    document.catalog_generation += 1;
-                    return vec![
-                        set_home_document_op(&document),
-                        json!({
-                            "op": "navigate",
-                            "uri": format!("/studios/{}", entry.id)
-                        })
-                        .to_string(),
-                    ];
+                let kind = args
+                    .and_then(|value| value.get("kind"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("file");
+                match kind {
+                    "temporary" => {
+                        if let Ok(entry) = create_os_studio(name, temp_catalog_port()) {
+                            return finish_create_ops(&mut document, &entry);
+                        }
+                    }
+                    "folder" => {
+                        #[cfg(not(target_arch = "wasm32"))]
+                        {
+                            if let Some(folder_path) = args
+                                .and_then(|value| value.get("folderPath"))
+                                .and_then(|value| value.as_str())
+                            {
+                                if let Ok(entry) = create_folder_studio(name, folder_path) {
+                                    return finish_create_ops(&mut document, &entry);
+                                }
+                            }
+                            return vec![json!({
+                                "op": "requestFolderPick",
+                                "importCommand": "createStudio",
+                                "args": { "kind": "folder", "name": name }
+                            })
+                            .to_string()];
+                        }
+                        #[cfg(target_arch = "wasm32")]
+                        {
+                            let _ = name;
+                        }
+                    }
+                    "file" | _ => {
+                        if let Ok(entry) = create_os_studio(name, port.clone()) {
+                            let mut ops = finish_create_ops(&mut document, &entry);
+                            if let Ok(studio_document) = load_os_studio_document(&entry.id, port.clone()) {
+                                if let Ok(json) = os_document_to_json(&studio_document) {
+                                    #[cfg(not(target_arch = "wasm32"))]
+                                    {
+                                        ops.insert(
+                                            1,
+                                            json!({
+                                                "op": "requestFileSave",
+                                                "filename": format!("{}.studio.json", entry.name.replace(' ', "-")),
+                                                "mimeType": "application/json",
+                                                "data": json,
+                                                "studioId": entry.id
+                                            })
+                                            .to_string(),
+                                        );
+                                    }
+                                    #[cfg(target_arch = "wasm32")]
+                                    {
+                                        ops.insert(
+                                            1,
+                                            json!({
+                                                "op": "downloadMediaExport",
+                                                "filename": format!("{}.studio.json", entry.name.replace(' ', "-")),
+                                                "mimeType": "application/json",
+                                                "data": json
+                                            })
+                                            .to_string(),
+                                        );
+                                    }
+                                }
+                            }
+                            return ops;
+                        }
+                    }
+                }
+            }
+            "bindStudioFile" => {
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    let studio_id = args
+                        .and_then(|value| value.get("studioId"))
+                        .and_then(|value| value.as_str());
+                    let file_path = args
+                        .and_then(|value| value.get("filePath"))
+                        .and_then(|value| value.as_str());
+                    if let (Some(studio_id), Some(file_path)) = (studio_id, file_path) {
+                        let _ = bind_studio_file(studio_id, file_path);
+                    }
                 }
             }
             "importStudio" => {
-                if let Some(json) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
-                    if import_os_studio_from_json(json, port.clone()).is_ok() {
+                let json = args
+                    .and_then(|value| value.get("json"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string)
+                    .or_else(|| {
+                        args.and_then(|value| value.get("payload"))
+                            .and_then(|value| value.as_str())
+                            .map(str::to_string)
+                    })
+                    .or_else(|| {
+                        args.and_then(|value| value.get("payload"))
+                            .map(|value| value.to_string())
+                    });
+                if let Some(json) = json {
+                    if import_os_studio_from_json(&json, port.clone()).is_ok() {
                         document.catalog_generation += 1;
                     }
+                    return vec![set_home_document_op(&document)];
                 }
+                return vec![json!({
+                    "op": "requestFileOpen",
+                    "importCommand": "importStudio",
+                    "accept": ".json"
+                })
+                .to_string()];
             }
             "openStudio" | "navigateVirtualFileSystemNode" => {
                 let studio_id = args
@@ -2032,7 +2219,7 @@ impl SStudioApp {
                     .and_then(|value| value.get("studioId"))
                     .and_then(|value| value.as_str())
                 {
-                    if let Ok(document) = load_os_studio_document(studio_id, catalog_port()) {
+                    if let Ok(document) = load_studio_document(studio_id) {
                         *envelope = SStudioEnvelope {
                             document,
                             runtime: StudioRuntimeState {
@@ -2268,19 +2455,46 @@ fn media_graph_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance
     }]
 }
 
+fn home_create_tools() -> Vec<semio_framework_plugin::ToolNode> {
+    let mut children = vec![
+        tool_button(
+            "s-home.create.temporary",
+            "zap",
+            "Temporary",
+            s_home_cmd("createStudio", Some(json!({ "kind": "temporary" }))),
+        ),
+        tool_button(
+            "s-home.create.file",
+            "file-json",
+            "File",
+            s_home_cmd("createStudio", Some(json!({ "kind": "file" }))),
+        ),
+    ];
+    #[cfg(not(target_arch = "wasm32"))]
+    children.push(tool_button(
+        "s-home.create.folder",
+        "folder",
+        "Folder",
+        s_home_cmd("createStudio", Some(json!({ "kind": "folder" }))),
+    ));
+    vec![
+        tool_collection("s-home.create", "plus", "Create", children),
+        tool_button(
+            "s-home.import",
+            "upload",
+            "Import Studio",
+            s_home_cmd("importStudio", None),
+        ),
+    ]
+}
+
 fn create_home_app() -> App {
     let mut app = App::from_builder(
         App::builder(S_HOME_APP_ID, "Home").document(["semio", "s", "home"])
             .icon_id("home")
             .mode("explore", "Explore")
             .default_mode_id("explore")
-            .mode_tools(
-                "explore",
-                vec![
-                    tool_button("s-home.create", "plus", "New Studio", s_home_cmd("createStudio", None)),
-                    tool_button("s-home.import", "upload", "Import Studio", s_home_cmd("importStudio", None)),
-                ],
-            )
+            .mode_tools("explore", home_create_tools())
             .window_kind(S_HOME_WINDOW, "Studios", S_HOME_BODY)
             .default_layout(create_tab_stack_layout(
                 &[S_HOME_WINDOW.into()],
@@ -2319,19 +2533,19 @@ fn create_studio_app() -> App {
         .panel_tab(
             S_PLAY_CATALOGUE_TAB_ID,
             FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-            "workbench",
+            PanelGroup::Workbench,
             S_PLAY_CATALOGUE_BODY_KEY,
         )
         .panel_tab(
             S_PLAY_PARAMETERS_TAB_ID,
             FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
-            "workbench",
+            PanelGroup::Workbench,
             S_PLAY_PARAMETERS_BODY_KEY,
         )
         .panel_tab(
             S_PLAY_INSPECTOR_TAB_ID,
             FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-            "details",
+            PanelGroup::Details,
             S_PLAY_INSPECTOR_BODY_KEY,
         )
         .default_layout(studio_play_layout())
@@ -2388,6 +2602,7 @@ fn create_studio_app() -> App {
 
 fn bundle() -> PluginBundle {
     PluginBundle::new("s", "S Studio", "0.1.0")
+        .capability(Capability::LocalBackboneStorage)
         .register_app(create_home_app(), || Box::new(SHomeApp))
         .register_app(create_studio_app(), || Box::new(SStudioApp))
 }
@@ -2405,8 +2620,7 @@ mod tests {
         merge_os_program_definition, os_baseline_resource, os_in_port, os_out_port,
         validate_media_graph, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput,
     };
-    use semio_framework_plugin::ModeDefinition;
-    use semio_framework_plugin::{UiControlNode, UiNode};
+    use semio_framework_plugin::{PanelGroup, ModeDefinition, ToolNode, UiControlNode, UiNode};
 
     fn seed_draw_program() {
         let mut resources = HashMap::new();
@@ -2585,16 +2799,16 @@ mod tests {
         let panel = StudioPanelState {
             programs: vec![
                 StudioProgramEntry {
-                    plugin_id: "puzzle2d".into(),
-                    program_id: "puzzle2d".into(),
+                    plugin_id: "puzzle".into(),
+                    program_id: "puzzle".into(),
                     app_id: "puzzle2d-play".into(),
                     label: "Puzzle 2D".into(),
                     document: vec!["semio".into(), "puzzle".into(), "2d".into()],
                     yields: "layout".into(),
                 },
                 StudioProgramEntry {
-                    plugin_id: "puzzle3d".into(),
-                    program_id: "puzzle3d".into(),
+                    plugin_id: "puzzle".into(),
+                    program_id: "puzzle".into(),
                     app_id: "puzzle3d-play".into(),
                     label: "Puzzle 3D".into(),
                     document: vec!["semio".into(), "puzzle".into(), "3d".into()],
@@ -2629,6 +2843,36 @@ mod tests {
         );
         let after = list_os_studio_catalog_entries(port).expect("list").len();
         assert!(after >= before);
+    }
+
+    #[test]
+    fn home_explore_tools_include_create_collection() {
+        let app = create_home_app();
+        let explore = app
+            .definition
+            .modes
+            .iter()
+            .find(|mode| mode.id == "explore")
+            .expect("explore mode");
+        assert!(explore.tools.iter().any(|tool| {
+            matches!(tool, ToolNode::Collection { id, .. } if id == "s-home.create")
+        }));
+    }
+
+    #[test]
+    fn temporary_studio_uses_ephemeral_port() {
+        let mut home = SHomeApp;
+        let ops = home.handle_command(
+            "createStudio",
+            Some(&json!({ "name": "Temp Studio", "kind": "temporary" })),
+            &home.initial_document_json(),
+            &ViewState::default(),
+        );
+        assert!(ops.iter().any(|op| op.contains("navigate")));
+        let persistent = list_os_studio_catalog_entries(catalog_port()).expect("list");
+        assert!(!persistent.iter().any(|entry| entry.name == "Temp Studio"));
+        let ephemeral = list_os_studio_catalog_entries(temp_catalog_port()).expect("list");
+        assert!(ephemeral.iter().any(|entry| entry.name == "Temp Studio"));
     }
 
     #[test]
@@ -2743,7 +2987,7 @@ mod tests {
                     os_out_port("topology", "out-b", "Out B"),
                 ],
                 source_format: "puzzle5d.document".into(),
-                component_kind: "world-3d".into(),
+                component_kind: SurfaceKind::World3d,
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),
@@ -2783,7 +3027,7 @@ mod tests {
                 inputs: vec![os_in_port("2d.shooting", "scene-in", "Scene", true)],
                 outputs: vec![os_out_port("2d.shooting", "scene-out", "Scene")],
                 source_format: "shooting.document".into(),
-                component_kind: "world-3d".into(),
+                component_kind: SurfaceKind::World3d,
                 modes: vec![ModeDefinition {
                     id: "edit".into(),
                     label: "Edit".into(),

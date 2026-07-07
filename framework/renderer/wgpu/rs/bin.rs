@@ -11,11 +11,10 @@ fn main() {
         .position(|arg| arg == "--plugin")
         .and_then(|index| env::args().nth(index + 1))
         .unwrap_or_else(|| "s".to_string());
-    let modules_root = env::var("SEMIO_NATIVE_PLUGIN_MODULES")
+    let modules_root = env::var("SEMIO_PLUGIN_MODULES")
         .map(PathBuf::from)
         .unwrap_or_else(|_| {
-            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                .join("../../../product/os/dev/plugin-modules-native")
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../product/os/dev/plugin-modules")
         });
     run_native(&plugin_filter, modules_root);
 }

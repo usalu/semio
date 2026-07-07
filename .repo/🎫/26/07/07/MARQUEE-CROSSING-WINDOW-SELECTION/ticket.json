@@ -1,9 +1,9 @@
 {
   "title": "Marquee Crossing Window Selection",
   "emoji": "🎫",
-  "status": "open",
+  "status": "closed",
   "description": "Restore canonical drag-direction marquee selection (left-to-right = window/total inclusion, right-to-left = crossing/partial inclusion) for 3D world WGPU renderer.",
-  "summary": "Fixed rectangle marquee making the 3D scene disappear and hiding the selection rect. Root cause: push_solid_overlay on the same draw layer as push_scene_pass breaks the overlay interleave pass (world_prepared is None there, so scene passes on that layer are skipped while overlay UI still draws). Switched marquee fill to push_solid on the backdrop layer, matching GIS map marquee rendering. Border lines remain push_line after the scene pass watermark so they interleave correctly.",
+  "summary": "Fixed component hover/select display for edge and face modes in the WGPU world engine. Picking now projects through the render viewport (`bounds`) while still clipping to `pick_bounds`, fixing edge highlights offset from the cursor. Edge picks use screen-distance with depth/ray tie-break so the frontmost edge under the cursor wins. Face picks use ray-triangle tests; face overlays render as double-sided translucent fills plus highlighted triangle edge lines (fixes back-face culling hiding all face chrome). Marquee preview/commit uses the same render viewport. Added tests for viewport offset, face line overlays, and ray picking. infinite_world 23/23 tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1847"
   },

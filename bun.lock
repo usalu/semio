@@ -740,9 +740,10 @@
     "print": {
       "name": "@semio-tech/print",
       "version": "0.1.0",
-      "devDependencies": {
+      "dependencies": {
         "@napi-rs/canvas": "^1.0.2",
         "pdfjs-dist": "^6.1.200",
+        "sharp": "^0.34.5",
       },
     },
     "procedural/2d/rs": {

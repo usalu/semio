@@ -6,7 +6,7 @@ use flow_core::{
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     CameraJson, FlowFixture, FlowHost, Widget,
 };
-use semio_framework_plugin::{
+use semio_framework_plugin::{PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout,
     handle_generation_command, render_generation_form_body, render_generation_preview_text, render_generations_tree,
     selected_generation, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
@@ -1280,19 +1280,19 @@ fn create_flow_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 FLOW_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 FLOW_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 FLOW_PLAY_BODY_INSPECTOR,
             )
             .keybinding("mod+z", "undo")

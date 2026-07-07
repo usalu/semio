@@ -11,7 +11,7 @@ use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, 
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout,
     export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, PanelGroup,
     world3d_selection_json, App, Canvas2dScene, CommandDescriptor, MeshData, PluginApp, PluginBundle,
     tool_button, tool_collection, tool_toggle, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
@@ -2215,22 +2215,22 @@ fn create_lowpoly_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 LOWPOLY_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 LOWPOLY_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 LOWPOLY_PLAY_BODY_INSPECTION,
             )
-            .panel_tab("framework.panel.layers", "Layers", "workbench", LOWPOLY_PLAY_BODY_LAYERS)
+            .panel_tab("framework.panel.layers", "Layers", PanelGroup::Workbench, LOWPOLY_PLAY_BODY_LAYERS)
             .mode_tools("edit", edit_tools(&default_envelope()))
             .mode_tools("paint", paint_tools(&default_envelope())),
     )

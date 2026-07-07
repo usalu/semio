@@ -5,12 +5,12 @@ pub mod app {
 //! 🧩 Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    AppDefinition, CommandDescriptor, ExampleDefinition, Keybinding, ModeDefinition,
-    NamedLayout, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode, UiNode, ViewState,
-    WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
+    collect_window_kind_ids_from_layout, AppDefinition, CommandDescriptor, ExampleDefinition, Keybinding,
+    ModeDefinition, NamedLayout, PanelGroup, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode,
+    UiNode, ViewState, WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
 };
 use serde_json::Value;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub struct ModeSpec {
     pub id: String,
@@ -30,7 +30,7 @@ pub struct WindowKindSpec {
 pub struct PanelTabSpec {
     pub id: String,
     pub label: String,
-    pub group: String,
+    pub group: PanelGroup,
     pub body_key: String,
 }
 
@@ -154,13 +154,13 @@ impl AppBuilder {
         mut self,
         id: impl Into<String>,
         label: impl Into<String>,
-        group: impl Into<String>,
+        group: PanelGroup,
         body_key: impl Into<String>,
     ) -> Self {
         self.panel_tabs.push(PanelTabSpec {
             id: id.into(),
             label: label.into(),
-            group: group.into(),
+            group,
             body_key: body_key.into(),
         });
         self
@@ -178,8 +178,54 @@ impl AppBuilder {
     pub fn build_definition(self) -> AppDefinition {
         assert!(
             !self.document.is_empty() && self.document.iter().all(|segment| !segment.trim().is_empty()),
-            "app document must contain non-empty segments"
+            "app {} document must contain non-empty segments",
+            self.id
         );
+        assert!(
+            !self.window_kinds.is_empty(),
+            "app {} must declare at least one window kind",
+            self.id
+        );
+        let mut window_kind_ids = HashSet::new();
+        for window in &self.window_kinds {
+            assert!(!window.id.trim().is_empty(), "app {} window kind id must be non-empty", self.id);
+            assert!(
+                !window.body_key.trim().is_empty(),
+                "app {} window kind {} body_key must be non-empty",
+                self.id,
+                window.id
+            );
+            assert!(
+                window_kind_ids.insert(window.id.clone()),
+                "app {} duplicate window kind id {}",
+                self.id,
+                window.id
+            );
+        }
+        for tab in &self.panel_tabs {
+            assert!(!tab.id.trim().is_empty(), "app {} panel tab id must be non-empty", self.id);
+            assert!(
+                !tab.body_key.trim().is_empty(),
+                "app {} panel tab {} body_key must be non-empty",
+                self.id,
+                tab.id
+            );
+        }
+        let mut layout_window_ids = Vec::new();
+        if let Some(layout) = &self.default_layout {
+            layout_window_ids.extend(collect_window_kind_ids_from_layout(layout));
+        }
+        for named in &self.named_layouts {
+            layout_window_ids.extend(collect_window_kind_ids_from_layout(&named.layout));
+        }
+        for window_kind_id in layout_window_ids {
+            assert!(
+                window_kind_ids.contains(&window_kind_id),
+                "app {} layout references undeclared window kind {}",
+                self.id,
+                window_kind_id
+            );
+        }
         let default_mode_id = self
             .default_mode_id
             .or_else(|| self.modes.first().map(|mode| mode.id.clone()));
@@ -236,6 +282,36 @@ impl AppBuilder {
             named_layouts: self.named_layouts,
             default_layout: self.default_layout,
         }
+    }
+}
+
+#[cfg(test)]
+mod app_builder_tests {
+    use super::*;
+    use semio_framework_core::create_default_layout;
+
+    #[test]
+    fn build_definition_rejects_layout_with_unknown_window_kind() {
+        let result = std::panic::catch_unwind(|| {
+            App::builder("bad-app", "Bad")
+                .document(["semio", "bad"])
+                .window_kind("main", "Main", "bad.main")
+                .default_layout(create_default_layout(&["missing".into()], "row", None, None))
+                .build_definition();
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_accepts_valid_manifest() {
+        let definition = App::builder("good-app", "Good")
+            .document(["semio", "good"])
+            .window_kind("main", "Main", "good.main")
+            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, "good.document")
+            .default_layout(create_default_layout(&["main".into()], "row", None, None))
+            .build_definition();
+        assert_eq!(definition.window_kinds.len(), 1);
+        assert_eq!(definition.panel_tabs.len(), 1);
     }
 }
 
@@ -329,9 +405,17 @@ impl PluginBundle {
                 apps: Vec::new(),
                 programs: Vec::new(),
                 examples: Vec::new(),
+                capabilities: Vec::new(),
             },
             apps: HashMap::new(),
         }
+    }
+
+    pub fn capability(mut self, capability: semio_framework_core::Capability) -> Self {
+        if !self.manifest.capabilities.contains(&capability) {
+            self.manifest.capabilities.push(capability);
+        }
+        self
     }
 
     pub fn register_app(
@@ -923,6 +1007,7 @@ pub fn plugin_manifest() -> PluginManifest {
                 apps: vec![],
                 programs: vec![],
                 examples: vec![],
+                capabilities: vec![],
             })
     })
 }
@@ -1187,8 +1272,7 @@ macro_rules! wasm_plugin_exports {
 #[macro_export]
 macro_rules! native_plugin_exports {
     () => {
-        #[cfg(not(target_arch = "wasm32"))]
-        mod semio_native_exports {
+        mod semio_plugin_exports {
             use super::_PLUGIN_INIT;
             use semio_framework_plugin::plugin_runtime::{
                 plugin_create_app, plugin_destroy_app, plugin_handle_command, plugin_manifest, plugin_render,
@@ -1215,6 +1299,30 @@ macro_rules! native_plugin_exports {
                     .to_str()
                     .map(|value| value.to_string())
                     .map_err(|error| error.to_string())
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_start() {
+                let _ = &*START;
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_alloc(size: u32) -> *mut c_char {
+                let _ = &*START;
+                if size == 0 {
+                    return std::ptr::null_mut();
+                }
+                let layout = std::alloc::Layout::from_size_align(size as usize, 1).expect("alloc layout");
+                unsafe { std::alloc::alloc(layout) as *mut c_char }
+            }
+
+            #[no_mangle]
+            pub extern "C" fn semio_plugin_dealloc(ptr: *mut c_char, size: u32) {
+                if ptr.is_null() || size == 0 {
+                    return;
+                }
+                let layout = std::alloc::Layout::from_size_align(size as usize, 1).expect("dealloc layout");
+                unsafe { std::alloc::dealloc(ptr as *mut u8, layout) };
             }
 
             #[no_mangle]
@@ -1319,180 +1427,10 @@ macro_rules! native_plugin_exports {
 #[macro_export]
 macro_rules! plugin_exports {
     () => {
-        semio_framework_plugin::wasm_plugin_exports!();
         semio_framework_plugin::native_plugin_exports!();
     };
 }
 // #endregion plugin_runtime
-}
-
-pub mod native_host {
-// #region native_host
-//! 🔌 Native dylib plugin loader with hot-swap support.
-
-#[cfg(not(target_arch = "wasm32"))]
-mod native {
-    use libloading::{Library, Symbol};
-    use semio_framework_core::{PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement, WindowMeasure};
-    use std::ffi::{c_char, CStr, CString};
-    use std::path::{Path, PathBuf};
-
-    type ManifestFn = unsafe extern "C" fn() -> *mut c_char;
-    type CreateAppFn = unsafe extern "C" fn(*const c_char) -> u32;
-    type DestroyAppFn = unsafe extern "C" fn(u32);
-    type CommandFn = unsafe extern "C" fn(u32, *const c_char, *const c_char) -> *mut c_char;
-    type RenderFn = unsafe extern "C" fn(u32, *const c_char, *const c_char) -> *mut c_char;
-    type ToolsFn = unsafe extern "C" fn(u32, *const c_char) -> *mut c_char;
-    type EngagementsFn = unsafe extern "C" fn(u32, *const c_char) -> *mut c_char;
-    type MeasuresFn = unsafe extern "C" fn(u32, *const c_char) -> *mut c_char;
-    type FreeStringFn = unsafe extern "C" fn(*mut c_char);
-
-    pub struct NativePluginLibrary {
-        library: Library,
-        pub path: PathBuf,
-    }
-
-    impl NativePluginLibrary {
-        pub fn load(path: impl AsRef<Path>) -> Result<Self, String> {
-            let path = path.as_ref().to_path_buf();
-            let library = unsafe { Library::new(&path).map_err(|error| error.to_string())? };
-            Ok(Self { library, path })
-        }
-
-        pub fn manifest(&self) -> Result<PluginManifest, String> {
-            let json = self.call_string(b"semio_plugin_manifest", |symbol| unsafe { symbol() })?;
-            serde_json::from_str(&json).map_err(|error| error.to_string())
-        }
-
-        pub fn create_app(&self, app_id: &str) -> Result<u32, String> {
-            let c_app = CString::new(app_id).map_err(|error| error.to_string())?;
-            let create: Symbol<CreateAppFn> = unsafe {
-                self.library
-                    .get(b"semio_plugin_create_app")
-                    .map_err(|error| error.to_string())?
-            };
-            let id = unsafe { create(c_app.as_ptr()) };
-            if id == u32::MAX {
-                return Err("create_app failed".into());
-            }
-            Ok(id)
-        }
-
-        pub fn destroy_app(&self, instance_id: u32) {
-            if let Ok(destroy) = unsafe { self.library.get::<DestroyAppFn>(b"semio_plugin_destroy_app") } {
-                unsafe { destroy(instance_id) };
-            }
-        }
-
-        pub fn handle_command(
-            &self,
-            instance_id: u32,
-            command_json: &str,
-            view_state: &ViewState,
-        ) -> Result<Vec<String>, String> {
-            let command = CString::new(command_json).map_err(|error| error.to_string())?;
-            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
-                .map_err(|error| error.to_string())?;
-            let handle: Symbol<CommandFn> = unsafe {
-                self.library
-                    .get(b"semio_plugin_handle_command")
-                    .map_err(|error| error.to_string())?
-            };
-            let json = self.call_string_ptr(unsafe {
-                handle(instance_id, command.as_ptr(), view.as_ptr())
-            })?;
-            serde_json::from_str(&json).map_err(|error| error.to_string())
-        }
-
-        pub fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewState) -> Result<UiNode, String> {
-            let body = CString::new(body_key).map_err(|error| error.to_string())?;
-            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
-                .map_err(|error| error.to_string())?;
-            let render: Symbol<RenderFn> = unsafe {
-                self.library
-                    .get(b"semio_plugin_render")
-                    .map_err(|error| error.to_string())?
-            };
-            let json = self.call_string_ptr(unsafe {
-                render(instance_id, body.as_ptr(), view.as_ptr())
-            })?;
-            serde_json::from_str(&json).map_err(|error| error.to_string())
-        }
-
-        pub fn tools(&self, instance_id: u32, view_state: &ViewState) -> Result<Vec<ToolNode>, String> {
-            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
-                .map_err(|error| error.to_string())?;
-            let tools: Symbol<ToolsFn> = unsafe {
-                self.library
-                    .get(b"semio_plugin_tools")
-                    .map_err(|error| error.to_string())?
-            };
-            let json = self.call_string_ptr(unsafe { tools(instance_id, view.as_ptr()) })?;
-            serde_json::from_str(&json).map_err(|error| error.to_string())
-        }
-
-        pub fn window_engagements(
-            &self,
-            instance_id: u32,
-            view_state: &ViewState,
-        ) -> Result<std::collections::HashMap<String, WindowEngagement>, String> {
-            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
-                .map_err(|error| error.to_string())?;
-            let engagements: Symbol<EngagementsFn> = unsafe {
-                self.library
-                    .get(b"semio_plugin_window_engagements")
-                    .map_err(|error| error.to_string())?
-            };
-            let json = self.call_string_ptr(unsafe { engagements(instance_id, view.as_ptr()) })?;
-            serde_json::from_str(&json).map_err(|error| error.to_string())
-        }
-
-        pub fn window_measures(
-            &self,
-            instance_id: u32,
-            view_state: &ViewState,
-        ) -> Result<std::collections::HashMap<String, Vec<WindowMeasure>>, String> {
-            let view = CString::new(serde_json::to_string(view_state).map_err(|error| error.to_string())?)
-                .map_err(|error| error.to_string())?;
-            let measures: Symbol<MeasuresFn> = unsafe {
-                self.library
-                    .get(b"semio_plugin_window_measures")
-                    .map_err(|error| error.to_string())?
-            };
-            let json = self.call_string_ptr(unsafe { measures(instance_id, view.as_ptr()) })?;
-            serde_json::from_str(&json).map_err(|error| error.to_string())
-        }
-
-        fn call_string(
-            &self,
-            symbol_name: &[u8],
-            invoke: impl FnOnce(Symbol<ManifestFn>) -> *mut c_char,
-        ) -> Result<String, String> {
-            let symbol: Symbol<ManifestFn> = unsafe {
-                self.library.get(symbol_name).map_err(|error| error.to_string())?
-            };
-            self.call_string_ptr(unsafe { invoke(symbol) })
-        }
-
-        fn call_string_ptr(&self, ptr: *mut c_char) -> Result<String, String> {
-            if ptr.is_null() {
-                return Err("native plugin returned null".into());
-            }
-            let value = unsafe { CStr::from_ptr(ptr) }
-                .to_str()
-                .map_err(|error| error.to_string())?
-                .to_string();
-            if let Ok(free) = unsafe { self.library.get::<FreeStringFn>(b"semio_plugin_free_string") } {
-                unsafe { free(ptr) };
-            }
-            Ok(value)
-        }
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub use native::NativePluginLibrary;
-// #endregion native_host
 }
 
 pub mod scaffold {
@@ -1502,22 +1440,12 @@ pub mod scaffold {
 use crate::{
     build_canvas_2d_scene, build_node_graph_scene, build_raster_scene, build_table_scene,
     build_text_editor_scene, build_world_3d_scene, default_world3d_selection, ui_stack_vertical,
-    ui_text, world3d_default_meshes_json, App, Canvas2dScene, NodeGraphScene, PluginApp,
-    RasterScene, TableScene, TextEditorScene, UiNode, ViewState, World3dScene,
+    ui_text, world3d_default_meshes_json, App, Canvas2dScene, NodeGraphScene, PanelGroup, PluginApp,
+    RasterScene, SurfaceKind, TableScene, TextEditorScene, UiNode, ViewState, World3dScene,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde_json::Value;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SceneKind {
-    Canvas2d,
-    World3d,
-    NodeGraph,
-    TextEditor,
-    Table,
-    Raster,
-}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct StandardApp {
@@ -1528,7 +1456,7 @@ pub struct StandardApp {
     pub yields: Option<&'static str>,
     pub surface_id: &'static str,
     pub body_key: &'static str,
-    pub scene_kind: SceneKind,
+    pub surface_kind: SurfaceKind,
     pub initial_document_json: &'static str,
 }
 
@@ -1649,22 +1577,11 @@ fn raster_payload(document: &Value, fallback: &str) -> RasterScene {
     }
 }
 
-pub fn scene_kind_component_tag(kind: SceneKind) -> &'static str {
-    match kind {
-        SceneKind::Canvas2d => "canvas-2d",
-        SceneKind::World3d => "world-3d",
-        SceneKind::NodeGraph => "node-graph",
-        SceneKind::TextEditor => "text-editor",
-        SceneKind::Table => "table",
-        SceneKind::Raster => "raster",
-    }
-}
-
 pub fn assert_standard_app_renders(spec: StandardApp) {
     let app = StandardPluginApp { spec };
     let node = app.render(spec.body_key, spec.initial_document_json, &ViewState::default());
     let json = serde_json::to_string(&node).expect("ui json");
-    let tag = scene_kind_component_tag(spec.scene_kind);
+    let tag = spec.surface_kind.as_str();
     assert!(json.contains(tag), "expected {tag} in {json}");
 }
 
@@ -1712,8 +1629,8 @@ impl PluginApp for StandardPluginApp {
         }
         let document: Value =
             serde_json::from_str(document_json).unwrap_or(Value::String(document_json.into()));
-        match self.spec.scene_kind {
-            SceneKind::Canvas2d => build_canvas_2d_scene(
+        match self.spec.surface_kind {
+            SurfaceKind::Canvas2d => build_canvas_2d_scene(
                 self.spec.surface_id,
                 self.spec.app_id,
                 Canvas2dScene {
@@ -1735,7 +1652,7 @@ impl PluginApp for StandardPluginApp {
                     layers_json: canvas_layers_json(&document, document_json),
                 },
             ),
-            SceneKind::World3d => build_world_3d_scene(
+            SurfaceKind::World3d => build_world_3d_scene(
                 self.spec.surface_id,
                 self.spec.app_id,
                 World3dScene {
@@ -1762,7 +1679,7 @@ impl PluginApp for StandardPluginApp {
                     chunking_json: None,
                 },
             ),
-            SceneKind::NodeGraph => {
+            SurfaceKind::NodeGraph => {
                 let (nodes_json, edges_json) = node_graph_payload(&document, document_json);
                 build_node_graph_scene(
                     self.spec.surface_id,
@@ -1777,7 +1694,7 @@ impl PluginApp for StandardPluginApp {
                     ),
                 )
             }
-            SceneKind::TextEditor => {
+            SurfaceKind::TextEditor => {
                 let (buffer, language) = text_editor_payload(&document, document_json);
                 build_text_editor_scene(
                     self.spec.surface_id,
@@ -1785,7 +1702,7 @@ impl PluginApp for StandardPluginApp {
                     TextEditorScene::base(buffer, language, None),
                 )
             }
-            SceneKind::Table => {
+            SurfaceKind::Table => {
                 let (columns_json, rows_json) = table_payload(&document, document_json);
                 build_table_scene(
                     self.spec.surface_id,
@@ -1796,11 +1713,12 @@ impl PluginApp for StandardPluginApp {
                     },
                 )
             }
-            SceneKind::Raster => build_raster_scene(
+            SurfaceKind::Raster => build_raster_scene(
                 self.spec.surface_id,
                 self.spec.app_id,
                 raster_payload(&document, document_json),
             ),
+            _ => ui_text(format!("Unsupported surface: {}", self.spec.surface_kind.as_str())),
         }
     }
 }
@@ -1852,13 +1770,13 @@ pub fn standard_app(spec: StandardApp) -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 &document_key,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 &properties_key,
             ),
     );
@@ -1892,7 +1810,7 @@ mod tests {
             yields: None,
             surface_id: "test.canvas",
             body_key: "test.canvas.composite",
-            scene_kind: SceneKind::Canvas2d,
+            surface_kind: SurfaceKind::Canvas2d,
             initial_document_json: r#"{"schema":"test","id":"test","layers":[]}"#,
         });
     }
@@ -1907,7 +1825,7 @@ mod tests {
             yields: None,
             surface_id: "test.graph",
             body_key: "test.graph.composite",
-            scene_kind: SceneKind::NodeGraph,
+            surface_kind: SurfaceKind::NodeGraph,
             initial_document_json: r#"{"nodes":[],"edges":[]}"#,
         });
     }
@@ -1922,7 +1840,7 @@ mod tests {
             yields: None,
             surface_id: "test.world",
             body_key: "test.world.composite",
-            scene_kind: SceneKind::World3d,
+            surface_kind: SurfaceKind::World3d,
             initial_document_json: r#"{"schema":"test","id":"test","entities":[]}"#,
         });
     }
@@ -1937,7 +1855,7 @@ mod tests {
             yields: None,
             surface_id: "test.text",
             body_key: "test.text.composite",
-            scene_kind: SceneKind::TextEditor,
+            surface_kind: SurfaceKind::TextEditor,
             initial_document_json: r#"{"schema":"test","id":"test","source":""}"#,
         });
     }
@@ -1952,7 +1870,7 @@ mod tests {
             yields: None,
             surface_id: "test.table",
             body_key: "test.table.composite",
-            scene_kind: SceneKind::Table,
+            surface_kind: SurfaceKind::Table,
             initial_document_json: r#"{"schema":"test","id":"test","rows":[]}"#,
         });
     }
@@ -1967,7 +1885,7 @@ mod tests {
             yields: None,
             surface_id: "test.raster",
             body_key: "test.raster.composite",
-            scene_kind: SceneKind::Raster,
+            surface_kind: SurfaceKind::Raster,
             initial_document_json: r#"{"schema":"raster.document","id":"raster","width":64,"height":64,"pixelsBase64":""}"#,
         });
     }
@@ -2178,8 +2096,8 @@ pub use generate_mode::{
 };
 pub use plugin_runtime::install_plugin_bundle;
 pub use scaffold::{
-    assert_standard_app_renders, register_standard_app, scene_kind_component_tag, standard_app,
-    standard_factory, SceneKind, StandardApp, StandardPluginApp,
+    assert_standard_app_renders, register_standard_app, standard_app,
+    standard_factory, StandardApp, StandardPluginApp,
 };
 pub use world3d_host::{
     default_world3d_selection, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids,

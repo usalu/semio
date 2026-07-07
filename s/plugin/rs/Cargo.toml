@@ -7,6 +7,9 @@ rust-version = "1.88"
 [package.metadata.component]
 package = "semio:s"
 
+[package.metadata.semio]
+capabilities = ["localBackboneStorage"]
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
@@ -18,6 +21,3 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 vcs = { path = "../../../vcs/rs" }
 mathematical_graph_port_directed_dag = { path = "../../../mathematical/graph/port/directed/dag/rs" }
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2.126"

@@ -2,7 +2,7 @@
 
 use imperative_core::{default_document, ImperativeDocument, ImperativeHost};
 use imperative_engine::Step;
-use semio_framework_plugin::{
+use semio_framework_plugin::{PanelGroup, 
     build_table_scene, build_text_editor_scene, create_stack_layout, ui_declarative_sections_to_tree,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, CommandDescriptor, PluginApp, PluginBundle,
     TableScene, TextEditorScene, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -483,19 +483,19 @@ fn create_imperative_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 IMPERATIVE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 IMPERATIVE_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 IMPERATIVE_PLAY_BODY_INSPECTOR,
             )
             .keybinding("mod+z", "undo")

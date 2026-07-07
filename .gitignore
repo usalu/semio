@@ -17,6 +17,11 @@ target*
 .tmp*
 #--------------------------------------PRINT--------------------------------------
 print/asset/font/
+print/template/**/.semio-panel-glass/
+print/template/**/*.panels
+print/dist/**/*.panels
+mit-bestand/bericht/**/.semio-panel-glass/
+mit-bestand/bericht/**/*.panels
 #--------------------------------------MIT-BESTAND--------------------------------------
 mit-bestand/bericht/**/dist/
 #--------------------------------------REPO--------------------------------------

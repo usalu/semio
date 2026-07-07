@@ -10,7 +10,7 @@ use kernel_3d_scene::{
     Instance3d, LineDraw3d, LineVertex3d, Mat4, Mesh3d, OrbitController, SceneDraw3d, ScenePass3d,
     TexturedDraw3d, TexturedInstance3d, Vec3,
 };
-use semio_framework_core::{mesh_from_glb, mesh_from_kind, CommandDescriptor, MeshData, UiComponentSceneNode};
+use semio_framework_core::{mesh_from_glb, mesh_from_kind, CommandDescriptor, MeshData, SurfaceKind, UiComponentSceneNode};
 use base64::Engine;
 use serde::de::Error as DeError;
 use serde::Deserialize;
@@ -867,7 +867,6 @@ fn component_mode_active(state: &World3dState) -> bool {
 const CLICK_DRAG_THRESHOLD_PX: f32 = 4.0;
 const PICK_VERTEX_SCREEN_PX: f32 = 14.0;
 const PICK_EDGE_SCREEN_PX: f32 = 18.0;
-const PICK_FACE_SCREEN_PX: f32 = 18.0;
 const FACE_OVERLAY_OFFSET: f32 = 0.003;
 
 fn world_pick_rect(state: &World3dState) -> Rect {
@@ -878,12 +877,20 @@ fn world_pick_rect(state: &World3dState) -> Rect {
     }
 }
 
+fn render_pick_viewport(state: &World3dState) -> Rect {
+    state.bounds
+}
+
 fn pointer_in_pick_rect(state: &World3dState, x: f32, y: f32) -> Option<(f32, f32, Rect)> {
-    let rect = world_pick_rect(state);
-    if !rect.contains(x, y) {
+    let clip = world_pick_rect(state);
+    if !clip.contains(x, y) {
         return None;
     }
-    Some((x - rect.x, y - rect.y, rect))
+    let viewport = render_pick_viewport(state);
+    if !viewport.contains(x, y) {
+        return None;
+    }
+    Some((x - viewport.x, y - viewport.y, viewport))
 }
 
 fn pick_targets_instance(state: &World3dState, instance_id: &str) -> bool {
@@ -1053,6 +1060,39 @@ fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>
             }
         }
     }
+    if state.granularity == "face" {
+        for draw in &state.draws {
+            let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
+                continue;
+            };
+            for instance in &draw.instances {
+                let hovered = instance_hovered_component_id(state, &instance.id);
+                if hovered.is_none() && selected.is_empty() && preview.is_empty() {
+                    continue;
+                }
+                for (tri_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
+                    let id = mesh
+                        .face_ids
+                        .get(tri_index)
+                        .map(|value| value.to_string())
+                        .unwrap_or_else(|| tri_index.to_string());
+                    let Some((color, _)) =
+                        component_overlay_color(&id, &selected, &preview, &hovered)
+                    else {
+                        continue;
+                    };
+                    let verts = [
+                        instance.model.transform_point(mesh_vertex(mesh, tri[0])),
+                        instance.model.transform_point(mesh_vertex(mesh, tri[1])),
+                        instance.model.transform_point(mesh_vertex(mesh, tri[2])),
+                    ];
+                    push_line_segment(lines, verts[0], verts[1], color);
+                    push_line_segment(lines, verts[1], verts[2], color);
+                    push_line_segment(lines, verts[2], verts[0], color);
+                }
+            }
+        }
+    }
     if state.selection_targets.vertex || state.granularity == "vertex" {
         let wire_color = [0.55, 0.65, 0.8, 0.9];
         for draw in &state.draws {
@@ -1149,6 +1189,7 @@ fn append_component_face_translucent_overlays(
                     bucket.2.extend_from_slice(&normal.to_array());
                 }
                 bucket.3.extend_from_slice(&[base, base + 1, base + 2]);
+                bucket.3.extend_from_slice(&[base, base + 2, base + 1]);
             }
         }
     }
@@ -1215,14 +1256,13 @@ fn pick_gumball_handle_at(
     state: &World3dState,
     x: f32,
     y: f32,
-    inner: Rect,
+    _inner: Rect,
 ) -> Option<GumballHandle> {
+    let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let pivot = selection_centroid(state)?;
     let camera = state.orbit.to_camera();
-    let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let local_x = x - inner.x;
-    let local_y = y - inner.y;
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
+    let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
+    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
     let extent = gumball_extent(camera.position.sub(pivot).length());
     let pick_radius = extent * 0.08;
     let eye = gumball_eye(&camera, pivot);
@@ -2168,7 +2208,7 @@ pub fn handle_world3d_pointer_move(
     if down && button == 0 {
         if state.marquee_active {
             state.marquee_points.push([x, y]);
-            update_marquee_preview(state, inner);
+            update_marquee_preview(state, render_pick_viewport(state));
         } else if state.paint_stroke_active && state.interaction_mode == "paint" {
             if let Some((object_id, u, v)) = pick_paint_hit(state, x, y, inner) {
                 return Some(CommandDescriptor {
@@ -2294,7 +2334,7 @@ pub fn handle_world3d_pointer_button(
                 return pick_select_command(state, x, y, inner, shift, ctrl);
             }
         } else {
-            return marquee_select_command(state, inner, shift, ctrl);
+            return marquee_select_command(state, render_pick_viewport(state), shift, ctrl);
         }
     }
     if button == 0 && state.interaction_mode == "paint" && state.paint_stroke_active {
@@ -2886,7 +2926,8 @@ fn pick_component_at(
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "edge" => {
-            let mut best: Option<(f32, String, String)> = None;
+            let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, rect.w, rect.h);
+            let mut best: Option<(f32, f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
                     continue;
@@ -2905,17 +2946,13 @@ fn pick_component_at(
                         let b = instance.model.transform_point(Vec3::new(
                             chunk[3], chunk[4], chunk[5],
                         ));
-                        let Some(screen_a) =
-                            kernel_3d_scene::project_point(view_proj, a, rect.w, rect.h)
-                        else {
+                        let (Some(screen_a), Some(screen_b)) = (
+                            kernel_3d_scene::project_point(view_proj, a, rect.w, rect.h),
+                            kernel_3d_scene::project_point(view_proj, b, rect.w, rect.h),
+                        ) else {
                             continue;
                         };
-                        let Some(screen_b) =
-                            kernel_3d_scene::project_point(view_proj, b, rect.w, rect.h)
-                        else {
-                            continue;
-                        };
-                        let dist = kernel_3d_scene::screen_segment_distance(
+                        let screen_dist = kernel_3d_scene::screen_segment_distance(
                             local_x,
                             local_y,
                             screen_a[0],
@@ -2923,22 +2960,34 @@ fn pick_component_at(
                             screen_b[0],
                             screen_b[1],
                         );
-                        if dist <= PICK_EDGE_SCREEN_PX
-                            && best.as_ref().map_or(true, |(best_dist, _, _)| dist < *best_dist)
-                        {
+                        if screen_dist > PICK_EDGE_SCREEN_PX {
+                            continue;
+                        }
+                        let ray_dist = kernel_3d_scene::ray_segment_distance(origin, dir, a, b)
+                            .unwrap_or(f32::INFINITY);
+                        let depth = a.add(b).scale(0.5).sub(origin).dot(dir);
+                        let better = match &best {
+                            None => true,
+                            Some((best_ray, best_depth, _, _)) => {
+                                depth < *best_depth - 1e-4
+                                    || ((depth - *best_depth).abs() <= 1e-4 && ray_dist < *best_ray)
+                            }
+                        };
+                        if better {
                             let id = mesh
                                 .edge_ids
                                 .get(edge_index)
                                 .map(|value| value.to_string())
                                 .unwrap_or_else(|| edge_index.to_string());
-                            best = Some((dist, id, instance.id.clone()));
+                            best = Some((ray_dist, depth, id, instance.id.clone()));
                         }
                     }
                 }
             }
-            return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
+            return best.map(|(_, _, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "face" => {
+            let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, rect.w, rect.h);
             let mut best: Option<(f32, String, String)> = None;
             for draw in &state.draws {
                 let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -2949,29 +2998,25 @@ fn pick_component_at(
                         continue;
                     }
                     for (tri_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
-                        let id = mesh
-                            .face_ids
-                            .get(tri_index)
-                            .map(|value| value.to_string())
-                            .unwrap_or_else(|| tri_index.to_string());
-                        let centroid = instance.model.transform_point(
-                            mesh_vertex(mesh, tri[0])
-                                .add(mesh_vertex(mesh, tri[1]))
-                                .add(mesh_vertex(mesh, tri[2]))
-                                .scale(1.0 / 3.0),
-                        );
-                        let Some(screen) =
-                            kernel_3d_scene::project_point(view_proj, centroid, rect.w, rect.h)
-                        else {
+                        let a = instance
+                            .model
+                            .transform_point(mesh_vertex(mesh, tri[0]));
+                        let b = instance
+                            .model
+                            .transform_point(mesh_vertex(mesh, tri[1]));
+                        let c = instance
+                            .model
+                            .transform_point(mesh_vertex(mesh, tri[2]));
+                        let Some(depth) = kernel_3d_scene::ray_triangle(origin, dir, a, b, c) else {
                             continue;
                         };
-                        let dx = screen[0] - local_x;
-                        let dy = screen[1] - local_y;
-                        let dist = (dx * dx + dy * dy).sqrt();
-                        if dist <= PICK_FACE_SCREEN_PX
-                            && best.as_ref().map_or(true, |(best_dist, _, _)| dist < *best_dist)
-                        {
-                            best = Some((dist, id, instance.id.clone()));
+                        if best.as_ref().map_or(true, |(best_depth, _, _)| depth < *best_depth) {
+                            let id = mesh
+                                .face_ids
+                                .get(tri_index)
+                                .map(|value| value.to_string())
+                                .unwrap_or_else(|| tri_index.to_string());
+                            best = Some((depth, id, instance.id.clone()));
                         }
                     }
                 }
@@ -2983,12 +3028,11 @@ fn pick_component_at(
     None
 }
 
-fn pick_paint_hit(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option<(String, f32, f32)> {
+fn pick_paint_hit(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<(String, f32, f32)> {
+    let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
-    let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let local_x = x - inner.x;
-    let local_y = y - inner.y;
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
+    let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
+    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String, f32, f32)> = None;
     for draw in &state.draws {
         let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -3063,12 +3107,11 @@ fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
     };
 }
 
-fn pick_instance_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option<String> {
+fn pick_instance_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<String> {
+    let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
-    let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let local_x = x - inner.x;
-    let local_y = y - inner.y;
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
+    let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
+    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String)> = None;
     for draw in &state.draws {
         let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
@@ -3085,12 +3128,11 @@ fn pick_instance_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option
     best.map(|(_, id)| id)
 }
 
-fn pick_vortex_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option<String> {
+fn pick_vortex_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<String> {
+    let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
-    let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let local_x = x - inner.x;
-    let local_y = y - inner.y;
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
+    let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
+    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
     let mut best: Option<(f32, String)> = None;
     for vortex in &state.vortices {
         let position = vortex.position.unwrap_or([0.0, 0.0, 0.0]);
@@ -3129,12 +3171,11 @@ fn update_dragged_instance_position(state: &mut World3dState, object_id: &str, p
     }
 }
 
-fn ground_plane_pick(state: &World3dState, x: f32, y: f32, inner: Rect, plane_z: f32) -> Option<[f32; 3]> {
+fn ground_plane_pick(state: &World3dState, x: f32, y: f32, _inner: Rect, plane_z: f32) -> Option<[f32; 3]> {
+    let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
     let camera = state.orbit.to_camera();
-    let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
-    let local_x = x - inner.x;
-    let local_y = y - inner.y;
-    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
+    let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
+    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
     if dir.z.abs() < 1e-5 {
         return None;
     }
@@ -3406,7 +3447,7 @@ mod tests {
         UiComponentSceneNode {
             surface_id: "surface-1".into(),
             controller_id: "controller-1".into(),
-            component_kind: "world-3d".into(),
+            component_kind: SurfaceKind::World3d,
             pane_id: None,
             binding_id: None,
             canvas_2d: None,
@@ -3883,7 +3924,78 @@ mod tests {
     }
 
     #[test]
-    fn pick_component_at_face_mode_uses_screen_space() {
+    fn pick_viewport_uses_render_bounds_not_pick_clip_offset() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "vertex".into();
+        state.active_object_id = Some("obj-1".into());
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let bounds = Rect {
+            x: 0.0,
+            y: 50.0,
+            w: 400.0,
+            h: 400.0,
+        };
+        let clip = Rect {
+            x: 0.0,
+            y: 100.0,
+            w: 400.0,
+            h: 400.0,
+        };
+        state.bounds = bounds;
+        state.pick_bounds = clip;
+        let camera = state.orbit.to_camera();
+        let screen = kernel_3d_scene::project_point(camera.view_proj(1.0), Vec3::ZERO, bounds.w, bounds.h)
+            .expect("vertex projects");
+        let global_x = bounds.x + screen[0];
+        let global_y = bounds.y + screen[1];
+        let picked = pick_component_at(&state, global_x, global_y, bounds)
+            .expect("vertex pick respects render viewport");
+        assert_eq!(picked.1, "1");
+    }
+
+    #[test]
+    fn append_component_face_overlay_lines_include_hovered_face() {
+        let mesh = topology_mesh();
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "face".into();
+        state.hovered_component_mode = Some("face".into());
+        state.hovered_component_id = Some("10".into());
+        state.hovered_component_object_id = Some("obj-1".into());
+        state.meshes.insert("mesh-1".into(), mesh);
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let mut lines = Vec::new();
+        append_component_overlays(&state, &mut lines);
+        assert!(
+            lines.len() >= 6,
+            "hovered face should emit triangle edge lines, got {}",
+            lines.len()
+        );
+    }
+
+    #[test]
+    fn pick_component_at_face_mode_uses_ray_pick() {
         let mesh = topology_mesh();
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
         state.granularity = "face".into();
@@ -3924,7 +4036,7 @@ mod tests {
     }
 
     #[test]
-    fn pick_component_at_edge_mode_uses_screen_space() {
+    fn pick_component_at_edge_mode_uses_ray_pick() {
         let mesh = topology_mesh();
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
         state.granularity = "edge".into();

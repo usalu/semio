@@ -1,0 +1,19 @@
+{
+  "title": "Print Glass Panels",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "Add Panel overlay construct to print/ with anchor+offset positioning, frosted glass background via two-pass rasterize/blur/tint pipeline matching ui-glass-panel.",
+  "summary": "Fixed glass panel rendering: pass-1 no longer paints panel (clean raster source), pass-2 uses border-only fbox with embedded PNG (no fcolorbox fill over image), per-jobname glass dirs (.semio-panel-glass/\\jobname/), latex2e IfFileExists, stronger blur + frost noise in renderPanelGlass. Report demo panel moved to y=5cm over TOC. All 12 PDFs build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1857"
+  },
+  "goal": "🎯r2602",
+  "plan": {
+    "client": "cursor",
+    "id": "d21bc708",
+    "local": "print_glass_panels_d21bc708.plan.md"
+  },
+  "sessions": [
+    "⚪7c58c4655f4d44eb8b406d6556521ef8"
+  ]
+}

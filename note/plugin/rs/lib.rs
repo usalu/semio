@@ -1,6 +1,6 @@
 //! 📝 Note plugin — infinite canvas note board bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{
+use semio_framework_plugin::{PanelGroup, 
     build_canvas_2d_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
     Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
@@ -1458,19 +1458,19 @@ fn create_note_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 NOTE_PLAY_BODY_DOCUMENT,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 NOTE_PLAY_BODY_CATALOGUE,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 NOTE_PLAY_BODY_PROPERTIES,
             )
             .keybinding("mod+z", "undo")

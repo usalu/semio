@@ -1,9 +1,11 @@
 #!/usr/bin/env bun
 /** 🖨️ `@semio-tech/print` router: `bun ./script.ts generate|fonts|build|watch|test`. */
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, getWorkspaceRoot, runBundleScriptMain } from "../repo/lib/js/index.ts";
 
 const printRoot = import.meta.dir;
@@ -74,6 +76,9 @@ type Tokens = {
 	readonly colors: Record<string, string>;
 	readonly spacing: Record<string, string>;
 	readonly strokes?: Record<string, number | number[]>;
+	readonly opacities?: {
+		readonly glassPanelAlpha?: number;
+	};
 	readonly themes?: Record<string, Record<string, Record<string, PaintRef>>>;
 	readonly metrics?: {
 		readonly chrome?: {
@@ -81,6 +86,8 @@ type Tokens = {
 			readonly paddingStandardUiSpacing?: number;
 			readonly navbarHeightUiSpacing?: number;
 			readonly footerHeightUiSpacing?: number;
+			readonly glassPanelBlurPx?: number;
+			readonly glassSaturate?: number;
 		};
 		readonly typography?: {
 			readonly textXsPx?: number;
@@ -90,10 +97,24 @@ type Tokens = {
 	};
 };
 
+type PanelManifestEntry = {
+	readonly id: string;
+	readonly page: number;
+	readonly xPt: number;
+	readonly yPt: number;
+	readonly wPt: number;
+	readonly hPt: number;
+};
+
+const PANEL_GLASS_DIR = ".semio-panel-glass";
+const PANEL_RENDER_DPI = 200;
+const PDF_PT_PER_INCH = 72;
+
 const CHROME_PAINT_KEYS = [
 	"base",
 	"window",
 	"canvas",
+	"panel",
 	"borderNormal",
 	"borderEmphasized",
 	"activeBase",
@@ -149,6 +170,177 @@ function remFactor(rem: string): number {
 
 function colorKeyToLatex(key: string): string {
 	return `semio-${key.replaceAll("_", "-")}`;
+}
+
+function panelManifestPath(outDir: string, jobname: string): string {
+	return join(outDir, `${jobname}.panels`);
+}
+
+function panelGlassDir(workDir: string, jobname: string): string {
+	return join(workDir, PANEL_GLASS_DIR, jobname);
+}
+
+function detectTheme(texAbs: string): "light" | "dark" {
+	const source = readFileSync(texAbs, "utf8");
+	return /\btheme\s*=\s*dark\b/.test(source) ? "dark" : "light";
+}
+
+function parsePt(value: string): number {
+	return Number.parseFloat(value.replace(/pt$/i, ""));
+}
+
+function parsePanelManifest(manifestPath: string): PanelManifestEntry[] {
+	const text = readFileSync(manifestPath, "utf8").trim();
+	if (!text) return [];
+	return text.split("\n").map((line) => {
+		const [id, page, xPt, yPt, wPt, hPt] = line.split(";").map((part) => part.trim());
+		if (!id || !page || !xPt || !yPt || !wPt || !hPt) throw new Error(`invalid panel manifest line: ${line}`);
+		return {
+			id,
+			page: Number.parseInt(page, 10),
+			xPt: parsePt(xPt),
+			yPt: parsePt(yPt),
+			wPt: parsePt(wPt),
+			hPt: parsePt(hPt),
+		};
+	});
+}
+
+function loadTokens(): Tokens {
+	return JSON.parse(readFileSync(tokensPath, "utf8")) as Tokens;
+}
+
+function panelGlassTintHex(theme: "light" | "dark"): string {
+	const tokens = loadTokens();
+	const paint = tokens.themes?.[theme]?.chrome?.panel;
+	if (!paint) throw new Error(`tokens.themes.${theme}.chrome.panel missing`);
+	return resolvePaint(tokens.colors, paint);
+}
+
+function loadPdfjsNapiCanvas(): { createCanvas: (width: number, height: number) => import("@napi-rs/canvas").Canvas } {
+	const pdfjsEntry = fileURLToPath(new URL("../node_modules/pdfjs-dist/legacy/build/pdf.mjs", import.meta.url));
+	return createRequire(pdfjsEntry)("@napi-rs/canvas");
+}
+
+/** @emoji 🪟 Rasterizes pass-1 PDF pages and writes frosted glass PNGs for each panel manifest entry. */
+export async function renderPanelGlass(options: {
+	readonly manifestPath: string;
+	readonly pdfPath: string;
+	readonly glassDir: string;
+	readonly theme: "light" | "dark";
+}): Promise<void> {
+	const entries = parsePanelManifest(options.manifestPath);
+	if (entries.length === 0) return;
+	const tokens = loadTokens();
+	const glassPanelAlpha = tokens.opacities?.glassPanelAlpha ?? 0.58;
+	const glassPanelBlurPx = tokens.metrics?.chrome?.glassPanelBlurPx ?? 40;
+	const glassSaturate = tokens.metrics?.chrome?.glassSaturate ?? 1.45;
+	const panelTint = panelGlassTintHex(options.theme);
+	const [tintR, tintG, tintB] = parseHex6(panelTint);
+	const tintAlpha = Math.round(glassPanelAlpha * 255);
+	const renderScale = PANEL_RENDER_DPI / PDF_PT_PER_INCH;
+	const blurSigma = Math.max(0.3, (glassPanelBlurPx * renderScale) / 8);
+
+	const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+	const { createCanvas } = loadPdfjsNapiCanvas();
+	const sharp = (await import("sharp")).default;
+
+	const pdfBytes = readFileSync(options.pdfPath);
+	const doc = await pdfjs.getDocument({ data: new Uint8Array(pdfBytes), useSystemFonts: true }).promise;
+	const pageCache = new Map<number, { readonly png: Buffer; readonly pageWidthPt: number; readonly pageHeightPt: number }>();
+
+	mkdirSync(options.glassDir, { recursive: true });
+
+	for (const entry of entries) {
+		let pageRender = pageCache.get(entry.page);
+		if (!pageRender) {
+			const page = await doc.getPage(entry.page);
+			const viewport = page.getViewport({ scale: renderScale });
+			const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+			const context = canvas.getContext("2d");
+			if (!context) throw new Error("panel glass canvas 2d unavailable");
+			await page.render({ canvas, canvasContext: context, viewport }).promise;
+			const pageWidthPt = (page.view[2] ?? 0) - (page.view[0] ?? 0);
+			const pageHeightPt = (page.view[3] ?? 0) - (page.view[1] ?? 0);
+			pageRender = { png: canvas.toBuffer("image/png"), pageWidthPt, pageHeightPt };
+			pageCache.set(entry.page, pageRender);
+		}
+
+		const cropLeft = Math.max(0, Math.round(entry.xPt * renderScale));
+		const cropTop = Math.max(0, Math.round((pageRender.pageHeightPt - entry.yPt - entry.hPt) * renderScale));
+		const cropWidth = Math.max(1, Math.round(entry.wPt * renderScale));
+		const cropHeight = Math.max(1, Math.round(entry.hPt * renderScale));
+
+		const cropped = await sharp(pageRender.png)
+			.extract({
+				left: Math.min(cropLeft, Math.max(0, Math.round(pageRender.pageWidthPt * renderScale) - 1)),
+				top: Math.min(cropTop, Math.max(0, Math.round(pageRender.pageHeightPt * renderScale) - 1)),
+				width: cropWidth,
+				height: cropHeight,
+			})
+			.png()
+			.toBuffer();
+
+		const tintLayer = await sharp({
+			create: {
+				width: cropWidth,
+				height: cropHeight,
+				channels: 4,
+				background: { r: tintR, g: tintG, b: tintB, alpha: tintAlpha },
+			},
+		})
+			.png()
+			.toBuffer();
+		const frostNoise = await sharp({
+			create: {
+				width: cropWidth,
+				height: cropHeight,
+				channels: 3,
+				noise: { type: "gaussian", mean: 128, sigma: 20 },
+			},
+		})
+			.png()
+			.toBuffer();
+		const processed = await sharp(cropped)
+			.blur(blurSigma)
+			.modulate({ saturation: Math.round(glassSaturate * 100) })
+			.composite([
+				{ input: tintLayer, blend: "over" },
+				{ input: frostNoise, blend: "soft-light" },
+			])
+			.png()
+			.toBuffer();
+
+		writeFileSync(join(options.glassDir, `${entry.id}.png`), processed);
+		console.log(`[DEBUG] print panel glass ${entry.id} page ${entry.page}`);
+	}
+	writeFileSync(join(options.glassDir, ".ready"), "");
+}
+
+function resetPanelArtifacts(workDir: string, outDir: string, jobname: string): void {
+	const manifestPath = panelManifestPath(outDir, jobname);
+	const glassDir = panelGlassDir(workDir, jobname);
+	if (existsSync(manifestPath)) rmSync(manifestPath);
+	if (existsSync(glassDir)) rmSync(glassDir, { recursive: true });
+}
+
+async function compilePrintDocumentWithPanels(tectonic: string, texAbs: string, outDir: string): Promise<void> {
+	const workDir = dirname(texAbs);
+	const jobname = basename(texAbs, ".tex");
+	resetPanelArtifacts(workDir, outDir, jobname);
+	compilePrintDocument(tectonic, texAbs, outDir);
+	const manifestPath = panelManifestPath(outDir, jobname);
+	if (!existsSync(manifestPath)) return;
+	const entries = parsePanelManifest(manifestPath);
+	if (entries.length === 0) return;
+	const pdfPath = join(outDir, `${jobname}.pdf`);
+	await renderPanelGlass({
+		manifestPath,
+		pdfPath,
+		glassDir: panelGlassDir(workDir, jobname),
+		theme: detectTheme(texAbs),
+	});
+	compilePrintDocument(tectonic, texAbs, outDir);
 }
 
 function remToEm(rem: string): string {
@@ -332,6 +524,7 @@ function tectonicEnv(): NodeJS.ProcessEnv {
 }
 
 function compilePrintDocument(tectonic: string, texAbs: string, outDir: string): void {
+	emitSemioTokensSty();
 	const workDir = dirname(texAbs);
 	const texFile = basename(texAbs);
 	mkdirSync(outDir, { recursive: true });
@@ -346,25 +539,25 @@ function compilePrintDocument(tectonic: string, texAbs: string, outDir: string):
 	console.log(`[DEBUG] print built ${relative(repoRoot, pdf)}`);
 }
 
-function compileLightAndDark(tectonic: string, texAbs: string, outDir: string): void {
-	compilePrintDocument(tectonic, texAbs, outDir);
+async function compileLightAndDark(tectonic: string, texAbs: string, outDir: string): Promise<void> {
+	await compilePrintDocumentWithPanels(tectonic, texAbs, outDir);
 	const lightSource = readFileSync(texAbs, "utf8");
 	const darkSource = deriveDarkTexSource(lightSource);
 	const darkTexAbs = join(dirname(texAbs), `${basename(texAbs, ".tex")}-dark.tex`);
 	writeFileSync(darkTexAbs, darkSource, "utf8");
-	compilePrintDocument(tectonic, darkTexAbs, outDir);
+	await compilePrintDocumentWithPanels(tectonic, darkTexAbs, outDir);
 }
 
 /** @emoji 🖨️ Compiles one `.tex` file with the semio print search path and Tectonic. */
 export async function buildPrintDocument(texAbs: string, outDir = join(dirname(texAbs), "dist")): Promise<void> {
 	emitSemioTokensSty();
 	const tectonic = await ensureTectonic();
-	compileLightAndDark(tectonic, texAbs, outDir);
+	await compileLightAndDark(tectonic, texAbs, outDir);
 }
 
-function compileTemplate(tectonic: string, template: (typeof TEMPLATES)[number]): void {
+async function compileTemplate(tectonic: string, template: (typeof TEMPLATES)[number]): Promise<void> {
 	const texAbs = join(printRoot, template.tex);
-	compileLightAndDark(tectonic, texAbs, distDir);
+	await compileLightAndDark(tectonic, texAbs, distDir);
 }
 
 function resolveTemplates(filter: string[]): (typeof TEMPLATES)[number][] {
@@ -383,16 +576,16 @@ async function watchTemplates(filter: string[]): Promise<void> {
 	const templates = resolveTemplates(filter);
 	const tectonic = await ensureTectonic();
 	emitSemioTokensSty();
-	const rebuild = () => {
+	const rebuild = async () => {
 		for (const template of templates) {
 			try {
-				compileTemplate(tectonic, template);
+				await compileTemplate(tectonic, template);
 			} catch (error) {
 				console.error(`[DEBUG] print watch rebuild failed for ${template.id}:`, error);
 			}
 		}
 	};
-	rebuild();
+	await rebuild();
 	const mtimes = new Map<string, number>();
 	const touch = (path: string) => {
 		try {
@@ -412,7 +605,7 @@ async function watchTemplates(filter: string[]): Promise<void> {
 					const mtime = statSync(abs).mtimeMs;
 					if (mtimes.get(abs) === mtime) return;
 					touch(abs);
-					rebuild();
+					void rebuild();
 				} catch {
 					/* ignore */
 				}
@@ -440,7 +633,7 @@ class BuildScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		const tectonic = await ensureTectonic();
 		emitSemioTokensSty();
-		for (const template of resolveTemplates(segments)) compileTemplate(tectonic, template);
+		for (const template of resolveTemplates(segments)) await compileTemplate(tectonic, template);
 	}
 }
 
@@ -455,7 +648,7 @@ class TestScript extends BundleScript {
 		emitSemioTokensSty();
 		await fetchPrintFonts();
 		const tectonic = await ensureTectonic();
-		for (const template of TEMPLATES) compileTemplate(tectonic, template);
+		for (const template of TEMPLATES) await compileTemplate(tectonic, template);
 		for (const template of TEMPLATES) {
 			for (const pdf of Object.values(templatePdfNames(template.tex))) {
 				const pdfPath = join(distDir, pdf);

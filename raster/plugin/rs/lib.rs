@@ -3,7 +3,7 @@
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_raster_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
-    ui_text, App, Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, RasterScene, UiInspectorFieldGroup,
+    ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, RasterScene, UiInspectorFieldGroup,
     UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1288,20 +1288,20 @@ fn create_raster_app() -> App {
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 RASTER_PLAY_BODY_LAYERS,
             )
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
                 FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                "workbench",
+                PanelGroup::Workbench,
                 RASTER_PLAY_BODY_CATALOGUE,
             )
-            .panel_tab(RASTER_PLAY_MASKS_TAB_ID, "Masks", "workbench", RASTER_PLAY_BODY_MASKS)
+            .panel_tab(RASTER_PLAY_MASKS_TAB_ID, "Masks", PanelGroup::Workbench, RASTER_PLAY_BODY_MASKS)
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_INSPECTION_ID,
                 FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                "details",
+                PanelGroup::Details,
                 RASTER_PLAY_BODY_PROPERTIES,
             )
             .keybinding("mod+z", "undo")

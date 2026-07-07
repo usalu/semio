@@ -1,0 +1,26 @@
+[package]
+name = "puzzle-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[package.metadata.component]
+package = "semio:puzzle"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../../framework/core/rs" }
+semio-framework-os = { path = "../../../framework/product/os/core/rs" }
+semio-framework-plugin = { path = "../../../framework/plugin/rs" }
+puzzle_2d = { path = "../../2d/rs" }
+puzzle_3d = { path = "../../3d/rs" }
+puzzle_5d = { path = "../../5d/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+base64 = "0.22.1"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.126"

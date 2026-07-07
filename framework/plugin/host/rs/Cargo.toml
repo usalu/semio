@@ -1,0 +1,14 @@
+[package]
+name = "semio-framework-plugin-host"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../../core/rs" }
+wasmtime = { version = "22.0.1", features = ["cranelift"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, watch } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -20,40 +20,108 @@ import {
 	frameworkOsPlaygroundDefaultPort,
 } from "../../../../repo/lib/js/index.ts";
 import { PLUGIN_BUILD_TARGETS } from "./js/index.ts";
+import { generatePluginRegistry } from "../../../plugin/registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
 const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
-const nativePluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules-native");
 
-function nativePluginFileName(packageName: string): string {
-	const libBase = packageName.replace(/-/g, "_");
-	if (process.platform === "win32") return `${libBase}.dll`;
-	if (process.platform === "darwin") return `lib${libBase}.dylib`;
-	return `lib${libBase}.so`;
+function pluginApiWrapperSource(wasmFileName: string, bindgenBase: string): string {
+	return `/** @generated semio plugin C-ABI API wrapper */
+import initBindgen from "./${bindgenBase}.js";
+
+let wasm;
+
+function readCString(ptr) {
+  const view = new Uint8Array(wasm.memory.buffer);
+  let end = ptr;
+  while (view[end]) end += 1;
+  return new TextDecoder().decode(view.subarray(ptr, end));
 }
 
-async function buildNativePlugin(target: (typeof PLUGIN_BUILD_TARGETS)[number]): Promise<void> {
-	const packageName = await readPackageName(target.cratePath);
-	const build = spawnSync("cargo", ["build", "-p", packageName, "--release"], {
-		cwd: repoRoot,
-		stdio: "inherit",
-	});
-	if (build.status !== 0) throw new Error(`native plugin build failed: ${target.pluginId}`);
-	const artifact = join(repoRoot, "target", "release", nativePluginFileName(packageName));
-	const outDir = join(nativePluginOutRoot, target.pluginId);
-	mkdirSync(outDir, { recursive: true });
-	copyFileSync(artifact, join(outDir, basename(artifact)));
-	console.log(`[DEBUG] built native plugin ${target.pluginId} -> ${outDir}`);
+function writeCString(value) {
+  const bytes = new TextEncoder().encode(value + "\\0");
+  const ptr = wasm.semio_plugin_alloc(bytes.length);
+  new Uint8Array(wasm.memory.buffer).set(bytes, ptr);
+  return ptr;
 }
 
-async function buildNativePlugins(filterPlugin?: string): Promise<void> {
-	mkdirSync(nativePluginOutRoot, { recursive: true });
-	const targets = filterPlugin
-		? PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin)
-		: PLUGIN_BUILD_TARGETS;
-	for (const target of targets) {
-		await buildNativePlugin(target);
+function callStringExport(name, ...args) {
+  const ptr = wasm[name](...args);
+  const value = readCString(ptr);
+  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(ptr);
+  return value;
+}
+
+export default async function init() {
+  wasm = await initBindgen(new URL("./${wasmFileName}", import.meta.url));
+  if (wasm.semio_plugin_start) wasm.semio_plugin_start();
+}
+
+export function semio_plugin_manifest() {
+  return callStringExport("semio_plugin_manifest");
+}
+
+export function semio_plugin_create_app(appId) {
+  const ptr = writeCString(appId);
+  const id = wasm.semio_plugin_create_app(ptr);
+  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(ptr);
+  return id;
+}
+
+export function semio_plugin_destroy_app(instanceId) {
+  wasm.semio_plugin_destroy_app(instanceId);
+}
+
+export function semio_plugin_handle_command(instanceId, commandJson, viewStateJson) {
+  const commandPtr = writeCString(commandJson);
+  const viewPtr = writeCString(viewStateJson);
+  const out = callStringExport("semio_plugin_handle_command", instanceId, commandPtr, viewPtr);
+  if (wasm.semio_plugin_free_string) {
+    wasm.semio_plugin_free_string(commandPtr);
+    wasm.semio_plugin_free_string(viewPtr);
+  }
+  return out;
+}
+
+export function semio_plugin_render(instanceId, bodyKey, viewStateJson) {
+  const bodyPtr = writeCString(bodyKey);
+  const viewPtr = writeCString(viewStateJson);
+  const out = callStringExport("semio_plugin_render", instanceId, bodyPtr, viewPtr);
+  if (wasm.semio_plugin_free_string) {
+    wasm.semio_plugin_free_string(bodyPtr);
+    wasm.semio_plugin_free_string(viewPtr);
+  }
+  return out;
+}
+
+export function semio_plugin_tools(instanceId, viewStateJson) {
+  const viewPtr = writeCString(viewStateJson);
+  const out = callStringExport("semio_plugin_tools", instanceId, viewPtr);
+  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(viewPtr);
+  return out;
+}
+
+export function semio_plugin_window_engagements(instanceId, viewStateJson) {
+  const viewPtr = writeCString(viewStateJson);
+  const out = callStringExport("semio_plugin_window_engagements", instanceId, viewPtr);
+  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(viewPtr);
+  return out;
+}
+
+export function semio_plugin_window_measures(instanceId, viewStateJson) {
+  const viewPtr = writeCString(viewStateJson);
+  const out = callStringExport("semio_plugin_window_measures", instanceId, viewPtr);
+  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(viewPtr);
+  return out;
+}
+`;
+}
+
+function ensureWasmBindgenCli(): void {
+	const probe = spawnSync("wasm-bindgen", ["--version"], { encoding: "utf8" });
+	if (probe.status !== 0) {
+		spawnSync("cargo", ["install", "wasm-bindgen-cli", "--locked"], { stdio: "inherit" });
 	}
 }
 
@@ -82,21 +150,33 @@ async function buildPlugin(target: (typeof PLUGIN_BUILD_TARGETS)[number]): Promi
 	const artifact = join(repoRoot, "target", wasmTarget, "release", `${packageName.replace(/-/g, "_")}.wasm`);
 	const outDir = join(pluginOutRoot, target.pluginId);
 	mkdirSync(outDir, { recursive: true });
-	const wasmBindgen = spawnSync("wasm-bindgen", ["--version"], { encoding: "utf8" });
-	if (wasmBindgen.status !== 0) {
-		spawnSync("cargo", ["install", "wasm-bindgen-cli", "--locked"], { stdio: "inherit" });
-	}
+	const jsBase = target.wasmOut.replace(/\.wasm$/, "");
+	const bindgenBase = `${jsBase}_bindgen`;
+	ensureWasmBindgenCli();
 	const bindgen = spawnSync(
 		"wasm-bindgen",
-		["--target", "web", "--out-dir", outDir, "--out-name", target.wasmOut.replace(/\.wasm$/, ""), artifact],
+		["--target", "web", "--out-dir", outDir, "--out-name", bindgenBase, artifact],
 		{ cwd: repoRoot, stdio: "inherit" },
 	);
 	if (bindgen.status !== 0) throw new Error(`wasm-bindgen failed: ${target.pluginId}`);
+	const wasmOut = join(outDir, target.wasmOut);
+	copyFileSync(join(outDir, `${bindgenBase}_bg.wasm`), wasmOut);
+	const jsOut = join(outDir, `${jsBase}.js`);
+	writeFileSync(jsOut, pluginApiWrapperSource(target.wasmOut, bindgenBase));
+	const hotSwapMarker = join(pluginOutRoot, ".hot-swap");
+	writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
 	console.log(`[DEBUG] built plugin ${target.pluginId} -> ${outDir}`);
+}
+
+async function ensurePluginRegistry(): Promise<void> {
+	const registryScript = join(repoRoot, "framework/plugin/registry/script.ts");
+	const generate = spawnSync("bun", [registryScript, "generate"], { cwd: repoRoot, stdio: "inherit" });
+	if (generate.status !== 0) throw new Error("plugin registry generation failed");
 }
 
 async function buildPlugins(filterPlugin?: string): Promise<void> {
 	ensureWasmTarget();
+	await ensurePluginRegistry();
 	mkdirSync(pluginOutRoot, { recursive: true });
 	const stalePublicPlugins = join(repoRoot, "framework/product/os/dev/public/plugin-modules");
 	if (existsSync(stalePublicPlugins)) {
@@ -108,9 +188,6 @@ async function buildPlugins(filterPlugin?: string): Promise<void> {
 			: PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin);
 	for (const target of targets) {
 		await buildPlugin(target);
-	}
-	if (process.env.SEMIO_NATIVE_PLUGINS === "1") {
-		await buildNativePlugins(filterPlugin);
 	}
 }
 
@@ -134,11 +211,6 @@ class PluginWatchScript extends BundleScript {
 				void buildPlugin(target).catch((error) => {
 					console.error("[DEBUG] plugin watch rebuild failed", error);
 				});
-				if (process.env.SEMIO_NATIVE_PLUGINS === "1") {
-					void buildNativePlugin(target).catch((error) => {
-						console.error("[DEBUG] native plugin watch rebuild failed", error);
-					});
-				}
 			});
 		}
 		console.log("[DEBUG] watching plugin crates for hot-swap rebuilds");
@@ -249,6 +321,71 @@ class BuildScript extends BundleScript {
 	}
 }
 
+class PluginCapabilityLintScript extends BundleScript {
+	async run(): Promise<void> {
+		const metadataResult = spawnSync("cargo", ["metadata", "--format-version", "1"], {
+			cwd: repoRoot,
+			encoding: "utf8",
+			maxBuffer: 64 * 1024 * 1024,
+		});
+		if (metadataResult.status !== 0) {
+			throw new Error(metadataResult.stderr || "cargo metadata failed");
+		}
+		const metadata = JSON.parse(metadataResult.stdout ?? "{}") as {
+			packages: Array<{
+				name: string;
+				manifest_path: string;
+				dependencies: Array<{ name: string }>;
+			}>;
+		};
+		const depRules: Record<string, string> = {
+			rusqlite: "localBackboneStorage",
+			libloading: "forbidden",
+			reqwest: "forbidden",
+			"web-sys": "forbidden",
+			"js-sys": "forbidden",
+		};
+		const failures: string[] = [];
+		for (const pkg of metadata.packages) {
+			if (!pkg.manifest_path.includes("/plugin/rs/Cargo.toml")) continue;
+			const manifestText = await Bun.file(pkg.manifest_path).text();
+			const declared = new Set<string>();
+			const metaMatch = manifestText.match(/\[package\.metadata\.semio\][\s\S]*?capabilities\s*=\s*\[([^\]]*)\]/);
+			if (metaMatch?.[1]) {
+				for (const entry of metaMatch[1].match(/"([^"]+)"/g) ?? []) {
+					declared.add(entry.slice(1, -1));
+				}
+			}
+			if (manifestText.includes("Capability::LocalBackboneStorage")) {
+				declared.add("localBackboneStorage");
+			}
+			const depNames = new Set(pkg.dependencies.map((dep) => dep.name));
+			for (const [dep, rule] of Object.entries(depRules)) {
+				if (!depNames.has(dep)) continue;
+				if (rule === "forbidden") {
+					failures.push(`${pkg.name}: forbidden dependency ${dep}`);
+					continue;
+				}
+				if (!declared.has(rule)) {
+					failures.push(`${pkg.name}: dependency ${dep} requires capability ${rule}`);
+				}
+			}
+			const libRs = join(dirname(pkg.manifest_path), "lib.rs");
+			if (existsSync(libRs)) {
+				const source = await Bun.file(libRs).text();
+				if (/std::fs::|std::net::/.test(source) && !declared.has("localBackboneStorage")) {
+					failures.push(`${pkg.name}: uses std::fs/std::net without localBackboneStorage capability`);
+				}
+			}
+		}
+		if (failures.length > 0) {
+			for (const failure of failures) console.error(`[plugin-capability-lint] ${failure}`);
+			throw new Error(`plugin capability lint failed (${failures.length} issues)`);
+		}
+		console.log("[DEBUG] plugin capability lint passed");
+	}
+}
+
 class TestScript extends BundleScript {
 	run(segments: string[]): void {
 		runVitest(this.root, segments, "vitest.config.ts");
@@ -277,6 +414,7 @@ class VerifyScript extends BundleScript {
 			env: { ...process.env, S_STUDIO_URL: studioUrl },
 		});
 		if (e2e.status !== 0) throw new Error("s studio e2e verification failed");
+		await new PluginCapabilityLintScript(this.root).run([]);
 		console.log(`[DEBUG] s studio verify passed (${studioUrl})`);
 	}
 }
@@ -290,6 +428,11 @@ const router = new ScriptRouter(import.meta.dir)
 		async run(segments: string[]): Promise<void> {
 			const sub = segments[0];
 			if (sub === "watch") return new PluginWatchScript(this.root).run(segments.slice(1));
+			if (sub === "lint") return new PluginCapabilityLintScript(this.root).run(segments.slice(1));
+			if (sub === "registry") {
+				await ensurePluginRegistry();
+				return;
+			}
 			return new PluginBuildScript(this.root).run(segments.slice(1));
 		}
 	});

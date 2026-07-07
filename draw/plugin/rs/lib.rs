@@ -10,7 +10,7 @@ use draw::{
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, UiControlNode,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, UiControlNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode,
     UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -1281,9 +1281,9 @@ fn create_draw_app() -> App {
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind_with_engagement("draw-composite", "Canvas", DRAW_PLAY_BODY_COMPOSITE, engagement)
-            .panel_tab("framework.panel.document", "Document", "workbench", DRAW_PLAY_BODY_LAYERS)
-            .panel_tab("framework.panel.catalogue", "Catalogue", "workbench", DRAW_PLAY_BODY_CATALOGUE)
-            .panel_tab("framework.panel.inspection", "Inspection", "details", DRAW_PLAY_BODY_PROPERTIES)
+            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, DRAW_PLAY_BODY_LAYERS)
+            .panel_tab("framework.panel.catalogue", "Catalogue", PanelGroup::Workbench, DRAW_PLAY_BODY_CATALOGUE)
+            .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, DRAW_PLAY_BODY_PROPERTIES)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .keybinding("mod+a", "selectAll")

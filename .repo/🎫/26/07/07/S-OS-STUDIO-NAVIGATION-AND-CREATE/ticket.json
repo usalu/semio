@@ -1,0 +1,14 @@
+{
+  "title": "S OS Studio Navigation and Create",
+  "emoji": "🖥️",
+  "status": "closed",
+  "description": "Fix wgpu studio navigation (navigate op, double-click demo studio) and add footer Create tool group with Temporary/File/Folder persistence kinds.",
+  "summary": "Implemented wgpu S OS studio navigation and Create persistence kinds.\n\n- wgpu `apply_ops` now handles `navigate`, `requestFileSave`, and `requestFolderPick` ops; added `apply_shell_uri` / `switch_to_s_app` so double-click and create-studio navigation switch Home ↔ Studio sessions.\n- Back/forward/up navigation re-applies the shell URI.\n- `refresh_ui` falls back to static `AppDefinition.modes[].tools` so footer tools render (Create collection visible on Home).\n- S Home footer: Create tool group with Temporary / File / Folder (Folder native-only via cfg).\n- Persistence: Temporary uses `MemoryBackbonePort`; File uses dev backbone + native save dialog (`bindStudioFile` + `NativeFileBackbonePort`) or wasm download; Folder creates `.semio/studio.db` via `SqliteFolderBackbonePort` (native, rusqlite).\n- Exported `OsStudioCatalogEntry` from framework-os for catalog helpers.\n- Added unit tests and verify-log.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1851"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪3adf665595284ce8ab73e3646284a646"
+  ]
+}

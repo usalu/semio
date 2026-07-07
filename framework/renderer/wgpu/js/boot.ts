@@ -2,33 +2,7 @@
 /** @emoji 🧊 Trunk boot glue — loads wasm plugins and starts the wgpu renderer. */
 // #endregion 🧲Header
 
-const PLUGIN_TARGETS = [
-	{ pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" },
-	{ pluginId: "note", moduleUrl: "/plugin-modules/note/note_plugin.js" },
-	{ pluginId: "writer", moduleUrl: "/plugin-modules/writer/writer_plugin.js" },
-	{ pluginId: "raster", moduleUrl: "/plugin-modules/raster/raster_plugin.js" },
-	{ pluginId: "forms", moduleUrl: "/plugin-modules/forms/forms_plugin.js" },
-	{ pluginId: "vcs", moduleUrl: "/plugin-modules/vcs/vcs_plugin.js" },
-	{ pluginId: "flow", moduleUrl: "/plugin-modules/flow/flow_plugin.js" },
-	{ pluginId: "dag", moduleUrl: "/plugin-modules/dag/dag_plugin.js" },
-	{ pluginId: "imperative", moduleUrl: "/plugin-modules/imperative/imperative_plugin.js" },
-	{ pluginId: "sequence", moduleUrl: "/plugin-modules/sequence/sequence_plugin.js" },
-	{ pluginId: "layout", moduleUrl: "/plugin-modules/layout/layout_plugin.js" },
-	{ pluginId: "puzzle2d", moduleUrl: "/plugin-modules/puzzle2d/puzzle2d_plugin.js" },
-	{ pluginId: "gis2d", moduleUrl: "/plugin-modules/gis2d/gis2d_plugin.js" },
-	{ pluginId: "procedural2d", moduleUrl: "/plugin-modules/procedural2d/procedural2d_plugin.js" },
-	{ pluginId: "reasoning-wires", moduleUrl: "/plugin-modules/reasoning-wires/reasoning_wires_plugin.js" },
-	{ pluginId: "cad", moduleUrl: "/plugin-modules/cad/cad_plugin.js" },
-	{ pluginId: "puzzle3d", moduleUrl: "/plugin-modules/puzzle3d/puzzle3d_plugin.js" },
-	{ pluginId: "puzzle5d", moduleUrl: "/plugin-modules/puzzle5d/puzzle5d_plugin.js" },
-	{ pluginId: "shooting", moduleUrl: "/plugin-modules/shooting/shooting_plugin.js" },
-	{ pluginId: "lowpoly", moduleUrl: "/plugin-modules/lowpoly/lowpoly_plugin.js" },
-	{ pluginId: "procedural3d", moduleUrl: "/plugin-modules/procedural3d/procedural3d_plugin.js" },
-	{ pluginId: "trinity", moduleUrl: "/plugin-modules/trinity/trinity_plugin.js" },
-	{ pluginId: "trinity-rewrite", moduleUrl: "/plugin-modules/trinity-rewrite/trinity_rewrite_plugin.js" },
-	{ pluginId: "s", moduleUrl: "/plugin-modules/s/s_plugin.js" },
-	{ pluginId: "presentation", moduleUrl: "/plugin-modules/presentation/presentation_plugin.js" },
-] as const;
+import { PLUGIN_TARGETS } from "../../../plugin/registry/generated/plugins.ts";
 
 declare const DEFAULT_PLUGIN_FILTER: string;
 
@@ -130,7 +104,7 @@ async function pluginModuleAvailable(moduleUrl: string): Promise<boolean> {
 	}
 }
 
-const availableTargets: typeof PLUGIN_TARGETS[number][] = [];
+const availableTargets: (typeof PLUGIN_TARGETS)[number][] = [];
 for (const entry of pluginTargets) {
 	if (await pluginModuleAvailable(entry.moduleUrl)) {
 		availableTargets.push(entry);
@@ -148,7 +122,7 @@ const handles = await Promise.all(
 );
 
 const bindings = await new Promise<Record<string, unknown>>((resolve, reject) => {
-	const host = window as Window & { wasmBindings?: Record<string, unknown> };
+	const host = window as { wasmBindings?: Record<string, unknown> };
 	const finish = () => {
 		if (!host.wasmBindings) {
 			reject(new Error("[DEBUG] trunk wasm bindings missing"));
@@ -160,7 +134,7 @@ const bindings = await new Promise<Record<string, unknown>>((resolve, reject) =>
 		finish();
 		return;
 	}
-	const timeout = window.setTimeout(() => reject(new Error("[DEBUG] trunk wasm bindings timeout")), 30_000);
+	const timeout = window.setTimeout(() => reject(new Error("[DEBUG] trunk wasm bindings timeout")), 30000);
 	const done = () => {
 		window.clearTimeout(timeout);
 		window.clearInterval(poll);
@@ -173,7 +147,7 @@ const bindings = await new Promise<Record<string, unknown>>((resolve, reject) =>
 });
 
 if (!bindings.semioRendererBoot) throw new Error("[DEBUG] missing semioRendererBoot");
-await (bindings.semioRendererBoot as (plugins: typeof handles, pluginFilter: string) => Promise<void>)(
+await (bindings.semioRendererBoot as (handles: typeof handles, pluginFilter: string) => Promise<void>)(
 	handles,
 	pluginFilter,
 );

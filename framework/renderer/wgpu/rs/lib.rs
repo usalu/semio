@@ -448,12 +448,38 @@ impl DockState {
             if let Some(node) = node_at(&self.root, path) {
                 let rect = bounds;
                 if let DockNode::Stack { .. } = node {
-                    render_stack(self, ctx, path, node, rect, true, &mut |_, _| {});
+                    render_stack(self, ctx, path, node, rect, true, true, &mut |_, _| {});
                     return;
                 }
             }
         }
-        render_node(self, ctx, &self.root, bounds, &empty_path(), &mut |_, _| {}, None);
+        render_node(self, ctx, &self.root, bounds, &empty_path(), true, &mut |_, _| {}, None);
+    }
+
+    pub fn paint_chrome(
+        &self,
+        ctx: &mut DockRenderContext<'_>,
+        bounds: Rect,
+        body_fill: bool,
+    ) {
+        if let Some(path) = &self.maximized_stack {
+            if let Some(node) = node_at(&self.root, path) {
+                if let DockNode::Stack { .. } = node {
+                    render_stack(self, ctx, path, node, bounds, true, body_fill, &mut |_, _| {});
+                    return;
+                }
+            }
+        }
+        render_node(
+            self,
+            ctx,
+            &self.root,
+            bounds,
+            &empty_path(),
+            body_fill,
+            &mut |_, _| {},
+            None,
+        );
     }
 
     pub fn register_resize_hits(&self, ctx: &mut DockRenderContext<'_>, bounds: Rect) {
@@ -974,13 +1000,14 @@ fn render_node(
     node: &DockNode,
     bounds: Rect,
     path: &[usize],
+    body_fill: bool,
     render_body: &mut dyn FnMut(Rect, &str),
     outer_split: Option<(DockPath, usize, bool)>,
 ) {
     match node {
-        DockNode::Row(children) => render_axis(state, ctx, children, bounds, path, true, render_body, outer_split),
-        DockNode::Column(children) => render_axis(state, ctx, children, bounds, path, false, render_body, outer_split),
-        DockNode::Stack { .. } => render_stack(state, ctx, path, node, bounds, false, render_body),
+        DockNode::Row(children) => render_axis(state, ctx, children, bounds, path, true, body_fill, render_body, outer_split),
+        DockNode::Column(children) => render_axis(state, ctx, children, bounds, path, false, body_fill, render_body, outer_split),
+        DockNode::Stack { .. } => render_stack(state, ctx, path, node, bounds, false, body_fill, render_body),
     }
 }
 
@@ -994,6 +1021,7 @@ fn render_axis(
     bounds: Rect,
     path: &[usize],
     horizontal: bool,
+    body_fill: bool,
     render_body: &mut dyn FnMut(Rect, &str),
     outer_split: Option<(DockPath, usize, bool)>,
 ) {
@@ -1011,6 +1039,7 @@ fn render_axis(
                 child,
                 child_rect,
                 &child_path,
+                body_fill,
                 render_body,
                 Some((path.to_vec(), index, true)),
             );
@@ -1029,6 +1058,7 @@ fn render_axis(
                 child,
                 child_rect,
                 &child_path,
+                body_fill,
                 render_body,
                 Some((path.to_vec(), index, false)),
             );
@@ -1200,6 +1230,7 @@ fn render_stack(
     node: &DockNode,
     bounds: Rect,
     maximized: bool,
+    body_fill: bool,
     render_body: &mut dyn FnMut(Rect, &str),
 ) {
     let DockNode::Stack { windows, active } = node else {
@@ -1352,7 +1383,9 @@ fn render_stack(
         bounds.w
     };
     let body_rect = Rect::new(body_x, body_y, body_w, bounds.h - tab_h);
-    ctx.draw.push_solid([body_rect.x, body_rect.y, body_rect.w, body_rect.h], theme.canvas_clear);
+    if body_fill {
+        ctx.draw.push_solid([body_rect.x, body_rect.y, body_rect.w, body_rect.h], theme.canvas_clear);
+    }
     ctx.draw
         .push_solid([body_rect.x, body_rect.y, stroke, body_rect.h], border);
     ctx.draw
@@ -1360,8 +1393,10 @@ fn render_stack(
     ctx.draw
         .push_solid([body_rect.x, body_rect.y + body_rect.h - stroke, body_rect.w, stroke], border);
 
-    let content = body_rect.inset(theme.padding_standard);
-    render_body(content, active);
+    if body_fill {
+        let content = body_rect.inset(theme.padding_standard);
+        render_body(content, active);
+    }
 }
 
 struct StackCapLayout {
@@ -1658,7 +1693,7 @@ mod tests {
             panel_tabs: vec![PanelTabDefinition {
                 id: "tab".into(),
                 label: "Tab".into(),
-                group: "workbench".into(),
+                group: PanelGroup::Workbench,
                 body_key: "tab.body".into(),
             }],
             keybindings: vec![],
@@ -1876,7 +1911,7 @@ use flow_core::{dag::dag_screen_to_world, FlowFixture, FlowHost};
 use framework_editor::EditorHost;
 use framework_graph::GraphHost;
 use infinite_cavas as cavas;
-use semio_framework_core::{CommandDescriptor, UiComponentSceneNode};
+use semio_framework_core::{CommandDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -4051,7 +4086,7 @@ pub fn framework_widget_context<'a>(
 
 pub mod plugin_bridge {
 // #region plugin_bridge
-//! 🔌 Plugin bridge for wasm-bindgen and native dylib modules.
+//! 🔌 Plugin bridge for wasm C-ABI modules (browser JS loader + wasmtime host).
 
 use semio_framework_core::{PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
@@ -4067,13 +4102,13 @@ use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_plugin::native_host::NativePluginLibrary;
+use semio_framework_plugin_host::WasmPluginRuntime;
 
 enum PluginBridgeBackend {
     #[cfg(target_arch = "wasm32")]
     Js(Rc<JsValue>),
     #[cfg(not(target_arch = "wasm32"))]
-    Native(Arc<NativePluginLibrary>),
+    Wasm(Arc<WasmPluginRuntime>),
 }
 
 impl Clone for PluginBridgeBackend {
@@ -4082,7 +4117,7 @@ impl Clone for PluginBridgeBackend {
             #[cfg(target_arch = "wasm32")]
             Self::Js(handle) => Self::Js(handle.clone()),
             #[cfg(not(target_arch = "wasm32"))]
-            Self::Native(library) => Self::Native(library.clone()),
+            Self::Wasm(runtime) => Self::Wasm(runtime.clone()),
         }
     }
 }
@@ -4117,19 +4152,27 @@ impl PluginBridgeEntry {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn from_native(plugin_id: String, library: Arc<NativePluginLibrary>) -> Result<Self, String> {
-        let manifest = library.manifest()?;
+    pub fn from_wasm(plugin_id: String, runtime: Arc<WasmPluginRuntime>) -> Result<Self, String> {
         Ok(Self {
             plugin_id,
-            manifest,
-            backend: PluginBridgeBackend::Native(library),
+            manifest: runtime.manifest.clone(),
+            backend: PluginBridgeBackend::Wasm(runtime),
         })
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn native_library_path(&self) -> Option<&std::path::Path> {
+    pub fn wasm_runtime(&self) -> Option<Arc<WasmPluginRuntime>> {
         match &self.backend {
-            PluginBridgeBackend::Native(library) => Some(library.path.as_path()),
+            PluginBridgeBackend::Wasm(runtime) => Some(runtime.clone()),
+            #[cfg(target_arch = "wasm32")]
+            _ => None,
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn wasm_artifact_path(&self) -> Option<&std::path::Path> {
+        match &self.backend {
+            PluginBridgeBackend::Wasm(runtime) => Some(runtime.path.as_path()),
             #[cfg(target_arch = "wasm32")]
             _ => None,
         }
@@ -4140,7 +4183,7 @@ impl PluginBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             PluginBridgeBackend::Js(handle) => create_app_js(handle, app_id).await,
             #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Native(library) => library.create_app(app_id),
+            PluginBridgeBackend::Wasm(runtime) => runtime.create_app(app_id),
         }
     }
 
@@ -4149,7 +4192,7 @@ impl PluginBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             PluginBridgeBackend::Js(handle) => destroy_app_js(handle, instance_id),
             #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Native(library) => library.destroy_app(instance_id),
+            PluginBridgeBackend::Wasm(runtime) => runtime.destroy_app(instance_id),
         }
     }
 
@@ -4163,7 +4206,7 @@ impl PluginBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             PluginBridgeBackend::Js(handle) => handle_command_js(handle, instance_id, command_json, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Native(library) => library.handle_command(instance_id, command_json, view_state),
+            PluginBridgeBackend::Wasm(runtime) => runtime.handle_command(instance_id, command_json, view_state),
         }
     }
 
@@ -4177,7 +4220,7 @@ impl PluginBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             PluginBridgeBackend::Js(handle) => render_js(handle, instance_id, body_key, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Native(library) => library.render(instance_id, body_key, view_state),
+            PluginBridgeBackend::Wasm(runtime) => runtime.render(instance_id, body_key, view_state),
         }
     }
 
@@ -4186,7 +4229,7 @@ impl PluginBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             PluginBridgeBackend::Js(handle) => tools_js(handle, instance_id, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Native(library) => library.tools(instance_id, view_state),
+            PluginBridgeBackend::Wasm(runtime) => runtime.tools(instance_id, view_state),
         }
     }
 
@@ -4199,7 +4242,7 @@ impl PluginBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             PluginBridgeBackend::Js(handle) => window_engagements_js(handle, instance_id, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Native(library) => library.window_engagements(instance_id, view_state),
+            PluginBridgeBackend::Wasm(runtime) => runtime.window_engagements(instance_id, view_state),
         }
     }
 
@@ -4212,7 +4255,7 @@ impl PluginBridgeEntry {
             #[cfg(target_arch = "wasm32")]
             PluginBridgeBackend::Js(handle) => window_measures_js(handle, instance_id, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Native(library) => library.window_measures(instance_id, view_state),
+            PluginBridgeBackend::Wasm(runtime) => runtime.window_measures(instance_id, view_state),
         }
     }
 }
@@ -4446,63 +4489,37 @@ pub fn filter_plugins(entries: Vec<PluginBridgeEntry>, plugin_filter: &str) -> V
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn load_native_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<PluginBridgeEntry>, String> {
-    let plugin_ids: Vec<(&str, String)> = if is_studio_mode(plugin_filter) {
+pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<PluginBridgeEntry>, String> {
+    let plugin_ids: Vec<&str> = if is_studio_mode(plugin_filter) {
         vec![
-            ("draw", "draw_plugin".into()),
-            ("note", "note_plugin".into()),
-            ("writer", "writer_plugin".into()),
-            ("raster", "raster_plugin".into()),
-            ("forms", "forms_plugin".into()),
-            ("vcs", "vcs_plugin".into()),
-            ("flow", "flow_plugin".into()),
-            ("dag", "dag_plugin".into()),
-            ("imperative", "imperative_plugin".into()),
-            ("sequence", "sequence_plugin".into()),
-            ("layout", "layout_plugin".into()),
-            ("puzzle2d", "puzzle2d_plugin".into()),
-            ("gis2d", "gis2d_plugin".into()),
-            ("procedural2d", "procedural2d_plugin".into()),
-            ("reasoning-wires", "reasoning_wires_plugin".into()),
-            ("cad", "cad_plugin".into()),
-            ("puzzle3d", "puzzle3d_plugin".into()),
-            ("puzzle5d", "puzzle5d_plugin".into()),
-            ("shooting", "shooting_plugin".into()),
-            ("lowpoly", "lowpoly_plugin".into()),
-            ("procedural3d", "procedural3d_plugin".into()),
-            ("trinity", "trinity_plugin".into()),
-            ("trinity-rewrite", "trinity_rewrite_plugin".into()),
-            ("s", "s_plugin".into()),
-            ("presentation", "presentation_plugin".into()),
+            "cad", "dag", "draw", "flow", "forms", "gis", "imperative", "layout", "lowpoly", "note",
+            "presentation", "procedural", "puzzle", "raster", "reasoning-mindmap", "s", "sequence",
+            "shooting", "trinity", "vcs", "writer",
         ]
     } else {
-        vec![(plugin_filter, format!("{plugin_filter}_plugin"))]
+        vec![plugin_filter]
     };
     let mut entries = Vec::new();
-    for (plugin_id, lib_name) in plugin_ids {
-        let path = native_plugin_path(modules_root, plugin_id, &lib_name);
-        if !path.exists() {
+    for plugin_id in plugin_ids {
+        let plugin_dir = modules_root.join(plugin_id);
+        if !plugin_dir.is_dir() {
             continue;
         }
-        let library = Arc::new(NativePluginLibrary::load(&path)?);
-        entries.push(PluginBridgeEntry::from_native(plugin_id.to_string(), library)?);
+        let wasm_path = std::fs::read_dir(&plugin_dir)
+            .map_err(|error| error.to_string())?
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .find(|path| path.extension().is_some_and(|ext| ext == "wasm"));
+        let Some(path) = wasm_path else {
+            continue;
+        };
+        let runtime = Arc::new(WasmPluginRuntime::load(&path)?);
+        entries.push(PluginBridgeEntry::from_wasm(plugin_id.to_string(), runtime)?);
     }
     if entries.is_empty() {
-        return Err(format!("[DEBUG] no native plugins found under {}", modules_root.display()));
+        return Err(format!("[DEBUG] no wasm plugins found under {}", modules_root.display()));
     }
     Ok(entries)
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn native_plugin_path(root: &std::path::Path, plugin_id: &str, lib_name: &str) -> std::path::PathBuf {
-    let file_name = if cfg!(target_os = "windows") {
-        format!("{lib_name}.dll")
-    } else if cfg!(target_os = "macos") {
-        format!("lib{lib_name}.dylib")
-    } else {
-        format!("lib{lib_name}.so")
-    };
-    root.join(plugin_id).join(file_name)
 }
 // #endregion plugin_bridge
 }
@@ -4516,7 +4533,7 @@ use crate::interpreter::FrameworkWidgetContext;
 use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem};
 use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
-use semio_framework_core::{CommandDescriptor, UiComponentSceneNode};
+use semio_framework_core::{CommandDescriptor, SurfaceKind, UiComponentSceneNode};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -4833,26 +4850,26 @@ pub fn handle_scene_wheel(
     if !inner.contains(x, y) {
         return Vec::new();
     }
-    match scene.component_kind.as_str() {
-        "table" => {
+    match scene.component_kind {
+        SurfaceKind::Table => {
             let current = scroll_offset(&scene.surface_id, "body");
             set_scroll_offset(&scene.surface_id, "body", current + delta * 0.5);
             Vec::new()
         }
-        "text-editor" => engine_canvas::text_editor_wheel(scene, delta),
-        "virtualFileSystem" => {
+        SurfaceKind::TextEditor => engine_canvas::text_editor_wheel(scene, delta),
+        SurfaceKind::VirtualFileSystem => {
             let current = scroll_offset(&scene.surface_id, "vfs");
             set_scroll_offset(&scene.surface_id, "vfs", current + delta * 0.5);
             Vec::new()
         }
-        "canvas-2d" => {
+        SurfaceKind::Canvas2d => {
             mutate_scene_state(&scene.surface_id, |state| {
                 let factor = (1.0 - delta * 0.001).clamp(0.5, 2.0);
                 state.viewport.zoom = (state.viewport.zoom * factor).clamp(0.125, 8.0);
             });
             Vec::new()
         }
-        "node-graph" => engine_canvas::node_graph_wheel(
+        SurfaceKind::NodeGraph => engine_canvas::node_graph_wheel(
             &scene.surface_id,
             &scene.controller_id,
             inner,
@@ -4861,7 +4878,7 @@ pub fn handle_scene_wheel(
             delta,
             ctrl,
         ),
-        "gis2d-map" => engine_canvas::gis_map_wheel(
+        SurfaceKind::GisMap => engine_canvas::gis_map_wheel(
             &scene.surface_id,
             &scene.controller_id,
             inner,
@@ -4931,15 +4948,15 @@ pub fn handle_scene_pointer_move(
             }
         }
     }
-    match scene.component_kind.as_str() {
-        "canvas-2d" if down => {
+    match scene.component_kind {
+        SurfaceKind::Canvas2d if down => {
             commands.push(scene_cmd(
                 scene,
                 "canvasPointerMove",
                 canvas_world_pointer_json(scene, inner, x, y, json!({})),
             ));
         }
-        "node-graph" if down => {
+        SurfaceKind::NodeGraph if down => {
             commands.extend(engine_canvas::node_graph_pointer_move(
                 &scene.surface_id,
                 &scene.controller_id,
@@ -4951,12 +4968,12 @@ pub fn handle_scene_pointer_move(
                 false,
             ));
         }
-        "text-editor" if down => {
+        SurfaceKind::TextEditor if down => {
             commands.extend(engine_canvas::text_editor_pointer_move(scene, inner, x, y));
         }
-        "node-graph" | "text-editor" if !down => {
-            commands.extend(match scene.component_kind.as_str() {
-                "node-graph" => engine_canvas::node_graph_pointer_move(
+        SurfaceKind::NodeGraph | SurfaceKind::TextEditor if !down => {
+            commands.extend(match scene.component_kind {
+                SurfaceKind::NodeGraph => engine_canvas::node_graph_pointer_move(
                     &scene.surface_id,
                     &scene.controller_id,
                     inner,
@@ -4998,8 +5015,8 @@ pub fn handle_scene_pointer_button(
         mutate_scene_state(&scene.surface_id, |state| {
             state.pointer_was_down = true;
         });
-        match scene.component_kind.as_str() {
-            "canvas-2d" => {
+        match scene.component_kind {
+            SurfaceKind::Canvas2d => {
                 if button == 0 {
                     mutate_scene_state(&scene.surface_id, |state| {
                         if !state.paint_stroke_active {
@@ -5028,7 +5045,7 @@ pub fn handle_scene_pointer_button(
                     });
                 }
             }
-            "node-graph" => {
+            SurfaceKind::NodeGraph => {
                 commands.extend(engine_canvas::node_graph_pointer_down(
                     &scene.surface_id,
                     &scene.controller_id,
@@ -5042,14 +5059,14 @@ pub fn handle_scene_pointer_button(
                     false,
                 ));
             }
-            "text-editor" => {
+            SurfaceKind::TextEditor => {
                 commands.extend(engine_canvas::text_editor_pointer_down(scene, inner, x, y, button));
             }
             _ => {}
         }
     } else {
-        match scene.component_kind.as_str() {
-            "canvas-2d" => {
+        match scene.component_kind {
+            SurfaceKind::Canvas2d => {
                 commands.push(scene_cmd(
                     scene,
                     "canvasPointerUp",
@@ -5062,7 +5079,7 @@ pub fn handle_scene_pointer_button(
                 });
                 commands.push(scene_cmd(scene, "paintStrokeEnd", json!({ "surfaceId": scene.surface_id })));
             }
-            "node-graph" => {
+            SurfaceKind::NodeGraph => {
                 commands.extend(engine_canvas::node_graph_pointer_up(
                     &scene.surface_id,
                     &scene.controller_id,
@@ -5074,7 +5091,7 @@ pub fn handle_scene_pointer_button(
                     false,
                 ));
             }
-            "text-editor" => {
+            SurfaceKind::TextEditor => {
                 commands.extend(engine_canvas::text_editor_pointer_up(scene, inner, x, y));
             }
             _ => {}
@@ -5121,8 +5138,8 @@ fn hit_double_click_target(
     x: f32,
     y: f32,
 ) -> Option<String> {
-    match scene.component_kind.as_str() {
-        "virtualFileSystem" => {
+    match scene.component_kind {
+        SurfaceKind::VirtualFileSystem => {
             let row_h = 22.0;
             let scroll = scroll_offset(&scene.surface_id, "vfs");
             let body_y = inner.y + 24.0;
@@ -5132,7 +5149,7 @@ fn hit_double_click_target(
             }
             Some(format!("{}.vfs.index.{index}", scene.surface_id))
         }
-        "node-graph" => hit_graph_node(scene, inner, x, y)
+        SurfaceKind::NodeGraph => hit_graph_node(scene, inner, x, y)
             .map(|id| format!("{}.node.{}", scene.surface_id, id)),
         _ => None,
     }
@@ -5145,8 +5162,8 @@ fn double_click_command(
     x: f32,
     y: f32,
 ) -> Option<CommandDescriptor> {
-    match scene.component_kind.as_str() {
-        "virtualFileSystem" => {
+    match scene.component_kind {
+        SurfaceKind::VirtualFileSystem => {
             let vfs = scene.virtual_file_system.as_ref()?;
             let rows: Vec<Value> = serde_json::from_str(&vfs.rows_json).ok()?;
             let row_h = 22.0;
@@ -5155,7 +5172,7 @@ fn double_click_command(
             rows.get(index)
                 .and_then(|row| vfs_double_click_command(scene, row))
         }
-        "node-graph" => {
+        SurfaceKind::NodeGraph => {
             let node_id = target.strip_prefix(&format!("{}.node.", scene.surface_id))?;
             let record = find_graph_node(scene, node_id)?;
             let instance_id = record.instance_id.as_deref()?;
@@ -5187,21 +5204,21 @@ pub fn render_component_scene(
         theme.panel,
         theme.border_radius,
     );
-    match scene.component_kind.as_str() {
-        "raster" => render_raster(scene, bounds, ctx, gpu),
-        "table" => render_table(scene, bounds, ctx),
-        "canvas-2d" => render_canvas_2d(scene, bounds, ctx),
-        "node-graph" => render_node_graph(scene, bounds, ctx, gpu, node_graph_states),
-        "gis2d-map" => render_gis_map(scene, bounds, ctx, gpu, gis_map_states),
-        "virtualFileSystem" => render_vfs(scene, bounds, ctx),
-        "text-editor" => render_text_editor(scene, bounds, ctx, gpu),
-        "world-3d" => {
+    match scene.component_kind {
+        SurfaceKind::Raster => render_raster(scene, bounds, ctx, gpu),
+        SurfaceKind::Table => render_table(scene, bounds, ctx),
+        SurfaceKind::Canvas2d => render_canvas_2d(scene, bounds, ctx),
+        SurfaceKind::NodeGraph => render_node_graph(scene, bounds, ctx, gpu, node_graph_states),
+        SurfaceKind::GisMap => render_gis_map(scene, bounds, ctx, gpu, gis_map_states),
+        SurfaceKind::VirtualFileSystem => render_vfs(scene, bounds, ctx),
+        SurfaceKind::TextEditor => render_text_editor(scene, bounds, ctx, gpu),
+        SurfaceKind::World3d => {
             let state = world3d_states
                 .entry(scene.surface_id.clone())
                 .or_insert_with(|| World3dState::new(scene.surface_id.clone(), scene.controller_id.clone()));
             render_world_3d(scene, bounds, ctx, state, gpu);
         }
-        _ => render_placeholder(&scene.component_kind, bounds, ctx),
+        _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
     }
     apply_scene_wheel(scene, bounds, ctx);
 }
@@ -5573,10 +5590,10 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         zoom: canvas.zoom as f32,
     };
     let local = scene_state(&scene.surface_id);
-    if local.viewport.zoom > 0.0 && scene.component_kind == "canvas-2d" {
+    if local.viewport.zoom > 0.0 && scene.component_kind == SurfaceKind::Canvas2d {
         viewport = local.viewport;
     }
-    if local.viewport.zoom > 0.0 && scene.component_kind == "canvas-2d" {
+    if local.viewport.zoom > 0.0 && scene.component_kind == SurfaceKind::Canvas2d {
         viewport = local.viewport;
     }
     let has_polyline = layers.iter().any(|layer| layer.kind == "polyline");
@@ -6812,8 +6829,8 @@ use infinite_world::{
 };
 use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
 use semio_framework_core::{
-    app_document_label, app_window_document_label, AppDefinition, CommandDescriptor, ExampleDefinition, ModeDefinition, PanelTabDefinition,
-    ToolNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, ViewState, WindowEngagement,
+    app_document_label, app_window_document_label, AppDefinition, CommandDescriptor, ExampleDefinition,
+    ModeDefinition, PanelGroup, PanelTabDefinition, ToolNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, ViewState, WindowEngagement,
     WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
 };
 use semio_framework_core::layout::{
@@ -6988,6 +7005,8 @@ pub struct ShellState {
     pub right_click: RightClickState,
     pub uri_history: Vec<String>,
     pub uri_index: usize,
+    pub open_studio_id: Option<String>,
+    pub pending_shell_uri_apply: bool,
     pub panel_resize_origin_width: f32,
     pub error: Option<String>,
     pub screen_w: f32,
@@ -7070,8 +7089,10 @@ impl ShellState {
             find_open: false,
             theme_id: "system".into(),
             right_click: RightClickState::default(),
-            uri_history: vec!["os://home".into()],
+            uri_history: vec!["/".into()],
             uri_index: 0,
+            open_studio_id: None,
+            pending_shell_uri_apply: false,
             panel_resize_origin_width: 280.0,
             error: None,
             screen_w: 1280.0,
@@ -7264,11 +7285,11 @@ impl ShellState {
             .unwrap_or_default()
     }
 
-    fn synthetic_panel_tab(id: &str, label: &str, group: &str) -> PanelTabDefinition {
+    fn synthetic_panel_tab(id: &str, label: &str, group: PanelGroup) -> PanelTabDefinition {
         PanelTabDefinition {
             id: id.into(),
             label: label.into(),
-            group: group.into(),
+            group,
             body_key: String::new(),
         }
     }
@@ -7367,6 +7388,21 @@ impl ShellState {
             .tools(session.instance_id, &session.view_state)
             .await
             .unwrap_or_default();
+        if self.active_tools.is_empty() {
+            let active_mode_id = session
+                .view_state
+                .active_mode_id
+                .clone()
+                .or_else(|| session.app.default_mode_id.clone())
+                .or_else(|| session.app.modes.first().map(|mode| mode.id.clone()));
+            self.active_tools = session
+                .app
+                .modes
+                .iter()
+                .find(|mode| Some(&mode.id) == active_mode_id.as_ref())
+                .map(|mode| mode.tools.clone())
+                .unwrap_or_default();
+        }
         self.window_engagements = plugin
             .window_engagements(session.instance_id, &session.view_state)
             .await
@@ -7613,9 +7649,14 @@ impl ShellState {
     }
 
     pub async fn apply_ops(&mut self, ops: &[String]) -> Result<(), String> {
+        self.apply_ops_inner(ops, true).await
+    }
+
+    async fn apply_ops_inner(&mut self, ops: &[String], allow_navigate: bool) -> Result<(), String> {
         let mut pending: Vec<String> = ops.to_vec();
         let mut view_state = self.session.as_ref().map(|s| s.view_state.clone());
         let mut document_changed = false;
+        let mut navigate_uri: Option<String> = None;
         while !pending.is_empty() {
             let batch = std::mem::take(&mut pending);
             let mut follow_up_ops: Vec<String> = Vec::new();
@@ -7649,11 +7690,16 @@ impl ShellState {
                         .unwrap_or(".json");
                     if let (Some(session), Some(contents)) = (self.session.clone(), request_file_open(accept)) {
                         let payload = serde_json::from_str::<serde_json::Value>(&contents)
-                            .unwrap_or_else(|_| serde_json::Value::String(contents));
+                            .unwrap_or_else(|_| serde_json::Value::String(contents.clone()));
+                        let mut args = op.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
+                        if let Some(obj) = args.as_object_mut() {
+                            obj.insert("json".into(), serde_json::Value::String(contents));
+                            obj.insert("payload".into(), payload);
+                        }
                         let command = CommandDescriptor {
                             controller_id: session.app.controller_id.clone(),
                             command: import_command.to_string(),
-                            args: Some(serde_json::json!({ "payload": payload })),
+                            args: Some(args),
                         };
                         if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                             if let Ok(command_json) = serde_json::to_string(&command) {
@@ -7668,15 +7714,90 @@ impl ShellState {
                     }
                 }
             }
+            if op.get("op").and_then(|v| v.as_str()) == Some("requestFileSave") {
+                #[cfg(not(target_arch = "wasm32"))]
+                if let (Some(filename), Some(data), Some(studio_id)) = (
+                    op.get("filename").and_then(|v| v.as_str()),
+                    op.get("data").and_then(|v| v.as_str()),
+                    op.get("studioId").and_then(|v| v.as_str()),
+                ) {
+                    if let Some(path) = request_file_save(filename) {
+                        let _ = std::fs::write(&path, data.as_bytes());
+                        if let Some(session) = self.session.clone() {
+                            let command = CommandDescriptor {
+                                controller_id: session.app.controller_id.clone(),
+                                command: "bindStudioFile".into(),
+                                args: Some(serde_json::json!({
+                                    "studioId": studio_id,
+                                    "filePath": path.display().to_string(),
+                                })),
+                            };
+                            if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
+                                if let Ok(command_json) = serde_json::to_string(&command) {
+                                    if let Ok(bind_ops) = plugin
+                                        .handle_command(session.instance_id, &command_json, &session.view_state)
+                                        .await
+                                    {
+                                        follow_up_ops.extend(bind_ops);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if op.get("op").and_then(|v| v.as_str()) == Some("requestFolderPick") {
+                #[cfg(not(target_arch = "wasm32"))]
+                if let Some(import_command) = op.get("importCommand").and_then(|v| v.as_str()) {
+                    if let Some(folder_path) = pick_folder() {
+                        let mut args = op.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
+                        if let Some(obj) = args.as_object_mut() {
+                            obj.insert("folderPath".into(), serde_json::json!(folder_path));
+                        }
+                        if let Some(session) = self.session.clone() {
+                            let command = CommandDescriptor {
+                                controller_id: session.app.controller_id.clone(),
+                                command: import_command.to_string(),
+                                args: Some(args),
+                            };
+                            if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
+                                if let Ok(command_json) = serde_json::to_string(&command) {
+                                    if let Ok(folder_ops) = plugin
+                                        .handle_command(session.instance_id, &command_json, &session.view_state)
+                                        .await
+                                    {
+                                        follow_up_ops.extend(folder_ops);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             if op.get("op").and_then(|v| v.as_str()) == Some("spawnProgram") {
                 if let (Some(program_id), Some(session)) = (op.get("programId").and_then(|v| v.as_str()), &self.session) {
                     self.spawn_program(program_id, session.view_state.clone()).await?;
+                }
+            }
+            if op.get("op").and_then(|v| v.as_str()) == Some("navigate") {
+                if let Some(uri) = op.get("uri").and_then(|v| v.as_str()) {
+                    navigate_uri = Some(uri.to_string());
                 }
             }
             }
             if !follow_up_ops.is_empty() {
                 pending.extend(follow_up_ops);
                 document_changed = true;
+            }
+        }
+        if allow_navigate {
+            if let Some(uri) = navigate_uri.take() {
+                self.push_uri(uri.clone());
+                self.apply_shell_uri(&uri).await?;
+                if document_changed {
+                    self.sync_session_chrome();
+                }
+                return Ok(());
             }
         }
         if let (Some(mut session), Some(vs)) = (self.session.take(), view_state) {
@@ -7689,6 +7810,111 @@ impl ShellState {
             self.refresh_ui().await?;
         }
         Ok(())
+    }
+
+    async fn switch_to_s_app(
+        &mut self,
+        app_id: &str,
+        view_state: Option<ViewState>,
+    ) -> Result<(), String> {
+        let s_plugin = self
+            .plugins
+            .iter()
+            .find(|plugin| plugin.plugin_id == "s")
+            .ok_or("s plugin missing")?;
+        let app = s_plugin
+            .manifest
+            .apps
+            .iter()
+            .find(|candidate| candidate.id == app_id)
+            .ok_or("s app missing")?
+            .clone();
+        if let Some(session) = &self.session {
+            if session.plugin_id == s_plugin.plugin_id && session.app.id == app_id {
+                if let Some(next_view_state) = view_state {
+                    if let Some(mut current) = self.session.take() {
+                        current.view_state = next_view_state;
+                        self.session = Some(current);
+                        self.refresh_ui().await?;
+                    }
+                }
+                return Ok(());
+            }
+        }
+        let instance_id = s_plugin.create_app(&app.id).await?;
+        let programs = self.build_studio_programs();
+        let panel_state = StudioPanelState {
+            active_panel_tab: S_PLAY_CATALOGUE_TAB_ID.into(),
+            programs,
+            spawned_apps: vec![],
+            active_spawned_id: None,
+        };
+        let next_view_state = view_state.unwrap_or_else(|| ViewState {
+            active_mode_id: app
+                .default_mode_id
+                .clone()
+                .or_else(|| app.modes.first().map(|mode| mode.id.clone())),
+            active_window_kind_id: app.window_kinds.first().map(|window| window.id.clone()),
+            selection_json: None,
+            panel_json: Some(Self::panel_json(&panel_state)),
+        });
+        self.active_window_id = app.window_kinds.first().map(|window| window.id.clone());
+        if app_id == S_HOME_APP_ID {
+            self.open_studio_id = None;
+        }
+        self.session = Some(ActiveSession {
+            plugin_id: s_plugin.plugin_id.clone(),
+            instance_id,
+            app,
+            view_state: next_view_state,
+        });
+        self.refresh_ui().await
+    }
+
+    async fn apply_shell_uri(&mut self, uri: &str) -> Result<(), String> {
+        if !self.studio_mode {
+            return Ok(());
+        }
+        let path = uri.split('?').next().unwrap_or(uri);
+        let studio_id = path
+            .strip_prefix("/studios/")
+            .map(|value| value.trim_end_matches('/').to_string())
+            .filter(|value| !value.is_empty());
+        if studio_id.is_none() {
+            self.open_studio_id = None;
+            if self.session.as_ref().map(|session| session.app.id.as_str()) != Some(S_HOME_APP_ID) {
+                self.switch_to_s_app(S_HOME_APP_ID, None).await?;
+            }
+            return Ok(());
+        }
+        let studio_id = studio_id.expect("studio id");
+        self.switch_to_s_app(S_PLAY_APP_ID, None).await?;
+        if self.open_studio_id.as_deref() == Some(studio_id.as_str()) {
+            return Ok(());
+        }
+        self.open_studio_id = Some(studio_id.clone());
+        let session = self.session.clone().ok_or("studio session missing")?;
+        let plugin = self
+            .plugins
+            .iter()
+            .find(|entry| entry.plugin_id == session.plugin_id)
+            .ok_or("studio plugin missing")?;
+        let command = CommandDescriptor {
+            controller_id: S_PLAY_CONTROLLER_ID.into(),
+            command: "openStudio".into(),
+            args: Some(serde_json::json!({ "studioId": studio_id })),
+        };
+        let command_json = serde_json::to_string(&command).map_err(|err| err.to_string())?;
+        let _ops = plugin
+            .handle_command(session.instance_id, &command_json, &session.view_state)
+            .await?;
+        self.sync_session_chrome();
+        self.refresh_ui().await
+    }
+
+    pub async fn apply_pending_shell_uri(&mut self) -> Result<(), String> {
+        let uri = self.shell_uri();
+        self.apply_shell_uri(&uri).await
     }
 
     async fn spawn_program(&mut self, program_id: &str, mut view_state: ViewState) -> Result<(), String> {
@@ -8330,12 +8556,14 @@ impl ShellState {
                 if self.uri_index > 0 {
                     self.uri_index -= 1;
                 }
+                self.apply_pending_shell_uri().await?;
                 return Ok(true);
             }
             "ui.nav.forward" => {
                 if self.uri_index + 1 < self.uri_history.len() {
                     self.uri_index += 1;
                 }
+                self.apply_pending_shell_uri().await?;
                 return Ok(true);
             }
             "ui.nav.up" => {
@@ -8345,6 +8573,7 @@ impl ShellState {
                         self.push_uri(parent);
                     }
                 }
+                self.apply_pending_shell_uri().await?;
                 return Ok(true);
             }
             "playground.navbar.fixture" => {
@@ -8754,6 +8983,10 @@ impl ShellState {
         let commands = std::mem::take(&mut self.deferred_commands);
         for command in commands {
             self.dispatch_command(command).await?;
+        }
+        if self.pending_shell_uri_apply {
+            self.pending_shell_uri_apply = false;
+            self.apply_pending_shell_uri().await?;
         }
         Ok(())
     }
@@ -9188,12 +9421,14 @@ impl ShellState {
             if self.uri_index > 0 {
                 self.uri_index -= 1;
             }
+            self.pending_shell_uri_apply = true;
             return;
         }
         if meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c == "]") {
             if self.uri_index + 1 < self.uri_history.len() {
                 self.uri_index += 1;
             }
+            self.pending_shell_uri_apply = true;
             return;
         }
         if meta && matches!(action, ui_wgpu::KeyAction::ArrowUp) {
@@ -9203,6 +9438,7 @@ impl ShellState {
                     self.push_uri(parent);
                 }
             }
+            self.pending_shell_uri_apply = true;
             return;
         }
         if meta && modifiers.shift && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
@@ -9349,6 +9585,89 @@ fn chrome_icon(draw: &mut DrawList, icons: &IconAtlas, icon_id: &str, x: f32, y:
     if let Some(uv) = icons.icon_uv(icon_id) {
         draw.push_textured([x, y, size, size], uv, color);
     }
+}
+
+/** @emoji 📑 Shared side-panel tab strip for floating panels. */
+fn render_panel_tab_bar(
+    panel_draw: &mut DrawList,
+    atlas: &mut FontAtlas,
+    icons: &IconAtlas,
+    input: &mut InputState<CommandDescriptor>,
+    theme: &Theme,
+    panel: Rect,
+    tabs: &[PanelTabDefinition],
+    active_tab_id: &str,
+    side_left: bool,
+    inner_stroke: Rgba,
+    hair: f32,
+) -> f32 {
+    let tab_bar_h = theme.panel_header_height;
+    let tab_bar = Rect::new(
+        panel.x + hair,
+        panel.y,
+        (panel.w - hair * 2.0).max(0.0),
+        tab_bar_h,
+    );
+    panel_draw.push_scissor(tab_bar);
+    panel_draw.push_solid(
+        [tab_bar.x, tab_bar.y + tab_bar_h - hair, tab_bar.w, hair],
+        inner_stroke,
+    );
+    let mut tab_x = tab_bar.x;
+    for (index, tab) in tabs.iter().enumerate() {
+        let icon_id = panel_tab_icon_id(tab);
+        let label_w = atlas.measure_text(&tab.label, theme.font_size_small).0;
+        let tw = theme.padding_standard * 2.0 + CHROME_ICON_TINY + theme.gap_standard + label_w;
+        let rect = Rect::new(tab_x, tab_bar.y, tw, tab_bar_h);
+        if index > 0 {
+            panel_draw.push_solid([tab_x, tab_bar.y, hair, tab_bar_h], inner_stroke);
+        }
+        let active = tab.id == active_tab_id;
+        let hovered = rect.contains(input.pointer_x, input.pointer_y);
+        if active {
+            panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.selected);
+        } else if hovered {
+            panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.button_hover);
+        }
+        let icon_x = rect.x + theme.padding_standard;
+        let icon_y = rect.y + (rect.h - CHROME_ICON_TINY) * 0.5;
+        chrome_icon(
+            panel_draw,
+            icons,
+            icon_id,
+            icon_x,
+            icon_y,
+            CHROME_ICON_TINY,
+            chrome_item_text(theme, active, hovered),
+        );
+        chrome_text(
+            panel_draw,
+            atlas,
+            input,
+            theme,
+            &tab.label,
+            icon_x + CHROME_ICON_TINY + theme.gap_standard,
+            rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0,
+            theme.font_size_small,
+            chrome_item_text(theme, active, hovered),
+        );
+        let prefix = if side_left {
+            "shell.panel.tab.left."
+        } else {
+            "shell.panel.tab.right."
+        };
+        input.register_hit(HitTarget {
+            rect,
+            event: None,
+            control_id: Some(format!("{prefix}{}", tab.id)),
+            kind: HitKind::PanelTab,
+            drag_axis: None,
+            drag_data: None,
+        });
+        tab_x += tw;
+    }
+    panel_draw.pop_scissor();
+    tab_bar_h
 }
 
 fn chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme) {
@@ -9689,7 +10008,7 @@ fn render_footer_tool_nodes(
 }
 
 fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
-    if tab.id == S_PLAY_CATALOGUE_TAB_ID || tab.group == "workbench" {
+    if tab.id == S_PLAY_CATALOGUE_TAB_ID || tab.group == PanelGroup::Workbench {
         return "library";
     }
     if tab.id.contains("parameters") {
@@ -9729,11 +10048,11 @@ fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static
     match kind {
         "display" => "layout-grid",
         "workbench" => session
-            .and_then(|s| s.app.panel_tabs.iter().find(|tab| tab.group == "left" || tab.group == "workbench"))
+            .and_then(|s| s.app.panel_tabs.iter().find(|tab| tab.group.side() == "left"))
             .map(|tab| panel_tab_icon_id(tab))
             .unwrap_or("folder"),
         "details" => session
-            .and_then(|s| s.app.panel_tabs.iter().find(|tab| tab.group == "right" || tab.group == "inspection"))
+            .and_then(|s| s.app.panel_tabs.iter().find(|tab| tab.group.side() == "right"))
             .map(|tab| panel_tab_icon_id(tab))
             .unwrap_or("info"),
         "settings" => "settings-2",
@@ -9771,16 +10090,16 @@ impl ShellState {
         self.find_items = take_find_items();
         if self.left_panel_open && self.has_left_tabs() {
             if let Some(panel_draw) = overlay_slot.as_deref_mut() {
-                self.render_left_panel(panel_draw, atlas, icons, input, theme, body, gpu);
+                self.render_left_panel(panel_draw, None, atlas, icons, input, theme, body, gpu);
             } else {
-                self.render_left_panel(draw, atlas, icons, input, theme, body, gpu);
+                self.render_left_panel(draw, None, atlas, icons, input, theme, body, gpu);
             }
         }
         if self.right_panel_open && self.has_right_tabs() {
             if let Some(panel_draw) = overlay_slot.as_deref_mut() {
-                self.render_right_panel(panel_draw, atlas, icons, input, theme, body, gpu);
+                self.render_right_panel(panel_draw, None, atlas, icons, input, theme, body, gpu);
             } else {
-                self.render_right_panel(draw, atlas, icons, input, theme, body, gpu);
+                self.render_right_panel(draw, None, atlas, icons, input, theme, body, gpu);
             }
         }
         self.render_navbar(draw, atlas, icons, input, theme, w);
@@ -9836,14 +10155,6 @@ impl ShellState {
             })
     }
 
-    fn panel_side_for_group(group: &str) -> &'static str {
-        if group == "workbench" || group == "document" || group == "display" {
-            "left"
-        } else {
-            "right"
-        }
-    }
-
     fn has_left_tabs(&self) -> bool {
         self.session.is_some()
     }
@@ -9858,13 +10169,13 @@ impl ShellState {
                 PanelTabDefinition {
                     id: FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(),
                     label: "Windows".into(),
-                    group: "display".into(),
+                    group: PanelGroup::Display,
                     body_key: String::new(),
                 },
                 PanelTabDefinition {
                     id: FRAMEWORK_DISPLAY_LAYOUT_TAB_ID.into(),
                     label: "Layout".into(),
-                    group: "display".into(),
+                    group: PanelGroup::Display,
                     body_key: String::new(),
                 },
             ],
@@ -9873,7 +10184,7 @@ impl ShellState {
                     .app
                     .panel_tabs
                     .iter()
-                    .filter(|tab| Self::panel_side_for_group(&tab.group) == "left")
+                    .filter(|tab| tab.group.side() == "left")
                     .cloned()
                     .collect();
                 let has_document = tabs.iter().any(|t| t.id == FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
@@ -9883,7 +10194,7 @@ impl ShellState {
                         PanelTabDefinition {
                             id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into(),
                             label: "Document".into(),
-                            group: "document".into(),
+                            group: PanelGroup::Workbench,
                             body_key: String::new(),
                         },
                     );
@@ -9898,14 +10209,14 @@ impl ShellState {
             RightPanelKind::Settings => vec![PanelTabDefinition {
                 id: FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into(),
                 label: "General".into(),
-                group: "settings".into(),
+                group: PanelGroup::Settings,
                 body_key: String::new(),
             }],
             RightPanelKind::Details => session
                 .app
                 .panel_tabs
                 .iter()
-                .filter(|tab| Self::panel_side_for_group(&tab.group) == "right")
+                .filter(|tab| tab.group.side() == "right")
                 .cloned()
                 .collect(),
         }
@@ -10272,6 +10583,7 @@ impl ShellState {
     fn render_floating_panel(
         &mut self,
         panel_draw: &mut DrawList,
+        overlay: Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
         input: &mut InputState<CommandDescriptor>,
@@ -10330,64 +10642,23 @@ impl ShellState {
             theme,
         );
         panel_draw.begin_glass_content(glass);
-        let tab_bar_h = theme.panel_header_height;
-        panel_draw.push_solid(
-            [panel.x, panel.y + tab_bar_h - hair, panel.w, hair],
+        panel_draw.push_solid([panel.x, panel.y, panel.w, hair], top);
+        panel_draw.push_solid([panel.x, panel.y + panel.h - hair, panel.w, hair], bottom);
+        panel_draw.push_solid([panel.x, panel.y, hair, panel.h], left);
+        panel_draw.push_solid([panel.x + panel.w - hair, panel.y, hair, panel.h], right);
+        let tab_bar_h = render_panel_tab_bar(
+            panel_draw,
+            atlas,
+            icons,
+            input,
+            theme,
+            panel,
+            tabs,
+            active_tab_id,
+            side_left,
             inner_stroke,
+            hair,
         );
-        let mut tab_x = panel.x;
-        for (index, tab) in tabs.iter().enumerate() {
-            let icon_id = panel_tab_icon_id(tab);
-            let label_w = atlas.measure_text(&tab.label, theme.font_size_small).0;
-            let tw = theme.padding_standard * 2.0 + CHROME_ICON_TINY + theme.gap_standard + label_w;
-            let rect = Rect::new(tab_x, panel.y, tw, tab_bar_h);
-            if index > 0 {
-                panel_draw.push_solid([tab_x, panel.y, hair, tab_bar_h], inner_stroke);
-            }
-            let active = tab.id == active_tab_id;
-            let hovered = rect.contains(input.pointer_x, input.pointer_y);
-            if active {
-                panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.selected);
-            } else if hovered {
-                panel_draw.push_solid([rect.x, rect.y, rect.w, rect.h], theme.button_hover);
-            }
-            let icon_x = rect.x + theme.padding_standard;
-            let icon_y = rect.y + (rect.h - CHROME_ICON_TINY) * 0.5;
-            chrome_icon(
-                panel_draw,
-                icons,
-                icon_id,
-                icon_x,
-                icon_y,
-                CHROME_ICON_TINY,
-                chrome_item_text(theme, active, hovered),
-            );
-            chrome_text(
-                panel_draw,
-                atlas,
-                input,
-                theme,
-                &tab.label,
-                icon_x + CHROME_ICON_TINY + theme.gap_standard,
-                rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0,
-                theme.font_size_small,
-                chrome_item_text(theme, active, hovered),
-            );
-            let prefix = if side_left {
-                "shell.panel.tab.left."
-            } else {
-                "shell.panel.tab.right."
-            };
-            input.register_hit(HitTarget {
-                rect,
-                event: None,
-                control_id: Some(format!("{prefix}{}", tab.id)),
-                kind: HitKind::PanelTab,
-                drag_axis: None,
-            drag_data: None,
-            });
-            tab_x += tw;
-        }
         let content = Rect::new(
             panel.x + theme.gap_standard,
             panel.y + tab_bar_h,
@@ -10417,7 +10688,7 @@ impl ShellState {
             let widget_maps = &mut self.widget_maps;
         let mut ctx = framework_widget_context(
             panel_draw,
-            None,
+            overlay,
             atlas,
             Some(icons),
             input,
@@ -10432,10 +10703,6 @@ impl ShellState {
         }
         panel_draw.pop_scissor();
         panel_draw.end_glass_content();
-        panel_draw.push_solid([panel.x, panel.y, panel.w, hair], top);
-        panel_draw.push_solid([panel.x, panel.y + panel.h - hair, panel.w, hair], bottom);
-        panel_draw.push_solid([panel.x, panel.y, hair, panel.h], left);
-        panel_draw.push_solid([panel.x + panel.w - hair, panel.y, hair, panel.h], right);
         input.register_hit(HitTarget {
             rect: resize_handle,
             event: None,
@@ -10449,6 +10716,7 @@ impl ShellState {
     fn render_left_panel(
         &mut self,
         panel_draw: &mut DrawList,
+        mut overlay: Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
         input: &mut InputState<CommandDescriptor>,
@@ -10468,7 +10736,7 @@ impl ShellState {
         let panel = self.floating_panel_rect(true, body, theme);
         self.render_floating_panel(
             panel_draw,
-            overlay,
+            overlay.as_deref_mut(),
             atlas,
             icons,
             input,
@@ -10484,7 +10752,7 @@ impl ShellState {
     fn render_right_panel(
         &mut self,
         panel_draw: &mut DrawList,
-        overlay: &mut DrawList,
+        mut overlay: Option<&mut DrawList>,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
         input: &mut InputState<CommandDescriptor>,
@@ -10504,7 +10772,7 @@ impl ShellState {
         let panel = self.floating_panel_rect(false, body, theme);
         self.render_floating_panel(
             panel_draw,
-            overlay,
+            overlay.as_deref_mut(),
             atlas,
             icons,
             input,
@@ -10630,6 +10898,17 @@ impl ShellState {
                     drag_data: None,
                 });
             }
+        }
+        {
+            let mut dock_ctx = DockRenderContext {
+                draw,
+                atlas,
+                icons,
+                input,
+                theme,
+                window_labels: &window_labels,
+            };
+            self.dock.paint_chrome(&mut dock_ctx, canvas, false);
         }
         {
             let mut resize_ctx = DockRenderContext {
@@ -10900,11 +11179,7 @@ impl ShellState {
             OverlayState::ThemeSelect => {}
             OverlayState::None => {}
         }
-        for (id, open) in &self.open_selects {
-            if *open {
-                self.render_palette(overlay, atlas, input, theme, width * 0.4, theme.navbar_height + 40.0, 220.0, "Options", id);
-            }
-        }
+        // render_palette removed
         if let Some(menu) = &self.context_menu {
             self.render_context_menu(overlay, atlas, input, theme, menu);
         }
@@ -11158,11 +11433,7 @@ impl ShellState {
                 chip_w,
                 theme.control_height,
             );
-            if let Some(chip_draw) = overlay.as_deref_mut() {
-                render_chrome_group(chip_draw, atlas, icons, input, theme, chip, &[item], false);
-            } else {
-                render_chrome_group(draw, atlas, icons, input, theme, chip, &[item], false);
-            }
+            render_chrome_group(draw, atlas, icons, input, theme, chip, &[item], false);
             return WindowMeasuresRailOutcome {
                 chip_hit: Some((chip, format!("shell.measures.unfold.{window_id}"))),
                 reserve_width: chip_w + inset,
@@ -11506,11 +11777,7 @@ impl ShellState {
                 chip_w,
                 theme.control_height,
             );
-            if let Some(chip_draw) = overlay.as_deref_mut() {
-                render_chrome_group(chip_draw, atlas, icons, input, theme, chip, &[item], false);
-            } else {
-                render_chrome_group(draw, atlas, icons, input, theme, chip, &[item], false);
-            }
+            render_chrome_group(draw, atlas, icons, input, theme, chip, &[item], false);
             return Some((chip, format!("shell.engagement.toggle.{window_id}")));
         }
         let rail_w = engagement_rail_width(theme, content.w, inset, measures_reserve);
@@ -11927,6 +12194,29 @@ fn download_media_export(filename: &str, mime_type: &str, data: &str) {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+fn request_file_save(filename: &str) -> Option<std::path::PathBuf> {
+    rfd::FileDialog::new()
+        .set_file_name(filename)
+        .add_filter("studio", &["json"])
+        .save_file()
+}
+
+#[cfg(target_arch = "wasm32")]
+fn request_file_save(_filename: &str) -> Option<std::path::PathBuf> {
+    None
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn pick_folder() -> Option<String> {
+    rfd::FileDialog::new().pick_folder().map(|path| path.display().to_string())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn pick_folder() -> Option<String> {
+    None
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 fn request_file_open(accept: &str) -> Option<String> {
     let extensions: Vec<&str> = accept
         .split(',')
@@ -12052,7 +12342,7 @@ use plugin_bridge::filter_plugins;
 #[cfg(target_arch = "wasm32")]
 use plugin_bridge::parse_plugin_entries;
 #[cfg(not(target_arch = "wasm32"))]
-use plugin_bridge::load_native_plugins;
+use plugin_bridge::load_wasm_plugins;
 use infinite_world::{
     apply_glb_bytes, apply_world_command_preview, collect_pending_glb_fetches, fetch_url_bytes,
     handle_world3d_paint_commands, handle_world3d_pointer_button, handle_world3d_pointer_drag,
@@ -12210,7 +12500,7 @@ impl AppRuntime {
     fn poll_native_plugin_hot_swap(&mut self) {
         let mut changed = false;
         for plugin in &self.shell.plugins {
-            let Some(path) = plugin.native_library_path() else {
+            let Some(path) = plugin.wasm_artifact_path() else {
                 continue;
             };
             let Ok(metadata) = std::fs::metadata(path) else {
@@ -12238,18 +12528,18 @@ impl AppRuntime {
         self.native_reload_pending = false;
         let plugin_filter = self.shell.plugin_filter.clone();
         let modules_root = self.plugin_modules_root.clone();
-        let entries = match load_native_plugins(&plugin_filter, &modules_root) {
+        let entries = match load_wasm_plugins(&plugin_filter, &modules_root) {
             Ok(entries) => filter_plugins(entries, &plugin_filter),
             Err(error) => {
-                log_debug(&format!("[DEBUG] native plugin reload failed: {error}"));
+                log_debug(&format!("[DEBUG] wasm plugin reload failed: {error}"));
                 return;
             }
         };
         self.shell.prepare_hot_reload(entries);
         if let Err(error) = pollster::block_on(self.shell.boot()) {
-            log_debug(&format!("[DEBUG] native plugin hot reload failed: {error}"));
+            log_debug(&format!("[DEBUG] wasm plugin hot reload failed: {error}"));
         } else {
-            log_debug("[DEBUG] native plugin hot reload complete");
+            log_debug("[DEBUG] wasm plugin hot reload complete");
         }
     }
 
@@ -13023,7 +13313,7 @@ async fn boot_runtime(
     };
     #[cfg(not(target_arch = "wasm32"))]
     let entries = filter_plugins(
-        load_native_plugins(&plugin_filter, &plugin_modules_root)?,
+        load_wasm_plugins(&plugin_filter, &plugin_modules_root)?,
         &plugin_filter,
     );
 

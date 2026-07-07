@@ -14,7 +14,7 @@ use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
     build_raster_scene, build_table_scene, build_world_3d_scene, create_default_layout,
     mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
-    ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
+    ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, PanelGroup,
     CommandDescriptor, PluginApp, PluginBundle, RasterScene, TableScene, UiButtonNode,
     UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
     UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
@@ -2138,9 +2138,9 @@ fn create_forms_app() -> App {
             .window_kind(FORMS_PLAY_WINDOW_EDIT, "Edit", FORMS_PLAY_BODY_EDIT)
             .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY)
             .window_kind(FORMS_PLAY_WINDOW_PREVIEW, "Preview", FORMS_PLAY_BODY_PREVIEW)
-            .panel_tab("framework.panel.document", "Document", "workbench", FORMS_PLAY_BODY_DOCUMENT)
-            .panel_tab("framework.panel.catalogue", "Catalogue", "workbench", FORMS_PLAY_BODY_CATALOGUE)
-            .panel_tab("framework.panel.inspection", "Inspection", "details", FORMS_PLAY_BODY_INSPECTION)
+            .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, FORMS_PLAY_BODY_DOCUMENT)
+            .panel_tab("framework.panel.catalogue", "Catalogue", PanelGroup::Workbench, FORMS_PLAY_BODY_CATALOGUE)
+            .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, FORMS_PLAY_BODY_INSPECTION)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(create_default_layout(

@@ -4022,14 +4022,17 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 /** @emoji 🪟 Canvas viewport surface inside a host root. */
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
-/** @emoji 📑 Panel tab strip — {@link borderNormalBottomClass} under tabs; outer outline is {@link panelChromeBorderClass}. */
-export const panelTabBarClass = cn("relative z-20 flex min-w-0 items-center shrink-0 overflow-x-auto", borderNormalBottomClass);
+/** @emoji 📑 Panel tab strip — sits above {@link panelChromeFrameLayerClass}; inset padding keeps labels off the frame edge. */
+export const panelTabBarClass = cn(
+  "relative z-40 flex min-w-0 items-center shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single px-single",
+  borderNormalBottomClass,
+);
 
 /** @emoji 📑 Panel tab icon slot — defers dimensions to the tab icon (12px). */
 export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-center leading-none";
 
 /** @emoji 📑 Panel tab label beside the icon. */
-export const panelTabLabelClass = "truncate text-xs leading-none";
+export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
 /** @emoji 📑 Panel tab button with icon and mandatory name (no per-tab borders — {@link panelTabBarClass} owns dividers). */
 export const panelTabButtonClass = cn(
@@ -4042,7 +4045,68 @@ export const panelTabButtonClass = cn(
 export const sidePanelTabBarClass = cn(panelTabBarClass, "h-medium");
 
 /** @emoji 📑 Side panel tab button padding. */
-export const sidePanelTabButtonClass = cn(panelTabButtonClass, "px-single");
+export const sidePanelTabButtonClass = cn(panelTabButtonClass, "px-tiny");
+
+/** @emoji 📑 Shared side/mobile panel tab bar variant. */
+export type PanelTabBarVariant = "side" | "mobile";
+
+/** @emoji 📑 Props for {@link PanelTabBar}. */
+export interface PanelTabBarProps {
+  readonly variant: PanelTabBarVariant;
+  readonly tabs: readonly SidePanelTabConfig[];
+  readonly activeTabId?: string;
+  readonly onTabChange: (tabId: string) => void;
+}
+
+/** @emoji 📑 Panel tab strip shared by {@link SidePanel} and {@link MobilePanel}. */
+export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, tabs, activeTabId, onTabChange }) => {
+  const barRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const tabSlot = variant === "side" ? "side-panel" : "mobile-panel";
+  const sortedTabs = reactHostPort.useMemo(() => [...tabs].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), [tabs]);
+  const resolvedActiveTabId = activeTabId ?? sortedTabs[0]?.id;
+  const activeTab = reactHostPort.useMemo(
+    () => sortedTabs.find((tab) => tab.id === resolvedActiveTabId) ?? sortedTabs[0],
+    [resolvedActiveTabId, sortedTabs],
+  );
+
+  reactHostPort.useLayoutEffect(() => {
+    const bar = barRef.current;
+    if (!bar) return;
+    bar.scrollLeft = 0;
+    const activeButton = bar.querySelector<HTMLElement>(`[data-slot="${tabSlot}-tab-button"][data-active="true"]`);
+    activeButton?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [resolvedActiveTabId, sortedTabs, tabSlot]);
+
+  if (sortedTabs.length === 0) return null;
+
+  const barClass = variant === "side" ? sidePanelTabBarClass : mobilePanelTabBarClass;
+  const buttonClass = variant === "side" ? sidePanelTabButtonClass : mobilePanelTabButtonClass;
+
+  return (
+    <div ref={barRef} data-dim data-slot={`${tabSlot}-tabs`} className={barClass}>
+      {sortedTabs.map((tab) => {
+        const Icon = tab.icon;
+        const isActive = tab.id === activeTab?.id;
+        return (
+          <ChromeControlHint key={tab.id} id={tab.id}>
+            <button
+              data-slot={`${tabSlot}-tab-button`}
+              id={tab.id}
+              data-active={isActive ? "true" : undefined}
+              onClick={() => onTabChange(tab.id)}
+              className={cn(buttonClass, isActive && panelTabActiveClass)}
+            >
+              <span className={panelTabIconSlotClass}>
+                <Icon size={12} />
+              </span>
+              <span className={panelTabLabelClass}>{tab.name}</span>
+            </button>
+          </ChromeControlHint>
+        );
+      })}
+    </div>
+  );
+};
 
 /** @emoji 📑 Mobile panel tab strip height. */
 export const mobilePanelTabBarClass = cn(panelTabBarClass, "h-large");
@@ -14105,30 +14169,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
             />
           </>
         ) : null}
-        {showTabBar && (
-          <div data-dim data-slot="side-panel-tabs" className={sidePanelTabBarClass}>
-            {sortedTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = tab.id === activeTab?.id;
-              return (
-                <ChromeControlHint key={tab.id} id={tab.id}>
-                  <button
-                    data-slot="side-panel-tab-button"
-                    id={tab.id}
-                    data-active={isActive ? "true" : undefined}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cn(sidePanelTabButtonClass, isActive && panelTabActiveClass)}
-                  >
-                    <span className={panelTabIconSlotClass}>
-                      <Icon size={12} />
-                    </span>
-                    <span className={panelTabLabelClass}>{tab.name}</span>
-                  </button>
-                </ChromeControlHint>
-              );
-            })}
-          </div>
-        )}
+        {showTabBar ? (
+          <PanelTabBar activeTabId={currentActiveTab} onTabChange={handleTabChange} tabs={sortedTabs} variant="side" />
+        ) : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="side-panel-content" className="flex min-h-0 flex-1 flex-col">
             {activeTabTree ? <SidePanelTreePane config={activeTabTree} /> : null}
@@ -14198,30 +14241,9 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = true, tabs, activeT
       <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full text-foreground flex flex-col box-border overflow-hidden", className)} style={{ height: `${height}px` }}>
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
         <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
-        {showTabBar && (
-          <div data-dim data-slot="mobile-panel-tabs" className={mobilePanelTabBarClass}>
-            {sortedTabs.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = tab.id === activeTab?.id;
-              return (
-                <ChromeControlHint key={tab.id} id={tab.id}>
-                  <button
-                    data-slot="mobile-panel-tab-button"
-                    id={tab.id}
-                    data-active={isActive ? "true" : undefined}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={cn(mobilePanelTabButtonClass, isActive && panelTabActiveClass)}
-                  >
-                    <span className={panelTabIconSlotClass}>
-                      <Icon size={12} />
-                    </span>
-                    <span className={panelTabLabelClass}>{tab.name}</span>
-                  </button>
-                </ChromeControlHint>
-              );
-            })}
-          </div>
-        )}
+        {showTabBar ? (
+          <PanelTabBar activeTabId={currentActiveTab} onTabChange={handleTabChange} tabs={sortedTabs} variant="mobile" />
+        ) : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
             {activeTabTree ? (
@@ -21777,7 +21799,27 @@ if (import.meta.vitest) {
       expect(screen.getByText("Review Mode")).toBeTruthy();
     });
 
-    it("SidePanel marks the active tab with hover fill and emphasized icon below the emphasized frame", () => {
+    it("PanelTabBar keeps the first tab label fully visible inside the inset strip", () => {
+      const StubIcon = (): null => null;
+      const { container } = render(
+        <PanelTabBar
+          variant="side"
+          tabs={[
+            { id: "framework.panel.document", icon: StubIcon, name: "Document", tree: { sections: [] } },
+            { id: "framework.panel.catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } },
+          ]}
+          activeTabId="framework.panel.document"
+          onTabChange={() => {}}
+        />,
+      );
+      expect(screen.getByText("Document")).toBeTruthy();
+      expect(screen.getByText("Catalogue")).toBeTruthy();
+      const tabBar = container.querySelector('[data-slot="side-panel-tabs"]');
+      expect(tabBar?.className).toContain("px-single");
+      expect(tabBar?.className).toContain("z-40");
+    });
+
+    it("SidePanel marks the active tab with hover fill and emphasized icon above the emphasized frame", () => {
       const StubIcon = (): null => null;
       const tabs: SidePanelTabConfig[] = [
         { id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } },
@@ -21790,7 +21832,8 @@ if (import.meta.vitest) {
       expect(activeButton?.className).toContain("bg-active-base");
       expect(activeButton?.className).toContain("text-emphasized");
       expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("overflow-x-auto");
-      expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("z-20");
+      expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("z-40");
+      expect(container.querySelector('[data-slot="side-panel-tabs"]')?.className).toContain("px-single");
       expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
     });
 
@@ -25338,7 +25381,7 @@ if (treeVitest) {
       expect(panelMarkup).toContain(borderNormalClass);
       expect(panelMarkup).not.toContain("border-b-current");
       expect(panelMarkup).not.toMatch(/side-panel-tabs[^>]*border-emphasized/);
-      expect(panelMarkup).toMatch(/side-panel-tabs[^>]*z-20/);
+      expect(panelMarkup).toMatch(/side-panel-tabs[^>]*z-40/);
       expect(panelMarkup).toMatch(/panel-chrome-frame[^>]*z-30/);
       const measuresMarkup = renderToStaticMarkup(
         <div data-slot="window-measures-stack" className={windowMeasuresStackClass} />,

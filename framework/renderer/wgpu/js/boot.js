@@ -1,31 +1,33 @@
-// js/boot.ts
-var PLUGIN_TARGETS = [
-  { pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js" },
-  { pluginId: "note", moduleUrl: "/plugin-modules/note/note_plugin.js" },
-  { pluginId: "writer", moduleUrl: "/plugin-modules/writer/writer_plugin.js" },
-  { pluginId: "raster", moduleUrl: "/plugin-modules/raster/raster_plugin.js" },
-  { pluginId: "forms", moduleUrl: "/plugin-modules/forms/forms_plugin.js" },
-  { pluginId: "vcs", moduleUrl: "/plugin-modules/vcs/vcs_plugin.js" },
-  { pluginId: "flow", moduleUrl: "/plugin-modules/flow/flow_plugin.js" },
-  { pluginId: "dag", moduleUrl: "/plugin-modules/dag/dag_plugin.js" },
-  { pluginId: "imperative", moduleUrl: "/plugin-modules/imperative/imperative_plugin.js" },
-  { pluginId: "sequence", moduleUrl: "/plugin-modules/sequence/sequence_plugin.js" },
-  { pluginId: "layout", moduleUrl: "/plugin-modules/layout/layout_plugin.js" },
-  { pluginId: "puzzle2d", moduleUrl: "/plugin-modules/puzzle2d/puzzle2d_plugin.js" },
-  { pluginId: "gis2d", moduleUrl: "/plugin-modules/gis2d/gis2d_plugin.js" },
-  { pluginId: "procedural2d", moduleUrl: "/plugin-modules/procedural2d/procedural2d_plugin.js" },
-  { pluginId: "reasoning-wires", moduleUrl: "/plugin-modules/reasoning-wires/reasoning_wires_plugin.js" },
-  { pluginId: "cad", moduleUrl: "/plugin-modules/cad/cad_plugin.js" },
-  { pluginId: "puzzle3d", moduleUrl: "/plugin-modules/puzzle3d/puzzle3d_plugin.js" },
-  { pluginId: "puzzle5d", moduleUrl: "/plugin-modules/puzzle5d/puzzle5d_plugin.js" },
-  { pluginId: "shooting", moduleUrl: "/plugin-modules/shooting/shooting_plugin.js" },
-  { pluginId: "lowpoly", moduleUrl: "/plugin-modules/lowpoly/lowpoly_plugin.js" },
-  { pluginId: "procedural3d", moduleUrl: "/plugin-modules/procedural3d/procedural3d_plugin.js" },
-  { pluginId: "trinity", moduleUrl: "/plugin-modules/trinity/trinity_plugin.js" },
-  { pluginId: "trinity-rewrite", moduleUrl: "/plugin-modules/trinity-rewrite/trinity_rewrite_plugin.js" },
-  { pluginId: "s", moduleUrl: "/plugin-modules/s/s_plugin.js" },
-  { pluginId: "presentation", moduleUrl: "/plugin-modules/presentation/presentation_plugin.js" }
+// ../../plugin/registry/generated/plugins.ts
+var PLUGIN_BUILD_TARGETS = [
+  { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm" },
+  { pluginId: "dag", cratePath: "mathematical/graph/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm" },
+  { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm" },
+  { pluginId: "flow", cratePath: "flow/plugin/rs", wasmOut: "flow_plugin.wasm" },
+  { pluginId: "forms", cratePath: "forms/plugin/rs", wasmOut: "forms_plugin.wasm" },
+  { pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm" },
+  { pluginId: "imperative", cratePath: "imperative/plugin/rs", wasmOut: "imperative_plugin.wasm" },
+  { pluginId: "layout", cratePath: "layout/plugin/rs", wasmOut: "layout_plugin.wasm" },
+  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm" },
+  { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm" },
+  { pluginId: "presentation", cratePath: "framework/product/presentation/plugin/rs", wasmOut: "presentation_plugin.wasm" },
+  { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm" },
+  { pluginId: "puzzle", cratePath: "puzzle/plugin/rs", wasmOut: "puzzle_plugin.wasm" },
+  { pluginId: "raster", cratePath: "raster/plugin/rs", wasmOut: "raster_plugin.wasm" },
+  { pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", wasmOut: "reasoning_mindmap_plugin.wasm" },
+  { pluginId: "s", cratePath: "s/plugin/rs", wasmOut: "s_plugin.wasm" },
+  { pluginId: "sequence", cratePath: "sequence/plugin/rs", wasmOut: "sequence_plugin.wasm" },
+  { pluginId: "shooting", cratePath: "shooting/plugin/rs", wasmOut: "shooting_plugin.wasm" },
+  { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm" },
+  { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm" },
+  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm" }
 ];
+var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
+  pluginId: target.pluginId,
+  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`
+}));
+
+// js/boot.ts
 await new Promise((resolve) => {
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => resolve(), { once: true });
@@ -98,7 +100,7 @@ function pluginHandleForBridge(handle) {
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-var pluginFilter = pluginFromUrl ?? "s";
+var pluginFilter = pluginFromUrl ?? "lowpoly";
 var studioMode = pluginFilter === "s";
 var pluginTargets = studioMode ? PLUGIN_TARGETS : PLUGIN_TARGETS.filter((entry) => entry.pluginId === pluginFilter);
 async function pluginModuleAvailable(moduleUrl) {
