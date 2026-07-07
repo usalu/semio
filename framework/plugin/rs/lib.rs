@@ -1758,6 +1758,8 @@ impl PluginApp for StandardPluginApp {
                     references_json: None,
                     brush_preview_json: None,
                     interaction_json: None,
+                    lod_json: None,
+                    chunking_json: None,
                 },
             ),
             SceneKind::NodeGraph => {
@@ -2084,6 +2086,8 @@ pub fn world3d_scene(
         None,
         None,
         None,
+        None,
+        None,
     )
 }
 
@@ -2098,6 +2102,8 @@ pub fn world3d_scene_extended(
     references_json: Option<String>,
     brush_preview_json: Option<String>,
     interaction_json: Option<String>,
+    lod_json: Option<String>,
+    chunking_json: Option<String>,
 ) -> World3dScene {
     World3dScene {
         camera_json,
@@ -2110,6 +2116,8 @@ pub fn world3d_scene_extended(
         references_json,
         brush_preview_json,
         interaction_json,
+        lod_json,
+        chunking_json,
     }
 }
 

@@ -1,0 +1,13 @@
+{
+  "title": "Wgpu Infinite World Chunking Pooling Lod Grid Parity",
+  "emoji": "🌍",
+  "status": "open",
+  "description": "Port chunking/view-radius streaming, refcounted object pooling, distance-based LOD, and progressive world grid from premigration @semio-tech/infinite-world-r3f into Rust wgpu world canvas (infinite/world/rs) as generic opt-in infrastructure for all world-3d plugins.",
+  "goal": "🎯puzzle3d🎯puzzle3dplay",
+  "plan": {
+    "client": "cursor",
+    "id": "27958a78",
+    "local": "wgpu_infinite_world_parity_27958a78.plan.md"
+  },
+  "sessions": []
+}

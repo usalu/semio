@@ -1,10 +1,12 @@
 //! 🌐 Application-neutral 3D world canvas: mesh loading, orbit camera, picking, and marquee selection.
 
 use kernel_3d_scene::{
-    aabb_intersects_frustum, axis_rotate_angle, frustum_planes, gumball_extent, gumball_eye,
-    gumball_project_ray_onto_axis, interpolate_mesh_uv, quat_from_basis, ray_aabb_slab,
+    aabb_intersects_frustum, axis_rotate_angle, frustum_planes, grid_placement_anchor, gumball_extent,
+    gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance,
+    lod_progressive_grid_layers, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab,
     ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector,
-    screen_select_components, screen_select_instances, transform_aabb, vec3_from_f64, Camera3d,
+    marquee_is_crossing_from_path, screen_select_components, screen_select_instances,
+    transform_aabb, vec3_from_f64, Camera3d,
     Instance3d, LineDraw3d, LineVertex3d, Mat4, Mesh3d, OrbitController, SceneDraw3d, ScenePass3d,
     TexturedDraw3d, TexturedInstance3d, Vec3,
 };
@@ -15,8 +17,8 @@ use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use ui_wgpu::{
-    draw_text, mesh_content_version, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, Rgba,
-    WidgetContext,
+    draw_text, mesh_content_version, paint_selection_marquee, GpuContext, HitKind, HitTarget,
+    PointerModifiers, Rect, Rgba, WidgetContext,
 };
 
 //#region SceneRecords
@@ -62,12 +64,66 @@ struct WorldCameraRecord {
     z: Option<f64>,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WorldMeshLodEntry {
+    lod: f64,
+    url: String,
+}
+
 #[derive(Clone, Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 struct WorldMeshRecord {
     id: String,
     data: Option<MeshData>,
     url: Option<String>,
+    lods: Option<Vec<WorldMeshLodEntry>>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WorldLodRecord {
+    #[serde(default = "default_true")]
+    automatic: bool,
+    #[serde(default = "default_manual_lod")]
+    manual: f64,
+    #[serde(default = "default_distance_reference")]
+    distance_reference: f64,
+    #[serde(default)]
+    depth_variable: bool,
+    #[serde(default = "default_grid_factor")]
+    grid_factor: f64,
+    #[serde(default)]
+    grid_snap_enabled: bool,
+    #[serde(default = "default_true")]
+    show_grid: bool,
+    #[serde(default)]
+    grid_datum: Option<[f64; 3]>,
+}
+
+impl Default for WorldLodRecord {
+    fn default() -> Self {
+        default_lod_record()
+    }
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct WorldChunkingRecord {
+    chunk_size: f64,
+    max_distance: f64,
+}
+
+fn default_manual_lod() -> f64 {
+    100.0
+}
+
+fn default_distance_reference() -> f64 {
+    100.0
+}
+
+fn default_grid_factor() -> f64 {
+    10.0
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -254,6 +310,18 @@ pub struct World3dState {
     active_object_id: Option<String>,
     press_object_id: Option<String>,
     mesh_paint_textures: HashMap<String, (u32, u32, Vec<u8>)>,
+    lod: WorldLodRecord,
+    chunking: Option<WorldChunkingRecord>,
+    visible_chunks: HashSet<(i64, i64, i64)>,
+    mesh_lod_catalog: HashMap<String, Vec<WorldMeshLodEntry>>,
+    mesh_url_fallback: HashMap<String, String>,
+    instance_positions: HashMap<String, [f64; 3]>,
+    parsed_instances: Vec<WorldInstanceRecord>,
+    mesh_pool: RefCountPool<String>,
+    mesh_source_urls: HashMap<String, String>,
+    resolved_lod_pick: Option<f64>,
+    scene_lod_json: Option<String>,
+    scene_chunking_json: Option<String>,
 }
 
 impl World3dState {
@@ -318,10 +386,363 @@ impl World3dState {
             active_object_id: None,
             press_object_id: None,
             mesh_paint_textures: HashMap::new(),
+            lod: WorldLodRecord {
+                automatic: true,
+                manual: default_manual_lod(),
+                distance_reference: default_distance_reference(),
+                depth_variable: false,
+                grid_factor: default_grid_factor(),
+                grid_snap_enabled: false,
+                show_grid: true,
+                grid_datum: Some([0.0, 0.0, 0.0]),
+            },
+            chunking: None,
+            visible_chunks: HashSet::new(),
+            mesh_lod_catalog: HashMap::new(),
+            mesh_url_fallback: HashMap::new(),
+            instance_positions: HashMap::new(),
+            parsed_instances: Vec::new(),
+            mesh_pool: RefCountPool::new(),
+            mesh_source_urls: HashMap::new(),
+            resolved_lod_pick: None,
+            scene_lod_json: None,
+            scene_chunking_json: None,
         }
     }
 }
 //#endregion World3dState
+
+//#region Pool
+struct RefCountPool<K>
+where
+    K: Eq + std::hash::Hash + Clone,
+{
+    counts: HashMap<K, u32>,
+}
+
+impl<K> RefCountPool<K>
+where
+    K: Eq + std::hash::Hash + Clone,
+{
+    fn new() -> Self {
+        Self {
+            counts: HashMap::new(),
+        }
+    }
+
+    fn acquire(&mut self, key: K) {
+        *self.counts.entry(key).or_insert(0) += 1;
+    }
+
+    fn release(&mut self, key: K) -> bool {
+        match self.counts.get_mut(&key) {
+            Some(count) if *count > 1 => {
+                *count -= 1;
+                false
+            }
+            Some(_) => {
+                self.counts.remove(&key);
+                true
+            }
+            None => false,
+        }
+    }
+
+    fn contains(&self, key: &K) -> bool {
+        self.counts.contains_key(key)
+    }
+
+    fn keys(&self) -> impl Iterator<Item = &K> {
+        self.counts.keys()
+    }
+}
+//#endregion Pool
+
+//#region Chunking
+fn chunk_key_indices(position: [f64; 3], chunk_size: f64) -> (i64, i64, i64) {
+    (
+        (position[0] / chunk_size).floor() as i64,
+        (position[1] / chunk_size).floor() as i64,
+        (position[2] / chunk_size).floor() as i64,
+    )
+}
+
+fn chunk_center(key: (i64, i64, i64), chunk_size: f64) -> Vec3 {
+    let size = chunk_size as f32;
+    Vec3::new(
+        (key.0 as f32 + 0.5) * size,
+        (key.1 as f32 + 0.5) * size,
+        (key.2 as f32 + 0.5) * size,
+    )
+}
+
+fn chunk_bounds_radius(chunk_size: f64) -> f64 {
+    chunk_size * 0.866
+}
+
+fn chunk_distance_visible(
+    cam_pos: Vec3,
+    chunk_center: Vec3,
+    chunk_size: f64,
+    max_dist: f64,
+    was_visible: bool,
+) -> bool {
+    let bounds_r = chunk_bounds_radius(chunk_size);
+    let dist = cam_pos.sub(chunk_center).length() as f64;
+    let enter_dist = max_dist + bounds_r;
+    let exit_dist = enter_dist + chunk_size * 0.5;
+    if dist <= enter_dist {
+        return true;
+    }
+    if was_visible && dist <= exit_dist {
+        return true;
+    }
+    false
+}
+
+fn update_visible_chunks(state: &mut World3dState, cam_pos: Vec3) {
+    let Some(chunking) = state.chunking.clone() else {
+        return;
+    };
+    let chunk_size = chunking.chunk_size;
+    let max_distance = chunking.max_distance;
+    let mut chunk_keys = HashSet::new();
+    for position in state.instance_positions.values() {
+        chunk_keys.insert(chunk_key_indices(*position, chunk_size));
+    }
+    let previous = state.visible_chunks.clone();
+    let mut next_visible = HashSet::new();
+    for key in chunk_keys.iter().chain(previous.iter()) {
+        let center = chunk_center(*key, chunk_size);
+        let was = previous.contains(key);
+        if chunk_distance_visible(cam_pos, center, chunk_size, max_distance, was) {
+            next_visible.insert(*key);
+        }
+    }
+    state.visible_chunks = next_visible;
+}
+
+fn instance_chunk_visible(state: &World3dState, position: [f64; 3]) -> bool {
+    let Some(chunking) = &state.chunking else {
+        return true;
+    };
+    let key = chunk_key_indices(position, chunking.chunk_size);
+    state.visible_chunks.contains(&key)
+}
+//#endregion Chunking
+
+//#region LodGrid
+const WORLD_LOD_EPSILON: f64 = 0.01;
+const WORLD_GRID_SIZE: f32 = 12_000.0;
+
+fn default_lod_record() -> WorldLodRecord {
+    WorldLodRecord {
+        automatic: true,
+        manual: default_manual_lod(),
+        distance_reference: default_distance_reference(),
+        depth_variable: false,
+        grid_factor: default_grid_factor(),
+        grid_snap_enabled: false,
+        show_grid: true,
+        grid_datum: Some([0.0, 0.0, 0.0]),
+    }
+}
+
+fn scene_lod(state: &World3dState) -> f64 {
+    let camera = state.orbit.to_camera();
+    let distance = camera.position.sub(camera.target).length() as f64;
+    let auto_lod = lod_from_camera_distance(distance, state.lod.distance_reference);
+    if state.lod.automatic || state.lod.depth_variable {
+        auto_lod
+    } else {
+        state.lod.manual
+    }
+}
+
+fn resolve_physical_mesh_id(state: &World3dState, logical_id: &str, desired_lod: f64) -> String {
+    if let Some(lods) = state.mesh_lod_catalog.get(logical_id) {
+        let entries: Vec<(f64, &str)> = lods
+            .iter()
+            .map(|entry| (entry.lod, entry.url.as_str()))
+            .collect();
+        let fallback = state.mesh_url_fallback.get(logical_id).map(String::as_str);
+        if let Some(url) = pick_closest_mesh_url(&entries, desired_lod, fallback) {
+            return mesh_id_from_url(url);
+        }
+    }
+    logical_id.to_string()
+}
+
+fn append_lod_grid_lines(
+    line_vertices: &mut Vec<LineVertex3d>,
+    lod: f64,
+    grid_factor: f64,
+    anchor: Vec3,
+    base_color: [f32; 4],
+) {
+    for (step_world, opacity) in lod_progressive_grid_layers(lod, grid_factor) {
+        let step = step_world as f32;
+        let divs = ((WORLD_GRID_SIZE / step).round() as i32).clamp(2, 512);
+        let half = WORLD_GRID_SIZE * 0.5;
+        let step_size = WORLD_GRID_SIZE / divs as f32;
+        let color = [
+            base_color[0],
+            base_color[1],
+            base_color[2],
+            base_color[3] * opacity,
+        ];
+        let z = anchor.z + 0.002;
+        for i in 0..=divs {
+            let offset = -half + i as f32 * step_size;
+            line_vertices.push(LineVertex3d {
+                position: [anchor.x - half, anchor.y + offset, z],
+                color,
+            });
+            line_vertices.push(LineVertex3d {
+                position: [anchor.x + half, anchor.y + offset, z],
+                color,
+            });
+            line_vertices.push(LineVertex3d {
+                position: [anchor.x + offset, anchor.y - half, z],
+                color,
+            });
+            line_vertices.push(LineVertex3d {
+                position: [anchor.x + offset, anchor.y + half, z],
+                color,
+            });
+        }
+    }
+}
+
+fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, gpu: &mut GpuContext) {
+    const PINNED: &[&str] = &["vortex-marker", "reference-plane", "vertex-marker"];
+    for key in needed_mesh_keys {
+        if !state.mesh_pool.contains(key) {
+            state.mesh_pool.acquire(key.clone());
+        }
+    }
+    let stale: Vec<String> = state
+        .mesh_pool
+        .keys()
+        .filter(|key| !needed_mesh_keys.contains(*key) && !PINNED.contains(&key.as_str()))
+        .cloned()
+        .collect();
+    for key in stale {
+        if state.mesh_pool.release(key.clone()) {
+            state.meshes.remove(&key);
+            state.mesh_versions.remove(&key);
+            state.mesh_paint_textures.remove(&key);
+            state.mesh_source_urls.remove(&key);
+            state.pending_glb_urls.remove(&key);
+            gpu.evict_mesh(&key);
+        }
+    }
+}
+
+fn queue_lod_mesh_fetch(state: &mut World3dState, logical_id: &str, scene_lod: f64) {
+    let entries: Vec<(f64, &str)> = state
+        .mesh_lod_catalog
+        .get(logical_id)
+        .map(|lods| {
+            lods.iter()
+                .map(|entry| (entry.lod, entry.url.as_str()))
+                .collect()
+        })
+        .unwrap_or_default();
+    let fallback = state.mesh_url_fallback.get(logical_id).map(String::as_str);
+    if let Some(url) = pick_closest_mesh_url(&entries, scene_lod, fallback) {
+        state.pending_glb_urls.insert(url.to_string());
+    } else if let Some(url) = fallback {
+        state.pending_glb_urls.insert(url.to_string());
+    }
+}
+
+fn rebuild_instance_draws(state: &mut World3dState, scene_lod: f64) {
+    state.instance_positions.clear();
+    let instances = state.parsed_instances.clone();
+    let mut grouped: HashMap<String, Vec<Instance3d>> = HashMap::new();
+    for (index, instance) in instances.iter().enumerate() {
+        let logical_mesh_id = instance
+            .mesh_id
+            .clone()
+            .unwrap_or_else(|| "box".into());
+        let physical_mesh_id = resolve_physical_mesh_id(state, &logical_mesh_id, scene_lod);
+        if !state.meshes.contains_key(&physical_mesh_id) {
+            if physical_mesh_id == logical_mesh_id {
+                let primitive = mesh_from_kind(&logical_mesh_id);
+                store_mesh(
+                    state,
+                    physical_mesh_id.clone(),
+                    Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices),
+                );
+            } else {
+                queue_lod_mesh_fetch(state, &logical_mesh_id, scene_lod);
+            }
+        }
+        let position = instance.position.unwrap_or([
+            instance.x.unwrap_or(index as f64),
+            instance.y.unwrap_or(0.0),
+            instance.z.unwrap_or(0.0),
+        ]);
+        state.instance_positions.insert(instance.id.clone(), position);
+        let scale = instance
+            .scale
+            .map(|value| [value[0] as f32, value[1] as f32, value[2] as f32])
+            .unwrap_or([1.0, 1.0, 1.0]);
+        let rotation = instance.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+        let mut color = parse_color(instance.color.as_deref().unwrap_or("#94a3b8"));
+        if let Some(mesh) = state.meshes.get(&physical_mesh_id) {
+            if mesh.has_vertex_colors() {
+                let mut avg = [0.0f32; 3];
+                let count = mesh.colors.len() / 4;
+                for chunk in mesh.colors.chunks_exact(4) {
+                    avg[0] += chunk[0];
+                    avg[1] += chunk[1];
+                    avg[2] += chunk[2];
+                }
+                if count > 0 {
+                    let count = count as f32;
+                    color = [avg[0] / count, avg[1] / count, avg[2] / count, 1.0];
+                }
+            }
+        }
+        let selected = instance.selected.unwrap_or(false);
+        let hovered = if component_mode_active(state) {
+            false
+        } else {
+            instance.hovered.unwrap_or(false)
+                || state.local_hover_id.as_deref() == Some(instance.id.as_str())
+        };
+        grouped
+            .entry(physical_mesh_id)
+            .or_default()
+            .push(Instance3d {
+                id: instance.id.clone(),
+                model: Instance3d::model_from_trs(
+                    [position[0] as f32, position[1] as f32, position[2] as f32],
+                    [
+                        rotation[0] as f32,
+                        rotation[1] as f32,
+                        rotation[2] as f32,
+                        rotation[3] as f32,
+                    ],
+                    scale,
+                ),
+                color,
+                selected,
+                hovered,
+            });
+    }
+    state.draws = grouped
+        .into_iter()
+        .map(|(mesh_key, instances)| SceneDraw3d {
+            mesh_key: mesh_key.clone(),
+            mesh_version: *state.mesh_versions.get(&mesh_key).unwrap_or(&0),
+            instances,
+        })
+        .collect();
+}
+//#endregion LodGrid
 
 //#region Gumball
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -558,52 +979,8 @@ fn instance_hovered_component_id(state: &World3dState, instance_id: &str) -> Opt
     state.hovered_component_id.clone()
 }
 
-fn append_component_vertex_spheres(state: &mut World3dState) -> Vec<Instance3d> {
-    if !state.selection_targets.vertex && state.granularity != "vertex" {
-        return Vec::new();
-    }
-    ensure_vertex_marker_mesh(state);
-    let wire_color = [0.55, 0.65, 0.8, 0.9];
-    let selected: HashSet<String> = state.component_ids.iter().cloned().collect();
-    let preview: HashSet<String> = state.marquee_preview_ids.iter().cloned().collect();
-    let mut instances = Vec::new();
-    for draw in &state.draws {
-        let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
-            continue;
-        };
-        for instance in &draw.instances {
-            let hovered = instance_hovered_component_id(state, &instance.id);
-            for (vertex_index, chunk) in mesh.positions.chunks_exact(3).enumerate() {
-                let id = mesh
-                    .vertex_ids
-                    .get(vertex_index)
-                    .map(|value| value.to_string())
-                    .unwrap_or_else(|| vertex_index.to_string());
-                let center = instance.model.transform_point(Vec3::new(
-                    chunk[0], chunk[1], chunk[2],
-                ));
-                let (color, scale) = component_overlay_color(&id, &selected, &preview, &hovered)
-                    .unwrap_or_else(|| (wire_color, VERTEX_BASE_SCALE));
-                if !state.selection_targets.vertex
-                    && component_overlay_color(&id, &selected, &preview, &hovered).is_none()
-                {
-                    continue;
-                }
-                instances.push(Instance3d {
-                    id: format!("vertex-{id}"),
-                    model: Instance3d::model_from_trs(
-                        center.to_array(),
-                        [0.0, 0.0, 0.0, 1.0],
-                        [scale, scale, scale],
-                    ),
-                    color,
-                    selected: false,
-                    hovered: false,
-                });
-            }
-        }
-    }
-    instances
+fn append_component_vertex_spheres(_state: &mut World3dState) -> Vec<Instance3d> {
+    Vec::new()
 }
 
 fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>) {
@@ -673,6 +1050,38 @@ fn append_component_overlays(state: &World3dState, lines: &mut Vec<LineVertex3d>
                             chunk[3], chunk[4], chunk[5],
                         ));
                         push_line_segment(lines, a, b, color);
+            }
+        }
+    }
+    if state.selection_targets.vertex || state.granularity == "vertex" {
+        let wire_color = [0.55, 0.65, 0.8, 0.9];
+        for draw in &state.draws {
+            let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
+                continue;
+            };
+            for instance in &draw.instances {
+                let hovered = instance_hovered_component_id(state, &instance.id);
+                for (vertex_index, chunk) in mesh.positions.chunks_exact(3).enumerate() {
+                    let id = mesh
+                        .vertex_ids
+                        .get(vertex_index)
+                        .map(|value| value.to_string())
+                        .unwrap_or_else(|| vertex_index.to_string());
+                    let center = instance.model.transform_point(Vec3::new(
+                        chunk[0], chunk[1], chunk[2],
+                    ));
+                    let (color, scale) = component_overlay_color(&id, &selected, &preview, &hovered)
+                        .unwrap_or_else(|| (wire_color, VERTEX_BASE_SCALE));
+                    if !state.selection_targets.vertex
+                        && component_overlay_color(&id, &selected, &preview, &hovered).is_none()
+                    {
+                        continue;
+                    }
+                    let d = scale * 0.15;
+                    push_line_segment(lines, center.sub(Vec3::new(d, 0.0, 0.0)), center.add(Vec3::new(d, 0.0, 0.0)), color);
+                    push_line_segment(lines, center.sub(Vec3::new(0.0, d, 0.0)), center.add(Vec3::new(0.0, d, 0.0)), color);
+                    push_line_segment(lines, center.sub(Vec3::new(0.0, 0.0, d)), center.add(Vec3::new(0.0, 0.0, d)), color);
+                }
             }
         }
     }
@@ -1155,6 +1564,8 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         state.scene_references_json = None;
         state.scene_brush_preview_json = None;
         state.scene_interaction_json = None;
+        state.scene_lod_json = None;
+        state.scene_chunking_json = None;
         return;
     };
     let unchanged = state.scene_camera_json.as_deref() == Some(world.camera_json.as_str())
@@ -1166,7 +1577,9 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         && state.scene_target_volumes_json.as_deref() == world.target_volumes_json.as_deref()
         && state.scene_references_json.as_deref() == world.references_json.as_deref()
         && state.scene_brush_preview_json.as_deref() == world.brush_preview_json.as_deref()
-        && state.scene_interaction_json.as_deref() == world.interaction_json.as_deref();
+        && state.scene_interaction_json.as_deref() == world.interaction_json.as_deref()
+        && state.scene_lod_json.as_deref() == world.lod_json.as_deref()
+        && state.scene_chunking_json.as_deref() == world.chunking_json.as_deref();
     if unchanged {
         return;
     }
@@ -1181,6 +1594,17 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.scene_references_json = world.references_json.clone();
     state.scene_brush_preview_json = world.brush_preview_json.clone();
     state.scene_interaction_json = world.interaction_json.clone();
+    state.scene_lod_json = world.lod_json.clone();
+    state.scene_chunking_json = world.chunking_json.clone();
+    state.lod = world
+        .lod_json
+        .as_deref()
+        .and_then(|json| serde_json::from_str(json).ok())
+        .unwrap_or_else(default_lod_record);
+    state.chunking = world
+        .chunking_json
+        .as_deref()
+        .and_then(|json| serde_json::from_str(json).ok());
     state.vortices = world
         .vortices_json
         .as_deref()
@@ -1255,8 +1679,16 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     }
     let meshes: Vec<WorldMeshRecord> =
         serde_json::from_str(&world.meshes_json).unwrap_or_default();
+    state.mesh_lod_catalog.clear();
+    state.mesh_url_fallback.clear();
     for mesh in meshes {
-        if let Some(data) = mesh.data {
+        if let Some(lods) = mesh.lods.filter(|entries| !entries.is_empty()) {
+            state.mesh_lod_catalog.insert(mesh.id.clone(), lods);
+            if let Some(url) = mesh.url.clone() {
+                state.mesh_url_fallback.insert(mesh.id.clone(), url);
+            }
+            queue_lod_mesh_fetch(state, &mesh.id, scene_lod(state));
+        } else if let Some(data) = mesh.data {
             store_mesh(state, mesh.id.clone(), mesh_from_data(&data));
             if let Some(texture) = data.paint_texture_base64.as_deref() {
                 if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(
@@ -1273,10 +1705,11 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
                 }
             }
         } else if let Some(url) = mesh.url {
+            state.mesh_url_fallback.insert(mesh.id.clone(), url.clone());
             state.pending_glb_urls.insert(url);
         }
     }
-    let instances: Vec<WorldInstanceRecord> =
+    state.parsed_instances =
         serde_json::from_str(&world.instances_json).unwrap_or_default();
     let selection: WorldSelectionRecord =
         serde_json::from_str(&world.selection_json).unwrap_or_default();
@@ -1334,77 +1767,9 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.transform_tool = selection
         .transform_tool
         .unwrap_or_else(|| "translate".into());
-    let mut grouped: HashMap<String, Vec<Instance3d>> = HashMap::new();
-    for (index, instance) in instances.into_iter().enumerate() {
-        let mesh_id = instance
-            .mesh_id
-            .unwrap_or_else(|| "box".into());
-        if !state.meshes.contains_key(&mesh_id) {
-            let primitive = mesh_from_kind(&mesh_id);
-            store_mesh(
-                state,
-                mesh_id.clone(),
-                Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices),
-            );
-        }
-        let position = instance.position.unwrap_or([
-            instance.x.unwrap_or(index as f64),
-            instance.y.unwrap_or(0.0),
-            instance.z.unwrap_or(0.0),
-        ]);
-        let scale = instance
-            .scale
-            .map(|value| [value[0] as f32, value[1] as f32, value[2] as f32])
-            .unwrap_or([1.0, 1.0, 1.0]);
-        let rotation = instance.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-        let mut color = parse_color(instance.color.as_deref().unwrap_or("#94a3b8"));
-        if let Some(mesh) = state.meshes.get(&mesh_id) {
-            if mesh.has_vertex_colors() {
-                let mut avg = [0.0f32; 3];
-                let count = mesh.colors.len() / 4;
-                for chunk in mesh.colors.chunks_exact(4) {
-                    avg[0] += chunk[0];
-                    avg[1] += chunk[1];
-                    avg[2] += chunk[2];
-                }
-                if count > 0 {
-                    let count = count as f32;
-                    color = [avg[0] / count, avg[1] / count, avg[2] / count, 1.0];
-                }
-            }
-        }
-        let selected = instance.selected.unwrap_or(false);
-        let hovered = if component_mode_active(state) {
-            false
-        } else {
-            instance.hovered.unwrap_or(false)
-                || state.local_hover_id.as_deref() == Some(instance.id.as_str())
-        };
-        grouped.entry(mesh_id).or_default().push(Instance3d {
-            id: instance.id,
-            model: Instance3d::model_from_trs(
-                [position[0] as f32, position[1] as f32, position[2] as f32],
-                [
-                    rotation[0] as f32,
-                    rotation[1] as f32,
-                    rotation[2] as f32,
-                    rotation[3] as f32,
-                ],
-                scale,
-            ),
-            color,
-            selected,
-            hovered,
-        });
-    }
-    state.draws = grouped
-        .into_iter()
-        .map(|(mesh_key, instances)| SceneDraw3d {
-            mesh_key: mesh_key.clone(),
-            mesh_version: *state.mesh_versions.get(&mesh_key).unwrap_or(&0),
-            instances,
-        })
-        .collect();
+    let current_lod = scene_lod(state);
+    rebuild_instance_draws(state, current_lod);
+    state.resolved_lod_pick = Some(current_lod);
 }
 
 fn apply_runtime_draw_flags(state: &mut World3dState) {
@@ -1453,33 +1818,47 @@ pub fn render_world_3d(
     let theme = ctx.theme;
     state.pick_bounds = ctx.pick_clip.unwrap_or(bounds);
     sync_world3d_state(state, scene, bounds);
+    let current_lod = scene_lod(state);
+    let lod_changed = state
+        .resolved_lod_pick
+        .is_none_or(|previous| (previous - current_lod).abs() > WORLD_LOD_EPSILON);
+    if lod_changed {
+        rebuild_instance_draws(state, current_lod);
+        state.resolved_lod_pick = Some(current_lod);
+    }
     apply_runtime_draw_flags(state);
     apply_gumball_preview(state);
     let inner = bounds;
     ctx.draw
         .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let camera = state.orbit.to_camera();
+    update_visible_chunks(state, camera.position);
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let view_proj = camera.view_proj(aspect);
     let planes = frustum_planes(view_proj);
     let mut culled_draws = Vec::new();
     let mut culled_count = 0u32;
+    let mut needed_mesh_keys = HashSet::new();
     for draw in &state.draws {
         let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
+            if let Some(url) = state.mesh_source_urls.get(&draw.mesh_key) {
+                state.pending_glb_urls.insert(url.clone());
+            }
             continue;
         };
         let mesh_version = *state.mesh_versions.get(&draw.mesh_key).unwrap_or(&0);
-        gpu.ensure_mesh(
-            &draw.mesh_key,
-            mesh_version,
-            &mesh.positions,
-            &mesh.normals,
-            &mesh.indices,
-        );
         let instances: Vec<Instance3d> = draw
             .instances
             .iter()
             .filter(|instance| {
+                let position = state
+                    .instance_positions
+                    .get(&instance.id)
+                    .copied()
+                    .unwrap_or([0.0, 0.0, 0.0]);
+                if !instance_chunk_visible(state, position) {
+                    return false;
+                }
                 let (min, max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
                 let visible = aabb_intersects_frustum(&planes, min, max);
                 if !visible {
@@ -1490,6 +1869,14 @@ pub fn render_world_3d(
             .cloned()
             .collect();
         if !instances.is_empty() {
+            needed_mesh_keys.insert(draw.mesh_key.clone());
+            gpu.ensure_mesh(
+                &draw.mesh_key,
+                mesh_version,
+                &mesh.positions,
+                &mesh.normals,
+                &mesh.indices,
+            );
             culled_draws.push(SceneDraw3d {
                 mesh_key: draw.mesh_key.clone(),
                 mesh_version,
@@ -1497,7 +1884,24 @@ pub fn render_world_3d(
             });
         }
     }
+    sync_mesh_pool(state, &needed_mesh_keys, gpu);
     let mut line_vertices = Vec::new();
+    if state.lod.show_grid {
+        let datum = state.lod.grid_datum.unwrap_or([0.0, 0.0, 0.0]);
+        let anchor = grid_placement_anchor(camera.target, datum);
+        append_lod_grid_lines(
+            &mut line_vertices,
+            current_lod,
+            state.lod.grid_factor,
+            anchor,
+            [
+                theme.text_element.r,
+                theme.text_element.g,
+                theme.text_element.b,
+                theme.text_element.a,
+            ],
+        );
+    }
     append_component_overlays(state, &mut line_vertices);
     for attraction in &state.attractions {
         let Some(from) = attraction.from else { continue };
@@ -1706,26 +2110,18 @@ pub fn render_world_3d(
         ..Default::default()
     });
     if state.marquee_active && state.marquee_points.len() >= 2 {
-        let accent = theme.accent;
-        if state.selection_method == "lasso" {
-            for window in state.marquee_points.windows(2) {
-                ctx.draw.push_line(
-                    window[0][0],
-                    window[0][1],
-                    window[1][0],
-                    window[1][1],
-                    accent,
-                    1.5,
-                );
-            }
-        } else {
-            let start = state.marquee_points[0];
-            let end = state.marquee_points[state.marquee_points.len() - 1];
-            ctx.draw.push_line(start[0], start[1], end[0], start[1], accent, 1.5);
-            ctx.draw.push_line(end[0], start[1], end[0], end[1], accent, 1.5);
-            ctx.draw.push_line(end[0], end[1], start[0], end[1], accent, 1.5);
-            ctx.draw.push_line(start[0], end[1], start[0], start[1], accent, 1.5);
-        }
+        let crossing = marquee_is_crossing_from_path(
+            &state.marquee_points,
+            state.selection_method == "lasso",
+        );
+        paint_selection_marquee(
+            &mut ctx.draw,
+            theme,
+            crossing,
+            state.selection_method == "lasso",
+            &state.marquee_points,
+            false,
+        );
     }
     if scene.world_3d.is_none() {
         draw_text(
@@ -2309,14 +2705,7 @@ fn marquee_select_command(
     let camera = state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let view_proj = camera.view_proj(aspect);
-    let rectangle = state.selection_method != "lasso";
-    let polygon: Vec<[f32; 2]> = if rectangle {
-        let start = state.marquee_points[0];
-        let end = state.marquee_points[state.marquee_points.len() - 1];
-        vec![start, [end[0], start[1]], end, [start[0], end[1]]]
-    } else {
-        state.marquee_points.clone()
-    };
+    let (polygon, rectangle, crossing) = marquee_local_polygon(state, inner);
     let ids = if component_mode_active(state) {
         screen_select_components(
             &state.meshes,
@@ -2327,6 +2716,8 @@ fn marquee_select_command(
             &polygon,
             rectangle,
             state.granularity.as_str(),
+            state.active_object_id.as_deref(),
+            crossing,
         )
     } else {
         screen_select_instances(
@@ -2337,6 +2728,7 @@ fn marquee_select_command(
             inner.h,
             &polygon,
             rectangle,
+            crossing,
         )
     };
     state.marquee_points.clear();
@@ -2618,6 +3010,23 @@ fn pick_paint_hit(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option<(
     best.map(|(_, object_id, u, v)| (object_id, u, v))
 }
 
+fn marquee_local_polygon(state: &World3dState, rect: Rect) -> (Vec<[f32; 2]>, bool, bool) {
+    let rectangle = state.selection_method != "lasso";
+    let crossing = marquee_is_crossing_from_path(&state.marquee_points, !rectangle);
+    let global: Vec<[f32; 2]> = if rectangle {
+        let start = state.marquee_points[0];
+        let end = state.marquee_points[state.marquee_points.len() - 1];
+        vec![start, end]
+    } else {
+        state.marquee_points.clone()
+    };
+    let local = global
+        .iter()
+        .map(|point| [point[0] - rect.x, point[1] - rect.y])
+        .collect();
+    (local, rectangle, crossing)
+}
+
 fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
     if state.marquee_points.len() < 2 {
         state.marquee_preview_ids.clear();
@@ -2626,14 +3035,7 @@ fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
     let camera = state.orbit.to_camera();
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let view_proj = camera.view_proj(aspect);
-    let rectangle = state.selection_method != "lasso";
-    let polygon: Vec<[f32; 2]> = if rectangle {
-        let start = state.marquee_points[0];
-        let end = state.marquee_points[state.marquee_points.len() - 1];
-        vec![start, [end[0], start[1]], end, [start[0], end[1]]]
-    } else {
-        state.marquee_points.clone()
-    };
+    let (polygon, rectangle, crossing) = marquee_local_polygon(state, inner);
     state.marquee_preview_ids = if component_mode_active(state) {
         screen_select_components(
             &state.meshes,
@@ -2644,6 +3046,8 @@ fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
             &polygon,
             rectangle,
             state.granularity.as_str(),
+            state.active_object_id.as_deref(),
+            crossing,
         )
     } else {
         screen_select_instances(
@@ -2654,6 +3058,7 @@ fn update_marquee_preview(state: &mut World3dState, inner: Rect) {
             inner.h,
             &polygon,
             rectangle,
+            crossing,
         )
     };
 }
@@ -2866,6 +3271,7 @@ fn mesh_id_from_url(url: &str) -> String {
 
 pub fn apply_glb_bytes(state: &mut World3dState, url: &str, bytes: &[u8]) {
     let mesh_id = mesh_id_from_url(url);
+    state.mesh_source_urls.insert(mesh_id.clone(), url.to_string());
     if state.meshes.contains_key(&mesh_id) {
         state.pending_glb_urls.remove(url);
         return;
@@ -3015,6 +3421,8 @@ mod tests {
                 references_json: None,
                 brush_preview_json: None,
                 interaction_json: None,
+                lod_json: None,
+                chunking_json: None,
             }),
             node_graph: None,
             text_editor: None,
@@ -3094,7 +3502,11 @@ mod tests {
             }],
         });
         let instances = append_component_vertex_spheres(&mut state);
-        assert_eq!(instances.len(), 4);
+        assert_eq!(instances.len(), 0);
+
+        let mut lines = Vec::new();
+        append_component_overlays(&state, &mut lines);
+        assert_eq!(lines.len(), 28); // 4 from edges + 24 from 4 vertex crosses
     }
 
     #[test]
@@ -3219,6 +3631,103 @@ mod tests {
         assert_eq!(command.command, "worldPick");
         let args = command.args.expect("args");
         assert_eq!(args["id"], json!(1));
+    }
+
+    #[test]
+    fn marquee_preview_respects_pick_bounds_offset() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "vertex".into();
+        state.active_object_id = Some("obj-1".into());
+        state.meshes.insert("mesh-1".into(), topology_mesh());
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let inner = Rect {
+            x: 100.0,
+            y: 50.0,
+            w: 400.0,
+            h: 400.0,
+        };
+        state.pick_bounds = inner;
+        state.marquee_points = vec![[110.0, 60.0], [490.0, 450.0]];
+        update_marquee_preview(&mut state, inner);
+        assert!(
+            !state.marquee_preview_ids.is_empty(),
+            "preview ids: {:?}",
+            state.marquee_preview_ids
+        );
+    }
+
+    #[test]
+    fn marquee_crossing_includes_partial_overlap_window_does_not() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.granularity = "mesh".into();
+        state.meshes.insert("mesh-1".into(), topology_mesh());
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d {
+                id: "obj-1".into(),
+                model: Mat4::identity(),
+                color: [1.0, 1.0, 1.0, 1.0],
+                selected: false,
+                hovered: false,
+            }],
+        });
+        let inner = Rect {
+            x: 0.0,
+            y: 0.0,
+            w: 400.0,
+            h: 400.0,
+        };
+        state.pick_bounds = inner;
+        let camera = state.orbit.to_camera();
+        let view_proj = camera.view_proj(1.0);
+        let mut min_x = f32::INFINITY;
+        let mut min_y = f32::INFINITY;
+        let mut max_x = f32::NEG_INFINITY;
+        let mut max_y = f32::NEG_INFINITY;
+        for corner in [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [1.0, 1.0, 0.0]] {
+            let screen = kernel_3d_scene::project_point(
+                view_proj,
+                Vec3::from_array(corner),
+                inner.w,
+                inner.h,
+            )
+            .expect("screen");
+            min_x = min_x.min(screen[0]);
+            min_y = min_y.min(screen[1]);
+            max_x = max_x.max(screen[0]);
+            max_y = max_y.max(screen[1]);
+        }
+        let center_x = (min_x + max_x) * 0.5;
+        let center_y = (min_y + max_y) * 0.5;
+        state.marquee_points = vec![
+            [inner.x + min_x, inner.y + min_y],
+            [inner.x + center_x, inner.y + center_y],
+        ];
+        update_marquee_preview(&mut state, inner);
+        assert!(
+            state.marquee_preview_ids.is_empty(),
+            "window marquee should not select partially enclosed mesh"
+        );
+        state.marquee_points = vec![
+            [inner.x + center_x, inner.y + min_y],
+            [inner.x + min_x, inner.y + center_y],
+        ];
+        update_marquee_preview(&mut state, inner);
+        assert!(
+            !state.marquee_preview_ids.is_empty(),
+            "crossing marquee should select partially enclosed mesh"
+        );
     }
 
     #[test]
@@ -3454,5 +3963,70 @@ mod tests {
             .expect("edge pick");
         assert_eq!(picked.0, "edge");
         assert_eq!(picked.2, "obj-1");
+    }
+
+    #[test]
+    fn chunk_key_indices_buckets_negative_coordinates() {
+        assert_eq!(chunk_key_indices([-10.0, 5.0, 0.0], 256.0), (-1, 0, 0));
+        assert_eq!(chunk_key_indices([300.0, 300.0, 0.0], 256.0), (1, 1, 0));
+    }
+
+    #[test]
+    fn chunk_distance_visible_uses_hysteresis() {
+        let center = chunk_center((0, 0, 0), 256.0);
+        let cam_near = Vec3::new(0.0, 0.0, 0.0);
+        assert!(chunk_distance_visible(cam_near, center, 256.0, 8000.0, false));
+        let cam_far = Vec3::new(8400.0, 128.0, 0.0);
+        assert!(!chunk_distance_visible(cam_far, center, 256.0, 8000.0, false));
+        assert!(chunk_distance_visible(cam_far, center, 256.0, 8000.0, true));
+    }
+
+    #[test]
+    fn mesh_pool_release_clears_at_zero_refcount() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.mesh_pool.acquire("mesh-1".into());
+        assert!(state.mesh_pool.release("mesh-1".into()));
+        assert!(!state.mesh_pool.contains(&"mesh-1".to_string()));
+        state.mesh_pool.acquire("mesh-1".into());
+        state.mesh_pool.acquire("mesh-1".into());
+        assert!(!state.mesh_pool.release("mesh-1".into()));
+        assert!(state.mesh_pool.contains(&"mesh-1".to_string()));
+        assert!(state.mesh_pool.release("mesh-1".into()));
+        assert!(!state.mesh_pool.contains(&"mesh-1".to_string()));
+    }
+
+    #[test]
+    fn resolve_physical_mesh_id_picks_closest_lod_url() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.mesh_lod_catalog.insert(
+            "tower".into(),
+            vec![
+                WorldMeshLodEntry {
+                    lod: 1.0,
+                    url: "https://example.com/tower-high.glb".into(),
+                },
+                WorldMeshLodEntry {
+                    lod: 100.0,
+                    url: "https://example.com/tower-low.glb".into(),
+                },
+            ],
+        );
+        let detailed = resolve_physical_mesh_id(&state, "tower", 2.0);
+        let coarse = resolve_physical_mesh_id(&state, "tower", 200.0);
+        assert_eq!(detailed, "mesh:tower-high");
+        assert_eq!(coarse, "mesh:tower-low");
+    }
+
+    #[test]
+    fn lod_grid_lines_generate_for_near_camera() {
+        let mut lines = Vec::new();
+        append_lod_grid_lines(
+            &mut lines,
+            2.0,
+            10.0,
+            Vec3::ZERO,
+            [0.5, 0.5, 0.5, 1.0],
+        );
+        assert!(!lines.is_empty());
     }
 }

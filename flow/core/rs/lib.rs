@@ -2367,6 +2367,10 @@ impl FlowHost {
         self.dag.selection_preview_crossing()
     }
 
+    pub fn selection_preview_method(&self) -> &str {
+        self.dag.selection_preview_method()
+    }
+
     pub fn preselect_widget_ids_json(&self) -> String {
         serde_json::json!({
             "ids": self.dag.preselect_widget_ids(),

@@ -1,0 +1,20 @@
+{
+  "title": "Fix Wgpu Window Options Chip Z-Order",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Fix folded Window Options and Command chip buttons in the wgpu renderer so they render below glassy side panels. Root cause: folded chips are drawn to the overlay draw list backdrop tier, which composites on top of side panel glass. Fix: render chips to the main draw list instead, matching unfolded rails.",
+  "summary": "Fixed folded Window Options and Command chips rendering above glassy side panels in the wgpu renderer.\n\nRoot cause: folded chips were drawn to the overlay draw list's backdrop tier. In `composite_to_swapchain`, overlay backdrop always composites after overlay glass, so chips painted on top of side panels.\n\nFix: render both folded chips unconditionally to the main `draw` list (matching unfolded rails that already use `draw.push_glass(..., GlassTier::WindowOptions)`). Side panels remain on `overlay` and composite after `draw`.\n\n`cargo check -p semio-framework-renderer-wgpu` blocked by pre-existing `semio-framework-plugin` compile errors (unrelated `world3d_scene_extended` signature). Change is a two-line draw-list target swap with no new API.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1848"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "8b566cb0",
+    "local": "fix_wgpu_window_options_chip_z-order_8b566cb0.plan.md"
+  },
+  "sessions": [
+    "⚪4b2650bacd3e4b0bb9d30226201704be",
+    "⚪79d52d499ea846cc8a4150b6234539ab"
+  ]
+}

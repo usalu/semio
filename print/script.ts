@@ -51,8 +51,11 @@ const TEMPLATES: readonly { readonly id: string; readonly tex: string }[] = [
 ];
 
 function deriveDarkTexSource(lightSource: string): string {
-	if (!/\btheme=light\b/.test(lightSource)) throw new Error("template missing theme=light; cannot derive dark variant");
-	return lightSource.replace(/\btheme=light\b/, "theme=dark");
+	if (/\btheme=dark\b/.test(lightSource)) throw new Error("source already has theme=dark; use the light source as canonical");
+	if (/\btheme=light\b/.test(lightSource)) return lightSource.replace(/\btheme=light\b/, "theme=dark");
+	const withOptions = lightSource.replace(/(\\documentclass\[[^\]]*)\]/, "$1,theme=dark]");
+	if (withOptions !== lightSource) return withOptions;
+	throw new Error("cannot derive dark variant: \\documentclass has no options to append theme=dark");
 }
 
 function templatePdfNames(texRel: string): { readonly light: string; readonly dark: string } {
@@ -170,9 +173,11 @@ export function emitSemioTokensSty(): void {
 		lines.push(`\\definecolor{${name}}{HTML}{${html}}`);
 	}
 	lines.push("");
-	for (const [key, value] of Object.entries(tokens.spacing)) {
-		lines.push(`\\newcommand{\\semio@spacing@${key.replaceAll("-", "@")}}{${remToEm(value)}}`);
-	}
+	const unitFactor = remFactor(tokens.spacing.compact ?? "0.2rem");
+	const unitEm = `${+unitFactor.toFixed(3)}em`;
+	lines.push(`\\newcommand{\\semio@spacing@unit}{${unitEm}}`);
+	lines.push(`\\newcommand{\\semio@spacing@single}{${unitEm}}`);
+	lines.push(`\\newcommand{\\semio@spacing@double}{${+(unitFactor * 2).toFixed(3)}em}`);
 	const hairline =
 		typeof tokens.strokes?.chromeBorderHairline === "number"
 			? tokens.strokes.chromeBorderHairline * 0.75
@@ -195,13 +200,12 @@ export function emitSemioTokensSty(): void {
 	lines.push(`\\newcommand{\\semio@stroke@default}{${strokeDefault}pt}`);
 	lines.push(`\\newcommand{\\semio@stroke@focus}{${strokeFocus}pt}`);
 	lines.push("");
-	const compactFactor = remFactor(tokens.spacing.compact ?? "0.2rem");
 	const chromeMetrics = tokens.metrics?.chrome;
 	if (chromeMetrics) {
-		const titleBarHeight = compactFactor * (chromeMetrics.controlHeightUiSpacing ?? 7);
-		const chromePadding = compactFactor * (chromeMetrics.paddingStandardUiSpacing ?? 1);
-		const navbarHeight = compactFactor * (chromeMetrics.navbarHeightUiSpacing ?? 9);
-		const footerHeight = compactFactor * (chromeMetrics.footerHeightUiSpacing ?? 9);
+		const titleBarHeight = unitFactor * (chromeMetrics.controlHeightUiSpacing ?? 7);
+		const chromePadding = unitFactor * (chromeMetrics.paddingStandardUiSpacing ?? 1);
+		const navbarHeight = unitFactor * (chromeMetrics.navbarHeightUiSpacing ?? 9);
+		const footerHeight = unitFactor * (chromeMetrics.footerHeightUiSpacing ?? 9);
 		lines.push(`\\newcommand{\\semio@chrome@titlebar@height}{${+titleBarHeight.toFixed(3)}em}`);
 		lines.push(`\\newcommand{\\semio@chrome@padding}{${+chromePadding.toFixed(3)}em}`);
 		lines.push(`\\newcommand{\\semio@chrome@navbar@height}{${+navbarHeight.toFixed(3)}em}`);
@@ -342,21 +346,25 @@ function compilePrintDocument(tectonic: string, texAbs: string, outDir: string):
 	console.log(`[DEBUG] print built ${relative(repoRoot, pdf)}`);
 }
 
-/** @emoji 🖨️ Compiles one `.tex` file with the semio print search path and Tectonic. */
-export async function buildPrintDocument(texAbs: string, outDir = join(dirname(texAbs), "dist")): Promise<void> {
-	emitSemioTokensSty();
-	const tectonic = await ensureTectonic();
+function compileLightAndDark(tectonic: string, texAbs: string, outDir: string): void {
 	compilePrintDocument(tectonic, texAbs, outDir);
-}
-
-function compileTemplate(tectonic: string, template: (typeof TEMPLATES)[number]): void {
-	const texAbs = join(printRoot, template.tex);
-	compilePrintDocument(tectonic, texAbs, distDir);
 	const lightSource = readFileSync(texAbs, "utf8");
 	const darkSource = deriveDarkTexSource(lightSource);
 	const darkTexAbs = join(dirname(texAbs), `${basename(texAbs, ".tex")}-dark.tex`);
 	writeFileSync(darkTexAbs, darkSource, "utf8");
-	compilePrintDocument(tectonic, darkTexAbs, distDir);
+	compilePrintDocument(tectonic, darkTexAbs, outDir);
+}
+
+/** @emoji 🖨️ Compiles one `.tex` file with the semio print search path and Tectonic. */
+export async function buildPrintDocument(texAbs: string, outDir = join(dirname(texAbs), "dist")): Promise<void> {
+	emitSemioTokensSty();
+	const tectonic = await ensureTectonic();
+	compileLightAndDark(tectonic, texAbs, outDir);
+}
+
+function compileTemplate(tectonic: string, template: (typeof TEMPLATES)[number]): void {
+	const texAbs = join(printRoot, template.tex);
+	compileLightAndDark(tectonic, texAbs, distDir);
 }
 
 function resolveTemplates(filter: string[]): (typeof TEMPLATES)[number][] {

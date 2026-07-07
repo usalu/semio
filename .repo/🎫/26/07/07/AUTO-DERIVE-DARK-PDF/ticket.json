@@ -3,7 +3,7 @@
   "emoji": "🖨️",
   "status": "closed",
   "description": "Stop hand-maintaining six *-dark.tex wrapper files and six duplicate TEMPLATES entries in print/script.ts. Derive each dark PDF automatically at build time from its canonical light .tex file, and let logo/image assets optionally supply a -dark variant by convention.",
-  "summary": "Dark PDFs are now derived automatically at build time instead of being hand-maintained as separate template files.\n\n- Collapsed `TEMPLATES` in `print/script.ts` to 6 canonical families; `compileTemplate` writes a sibling `*-dark.tex` (theme=light → theme=dark) and compiles both light and dark PDFs.\n- Watch mode ignores regenerated `*-dark.tex` artifacts; `resolveTemplates` still accepts legacy `*-dark` filter ids.\n- Deleted 6 hand-written `*-dark.tex` wrappers; added `print/.gitignore` for regenerated artifacts.\n- `semio-logo.sty` resolves optional `-dark` image variants by convention when theme is dark.\n- Fixed missing `\\dim_new:N` declarations in `semio-window.sty` uncovered during verification.\n\nVerified: `bun ./script.ts test` builds all 12 PDFs.",
+  "summary": "Extended auto dark PDF derivation to all `buildPrintDocument` consumers.\n\n- Extracted `compileLightAndDark` used by both `buildPrintDocument` and `compileTemplate`.\n- `deriveDarkTexSource` now handles documents without explicit `theme=light` by appending `theme=dark` to `\\documentclass` options.\n- mit-bestand bericht watch ignores regenerated `*-dark.tex` files.\n\nVerified: mit-bestand zwischenbericht dist now contains both `zwischenbericht.pdf` and `zwischenbericht-dark.pdf`; print test still builds all 12 template PDFs.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1843"
   },
@@ -14,6 +14,7 @@
     "local": "auto-derive_dark_pdf_98e88ecc.plan.md"
   },
   "sessions": [
-    "⚪30a1ae2827a44668906f0a957dad58f3"
+    "⚪30a1ae2827a44668906f0a957dad58f3",
+    "⚪9e2f8cf4712f4cf1b345ae4d377da3a4"
   ]
 }

@@ -1,9 +1,9 @@
 {
   "title": "Per-Component Hover and Vertex Spheres",
   "emoji": "🖱️",
-  "status": "open",
+  "status": "closed",
   "description": "Wgpu renderer cursor parity with React: theme-aware custom SVG cursors (selectable, grab, resize, text, etc.) applied to canvas based on hit targets and drag state.",
-  "summary": "Fixed 3D component picking coordinates and edge hover. Picking now uses a visible clip rect (pick_bounds) aligned with the scissored viewport instead of scrolled layout bounds, fixing vertex hover offset in scrollable panels. Edge hover uses screen-space distance to projected edge segments. project_point depth check corrected for WGPU NDC (0..1). All infinite_world tests pass; WGPU WASM rebuilt.",
+  "summary": "Fixed rectangle marquee live preview for component selection (vertex/edge/face). Root causes: marquee polygon was in global screen coordinates while projected pick points use viewport-local space; rectangle hit-testing used polygon[0] and polygon[1] (adjacent corners) instead of the full marquee bounds. Added marquee_local_polygon() to convert global drag points to pick-rect-local space, fixed marquee_rect_bounds() in kernel_3d_scene to use min/max of all polygon points, and scoped component marquee to active_object_id. Added tests for pick_bounds offset preview. Rebuilt WGPU wasm (also fixed pre-existing AssetPollReset compile errors blocking trunk).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1826"
   },

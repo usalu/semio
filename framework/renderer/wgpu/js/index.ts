@@ -115,6 +115,7 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
 	canvas.style.width = "100%";
 	canvas.style.height = "100vh";
 	canvas.style.touchAction = "none";
+	canvas.style.outline = "none";
 	root.append(canvas);
 
 	const pluginEntries = options.plugins ?? [];

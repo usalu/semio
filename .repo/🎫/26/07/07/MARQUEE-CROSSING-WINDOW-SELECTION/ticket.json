@@ -1,0 +1,21 @@
+{
+  "title": "Marquee Crossing Window Selection",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Restore canonical drag-direction marquee selection (left-to-right = window/total inclusion, right-to-left = crossing/partial inclusion) for 3D world WGPU renderer.",
+  "summary": "Fixed rectangle marquee making the 3D scene disappear and hiding the selection rect. Root cause: push_solid_overlay on the same draw layer as push_scene_pass breaks the overlay interleave pass (world_prepared is None there, so scene passes on that layer are skipped while overlay UI still draws). Switched marquee fill to push_solid on the backdrop layer, matching GIS map marquee rendering. Border lines remain push_line after the scene pass watermark so they interleave correctly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1847"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "e8ab273b",
+    "local": "marquee_crossing_window_selection_e8ab273b.plan.md"
+  },
+  "sessions": [
+    "⚪0178a9aac903436dabbc17781cc6dcc6",
+    "⚪c3d23576d918453c89454b92903fa365",
+    "⚪bfecc639d3294dfeaf4a518d76dc9635"
+  ]
+}

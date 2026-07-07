@@ -1181,6 +1181,10 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         self.selection_preview_crossing
     }
 
+    pub fn selection_preview_method(&self) -> &str {
+        self.selection_options.method.as_str()
+    }
+
     pub fn cancel_area_select(&mut self) -> bool {
         let prev = std::mem::replace(&mut self.interaction, InteractionMode::Idle);
         let cancelled = matches!(prev, InteractionMode::SelectionPending { .. } | InteractionMode::AreaSelect { .. });

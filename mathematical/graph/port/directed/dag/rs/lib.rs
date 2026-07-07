@@ -2285,6 +2285,10 @@ impl DagHost {
         self.engine.selection_preview_crossing()
     }
 
+    pub fn selection_preview_method(&self) -> &str {
+        self.engine.selection_preview_method()
+    }
+
     /// 👁️ Preselected widget ids during an in-flight marquee gesture.
     pub fn preselect_widget_ids(&self) -> Vec<String> {
         self.engine.preselect.node_ids.iter().filter_map(|&nid| self.widget_id_for_node_id(nid)).collect()

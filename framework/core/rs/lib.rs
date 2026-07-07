@@ -2078,6 +2078,83 @@ pub struct World3dScene {
     pub brush_preview_json: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub interaction_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lod_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chunking_json: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldMeshLodEntry {
+    pub lod: f64,
+    pub url: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldLodRecord {
+    #[serde(default = "default_true")]
+    pub automatic: bool,
+    #[serde(default = "default_manual_lod")]
+    pub manual: f64,
+    #[serde(default = "default_distance_reference")]
+    pub distance_reference: f64,
+    #[serde(default)]
+    pub depth_variable: bool,
+    #[serde(default = "default_grid_factor")]
+    pub grid_factor: f64,
+    #[serde(default)]
+    pub grid_snap_enabled: bool,
+    #[serde(default = "default_true")]
+    pub show_grid: bool,
+    #[serde(default)]
+    pub grid_datum: Option<[f64; 3]>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WorldChunkingRecord {
+    pub chunk_size: f64,
+    pub max_distance: f64,
+}
+
+fn default_manual_lod() -> f64 {
+    100.0
+}
+
+fn default_distance_reference() -> f64 {
+    100.0
+}
+
+fn default_grid_factor() -> f64 {
+    10.0
+}
+
+fn default_true() -> bool {
+    true
+}
+
+pub fn world3d_default_lod_json() -> String {
+    serde_json::json!({
+        "automatic": true,
+        "manual": 100.0,
+        "distanceReference": 100.0,
+        "depthVariable": false,
+        "gridFactor": 10.0,
+        "gridSnapEnabled": false,
+        "showGrid": true,
+        "gridDatum": [0.0, 0.0, 0.0],
+    })
+    .to_string()
+}
+
+pub fn world3d_chunking_json(chunk_size: f64, max_distance: f64) -> String {
+    serde_json::json!({
+        "chunkSize": chunk_size,
+        "maxDistance": max_distance,
+    })
+    .to_string()
 }
 
 pub fn world3d_default_selection_json() -> String {

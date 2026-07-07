@@ -1408,6 +1408,8 @@ impl PluginApp for Puzzle5dPlayApp {
                         None,
                         brush_preview,
                         Some(world_interaction_json(&envelope.runtime)),
+                        None,
+                        None,
                     ),
                 )
             }

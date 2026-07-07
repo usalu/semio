@@ -1690,6 +1690,37 @@ mod tests {
     }
 
     #[test]
+    fn panel_scroll_region_blocks_scene_wheel() {
+        let panel_scroll = HitTarget {
+            rect: Rect::new(0.0, 0.0, 200.0, 400.0),
+            event: None,
+            control_id: Some("panel.left.lowpoly".into()),
+            kind: HitKind::ScrollRegion,
+            drag_axis: None,
+            drag_data: None,
+        };
+        assert!(!ShellState::wheel_propagates_to_scene_surface(Some(&panel_scroll)));
+        let world = HitTarget {
+            rect: Rect::new(0.0, 0.0, 800.0, 600.0),
+            event: None,
+            control_id: Some("world-surface".into()),
+            kind: HitKind::World3d,
+            drag_axis: None,
+            drag_data: None,
+        };
+        assert!(ShellState::wheel_propagates_to_scene_surface(Some(&world)));
+        let graph_pane = HitTarget {
+            rect: Rect::new(0.0, 0.0, 800.0, 600.0),
+            event: None,
+            control_id: Some("graph-surface.pane".into()),
+            kind: HitKind::ScrollRegion,
+            drag_axis: None,
+            drag_data: None,
+        };
+        assert!(ShellState::wheel_propagates_to_scene_surface(Some(&graph_pane)));
+    }
+
+    #[test]
     fn resize_hits_win_over_later_scroll_region() {
         let dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
         dock.root = even_layout(&["a".into(), "b".into()]);
@@ -1821,6 +1852,15 @@ mod tests {
         let right = split_drop_preview_in_body(body, DockSide::Right);
         assert_eq!(right.x, 210.0);
         assert_eq!(right.w, 200.0);
+    }
+
+    #[test]
+    fn map_marquee_mode_matches_ui_react() {
+        use crate::engine_canvas::map_marquee_mode;
+        assert_eq!(map_marquee_mode(false, false), "default");
+        assert_eq!(map_marquee_mode(true, false), "additive");
+        assert_eq!(map_marquee_mode(false, true), "subtractive");
+        assert_eq!(map_marquee_mode(true, true), "invertive");
     }
 }
 //#endregion DockTests
@@ -2906,6 +2946,7 @@ pub fn paint_node_graph_labels(
 struct NodeGraphOverlaySnapshot {
     preview_points_json: String,
     preview_crossing: bool,
+    preview_method: String,
     selection_bounds_json: String,
 }
 
@@ -2917,11 +2958,13 @@ fn node_graph_overlay_snapshot(surface_id: &str) -> Option<NodeGraphOverlaySnaps
             Some(NodeGraphEngine::Flow(host)) => Some(NodeGraphOverlaySnapshot {
                 preview_points_json: host.selection_preview_points_json(),
                 preview_crossing: host.selection_preview_crossing(),
+                preview_method: host.selection_preview_method().to_string(),
                 selection_bounds_json: host.selection_union_bounds_screen_json(),
             }),
             Some(NodeGraphEngine::Dag(host)) => Some(NodeGraphOverlaySnapshot {
                 preview_points_json: host.dag.selection_preview_points_json(),
                 preview_crossing: host.dag.selection_preview_crossing(),
+                preview_method: host.dag.selection_preview_method().to_string(),
                 selection_bounds_json: host.dag.selection_union_bounds_screen_json(),
             }),
             None => None,
@@ -2942,46 +2985,18 @@ fn paint_node_graph_selection_marquee(
     inner: Rect,
     points: &[(f32, f32)],
     crossing: bool,
+    method: &str,
     theme: &Theme,
 ) {
     if points.len() < 2 {
         return;
     }
-    let stroke = theme.accent.with_alpha(0.9);
-    let fill_alpha = if crossing { 0.08 } else { 0.12 };
-    let fill = theme.selected.with_alpha(fill_alpha);
-    if points.len() >= 3 {
-        for window in points.windows(2) {
-            let (x0, y0) = window[0];
-            let (x1, y1) = window[1];
-            ctx.draw.push_line_overlay(
-                inner.x + x0,
-                inner.y + y0,
-                inner.x + x1,
-                inner.y + y1,
-                stroke,
-                1.5,
-            );
-        }
-        let (fx, fy) = points[0];
-        let (lx, ly) = points[points.len() - 1];
-        ctx.draw.push_line_overlay(inner.x + lx, inner.y + ly, inner.x + fx, inner.y + fy, stroke, 1.5);
-        return;
-    }
-    let (x0, y0) = points[0];
-    let (x1, y1) = points[points.len() - 1];
-    let rx = inner.x + x0.min(x1);
-    let ry = inner.y + y0.min(y1);
-    let rw = (x1 - x0).abs();
-    let rh = (y1 - y0).abs();
-    ctx.draw.push_solid_overlay([rx, ry, rw, rh], fill);
-    ctx.draw
-        .push_line_overlay(rx, ry, rx + rw, ry, stroke, 1.5);
-    ctx.draw
-        .push_line_overlay(rx + rw, ry, rx + rw, ry + rh, stroke, 1.5);
-    ctx.draw
-        .push_line_overlay(rx + rw, ry + rh, rx, ry + rh, stroke, 1.5);
-    ctx.draw.push_line_overlay(rx, ry + rh, rx, ry, stroke, 1.5);
+    let lasso = method == "lasso";
+    let global: Vec<[f32; 2]> = points
+        .iter()
+        .map(|(x, y)| [inner.x + x, inner.y + y])
+        .collect();
+    ui_wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, true);
 }
 
 fn paint_node_graph_selection_bounds(
@@ -3021,7 +3036,14 @@ pub fn paint_node_graph_overlays(
         return;
     };
     let points = parse_selection_preview_points(&snapshot.preview_points_json);
-    paint_node_graph_selection_marquee(ctx, inner, &points, snapshot.preview_crossing, ctx.theme);
+    paint_node_graph_selection_marquee(
+        ctx,
+        inner,
+        &points,
+        snapshot.preview_crossing,
+        &snapshot.preview_method,
+        ctx.theme,
+    );
     paint_node_graph_selection_bounds(ctx, inner, &snapshot.selection_bounds_json, ctx.theme);
 }
 //#endregion NodeGraph
@@ -3296,13 +3318,13 @@ pub fn map_local_pointer(inner: Rect, x: f32, y: f32) -> (f64, f64) {
     ((x - inner.x) as f64, (y - inner.y) as f64)
 }
 
-pub fn map_marquee_mode(shift: bool, ctrl: bool, alt: bool) -> &'static str {
-    if alt {
-        "subtractive"
-    } else if ctrl {
+pub fn map_marquee_mode(shift: bool, ctrl_or_meta: bool) -> &'static str {
+    if shift && ctrl_or_meta {
         "invertive"
     } else if shift {
         "additive"
+    } else if ctrl_or_meta {
+        "subtractive"
     } else {
         "default"
     }
@@ -5904,8 +5926,6 @@ fn paint_gis_map_marquee(
     if points.len() < 2 {
         return;
     }
-    let stroke = theme.accent.with_alpha(0.9);
-    let fill = theme.selected.with_alpha(0.12);
     let method = match &state.drag {
         Some(SceneDrag {
             mode: SceneDragMode::MapMarquee { method, .. },
@@ -5913,39 +5933,13 @@ fn paint_gis_map_marquee(
         }) => method.as_str(),
         _ => "rectangle",
     };
-    if method == "lasso" && points.len() >= 3 {
-        for window in points.windows(2) {
-            let (x0, y0) = window[0];
-            let (x1, y1) = window[1];
-            ctx.draw.push_line(
-                inner.x + x0,
-                inner.y + y0,
-                inner.x + x1,
-                inner.y + y1,
-                stroke,
-                1.5,
-            );
-        }
-        let (fx, fy) = points[0];
-        let (lx, ly) = points[points.len() - 1];
-        ctx.draw.push_line(inner.x + lx, inner.y + ly, inner.x + fx, inner.y + fy, stroke, 1.5);
-    } else {
-        let (x0, y0) = points[0];
-        let (x1, y1) = points[points.len() - 1];
-        let rx = inner.x + x0.min(x1);
-        let ry = inner.y + y0.min(y1);
-        let rw = (x1 - x0).abs();
-        let rh = (y1 - y0).abs();
-        ctx.draw.push_solid([rx, ry, rw, rh], fill);
-        ctx.draw.push_rounded([rx, ry, rw, rh], stroke.with_alpha(0.0), 0.0);
-        ctx.draw
-            .push_line(rx, ry, rx + rw, ry, stroke, 1.5);
-        ctx.draw
-            .push_line(rx + rw, ry, rx + rw, ry + rh, stroke, 1.5);
-        ctx.draw
-            .push_line(rx + rw, ry + rh, rx, ry + rh, stroke, 1.5);
-        ctx.draw.push_line(rx, ry + rh, rx, ry, stroke, 1.5);
-    }
+    let lasso = method == "lasso" && points.len() >= 3;
+    let global: Vec<[f32; 2]> = points
+        .iter()
+        .map(|(x, y)| [inner.x + x, inner.y + y])
+        .collect();
+    let crossing = ui_wgpu::marquee_is_crossing_from_path(&global, lasso);
+    ui_wgpu::paint_selection_marquee(&mut ctx.draw, theme, crossing, lasso, &global, false);
 }
 
 /** @emoji 🗺️ Pushes GIS map context-menu items for a screen-space hit. */
@@ -6076,8 +6070,7 @@ pub fn gis_map_pointer_down(
     y: f32,
     button: i16,
     shift: bool,
-    ctrl: bool,
-    alt: bool,
+    ctrl_or_meta: bool,
     selection_method: &str,
 ) -> Vec<CommandDescriptor> {
     let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
@@ -6088,7 +6081,7 @@ pub fn gis_map_pointer_down(
                     start_x: sx as f32,
                     start_y: sy as f32,
                     method: selection_method.to_string(),
-                    merge_mode: engine_canvas::map_marquee_mode(shift, ctrl, alt).to_string(),
+                    merge_mode: engine_canvas::map_marquee_mode(shift, ctrl_or_meta).to_string(),
                 },
                 button,
             });
@@ -6270,6 +6263,13 @@ pub fn gis_map_pointer_up(
         state.map_marquee_active = false;
     });
     commands
+}
+
+pub fn gis_map_drag_active(surface_id: &str) -> bool {
+    scene_state(surface_id)
+        .drag
+        .as_ref()
+        .is_some_and(|drag| matches!(drag.mode, SceneDragMode::MapMarquee { .. } | SceneDragMode::MapPan))
 }
 
 fn render_gis_map(
@@ -7736,6 +7736,7 @@ impl ShellState {
         down: bool,
         button: i16,
         input: &mut InputState<CommandDescriptor>,
+        theme: &Theme,
     ) -> Result<(), String> {
         input.pointer_x = x;
         input.pointer_y = y;
@@ -7824,10 +7825,11 @@ impl ShellState {
                         return Ok(());
                     }
                 }
+                let body = self.body_rect(theme);
                 let width = if hit.control_id.as_deref() == Some("panel.resize.left") {
-                    self.left_panel_width
+                    floating_panel_width(self.left_panel_width, body, theme)
                 } else {
-                    self.right_panel_width
+                    floating_panel_width(self.right_panel_width, body, theme)
                 };
                 self.panel_resize_origin_width = width;
                 input.begin_drag(
@@ -8136,12 +8138,14 @@ impl ShellState {
                         }
                     }
                     "panel.resize.left" => {
+                        let body = self.body_rect(theme);
                         self.left_panel_width = (self.panel_resize_origin_width + dx)
-                            .clamp(theme.panel_min_width, theme.panel_max_width);
+                            .clamp(theme.panel_min_width, floating_panel_max_width(body, theme));
                     }
                     "panel.resize.right" => {
+                        let body = self.body_rect(theme);
                         self.right_panel_width = (self.panel_resize_origin_width - dx)
-                            .clamp(theme.panel_min_width, theme.panel_max_width);
+                            .clamp(theme.panel_min_width, floating_panel_max_width(body, theme));
                     }
                     dock_id if dock_id.starts_with("dock.corner.") => {
                         if let Some(path) = self.split_resize_path.clone() {
@@ -8221,21 +8225,46 @@ impl ShellState {
         Ok(())
     }
 
+    fn scroll_region_is_scene_surface(control_id: &str) -> bool {
+        control_id.ends_with(".pane") || control_id.ends_with(".map")
+    }
+
+    pub fn wheel_propagates_to_scene_surface(hit: Option<&HitTarget<CommandDescriptor>>) -> bool {
+        let Some(hit) = hit else {
+            return true;
+        };
+        match hit.kind {
+            HitKind::World3d | HitKind::Window => true,
+            HitKind::ScrollRegion => hit
+                .control_id
+                .as_deref()
+                .is_some_and(Self::scroll_region_is_scene_surface),
+            _ => false,
+        }
+    }
+
     pub fn handle_pointer_wheel(
         &mut self,
         x: f32,
         y: f32,
         delta: f32,
         input: &InputState<CommandDescriptor>,
-    ) {
-        if let Some(hit) = input.hit_at(x, y) {
-            if hit.kind == HitKind::ScrollRegion {
-                if let Some(id) = &hit.control_id {
-                    let entry = self.scroll_offsets.entry(id.clone()).or_insert(0.0);
-                    *entry = (*entry + delta * 24.0).max(0.0);
-                }
-            }
+    ) -> bool {
+        let Some(hit) = input.hit_at(x, y) else {
+            return false;
+        };
+        if hit.kind != HitKind::ScrollRegion {
+            return false;
         }
+        let Some(id) = &hit.control_id else {
+            return false;
+        };
+        if Self::scroll_region_is_scene_surface(id) {
+            return false;
+        }
+        let entry = self.scroll_offsets.entry(id.clone()).or_insert(0.0);
+        *entry = (*entry + delta * 24.0).max(0.0);
+        true
     }
 
     pub async fn handle_world3d_input(
@@ -9359,6 +9388,21 @@ fn engagement_rail_width(theme: &Theme, content_w: f32, inset: f32, measures_res
         .min(available.max(0.0))
 }
 
+fn floating_panel_available_width(body: Rect, theme: &Theme) -> f32 {
+    (body.w - theme.panel_inset * 2.0).max(theme.panel_min_width)
+}
+
+fn floating_panel_max_width(body: Rect, theme: &Theme) -> f32 {
+    theme
+        .panel_max_width
+        .min(floating_panel_available_width(body, theme))
+        .max(theme.panel_min_width)
+}
+
+fn floating_panel_width(width: f32, body: Rect, theme: &Theme) -> f32 {
+    width.clamp(theme.panel_min_width, floating_panel_max_width(body, theme))
+}
+
 fn measure_window_measure_height(
     theme: &Theme,
     collapsed_sections: &HashMap<String, bool>,
@@ -9913,18 +9957,23 @@ impl ShellState {
 
     fn floating_panel_rect(&self, left: bool, body: Rect, theme: &Theme) -> Rect {
         let inset = theme.panel_inset;
+        let width = if left {
+            floating_panel_width(self.left_panel_width, body, theme)
+        } else {
+            floating_panel_width(self.right_panel_width, body, theme)
+        };
         if left {
             Rect::new(
                 body.x + inset,
                 body.y + inset,
-                self.left_panel_width,
+                width,
                 body.h - inset * 2.0,
             )
         } else {
             Rect::new(
-                body.x + body.w - inset - self.right_panel_width,
+                body.x + body.w - inset - width,
                 body.y + inset,
-                self.right_panel_width,
+                width,
                 body.h - inset * 2.0,
             )
         }
@@ -10419,6 +10468,7 @@ impl ShellState {
         let panel = self.floating_panel_rect(true, body, theme);
         self.render_floating_panel(
             panel_draw,
+            overlay,
             atlas,
             icons,
             input,
@@ -10434,6 +10484,7 @@ impl ShellState {
     fn render_right_panel(
         &mut self,
         panel_draw: &mut DrawList,
+        overlay: &mut DrawList,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
         input: &mut InputState<CommandDescriptor>,
@@ -10453,6 +10504,7 @@ impl ShellState {
         let panel = self.floating_panel_rect(false, body, theme);
         self.render_floating_panel(
             panel_draw,
+            overlay,
             atlas,
             icons,
             input,
@@ -12125,13 +12177,27 @@ struct AppRuntime {
 
 #[cfg(not(target_arch = "wasm32"))]
 fn fetch_map_tile_bytes_blocking(url: &str) -> Option<Vec<u8>> {
-    if !url.starts_with("http://") && !url.starts_with("https://") {
+    let resolved = resolve_map_tile_fetch_url(url);
+    if !resolved.starts_with("http://") && !resolved.starts_with("https://") {
         return None;
     }
-    let mut response = ureq::get(url).call().ok()?;
+    let mut response = ureq::get(&resolved).call().ok()?;
     let mut bytes = Vec::new();
     response.into_reader().read_to_end(&mut bytes).ok()?;
     Some(bytes)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn resolve_map_tile_fetch_url(url: &str) -> String {
+    if url.starts_with("http://") || url.starts_with("https://") {
+        return url.to_string();
+    }
+    if url.starts_with('/') {
+        let base = std::env::var("SEMIO_GIS_MAP_TILE_BASE_URL")
+            .unwrap_or_else(|_| "http://127.0.0.1:6141".to_string());
+        return format!("{}{}", base.trim_end_matches('/'), url);
+    }
+    url.to_string()
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -12211,69 +12277,6 @@ impl AppRuntime {
         }
         self.draw.clear();
         self.overlay.clear();
-        let wheel_delta = self.wheel_delta;
-        self.wheel_delta = 0.0;
-        if wheel_delta.abs() > 0.0 {
-            let x = self.last_pointer_x;
-            let y = self.last_pointer_y;
-            let ctrl = self.modifiers.ctrl;
-            self.shell
-                .handle_pointer_wheel(x, y, wheel_delta, &self.input);
-            for state in self.shell.world3d_states.values_mut() {
-                if state.bounds.contains(x, y) {
-                    handle_world3d_wheel(state, wheel_delta);
-                }
-            }
-            let mut graph_commands = Vec::new();
-            for (surface_id, surface) in &self.shell.node_graph_states {
-                if surface.bounds.contains(x, y) {
-                    graph_commands.extend(engine_canvas::node_graph_wheel(
-                        surface_id,
-                        &surface.controller_id,
-                        surface.bounds,
-                        x,
-                        y,
-                        wheel_delta,
-                        ctrl,
-                    ));
-                }
-            }
-            if !graph_commands.is_empty() {
-                self.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
-                let runtime = self.self_weak.clone();
-                spawn_app_task(async move {
-                    if let Some(runtime) = runtime.upgrade() {
-                        if let Ok(mut app) = runtime.try_borrow_mut() {
-                            app.dispatch_commands(graph_commands).await;
-                        }
-                    }
-                });
-            }
-            let mut map_commands = Vec::new();
-            for (surface_id, surface) in &self.shell.gis_map_states {
-                if surface.bounds.contains(x, y) {
-                    map_commands.extend(engine_canvas::gis_map_wheel(
-                        surface_id,
-                        &surface.controller_id,
-                        surface.bounds,
-                        x,
-                        y,
-                        wheel_delta,
-                        ctrl,
-                    ));
-                }
-            }
-            if !map_commands.is_empty() {
-                let runtime = self.self_weak.clone();
-                spawn_app_task(async move {
-                    if let Some(runtime) = runtime.upgrade() {
-                        if let Ok(mut app) = runtime.try_borrow_mut() {
-                            app.dispatch_commands(map_commands).await;
-                        }
-                    }
-                });
-            }
-        }
         ICON_ATLAS_RUNTIME.with(|cell| {
             if let Some(atlas) = cell.borrow_mut().take() {
                 self.icons = atlas;
@@ -12289,6 +12292,71 @@ impl AppRuntime {
             &self.theme,
             &mut self.gpu,
         );
+        let wheel_delta = self.wheel_delta;
+        self.wheel_delta = 0.0;
+        if wheel_delta.abs() > 0.0 {
+            let x = self.last_pointer_x;
+            let y = self.last_pointer_y;
+            let ctrl = self.modifiers.ctrl;
+            self.shell
+                .handle_pointer_wheel(x, y, wheel_delta, &self.input);
+            if ShellState::wheel_propagates_to_scene_surface(self.input.hit_at(x, y)) {
+                for state in self.shell.world3d_states.values_mut() {
+                    if state.bounds.contains(x, y) {
+                        handle_world3d_wheel(state, wheel_delta);
+                    }
+                }
+                let mut graph_commands = Vec::new();
+                for (surface_id, surface) in &self.shell.node_graph_states {
+                    if surface.bounds.contains(x, y) {
+                        graph_commands.extend(engine_canvas::node_graph_wheel(
+                            surface_id,
+                            &surface.controller_id,
+                            surface.bounds,
+                            x,
+                            y,
+                            wheel_delta,
+                            ctrl,
+                        ));
+                    }
+                }
+                if !graph_commands.is_empty() {
+                    self.wheel_zoom_deadline_ms = app_now_ms() + 120.0;
+                    let runtime = self.self_weak.clone();
+                    spawn_app_task(async move {
+                        if let Some(runtime) = runtime.upgrade() {
+                            if let Ok(mut app) = runtime.try_borrow_mut() {
+                                app.dispatch_commands(graph_commands).await;
+                            }
+                        }
+                    });
+                }
+                let mut map_commands = Vec::new();
+                for (surface_id, surface) in &self.shell.gis_map_states {
+                    if surface.bounds.contains(x, y) {
+                        map_commands.extend(engine_canvas::gis_map_wheel(
+                            surface_id,
+                            &surface.controller_id,
+                            surface.bounds,
+                            x,
+                            y,
+                            wheel_delta,
+                            ctrl,
+                        ));
+                    }
+                }
+                if !map_commands.is_empty() {
+                    let runtime = self.self_weak.clone();
+                    spawn_app_task(async move {
+                        if let Some(runtime) = runtime.upgrade() {
+                            if let Ok(mut app) = runtime.try_borrow_mut() {
+                                app.dispatch_commands(map_commands).await;
+                            }
+                        }
+                    });
+                }
+            }
+        }
         for upload in scenes::drain_pending_raster_uploads() {
             self.gpu.ensure_raster_texture(&upload.key, &upload.pixels, upload.width, upload.height);
         }
@@ -12318,32 +12386,61 @@ impl AppRuntime {
             &mut self.last_cursor,
         );
         if !self.asset_poll_pending {
+            self.poll_pending_assets();
+        }
+    }
+
+    fn poll_pending_assets(&mut self) {
+        let glb = collect_pending_glb_fetches(&self.shell.world3d_states);
+        let map = engine_canvas::collect_pending_map_tile_fetches();
+        if glb.is_empty() && map.is_empty() {
+            return;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            for item in map {
+                let url = resolve_map_tile_fetch_url(&item.url);
+                if let Some(bytes) = fetch_map_tile_bytes_blocking(&url) {
+                    engine_canvas::apply_map_tile_bytes(&item.surface_id, &item, &bytes);
+                }
+            }
+            for item in glb {
+                if let Some(bytes) = pollster::block_on(fetch_url_bytes(&item.url)) {
+                    if let Some(state) = self.shell.world3d_states.get_mut(&item.surface_id) {
+                        apply_glb_bytes(state, &item.url, &bytes);
+                    }
+                }
+            }
+            return;
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
             self.asset_poll_pending = true;
             let runtime = self.self_weak.clone();
             spawn_app_task(async move {
+                struct AssetPollReset(std::rc::Weak<RefCell<AppRuntime>>);
+                impl Drop for AssetPollReset {
+                    fn drop(&mut self) {
+                        if let Some(runtime) = self.0.upgrade() {
+                            if let Ok(mut app) = runtime.try_borrow_mut() {
+                                app.asset_poll_pending = false;
+                            }
+                        }
+                    }
+                }
+                let _reset = AssetPollReset(runtime.clone());
                 let Some(runtime) = runtime.upgrade() else {
                     return;
                 };
-                let pending = {
-                    let Ok(app) = runtime.try_borrow() else {
-                        return;
-                    };
-                    let glb = collect_pending_glb_fetches(&app.shell.world3d_states);
-                    let map = engine_canvas::collect_pending_map_tile_fetches();
-                    (glb, map)
-                };
                 let mut fetched_glb = Vec::new();
-                for item in pending.0 {
+                for item in glb {
                     if let Some(bytes) = fetch_url_bytes(&item.url).await {
                         fetched_glb.push((item.surface_id, item.url, bytes));
                     }
                 }
                 let mut fetched_map = Vec::new();
-                for item in pending.1 {
-                    let bytes = fetch_url_bytes(&item.url)
-                        .await
-                        .or_else(|| fetch_map_tile_bytes_blocking(&item.url));
-                    if let Some(bytes) = bytes {
+                for item in map {
+                    if let Some(bytes) = fetch_url_bytes(&item.url).await {
                         fetched_map.push((item, bytes));
                     }
                 }
@@ -12356,7 +12453,6 @@ impl AppRuntime {
                     for (fetch, bytes) in fetched_map {
                         engine_canvas::apply_map_tile_bytes(&fetch.surface_id, &fetch, &bytes);
                     }
-                    app.asset_poll_pending = false;
                 };
             });
         }
@@ -12432,9 +12528,37 @@ impl AppRuntime {
         self.pointer_button = button;
         self.modifiers = modifiers.clone();
         if !down {
+            let mut map_commands = Vec::new();
+            let map_had_active_drag = self.shell.gis_map_states.keys().any(|surface_id| {
+                scenes::gis_map_drag_active(surface_id)
+            });
+            for (surface_id, surface) in &self.shell.gis_map_states {
+                if !surface.bounds.contains(x, y) && !scenes::gis_map_drag_active(surface_id) {
+                    continue;
+                }
+                map_commands.extend(scenes::gis_map_pointer_up(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                ));
+            }
+            if !map_commands.is_empty() {
+                self.dispatch_commands(map_commands).await;
+            }
+            let map_consumed = self
+                .shell
+                .gis_map_states
+                .values()
+                .any(|surface| surface.bounds.contains(x, y))
+                || map_had_active_drag;
+            if map_consumed {
+                return;
+            }
             if let Err(err) = self
                 .shell
-                .handle_pointer_button(x, y, down, button, &mut self.input)
+                .handle_pointer_button(x, y, down, button, &mut self.input, &self.theme)
                 .await
             {
                 log_debug(&format!("[DEBUG] pointer failed: {err}"));
@@ -12485,22 +12609,6 @@ impl AppRuntime {
             }
             if !graph_commands.is_empty() {
                 self.dispatch_commands(graph_commands).await;
-            }
-            let mut map_commands = Vec::new();
-            for (surface_id, surface) in &self.shell.gis_map_states {
-                if !surface.bounds.contains(x, y) {
-                    continue;
-                }
-                map_commands.extend(scenes::gis_map_pointer_up(
-                    surface_id,
-                    &surface.controller_id,
-                    surface.bounds,
-                    x,
-                    y,
-                ));
-            }
-            if !map_commands.is_empty() {
-                self.dispatch_commands(map_commands).await;
             }
             return;
         }
@@ -12568,10 +12676,12 @@ impl AppRuntime {
             self.dispatch_commands(graph_commands).await;
         }
         let mut map_commands = Vec::new();
+        let mut map_pointer_on_surface = false;
         for (surface_id, surface) in &self.shell.gis_map_states {
             if !surface.bounds.contains(x, y) {
                 continue;
             }
+            map_pointer_on_surface = true;
             if down {
                 map_commands.extend(scenes::gis_map_pointer_down(
                     surface_id,
@@ -12581,17 +12691,8 @@ impl AppRuntime {
                     y,
                     button,
                     modifiers.shift,
-                    modifiers.ctrl,
-                    modifiers.alt,
+                    modifiers.ctrl_or_meta(),
                     &surface.selection_method,
-                ));
-            } else {
-                map_commands.extend(scenes::gis_map_pointer_up(
-                    surface_id,
-                    &surface.controller_id,
-                    surface.bounds,
-                    x,
-                    y,
                 ));
             }
         }
@@ -12599,9 +12700,12 @@ impl AppRuntime {
             self.dispatch_commands(map_commands).await;
             return;
         }
+        if map_pointer_on_surface && (button == 0 || button == 1) {
+            return;
+        }
         if let Err(err) = self
             .shell
-            .handle_pointer_button(x, y, down, button, &mut self.input)
+            .handle_pointer_button(x, y, down, button, &mut self.input, &self.theme)
             .await
         {
             log_debug(&format!("[DEBUG] pointer failed: {err}"));
@@ -12677,16 +12781,17 @@ impl AppRuntime {
         }
         let mut map_commands = Vec::new();
         for (surface_id, surface) in &self.shell.gis_map_states {
-            if surface.bounds.contains(x, y) {
-                map_commands.extend(scenes::gis_map_pointer_move(
-                    surface_id,
-                    &surface.controller_id,
-                    surface.bounds,
-                    x,
-                    y,
-                    down,
-                ));
+            if !surface.bounds.contains(x, y) && !scenes::gis_map_drag_active(surface_id) {
+                continue;
             }
+            map_commands.extend(scenes::gis_map_pointer_move(
+                surface_id,
+                &surface.controller_id,
+                surface.bounds,
+                x,
+                y,
+                down,
+            ));
         }
         if !map_commands.is_empty() {
             self.dispatch_commands(map_commands).await;
@@ -12699,7 +12804,7 @@ impl AppRuntime {
     async fn handle_context_menu(&mut self, x: f32, y: f32) {
         let _ = self
             .shell
-            .handle_pointer_button(x, y, true, 2, &mut self.input)
+            .handle_pointer_button(x, y, true, 2, &mut self.input, &self.theme)
             .await;
     }
 }
@@ -13037,6 +13142,7 @@ pub async fn semio_renderer_boot(plugins: JsValue, plugin_filter: String) -> Res
     let _ = style.set_property("width", "100%");
     let _ = style.set_property("height", "100%");
     let _ = style.set_property("touch-action", "none");
+    let _ = style.set_property("outline", "none");
     root.set_inner_html("");
     root.append_child(&canvas)
         .map_err(|_| JsValue::from_str("[DEBUG] canvas append failed"))?;

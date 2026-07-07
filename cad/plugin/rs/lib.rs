@@ -13,7 +13,7 @@ use semio_framework_plugin::{
     build_world_3d_scene, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind,
     tool_button, tool_collection, tool_separator, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, App,
+    ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, App,
     CommandDescriptor, MeshData, PluginApp, PluginBundle, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption,
@@ -1158,6 +1158,8 @@ fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surfa
             world_references_json(&envelope.document, pane),
             None,
             preview,
+            None,
+            Some(world3d_chunking_json(256.0, 8000.0)),
         ),
     )
 }

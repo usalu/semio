@@ -3,7 +3,7 @@
   "emoji": "🗺️",
   "status": "closed",
   "description": "Restore full premigration map (gis2d) functionality in the wgpu renderer: Vello-rendered cartography, tile fetching, hover, rectangle+lasso multi-select, middle-button pan, context menu, layer weight sliders.",
-  "summary": "Fixed wgpu gis2d map tiles not rendering (only pins/labels visible): added startGisMapTileProxyServer() reusing existing OSM/VT Connect middlewares from ui/styling/vite-elements-assets.ts; GIS_MAP_WGPU_TILE_PROXY_PORT=6141 in repo/lib/js; Trunk.toml [[proxy]] forwards /osm/ and /vt/ to the tile proxy; wgpu script.ts starts the proxy for gis2d trunk serve and native-bin (SEMIO_GIS_MAP_TILE_BASE_URL); gis2d plugin render_canvas applies absolute tile URL templates from env for native. Verified: tile proxy returns 200 for osm+vt, gis2d-plugin 15/15 tests pass.",
+  "summary": "Fixed wgpu gis2d map tiles not loading (raster/vector missing, pins only).\n\nRoot cause: native `spawn_app_task` runs `pollster::block_on` inside `frame()` while `AppRuntime` is already mutably borrowed. The deferred asset-poll task failed `try_borrow()`, left `asset_poll_pending` stuck true, and never applied fetched tile bytes to `MapHost`.\n\nFix in `framework/renderer/wgpu/rs/lib.rs`:\n- Added `poll_pending_assets()` — collects pending map/GLB fetches synchronously during `frame()`.\n- Native: blocking tile fetch via `fetch_map_tile_bytes_blocking` + `resolve_map_tile_fetch_url` (relative `/osm`/`/vt` → `SEMIO_GIS_MAP_TILE_BASE_URL`, default `http://127.0.0.1:6141`).\n- Wasm: async `fetch()` with `AssetPollReset` drop guard so `asset_poll_pending` always clears.\n\nTile proxy + Trunk `/osm`/`/vt` forwarding unchanged; ensure gis2d dev is started with `SEMIO_PLUGIN=gis2d` so the tile proxy on port 6141 starts.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1839"
   },
@@ -15,6 +15,8 @@
   },
   "sessions": [
     "⚪3f187f3d31a94283b57d22c556c71591",
-    "⚪0e0f08e31a9d405b969981c92480d423"
+    "⚪0e0f08e31a9d405b969981c92480d423",
+    "⚪140a01b15f324714a991d261a092a4a1",
+    "⚪5e4493df6df84c58995abb36041f6536"
   ]
 }

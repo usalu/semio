@@ -1145,6 +1145,55 @@ mod tests {
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         let selection: Value = serde_json::from_str(&next.runtime.feature_selection_json).unwrap();
+        let positions = selection["positions"].as_array().unwrap();
+        assert_eq!(positions.len(), 2);
+        assert!(positions.contains(&json!("a")));
+        assert!(positions.contains(&json!("b")));
+    }
+
+    #[test]
+    fn set_feature_selection_subtractive_removes() {
+        let mut app = Gis2dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "setFeatureSelection",
+            Some(&json!({ "positions": ["a", "b"], "routes": [], "mode": "default" })),
+            &document,
+            &ViewState::default(),
+        );
+        let document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
+        let ops = app.handle_command(
+            "setFeatureSelection",
+            Some(&json!({ "positions": ["a"], "routes": [], "mode": "subtractive" })),
+            &document,
+            &ViewState::default(),
+        );
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let selection: Value = serde_json::from_str(&next.runtime.feature_selection_json).unwrap();
+        assert_eq!(selection["positions"], json!(["b"]));
+    }
+
+    #[test]
+    fn set_feature_selection_invertive_toggles() {
+        let mut app = Gis2dPlayApp;
+        let document = app.initial_document_json();
+        let ops = app.handle_command(
+            "setFeatureSelection",
+            Some(&json!({ "positions": ["a"], "routes": [], "mode": "default" })),
+            &document,
+            &ViewState::default(),
+        );
+        let document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
+        let ops = app.handle_command(
+            "setFeatureSelection",
+            Some(&json!({ "positions": ["b"], "routes": [], "mode": "invertive" })),
+            &document,
+            &ViewState::default(),
+        );
+        let payload: Value = serde_json::from_str(&ops[0]).unwrap();
+        let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
+        let selection: Value = serde_json::from_str(&next.runtime.feature_selection_json).unwrap();
         assert_eq!(selection["positions"], json!(["a", "b"]));
     }
 

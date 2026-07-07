@@ -3,7 +3,7 @@
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, export_mesh_glb_bytes, export_mesh_obj,
     merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls,
+    ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls,
     world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, App, CommandDescriptor, MeshData,
     PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -1187,6 +1187,8 @@ impl PluginApp for Puzzle3dPlayApp {
                         Some(world_references_json(&envelope.fixture)),
                         brush_preview,
                         Some(world_interaction_json(&envelope.runtime)),
+                        None,
+                        Some(world3d_chunking_json(256.0, 8000.0)),
                     ),
                 )
             }

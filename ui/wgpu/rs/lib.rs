@@ -935,6 +935,230 @@ impl DrawList {
                 .push(VectorVertex { position: points[tri + 1], color: c });
         }
     }
+
+    pub fn push_triangle_fan_overlay(&mut self, points: &[[f32; 2]], color: Rgba) {
+        if points.len() < 3 {
+            return;
+        }
+        let c = [color.r, color.g, color.b, color.a];
+        let layer = self.active_layer();
+        for tri in 1..points.len() - 1 {
+            layer
+                .overlay_vector_vertices
+                .push(VectorVertex { position: points[0], color: c });
+            layer
+                .overlay_vector_vertices
+                .push(VectorVertex { position: points[tri], color: c });
+            layer
+                .overlay_vector_vertices
+                .push(VectorVertex { position: points[tri + 1], color: c });
+        }
+    }
+
+    pub fn push_dashed_line(
+        &mut self,
+        x0: f32,
+        y0: f32,
+        x1: f32,
+        y1: f32,
+        color: Rgba,
+        width: f32,
+        dash: f32,
+        gap: f32,
+    ) {
+        for (sx0, sy0, sx1, sy1) in dashed_line_segments(x0, y0, x1, y1, dash, gap) {
+            self.push_line(sx0, sy0, sx1, sy1, color, width);
+        }
+    }
+
+    pub fn push_dashed_line_overlay(
+        &mut self,
+        x0: f32,
+        y0: f32,
+        x1: f32,
+        y1: f32,
+        color: Rgba,
+        width: f32,
+        dash: f32,
+        gap: f32,
+    ) {
+        for (sx0, sy0, sx1, sy1) in dashed_line_segments(x0, y0, x1, y1, dash, gap) {
+            self.push_line_overlay(sx0, sy0, sx1, sy1, color, width);
+        }
+    }
+}
+
+pub const SELECTION_MARQUEE_STROKE_WIDTH: f32 = 1.5;
+pub const SELECTION_MARQUEE_FILL_ALPHA: f32 = 0.12;
+pub const SELECTION_MARQUEE_DASH_LEN: f32 = 5.0;
+pub const SELECTION_MARQUEE_DASH_GAP: f32 = 4.0;
+
+pub fn selection_marquee_stroke(theme: &Theme) -> Rgba {
+    theme.selected
+}
+
+pub fn selection_marquee_fill(theme: &Theme) -> Rgba {
+    theme.selected.with_alpha(SELECTION_MARQUEE_FILL_ALPHA)
+}
+
+fn dashed_line_segments(
+    x0: f32,
+    y0: f32,
+    x1: f32,
+    y1: f32,
+    dash: f32,
+    gap: f32,
+) -> Vec<(f32, f32, f32, f32)> {
+    let dx = x1 - x0;
+    let dy = y1 - y0;
+    let len = (dx * dx + dy * dy).sqrt().max(0.001);
+    let ux = dx / len;
+    let uy = dy / len;
+    let mut traveled = 0.0f32;
+    let mut drawing = true;
+    let mut segments = Vec::new();
+    while traveled < len {
+        let segment = if drawing { dash } else { gap };
+        let next = (traveled + segment).min(len);
+        if drawing {
+            segments.push((
+                x0 + ux * traveled,
+                y0 + uy * traveled,
+                x0 + ux * next,
+                y0 + uy * next,
+            ));
+        }
+        traveled = next;
+        drawing = !drawing;
+    }
+    segments
+}
+
+#[cfg(test)]
+mod selection_marquee_tests {
+    use super::*;
+    use crate::theme::Theme;
+
+    #[test]
+    fn dashed_line_segments_emit_dashes_along_segment() {
+        let segments = dashed_line_segments(0.0, 0.0, 20.0, 0.0, 5.0, 4.0);
+        assert!(!segments.is_empty());
+        let span: f32 = segments.iter().map(|(x0, _, x1, _)| x1 - x0).sum();
+        assert!(span > 0.0 && span <= 20.0);
+    }
+
+    #[test]
+    fn selection_marquee_colors_use_active_token_only() {
+        let theme = Theme::default();
+        assert_eq!(selection_marquee_stroke(&theme), theme.selected);
+        assert_eq!(selection_marquee_fill(&theme).a, SELECTION_MARQUEE_FILL_ALPHA);
+    }
+}
+
+fn push_marquee_segment(
+    draw: &mut DrawList,
+    overlay: bool,
+    x0: f32,
+    y0: f32,
+    x1: f32,
+    y1: f32,
+    stroke: Rgba,
+    dashed: bool,
+) {
+    if dashed {
+        if overlay {
+            draw.push_dashed_line_overlay(
+                x0,
+                y0,
+                x1,
+                y1,
+                stroke,
+                SELECTION_MARQUEE_STROKE_WIDTH,
+                SELECTION_MARQUEE_DASH_LEN,
+                SELECTION_MARQUEE_DASH_GAP,
+            );
+        } else {
+            draw.push_dashed_line(
+                x0,
+                y0,
+                x1,
+                y1,
+                stroke,
+                SELECTION_MARQUEE_STROKE_WIDTH,
+                SELECTION_MARQUEE_DASH_LEN,
+                SELECTION_MARQUEE_DASH_GAP,
+            );
+        }
+    } else if overlay {
+        draw.push_line_overlay(x0, y0, x1, y1, stroke, SELECTION_MARQUEE_STROKE_WIDTH);
+    } else {
+        draw.push_line(x0, y0, x1, y1, stroke, SELECTION_MARQUEE_STROKE_WIDTH);
+    }
+}
+
+pub fn paint_selection_marquee(
+    draw: &mut DrawList,
+    theme: &Theme,
+    crossing: bool,
+    lasso: bool,
+    points: &[[f32; 2]],
+    overlay: bool,
+) {
+    if points.len() < 2 {
+        return;
+    }
+    let stroke = selection_marquee_stroke(theme);
+    let fill = selection_marquee_fill(theme);
+    let dashed = crossing;
+    if lasso {
+        if points.len() >= 3 {
+            if overlay {
+                draw.push_triangle_fan_overlay(points, fill);
+            } else {
+                draw.push_triangle_fan(points, fill);
+            }
+        }
+        for window in points.windows(2) {
+            push_marquee_segment(
+                draw,
+                overlay,
+                window[0][0],
+                window[0][1],
+                window[1][0],
+                window[1][1],
+                stroke,
+                dashed,
+            );
+        }
+        let first = points[0];
+        let last = points[points.len() - 1];
+        push_marquee_segment(
+            draw,
+            overlay,
+            last[0],
+            last[1],
+            first[0],
+            first[1],
+            stroke,
+            dashed,
+        );
+        return;
+    }
+    let start = points[0];
+    let end = points[points.len() - 1];
+    let rx = start[0].min(end[0]);
+    let ry = start[1].min(end[1]);
+    let rw = (end[0] - start[0]).abs();
+    let rh = (end[1] - start[1]).abs();
+    if overlay {
+        draw.push_solid_overlay([rx, ry, rw, rh], fill);
+    } else {
+        draw.push_solid([rx, ry, rw, rh], fill);
+    }
+    push_marquee_segment(draw, overlay, start[0], start[1], end[0], start[1], stroke, dashed);
+    push_marquee_segment(draw, overlay, end[0], start[1], end[0], end[1], stroke, dashed);
+    push_marquee_segment(draw, overlay, end[0], end[1], start[0], end[1], stroke, dashed);
+    push_marquee_segment(draw, overlay, start[0], end[1], start[0], start[1], stroke, dashed);
 }
 
 pub fn ear_clip_polygon(points: &[[f32; 2]]) -> Vec<[f32; 2]> {
@@ -1135,6 +1359,11 @@ impl MeshGpuStore {
                 index_count: indices.len() as u32,
             },
         );
+    }
+
+    pub fn evict_mesh(&mut self, key: &str) {
+        let prefix = format!("{key}:");
+        self.meshes.retain(|existing, _| !existing.starts_with(&prefix));
     }
 }
 
@@ -3975,6 +4204,10 @@ impl GpuContext {
     pub fn ensure_mesh(&mut self, key: &str, version: u64, positions: &[f32], normals: &[f32], indices: &[u32]) {
         self.mesh_store
             .ensure_mesh(&self.device, key, version, positions, normals, indices);
+    }
+
+    pub fn evict_mesh(&mut self, key: &str) {
+        self.mesh_store.evict_mesh(key);
     }
 
     pub fn render_frame(&mut self, draw: &DrawList, overlay: Option<&DrawList>) -> Result<(), String> {
@@ -7341,7 +7574,7 @@ fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
 pub use cursor::{resolve_semio_cursor, apply_window_cursor, CursorDragState, SemioCursor};
 #[cfg(target_arch = "wasm32")]
 pub use cursor::apply_canvas_cursor;
-pub use draw::{mesh_content_version, DrawList, IconAtlas, MeshGpuStore, RasterTextureStore, ear_clip_polygon};
+pub use draw::{mesh_content_version, DrawList, IconAtlas, MeshGpuStore, RasterTextureStore, ear_clip_polygon, paint_selection_marquee};
 pub use geometry::Rect;
 pub use gpu::GpuContext;
 pub use gpu::schedule_frame;
@@ -7354,6 +7587,7 @@ pub use kernel_3d_scene::{
     Mesh3d, OrbitController, quat_from_basis, ray_plane_point, ray_segment_distance, rotate_vector, SceneDraw3d,
     ScenePass3d, TexturedDraw3d, TexturedInstance3d, Vec3, vec3_from_f64, point_in_polygon, project_point,
     ray_aabb_slab, ray_pick_instance, rect_contains, screen_select_instances, transform_aabb,
+    marquee_is_crossing_from_path,
 };
 pub use text::{fetch_font_bytes, FontAtlas};
 pub use theme::{GlassTier, Rgba, Theme};

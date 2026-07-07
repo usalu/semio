@@ -41,6 +41,7 @@
     breakable,
     arc=0mm,
     boxrule=\semio@stroke@hairline,
+    boxsep=0pt,
     colframe=semio-chrome-border-normal,
     toprule=0pt,
     leftrule=\semio@stroke@hairline,
@@ -48,13 +49,14 @@
     bottomrule=\semio@stroke@hairline,
     colback=semio-chrome-canvas,
     coltext=semio-chrome-foreground,
-    top=0pt,
+    top=\semio@chrome@padding,
     left=\semio@chrome@padding,
     right=\semio@chrome@padding,
     bottom=\semio@chrome@padding,
     before~skip=0pt,
     after~skip=0pt,
     parbox=false,
+    before~upper={\setlength{\parindent}{0pt}},
   },
   semio~window~chapter/.style={
     semio~window,
@@ -74,6 +76,7 @@
     breakable=false,
     arc=0mm,
     boxrule=0pt,
+    boxsep=0pt,
     colframe=semio-chrome-canvas,
     colback=semio-chrome-canvas,
     coltext=semio-chrome-foreground,
@@ -81,6 +84,7 @@
     right=\semio@chrome@padding,
     top=\semio@chrome@padding,
     bottom=\semio@chrome@padding,
+    before~upper={\setlength{\parindent}{0pt}},
   },
 }
 
@@ -116,6 +120,7 @@
   \tex_gdef:D \semio@chrome@heading {#1}
   \addcontentsline{toc}{chapter}{\protect\numberline{\thechapter}#1}
   \semio_window_header:nn {#1} { \thechapter }
+  \noindent
   \begin{tcolorbox}[semio~window~chapter]
   \bool_set_true:N \l_semio_window_chapter_open_bool
 }
@@ -130,6 +135,7 @@
   \tex_gdef:D \semio@chrome@heading {#1}
   \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}
   \semio_window_header:nn {#1} { \thesection }
+  \noindent
   \begin{tcolorbox}[semio~window~section]
   \bool_set_true:N \l_semio_window_section_open_bool
 }
@@ -138,15 +144,19 @@
   \tl_clear:N \l_semio_semiobox_title_tl
   \keys_set:nn { semio / semiobox } { #1 }
   \bool_if:NTF \l_semio_window_chapter_open_bool {
+    \noindent
     \begin{tcolorbox}[semio~window~inner, #1]
   } {
     \bool_if:NTF \l_semio_window_section_open_bool {
+      \noindent
       \begin{tcolorbox}[semio~window~inner, #1]
     } {
       \tl_if_empty:NTF \l_semio_semiobox_title_tl {
+        \noindent
         \begin{tcolorbox}[semio~window~boxed, #1]
       } {
         \semio_window_header:nn { \tl_use:N \l_semio_semiobox_title_tl } { }
+        \noindent
         \begin{tcolorbox}[semio~window, #1]
       }
     }
@@ -254,10 +264,9 @@
 \newcommand{\semio@window@cap}[2]{%
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
-    \setlength{\fboxsep}{\semio@chrome@padding}%
     \begingroup
     #2\relax
-    #1%
+    \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
@@ -289,13 +298,13 @@
 
 \newcommand{\semio@window@tab}[1]{%
   \semio@window@cap{#1}{%
-    \SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@titlebar@height}\selectfont\color{semio-chrome-border-emphasized}%
+    \SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@font@title}\selectfont\color{semio-chrome-border-emphasized}%
   }%
 }
 
 \newcommand{\semio@window@ctrl}[1]{%
   \semio@window@cap{#1}{%
-    \SemioSans\fontsize{\semio@chrome@font@number}{\semio@chrome@titlebar@height}\selectfont\color{semio-chrome-border-emphasized}%
+    \SemioSans\fontsize{\semio@chrome@font@number}{\semio@chrome@font@number}\selectfont\color{semio-chrome-border-emphasized}%
   }%
 }
 
@@ -418,7 +427,7 @@
       \semio@chrome@chip{%
         \hbox{%
           \semio@chrome@vcenter{\semio@chrome@row@height}{\usebox{\semio@chrome@navbar@emblem@box}}%
-          \hspace{\semio@spacing@compact}%
+          \hspace{\semio@chrome@padding}%
           \semio@chrome@vcenter{\semio@chrome@row@height}{%
             {\SemioSans\fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont\@title}%
           }%
@@ -443,7 +452,7 @@
       \semio@chrome@chip{%
         \hbox{%
           \semio@chrome@vcenter{\semio@chrome@row@height@footer}{\usebox{\semio@chrome@footer@emblem@box}}%
-          \hspace{\semio@spacing@compact}%
+          \hspace{\semio@chrome@padding}%
           \semio@chrome@vcenter{\semio@chrome@row@height@footer}{%
             {\SemioSans\fontsize{\semio@chrome@font@number}{\semio@chrome@font@number}\selectfont\@author}%
           }%
@@ -481,8 +490,8 @@
 
 \setlength{\headheight}{38.14006pt}
 \addtolength{\topmargin}{-21.14006pt}
-\setlength{\headsep}{\semio@spacing@touch}
-\setlength{\footskip}{\dimexpr\semio@chrome@footer@height+\semio@stroke@hairline+3pt+\semio@spacing@touch\relax}
+\setlength{\headsep}{\semio@spacing@double}
+\setlength{\footskip}{\dimexpr\semio@chrome@footer@height+\semio@stroke@hairline+\semio@spacing@double\relax}
 
 \AddToHook{enddocument/before}{\SemioWindowCloseAll}
 \AtEndDocument{\SemioWindowCloseAll}
