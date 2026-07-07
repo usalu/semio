@@ -425,10 +425,10 @@ ensure_cpp_toolchain() {
     if command -v apt-get >/dev/null 2>&1; then
       if command -v sudo >/dev/null 2>&1 && [ "$(id -u)" -ne 0 ]; then
         sudo apt-get update -qq
-        sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config uuid-dev
+        sudo apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config uuid-dev mold
       elif [ "$(id -u)" -eq 0 ]; then
         apt-get update -qq
-        apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config uuid-dev
+        apt-get install -y --no-install-recommends build-essential cmake ninja-build pkg-config uuid-dev mold
       fi
     else
       log "apt-get not available; install CMake, Ninja, pkg-config, and uuid headers with your system package manager."

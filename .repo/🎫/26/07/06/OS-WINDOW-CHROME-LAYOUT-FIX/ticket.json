@@ -1,0 +1,17 @@
+{
+  "title": "OS Window Chrome Layout Fix",
+  "emoji": "🧊",
+  "status": "closed",
+  "description": "Migrate the raw-wgpu OS/playground stack from browser-only wasm-bindgen/web-sys to winit windowing/input (native + web) and trunk build tooling, plus native hot-swappable plugin hosting.",
+  "summary": "Fixed print window chrome to use one continuous U-shaped outline: header caps render outside the body tcolorbox so side borders are not duplicated, body carries only L+R+B with hairline overlap, gap stroke uses the same colframe token as tab caps, and borderless boxed style covers headerless Semiobox.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1836"
+  },
+  "goal": "🎯framework🎯playground",
+  "sessions": [
+    "⚪c061613497df4c389f38aac5638e79a8",
+    "⚪5dc496cf4fc145a9afebda9c9b92cf31",
+    "⚪b6776fdb181646eda1165f32879ede70",
+    "⚪444f52ed3b834611b02018904ffde898"
+  ]
+}

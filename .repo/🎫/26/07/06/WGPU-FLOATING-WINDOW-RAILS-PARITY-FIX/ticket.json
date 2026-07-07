@@ -1,0 +1,23 @@
+{
+  "title": "Wgpu Floating Window Rails Parity Fix",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "Restore real frosted-glass panels in the wgpu renderer (side panel, context menus/dropdowns, window measures/engagement rails) via GPU backdrop-blur + saturate + tint composite.",
+  "summary": "Fixed wgpu window measures (Window Options) and engagement (Command) rails to match pre-migration React floating overlay behavior.\n\nRoot cause: rails shrank the window content rect before drawing body content, acting as docked sidebars instead of absolute overlays.\n\nChanges:\n- Reordered dock window render: content first, then measures/engagement overlays (hit-test priority matches React DOM order)\n- Removed content rect mutation; rails float with gap_standard inset\n- Token-derived widths on Theme (window_measures_default_width 224px, window_engagement_max_width 448px); measures resize uses panel_min/max_width\n- Auto-height glass cards from measure/engagement body height helpers (capped by window body)\n- Fixed measures tree sibling y-stacking bug; engagement control y advance\n- Added window_rail_widths_match_react_dom_tokens test\n\ncargo check -p semio-framework-renderer-wgpu passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1830"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "50513a08",
+    "local": "wgpu_floating_window_rails_50513a08.plan.md"
+  },
+  "sessions": [
+    "⚪6954e722a85046f1a25413e48694a6bc",
+    "⚪ea94852dacfe4fa9bca6971d51bef1a2",
+    "⚪f83825b71d024f1f852c6a2954d284b3",
+    "⚪3b8832479c274642ac6eb14a9af1c676",
+    "⚪49a677c2928c413b9fc22a5f82e1aa92"
+  ]
+}

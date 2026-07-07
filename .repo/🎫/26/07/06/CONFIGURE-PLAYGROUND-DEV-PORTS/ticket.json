@@ -1,0 +1,14 @@
+{
+  "title": "Configure Playground Dev Ports",
+  "emoji": "🎮",
+  "status": "closed",
+  "description": "Ensure all wgpu playgrounds have different ports for dev and do not edit the path",
+  "summary": "Assign unique default ports for all WebGPU and React dev playgrounds to avoid port conflicts and ensure no paths are edited.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1837"
+  },
+  "goal": "🎯puzzle🎯frameworkrendering",
+  "sessions": [
+    "⚪fbe95a7299714f21b0ae670bedd8fc77"
+  ]
+}

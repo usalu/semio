@@ -40,6 +40,26 @@
   kompakt-draft .bool_set:N = \l_semio_kompakt_draft_bool,
 }
 
+\cs_new_protected:Npn \semio_chrome_apply_aliases: {
+  \str_case:VnF \l_semio_theme_tl {
+    { dark } {
+      \colorlet{semio-chrome-window}{semio-chrome-dark-window}
+      \colorlet{semio-chrome-canvas}{semio-chrome-dark-canvas}
+      \colorlet{semio-chrome-border-normal}{semio-chrome-dark-border-normal}
+      \colorlet{semio-chrome-border-emphasized}{semio-chrome-dark-border-emphasized}
+      \colorlet{semio-chrome-active-base}{semio-chrome-dark-active-base}
+      \colorlet{semio-chrome-active-foreground}{semio-chrome-dark-active-foreground}
+    }
+  } {
+    \colorlet{semio-chrome-window}{semio-chrome-light-window}
+    \colorlet{semio-chrome-canvas}{semio-chrome-light-canvas}
+    \colorlet{semio-chrome-border-normal}{semio-chrome-light-border-normal}
+    \colorlet{semio-chrome-border-emphasized}{semio-chrome-light-border-emphasized}
+    \colorlet{semio-chrome-active-base}{semio-chrome-light-active-base}
+    \colorlet{semio-chrome-active-foreground}{semio-chrome-light-active-foreground}
+  }
+}
+
 \cs_new_protected:Npn \semio_theme_apply: {
   \str_if_eq:VnTF \l_semio_theme_tl { dark } {
     \pagecolor{semio-dark}
@@ -48,6 +68,7 @@
     \pagecolor{semio-light}
     \color{semio-dark}
   }
+  \semio_chrome_apply_aliases:
 }
 
 \NewDocumentCommand{\SemioSetup}{m}{\keys_set:nn { semio / setup } {#1}}

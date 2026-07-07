@@ -18,6 +18,7 @@
       "{workspaceRoot}/nx.json",
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/.cargo/config.toml",
       "{workspaceRoot}/Cargo.lock",
       "{workspaceRoot}/rustfmt.toml",
       "{workspaceRoot}/go.work",
@@ -76,6 +77,14 @@
     "update": {
       "dependsOn": ["^update"],
       "inputs": ["default", "^default"],
+      "cache": true
+    },
+    "wasm": {
+      "inputs": ["cargo", "^cargo"],
+      "cache": true
+    },
+    "native-build": {
+      "inputs": ["cargo", "^cargo"],
       "cache": true
     }
   },

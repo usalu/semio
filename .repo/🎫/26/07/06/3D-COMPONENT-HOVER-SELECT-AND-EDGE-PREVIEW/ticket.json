@@ -1,7 +1,7 @@
 {
   "title": "3D Component Hover Select and Edge Preview",
   "emoji": "🎯",
-  "status": "closed",
+  "status": "open",
   "description": "Fix vertex/edge/face hover and selection in WGPU world engine and lowpoly plugin; add Show Edges window option toggle.",
   "summary": "Fixed regression where apply_world_command_preview set scene_selection_json=None, forcing sync_world3d_state to re-parse stale cached selection JSON every frame and wipe optimistic hover/selection before the plugin round-trip completed. Removed cache invalidation; preview state now survives sync when scene JSON is unchanged. Added apply_runtime_draw_flags after sync to apply mesh hover/selection GPU flags without waiting for instances_json refresh. Apply preview synchronously when collecting world commands (before async dispatch) so the next frame sees updated state. React mesh clicks use worldPick with object index. Rebuilt WGPU WASM. Tests: preview_survives_sync_when_scene_json_unchanged plus existing suite.",
   "github": {
@@ -10,12 +10,13 @@
   "goal": "🎯r2602🎯runningsketchpad",
   "plan": {
     "client": "cursor",
-    "id": "836dfb83",
-    "local": "3d_component_hover_select_fixes_836dfb83.plan.md"
+    "id": "12c668e5",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/fix_wgpu_pointer_coordinate_scaling_bug_12c668e5.plan.md"
   },
   "sessions": [
     "⚪fc1bc2ebf0c443ea894ca05133679000",
     "⚪012513bca08a4972891fb1f2df2e3112",
-    "⚪15da272cc6354fd085557a0589c4e904"
+    "⚪15da272cc6354fd085557a0589c4e904",
+    "⚪601db591fae341bdb68f7875957fe2f1"
   ]
 }

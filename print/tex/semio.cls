@@ -39,6 +39,7 @@
 \RequirePackage{semio-core}
 \RequirePackage{semio-logo}
 \RequirePackage{semio-components}
+\RequirePackage{semio-window}
 
 \edef\semio@setup@type{\semio@type}
 \edef\semio@setup@theme{\semio@theme}

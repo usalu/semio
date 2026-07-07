@@ -101,6 +101,18 @@ members = [
     "shooting/plugin/rs",
     "s/plugin/rs",
     "framework/product/presentation/plugin/rs",
+    "framework/product/os/hub/rs",
 ]
 
 resolver = "2"
+
+[profile.dev]
+debug = "line-tables-only"
+split-debuginfo = "unpacked"
+incremental = true
+
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.release]
+strip = "debuginfo"

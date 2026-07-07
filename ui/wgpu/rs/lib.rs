@@ -3054,6 +3054,19 @@ impl UiPipelines {
                     height,
                 );
             }
+            self.render_glass_foreground(
+                device,
+                queue,
+                encoder,
+                view,
+                overlay,
+                depth_view,
+                mesh_store,
+                raster_store,
+                frame_buffers,
+                width,
+                height,
+            );
             let mut overlay_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("ui_overlay_pass"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -4189,198 +4202,6 @@ pub struct PointerCallbacks {
     pub on_context_menu: Rc<dyn Fn(f32, f32)>,
 }
 
-#[cfg(target_arch = "wasm32")]
-fn pointer_coords(canvas: &web_sys::HtmlCanvasElement, event: &web_sys::MouseEvent) -> (f32, f32) {
-    let rect = canvas.get_bounding_client_rect();
-    let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
-    let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
-    (x, y)
-}
-
-#[cfg(target_arch = "wasm32")]
-pub fn attach_dom_listeners(canvas: &web_sys::HtmlCanvasElement, callbacks: PointerCallbacks) {
-    use wasm_bindgen::closure::Closure;
-    use wasm_bindgen::JsCast;
-    use web_sys::MouseEvent;
-
-    let canvas_clone = canvas.clone();
-    let pointer_down = Rc::new(std::cell::Cell::new(false));
-    let pointer_button = Rc::new(std::cell::Cell::new(0i16));
-    let pointer_down_move = pointer_down.clone();
-    let pointer_button_move = pointer_button.clone();
-    let on_move = callbacks.on_move.clone();
-
-    let move_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
-        let (x, y) = pointer_coords(&canvas_clone, &event);
-        on_move(
-            x,
-            y,
-            pointer_down_move.get(),
-            pointer_button_move.get(),
-            modifiers_from_event(&event),
-        );
-    }) as Box<dyn FnMut(MouseEvent)>);
-    canvas
-        .add_event_listener_with_callback("mousemove", move_cb.as_ref().unchecked_ref())
-        .ok();
-    move_cb.forget();
-
-    let canvas_down = canvas.clone();
-    let pointer_down_down = pointer_down.clone();
-    let pointer_button_down = pointer_button.clone();
-    let on_button_down = callbacks.on_button.clone();
-    let down_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
-        pointer_down_down.set(true);
-        pointer_button_down.set(event.button());
-        let (x, y) = pointer_coords(&canvas_down, &event);
-        on_button_down(x, y, true, event.button(), modifiers_from_event(&event));
-    }) as Box<dyn FnMut(MouseEvent)>);
-    canvas
-        .add_event_listener_with_callback("mousedown", down_cb.as_ref().unchecked_ref())
-        .ok();
-    down_cb.forget();
-
-    let canvas_up = canvas.clone();
-    let pointer_down_up = pointer_down.clone();
-    let on_button_up = callbacks.on_button.clone();
-    let up_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
-        if !pointer_down_up.get() {
-            return;
-        }
-        pointer_down_up.set(false);
-        let (x, y) = pointer_coords(&canvas_up, &event);
-        on_button_up(x, y, false, event.button(), modifiers_from_event(&event));
-    }) as Box<dyn FnMut(MouseEvent)>);
-    canvas
-        .add_event_listener_with_callback("mouseup", up_cb.as_ref().unchecked_ref())
-        .ok();
-    up_cb.forget();
-
-    if let Some(window) = web_sys::window() {
-        let canvas_win_move = canvas.clone();
-        let pointer_down_win_move = pointer_down.clone();
-        let pointer_button_win_move = pointer_button.clone();
-        let on_move_win = callbacks.on_move.clone();
-        let win_move_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
-            if !pointer_down_win_move.get() {
-                return;
-            }
-            let (x, y) = pointer_coords(&canvas_win_move, &event);
-            on_move_win(
-                x,
-                y,
-                true,
-                pointer_button_win_move.get(),
-                modifiers_from_event(&event),
-            );
-        }) as Box<dyn FnMut(MouseEvent)>);
-        let _ = window.add_event_listener_with_callback("mousemove", win_move_cb.as_ref().unchecked_ref());
-        win_move_cb.forget();
-
-        let canvas_win_up = canvas.clone();
-        let pointer_down_win_up = pointer_down.clone();
-        let on_button_win_up = callbacks.on_button.clone();
-        let win_up_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
-            if !pointer_down_win_up.get() {
-                return;
-            }
-            pointer_down_win_up.set(false);
-            let (x, y) = pointer_coords(&canvas_win_up, &event);
-            on_button_win_up(x, y, false, event.button(), modifiers_from_event(&event));
-        }) as Box<dyn FnMut(MouseEvent)>);
-        let _ = window.add_event_listener_with_callback("mouseup", win_up_cb.as_ref().unchecked_ref());
-        win_up_cb.forget();
-    }
-
-    let canvas_wheel = canvas.clone();
-    let on_wheel = callbacks.on_wheel;
-    let wheel_cb = Closure::wrap(Box::new(move |event: web_sys::WheelEvent| {
-        event.prevent_default();
-        let rect = canvas_wheel.get_bounding_client_rect();
-        let x = (event.client_x() as f32 - rect.left() as f32) * device_pixel_ratio();
-        let y = (event.client_y() as f32 - rect.top() as f32) * device_pixel_ratio();
-        on_wheel(
-            event.delta_y() as f32,
-            x,
-            y,
-            PointerModifiers {
-                shift: event.shift_key(),
-                ctrl: event.ctrl_key(),
-                alt: event.alt_key(),
-                meta: event.meta_key(),
-            },
-        );
-    }) as Box<dyn FnMut(web_sys::WheelEvent)>);
-    canvas
-        .add_event_listener_with_callback("wheel", wheel_cb.as_ref().unchecked_ref())
-        .ok();
-    wheel_cb.forget();
-
-    let on_key = callbacks.on_key;
-    let key_cb = Closure::wrap(Box::new(move |event: web_sys::KeyboardEvent| {
-        let mods = PointerModifiers {
-            shift: event.shift_key(),
-            ctrl: event.ctrl_key(),
-            alt: event.alt_key(),
-            meta: event.meta_key(),
-        };
-        let action = match event.key().as_str() {
-            "Backspace" => KeyAction::Backspace,
-            "Delete" => KeyAction::Delete,
-            "Enter" => KeyAction::Enter,
-            "Escape" => KeyAction::Escape,
-            "ArrowLeft" => KeyAction::ArrowLeft,
-            "ArrowRight" => KeyAction::ArrowRight,
-            "ArrowUp" => KeyAction::ArrowUp,
-            "ArrowDown" => KeyAction::ArrowDown,
-            "Tab" => KeyAction::Tab,
-            key if key.len() == 1 => KeyAction::Char(key.to_string()),
-            _ => return,
-        };
-        if !matches!(action, KeyAction::Char(_)) {
-            event.prevent_default();
-        }
-        on_key(action, mods);
-    }) as Box<dyn FnMut(web_sys::KeyboardEvent)>);
-    canvas.set_tab_index(0);
-    canvas
-        .add_event_listener_with_callback("keydown", key_cb.as_ref().unchecked_ref())
-        .ok();
-    key_cb.forget();
-
-    let canvas_ctx = canvas.clone();
-    let on_context_menu = callbacks.on_context_menu;
-    let ctx_cb = Closure::wrap(Box::new(move |event: MouseEvent| {
-        event.prevent_default();
-        if event.alt_key() || event.shift_key() || event.meta_key() {
-            return;
-        }
-        let (x, y) = pointer_coords(&canvas_ctx, &event);
-        on_context_menu(x, y);
-    }) as Box<dyn FnMut(MouseEvent)>);
-    canvas
-        .add_event_listener_with_callback("contextmenu", ctx_cb.as_ref().unchecked_ref())
-        .ok();
-    ctx_cb.forget();
-}
-
-#[cfg(target_arch = "wasm32")]
-fn modifiers_from_event(event: &web_sys::MouseEvent) -> PointerModifiers {
-    PointerModifiers {
-        shift: event.shift_key(),
-        ctrl: event.ctrl_key(),
-        alt: event.alt_key(),
-        meta: event.meta_key(),
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn device_pixel_ratio() -> f32 {
-    web_sys::window()
-        .map(|w| w.device_pixel_ratio() as f32)
-        .unwrap_or(1.0)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -5354,6 +5175,8 @@ pub struct Theme {
     pub panel_inset: f32,
     pub panel_min_width: f32,
     pub panel_max_width: f32,
+    pub window_measures_default_width: f32,
+    pub window_engagement_max_width: f32,
     pub overlay_shadow: Rgba,
     pub focus_ring: Rgba,
     pub row_hover: Rgba,
@@ -5410,6 +5233,8 @@ fn from_chrome(chrome: &ChromeTheme) -> Theme {
         panel_inset: chrome_px(chrome_metrics::PANEL_INSET_UI_SPACING),
         panel_min_width: panel_width(dom::LAYOUT_PANEL_MIN_UI_SPACING),
         panel_max_width: panel_width(dom::LAYOUT_PANEL_MAX_UI_SPACING),
+        window_measures_default_width: chrome_px(dom::LAYOUT_PANEL_RAIL_UI_SPACING),
+        window_engagement_max_width: chrome_px(dom::LAYOUT_ENGAGEMENT_MAX_UI_SPACING),
         overlay_shadow: Rgba::new(0.0, 0.0, 0.0, 0.0),
         focus_ring: Rgba::from_chrome(&chrome.accent).with_alpha(0.6),
         row_hover: Rgba::from_chrome(&chrome.hover_interactive_fill),
@@ -5519,6 +5344,13 @@ mod tests {
         let glass = theme.glass(GlassTier::WindowOptions);
         assert!((glass.alpha - 0.22).abs() < f32::EPSILON);
         assert!((glass.blur_px - 14.0).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn window_rail_widths_match_react_dom_tokens() {
+        let theme = Theme::light();
+        assert!((theme.window_measures_default_width - 224.0).abs() < f32::EPSILON);
+        assert!((theme.window_engagement_max_width - 448.0).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -7113,9 +6945,8 @@ use crate::input::{KeyAction, PointerCallbacks, PointerModifiers};
 use winit::event::{ElementState, KeyEvent, MouseButton, MouseScrollDelta, WindowEvent};
 use winit::keyboard::{Key, NamedKey};
 
-pub fn pointer_coords(window: &winit::window::Window, position: winit::dpi::PhysicalPosition<f64>) -> (f32, f32) {
-    let dpr = window.scale_factor() as f32;
-    (position.x as f32 * dpr, position.y as f32 * dpr)
+pub fn pointer_coords(_window: &winit::window::Window, position: winit::dpi::PhysicalPosition<f64>) -> (f32, f32) {
+    (position.x as f32, position.y as f32)
 }
 
 pub fn modifiers_from_winit(modifiers: winit::keyboard::ModifiersState) -> PointerModifiers {
@@ -7147,6 +6978,16 @@ impl Default for WindowInputState {
     }
 }
 
+#[cfg(target_arch = "wasm32")]
+fn debug_log_pointer(message: &str) {
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(message));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn debug_log_pointer(message: &str) {
+    eprintln!("{message}");
+}
+
 pub fn dispatch_window_event(
     window: &winit::window::Window,
     event: &WindowEvent,
@@ -7160,6 +7001,10 @@ pub fn dispatch_window_event(
         }
         WindowEvent::CursorMoved { position, .. } => {
             let (x, y) = pointer_coords(window, *position);
+            debug_log_pointer(&format!(
+                "[DEBUG] CursorMoved raw_physical=({:.1},{:.1}) scale_factor={} pointer_coords=({x},{y})",
+                position.x, position.y, window.scale_factor()
+            ));
             input.pointer_x = x;
             input.pointer_y = y;
             (callbacks.on_move)(
@@ -7257,8 +7102,6 @@ pub use gpu::GpuContext;
 pub use gpu::schedule_frame;
 pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
-#[cfg(target_arch = "wasm32")]
-pub use input::attach_dom_listeners;
 pub use layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 pub use kernel_3d_scene::{
     aabb_intersects_frustum, axis_rotate_angle, Camera3d, frustum_planes, gumball_axis_drag_plane_normal,

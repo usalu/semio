@@ -136,24 +136,51 @@ impl Mat4 {
         Vec3::new(x, y, z).normalize()
     }
 
+    /// 🧮 Full 4x4 inverse via Gauss-Jordan elimination on an augmented `[A | I]` matrix.
+    /// Indexed as `a[row][col]`; `self.cols[c][r]` is read/written as `a[r][c]` throughout.
     pub fn inverse(self) -> Self {
-        let m = self.cols;
-        let mut inv = [[0.0f32; 4]; 4];
-        inv[0][0] = m[1][1] * m[2][2] * m[3][3] - m[1][1] * m[2][3] * m[3][2] - m[2][1] * m[1][2] * m[3][3]
-            + m[2][1] * m[1][3] * m[3][2] + m[3][1] * m[1][2] * m[2][3] - m[3][1] * m[1][3] * m[2][2];
-        let det = m[0][0] * inv[0][0] + m[0][1] * (m[1][0] * m[2][2] * m[3][3] - m[1][0] * m[2][3] * m[3][2] - m[2][0] * m[1][2] * m[3][3]
-            + m[2][0] * m[1][3] * m[3][2] + m[3][0] * m[1][2] * m[2][3] - m[3][0] * m[1][3] * m[2][2])
-            + m[0][2] * (m[1][0] * m[2][1] * m[3][3] - m[1][0] * m[2][3] * m[3][1] - m[2][0] * m[1][1] * m[3][3]
-                + m[2][0] * m[1][3] * m[3][1] + m[3][0] * m[1][1] * m[2][3] - m[3][0] * m[1][3] * m[2][1])
-            + m[0][3] * (m[1][0] * m[2][1] * m[3][2] - m[1][0] * m[2][2] * m[3][1] - m[2][0] * m[1][1] * m[3][2]
-                + m[2][0] * m[1][2] * m[3][1] + m[3][0] * m[1][1] * m[2][2] - m[3][0] * m[1][2] * m[2][1]);
-        if det.abs() < 1e-8 {
-            return Self::identity();
+        let mut a = [[0.0f32; 8]; 4];
+        for row in 0..4 {
+            for col in 0..4 {
+                a[row][col] = self.cols[col][row];
+            }
+            a[row][4 + row] = 1.0;
         }
-        let inv_det = 1.0 / det;
-        for col in 0..4 {
+        for pivot in 0..4 {
+            let (mut best_row, mut best_val) = (pivot, a[pivot][pivot].abs());
+            for row in (pivot + 1)..4 {
+                if a[row][pivot].abs() > best_val {
+                    best_row = row;
+                    best_val = a[row][pivot].abs();
+                }
+            }
+            if best_val < 1e-8 {
+                return Self::identity();
+            }
+            if best_row != pivot {
+                a.swap(pivot, best_row);
+            }
+            let pivot_value = a[pivot][pivot];
+            for col in 0..8 {
+                a[pivot][col] /= pivot_value;
+            }
             for row in 0..4 {
-                inv[col][row] *= inv_det;
+                if row == pivot {
+                    continue;
+                }
+                let factor = a[row][pivot];
+                if factor == 0.0 {
+                    continue;
+                }
+                for col in 0..8 {
+                    a[row][col] -= factor * a[pivot][col];
+                }
+            }
+        }
+        let mut inv = [[0.0f32; 4]; 4];
+        for row in 0..4 {
+            for col in 0..4 {
+                inv[col][row] = a[row][4 + col];
             }
         }
         Self { cols: inv }
@@ -1158,6 +1185,51 @@ mod tests {
         let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
         assert!(point_in_polygon([5.0, 5.0], &square));
         assert!(!point_in_polygon([20.0, 5.0], &square));
+    }
+
+    #[test]
+    fn mat4_inverse_round_trips_to_identity() {
+        let m = Mat4::translation(Vec3::new(3.0, -2.0, 5.0))
+            .mul(Mat4::from_quat(0.1, 0.2, 0.05, 0.9701425))
+            .mul(Mat4::scale_vec(Vec3::new(2.0, 1.5, 0.5)));
+        let round_trip = m.mul(m.inverse());
+        let identity = Mat4::identity();
+        for col in 0..4 {
+            for row in 0..4 {
+                assert!(
+                    (round_trip.cols[col][row] - identity.cols[col][row]).abs() < 1e-4,
+                    "mismatch at col={col} row={row}: {} vs {}",
+                    round_trip.cols[col][row],
+                    identity.cols[col][row]
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn mat4_inverse_undoes_view_projection() {
+        let camera = Camera3d::default();
+        let view = Mat4::look_at(camera.position, camera.target, camera.up);
+        let proj = Mat4::perspective(camera.fov_y, 1.5, camera.near, camera.far);
+        let view_proj = proj.mul(view);
+        let inv = view_proj.inverse();
+        let world_point = Vec3::new(1.0, 2.0, 0.5);
+        let clip_point = view_proj.transform_point(world_point);
+        let unprojected = inv.transform_point(clip_point);
+        assert!((unprojected.x - world_point.x).abs() < 1e-3, "x mismatch: {}", unprojected.x);
+        assert!((unprojected.y - world_point.y).abs() < 1e-3, "y mismatch: {}", unprojected.y);
+        assert!((unprojected.z - world_point.z).abs() < 1e-3, "z mismatch: {}", unprojected.z);
+    }
+
+    #[test]
+    fn ray_from_screen_center_points_at_target() {
+        let camera = Camera3d::default();
+        let aspect = 1.6;
+        let (origin, dir) = camera.ray_from_screen(aspect, 400.0, 300.0, 800.0, 600.0);
+        assert!((origin.x - camera.position.x).abs() < 1e-4);
+        let to_target = camera.target.sub(camera.position).normalize();
+        let dot = dir.dot(to_target);
+        assert!(dot > 0.999, "ray from screen center should point at target, dot={dot}");
     }
 
     #[test]

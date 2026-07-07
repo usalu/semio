@@ -2197,6 +2197,103 @@ pub struct VirtualFileSystemScene {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct GisMapScene {
+    pub map_fixture_json: String,
+    pub camera_json: String,
+    #[serde(default = "gis_map_default_render_mode")]
+    pub render_mode: String,
+    #[serde(default = "gis_map_default_vector_style")]
+    pub vector_style: String,
+    #[serde(default = "gis_map_default_lod_mode")]
+    pub lod_mode: String,
+    #[serde(default = "gis_map_default_tile_url_template")]
+    pub tile_url_template: String,
+    #[serde(default = "gis_map_default_vector_tile_url_template")]
+    pub vector_tile_url_template: String,
+    #[serde(default = "gis_map_default_layer_visibility_json")]
+    pub layer_visibility_json: String,
+    #[serde(default = "gis_map_default_layer_stroke_scale_json")]
+    pub layer_stroke_scale_json: String,
+    #[serde(default = "gis_map_default_selection_json")]
+    pub selection_json: String,
+    #[serde(default = "gis_map_default_hover_json")]
+    pub hover_json: String,
+    #[serde(default = "gis_map_default_selection_method")]
+    pub selection_method: String,
+    #[serde(default = "gis_map_default_selection_mode")]
+    pub selection_mode: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub context_menu_json: Option<String>,
+}
+
+pub fn gis_map_default_render_mode() -> String {
+    "combined".into()
+}
+
+pub fn gis_map_default_vector_style() -> String {
+    "colored".into()
+}
+
+pub fn gis_map_default_lod_mode() -> String {
+    "automatic".into()
+}
+
+pub fn gis_map_default_tile_url_template() -> String {
+    "/osm/{z}/{x}/{y}.png".into()
+}
+
+pub fn gis_map_default_vector_tile_url_template() -> String {
+    "/vt/{z}/{x}/{y}.pbf".into()
+}
+
+pub fn gis_map_default_layer_visibility_json() -> String {
+    r#"{"raster":true,"water":true,"land":true,"roads":true,"buildings":true,"borders":true,"labels":true,"positions":true,"positionLabels":true,"routes":true,"regions":true}"#.into()
+}
+
+pub fn gis_map_default_layer_stroke_scale_json() -> String {
+    r#"{"raster":1,"water":1,"land":1,"roads":1,"buildings":1,"borders":1,"labels":1,"positions":1,"positionLabels":1,"routes":1,"regions":1}"#.into()
+}
+
+pub fn gis_map_default_selection_json() -> String {
+    r#"{"positions":[],"routes":[]}"#.into()
+}
+
+pub fn gis_map_default_hover_json() -> String {
+    "null".into()
+}
+
+pub fn gis_map_default_selection_method() -> String {
+    "rectangle".into()
+}
+
+pub fn gis_map_default_selection_mode() -> String {
+    "default".into()
+}
+
+impl GisMapScene {
+    /** @emoji 🗺️ Builds a GIS map scene with optional extensions unset. */
+    pub fn base(map_fixture_json: String, camera_json: String) -> Self {
+        Self {
+            map_fixture_json,
+            camera_json,
+            render_mode: gis_map_default_render_mode(),
+            vector_style: gis_map_default_vector_style(),
+            lod_mode: gis_map_default_lod_mode(),
+            tile_url_template: gis_map_default_tile_url_template(),
+            vector_tile_url_template: gis_map_default_vector_tile_url_template(),
+            layer_visibility_json: gis_map_default_layer_visibility_json(),
+            layer_stroke_scale_json: gis_map_default_layer_stroke_scale_json(),
+            selection_json: gis_map_default_selection_json(),
+            hover_json: gis_map_default_hover_json(),
+            selection_method: gis_map_default_selection_method(),
+            selection_mode: gis_map_default_selection_mode(),
+            context_menu_json: None,
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UiComponentSceneNode {
     pub surface_id: String,
     pub controller_id: String,
@@ -2219,6 +2316,8 @@ pub struct UiComponentSceneNode {
     pub raster: Option<RasterScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub virtual_file_system: Option<VirtualFileSystemScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gis_map: Option<GisMapScene>,
 }
 //#endregion 🔖ComponentScenes
 
@@ -2311,6 +2410,22 @@ pub mod text_editor_commands {
     pub const COMMIT_RENAME: &str = "commitRename";
     pub const FORMAT_DOCUMENT: &str = "formatDocument";
 }
+
+/** @emoji 🗺️ Renderer-to-plugin command names for GIS map surfaces. */
+pub mod gis_map_commands {
+    pub const SET_CAMERA: &str = "setCamera";
+    pub const SET_FEATURE_SELECTION: &str = "setFeatureSelection";
+    pub const SET_HOVER: &str = "setHover";
+    pub const SET_SELECTION_METHOD: &str = "setSelectionMethod";
+    pub const SET_SELECTION_MODE: &str = "setSelectionMode";
+    pub const CLEAR_SELECTION: &str = "clearSelection";
+    pub const SELECT_ALL: &str = "selectAll";
+    pub const DESELECT: &str = "deselect";
+    pub const FOCUS_FEATURE: &str = "focusFeature";
+    pub const OPEN_SOURCE: &str = "openSource";
+    pub const SET_LAYER_STROKE_SCALE: &str = "setLayerStrokeScale";
+    pub const FIT_WORLD: &str = "fitWorld";
+}
 //#endregion 🔖SceneCommands
 
 pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
@@ -2349,6 +2464,7 @@ fn component_scene(
     table: Option<TableScene>,
     raster: Option<RasterScene>,
     virtual_file_system: Option<VirtualFileSystemScene>,
+    gis_map: Option<GisMapScene>,
 ) -> UiNode {
     UiNode::ComponentScene(UiComponentSceneNode {
         surface_id: surface_id.into(),
@@ -2363,6 +2479,7 @@ fn component_scene(
         table,
         raster,
         virtual_file_system,
+        gis_map,
     })
 }
 
@@ -2378,6 +2495,7 @@ pub fn build_canvas_2d_scene(
         None,
         None,
         Some(scene),
+        None,
         None,
         None,
         None,
@@ -2405,6 +2523,7 @@ pub fn build_world_3d_scene(
         None,
         None,
         None,
+        None,
     )
 }
 
@@ -2422,6 +2541,7 @@ pub fn build_node_graph_scene(
         None,
         None,
         Some(scene),
+        None,
         None,
         None,
         None,
@@ -2447,6 +2567,7 @@ pub fn build_text_editor_scene(
         None,
         None,
         None,
+        None,
     )
 }
 
@@ -2466,6 +2587,7 @@ pub fn build_table_scene(
         None,
         None,
         Some(scene),
+        None,
         None,
         None,
     )
@@ -2489,6 +2611,7 @@ pub fn build_raster_scene(
         None,
         Some(scene),
         None,
+        None,
     )
 }
 
@@ -2505,6 +2628,29 @@ pub fn build_virtual_file_system_scene(
         "virtualFileSystem",
         pane_id,
         binding_id,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        Some(scene),
+        None,
+    )
+}
+
+pub fn build_gis_map_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: GisMapScene,
+) -> UiNode {
+    component_scene(
+        surface_id,
+        controller_id,
+        "gis2d-map",
+        None,
+        None,
+        None,
         None,
         None,
         None,

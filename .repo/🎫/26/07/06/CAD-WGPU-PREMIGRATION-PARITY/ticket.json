@@ -1,0 +1,19 @@
+{
+  "title": "CAD Wgpu Premigration Parity",
+  "emoji": "📐",
+  "status": "closed",
+  "description": "Restore CAD premigration feature set inside wgpu/Rust plugin stack per plan cad_wgpu_premigration_parity_85c19a7c.",
+  "summary": "Restored CAD premigration feature parity in the wgpu/Rust plugin stack. Extended cad_document with full CadObject/CadScene schema (primitives, locked, references, per-pane objects), comprehensive CadOp variants (add/remove/patch/translate/rotate/scale/setPane/setReferences), and VCS-backed undo/redo for all object edits. Updated cad/plugin/rs to route mutations through VCS, wire hierarchy chrome (hover/actions/draggable/primitive children), multi-selection inspector with mixed-value fields, world reference overlays via world3d_scene_extended, transformation toolbar with applyTransformation, save/load JSON export commands, and per-pane engagement REPL with possible typology engagements. Fixed forest fixture model index mapping (shape=0, building=1, energy=2, structure-classic=3). Tests: 17 cad-plugin + 3 cad_document passing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1841"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "85c19a7c",
+    "local": "cad_wgpu_premigration_parity_85c19a7c.plan.md"
+  },
+  "sessions": [
+    "⚪0736e59e8ef248e1a2fe33651ec5f4e9"
+  ]
+}

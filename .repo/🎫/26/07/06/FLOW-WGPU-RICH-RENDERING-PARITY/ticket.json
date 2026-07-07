@@ -1,0 +1,18 @@
+{
+  "title": "Flow Wgpu Rich Rendering Parity",
+  "emoji": "🌊",
+  "status": "open",
+  "description": "Restore premigration flow node-graph rendering in wgpu: edges, handles, channels, labels, selection rectangle, LOD-adjusted content.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1840"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "6d0f4468",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/restore_flow_wgpu_rendering_parity_6d0f4468.plan.md"
+  },
+  "sessions": [
+    "⚪28a191d9d79a4a44827263eb0d470ce7"
+  ]
+}

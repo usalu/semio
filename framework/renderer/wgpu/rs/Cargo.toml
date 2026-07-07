@@ -16,6 +16,7 @@ framework_graph = { path = "../../../graph/rs" }
 framework_editor = { path = "../../../editor/rs" }
 infinite_cavas = { path = "../../../../infinite/cavas/rs" }
 infinite_world = { path = "../../../../infinite/world/rs" }
+gis_2d = { path = "../../../../gis/2d/rs" }
 flow_core = { path = "../../../../flow/core/rs" }
 ui_wgpu = { path = "../../../../ui/wgpu/rs" }
 semio-framework-plugin = { path = "../../../plugin/rs" }
@@ -40,6 +41,7 @@ required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 libloading = "0.8.9"
+ureq = "2.12.1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

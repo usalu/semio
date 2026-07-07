@@ -1,0 +1,421 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-window}[2026/07/06 v0.3.0 semio OS window chrome]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{calc}
+\RequirePackage{semio-core}
+\RequirePackage{semio-fonts}
+\RequirePackage{semio-logo}
+\RequirePackage{fancyhdr}
+\RequirePackage{graphicx}
+\RequirePackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+
+\providecommand{\semio@chrome@titlebar@height}{1.4em}
+\providecommand{\semio@chrome@padding}{0.2em}
+\providecommand{\semio@chrome@navbar@height}{1.8em}
+\providecommand{\semio@chrome@footer@height}{1.8em}
+\providecommand{\semio@chrome@font@title}{0.7em}
+\providecommand{\semio@chrome@font@number}{0.6em}
+\providecommand{\semio@chrome@font@body}{0.8em}
+
+\ExplSyntaxOn
+
+\bool_new:N \l_semio_window_chapter_open_bool
+\bool_new:N \l_semio_window_section_open_bool
+\tl_new:N \l_semio_semiobox_title_tl
+\tl_new:N \g_semio_current_heading_tl
+\dim_new:N \l_semio_window_gap_dim
+\dim_new:N \l_semio_window_header_width_dim
+\box_new:N \l_semio_window_tab_box
+\box_new:N \l_semio_window_controls_box
+
+\tl_gset:Nn \g_semio_current_heading_tl { }
+
+\tcbset{
+  semio~window~tab/.style={
+    enhanced,
+    nobeforeafter,
+    arc=0mm,
+    toprule=\semio@stroke@hairline,
+    leftrule=\semio@stroke@hairline,
+    rightrule=\semio@stroke@hairline,
+    bottomrule=0pt,
+    boxrule=0pt,
+    colframe=semio-chrome-border-normal,
+    colback=semio-chrome-window,
+    coltext=semio-chrome-border-emphasized,
+    fontupper={\SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@titlebar@height}\selectfont},
+    height=\semio@chrome@titlebar@height,
+    valign=center,
+    left=\semio@chrome@padding,
+    right=\semio@chrome@padding,
+    top=0pt,
+    bottom=0pt,
+  },
+  semio~window~controls/.style={
+    semio~window~tab,
+    fontupper={\SemioSans\fontsize{\semio@chrome@font@number}{\semio@chrome@titlebar@height}\selectfont},
+  },
+  semio~window~gap/.style={
+    enhanced,
+    nobeforeafter,
+    arc=0mm,
+    toprule=0pt,
+    leftrule=0pt,
+    rightrule=0pt,
+    bottomrule=\semio@stroke@hairline,
+    boxrule=0pt,
+    colframe=semio-chrome-border-normal,
+    colback=semio-chrome-canvas,
+    height=\semio@chrome@titlebar@height,
+    valign=bottom,
+    top=0pt,
+    bottom=0pt,
+    left=0pt,
+    right=0pt,
+  },
+  semio~window/.style={
+    enhanced,
+    breakable,
+    arc=0mm,
+    colback=semio-chrome-canvas,
+    colframe=semio-chrome-border-normal,
+    boxrule=0pt,
+    toprule=0pt,
+    leftrule=\semio@stroke@hairline,
+    rightrule=\semio@stroke@hairline,
+    bottomrule=\semio@stroke@hairline,
+    top=-\semio@stroke@hairline,
+    left=\semio@chrome@padding,
+    right=\semio@chrome@padding,
+    bottom=\semio@chrome@padding,
+    before~skip=0pt,
+    after~skip=0pt,
+    parbox=false,
+  },
+  semio~window~chapter/.style={
+    semio~window,
+    breakable=false,
+  },
+  semio~window~boxed/.style={
+    semio~window,
+    toprule=\semio@stroke@hairline,
+    top=\semio@chrome@padding,
+  },
+  semio~window~inner/.style={
+    enhanced,
+    breakable=false,
+    arc=0mm,
+    boxrule=0pt,
+    colframe=semio-chrome-canvas,
+    colback=semio-chrome-canvas,
+    left=\semio@chrome@padding,
+    right=\semio@chrome@padding,
+    top=\semio@chrome@padding,
+    bottom=\semio@chrome@padding,
+  },
+  semio~chrome~bar~navbar/.style={
+    enhanced,
+    nobeforeafter,
+    arc=0mm,
+    boxrule=0pt,
+    toprule=0pt,
+    leftrule=0pt,
+    rightrule=0pt,
+    bottomrule=\semio@stroke@hairline,
+    colframe=semio-chrome-border-normal,
+    colback=semio-chrome-window,
+    height=\semio@chrome@navbar@height,
+    valign=center,
+    left=\semio@chrome@padding,
+    right=\semio@chrome@padding,
+    top=0pt,
+    bottom=0pt,
+  },
+  semio~chrome~bar~footer/.style={
+    enhanced,
+    nobeforeafter,
+    arc=0mm,
+    boxrule=0pt,
+    toprule=\semio@stroke@hairline,
+    leftrule=0pt,
+    rightrule=0pt,
+    bottomrule=0pt,
+    colframe=semio-chrome-border-normal,
+    colback=semio-chrome-window,
+    height=\semio@chrome@footer@height,
+    valign=center,
+    left=\semio@chrome@padding,
+    right=\semio@chrome@padding,
+    top=0pt,
+    bottom=0pt,
+  },
+  semio~chrome~group/.style={
+    enhanced,
+    nobeforeafter,
+    arc=0mm,
+    boxrule=\semio@stroke@hairline,
+    colframe=semio-chrome-border-normal,
+    colback=semio-chrome-window,
+    coltext=semio-chrome-border-emphasized,
+    fontupper={\SemioSans\fontsize{\semio@chrome@font@title}{\semio@chrome@titlebar@height}\selectfont},
+    height=\semio@chrome@titlebar@height,
+    valign=center,
+    left=\semio@chrome@padding,
+    right=\semio@chrome@padding,
+    top=0pt,
+    bottom=0pt,
+  },
+}
+
+\keys_define:nn { semio / semiobox } {
+  title .tl_set:N = \l_semio_semiobox_title_tl,
+}
+
+\cs_new_protected:Npn \semio_window_header:nn #1 #2 {
+  \hbox_set:Nn \l_semio_window_tab_box { \tcbox[semio~window~tab]{#1} }
+  \hbox_set:Nn \l_semio_window_controls_box { \tcbox[semio~window~controls]{#2} }
+  \dim_set:Nn \l_semio_window_header_width_dim { \linewidth }
+  \dim_set:Nn \l_semio_window_gap_dim {
+    \dimexpr\l_semio_window_header_width_dim
+      - \box_wd:N \l_semio_window_tab_box
+      - \box_wd:N \l_semio_window_controls_box \relax
+  }
+  \noindent
+  \vtop{%
+    \hbox to \l_semio_window_header_width_dim {%
+      \box_use:N \l_semio_window_tab_box
+      \tcbox[semio~window~gap, width=\l_semio_window_gap_dim]{~}%
+      \box_use:N \l_semio_window_controls_box
+    }%
+  }%
+  \par\nointerlineskip
+}
+
+\cs_new_protected:Npn \semio_window_close_chapter_body: {
+  \bool_if:NT \l_semio_window_chapter_open_bool {
+    \end{tcolorbox}
+    \bool_set_false:N \l_semio_window_chapter_open_bool
+  }
+}
+
+\cs_new_protected:Npn \semio_window_close_section: {
+  \bool_if:NT \l_semio_window_section_open_bool {
+    \end{tcolorbox}
+    \bool_set_false:N \l_semio_window_section_open_bool
+  }
+}
+
+\cs_new_protected:Npn \semio_window_close_chapter: {
+  \semio_window_close_section:
+  \semio_window_close_chapter_body:
+}
+
+\cs_new_protected:Npn \semio_window_open_chapter:n #1 {
+  \semio_window_close_chapter:
+  \clearpage
+  \refstepcounter{chapter}
+  \chaptermark{#1}
+  \tl_gset:Nn \g_semio_current_heading_tl {#1}
+  \addcontentsline{toc}{chapter}{\protect\numberline{\thechapter}#1}
+  \semio_window_header:nn {#1} { \thechapter }
+  \begin{tcolorbox}[semio~window~chapter]
+  \bool_set_true:N \l_semio_window_chapter_open_bool
+}
+
+\cs_new_protected:Npn \semio_window_open_section:n #1 {
+  \semio_window_close_section:
+  \semio_window_close_chapter_body:
+  \refstepcounter{section}
+  \sectionmark{#1}
+  \tl_gset:Nn \g_semio_current_heading_tl {#1}
+  \addcontentsline{toc}{section}{\protect\numberline{\thesection}#1}
+  \semio_window_header:nn {#1} { \thesection }
+  \begin{tcolorbox}[semio~window]
+  \bool_set_true:N \l_semio_window_section_open_bool
+}
+
+\cs_new_protected:Npn \semio_window_semiobox_begin:n #1 {
+  \tl_clear:N \l_semio_semiobox_title_tl
+  \keys_set:nn { semio / semiobox } { #1 }
+  \bool_if:NTF \l_semio_window_chapter_open_bool {
+    \begin{tcolorbox}[semio~window~inner, #1]
+  } {
+    \bool_if:NTF \l_semio_window_section_open_bool {
+      \begin{tcolorbox}[semio~window~inner, #1]
+    } {
+      \tl_if_empty:NTF \l_semio_semiobox_title_tl {
+        \begin{tcolorbox}[semio~window~boxed, #1]
+      } {
+        \semio_window_header:nn { \tl_use:N \l_semio_semiobox_title_tl } { }
+        \begin{tcolorbox}[semio~window, #1]
+      }
+    }
+  }
+}
+
+\@ifundefined{chapter}{
+}{
+  \let\semio@koma@chapter\chapter
+  \RenewDocumentCommand{\chapter}{s m}{
+    \semio_window_open_chapter:n {#2}
+  }
+  \AddToHook{cmd/tableofcontents/before}{%
+    \let\semio@saved@chapter\chapter
+    \let\chapter\semio@koma@chapter
+  }
+  \AddToHook{cmd/tableofcontents/after}{%
+    \let\chapter\semio@saved@chapter
+  }
+  \AddToHook{cmd/listoffigures/before}{%
+    \let\semio@saved@chapter\chapter
+    \let\chapter\semio@koma@chapter
+  }
+  \AddToHook{cmd/listoftables/before}{%
+    \let\semio@saved@chapter\chapter
+    \let\chapter\semio@koma@chapter
+  }
+  \AddToHook{cmd/listoffigures/after}{%
+    \let\chapter\semio@saved@chapter
+  }
+  \AddToHook{cmd/listoftables/after}{%
+    \let\chapter\semio@saved@chapter
+  }
+}
+
+\RenewDocumentCommand{\section}{s m}{
+  \semio_window_open_section:n {#2}
+}
+
+\NewDocumentEnvironment{Semiobox}{O{}}{%
+  \semio_window_semiobox_begin:n {#1}%
+}{%
+  \end{tcolorbox}%
+}
+
+\cs_new_protected:Npn \semio@appendix_before: {
+  \semio_window_close_chapter:
+}
+
+\cs_new_eq:NN \semio@koma@appendix \appendix
+\RenewDocumentCommand{\appendix}{}{%
+  \semio@appendix_before:
+  \semio@koma@appendix
+}
+
+\cs_new_protected:Npn \SemioWindowCloseAll {
+  \semio_window_close_chapter:
+}
+
+\cs_new_protected:Npn \SemioWindowCloseChapter {
+  \semio_window_close_chapter_body:
+}
+
+\cs_new_protected:Npn \semio_chrome_navbar_icon_dim: {
+  \dimexpr\semio@chrome@navbar@height - 2 \semio@chrome@padding \relax
+}
+
+\cs_new_protected:Npn \semio_chrome_group_icon_dim: {
+  \dimexpr\semio@chrome@titlebar@height - 2 \semio@chrome@padding \relax
+}
+
+\cs_new_protected:Npn \semio_chrome_group:nn #1 #2 {
+  \tcbox[
+    semio~chrome~group,
+    nobeforeafter,
+    boxsep=0pt,
+    #1,
+  ] { #2 }
+}
+
+\cs_new_protected:Npn \semio_chrome_navbar_bar:n #1 {
+  \vbox {%
+    \nointerlineskip
+    \hbox {%
+      \setlength { \fboxsep } { 0pt }%
+      \colorbox { semio-chrome-window } {%
+        \parbox [ c ] [ \semio@chrome@navbar@height ] [ c ] { \headwidth } { #1 }%
+      }%
+    }%
+    \nointerlineskip
+    \hbox to \headwidth {%
+      \color { semio-chrome-border-normal }%
+      \rule { \headwidth } { \semio@stroke@hairline }%
+    }%
+  }%
+}
+
+\cs_new_protected:Npn \semio_chrome_footer_bar:n #1 {
+  \vbox {%
+    \nointerlineskip
+    \hbox to \headwidth {%
+      \color { semio-chrome-border-normal }%
+      \rule { \headwidth } { \semio@stroke@hairline }%
+    }%
+    \nointerlineskip
+    \hbox {%
+      \setlength { \fboxsep } { 0pt }%
+      \colorbox { semio-chrome-window } {%
+        \parbox [ c ] [ \semio@chrome@footer@height ] [ c ] { \headwidth } { #1 }%
+      }%
+    }%
+  }%
+}
+
+\cs_new_protected:Npn \semio_navbar_apply: {
+  \fancyhead[C] {%
+    \semio_chrome_navbar_bar:n {%
+      \hbox to \headwidth {%
+        \hspace { \semio@chrome@padding }%
+        \semioemblem [ 1em ]%
+        \hspace { \semio@spacing@compact }%
+        { \SemioSans \fontsize { \semio@chrome@font@body } { \semio@chrome@navbar@height } \selectfont \@title }%
+        \hfil
+        \tl_if_empty:NF \g_semio_current_heading_tl {
+          \semio_chrome_group:nn { } { \tl_use:N \g_semio_current_heading_tl }
+        }%
+        \hspace { \semio@chrome@padding }%
+      }%
+    }%
+  }%
+}
+
+\cs_new_protected:Npn \semio_footer_apply: {
+  \fancyfoot[C] {%
+    \semio_chrome_footer_bar:n {%
+      \hbox to \headwidth {%
+        \hspace { \semio@chrome@padding }%
+        \semio_chrome_group:nn { } {%
+          \semioemblem [ 0.75em ]%
+          \hspace { \semio@spacing@compact }%
+          { \SemioSans \fontsize { \semio@chrome@font@number } { \semio@chrome@titlebar@height } \selectfont \@author }%
+        }%
+        \hfil
+        { \SemioMono \fontsize { \semio@chrome@font@number } { \semio@chrome@footer@height } \selectfont \thepage }%
+        \hspace { \semio@chrome@padding }%
+      }%
+    }%
+  }%
+}
+
+\cs_new_protected:Npn \semio_header_footer_apply: {
+  \pagestyle { fancy }
+  \fancyhf { }
+  \semio_navbar_apply:
+  \semio_footer_apply:
+  \renewcommand { \headrulewidth } { 0pt }
+  \renewcommand { \footrulewidth } { 0pt }
+}
+
+\AddToHook{begindocument}{\semio_header_footer_apply:}
+
+\ExplSyntaxOff
+
+\setlength{\headheight}{\dimexpr\semio@chrome@navbar@height+\semio@stroke@hairline+2pt\relax}
+\setlength{\headsep}{\semio@spacing@touch}
+\setlength{\footskip}{\dimexpr\semio@chrome@footer@height+\semio@stroke@hairline+2pt+\semio@spacing@touch\relax}
+
+\AddToHook{enddocument/before}{\SemioWindowCloseAll}
+\AtEndDocument{\SemioWindowCloseAll}

@@ -17,6 +17,7 @@ import {
 	runBundleScriptMain,
 	runVitest,
 	runViteBunxDev,
+	frameworkOsPlaygroundDefaultPort,
 } from "../../../../repo/lib/js/index.ts";
 import { PLUGIN_BUILD_TARGETS } from "./js/index.ts";
 
@@ -168,9 +169,10 @@ class DevScript extends BundleScript {
 		const renderer = process.env.SEMIO_RENDERER ?? "react";
 		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
 		await buildEngineWasm(plugin, renderer);
+		const defaultPort = String(frameworkOsPlaygroundDefaultPort(plugin, renderer));
 		if (renderer === "wgpu") {
 			const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-			const port = Number(process.env.S_OS_PORT ?? "6066");
+			const port = Number(process.env.S_OS_PORT ?? defaultPort);
 			const playUrl = wgpuDevPlayUrl(host, port, plugin);
 			if (isDevPortInUse(host, port)) {
 				const entry = probeWgpuDevPort(host, port);
@@ -216,7 +218,7 @@ class DevScript extends BundleScript {
 		}
 		runViteBunxDev(this.root, segments, {
 			portEnv: "S_OS_PORT",
-			defaultPort: "6066",
+			defaultPort,
 			fixedPort: true,
 			env: {
 				SEMIO_PLUGIN: plugin,

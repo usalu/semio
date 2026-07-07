@@ -289,6 +289,9 @@ impl GraphHost {
                 if let Some(label) = value.get("lod").and_then(|v| v.as_str()) {
                     self.dag.set_forced_draw_lod_label(label);
                 }
+                if let Some(distance) = value.get("proximityDistance").and_then(|v| v.as_f64()) {
+                    self.dag.set_proximity_distance(distance);
+                }
             }
         }
         if let Some(computing_json) = &payload.computing_json {

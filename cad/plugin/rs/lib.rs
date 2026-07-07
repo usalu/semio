@@ -1,18 +1,25 @@
 //! 📏 CAD plugin — spatial model play app bundled as a hot-swappable WASM component.
 
-use cad_document::{empty_cad_projection, CadEnvelope, CadNode, CadOp, CadScene, CadStore, CAD_DOCUMENT_SCHEMA};
+use cad_document::{
+    cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects,
+    empty_cad_projection, CadCamera, CadEnvelope, CadNode, CadObject, CadObjectPatch, CadOp, CadPaneId,
+    CadPrimitiveSlot, CadReference, CadReferencePatch, CadScene, CadStore, CAD_DOCUMENT_SCHEMA,
+    CAD_PLAY_DOCUMENT_SCHEMA,
+};
 use semio_framework_plugin::{
     build_world_3d_scene, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind,
-    ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
-    world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, App,
-    CommandDescriptor, MeshData, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInspectorFieldGroup,
-    UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementOption,
+    tool_button, tool_collection, tool_separator, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
+    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_readonly_field,
+    ui_stack_vertical, ui_text, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, App,
+    CommandDescriptor, MeshData, PluginApp, PluginBundle, ToolNode, UiControlNode, UiFieldNode,
+    UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
+    UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
     WindowLayoutWindowNode, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use semio_framework_plugin::layout::WindowEngagementStatus;
+use semio_framework_plugin::layout::{WindowEngagementPossible, WindowEngagementStatus};
 use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
 use base64::Engine;
 use serde::{Deserialize, Serialize};
@@ -44,10 +51,10 @@ const CAD_EXAMPLE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
 const CAD_FALLBACK_MESH_KIND: &str = "box";
 
 /// @emoji 🗂️ Indices into the quad play fixture's `models[]` array — one model definition per pane.
-const CAD_MODEL_INDEX_BUILDING: usize = 0;
-const CAD_MODEL_INDEX_ENERGY: usize = 1;
-const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 2;
-const CAD_MODEL_INDEX_SHAPE: usize = 3;
+const CAD_MODEL_INDEX_SHAPE: usize = 0;
+const CAD_MODEL_INDEX_BUILDING: usize = 1;
+const CAD_MODEL_INDEX_ENERGY: usize = 2;
+const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
 
 static CAD_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
@@ -69,6 +76,41 @@ const TYPOLOGY_CATALOG: &[(&str, &str, &str)] = &[
 
 const FOREST_LEFT_MODEL_JSON: &str =
     include_str!("../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
+
+const CAD_MODEL_DEFINITION_SHAPE: &str = "spatial.shape";
+const CAD_MODEL_DEFINITION_BUILDING: &str = "aec.building";
+const CAD_MODEL_DEFINITION_ENERGY: &str = "aec.building.energy";
+const CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC: &str = "aec.building.structure.classic";
+
+const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-fixture/concrete-forest-reference.png";
+
+struct CadTransformationSpec {
+    id: &'static str,
+    label: &'static str,
+    source_model_definition_id: &'static str,
+    target_model_definition_id: &'static str,
+}
+
+const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
+    CadTransformationSpec {
+        id: "from_geometry",
+        label: "From Geometry",
+        source_model_definition_id: CAD_MODEL_DEFINITION_SHAPE,
+        target_model_definition_id: CAD_MODEL_DEFINITION_ENERGY,
+    },
+    CadTransformationSpec {
+        id: "from_building",
+        label: "From Building",
+        source_model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
+        target_model_definition_id: CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
+    },
+    CadTransformationSpec {
+        id: "classic",
+        label: "Classic",
+        source_model_definition_id: CAD_MODEL_DEFINITION_BUILDING,
+        target_model_definition_id: CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
+    },
+];
 //#endregion 🔖Constants
 
 //#region 🔖BrepMeshes
@@ -212,6 +254,7 @@ fn cad_document_pane_objects(source_json: &str, model_index: usize) -> Vec<CadOb
                 label,
                 typology: typology.into(),
                 visible: true,
+                locked: false,
                 origin: object_origin_from_vertices(object_id, vertices),
                 orientation: Some([0.0, 0.0, 0.0, 1.0]),
                 scale: None,
@@ -220,103 +263,72 @@ fn cad_document_pane_objects(source_json: &str, model_index: usize) -> Vec<CadOb
                     .find(|(kind, _)| *kind == typology)
                     .map(|(_, url)| url.to_string()),
                 extent: object_extent_from_vertices(object_id, vertices),
+                primitives: primitives_from_json(entry),
             })
+        })
+        .collect()
+}
+
+fn primitives_from_json(entry: &Value) -> Vec<CadPrimitiveSlot> {
+    let Some(primitives) = entry.get("primitives") else {
+        return Vec::new();
+    };
+    if let Some(map) = primitives.as_object() {
+        return map
+            .iter()
+            .map(|(slot, value)| CadPrimitiveSlot {
+                slot: slot.clone(),
+                primitive_id: value.as_str().unwrap_or_default().into(),
+                kind: slot.clone(),
+            })
+            .collect();
+    }
+    if let Some(rows) = primitives.as_array() {
+        return rows
+            .iter()
+            .filter_map(|row| {
+                let kind = row.get("kind")?.as_str()?;
+                let primitive_id = row.get("id")?.as_str()?;
+                let slot = row
+                    .get("slot")
+                    .and_then(|value| value.as_str())
+                    .unwrap_or(kind);
+                Some(CadPrimitiveSlot {
+                    slot: slot.into(),
+                    primitive_id: primitive_id.into(),
+                    kind: kind.into(),
+                })
+            })
+            .collect();
+    }
+    Vec::new()
+}
+
+fn forest_references_for_model_definitions() -> HashMap<String, Vec<CadReference>> {
+    CadPaneId::all()
+        .into_iter()
+        .map(|pane| {
+            (
+                pane.model_definition_id().into(),
+                vec![CadReference {
+                    id: "ref-concrete-forest".into(),
+                    source_url: CAD_CONCRETE_FOREST_REFERENCE_URL.into(),
+                    media_kind: "image".into(),
+                    origin: [-24.0, -18.0, 0.01],
+                    orientation: None,
+                    scale: None,
+                    width_world: 22.0,
+                    hidden: false,
+                    locked: false,
+                    opacity: Some(1.0),
+                }],
+            )
         })
         .collect()
 }
 //#endregion 🔖BrepMeshes
 
 //#region 🔖Document
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-struct CadCamera {
-    #[serde(default = "default_camera_position")]
-    position: [f64; 3],
-    #[serde(default = "default_camera_target")]
-    target: [f64; 3],
-    #[serde(default = "one_f64")]
-    zoom: f64,
-    #[serde(default = "default_fov")]
-    fov: f64,
-}
-
-fn default_camera_position() -> [f64; 3] {
-    [12.0, -12.0, 8.0]
-}
-
-fn default_camera_target() -> [f64; 3] {
-    [0.0, 0.0, 0.0]
-}
-
-fn default_fov() -> f64 {
-    50.0
-}
-
-fn one_f64() -> f64 {
-    1.0
-}
-
-fn default_selection_method() -> String {
-    "rectangle".into()
-}
-
-fn default_transform_tool() -> String {
-    "move".into()
-}
-
-fn typology_mesh_kind(typology: &str) -> &'static str {
-    match typology {
-        "building.building.column" | "structure.structure.reinforcedconcretecolumn" => "cylinder",
-        _ => "box",
-    }
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct CadObject {
-    id: String,
-    label: String,
-    typology: String,
-    #[serde(default)]
-    visible: bool,
-    #[serde(default)]
-    origin: [f64; 3],
-    #[serde(default)]
-    orientation: Option<[f64; 4]>,
-    #[serde(default)]
-    scale: Option<[f64; 3]>,
-    #[serde(default, rename = "meshUrl")]
-    mesh_url: Option<String>,
-    /// @emoji 📏 Authored bounding-box size, used to derive brep primitive dimensions.
-    #[serde(default)]
-    extent: Option<[f64; 3]>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct CadPlayDocument {
-    schema: String,
-    id: String,
-    #[serde(default)]
-    camera: CadCamera,
-    /// @emoji 📐 Shape pane objects (also the default single-pane / addObject target).
-    #[serde(default)]
-    objects: Vec<CadObject>,
-    #[serde(default)]
-    nodes: Vec<CadNode>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    active_tool: Option<String>,
-    /// @emoji 🏢 Building pane objects.
-    #[serde(default)]
-    building_objects: Vec<CadObject>,
-    /// @emoji 🔥 Energy pane objects.
-    #[serde(default)]
-    energy_objects: Vec<CadObject>,
-    /// @emoji 🏗️ Structure classic pane objects.
-    #[serde(default)]
-    structure_classic_objects: Vec<CadObject>,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CadPlayRuntime {
@@ -328,9 +340,30 @@ struct CadPlayRuntime {
     selection_method: String,
     #[serde(default)]
     hovered_object_id: Option<String>,
-    /// @emoji 🕹️ Active gumball transform mode: "move" | "rotate" | "scale".
     #[serde(default = "default_transform_tool")]
     transform_tool: String,
+    #[serde(default)]
+    engagement_input: String,
+    #[serde(default)]
+    engagement_step: String,
+    #[serde(default)]
+    active_example_id: Option<String>,
+    #[serde(default)]
+    selected_reference_model_definition_id: Option<String>,
+    #[serde(default)]
+    selected_reference_id: Option<String>,
+    #[serde(default)]
+    engagement_pane: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pending_export: Option<Value>,
+}
+
+fn default_selection_method() -> String {
+    "rectangle".into()
+}
+
+fn default_transform_tool() -> String {
+    "move".into()
 }
 
 impl Default for CadPlayRuntime {
@@ -341,6 +374,13 @@ impl Default for CadPlayRuntime {
             selection_method: default_selection_method(),
             hovered_object_id: None,
             transform_tool: default_transform_tool(),
+            engagement_input: String::new(),
+            engagement_step: "Idle".into(),
+            active_example_id: None,
+            selected_reference_model_definition_id: None,
+            selected_reference_id: None,
+            engagement_pane: None,
+            pending_export: None,
         }
     }
 }
@@ -348,10 +388,9 @@ impl Default for CadPlayRuntime {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct CadPlayEnvelope {
-    document: CadPlayDocument,
+    document: CadScene,
     #[serde(default)]
     runtime: CadPlayRuntime,
-    /// @emoji 🗄️ Node add/rename history, replayed through `vcs::DocumentVcsCommand`.
     #[serde(default = "default_cad_history")]
     history: CadEnvelope,
     #[serde(default)]
@@ -360,26 +399,39 @@ struct CadPlayEnvelope {
     redo_edit_ids: Vec<String>,
 }
 
-fn default_document() -> CadPlayDocument {
-    CadPlayDocument {
-        schema: "cad.document".into(),
+fn typology_mesh_kind(typology: &str) -> &'static str {
+    match typology {
+        "building.building.column" | "structure.structure.reinforcedconcretecolumn" => "cylinder",
+        _ => "box",
+    }
+}
+
+fn default_document() -> CadScene {
+    CadScene {
+        schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: "cad".into(),
         camera: CadCamera {
-            position: default_camera_position(),
-            target: default_camera_target(),
+            position: [12.0, -12.0, 8.0],
+            target: [0.0, 0.0, 0.0],
             zoom: 1.0,
-            fov: default_fov(),
+            fov: 50.0,
         },
         objects: vec![CadObject {
             id: "object-box-1".into(),
             label: "Box".into(),
             typology: "spatial.shape.box".into(),
             visible: true,
+            locked: false,
             origin: [0.0, 0.0, 0.0],
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
             scale: None,
             mesh_url: Some("/mesh/hexagonal-cut-concrete-forest-left.glb".into()),
             extent: None,
+            primitives: vec![CadPrimitiveSlot {
+                slot: "solid".into(),
+                primitive_id: "box-solid".into(),
+                kind: "solid".into(),
+            }],
         }],
         nodes: vec![
             CadNode {
@@ -397,18 +449,20 @@ fn default_document() -> CadPlayDocument {
         building_objects: Vec::new(),
         energy_objects: Vec::new(),
         structure_classic_objects: Vec::new(),
+        references_by_model_definition_id: HashMap::new(),
+        active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
     }
 }
 
 /// @emoji 🪟 Builds the quad play document: shape/building/energy/structure-classic panes each
 /// sourced from their own model definition inside the shared fixture JSON.
-fn forest_play_document(source_json: &str, id: &str) -> CadPlayDocument {
+fn forest_play_document(source_json: &str, id: &str) -> CadScene {
     let shape_objects = cad_document_pane_objects(source_json, CAD_MODEL_INDEX_SHAPE);
     if shape_objects.is_empty() {
         return default_document();
     }
-    CadPlayDocument {
-        schema: "cad.document".into(),
+    CadScene {
+        schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: id.into(),
         camera: CadCamera {
             position: [12.0, -12.0, 8.0],
@@ -426,18 +480,16 @@ fn forest_play_document(source_json: &str, id: &str) -> CadPlayDocument {
         building_objects: cad_document_pane_objects(source_json, CAD_MODEL_INDEX_BUILDING),
         energy_objects: cad_document_pane_objects(source_json, CAD_MODEL_INDEX_ENERGY),
         structure_classic_objects: cad_document_pane_objects(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC),
+        references_by_model_definition_id: forest_references_for_model_definitions(),
+        active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
     }
 }
 
-fn seed_cad_history(document: &CadPlayDocument) -> CadEnvelope {
+fn seed_cad_history(document: &CadScene) -> CadEnvelope {
     create_document_vcs_envelope(
         CAD_DOCUMENT_SCHEMA,
-        "cad-play-nodes",
-        CadScene {
-            schema: CAD_DOCUMENT_SCHEMA.into(),
-            id: document.id.clone(),
-            nodes: document.nodes.clone(),
-        },
+        "cad-play",
+        document.clone(),
         None,
     )
 }
@@ -451,7 +503,10 @@ fn forest_play_envelope() -> CadPlayEnvelope {
     CadPlayEnvelope {
         history: seed_cad_history(&document),
         document,
-        runtime: CadPlayRuntime::default(),
+        runtime: CadPlayRuntime {
+            active_example_id: Some(CAD_EXAMPLE_FOREST_LEFT.into()),
+            ..CadPlayRuntime::default()
+        },
         applied_edit_ids: Vec::new(),
         redo_edit_ids: Vec::new(),
     }
@@ -500,28 +555,8 @@ fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> 
         .unwrap_or_else(|| fallback.to_vec())
 }
 
-fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
-    [
-        a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
-        a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
-        a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
-        a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
-    ]
-}
-
-fn quat_from_axis_angle(ax: f64, ay: f64, az: f64, angle: f64) -> [f64; 4] {
-    let len = (ax * ax + ay * ay + az * az).sqrt();
-    if len < 1e-8 {
-        return [0.0, 0.0, 0.0, 1.0];
-    }
-    let half = angle * 0.5;
-    let s = half.sin();
-    [ax / len * s, ay / len * s, az / len * s, half.cos()]
-}
-
 //#region 🔖PaneHelpers
-/// @emoji 🧭 The 4 pane object lists, in document field order: shape/building/energy/structure.
-fn cad_pane_lists(document: &CadPlayDocument) -> [&Vec<CadObject>; 4] {
+fn cad_pane_lists(document: &CadScene) -> [&Vec<CadObject>; 4] {
     [
         &document.objects,
         &document.building_objects,
@@ -530,65 +565,163 @@ fn cad_pane_lists(document: &CadPlayDocument) -> [&Vec<CadObject>; 4] {
     ]
 }
 
-fn cad_pane_lists_mut(document: &mut CadPlayDocument) -> [&mut Vec<CadObject>; 4] {
-    [
-        &mut document.objects,
-        &mut document.building_objects,
-        &mut document.energy_objects,
-        &mut document.structure_classic_objects,
-    ]
+fn cad_pane_id_from_suffix(id_suffix: &str) -> CadPaneId {
+    match id_suffix {
+        "building" => CadPaneId::Building,
+        "energy" => CadPaneId::Energy,
+        "structure-classic" => CadPaneId::StructureClassic,
+        _ => CadPaneId::Shape,
+    }
 }
 
-/// @emoji 🌐 Objects across all 4 panes (ids are globally unique across the whole fixture).
-fn cad_all_objects(document: &CadPlayDocument) -> impl Iterator<Item = &CadObject> {
-    cad_pane_lists(document).into_iter().flatten()
+fn cad_pane_suffix(pane: CadPaneId) -> &'static str {
+    match pane {
+        CadPaneId::Shape => "shape",
+        CadPaneId::Building => "building",
+        CadPaneId::Energy => "energy",
+        CadPaneId::StructureClassic => "structure-classic",
+    }
+}
+
+fn dispatch_cad_ops(envelope: &mut CadPlayEnvelope, operations: Vec<CadOp>) -> bool {
+    if operations.is_empty() {
+        return false;
+    }
+    let mut store = cad_history_store(envelope);
+    if store
+        .dispatch(DocumentVcsCommand::Apply {
+            operations,
+            description: None,
+        })
+        .is_ok()
+    {
+        sync_cad_history(envelope, &store);
+        true
+    } else {
+        false
+    }
+}
+
+fn qualified_transformation_id(model_definition_id: &str, transformation_id: &str) -> String {
+    format!("{model_definition_id}.{transformation_id}")
+}
+
+fn transfers_to_for_model_definition(active_model_definition_id: &str) -> Vec<&'static CadTransformationSpec> {
+    CAD_TRANSFORMATION_SPECS
+        .iter()
+        .filter(|spec| spec.source_model_definition_id == active_model_definition_id)
+        .collect()
+}
+
+fn transfers_from_for_model_definition(active_model_definition_id: &str) -> Vec<&'static CadTransformationSpec> {
+    CAD_TRANSFORMATION_SPECS
+        .iter()
+        .filter(|spec| spec.target_model_definition_id == active_model_definition_id)
+        .collect()
+}
+
+fn apply_transformation_to_envelope(envelope: &mut CadPlayEnvelope, qid: &str) -> bool {
+    let Some((model_definition_id, transformation_id)) = qid.rsplit_once('.') else {
+        return false;
+    };
+    let Some(spec) = CAD_TRANSFORMATION_SPECS.iter().find(|entry| {
+        entry.source_model_definition_id == model_definition_id && entry.id == transformation_id
+    }) else {
+        return false;
+    };
+    let Some(source_pane) = cad_pane_from_model_definition_id(spec.source_model_definition_id) else {
+        return false;
+    };
+    let Some(target_pane) = cad_pane_from_model_definition_id(spec.target_model_definition_id) else {
+        return false;
+    };
+    let objects = if envelope.runtime.active_example_id.as_deref() == Some(CAD_EXAMPLE_FOREST_LEFT) {
+        let model_index = match target_pane {
+            CadPaneId::Building => CAD_MODEL_INDEX_BUILDING,
+            CadPaneId::Energy => CAD_MODEL_INDEX_ENERGY,
+            CadPaneId::StructureClassic => CAD_MODEL_INDEX_STRUCTURE_CLASSIC,
+            CadPaneId::Shape => CAD_MODEL_INDEX_SHAPE,
+        };
+        cad_document_pane_objects(FOREST_LEFT_MODEL_JSON, model_index)
+    } else {
+        cad_pane_objects(&envelope.document, source_pane)
+            .iter()
+            .map(|object| {
+                let mut next = object.clone();
+                if spec.target_model_definition_id == CAD_MODEL_DEFINITION_ENERGY {
+                    next.typology = "energy.energy.hull".into();
+                }
+                next
+            })
+            .collect()
+    };
+    dispatch_cad_ops(
+        envelope,
+        vec![CadOp::SetPaneObjects {
+            pane: target_pane,
+            objects,
+        }],
+    )
+}
+
+fn export_spatial_json(envelope: &CadPlayEnvelope, mode: &str) -> Value {
+    let models: Vec<Value> = CadPaneId::all()
+        .into_iter()
+        .map(|pane| {
+            json!({
+                "id": pane.model_definition_id(),
+                "model": {
+                    "schema": "spatial.model",
+                    "revision": 1,
+                    "objects": cad_pane_objects(&envelope.document, pane).iter().map(|object| json!({
+                        "id": object.id,
+                        "typology": object.typology,
+                        "primitives": object.primitives.iter().map(|primitive| json!({
+                            "kind": primitive.kind,
+                            "slot": primitive.slot,
+                            "id": primitive.primitive_id,
+                        })).collect::<Vec<_>>(),
+                    })).collect::<Vec<_>>(),
+                }
+            })
+        })
+        .collect();
+    match mode {
+        "selected" => {
+            let selected: Vec<&CadObject> = envelope
+                .runtime
+                .selected_object_ids
+                .iter()
+                .filter_map(|id| cad_all_objects(&envelope.document).find(|(object, _)| &object.id == id).map(|(object, _)| object))
+                .collect();
+            json!({
+                "schema": "spatial.model",
+                "revision": 1,
+                "objects": selected.iter().map(|object| json!({
+                    "id": object.id,
+                    "typology": object.typology,
+                })).collect::<Vec<_>>(),
+            })
+        }
+        "current" => {
+            let pane = cad_pane_from_model_definition_id(&envelope.document.active_model_definition_id)
+                .unwrap_or(CadPaneId::Shape);
+            json!({
+                "schema": "spatial.model",
+                "revision": 1,
+                "modelDefinitionId": pane.model_definition_id(),
+                "objects": cad_pane_objects(&envelope.document, pane),
+            })
+        }
+        _ => json!({
+            "schema": "spatial.modelspace",
+            "revision": 1,
+            "activeModelDefinitionId": envelope.document.active_model_definition_id,
+            "models": models,
+        }),
+    }
 }
 //#endregion 🔖PaneHelpers
-
-fn apply_cad_translate(envelope: &mut CadPlayEnvelope, args: Option<&Value>) -> bool {
-    let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
-    let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-    let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-    let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-    for object in cad_pane_lists_mut(&mut envelope.document).into_iter().flatten() {
-        if ids.contains(&object.id) {
-            object.origin[0] += dx;
-            object.origin[1] += dy;
-            object.origin[2] += dz;
-        }
-    }
-    !ids.is_empty()
-}
-
-fn apply_cad_rotate(envelope: &mut CadPlayEnvelope, args: Option<&Value>) -> bool {
-    let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
-    let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-    let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-    let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-    let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-    let delta = quat_from_axis_angle(ax, ay, az, angle);
-    for object in cad_pane_lists_mut(&mut envelope.document).into_iter().flatten() {
-        if ids.contains(&object.id) {
-            let current = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-            object.orientation = Some(quat_mul(delta, current));
-        }
-    }
-    !ids.is_empty()
-}
-
-fn apply_cad_scale(envelope: &mut CadPlayEnvelope, args: Option<&Value>) -> bool {
-    let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
-    let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-    let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-    let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-    for object in cad_pane_lists_mut(&mut envelope.document).into_iter().flatten() {
-        if ids.contains(&object.id) {
-            let current = object.scale.unwrap_or([1.0, 1.0, 1.0]);
-            object.scale = Some([current[0] * sx, current[1] * sy, current[2] * sz]);
-        }
-    }
-    !ids.is_empty()
-}
 
 fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
     if let Some(url) = object.mesh_url.as_ref().filter(|url| !url.is_empty()) {
@@ -621,10 +754,10 @@ fn gumball_active(runtime: &CadPlayRuntime) -> bool {
 }
 
 /// @emoji 🎯 World-space pivot for the gumball: centroid of selected objects across all panes.
-fn gumball_target_for(document: &CadPlayDocument, selected_ids: &[String]) -> Option<[f64; 3]> {
+fn gumball_target_for(document: &CadScene, selected_ids: &[String]) -> Option<[f64; 3]> {
     let mut sum = [0.0; 3];
     let mut count = 0usize;
-    for object in cad_all_objects(document) {
+    for (object, _) in cad_all_objects(document) {
         if selected_ids.contains(&object.id) {
             sum[0] += object.origin[0];
             sum[1] += object.origin[1];
@@ -697,7 +830,7 @@ fn world_meshes_json(objects: &[CadObject]) -> String {
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
-fn world_selection_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) -> String {
+fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime) -> String {
     let mut value: Value = serde_json::from_str(&world3d_selection_json(
         &runtime.selection_method,
         &runtime.selected_object_ids,
@@ -714,11 +847,56 @@ fn world_selection_json(document: &CadPlayDocument, runtime: &CadPlayRuntime) ->
     value.to_string()
 }
 
+fn world_references_json(document: &CadScene, pane: CadPaneId) -> Option<String> {
+    let references = document
+        .references_by_model_definition_id
+        .get(pane.model_definition_id())?;
+    if references.is_empty() {
+        return None;
+    }
+    let records: Vec<Value> = references
+        .iter()
+        .filter(|reference| !reference.hidden)
+        .map(|reference| {
+            json!({
+                "id": reference.id,
+                "url": reference.source_url,
+                "origin": reference.origin,
+                "widthWorld": if reference.width_world > 0.0 { reference.width_world } else { 1.0 },
+                "locked": reference.locked,
+                "hidden": reference.hidden,
+                "opacity": reference.opacity.unwrap_or(1.0),
+            })
+        })
+        .collect();
+    Some(serde_json::to_string(&records).unwrap_or_else(|_| "[]".into()))
+}
+
+fn build_world_scene_for_pane(envelope: &CadPlayEnvelope, pane: CadPaneId, surface_id: &str) -> UiNode {
+    let objects = cad_pane_objects(&envelope.document, pane);
+    build_world_3d_scene(
+        surface_id,
+        CAD_PLAY_APP_ID,
+        world3d_scene_extended(
+            camera_json(&envelope.document.camera),
+            world_meshes_json(objects),
+            world_instances_json(objects, &envelope.runtime),
+            world_selection_json(&envelope.document, &envelope.runtime),
+            None,
+            None,
+            None,
+            world_references_json(&envelope.document, pane),
+            None,
+            None,
+        ),
+    )
+}
+
 fn export_mesh_from_envelope(envelope: &CadPlayEnvelope) -> MeshData {
     let selected = cad_all_objects(&envelope.document)
-        .find(|object| envelope.runtime.selected_object_ids.contains(&object.id));
-    let typology = selected.map(|object| object.typology.as_str()).unwrap_or("spatial.shape.box");
-    let extent = selected.and_then(|object| object.extent);
+        .find(|(object, _)| envelope.runtime.selected_object_ids.contains(&object.id));
+    let typology = selected.map(|(object, _)| object.typology.as_str()).unwrap_or("spatial.shape.box");
+    let extent = selected.and_then(|(object, _)| object.extent);
     typology_brep_mesh(typology, extent)
 }
 
@@ -733,7 +911,7 @@ fn cad_history_store(envelope: &CadPlayEnvelope) -> CadStore {
 /// @emoji 💾 Persists the store's materialized nodes + history + undo/redo stacks back onto the envelope.
 fn sync_cad_history(envelope: &mut CadPlayEnvelope, store: &CadStore) {
     if let Ok(scene) = store.projection() {
-        envelope.document.nodes = scene.nodes;
+        envelope.document = scene;
     }
     envelope.history = store.envelope().clone();
     envelope.applied_edit_ids = store.applied_edit_ids().to_vec();
@@ -743,6 +921,128 @@ fn sync_cad_history(envelope: &mut CadPlayEnvelope, store: &CadStore) {
 //#endregion 🔖Document
 
 //#region 🔖Panels
+fn object_tree_item(id_suffix: &str, object: &CadObject) -> UiTreeItemNode {
+    let primitive_items: Vec<UiTreeItemNode> = object
+        .primitives
+        .iter()
+        .map(|primitive| {
+            let mut item = tree_item_with_command(
+                format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id),
+                format!("{}: {}", primitive.slot, primitive.primitive_id),
+                Some("hexagon"),
+                cad_cmd(
+                    "setPrimitiveSelection",
+                    Some(json!({
+                        "objectId": object.id,
+                        "primitiveId": primitive.primitive_id,
+                        "kind": primitive.kind,
+                    })),
+                ),
+            );
+            item.hover_command = Some(cad_cmd("worldHover", Some(json!({ "id": object.id }))));
+            item.unhover_command = Some(cad_cmd("worldHover", None));
+            item
+        })
+        .collect();
+    let mut item = tree_item_with_command(
+        format!("cad-object:{id_suffix}:{}", object.id),
+        object.label.clone(),
+        Some("box"),
+        cad_cmd("setSelection", Some(json!({ "objectIds": [object.id] }))),
+    );
+    item.hover_command = Some(cad_cmd("worldHover", Some(json!({ "id": object.id }))));
+    item.unhover_command = Some(cad_cmd("worldHover", None));
+    item.is_hidden = Some(!object.visible);
+    item.draggable = Some(!object.locked);
+    item.actions = Some(vec![
+        UiTreeItemAction {
+            icon_id: if object.visible { "eye-off" } else { "eye" }.into(),
+            label: Some(if object.visible { "Hide" } else { "Show" }.into()),
+            command: cad_cmd(
+                "patchObject",
+                Some(json!({ "objectId": object.id, "field": "hidden", "value": object.visible })),
+            ),
+            reveal_on_hover: Some(true),
+        },
+        UiTreeItemAction {
+            icon_id: if object.locked { "unlock" } else { "lock" }.into(),
+            label: Some(if object.locked { "Unlock" } else { "Lock" }.into()),
+            command: cad_cmd(
+                "patchObject",
+                Some(json!({ "objectId": object.id, "field": "locked", "value": !object.locked })),
+            ),
+            reveal_on_hover: Some(true),
+        },
+        UiTreeItemAction {
+            icon_id: "copy".into(),
+            label: Some("Duplicate".into()),
+            command: cad_cmd("duplicateObject", Some(json!({ "objectId": object.id }))),
+            reveal_on_hover: Some(true),
+        },
+        UiTreeItemAction {
+            icon_id: "trash-2".into(),
+            label: Some("Delete".into()),
+            command: cad_cmd("deleteObject", Some(json!({ "objectId": object.id }))),
+            reveal_on_hover: Some(true),
+        },
+    ]);
+    if !primitive_items.is_empty() {
+        item.items = Some(primitive_items);
+        item.default_open = Some(false);
+    }
+    item
+}
+
+fn reference_tree_item(model_definition_id: &str, reference: &CadReference) -> UiTreeItemNode {
+    let mut item = tree_item_with_command(
+        format!("cad-reference:{model_definition_id}:{}", reference.id),
+        reference.id.clone(),
+        Some("image"),
+        cad_cmd(
+            "setReferenceSelection",
+            Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id })),
+        ),
+    );
+    item.description = Some(reference.source_url.clone());
+    item.hover_command = Some(cad_cmd(
+        "referenceHover",
+        Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id })),
+    ));
+    item.unhover_command = Some(cad_cmd("referenceHover", None));
+    item.is_hidden = Some(reference.hidden);
+    item.actions = Some(vec![
+        UiTreeItemAction {
+            icon_id: if reference.hidden { "eye" } else { "eye-off" }.into(),
+            label: Some(if reference.hidden { "Show" } else { "Hide" }.into()),
+            command: cad_cmd(
+                "patchCadPlayReference",
+                Some(json!({
+                    "modelDefinitionId": model_definition_id,
+                    "referenceId": reference.id,
+                    "field": "hidden",
+                    "value": !reference.hidden,
+                })),
+            ),
+            reveal_on_hover: Some(true),
+        },
+        UiTreeItemAction {
+            icon_id: if reference.locked { "unlock" } else { "lock" }.into(),
+            label: Some(if reference.locked { "Unlock" } else { "Lock" }.into()),
+            command: cad_cmd(
+                "patchCadPlayReference",
+                Some(json!({
+                    "modelDefinitionId": model_definition_id,
+                    "referenceId": reference.id,
+                    "field": "locked",
+                    "value": !reference.locked,
+                })),
+            ),
+            reveal_on_hover: Some(true),
+        },
+    ]);
+    item
+}
+
 fn tree_item_with_command(
     id: impl Into<String>,
     label: impl Into<String>,
@@ -773,17 +1073,28 @@ fn pane_document_section(label: &str, id_suffix: &str, objects: &[CadObject]) ->
         id: format!("cad-play-document.{id_suffix}"),
         label: Some(label.into()),
         default_open: Some(true),
-        items: objects
-            .iter()
-            .map(|object| {
-                tree_item_with_command(
-                    format!("cad-object:{id_suffix}:{}", object.id),
-                    object.label.clone(),
-                    Some("box"),
-                    cad_cmd("setSelection", Some(json!({ "objectIds": [object.id] }))),
-                )
-            })
-            .collect(),
+        items: objects.iter().map(|object| object_tree_item(id_suffix, object)).collect(),
+    }
+}
+
+fn references_section(model_definition_id: &str, references: &[CadReference]) -> UiTreeSectionNode {
+    UiTreeSectionNode {
+        id: format!("cad-play-document.references.{model_definition_id}"),
+        label: Some("References".into()),
+        default_open: Some(false),
+        items: if references.is_empty() {
+            vec![tree_item_with_command(
+                format!("cad-play-document.references.{model_definition_id}.empty"),
+                "(none)",
+                None,
+                cad_cmd("noop", None),
+            )]
+        } else {
+            references
+                .iter()
+                .map(|reference| reference_tree_item(model_definition_id, reference))
+                .collect()
+        },
     }
 }
 
@@ -801,21 +1112,67 @@ fn build_document_tree(envelope: &CadPlayEnvelope) -> UiNode {
             )
         })
         .collect();
+    let mut sections = vec![
+        pane_document_section("Shape", "shape", &envelope.document.objects),
+        references_section(
+            CAD_MODEL_DEFINITION_SHAPE,
+            envelope
+                .document
+                .references_by_model_definition_id
+                .get(CAD_MODEL_DEFINITION_SHAPE)
+                .map(|rows| rows.as_slice())
+                .unwrap_or(&[]),
+        ),
+        pane_document_section("Building", "building", &envelope.document.building_objects),
+        references_section(
+            CAD_MODEL_DEFINITION_BUILDING,
+            envelope
+                .document
+                .references_by_model_definition_id
+                .get(CAD_MODEL_DEFINITION_BUILDING)
+                .map(|rows| rows.as_slice())
+                .unwrap_or(&[]),
+        ),
+        pane_document_section("Energy", "energy", &envelope.document.energy_objects),
+        references_section(
+            CAD_MODEL_DEFINITION_ENERGY,
+            envelope
+                .document
+                .references_by_model_definition_id
+                .get(CAD_MODEL_DEFINITION_ENERGY)
+                .map(|rows| rows.as_slice())
+                .unwrap_or(&[]),
+        ),
+        pane_document_section(
+            "Structure Classic",
+            "structure-classic",
+            &envelope.document.structure_classic_objects,
+        ),
+        references_section(
+            CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
+            envelope
+                .document
+                .references_by_model_definition_id
+                .get(CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC)
+                .map(|rows| rows.as_slice())
+                .unwrap_or(&[]),
+        ),
+        UiTreeSectionNode {
+            id: "cad-play-document.nodes".into(),
+            label: Some("Nodes".into()),
+            default_open: Some(true),
+            items: node_items,
+        },
+    ];
+    let _ = &mut sections;
     UiNode::Tree(UiTreeNode {
-        sections: vec![
-            pane_document_section("Shape", "shape", &envelope.document.objects),
-            pane_document_section("Building", "building", &envelope.document.building_objects),
-            pane_document_section("Energy", "energy", &envelope.document.energy_objects),
-            pane_document_section("Structure Classic", "structure-classic", &envelope.document.structure_classic_objects),
-            UiTreeSectionNode {
-                id: "cad-play-document.nodes".into(),
-                label: Some("Nodes".into()),
-                default_open: Some(true),
-                items: node_items,
-            },
-        ],
+        sections,
         selected_ids: None,
-        highlighted_ids: None,
+        highlighted_ids: envelope
+            .runtime
+            .hovered_object_id
+            .as_ref()
+            .map(|id| vec![format!("cad-object:shape:{id}")]),
         selection_change: None,
     })
 }
@@ -846,9 +1203,35 @@ fn build_catalogue_tree() -> UiNode {
 }
 
 fn build_properties_panel(envelope: &CadPlayEnvelope) -> UiNode {
-    if let Some(object_id) = envelope.runtime.selected_object_ids.first() {
-        if let Some(object) = cad_all_objects(&envelope.document).find(|entry| &entry.id == object_id) {
-            return ui_inspector_groups_to_tree(&[object_inspector_group(object)]);
+    if !envelope.runtime.selected_object_ids.is_empty() {
+        let selected: Vec<&CadObject> = envelope
+            .runtime
+            .selected_object_ids
+            .iter()
+            .filter_map(|id| {
+                cad_all_objects(&envelope.document)
+                    .find(|(object, _)| &object.id == id)
+                    .map(|(object, _)| object)
+            })
+            .collect();
+        if !selected.is_empty() {
+            return ui_inspector_groups_to_tree(&[object_inspector_group(&selected)]);
+        }
+    }
+    if let (Some(model_definition_id), Some(reference_id)) = (
+        envelope.runtime.selected_reference_model_definition_id.as_deref(),
+        envelope.runtime.selected_reference_id.as_deref(),
+    ) {
+        if let Some(reference) = envelope
+            .document
+            .references_by_model_definition_id
+            .get(model_definition_id)
+            .and_then(|rows| rows.iter().find(|row| row.id == reference_id))
+        {
+            return ui_inspector_groups_to_tree(&[reference_inspector_group(
+                model_definition_id,
+                reference,
+            )]);
         }
     }
     if let Some(node_id) = envelope.runtime.selected_node_ids.first() {
@@ -870,28 +1253,208 @@ fn build_properties_panel(envelope: &CadPlayEnvelope) -> UiNode {
     ])
 }
 
-fn object_inspector_group(object: &CadObject) -> UiInspectorFieldGroup {
+fn inspector_number_field(
+    id: &str,
+    label: &str,
+    values: &[f64],
+    object_ids: &[String],
+    field: &str,
+) -> UiNode {
+    let mixed = ui_inspector_mixed_number(values);
+    UiNode::Field(UiFieldNode {
+        id: id.into(),
+        label: label.into(),
+        child: UiControlNode::Input(UiInputNode {
+            id: format!("{id}.input"),
+            input_kind: "number".into(),
+            value: if mixed.uniform {
+                mixed.value.to_string()
+            } else {
+                String::new()
+            },
+            placeholder: if mixed.uniform { None } else { Some("—".into()) },
+            commit: None,
+            on_change: cad_cmd(
+                "patchSelection",
+                Some(json!({ "objectIds": object_ids, "field": field })),
+            ),
+        }),
+    })
+}
+
+fn inspector_vec3_field(
+    id: &str,
+    label: &str,
+    values: &[[f64; 3]],
+    object_ids: &[String],
+    field: &str,
+) -> UiNode {
+    let mixed = ui_inspector_mixed_vec3(values);
+    let value = mixed.value.unwrap_or([0.0, 0.0, 0.0]);
+    UiNode::Field(UiFieldNode {
+        id: id.into(),
+        label: label.into(),
+        child: UiControlNode::Input(UiInputNode {
+            id: format!("{id}.input"),
+            input_kind: "text".into(),
+            value: if mixed.uniform {
+                format!("[{}, {}, {}]", value[0], value[1], value[2])
+            } else {
+                String::new()
+            },
+            placeholder: if mixed.uniform { None } else { Some("—".into()) },
+            commit: None,
+            on_change: cad_cmd(
+                "patchSelection",
+                Some(json!({ "objectIds": object_ids, "field": field })),
+            ),
+        }),
+    })
+}
+
+fn object_inspector_group(objects: &[&CadObject]) -> UiInspectorFieldGroup {
+    let object_ids: Vec<String> = objects.iter().map(|object| object.id.clone()).collect();
+    let labels: Vec<String> = objects.iter().map(|object| object.label.clone()).collect();
+    let typologies: Vec<String> = objects.iter().map(|object| object.typology.clone()).collect();
+    let hidden: Vec<bool> = objects.iter().map(|object| !object.visible).collect();
+    let locked: Vec<bool> = objects.iter().map(|object| object.locked).collect();
+    let origins: Vec<[f64; 3]> = objects.iter().map(|object| object.origin).collect();
+    let scales: Vec<[f64; 3]> = objects
+        .iter()
+        .map(|object| object.scale.unwrap_or([1.0, 1.0, 1.0]))
+        .collect();
+    let label_mixed = ui_inspector_mixed_text(&labels);
+    let typology_mixed = ui_inspector_mixed_text(&typologies);
+    let hidden_mixed = ui_inspector_mixed_toggle(&hidden);
+    let locked_mixed = ui_inspector_mixed_toggle(&locked);
     UiInspectorFieldGroup {
         id: "cad-play-inspector.object".into(),
-        label: "Object".into(),
+        label: if objects.len() == 1 {
+            "Object".into()
+        } else {
+            format!("{} Objects", objects.len())
+        },
         default_open: None,
         fields: vec![
             UiNode::Field(UiFieldNode {
                 id: "cad-play-inspector.object.label".into(),
                 label: "Label".into(),
-                child: UiControlNode::Input(semio_framework_plugin::UiInputNode {
+                child: UiControlNode::Input(UiInputNode {
                     id: "cad-play-inspector.object.label.input".into(),
                     input_kind: "text".into(),
-                    value: object.label.clone(),
-                    placeholder: None,
+                    value: label_mixed.value.clone(),
+                    placeholder: label_mixed.placeholder.clone(),
                     commit: None,
                     on_change: cad_cmd(
-                        "patchObject",
-                        Some(json!({ "objectId": object.id, "field": "label" })),
+                        "patchSelection",
+                        Some(json!({ "objectIds": object_ids, "field": "label" })),
                     ),
                 }),
             }),
-            ui_inspector_readonly_field("cad-play-inspector.object.typology", "Typology", &object.typology),
+            UiNode::Field(UiFieldNode {
+                id: "cad-play-inspector.object.typology".into(),
+                label: "Typology".into(),
+                child: UiControlNode::Select(UiSelectNode {
+                    id: "cad-play-inspector.object.typology.select".into(),
+                    value: typology_mixed.value.clone(),
+                    items: TYPOLOGY_CATALOG
+                        .iter()
+                        .map(|(typology, label, _)| UiSelectItem {
+                            value: (*typology).into(),
+                            label: (*label).into(),
+                        })
+                        .collect(),
+                    placeholder: typology_mixed.placeholder.clone(),
+                    on_change: cad_cmd(
+                        "patchSelection",
+                        Some(json!({ "objectIds": object_ids, "field": "typology" })),
+                    ),
+                }),
+            }),
+            UiNode::Field(UiFieldNode {
+                id: "cad-play-inspector.object.hidden".into(),
+                label: "Hidden".into(),
+                child: UiControlNode::Toggle(semio_framework_plugin::UiToggleNode {
+                    id: "cad-play-inspector.object.hidden.toggle".into(),
+                    icon_id: "eye-off".into(),
+                    pressed: hidden_mixed.pressed,
+                    text: None,
+                    on_change: cad_cmd(
+                        "patchSelection",
+                        Some(json!({ "objectIds": object_ids, "field": "hidden" })),
+                    ),
+                }),
+            }),
+            UiNode::Field(UiFieldNode {
+                id: "cad-play-inspector.object.locked".into(),
+                label: "Locked".into(),
+                child: UiControlNode::Toggle(semio_framework_plugin::UiToggleNode {
+                    id: "cad-play-inspector.object.locked.toggle".into(),
+                    icon_id: "lock".into(),
+                    pressed: locked_mixed.pressed,
+                    text: None,
+                    on_change: cad_cmd(
+                        "patchSelection",
+                        Some(json!({ "objectIds": object_ids, "field": "locked" })),
+                    ),
+                }),
+            }),
+            inspector_vec3_field(
+                "cad-play-inspector.object.origin",
+                "Position",
+                &origins,
+                &object_ids,
+                "origin",
+            ),
+            inspector_vec3_field(
+                "cad-play-inspector.object.scale",
+                "Scale",
+                &scales,
+                &object_ids,
+                "scale",
+            ),
+        ],
+    }
+}
+
+fn reference_inspector_group(model_definition_id: &str, reference: &CadReference) -> UiInspectorFieldGroup {
+    UiInspectorFieldGroup {
+        id: "cad-play-inspector.reference".into(),
+        label: "Reference".into(),
+        default_open: None,
+        fields: vec![
+            ui_inspector_readonly_field("cad-play-inspector.reference.id", "Id", &reference.id),
+            ui_inspector_readonly_field(
+                "cad-play-inspector.reference.source",
+                "Source",
+                &reference.source_url,
+            ),
+            UiNode::Field(UiFieldNode {
+                id: "cad-play-inspector.reference.widthWorld".into(),
+                label: "Width (world)".into(),
+                child: UiControlNode::Input(UiInputNode {
+                    id: "cad-play-inspector.reference.widthWorld.input".into(),
+                    input_kind: "number".into(),
+                    value: reference.width_world.to_string(),
+                    placeholder: None,
+                    commit: None,
+                    on_change: cad_cmd(
+                        "patchCadPlayReference",
+                        Some(json!({
+                            "modelDefinitionId": model_definition_id,
+                            "referenceId": reference.id,
+                            "field": "widthWorld",
+                        })),
+                    ),
+                }),
+            }),
+            inspector_vec3_field(
+                "cad-play-inspector.reference.origin",
+                "Position",
+                &[reference.origin],
+                &[reference.id.clone()],
+                "origin",
+            ),
         ],
     }
 }
@@ -922,10 +1485,21 @@ fn node_inspector_group(node: &CadNode) -> UiInspectorFieldGroup {
     }
 }
 
-/// @emoji 🕹️ Visible gumball engagement: move/rotate/scale toggle buttons + selection status.
-fn cad_window_engagement(envelope: &CadPlayEnvelope) -> WindowEngagement {
+fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowEngagement {
     let transform = envelope.runtime.transform_tool.clone();
     let selected_count = envelope.runtime.selected_object_ids.len();
+    let possible_engagements: Vec<WindowEngagementPossible> = TYPOLOGY_CATALOG
+        .iter()
+        .map(|(typology, label, _)| WindowEngagementPossible {
+            id: typology.to_string(),
+            label: (*label).into(),
+            detail: Some((*typology).into()),
+            command: Some(cad_cmd(
+                "engagementPossibleSelect",
+                Some(json!({ "pane": cad_pane_suffix(pane), "possibleId": typology })),
+            )),
+        })
+        .collect();
     WindowEngagement {
         session_active: Some(true),
         options: Some(vec![
@@ -954,17 +1528,294 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope) -> WindowEngagement {
                 command: Some(cad_cmd("setTransformTool", Some(json!({ "tool": "scale" })))),
             },
         ]),
-        input: None,
+        input: Some(WindowEngagementInput {
+            id: Some("engagement-input".into()),
+            value: Some(envelope.runtime.engagement_input.clone()),
+            placeholder: Some("Command".into()),
+            disabled: None,
+            on_change: Some(cad_cmd(
+                "engagementInput",
+                Some(json!({ "pane": cad_pane_suffix(pane) })),
+            )),
+            on_submit: Some(cad_cmd(
+                "engagementSubmit",
+                Some(json!({ "pane": cad_pane_suffix(pane) })),
+            )),
+            on_repeat_last: Some(cad_cmd(
+                "engagementRepeatLast",
+                Some(json!({ "pane": cad_pane_suffix(pane) })),
+            )),
+            on_abort: Some(cad_cmd(
+                "engagementAbort",
+                Some(json!({ "pane": cad_pane_suffix(pane) })),
+            )),
+        }),
         control: None,
         controls: None,
-        status: Some(vec![WindowEngagementStatus {
-            id: "cad-status".into(),
-            text: format!("{selected_count} selected"),
-        }]),
-        possible_engagements: None,
+        status: Some(vec![
+            WindowEngagementStatus {
+                id: "cad-status".into(),
+                text: format!("{selected_count} selected"),
+            },
+            WindowEngagementStatus {
+                id: "cad-step".into(),
+                text: format!("Step: {}", envelope.runtime.engagement_step),
+            },
+        ]),
+        possible_engagements: Some(possible_engagements),
+    }
+}
+
+fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
+    let active = envelope.document.active_model_definition_id.as_str();
+    let view_tools: Vec<ToolNode> = CadPaneId::all()
+        .into_iter()
+        .enumerate()
+        .map(|(index, pane)| {
+            tool_toggle(
+                format!("cad.play.view.{}", pane.model_definition_id()),
+                "box",
+                pane.model_definition_id(),
+                active == pane.model_definition_id(),
+                cad_cmd(
+                    "focusModelDefinition",
+                    Some(json!({ "modelDefinitionId": pane.model_definition_id() })),
+                ),
+            )
+            .with_order(index as u32)
+        })
+        .collect();
+    let save_tools = vec![
+        tool_button(
+            "cad.play.save.selected",
+            "save",
+            "Selected",
+            cad_cmd("saveSelected", None),
+        )
+        .with_disabled(envelope.runtime.selected_object_ids.is_empty()),
+        tool_button(
+            "cad.play.save.modelspace",
+            "hard-drive",
+            "Model space",
+            cad_cmd("saveInPlay", None),
+        ),
+        tool_button(
+            "cad.play.save.current",
+            "save",
+            "Current",
+            cad_cmd("saveCurrent", None),
+        ),
+        tool_button(
+            "cad.play.save.load",
+            "folder-open",
+            "Load",
+            cad_cmd("loadRawRequest", None),
+        ),
+    ];
+    let transfers_to = transfers_to_for_model_definition(active);
+    let transfers_from = transfers_from_for_model_definition(active);
+    let mut transfer_tools: Vec<ToolNode> = transfers_to
+        .iter()
+        .enumerate()
+        .map(|(index, spec)| {
+            tool_button(
+                format!(
+                    "cad.play.transfer.to.{}",
+                    qualified_transformation_id(spec.source_model_definition_id, spec.id)
+                ),
+                "arrow-right",
+                format!("→ {}", spec.label),
+                cad_cmd(
+                    "applyTransformation",
+                    Some(json!({
+                        "qid": qualified_transformation_id(spec.source_model_definition_id, spec.id),
+                    })),
+                ),
+            )
+            .with_order(index as u32)
+        })
+        .collect();
+    if !transfers_to.is_empty() && !transfers_from.is_empty() {
+        transfer_tools.push(tool_separator("cad.play.transfer.separator"));
+    }
+    transfer_tools.extend(transfers_from.iter().enumerate().map(|(index, spec)| {
+        tool_button(
+            format!(
+                "cad.play.transfer.from.{}",
+                qualified_transformation_id(spec.source_model_definition_id, spec.id)
+            ),
+            "arrow-left",
+            format!("← {}", spec.label),
+            cad_cmd(
+                "applyTransformation",
+                Some(json!({
+                    "qid": qualified_transformation_id(spec.source_model_definition_id, spec.id),
+                })),
+            ),
+        )
+        .with_order((transfers_to.len() + index + 1) as u32)
+    }));
+    let mut tools = vec![
+        tool_collection("view", "layout-grid", "View", view_tools),
+        tool_collection("save", "save", "Save", save_tools),
+    ];
+    if !transfer_tools.is_empty() {
+        tools.push(tool_collection(
+            "transfer",
+            "arrow-right-left",
+            "Transfer",
+            transfer_tools,
+        ));
+    }
+    tools
+}
+
+trait ToolNodeExt {
+    fn with_pressed(self, pressed: bool) -> Self;
+    fn with_order(self, order: u32) -> Self;
+    fn with_disabled(self, disabled: bool) -> Self;
+}
+
+impl ToolNodeExt for ToolNode {
+    fn with_pressed(mut self, pressed: bool) -> Self {
+        if let ToolNode::Toggle { pressed: slot, .. } = &mut self {
+            *slot = Some(pressed);
+        }
+        self
+    }
+
+    fn with_order(mut self, order: u32) -> Self {
+        match &mut self {
+            ToolNode::Button { order: slot, .. }
+            | ToolNode::Toggle { order: slot, .. }
+            | ToolNode::Collection { order: slot, .. }
+            | ToolNode::Separator { order: slot, .. } => *slot = Some(order),
+        }
+        self
+    }
+
+    fn with_disabled(mut self, disabled: bool) -> Self {
+        match &mut self {
+            ToolNode::Button { disabled: slot, .. }
+            | ToolNode::Toggle { disabled: slot, .. }
+            | ToolNode::Collection { disabled: slot, .. }
+            | ToolNode::Separator { disabled: slot, .. } => *slot = Some(disabled),
+        }
+        self
     }
 }
 //#endregion 🔖Panels
+
+fn object_patch_from_field(field: &str, value: Option<&Value>) -> Option<CadObjectPatch> {
+    match field {
+        "label" | "name" => value
+            .and_then(|entry| entry.as_str())
+            .map(|label| CadObjectPatch {
+                label: Some(label.into()),
+                ..Default::default()
+            }),
+        "typology" => value
+            .and_then(|entry| entry.as_str())
+            .map(|typology| CadObjectPatch {
+                typology: Some(typology.into()),
+                ..Default::default()
+            }),
+        "hidden" => value
+            .and_then(|entry| entry.as_bool())
+            .map(|hidden| CadObjectPatch {
+                visible: Some(!hidden),
+                ..Default::default()
+            }),
+        "locked" => value.and_then(|entry| entry.as_bool()).map(|locked| CadObjectPatch {
+            locked: Some(locked),
+            ..Default::default()
+        }),
+        "origin" => value.and_then(parse_vec3_value).map(|origin| CadObjectPatch {
+            origin: Some(origin),
+            ..Default::default()
+        }),
+        "scale" => value.and_then(parse_vec3_value).map(|scale| CadObjectPatch {
+            scale: Some(scale),
+            ..Default::default()
+        }),
+        _ => None,
+    }
+}
+
+fn parse_vec3_value(value: &Value) -> Option<[f64; 3]> {
+    if let Some(array) = value.as_array() {
+        if array.len() >= 3 {
+            return Some([
+                array[0].as_f64().unwrap_or(0.0),
+                array[1].as_f64().unwrap_or(0.0),
+                array[2].as_f64().unwrap_or(0.0),
+            ]);
+        }
+    }
+    if let Some(text) = value.as_str() {
+        let trimmed = text.trim().trim_start_matches('[').trim_end_matches(']');
+        let parts: Vec<f64> = trimmed
+            .split(',')
+            .filter_map(|part| part.trim().parse().ok())
+            .collect();
+        if parts.len() >= 3 {
+            return Some([parts[0], parts[1], parts[2]]);
+        }
+    }
+    None
+}
+
+fn patch_objects_in_envelope(
+    envelope: &mut CadPlayEnvelope,
+    object_ids: &[String],
+    field: &str,
+    value: Option<&Value>,
+) -> bool {
+    let patch = match object_patch_from_field(field, value) {
+        Some(patch) => patch,
+        None => return false,
+    };
+    let mut operations = Vec::new();
+    for object_id in object_ids {
+        let Some(pane) = cad_find_object_pane(&envelope.document, object_id) else {
+            continue;
+        };
+        operations.push(CadOp::PatchObject {
+            pane,
+            object_id: object_id.clone(),
+            patch: patch.clone(),
+        });
+    }
+    dispatch_cad_ops(envelope, operations)
+}
+
+fn make_object_for_typology(typology: &str, label_count: usize) -> CadObject {
+    let label = TYPOLOGY_CATALOG
+        .iter()
+        .find(|(id, _, _)| *id == typology)
+        .map(|(_, name, _)| *name)
+        .unwrap_or("Object");
+    CadObject {
+        id: next_cad_id("object"),
+        label: format!("{label} {}", label_count + 1),
+        typology: typology.into(),
+        visible: true,
+        locked: false,
+        origin: [0.0, 0.0, 0.0],
+        orientation: Some([0.0, 0.0, 0.0, 1.0]),
+        scale: None,
+        mesh_url: TYPOLOGY_MESH_URLS
+            .iter()
+            .find(|(entry, _)| *entry == typology)
+            .map(|(_, url)| url.to_string()),
+        extent: None,
+        primitives: vec![CadPrimitiveSlot {
+            slot: "solid".into(),
+            primitive_id: next_cad_id("primitive"),
+            kind: "solid".into(),
+        }],
+    }
+}
 
 //#region 🔖CadApp
 struct CadApp;
@@ -1000,22 +1851,7 @@ impl PluginApp for CadApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
                 envelope = if example_id.is_empty() || example_id == "empty" {
-                    let document = CadPlayDocument {
-                        schema: "cad.document".into(),
-                        id: "cad".into(),
-                        camera: CadCamera {
-                            position: default_camera_position(),
-                            target: default_camera_target(),
-                            zoom: 1.0,
-                            fov: default_fov(),
-                        },
-                        objects: Vec::new(),
-                        nodes: Vec::new(),
-                        active_tool: Some("selectDirect".into()),
-                        building_objects: Vec::new(),
-                        energy_objects: Vec::new(),
-                        structure_classic_objects: Vec::new(),
-                    };
+                    let document = default_document();
                     CadPlayEnvelope {
                         history: seed_cad_history(&document),
                         document,
@@ -1071,72 +1907,143 @@ impl PluginApp for CadApp {
                 }
             }
             "translateSelection" => {
-                if apply_cad_translate(&mut envelope, args) {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
+                let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                if dispatch_cad_ops(
+                    &mut envelope,
+                    vec![CadOp::TranslateObjects {
+                        object_ids: ids,
+                        dx,
+                        dy,
+                        dz,
+                    }],
+                ) {
                     return vec![set_document_op(&envelope)];
                 }
             }
             "rotateSelection" => {
-                if apply_cad_rotate(&mut envelope, args) {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
+                let ax = args.and_then(|value| value.get("ax")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
+                if dispatch_cad_ops(
+                    &mut envelope,
+                    vec![CadOp::RotateObjects {
+                        object_ids: ids,
+                        ax,
+                        ay,
+                        az,
+                        angle,
+                    }],
+                ) {
                     return vec![set_document_op(&envelope)];
                 }
             }
             "scaleSelection" => {
-                if apply_cad_scale(&mut envelope, args) {
+                let ids = mesh_selection_ids(args, &envelope.runtime.selected_object_ids);
+                let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
+                if dispatch_cad_ops(
+                    &mut envelope,
+                    vec![CadOp::ScaleObjects {
+                        object_ids: ids,
+                        sx,
+                        sy,
+                        sz,
+                    }],
+                ) {
                     return vec![set_document_op(&envelope)];
                 }
             }
             "addObject" => {
-                let typology = args.and_then(|value| value.get("typology")).and_then(|value| value.as_str()).unwrap_or("spatial.shape.box");
-                let label = TYPOLOGY_CATALOG
-                    .iter()
-                    .find(|(id, _, _)| *id == typology)
-                    .map(|(_, name, _)| *name)
-                    .unwrap_or("Object");
-                let id = next_cad_id("object");
-                envelope.document.objects.push(CadObject {
-                    id: id.clone(),
-                    label: format!("{label} {}", envelope.document.objects.len() + 1),
-                    typology: typology.into(),
-                    visible: true,
-                    origin: [0.0, 0.0, 0.0],
-                    orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                    scale: None,
-                    mesh_url: TYPOLOGY_MESH_URLS
-                        .iter()
-                        .find(|(entry, _)| *entry == typology)
-                        .map(|(_, url)| url.to_string()),
-                    extent: None,
-                });
-                envelope.runtime.selected_object_ids = vec![id];
-                return vec![set_document_op(&envelope)];
+                let typology = args
+                    .and_then(|value| value.get("typology"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("spatial.shape.box");
+                let object = make_object_for_typology(typology, envelope.document.objects.len());
+                let id = object.id.clone();
+                if dispatch_cad_ops(
+                    &mut envelope,
+                    vec![CadOp::AddObject {
+                        pane: CadPaneId::Shape,
+                        object,
+                    }],
+                ) {
+                    envelope.runtime.selected_object_ids = vec![id];
+                    return vec![set_document_op(&envelope)];
+                }
             }
-            "patchObject" => {
-                let object_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).unwrap_or("");
-                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
-                let value = args.and_then(|value| value.get("value")).cloned();
-                for object in cad_pane_lists_mut(&mut envelope.document).into_iter().flatten() {
-                    if object.id != object_id {
-                        continue;
-                    }
-                    if field == "label" {
-                        if let Some(label) = value.as_ref().and_then(|entry| entry.as_str()) {
-                            object.label = label.into();
-                        }
+            "patchObject" | "patchSelection" => {
+                let object_ids: Vec<String> = if command == "patchSelection" {
+                    args.and_then(|value| value.get("objectIds"))
+                        .and_then(|value| serde_json::from_value(value.clone()).ok())
+                        .unwrap_or_else(|| envelope.runtime.selected_object_ids.clone())
+                } else {
+                    args.and_then(|value| value.get("objectId"))
+                        .and_then(|value| value.as_str())
+                        .map(|id| vec![id.to_string()])
+                        .unwrap_or_default()
+                };
+                let field = args
+                    .and_then(|value| value.get("field"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                let value = args.and_then(|value| value.get("value"));
+                if patch_objects_in_envelope(&mut envelope, &object_ids, field, value) {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "deleteObject" => {
+                let object_id = args
+                    .and_then(|value| value.get("objectId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                if let Some(pane) = cad_find_object_pane(&envelope.document, object_id) {
+                    if dispatch_cad_ops(
+                        &mut envelope,
+                        vec![CadOp::RemoveObject {
+                            pane,
+                            object_id: object_id.into(),
+                        }],
+                    ) {
+                        envelope.runtime.selected_object_ids.retain(|id| id != object_id);
+                        return vec![set_document_op(&envelope)];
                     }
                 }
-                return vec![set_document_op(&envelope)];
+            }
+            "duplicateObject" => {
+                let object_id = args
+                    .and_then(|value| value.get("objectId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                let duplicate_target = cad_all_objects(&envelope.document)
+                    .find(|(object, _)| object.id == object_id)
+                    .map(|(object, pane)| (object.clone(), pane));
+                if let Some((mut duplicate, pane)) = duplicate_target {
+                    duplicate.id = next_cad_id("object");
+                    duplicate.label = format!("{} copy", duplicate.label);
+                    if dispatch_cad_ops(
+                        &mut envelope,
+                        vec![CadOp::AddObject {
+                            pane,
+                            object: duplicate.clone(),
+                        }],
+                    ) {
+                        envelope.runtime.selected_object_ids = vec![duplicate.id];
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
             }
             "addNode" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("solid");
                 let id = next_cad_id("node");
                 let label = format!("Node {}", envelope.document.nodes.len() + 1);
-                let mut store = cad_history_store(&envelope);
                 let node = CadNode { id: id.clone(), label, kind: kind.into() };
-                if store
-                    .dispatch(DocumentVcsCommand::Apply { operations: vec![CadOp::AddNode { node }], description: None })
-                    .is_ok()
-                {
-                    sync_cad_history(&mut envelope, &store);
+                if dispatch_cad_ops(&mut envelope, vec![CadOp::AddNode { node }]) {
                     envelope.runtime.selected_node_ids = vec![id];
                     return vec![set_document_op(&envelope)];
                 }
@@ -1144,18 +2051,16 @@ impl PluginApp for CadApp {
             "renameNode" => {
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).unwrap_or("");
                 let label = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
-                if !node_id.is_empty() && !label.is_empty() {
-                    let mut store = cad_history_store(&envelope);
-                    if store
-                        .dispatch(DocumentVcsCommand::Apply {
-                            operations: vec![CadOp::RenameNode { node_id: node_id.into(), label: label.into() }],
-                            description: None,
-                        })
-                        .is_ok()
-                    {
-                        sync_cad_history(&mut envelope, &store);
-                        return vec![set_document_op(&envelope)];
-                    }
+                if !node_id.is_empty() && !label.is_empty()
+                    && dispatch_cad_ops(
+                        &mut envelope,
+                        vec![CadOp::RenameNode {
+                            node_id: node_id.into(),
+                            label: label.into(),
+                        }],
+                    )
+                {
+                    return vec![set_document_op(&envelope)];
                 }
             }
             "undo" => {
@@ -1198,54 +2103,204 @@ impl PluginApp for CadApp {
                 envelope.runtime.selection_method = method.into();
                 return vec![set_document_op(&envelope)];
             }
-            "worldPointerDown" => return Vec::new(),
+            "focusModelDefinition" => {
+                if let Some(model_definition_id) = args
+                    .and_then(|value| value.get("modelDefinitionId"))
+                    .and_then(|value| value.as_str())
+                {
+                    envelope.document.active_model_definition_id = model_definition_id.into();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "applyTransformation" => {
+                let qid = args
+                    .and_then(|value| value.get("qid"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                if apply_transformation_to_envelope(&mut envelope, qid) {
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "saveSelected" => {
+                envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "selected"));
+                return vec![set_document_op(&envelope)];
+            }
+            "saveInPlay" => {
+                envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "modelspace"));
+                return vec![set_document_op(&envelope)];
+            }
+            "saveCurrent" => {
+                envelope.runtime.pending_export = Some(export_spatial_json(&envelope, "current"));
+                return vec![set_document_op(&envelope)];
+            }
+            "loadRawRequest" => {
+                envelope.runtime.pending_export = None;
+                return vec![json!({ "op": "cadLoadRequest" }).to_string()];
+            }
+            "importSpatialJson" => {
+                if let Some(model_space) = args.and_then(|value| value.get("modelSpace")) {
+                    if let Ok(scene) = serde_json::from_value::<CadScene>(model_space.clone()) {
+                        envelope.document = scene;
+                        envelope.history = seed_cad_history(&envelope.document);
+                        envelope.applied_edit_ids.clear();
+                        envelope.redo_edit_ids.clear();
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "setReferenceSelection" => {
+                envelope.runtime.selected_reference_model_definition_id = args
+                    .and_then(|value| value.get("modelDefinitionId"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                envelope.runtime.selected_reference_id = args
+                    .and_then(|value| value.get("referenceId"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                envelope.runtime.selected_object_ids.clear();
+                envelope.runtime.selected_node_ids.clear();
+                return vec![set_document_op(&envelope)];
+            }
+            "referenceHover" => {
+                envelope.runtime.hovered_object_id = args
+                    .and_then(|value| value.get("referenceId"))
+                    .and_then(|value| value.as_str())
+                    .map(|id| format!("reference:{id}"));
+                return vec![set_document_op(&envelope)];
+            }
+            "patchCadPlayReference" => {
+                let model_definition_id = args
+                    .and_then(|value| value.get("modelDefinitionId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                let reference_id = args
+                    .and_then(|value| value.get("referenceId"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                let field = args
+                    .and_then(|value| value.get("field"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("");
+                let value = args.and_then(|value| value.get("value"));
+                let patch = match field {
+                    "hidden" => value.and_then(|entry| entry.as_bool()).map(|hidden| CadReferencePatch {
+                        hidden: Some(hidden),
+                        ..Default::default()
+                    }),
+                    "locked" => value.and_then(|entry| entry.as_bool()).map(|locked| CadReferencePatch {
+                        locked: Some(locked),
+                        ..Default::default()
+                    }),
+                    "widthWorld" => value.and_then(|entry| entry.as_f64()).map(|width_world| CadReferencePatch {
+                        width_world: Some(width_world),
+                        ..Default::default()
+                    }),
+                    "origin" => value.and_then(parse_vec3_value).map(|origin| CadReferencePatch {
+                        origin: Some(origin),
+                        ..Default::default()
+                    }),
+                    _ => None,
+                };
+                if let Some(patch) = patch {
+                    if dispatch_cad_ops(
+                        &mut envelope,
+                        vec![CadOp::PatchReference {
+                            model_definition_id: model_definition_id.into(),
+                            reference_id: reference_id.into(),
+                            patch,
+                        }],
+                    ) {
+                        return vec![set_document_op(&envelope)];
+                    }
+                }
+            }
+            "engagementInput" => {
+                envelope.runtime.engagement_input = args
+                    .and_then(|value| value.get("value"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("")
+                    .into();
+                envelope.runtime.engagement_pane = args
+                    .and_then(|value| value.get("pane"))
+                    .and_then(|value| value.as_str())
+                    .map(str::to_string);
+                return vec![set_document_op(&envelope)];
+            }
+            "engagementSubmit" => {
+                let input = envelope.runtime.engagement_input.trim().to_lowercase();
+                envelope.runtime.engagement_step = if input.is_empty() {
+                    "Idle".into()
+                } else if TYPOLOGY_CATALOG.iter().any(|(typology, _, _)| *typology == input || typology.ends_with(&format!(".{input}"))) {
+                    format!("Create {input}")
+                } else {
+                    format!("Unknown: {input}")
+                };
+                if let Some((typology, _, _)) = TYPOLOGY_CATALOG
+                    .iter()
+                    .find(|(typology, _, _)| *typology == input.as_str() || typology.ends_with(&format!(".{input}")))
+                {
+                    let object = make_object_for_typology(typology, envelope.document.objects.len());
+                    let id = object.id.clone();
+                    if dispatch_cad_ops(
+                        &mut envelope,
+                        vec![CadOp::AddObject {
+                            pane: CadPaneId::Shape,
+                            object,
+                        }],
+                    ) {
+                        envelope.runtime.selected_object_ids = vec![id];
+                        envelope.runtime.engagement_input.clear();
+                        envelope.runtime.engagement_step = "Idle".into();
+                    }
+                }
+                return vec![set_document_op(&envelope)];
+            }
+            "engagementPossibleSelect" => {
+                if let Some(possible_id) = args
+                    .and_then(|value| value.get("possibleId"))
+                    .and_then(|value| value.as_str())
+                {
+                    envelope.runtime.engagement_input = possible_id.into();
+                    envelope.runtime.engagement_step = format!("Create {possible_id}");
+                }
+                return vec![set_document_op(&envelope)];
+            }
+            "engagementRepeatLast" | "engagementAbort" => {
+                if command == "engagementAbort" {
+                    envelope.runtime.engagement_input.clear();
+                }
+                envelope.runtime.engagement_step = "Idle".into();
+                return vec![set_document_op(&envelope)];
+            }
+            "setPrimitiveSelection" => {
+                if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
+                    envelope.runtime.selected_object_ids = vec![object_id.into()];
+                    envelope.runtime.selected_node_ids.clear();
+                    return vec![set_document_op(&envelope)];
+                }
+            }
+            "noop" | "worldPointerDown" => return Vec::new(),
             _ => {}
         }
         Vec::new()
     }
 
+    fn tools(&self, document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
+        build_cad_play_toolbar(&parse_envelope(document_json))
+    }
+
     fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
         let envelope = parse_envelope(document_json);
         match body_key {
-            CAD_PLAY_BODY_SHAPE => build_world_3d_scene(
-                CAD_PLAY_SURFACE_SHAPE,
-                CAD_PLAY_APP_ID,
-                world3d_scene(
-                    camera_json(&envelope.document.camera),
-                    world_meshes_json(&envelope.document.objects),
-                    world_instances_json(&envelope.document.objects, &envelope.runtime),
-                    world_selection_json(&envelope.document, &envelope.runtime),
-                ),
-            ),
-            CAD_PLAY_BODY_BUILDING => build_world_3d_scene(
-                CAD_PLAY_SURFACE_BUILDING,
-                CAD_PLAY_APP_ID,
-                world3d_scene(
-                    camera_json(&envelope.document.camera),
-                    world_meshes_json(&envelope.document.building_objects),
-                    world_instances_json(&envelope.document.building_objects, &envelope.runtime),
-                    world_selection_json(&envelope.document, &envelope.runtime),
-                ),
-            ),
-            CAD_PLAY_BODY_ENERGY => build_world_3d_scene(
-                CAD_PLAY_SURFACE_ENERGY,
-                CAD_PLAY_APP_ID,
-                world3d_scene(
-                    camera_json(&envelope.document.camera),
-                    world_meshes_json(&envelope.document.energy_objects),
-                    world_instances_json(&envelope.document.energy_objects, &envelope.runtime),
-                    world_selection_json(&envelope.document, &envelope.runtime),
-                ),
-            ),
-            CAD_PLAY_BODY_STRUCTURE_CLASSIC => build_world_3d_scene(
+            CAD_PLAY_BODY_SHAPE => build_world_scene_for_pane(&envelope, CadPaneId::Shape, CAD_PLAY_SURFACE_SHAPE),
+            CAD_PLAY_BODY_BUILDING => {
+                build_world_scene_for_pane(&envelope, CadPaneId::Building, CAD_PLAY_SURFACE_BUILDING)
+            }
+            CAD_PLAY_BODY_ENERGY => build_world_scene_for_pane(&envelope, CadPaneId::Energy, CAD_PLAY_SURFACE_ENERGY),
+            CAD_PLAY_BODY_STRUCTURE_CLASSIC => build_world_scene_for_pane(
+                &envelope,
+                CadPaneId::StructureClassic,
                 CAD_PLAY_SURFACE_STRUCTURE_CLASSIC,
-                CAD_PLAY_APP_ID,
-                world3d_scene(
-                    camera_json(&envelope.document.camera),
-                    world_meshes_json(&envelope.document.structure_classic_objects),
-                    world_instances_json(&envelope.document.structure_classic_objects, &envelope.runtime),
-                    world_selection_json(&envelope.document, &envelope.runtime),
-                ),
             ),
             CAD_PLAY_BODY_DOCUMENT => build_document_tree(&envelope),
             CAD_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
@@ -1256,12 +2311,23 @@ impl PluginApp for CadApp {
 
     fn window_engagements(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, WindowEngagement> {
         let envelope = parse_envelope(document_json);
-        let engagement = cad_window_engagement(&envelope);
         HashMap::from([
-            (CAD_PLAY_WINDOW_SHAPE.to_string(), engagement.clone()),
-            (CAD_PLAY_WINDOW_BUILDING.to_string(), engagement.clone()),
-            (CAD_PLAY_WINDOW_ENERGY.to_string(), engagement.clone()),
-            (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(), engagement),
+            (
+                CAD_PLAY_WINDOW_SHAPE.to_string(),
+                cad_window_engagement(&envelope, CadPaneId::Shape),
+            ),
+            (
+                CAD_PLAY_WINDOW_BUILDING.to_string(),
+                cad_window_engagement(&envelope, CadPaneId::Building),
+            ),
+            (
+                CAD_PLAY_WINDOW_ENERGY.to_string(),
+                cad_window_engagement(&envelope, CadPaneId::Energy),
+            ),
+            (
+                CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(),
+                cad_window_engagement(&envelope, CadPaneId::StructureClassic),
+            ),
         ])
     }
 }
@@ -1459,7 +2525,60 @@ mod tests {
     #[test]
     fn cad_document_schema_matches_domain() {
         let scene = empty_cad_projection();
-        assert_eq!(scene.schema, CAD_DOCUMENT_SCHEMA);
+        assert_eq!(scene.schema, CAD_PLAY_DOCUMENT_SCHEMA);
+    }
+
+    #[test]
+    fn undo_redo_round_trips_added_object() {
+        let mut app = CadApp;
+        let document = app.initial_document_json();
+        let before_count = parse_envelope(&document).document.objects.len();
+        let add_ops = app.handle_command(
+            "addObject",
+            Some(&json!({ "typology": "spatial.shape.box" })),
+            &document,
+            &ViewState::default(),
+        );
+        let after_add = apply_ops(&parse_envelope(&document), &add_ops);
+        assert_eq!(after_add.document.objects.len(), before_count + 1);
+        let after_add_json = serde_json::to_string(&after_add).unwrap();
+        let undo_ops = app.handle_command("undo", None, &after_add_json, &ViewState::default());
+        let after_undo = apply_ops(&after_add, &undo_ops);
+        assert_eq!(after_undo.document.objects.len(), before_count);
+    }
+
+    #[test]
+    fn toolbar_exposes_save_and_transfer_tools() {
+        let app = CadApp;
+        let tools = app.tools(&app.initial_document_json(), &ViewState::default());
+        let json = serde_json::to_string(&tools).unwrap();
+        assert!(json.contains("cad.play.save.selected"));
+        assert!(json.contains("cad.play.transfer.to"));
+    }
+
+    #[test]
+    fn engagement_input_and_possible_engagements_present() {
+        let app = CadApp;
+        let engagements = app.window_engagements(&app.initial_document_json(), &ViewState::default());
+        let shape = engagements.get(CAD_PLAY_WINDOW_SHAPE).expect("shape engagement");
+        assert!(shape.input.is_some());
+        assert!(shape.possible_engagements.as_ref().is_some_and(|rows| !rows.is_empty()));
+    }
+
+    #[test]
+    fn forest_example_includes_reference_overlay() {
+        let envelope = forest_play_envelope();
+        let references = world_references_json(&envelope.document, CadPaneId::Shape).expect("references");
+        assert!(references.contains("ref-concrete-forest"));
+    }
+
+    #[test]
+    fn document_tree_includes_primitive_children() {
+        let app = CadApp;
+        let node = app.render(CAD_PLAY_BODY_DOCUMENT, &app.initial_document_json(), &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("cad-primitive:"));
+        assert!(json.contains("hoverCommand"));
     }
 
     #[test]

@@ -1,0 +1,14 @@
+{
+  "title": "Wgpu Winit Trunk Migration",
+  "emoji": "🧊",
+  "status": "closed",
+  "description": "Migrate the raw-wgpu OS/playground stack from browser-only wasm-bindgen/web-sys to winit windowing/input (native + web) and trunk build tooling, plus native hot-swappable plugin hosting.",
+  "summary": "Refined print OS window chrome to match the real UI U-cutout shape. `semio-window.sty` now draws a three-segment header (name tab left, canvas gap middle, hierarchy number right) with per-side tcolorbox rules and `-1px` body overlap; sections use a breakable body box, chapters remain header-only bands. All `\\chapter`/`\\section` calls (including starred) always increment counters and show hierarchy numbers in the right cap. `print/script.ts` emits exact chrome metrics from `tokens.metrics.chrome` (title bar height 1.4em, padding 0.2em, font sizes 0.7em/0.6em). Six templates split into `.content.tex` + light/dark wrappers; `zukunftbau.cls` forwards `theme` option. All 12 template PDFs and mit-bestand zwischenbericht build successfully.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1836"
+  },
+  "goal": "🎯framework🎯playground",
+  "sessions": [
+    "⚪c061613497df4c389f38aac5638e79a8"
+  ]
+}

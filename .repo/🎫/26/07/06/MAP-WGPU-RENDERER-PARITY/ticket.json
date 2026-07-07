@@ -1,0 +1,19 @@
+{
+  "title": "Map Wgpu Renderer Parity",
+  "emoji": "🗺️",
+  "status": "closed",
+  "description": "Restore full premigration map (gis2d) functionality in the wgpu renderer: Vello-rendered cartography, tile fetching, hover, rectangle+lasso multi-select, middle-button pan, context menu, layer weight sliders.",
+  "summary": "Restored full GIS map functionality in the wgpu-native renderer: GisMapScene + build_gis_map_scene in framework core; engine_canvas MapHost registry with Vello offscreen paint, tile fetch queue/apply, wheel/pan/marquee/hover helpers; scenes render_gis_map with marquee overlay and context menu; AppRuntime pointer/wheel dispatch and asset-poll tile fetching (wasm fetch + native ureq); gis2d plugin switched from canvas-2d placeholders to gis2d-map with extended runtime/commands (selection merge modes, hover, focus, openSource, layer stroke scales) and inspector weight sliders; MapHost focus_feature + open_url in gis_2d. Verified: cargo check semio-framework-renderer-wgpu (exit 0), gis2d plugin 14/14 tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1839"
+  },
+  "goal": "🎯gis🎯map",
+  "plan": {
+    "client": "cursor",
+    "id": "fe5999cf",
+    "local": "map_wgpu_renderer_parity_fe5999cf.plan.md"
+  },
+  "sessions": [
+    "⚪3f187f3d31a94283b57d22c556c71591"
+  ]
+}

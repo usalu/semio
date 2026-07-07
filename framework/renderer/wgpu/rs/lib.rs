@@ -1870,12 +1870,13 @@ struct NodeGraphSyncCache {
     lod_json: Option<String>,
     viewport_json: Option<String>,
     scene_json: Option<String>,
-    is_dark: Option<bool>,
 }
 
 struct EngineSurface {
     node_graph: Option<NodeGraphEngine>,
     sync_cache: NodeGraphSyncCache,
+    map_host: Option<gis_2d::MapHost>,
+    map_sync_cache: MapSyncCache,
     editor: Option<EditorHost>,
     vello: Renderer,
     texture: wgpu::Texture,
@@ -1884,20 +1885,42 @@ struct EngineSurface {
     height: u32,
 }
 
+#[derive(Default)]
+struct MapSyncCache {
+    map_fixture_json: Option<String>,
+    camera_json: Option<String>,
+    render_mode: Option<String>,
+    vector_style: Option<String>,
+    lod_mode: Option<String>,
+    layer_visibility_json: Option<String>,
+    layer_stroke_scale_json: Option<String>,
+    selection_json: Option<String>,
+    hover_json: Option<String>,
+    theme_json: Option<String>,
+    size_key: Option<String>,
+}
+
+#[derive(Clone, Debug)]
+pub struct PendingMapTileFetch {
+    pub surface_id: String,
+    pub key: String,
+    pub url: String,
+    pub vector: bool,
+    pub z: u32,
+    pub x: u32,
+    pub y: u32,
+}
+
+thread_local! {
+    static PENDING_MAP_TILE_FETCHES: RefCell<Vec<PendingMapTileFetch>> = RefCell::new(Vec::new());
+    static MAP_TILE_MISS: RefCell<HashSet<String>> = RefCell::new(HashSet::new());
+}
+
 fn sync_field(cache: &mut Option<String>, value: &str) -> bool {
     if cache.as_deref() == Some(value) {
         false
     } else {
         *cache = Some(value.to_string());
-        true
-    }
-}
-
-fn sync_bool(cache: &mut Option<bool>, value: bool) -> bool {
-    if cache == &Some(value) {
-        false
-    } else {
-        *cache = Some(value);
         true
     }
 }
@@ -1919,16 +1942,12 @@ fn linear_to_rgba8_channel(linear: f32) -> u8 {
     }
 }
 
-fn sync_canvas_theme_dark(cache: &mut NodeGraphSyncCache, dark: bool, flow: &mut FlowHost) {
-    if sync_bool(&mut cache.is_dark, dark) {
-        flow.set_canvas_theme_dark(dark);
-    }
+fn sync_canvas_theme_dark(_cache: &mut NodeGraphSyncCache, dark: bool, flow: &mut FlowHost) {
+    flow.set_canvas_theme_dark(dark);
 }
 
-fn sync_graph_canvas_theme_dark(cache: &mut NodeGraphSyncCache, dark: bool, graph: &mut GraphHost) {
-    if sync_bool(&mut cache.is_dark, dark) {
-        graph.set_canvas_theme_dark(dark);
-    }
+fn sync_graph_canvas_theme_dark(_cache: &mut NodeGraphSyncCache, dark: bool, graph: &mut GraphHost) {
+    graph.set_canvas_theme_dark(dark);
 }
 
 thread_local! {
@@ -1980,6 +1999,11 @@ fn editor_scene_json(editor: &semio_framework_core::TextEditorScene) -> String {
 }
 
 fn sync_flow_host(host: &mut FlowHost, graph: &semio_framework_core::NodeGraphScene, cache: &mut NodeGraphSyncCache) {
+    if let Some(json) = &graph.operators_json {
+        if sync_field(&mut cache.operators_json, json) {
+            host.set_neuron_kind_infos_json(json);
+        }
+    }
     if let Some(fixture_json) = &graph.fixture_json {
         if sync_field(&mut cache.fixture_json, fixture_json) {
             if let Ok(fixture) = FlowHost::parse_fixture_json(fixture_json) {
@@ -1990,11 +2014,6 @@ fn sync_flow_host(host: &mut FlowHost, graph: &semio_framework_core::NodeGraphSc
     if let Some(json) = &graph.catalogue_json {
         if sync_field(&mut cache.catalogue_json, json) {
             host.set_host_catalogue_json(json);
-        }
-    }
-    if let Some(json) = &graph.operators_json {
-        if sync_field(&mut cache.operators_json, json) {
-            host.set_neuron_kind_infos_json(json);
         }
     }
     if let Some(json) = &graph.selection_json {
@@ -2033,6 +2052,9 @@ fn sync_flow_host(host: &mut FlowHost, graph: &semio_framework_core::NodeGraphSc
                 }
                 if let Some(label) = value.get("forcedLabel").and_then(|v| v.as_str()) {
                     host.set_forced_draw_lod_label(label);
+                }
+                if let Some(distance) = value.get("proximityDistance").and_then(|v| v.as_f64()) {
+                    host.set_proximity_distance(distance);
                 }
             }
         }
@@ -2077,6 +2099,8 @@ fn ensure_surface(
                 EngineSurface {
                     node_graph: None,
                     sync_cache: NodeGraphSyncCache::default(),
+                    map_host: None,
+                    map_sync_cache: MapSyncCache::default(),
                     editor: None,
                     vello,
                     texture,
@@ -2668,7 +2692,553 @@ pub fn paint_node_graph_labels(
         paint_label_overlay_row(ctx, inner, cam_x, cam_y, zoom, row, &chrome);
     }
 }
+
+struct NodeGraphOverlaySnapshot {
+    preview_points_json: String,
+    preview_crossing: bool,
+    selection_bounds_json: String,
+}
+
+fn node_graph_overlay_snapshot(surface_id: &str) -> Option<NodeGraphOverlaySnapshot> {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let entry = map.get(surface_id)?;
+        match entry.node_graph.as_ref() {
+            Some(NodeGraphEngine::Flow(host)) => Some(NodeGraphOverlaySnapshot {
+                preview_points_json: host.selection_preview_points_json(),
+                preview_crossing: host.selection_preview_crossing(),
+                selection_bounds_json: host.selection_union_bounds_screen_json(),
+            }),
+            Some(NodeGraphEngine::Dag(host)) => Some(NodeGraphOverlaySnapshot {
+                preview_points_json: host.dag.selection_preview_points_json(),
+                preview_crossing: host.dag.selection_preview_crossing(),
+                selection_bounds_json: host.dag.selection_union_bounds_screen_json(),
+            }),
+            None => None,
+        }
+    })
+}
+
+fn parse_selection_preview_points(json: &str) -> Vec<(f32, f32)> {
+    serde_json::from_str::<Vec<[f64; 2]>>(json)
+        .unwrap_or_default()
+        .into_iter()
+        .map(|point| (point[0] as f32, point[1] as f32))
+        .collect()
+}
+
+fn paint_node_graph_selection_marquee(
+    ctx: &mut FrameworkWidgetContext<'_>,
+    inner: Rect,
+    points: &[(f32, f32)],
+    crossing: bool,
+    theme: &Theme,
+) {
+    if points.len() < 2 {
+        return;
+    }
+    let stroke = theme.accent.with_alpha(0.9);
+    let fill_alpha = if crossing { 0.08 } else { 0.12 };
+    let fill = theme.selected.with_alpha(fill_alpha);
+    if points.len() >= 3 {
+        for window in points.windows(2) {
+            let (x0, y0) = window[0];
+            let (x1, y1) = window[1];
+            ctx.draw.push_line(
+                inner.x + x0,
+                inner.y + y0,
+                inner.x + x1,
+                inner.y + y1,
+                stroke,
+                1.5,
+            );
+        }
+        let (fx, fy) = points[0];
+        let (lx, ly) = points[points.len() - 1];
+        ctx.draw.push_line(inner.x + lx, inner.y + ly, inner.x + fx, inner.y + fy, stroke, 1.5);
+        return;
+    }
+    let (x0, y0) = points[0];
+    let (x1, y1) = points[points.len() - 1];
+    let rx = inner.x + x0.min(x1);
+    let ry = inner.y + y0.min(y1);
+    let rw = (x1 - x0).abs();
+    let rh = (y1 - y0).abs();
+    ctx.draw.push_solid([rx, ry, rw, rh], fill);
+    ctx.draw
+        .push_line(rx, ry, rx + rw, ry, stroke, 1.5);
+    ctx.draw
+        .push_line(rx + rw, ry, rx + rw, ry + rh, stroke, 1.5);
+    ctx.draw
+        .push_line(rx + rw, ry + rh, rx, ry + rh, stroke, 1.5);
+    ctx.draw.push_line(rx, ry + rh, rx, ry, stroke, 1.5);
+}
+
+fn paint_node_graph_selection_bounds(
+    ctx: &mut FrameworkWidgetContext<'_>,
+    inner: Rect,
+    bounds_json: &str,
+    theme: &Theme,
+) {
+    if bounds_json.trim() == "null" {
+        return;
+    }
+    let Ok(value) = serde_json::from_str::<Value>(bounds_json) else {
+        return;
+    };
+    let x = value.get("x").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
+    let y = value.get("y").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
+    let w = value.get("width").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
+    let h = value.get("height").and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
+    if w <= 0.0 || h <= 0.0 {
+        return;
+    }
+    let rx = inner.x + x;
+    let ry = inner.y + y;
+    let stroke = theme.text_element.with_alpha(0.95);
+    ctx.draw.push_line(rx, ry, rx + w, ry, stroke, 1.0);
+    ctx.draw.push_line(rx + w, ry, rx + w, ry + h, stroke, 1.0);
+    ctx.draw.push_line(rx + w, ry + h, rx, ry + h, stroke, 1.0);
+    ctx.draw.push_line(rx, ry + h, rx, ry, stroke, 1.0);
+}
+
+pub fn paint_node_graph_overlays(
+    ctx: &mut FrameworkWidgetContext<'_>,
+    scene: &UiComponentSceneNode,
+    inner: Rect,
+) {
+    let Some(snapshot) = node_graph_overlay_snapshot(&scene.surface_id) else {
+        return;
+    };
+    let points = parse_selection_preview_points(&snapshot.preview_points_json);
+    paint_node_graph_selection_marquee(ctx, inner, &points, snapshot.preview_crossing, ctx.theme);
+    paint_node_graph_selection_bounds(ctx, inner, &snapshot.selection_bounds_json, ctx.theme);
+}
 //#endregion NodeGraph
+
+//#region GisMap
+fn map_tile_url(template: &str, z: u32, x: u32, y: u32) -> String {
+    template
+        .replace("{z}", &z.to_string())
+        .replace("{x}", &x.to_string())
+        .replace("{y}", &y.to_string())
+}
+
+fn map_theme_json_from_ui_theme(theme: &Theme) -> String {
+    let rgba = |color: Rgba| {
+        let r = (color.r.clamp(0.0, 1.0) * 255.0).round() as u8;
+        let g = (color.g.clamp(0.0, 1.0) * 255.0).round() as u8;
+        let b = (color.b.clamp(0.0, 1.0) * 255.0).round() as u8;
+        let a = (color.a.clamp(0.0, 1.0) * 255.0).round() as u8;
+        [r, g, b, a]
+    };
+    json!({
+        "surfaceClear": rgba(theme.canvas_clear),
+        "landFill": rgba(theme.panel),
+        "landStroke": [rgba(theme.separator)[0], rgba(theme.separator)[1], rgba(theme.separator)[2], 0],
+        "labelFill": rgba(theme.text),
+        "labelHalo": rgba(theme.canvas_clear),
+        "regionFill": rgba(theme.selected.with_alpha(0.22)),
+        "regionStroke": rgba(theme.accent),
+        "routeStroke": rgba(theme.accent_hover),
+        "positionFill": rgba(theme.accent),
+        "positionStroke": rgba(theme.active_foreground),
+        "selectionStroke": rgba(theme.accent),
+        "hoverStroke": rgba(theme.accent_hover),
+    })
+    .to_string()
+}
+
+fn sync_map_host(
+    host: &mut gis_2d::MapHost,
+    scene: &semio_framework_core::GisMapScene,
+    cache: &mut MapSyncCache,
+    pw: u32,
+    ph: u32,
+    dpr: f64,
+    theme_json: &str,
+) {
+    let size_key = format!("{pw}x{ph}@{dpr}");
+    if sync_field(&mut cache.size_key, &size_key) {
+        host.set_size(pw, ph, dpr);
+    }
+    if sync_field(&mut cache.map_fixture_json, &scene.map_fixture_json) {
+        let _ = host.sync_map_json(&scene.map_fixture_json);
+    }
+    if sync_field(&mut cache.camera_json, &scene.camera_json) {
+        if let Ok(camera) = serde_json::from_str::<Value>(&scene.camera_json) {
+            let x = camera.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0);
+            let y = camera.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0);
+            let zoom = camera.get("zoom").and_then(|value| value.as_f64()).unwrap_or(1.0);
+            host.set_camera(x, y, zoom);
+        }
+    }
+    if sync_field(&mut cache.render_mode, &scene.render_mode) {
+        host.set_render_mode(&scene.render_mode);
+    }
+    if sync_field(&mut cache.vector_style, &scene.vector_style) {
+        host.set_vector_style(&scene.vector_style);
+    }
+    if sync_field(&mut cache.lod_mode, &scene.lod_mode) {
+        host.set_lod_mode(&scene.lod_mode);
+    }
+    if sync_field(&mut cache.layer_visibility_json, &scene.layer_visibility_json) {
+        let _ = host.set_layer_visibility_from_json(&scene.layer_visibility_json);
+    }
+    if sync_field(&mut cache.layer_stroke_scale_json, &scene.layer_stroke_scale_json) {
+        let _ = host.set_layer_stroke_scale_from_json(&scene.layer_stroke_scale_json);
+    }
+    if sync_field(&mut cache.selection_json, &scene.selection_json) {
+        let _ = host.set_selection_json(&scene.selection_json);
+    }
+    if sync_field(&mut cache.hover_json, &scene.hover_json) {
+        let _ = host.set_hover_json(&scene.hover_json);
+    }
+    if sync_field(&mut cache.theme_json, theme_json) {
+        let _ = host.set_map_theme_from_json(theme_json);
+    }
+}
+
+fn queue_map_tile_fetches(surface_id: &str, scene: &semio_framework_core::GisMapScene, host: &mut gis_2d::MapHost) {
+    host.prepare_visible_tiles();
+    let needs_raster = scene.render_mode == "image" || scene.render_mode == "combined";
+    let needs_vector = scene.render_mode == "vector" || scene.render_mode == "combined";
+    PENDING_MAP_TILE_FETCHES.with(|pending| {
+        let mut queue = pending.borrow_mut();
+        if needs_raster {
+            let rows: Vec<Value> = serde_json::from_str(&host.visible_tiles_json()).unwrap_or_default();
+            for row in rows {
+                let (Some(z), Some(x), Some(y), Some(key)) = (
+                    row.get("z").and_then(|value| value.as_u64()).map(|value| value as u32),
+                    row.get("x").and_then(|value| value.as_u64()).map(|value| value as u32),
+                    row.get("y").and_then(|value| value.as_u64()).map(|value| value as u32),
+                    row.get("key").and_then(|value| value.as_str()),
+                ) else {
+                    continue;
+                };
+                if host.has_tile(key) {
+                    continue;
+                }
+                let miss_key = format!("raster:{key}");
+                if MAP_TILE_MISS.with(|cell| cell.borrow().contains(&miss_key)) {
+                    continue;
+                }
+                if queue.iter().any(|item| item.key == key && item.surface_id == surface_id) {
+                    continue;
+                }
+                queue.push(PendingMapTileFetch {
+                    surface_id: surface_id.to_string(),
+                    key: key.to_string(),
+                    url: map_tile_url(&scene.tile_url_template, z, x, y),
+                    vector: false,
+                    z,
+                    x,
+                    y,
+                });
+            }
+        }
+        if needs_vector {
+            let rows: Vec<Value> = serde_json::from_str(&host.visible_vector_tiles_json()).unwrap_or_default();
+            for row in rows {
+                let (Some(z), Some(x), Some(y), Some(key)) = (
+                    row.get("z").and_then(|value| value.as_u64()).map(|value| value as u32),
+                    row.get("x").and_then(|value| value.as_u64()).map(|value| value as u32),
+                    row.get("y").and_then(|value| value.as_u64()).map(|value| value as u32),
+                    row.get("key").and_then(|value| value.as_str()),
+                ) else {
+                    continue;
+                };
+                if host.has_vector_tile(key) {
+                    continue;
+                }
+                let miss_key = format!("vector:{key}");
+                if MAP_TILE_MISS.with(|cell| cell.borrow().contains(&miss_key)) {
+                    continue;
+                }
+                if queue.iter().any(|item| item.key == key && item.surface_id == surface_id) {
+                    continue;
+                }
+                queue.push(PendingMapTileFetch {
+                    surface_id: surface_id.to_string(),
+                    key: key.to_string(),
+                    url: map_tile_url(&scene.vector_tile_url_template, z, x, y),
+                    vector: true,
+                    z,
+                    x,
+                    y,
+                });
+            }
+        }
+    });
+}
+
+pub fn collect_pending_map_tile_fetches() -> Vec<PendingMapTileFetch> {
+    PENDING_MAP_TILE_FETCHES.with(|cell| {
+        let mut queue = cell.borrow_mut();
+        let out = queue.clone();
+        queue.clear();
+        out
+    })
+}
+
+pub fn apply_map_tile_bytes(surface_id: &str, fetch: &PendingMapTileFetch, bytes: &[u8]) {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else {
+            return;
+        };
+        let Some(host) = entry.map_host.as_mut() else {
+            return;
+        };
+        let result = if fetch.vector {
+            host.upload_vector_tile(fetch.z, fetch.x, fetch.y, bytes)
+        } else {
+            host.upload_tile(fetch.z, fetch.x, fetch.y, bytes)
+        };
+        if result.is_err() {
+            let miss_key = if fetch.vector {
+                format!("vector:{}", fetch.key)
+            } else {
+                format!("raster:{}", fetch.key)
+            };
+            MAP_TILE_MISS.with(|cell| {
+                cell.borrow_mut().insert(miss_key);
+            });
+        }
+    });
+}
+
+pub fn paint_gis_map(
+    gpu: &mut GpuContext,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    scene: &UiComponentSceneNode,
+    inner: Rect,
+) {
+    let Some(map_scene) = &scene.gis_map else {
+        return;
+    };
+    let pw = inner.w.max(1.0) as u32;
+    let ph = inner.h.max(1.0) as u32;
+    let dpr = gpu.dpr() as f64;
+    if ensure_surface(gpu, &scene.surface_id, pw, ph).is_err() {
+        return;
+    }
+    let theme_json = map_theme_json_from_ui_theme(ctx.theme);
+    let clear = vello_clear(ctx.theme);
+    let cavas_scene = ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let entry = map.get_mut(&scene.surface_id).expect("engine surface");
+        if entry.map_host.is_none() {
+            entry.map_host = Some(gis_2d::MapHost::new());
+            entry.map_sync_cache = MapSyncCache::default();
+        }
+        let host = entry.map_host.as_mut().expect("map host");
+        sync_map_host(host, map_scene, &mut entry.map_sync_cache, pw, ph, dpr, &theme_json);
+        queue_map_tile_fetches(&scene.surface_id, map_scene, host);
+        host.build_render_scene()
+    });
+    if render_vello_scene(gpu, &scene.surface_id, &cavas_scene, clear).is_err() {
+        return;
+    }
+    ctx.draw.push_raster_quad(
+        &raster_key(&scene.surface_id),
+        [inner.x, inner.y, inner.w, inner.h],
+        [0.0, 0.0, 1.0, 1.0],
+        1.0,
+    );
+    ctx.input.register_hit(HitTarget {
+        rect: inner,
+        event: None,
+        control_id: Some(format!("{}.map", scene.surface_id)),
+        kind: HitKind::ScrollRegion,
+        drag_axis: Some(ui_wgpu::input::DragAxis::Both),
+        drag_data: None,
+    });
+}
+
+pub fn with_map_host_mut<R>(surface_id: &str, f: impl FnOnce(&mut gis_2d::MapHost) -> R) -> Option<R> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let entry = map.get_mut(surface_id)?;
+        let host = entry.map_host.as_mut()?;
+        Some(f(host))
+    })
+}
+
+pub fn with_map_host<R>(surface_id: &str, f: impl FnOnce(&gis_2d::MapHost) -> R) -> Option<R> {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let entry = map.get(surface_id)?;
+        let host = entry.map_host.as_ref()?;
+        Some(f(host))
+    })
+}
+
+pub fn map_cmd(controller_id: &str, command: &str, args: Value) -> CommandDescriptor {
+    CommandDescriptor {
+        controller_id: controller_id.to_string(),
+        command: command.to_string(),
+        args: Some(args),
+    }
+}
+
+pub fn map_local_pointer(inner: Rect, x: f32, y: f32) -> (f64, f64) {
+    ((x - inner.x) as f64, (y - inner.y) as f64)
+}
+
+pub fn map_marquee_mode(shift: bool, ctrl: bool, alt: bool) -> &'static str {
+    if alt {
+        "subtractive"
+    } else if ctrl {
+        "invertive"
+    } else if shift {
+        "additive"
+    } else {
+        "default"
+    }
+}
+
+pub fn map_marquee_crossing(method: &str, start_x: f32, end_x: f32) -> bool {
+    if method == "lasso" {
+        end_x < start_x
+    } else {
+        end_x < start_x
+    }
+}
+
+pub fn map_merge_selection(
+    mode: &str,
+    current_positions: &[String],
+    current_routes: &[String],
+    next_positions: &[String],
+    next_routes: &[String],
+) -> (Vec<String>, Vec<String>) {
+    let mut positions: HashSet<String> = current_positions.iter().cloned().collect();
+    let mut routes: HashSet<String> = current_routes.iter().cloned().collect();
+    let next_pos: HashSet<String> = next_positions.iter().cloned().collect();
+    let next_routes: HashSet<String> = next_routes.iter().cloned().collect();
+    match mode {
+        "additive" => {
+            positions.extend(next_pos);
+            routes.extend(next_routes);
+        }
+        "subtractive" => {
+            positions.retain(|id| !next_pos.contains(id));
+            routes.retain(|id| !next_routes.contains(id));
+        }
+        "invertive" => {
+            for id in next_pos {
+                if !positions.insert(id.clone()) {
+                    positions.remove(&id);
+                }
+            }
+            for id in next_routes {
+                if !routes.insert(id.clone()) {
+                    routes.remove(&id);
+                }
+            }
+        }
+        _ => {
+            positions = next_pos;
+            routes = next_routes;
+        }
+    }
+    (
+        positions.into_iter().collect(),
+        routes.into_iter().collect(),
+    )
+}
+
+pub fn parse_map_feature_hit(hit_json: &str) -> (Vec<String>, Vec<String>) {
+    let hit: Value = serde_json::from_str(hit_json).unwrap_or(Value::Null);
+    let positions = hit
+        .get("positions")
+        .and_then(|value| value.as_array())
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|row| row.as_str().map(str::to_string))
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    let routes = hit
+        .get("routes")
+        .and_then(|value| value.as_array())
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|row| row.as_str().map(str::to_string))
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    (positions, routes)
+}
+
+pub fn parse_map_hover(hit_json: &str) -> Value {
+    if hit_json == "null" {
+        return Value::Null;
+    }
+    serde_json::from_str(hit_json).unwrap_or(Value::Null)
+}
+
+pub fn map_interaction_commands(
+    surface_id: &str,
+    controller_id: &str,
+    host: &gis_2d::MapHost,
+) -> Vec<CommandDescriptor> {
+  let selection = json!({
+      "positions": host.selected_positions_json(),
+      "routes": host.selected_routes_json(),
+  });
+  let hover = if let (Some(kind), Some(id)) = (host.hovered_kind(), host.hovered_id()) {
+      json!({ "kind": kind, "id": id })
+  } else {
+      Value::Null
+  };
+  vec![
+      map_cmd(
+          controller_id,
+          semio_framework_core::gis_map_commands::SET_CAMERA,
+          json!({ "surfaceId": surface_id, "camera": serde_json::from_str::<Value>(&host.camera_json()).unwrap_or(json!({})) }),
+      ),
+      map_cmd(
+          controller_id,
+          semio_framework_core::gis_map_commands::SET_FEATURE_SELECTION,
+          json!({ "surfaceId": surface_id, "positions": selection["positions"], "routes": selection["routes"] }),
+      ),
+      map_cmd(
+          controller_id,
+          semio_framework_core::gis_map_commands::SET_HOVER,
+          json!({ "surfaceId": surface_id, "hover": hover }),
+      ),
+  ]
+}
+
+pub fn gis_map_wheel(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    delta: f32,
+    ctrl: bool,
+) -> Vec<CommandDescriptor> {
+    let (sx, sy) = map_local_pointer(inner, x, y);
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(surface_id) else {
+            return Vec::new();
+        };
+        let Some(host) = entry.map_host.as_mut() else {
+            return Vec::new();
+        };
+        let mut delta_y = delta as f64;
+        if ctrl {
+            delta_y *= 2.5;
+        }
+        host.wheel_screen(sx, sy, delta_y);
+        map_interaction_commands(surface_id, controller_id, host)
+    })
+}
+//#endregion GisMap
 
 //#region TextEditor
 pub fn text_editor_apply_key(
@@ -2843,7 +3413,7 @@ pub mod interpreter {
 // #region interpreter
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{render_component_scene, NodeGraphSurface};
+use crate::scenes::{render_component_scene, GisMapSurface, NodeGraphSurface};
 use semio_framework_core::{CommandDescriptor, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use ui_wgpu::{
     gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect, SelectItem,
@@ -2895,10 +3465,11 @@ pub fn render_ui_node(
     gpu: &mut ui_wgpu::GpuContext,
     world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
+    gis_map_states: &mut std::collections::HashMap<String, GisMapSurface>,
 ) {
     match node {
         UiNode::ComponentScene(scene) => {
-            render_component_scene(scene, bounds, ctx, gpu, world3d_states, node_graph_states)
+            render_component_scene(scene, bounds, ctx, gpu, world3d_states, node_graph_states, gis_map_states)
         }
         UiNode::Stack(stack) => {
             let gap = gap_for_token(ctx.theme, stack.gap.as_deref());
@@ -2918,7 +3489,7 @@ pub fn render_ui_node(
                 layout_horizontal(bounds, gap, padding, &sizes)
             };
             for (child, rect) in stack.children.iter().zip(rects.iter()) {
-                render_ui_node(child, *rect, ctx, gpu, world3d_states, node_graph_states);
+                render_ui_node(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
             }
         }
         other => render_widget(&ui_node_to_widget(other), bounds, ctx),
@@ -3718,7 +4289,7 @@ use serde_json::{json, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use ui_wgpu::input::{DragAxis, KeyAction};
-use ui_wgpu::{draw_text, HitKind, HitTarget, Rect, Rgba};
+use ui_wgpu::{draw_text, HitKind, HitTarget, Rect, Rgba, Theme};
 
 //#region SceneRuntime
 #[derive(Clone, Copy, Debug, Default)]
@@ -3772,6 +4343,13 @@ enum SceneDragMode {
         is_output: bool,
     },
     Marquee,
+    MapMarquee {
+        start_x: f32,
+        start_y: f32,
+        method: String,
+        merge_mode: String,
+    },
+    MapPan,
 }
 
 #[derive(Clone, Debug)]
@@ -3799,6 +4377,9 @@ struct SceneSurfaceState {
     paint_stroke_active: bool,
     vfs_expanded_ids: HashSet<String>,
     vfs_selection_anchor: Option<String>,
+    map_marquee_points: Vec<(f32, f32)>,
+    map_marquee_active: bool,
+    map_last_hover_json: Option<String>,
 }
 
 #[derive(Clone, Debug)]
@@ -4002,6 +4583,8 @@ fn canvas_world_pointer_json(
 }
 
 //#region SceneInput
+const MAP_MARQUEE_THRESHOLD_PX: f32 = 6.0;
+
 pub fn handle_scene_wheel(
     scene: &UiComponentSceneNode,
     bounds: Rect,
@@ -4037,6 +4620,15 @@ pub fn handle_scene_wheel(
             Vec::new()
         }
         "node-graph" => engine_canvas::node_graph_wheel(
+            &scene.surface_id,
+            &scene.controller_id,
+            inner,
+            x,
+            y,
+            delta,
+            ctrl,
+        ),
+        "gis2d-map" => engine_canvas::gis_map_wheel(
             &scene.surface_id,
             &scene.controller_id,
             inner,
@@ -4086,6 +4678,23 @@ pub fn handle_scene_pointer_move(
                 }
                 SceneDragMode::ConnectPort { .. } => {}
                 SceneDragMode::Marquee => {}
+                SceneDragMode::MapMarquee { start_x, start_y, method, .. } => {
+                    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+                    let distance = ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
+                    mutate_scene_state(&scene.surface_id, |state| {
+                        if distance >= MAP_MARQUEE_THRESHOLD_PX {
+                            state.map_marquee_active = true;
+                        }
+                        if state.map_marquee_active {
+                            if method == "lasso" {
+                                state.map_marquee_points.push((sx as f32, sy as f32));
+                            } else {
+                                state.map_marquee_points = vec![(*start_x, *start_y), (sx as f32, sy as f32)];
+                            }
+                        }
+                    });
+                }
+                SceneDragMode::MapPan => {}
             }
         }
     }
@@ -4335,6 +4944,7 @@ pub fn render_component_scene(
     gpu: &mut ui_wgpu::GpuContext,
     world3d_states: &mut HashMap<String, World3dState>,
     node_graph_states: &mut HashMap<String, NodeGraphSurface>,
+    gis_map_states: &mut HashMap<String, GisMapSurface>,
 ) {
     let theme = ctx.theme;
     ctx.draw.set_screen_height(bounds.y + bounds.h);
@@ -4348,6 +4958,7 @@ pub fn render_component_scene(
         "table" => render_table(scene, bounds, ctx),
         "canvas-2d" => render_canvas_2d(scene, bounds, ctx),
         "node-graph" => render_node_graph(scene, bounds, ctx, gpu, node_graph_states),
+        "gis2d-map" => render_gis_map(scene, bounds, ctx, gpu, gis_map_states),
         "virtualFileSystem" => render_vfs(scene, bounds, ctx),
         "text-editor" => render_text_editor(scene, bounds, ctx, gpu),
         "world-3d" => {
@@ -5016,6 +5627,7 @@ fn render_node_graph(
     );
     engine_canvas::paint_node_graph(gpu, ctx, scene, inner);
     engine_canvas::paint_node_graph_labels(ctx, scene, inner);
+    engine_canvas::paint_node_graph_overlays(ctx, scene, inner);
 }
 
 fn node_screen_pos(node: &GraphNode, state: &SceneSurfaceState, viewport: &Viewport, inner: Rect) -> (f32, f32) {
@@ -5027,6 +5639,450 @@ fn node_screen_pos(node: &GraphNode, state: &SceneSurfaceState, viewport: &Viewp
     viewport.world_to_screen(nx, ny, inner)
 }
 //#endregion NodeGraph
+
+//#region GisMap
+#[derive(Clone, Debug)]
+pub struct GisMapSurface {
+    pub bounds: Rect,
+    pub controller_id: String,
+    pub selection_method: String,
+}
+
+fn query_map_feature_hits(
+    host: &gis_2d::MapHost,
+    method: &str,
+    points: &[(f32, f32)],
+    crossing: bool,
+) -> (Vec<String>, Vec<String>) {
+    if method == "lasso" && points.len() >= 3 {
+        let payload: Vec<[f64; 2]> = points
+            .iter()
+            .map(|(x, y)| [*x as f64, *y as f64])
+            .collect();
+        let points_json = serde_json::to_string(&payload).unwrap_or_else(|_| "[]".into());
+        engine_canvas::parse_map_feature_hit(&host.features_in_polygon_json(&points_json, crossing))
+    } else if points.len() >= 2 {
+        let (x0, y0) = points[0];
+        let (x1, y1) = points[points.len() - 1];
+        let (min_x, max_x) = if x0 <= x1 { (x0, x1) } else { (x1, x0) };
+        let (min_y, max_y) = if y0 <= y1 { (y0, y1) } else { (y1, y0) };
+        engine_canvas::parse_map_feature_hit(&host.features_in_rect_json(
+            min_x as f64,
+            min_y as f64,
+            max_x as f64,
+            max_y as f64,
+            crossing,
+        ))
+    } else {
+        (Vec::new(), Vec::new())
+    }
+}
+
+fn paint_gis_map_marquee(
+    ctx: &mut FrameworkWidgetContext<'_>,
+    surface_id: &str,
+    inner: Rect,
+    theme: &Theme,
+) {
+    let state = scene_state(surface_id);
+    if !state.map_marquee_active {
+        return;
+    }
+    let points = state.map_marquee_points;
+    if points.len() < 2 {
+        return;
+    }
+    let stroke = theme.accent.with_alpha(0.9);
+    let fill = theme.selected.with_alpha(0.12);
+    let method = match &state.drag {
+        Some(SceneDrag {
+            mode: SceneDragMode::MapMarquee { method, .. },
+            ..
+        }) => method.as_str(),
+        _ => "rectangle",
+    };
+    if method == "lasso" && points.len() >= 3 {
+        for window in points.windows(2) {
+            let (x0, y0) = window[0];
+            let (x1, y1) = window[1];
+            ctx.draw.push_line(
+                inner.x + x0,
+                inner.y + y0,
+                inner.x + x1,
+                inner.y + y1,
+                stroke,
+                1.5,
+            );
+        }
+        let (fx, fy) = points[0];
+        let (lx, ly) = points[points.len() - 1];
+        ctx.draw.push_line(inner.x + lx, inner.y + ly, inner.x + fx, inner.y + fy, stroke, 1.5);
+    } else {
+        let (x0, y0) = points[0];
+        let (x1, y1) = points[points.len() - 1];
+        let rx = inner.x + x0.min(x1);
+        let ry = inner.y + y0.min(y1);
+        let rw = (x1 - x0).abs();
+        let rh = (y1 - y0).abs();
+        ctx.draw.push_solid([rx, ry, rw, rh], fill);
+        ctx.draw.push_rounded([rx, ry, rw, rh], stroke.with_alpha(0.0), 0.0);
+        ctx.draw
+            .push_line(rx, ry, rx + rw, ry, stroke, 1.5);
+        ctx.draw
+            .push_line(rx + rw, ry, rx + rw, ry + rh, stroke, 1.5);
+        ctx.draw
+            .push_line(rx + rw, ry + rh, rx, ry + rh, stroke, 1.5);
+        ctx.draw.push_line(rx, ry + rh, rx, ry, stroke, 1.5);
+    }
+}
+
+/** @emoji 🗺️ Pushes GIS map context-menu items for a screen-space hit. */
+pub fn push_gis_map_context_menu(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+) {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let Some(hit_json) = engine_canvas::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy)) else {
+        return;
+    };
+    let hit: Value = serde_json::from_str(&hit_json).unwrap_or(Value::Null);
+    let (kind, id) = (
+        hit.get("kind").and_then(|value| value.as_str()),
+        hit.get("id").and_then(|value| value.as_str()),
+    );
+    if let (Some(kind), Some(id)) = (kind, id) {
+        let selected = engine_canvas::with_map_host(surface_id, |host| {
+            if kind == "position" {
+                host.selected_positions_json().iter().any(|row| row == id)
+            } else {
+                host.selected_routes_json().iter().any(|row| row == id)
+            }
+        })
+        .unwrap_or(false);
+        push_context_menu_item(ContextMenuItem {
+            id: format!("{surface_id}.context.select"),
+            label: "Select".into(),
+            command: Some(engine_canvas::map_cmd(
+                controller_id,
+                semio_framework_core::gis_map_commands::SET_FEATURE_SELECTION,
+                json!({
+                    "surfaceId": surface_id,
+                    "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
+                    "routes": if kind == "route" { vec![id] } else { Vec::<&str>::new() },
+                    "mode": "default",
+                }),
+            )),
+        });
+        if selected {
+            push_context_menu_item(ContextMenuItem {
+                id: format!("{surface_id}.context.deselect"),
+                label: "Deselect".into(),
+                command: Some(engine_canvas::map_cmd(
+                    controller_id,
+                    semio_framework_core::gis_map_commands::DESELECT,
+                    json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
+                )),
+            });
+        }
+        push_context_menu_item(ContextMenuItem {
+            id: format!("{surface_id}.context.focus"),
+            label: "Focus / zoom to".into(),
+            command: Some(engine_canvas::map_cmd(
+                controller_id,
+                semio_framework_core::gis_map_commands::FOCUS_FEATURE,
+                json!({ "surfaceId": surface_id, "featureId": id, "featureKind": kind }),
+            )),
+        });
+        if kind == "position" {
+            let has_source = engine_canvas::with_map_host(surface_id, |host| {
+                host.positions
+                    .get(id)
+                    .and_then(|row| row.source_url.as_deref())
+                    .filter(|url| !url.is_empty())
+                    .is_some()
+            })
+            .unwrap_or(false);
+            if has_source {
+                push_context_menu_item(ContextMenuItem {
+                    id: format!("{surface_id}.context.source"),
+                    label: "Open source".into(),
+                    command: Some(engine_canvas::map_cmd(
+                        controller_id,
+                        semio_framework_core::gis_map_commands::OPEN_SOURCE,
+                        json!({ "surfaceId": surface_id, "featureId": id }),
+                    )),
+                });
+            }
+        }
+        return;
+    }
+    push_context_menu_item(ContextMenuItem {
+        id: format!("{surface_id}.context.select-all"),
+        label: "Select all".into(),
+        command: Some(engine_canvas::map_cmd(
+            controller_id,
+            semio_framework_core::gis_map_commands::SELECT_ALL,
+            json!({ "surfaceId": surface_id }),
+        )),
+    });
+    let has_selection = engine_canvas::with_map_host(surface_id, |host| {
+        !host.selected_positions_json().is_empty() || !host.selected_routes_json().is_empty()
+    })
+    .unwrap_or(false);
+    push_context_menu_item(ContextMenuItem {
+        id: format!("{surface_id}.context.clear"),
+        label: "Clear selection".into(),
+        command: if has_selection {
+            Some(engine_canvas::map_cmd(
+                controller_id,
+                semio_framework_core::gis_map_commands::CLEAR_SELECTION,
+                json!({ "surfaceId": surface_id }),
+            ))
+        } else {
+            None
+        },
+    });
+    push_context_menu_item(ContextMenuItem {
+        id: format!("{surface_id}.context.fit-world"),
+        label: "Fit world".into(),
+        command: Some(engine_canvas::map_cmd(
+            controller_id,
+            semio_framework_core::gis_map_commands::FIT_WORLD,
+            json!({ "surfaceId": surface_id }),
+        )),
+    });
+}
+
+pub fn gis_map_pointer_down(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    button: i16,
+    shift: bool,
+    ctrl: bool,
+    alt: bool,
+    selection_method: &str,
+) -> Vec<CommandDescriptor> {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    if button == 0 {
+        mutate_scene_state(surface_id, |state| {
+            state.drag = Some(SceneDrag {
+                mode: SceneDragMode::MapMarquee {
+                    start_x: sx as f32,
+                    start_y: sy as f32,
+                    method: selection_method.to_string(),
+                    merge_mode: engine_canvas::map_marquee_mode(shift, ctrl, alt).to_string(),
+                },
+                button,
+            });
+            state.map_marquee_points = vec![(sx as f32, sy as f32)];
+            state.map_marquee_active = false;
+        });
+        return Vec::new();
+    }
+    if button == 1 {
+        engine_canvas::with_map_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, 1));
+        mutate_scene_state(surface_id, |state| {
+            state.drag = Some(SceneDrag {
+                mode: SceneDragMode::MapPan,
+                button: 1,
+            });
+        });
+        return engine_canvas::with_map_host_mut(surface_id, |host| {
+            engine_canvas::map_interaction_commands(surface_id, controller_id, host)
+        })
+        .unwrap_or_default();
+    }
+    let _ = controller_id;
+    Vec::new()
+}
+
+pub fn gis_map_pointer_move(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+    down: bool,
+) -> Vec<CommandDescriptor> {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    if down {
+        let state = scene_state(surface_id);
+        if let Some(drag) = &state.drag {
+            match &drag.mode {
+                SceneDragMode::MapPan => {
+                    engine_canvas::with_map_host_mut(surface_id, |host| host.pointer_move_screen(sx, sy));
+                    return engine_canvas::with_map_host_mut(surface_id, |host| {
+                        engine_canvas::map_interaction_commands(surface_id, controller_id, host)
+                    })
+                    .unwrap_or_default();
+                }
+                SceneDragMode::MapMarquee {
+                    start_x,
+                    start_y,
+                    method,
+                    ..
+                } => {
+                    let distance =
+                        ((sx as f32 - *start_x).powi(2) + (sy as f32 - *start_y).powi(2)).sqrt();
+                    mutate_scene_state(surface_id, |state| {
+                        if distance >= MAP_MARQUEE_THRESHOLD_PX {
+                            state.map_marquee_active = true;
+                        }
+                        if state.map_marquee_active {
+                            if method == "lasso" {
+                                if state.map_marquee_points.last().copied() != Some((sx as f32, sy as f32)) {
+                                    state.map_marquee_points.push((sx as f32, sy as f32));
+                                }
+                            } else {
+                                state.map_marquee_points =
+                                    vec![(*start_x, *start_y), (sx as f32, sy as f32)];
+                            }
+                        }
+                    });
+                }
+                _ => {}
+            }
+        }
+        return Vec::new();
+    }
+    let hit_json = engine_canvas::with_map_host(surface_id, |host| host.hit_test_feature_json(sx, sy))
+        .unwrap_or_else(|| "null".into());
+    let hover = engine_canvas::parse_map_hover(&hit_json);
+    let hover_json = if hover.is_null() {
+        "null".into()
+    } else {
+        hover.to_string()
+    };
+    let prior = scene_state(surface_id).map_last_hover_json;
+    if prior.as_deref() == Some(hover_json.as_str()) {
+        return Vec::new();
+    }
+    mutate_scene_state(surface_id, |state| {
+        state.map_last_hover_json = Some(hover_json.clone());
+    });
+    vec![engine_canvas::map_cmd(
+        controller_id,
+        semio_framework_core::gis_map_commands::SET_HOVER,
+        json!({ "surfaceId": surface_id, "hover": hover }),
+    )]
+}
+
+pub fn gis_map_pointer_up(
+    surface_id: &str,
+    controller_id: &str,
+    inner: Rect,
+    x: f32,
+    y: f32,
+) -> Vec<CommandDescriptor> {
+    let (sx, sy) = engine_canvas::map_local_pointer(inner, x, y);
+    let state = scene_state(surface_id);
+    let Some(drag) = state.drag.clone() else {
+        return Vec::new();
+    };
+    let mut commands = Vec::new();
+    match drag.mode {
+        SceneDragMode::MapPan => {
+            engine_canvas::with_map_host_mut(surface_id, |host| host.pointer_up_screen(sx, sy));
+            commands.extend(
+                engine_canvas::with_map_host_mut(surface_id, |host| {
+                    engine_canvas::map_interaction_commands(surface_id, controller_id, host)
+                })
+                .unwrap_or_default(),
+            );
+        }
+        SceneDragMode::MapMarquee {
+            start_x,
+            start_y,
+            method,
+            merge_mode,
+        } => {
+            let distance =
+                ((sx as f32 - start_x).powi(2) + (sy as f32 - start_y).powi(2)).sqrt();
+            if state.map_marquee_active && distance >= MAP_MARQUEE_THRESHOLD_PX {
+                let mut points = state.map_marquee_points.clone();
+                if method == "lasso" {
+                    points.push((sx as f32, sy as f32));
+                } else {
+                    points = vec![(start_x, start_y), (sx as f32, sy as f32)];
+                }
+                let crossing = engine_canvas::map_marquee_crossing(&method, start_x, sx as f32);
+                let (positions, routes) = engine_canvas::with_map_host(surface_id, |host| {
+                    query_map_feature_hits(host, &method, &points, crossing)
+                })
+                .unwrap_or_default();
+                commands.push(engine_canvas::map_cmd(
+                    controller_id,
+                    semio_framework_core::gis_map_commands::SET_FEATURE_SELECTION,
+                    json!({
+                        "surfaceId": surface_id,
+                        "positions": positions,
+                        "routes": routes,
+                        "mode": merge_mode,
+                    }),
+                ));
+            } else if distance < MAP_MARQUEE_THRESHOLD_PX {
+                let hit_json = engine_canvas::with_map_host(surface_id, |host| {
+                    host.hit_test_feature_json(sx, sy)
+                })
+                .unwrap_or_else(|| "null".into());
+                let hit: Value = serde_json::from_str(&hit_json).unwrap_or(Value::Null);
+                let (kind, id) = (
+                    hit.get("kind").and_then(|value| value.as_str()),
+                    hit.get("id").and_then(|value| value.as_str()),
+                );
+                if let (Some(kind), Some(id)) = (kind, id) {
+                    commands.push(engine_canvas::map_cmd(
+                        controller_id,
+                        semio_framework_core::gis_map_commands::SET_FEATURE_SELECTION,
+                        json!({
+                            "surfaceId": surface_id,
+                            "positions": if kind == "position" { vec![id] } else { Vec::<&str>::new() },
+                            "routes": if kind == "route" { vec![id] } else { Vec::<&str>::new() },
+                            "mode": merge_mode,
+                        }),
+                    ));
+                }
+            }
+        }
+        _ => {}
+    }
+    mutate_scene_state(surface_id, |state| {
+        state.drag = None;
+        state.map_marquee_points.clear();
+        state.map_marquee_active = false;
+    });
+    commands
+}
+
+fn render_gis_map(
+    scene: &UiComponentSceneNode,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    gpu: &mut ui_wgpu::GpuContext,
+    gis_map_states: &mut HashMap<String, GisMapSurface>,
+) {
+    let Some(map_scene) = &scene.gis_map else {
+        return render_placeholder("gis2d-map", bounds, ctx);
+    };
+    let inner = bounds;
+    gis_map_states.insert(
+        scene.surface_id.clone(),
+        GisMapSurface {
+            bounds: inner,
+            controller_id: scene.controller_id.clone(),
+            selection_method: map_scene.selection_method.clone(),
+        },
+    );
+    engine_canvas::paint_gis_map(gpu, ctx, scene, inner);
+    paint_gis_map_marquee(ctx, &scene.surface_id, inner, ctx.theme);
+}
+//#endregion GisMap
 
 //#region VirtualFileSystem
 #[derive(Deserialize)]
@@ -5536,7 +6592,7 @@ use crate::dock::{
     DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
 };
 use crate::interpreter::{framework_widget_context, render_ui_node};
-use crate::scenes::{clear_graph_node_context, resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, NodeGraphSurface};
+use crate::scenes::{clear_graph_node_context, push_gis_map_context_menu, resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, GisMapSurface, NodeGraphSurface};
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_commands,
     handle_world3d_pointer_button,
@@ -5567,8 +6623,6 @@ const S_PLAY_CATALOGUE_TAB_ID: &str = "s-play-catalogue";
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
 const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID: &str = "framework.display.layout";
 const FRAMEWORK_SETTINGS_GENERAL_TAB_ID: &str = "framework.settings.general";
-const DEFAULT_MEASURES_RAIL_WIDTH: f32 = 240.0;
-const DEFAULT_ENGAGEMENT_RAIL_WIDTH: f32 = 280.0;
 const CHROME_ICON_TINY: f32 = 14.0;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -5728,6 +6782,7 @@ pub struct ShellState {
     pub screen_h: f32,
     pub world3d_states: HashMap<String, World3dState>,
     pub node_graph_states: HashMap<String, NodeGraphSurface>,
+    pub gis_map_states: HashMap<String, GisMapSurface>,
     pub dock: DockState,
     pub active_left_kind: LeftPanelKind,
     pub active_right_kind: RightPanelKind,
@@ -5811,6 +6866,7 @@ impl ShellState {
             screen_h: 720.0,
             world3d_states: HashMap::new(),
             node_graph_states: HashMap::new(),
+            gis_map_states: HashMap::new(),
             dock: DockState::default(),
             active_left_kind: LeftPanelKind::Workbench,
             active_right_kind: RightPanelKind::Details,
@@ -5829,7 +6885,7 @@ impl ShellState {
             measures_folded: HashMap::new(),
             measures_expanded: HashMap::new(),
             measures_width: HashMap::new(),
-            measures_resize_origin_width: DEFAULT_MEASURES_RAIL_WIDTH,
+            measures_resize_origin_width: 0.0,
             engagement_inputs: HashMap::new(),
             compact_mode: false,
             expertise: "standard".into(),
@@ -5948,9 +7004,9 @@ impl ShellState {
             self.session = Some(ActiveSession {
                 plugin_id: plugin.plugin_id.clone(),
                 instance_id,
-                app,
+                app: app.clone(),
                 view_state: ViewState {
-                    active_mode_id: None,
+                    active_mode_id: app.default_mode_id.clone().or_else(|| app.modes.first().map(|m| m.id.clone())),
                     active_window_kind_id: self.active_window_id.clone(),
                     selection_json: None,
                     panel_json: None,
@@ -6068,20 +7124,27 @@ impl ShellState {
             return Ok(());
         };
         self.sync_dock();
+        self.window_ui.clear();
+        {
+            let plugin = self
+                .plugins
+                .iter()
+                .find(|p| p.plugin_id == session.plugin_id)
+                .ok_or("session plugin missing")?;
+            for kind in &session.app.window_kinds {
+                let node = plugin
+                    .render(session.instance_id, &kind.body_key, &session.view_state)
+                    .await?;
+                self.window_ui.insert(kind.id.clone(), node);
+            }
+        }
+        self.panel_ui.clear();
         self.ensure_framework_panel_ui(&session);
         let plugin = self
             .plugins
             .iter()
             .find(|p| p.plugin_id == session.plugin_id)
             .ok_or("session plugin missing")?;
-        self.window_ui.clear();
-        for kind in &session.app.window_kinds {
-            let node = plugin
-                .render(session.instance_id, &kind.body_key, &session.view_state)
-                .await?;
-            self.window_ui.insert(kind.id.clone(), node);
-        }
-        self.panel_ui.clear();
         for tab in &session.app.panel_tabs {
             let node = plugin
                 .render(session.instance_id, &tab.body_key, &session.view_state)
@@ -6473,6 +7536,18 @@ impl ShellState {
             return Ok(());
         }
         if button == 2 {
+            for (surface_id, surface) in &self.gis_map_states {
+                if surface.bounds.contains(x, y) {
+                    push_gis_map_context_menu(
+                        surface_id,
+                        &surface.controller_id,
+                        surface.bounds,
+                        x,
+                        y,
+                    );
+                    break;
+                }
+            }
             let hit = input.hit_at(x, y).cloned();
             self.open_context_menu(x, y, hit);
             self.right_click = RightClickState { pending: true, x, y };
@@ -6489,7 +7564,7 @@ impl ShellState {
                         self.measures_resize_origin_width = *self
                             .measures_width
                             .get(window_id)
-                            .unwrap_or(&DEFAULT_MEASURES_RAIL_WIDTH);
+                            .unwrap_or(&Theme::default().window_measures_default_width);
                         input.begin_drag(
                             x,
                             y,
@@ -6797,7 +7872,8 @@ impl ShellState {
                 match id {
                     id if id.starts_with("shell.measures.resize.") => {
                         if let Some(window_id) = self.measures_resize_window_id.clone() {
-                            let next = (self.measures_resize_origin_width - dx).clamp(160.0, 640.0);
+                            let next = (self.measures_resize_origin_width - dx)
+                                .clamp(theme.panel_min_width, theme.panel_max_width);
                             self.measures_width.insert(window_id, next);
                         }
                     }
@@ -7535,6 +8611,7 @@ impl ShellState {
     }
 
     async fn select_left_panel_tab(&mut self, tab_id: &str) -> Result<(), String> {
+        self.active_left_tab = Some(tab_id.to_string());
         if self.studio_mode {
             if let Some(session) = &self.session {
                 if session.app.id == S_PLAY_APP_ID {
@@ -7993,6 +9070,80 @@ fn measure_chrome_group_item(atlas: &mut FontAtlas, theme: &Theme, item: &Chrome
     theme.padding_standard * 2.0 + icon_w + text_w
 }
 
+struct WindowMeasuresRailOutcome {
+    chip_hit: Option<(Rect, String)>,
+    reserve_width: f32,
+}
+
+fn window_overlay_max_width(content_w: f32, inset: f32) -> f32 {
+    (content_w - inset * 2.0).max(0.0)
+}
+
+fn engagement_rail_width(theme: &Theme, content_w: f32, inset: f32, measures_reserve: f32) -> f32 {
+    let available = content_w - inset * 2.0 - measures_reserve;
+    theme
+        .window_engagement_max_width
+        .min(available.max(0.0))
+}
+
+fn measure_window_measure_height(
+    theme: &Theme,
+    collapsed_sections: &HashMap<String, bool>,
+    measure: &WindowMeasure,
+) -> f32 {
+    match measure {
+        WindowMeasure::Group {
+            id,
+            default_open,
+            children,
+            ..
+        } => {
+            let open =
+                !collapsed_sections.get(id).copied().unwrap_or(!default_open.unwrap_or(false));
+            let mut h = theme.control_height;
+            if open {
+                for child in children {
+                    h += measure_window_measure_height(theme, collapsed_sections, child);
+                }
+            }
+            h
+        }
+        WindowMeasure::Select { .. } | WindowMeasure::Slider { .. } => 16.0 + theme.control_height,
+        WindowMeasure::Toggle { .. } => theme.control_height,
+    }
+}
+
+fn measure_window_measures_body_height(
+    theme: &Theme,
+    collapsed_sections: &HashMap<String, bool>,
+    measures: &[WindowMeasure],
+) -> f32 {
+    measures
+        .iter()
+        .map(|measure| measure_window_measure_height(theme, collapsed_sections, measure))
+        .sum()
+}
+
+fn measure_engagement_body_height(theme: &Theme, engagement: &WindowEngagement) -> f32 {
+    let mut h = 0.0f32;
+    if let Some(options) = &engagement.options {
+        h += options.len() as f32 * (theme.control_height + 4.0);
+    }
+    if engagement.input.is_some() {
+        h += theme.control_height * 2.0 + 8.0;
+    }
+    if engagement.control.is_some() {
+        h += theme.control_height;
+    }
+    if let Some(status_rows) = &engagement.status {
+        h += status_rows.len() as f32 * theme.control_height;
+    }
+    if let Some(possibles) = &engagement.possible_engagements {
+        h += possibles.len() as f32 * (theme.control_height + 2.0);
+    }
+    h
+}
+
 fn render_chrome_group(
     draw: &mut DrawList,
     atlas: &mut FontAtlas,
@@ -8296,6 +9447,7 @@ impl ShellState {
         CONTEXT_MENU_SINK.with(|cell| cell.borrow_mut().clear());
         clear_graph_node_context();
         self.node_graph_states.clear();
+        self.gis_map_states.clear();
         self.widget_maps.clear_frame();
         let mut overlay_slot = Some(overlay);
         self.render_main_window(draw, &mut overlay_slot, atlas, icons, input, theme, body, gpu);
@@ -8451,8 +9603,13 @@ impl ShellState {
                         .map(|p| p.active_panel_tab)
                         .unwrap_or_else(|| S_PLAY_CATALOGUE_TAB_ID.into())
                 } else {
-                    self.left_tabs(session)
-                        .first()
+                    let tabs = self.left_tabs(session);
+                    if let Some(id) = &self.active_left_tab {
+                        if tabs.iter().any(|tab| tab.id == *id) {
+                            return id.clone();
+                        }
+                    }
+                    tabs.first()
                         .map(|t| t.id.clone())
                         .unwrap_or_else(|| FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into())
                 }
@@ -8464,11 +9621,13 @@ impl ShellState {
         if self.active_right_kind == RightPanelKind::Settings {
             return FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into();
         }
+        let tabs = self.right_tabs(session);
         if let Some(id) = &self.active_right_tab {
-            return id.clone();
+            if tabs.iter().any(|tab| tab.id == *id) {
+                return id.clone();
+            }
         }
-        self.right_tabs(session)
-            .first()
+        tabs.first()
             .map(|t| t.id.clone())
             .unwrap_or_default()
     }
@@ -8949,7 +10108,7 @@ impl ShellState {
                 open_selects,
                 Some(widget_maps),
             );
-            render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states);
+            render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states);
         }
         panel_draw.pop_scissor();
         panel_draw.end_glass_content();
@@ -9093,7 +10252,7 @@ impl ShellState {
         }
         let placements = self.dock.stack_body_rects(canvas, theme, &window_labels, atlas);
         let show_fallback = placements.is_empty();
-        for (_, mut content, window_id) in placements {
+        for (_, content, window_id) in placements {
             let window_kind = session
                 .app
                 .window_kinds
@@ -9101,19 +10260,25 @@ impl ShellState {
                 .find(|kind| kind.id == window_id)
                 .cloned();
             let mut window_chip_hits: Vec<(Rect, String)> = Vec::new();
+            if let Some(ui) = self.window_ui.get(&window_id).cloned() {
+                self.render_window_content(
+                    draw, overlay.as_deref_mut(), atlas, icons, input, theme, content, &ui, &window_id, gpu,
+                );
+            }
             if let Some(kind) = window_kind {
-                if let Some(hit) = self.render_window_measures_rail(
+                let measures_outcome = self.render_window_measures_rail(
                     draw,
                     overlay,
                     atlas,
                     icons,
                     input,
                     theme,
-                    &mut content,
+                    &content,
                     &window_id,
                     &kind,
                     gpu,
-                ) {
+                );
+                if let Some(hit) = measures_outcome.chip_hit {
                     window_chip_hits.push(hit);
                 }
                 if let Some(hit) = self.render_window_engagement_rail(
@@ -9123,18 +10288,14 @@ impl ShellState {
                     icons,
                     input,
                     theme,
-                    &mut content,
+                    &content,
                     &window_id,
                     &kind,
+                    measures_outcome.reserve_width,
                     gpu,
                 ) {
                     window_chip_hits.push(hit);
                 }
-            }
-            if let Some(ui) = self.window_ui.get(&window_id).cloned() {
-                self.render_window_content(
-                    draw, overlay.as_deref_mut(), atlas, icons, input, theme, content, &ui, &window_id, gpu,
-                );
             }
             for (rect, control_id) in window_chip_hits {
                 input.register_hit(HitTarget {
@@ -9313,7 +10474,7 @@ impl ShellState {
             open_selects,
             Some(widget_maps),
         );
-        render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states);
+        render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.gis_map_states);
         draw.pop_scissor();
     }
 
@@ -9643,18 +10804,21 @@ impl ShellState {
         icons: &IconAtlas,
         input: &mut InputState<CommandDescriptor>,
         theme: &Theme,
-        content: &mut Rect,
+        content: &Rect,
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
         gpu: &mut ui_wgpu::GpuContext,
-    ) -> Option<(Rect, String)> {
+    ) -> WindowMeasuresRailOutcome {
+        let inset = theme.gap_standard;
         let measures = self.measures_for_kind(kind);
+        if measures.is_empty() {
+            return WindowMeasuresRailOutcome {
+                chip_hit: None,
+                reserve_width: 0.0,
+            };
+        }
         let folded = self.measures_folded.get(window_id).copied().unwrap_or(true);
         let expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
-        let rail_w = *self
-            .measures_width
-            .get(window_id)
-            .unwrap_or(&DEFAULT_MEASURES_RAIL_WIDTH);
         if folded {
             let item = ChromeGroupItem {
                 control_id: "",
@@ -9665,8 +10829,8 @@ impl ShellState {
             };
             let chip_w = measure_chrome_group_item(atlas, theme, &item);
             let chip = Rect::new(
-                content.x + content.w - chip_w,
-                content.y + 8.0,
+                content.x + content.w - chip_w - inset,
+                content.y + inset,
                 chip_w,
                 theme.control_height,
             );
@@ -9675,11 +10839,46 @@ impl ShellState {
             } else {
                 render_chrome_group(draw, atlas, icons, input, theme, chip, &[item], false);
             }
-            return Some((chip, format!("shell.measures.unfold.{window_id}")));
+            return WindowMeasuresRailOutcome {
+                chip_hit: Some((chip, format!("shell.measures.unfold.{window_id}"))),
+                reserve_width: chip_w + inset,
+            };
         }
-        let width = if expanded { content.w * 0.45 } else { rail_w };
-        let rail = Rect::new(content.x + content.w - width, content.y, width, content.h);
-        let glass = draw.push_glass([rail.x, rail.y, rail.w, rail.h], theme.border_radius, GlassTier::WindowOptions, theme);
+        let max_w = window_overlay_max_width(content.w, inset);
+        let default_w = *self
+            .measures_width
+            .get(window_id)
+            .unwrap_or(&theme.window_measures_default_width);
+        let width = if expanded {
+            content.w
+        } else {
+            default_w
+                .clamp(theme.panel_min_width, theme.panel_max_width)
+                .min(max_w)
+        };
+        let body_content_h =
+            measure_window_measures_body_height(theme, &self.collapsed_sections, &measures);
+        let rail_h = if expanded {
+            content.h
+        } else {
+            let card_h = theme.panel_header_height + theme.gap_standard * 2.0 + body_content_h;
+            card_h.min((content.h - inset * 2.0).max(theme.panel_header_height))
+        };
+        let (rail_x, rail_y) = if expanded {
+            (content.x, content.y)
+        } else {
+            (
+                content.x + content.w - width - inset,
+                content.y + inset,
+            )
+        };
+        let rail = Rect::new(rail_x, rail_y, width, rail_h);
+        let glass = draw.push_glass(
+            [rail.x, rail.y, rail.w, rail.h],
+            theme.border_radius,
+            GlassTier::WindowOptions,
+            theme,
+        );
         draw.begin_glass_content(glass);
         let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
         draw.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
@@ -9715,7 +10914,7 @@ impl ShellState {
             control_id: Some(format!("shell.measures.focus.{window_id}")),
             kind: HitKind::Button,
             drag_axis: None,
-        drag_data: None,
+            drag_data: None,
         });
         let fold_w = measure_chrome_group_item(atlas, theme, &fold_item);
         render_chrome_group(
@@ -9734,7 +10933,7 @@ impl ShellState {
             control_id: Some(format!("shell.measures.fold.{window_id}")),
             kind: HitKind::Button,
             drag_axis: None,
-        drag_data: None,
+            drag_data: None,
         });
         let body = Rect::new(
             rail.x + theme.gap_standard,
@@ -9742,7 +10941,9 @@ impl ShellState {
             rail.w - theme.gap_standard * 2.0,
             rail.h - theme.panel_header_height - theme.gap_standard * 2.0,
         );
+        let mut y = body.y;
         for measure in &measures {
+            let h = measure_window_measure_height(theme, &self.collapsed_sections, measure);
             self.render_window_measure(
                 draw,
                 overlay,
@@ -9750,10 +10951,11 @@ impl ShellState {
                 icons,
                 input,
                 theme,
-                body,
+                Rect::new(body.x, y, body.w, h),
                 measure,
                 gpu,
             );
+            y += h;
         }
         if !expanded {
             let resize = Rect::new(rail.x - 3.0, rail.y, 6.0, rail.h);
@@ -9767,8 +10969,10 @@ impl ShellState {
             });
         }
         draw.end_glass_content();
-        content.w -= width + theme.gap_standard;
-        None
+        WindowMeasuresRailOutcome {
+            chip_hit: None,
+            reserve_width: if expanded { width } else { width + inset },
+        }
     }
 
     fn render_window_measure(
@@ -9782,9 +10986,10 @@ impl ShellState {
         bounds: Rect,
         measure: &WindowMeasure,
         gpu: &mut ui_wgpu::GpuContext,
-    ) {
+    ) -> f32 {
         use semio_framework_core::layout::MeasureSelectItem;
         use ui_wgpu::widgets::{render_widget, ControlNode, WidgetNode};
+        let height = measure_window_measure_height(theme, &self.collapsed_sections, measure);
         let mut y = bounds.y;
         match measure {
             WindowMeasure::Group {
@@ -9811,16 +11016,19 @@ impl ShellState {
                     control_id: Some(format!("shell.measure.group.{id}")),
                     kind: HitKind::Button,
                     drag_axis: None,
-                drag_data: None,
+                    drag_data: None,
                 });
                 y += theme.control_height;
                 if open {
                     for child in children {
+                        let child_h =
+                            measure_window_measure_height(theme, &self.collapsed_sections, child);
                         self.render_window_measure(
                             draw, overlay, atlas, icons, input, theme,
-                            Rect::new(bounds.x + 12.0, y, bounds.w - 12.0, bounds.h - (y - bounds.y)),
+                            Rect::new(bounds.x + 12.0, y, bounds.w - 12.0, child_h),
                             child, gpu,
                         );
+                        y += child_h;
                     }
                 }
             }
@@ -9916,6 +11124,7 @@ impl ShellState {
                 render_widget(&node, rect, &mut ctx);
             }
         }
+        height
     }
 
     fn render_window_engagement_rail(
@@ -9926,11 +11135,13 @@ impl ShellState {
         icons: &IconAtlas,
         input: &mut InputState<CommandDescriptor>,
         theme: &Theme,
-        content: &mut Rect,
+        content: &Rect,
         window_id: &str,
         kind: &semio_framework_core::WindowKindDefinition,
+        measures_reserve: f32,
         gpu: &mut ui_wgpu::GpuContext,
     ) -> Option<(Rect, String)> {
+        let inset = theme.gap_standard;
         let measures_expanded = self
             .measures_expanded
             .get(window_id)
@@ -9965,7 +11176,12 @@ impl ShellState {
                 kind: HitKind::Button,
             };
             let chip_w = measure_chrome_group_item(atlas, theme, &item);
-            let chip = Rect::new(content.x, content.y + 8.0, chip_w, theme.control_height);
+            let chip = Rect::new(
+                content.x + inset,
+                content.y + inset,
+                chip_w,
+                theme.control_height,
+            );
             if let Some(chip_draw) = overlay.as_deref_mut() {
                 render_chrome_group(chip_draw, atlas, icons, input, theme, chip, &[item], false);
             } else {
@@ -9973,9 +11189,20 @@ impl ShellState {
             }
             return Some((chip, format!("shell.engagement.toggle.{window_id}")));
         }
-        let rail_w = DEFAULT_ENGAGEMENT_RAIL_WIDTH;
-        let rail = Rect::new(content.x, content.y, rail_w, content.h);
-        let glass = draw.push_glass([rail.x, rail.y, rail.w, rail.h], theme.border_radius, GlassTier::WindowOptions, theme);
+        let rail_w = engagement_rail_width(theme, content.w, inset, measures_reserve);
+        if rail_w <= 0.0 {
+            return None;
+        }
+        let body_content_h = measure_engagement_body_height(theme, &engagement);
+        let card_h = theme.panel_header_height + theme.gap_standard * 2.0 + body_content_h;
+        let rail_h = card_h.min((content.h - inset * 2.0).max(theme.panel_header_height));
+        let rail = Rect::new(content.x + inset, content.y + inset, rail_w, rail_h);
+        let glass = draw.push_glass(
+            [rail.x, rail.y, rail.w, rail.h],
+            theme.border_radius,
+            GlassTier::WindowOptions,
+            theme,
+        );
         draw.begin_glass_content(glass);
         let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
         draw.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
@@ -10006,7 +11233,7 @@ impl ShellState {
             drag_axis: None,
             drag_data: None,
         });
-        let mut y = rail.y + theme.panel_header_height;
+        let mut y = rail.y + theme.panel_header_height + theme.gap_standard;
         if let Some(options) = &engagement.options {
             for option in options {
                 let label = option.label.clone().unwrap_or_else(|| option.id.clone());
@@ -10028,7 +11255,7 @@ impl ShellState {
                         control_id: Some(format!("shell.engagement.option.{}.{}", window_id, option.id)),
                         kind: HitKind::Button,
                         drag_axis: None,
-                    drag_data: None,
+                        drag_data: None,
                     });
                 }
                 y += theme.control_height + 4.0;
@@ -10048,6 +11275,7 @@ impl ShellState {
                 Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height),
                 control, gpu,
             );
+            y += theme.control_height;
         }
         if let Some(status_rows) = &engagement.status {
             for row in status_rows {
@@ -10075,14 +11303,12 @@ impl ShellState {
                         control_id: Some(format!("shell.engagement.possible.{}.{}", window_id, possible.id)),
                         kind: HitKind::Button,
                         drag_axis: None,
-                    drag_data: None,
+                        drag_data: None,
                     });
                 }
             }
         }
         draw.end_glass_content();
-        content.x += rail_w + theme.gap_standard;
-        content.w -= rail_w + theme.gap_standard;
         None
     }
 
@@ -10485,6 +11711,7 @@ use infinite_world::{
 use semio_framework_core::CommandDescriptor;
 use shell::ShellState;
 use std::cell::RefCell;
+use std::io::Read;
 use std::rc::Rc;
 use std::sync::Arc;
 use ui_wgpu::{
@@ -10579,6 +11806,22 @@ struct AppRuntime {
     native_plugin_mtimes: std::collections::HashMap<std::path::PathBuf, std::time::SystemTime>,
     #[cfg(not(target_arch = "wasm32"))]
     native_reload_pending: bool,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn fetch_map_tile_bytes_blocking(url: &str) -> Option<Vec<u8>> {
+    if !url.starts_with("http://") && !url.starts_with("https://") {
+        return None;
+    }
+    let mut response = ureq::get(url).call().ok()?;
+    let mut bytes = Vec::new();
+    response.into_reader().read_to_end(&mut bytes).ok()?;
+    Some(bytes)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn fetch_map_tile_bytes_blocking(_url: &str) -> Option<Vec<u8>> {
+    None
 }
 
 impl AppRuntime {
@@ -10681,6 +11924,30 @@ impl AppRuntime {
                     }
                 });
             }
+            let mut map_commands = Vec::new();
+            for (surface_id, surface) in &self.shell.gis_map_states {
+                if surface.bounds.contains(x, y) {
+                    map_commands.extend(engine_canvas::gis_map_wheel(
+                        surface_id,
+                        &surface.controller_id,
+                        surface.bounds,
+                        x,
+                        y,
+                        wheel_delta,
+                        ctrl,
+                    ));
+                }
+            }
+            if !map_commands.is_empty() {
+                let runtime = self.self_weak.clone();
+                spawn_app_task(async move {
+                    if let Some(runtime) = runtime.upgrade() {
+                        if let Ok(mut app) = runtime.try_borrow_mut() {
+                            app.dispatch_commands(map_commands).await;
+                        }
+                    }
+                });
+            }
         }
         ICON_ATLAS_RUNTIME.with(|cell| {
             if let Some(atlas) = cell.borrow_mut().take() {
@@ -10736,19 +12003,33 @@ impl AppRuntime {
                     let Ok(app) = runtime.try_borrow() else {
                         return;
                     };
-                    collect_pending_glb_fetches(&app.shell.world3d_states)
+                    let glb = collect_pending_glb_fetches(&app.shell.world3d_states);
+                    let map = engine_canvas::collect_pending_map_tile_fetches();
+                    (glb, map)
                 };
-                let mut fetched = Vec::new();
-                for item in pending {
+                let mut fetched_glb = Vec::new();
+                for item in pending.0 {
                     if let Some(bytes) = fetch_url_bytes(&item.url).await {
-                        fetched.push((item.surface_id, item.url, bytes));
+                        fetched_glb.push((item.surface_id, item.url, bytes));
+                    }
+                }
+                let mut fetched_map = Vec::new();
+                for item in pending.1 {
+                    let bytes = fetch_url_bytes(&item.url)
+                        .await
+                        .or_else(|| fetch_map_tile_bytes_blocking(&item.url));
+                    if let Some(bytes) = bytes {
+                        fetched_map.push((item, bytes));
                     }
                 }
                 if let Ok(mut app) = runtime.try_borrow_mut() {
-                    for (surface_id, url, bytes) in fetched {
+                    for (surface_id, url, bytes) in fetched_glb {
                         if let Some(state) = app.shell.world3d_states.get_mut(&surface_id) {
                             apply_glb_bytes(state, &url, &bytes);
                         }
+                    }
+                    for (fetch, bytes) in fetched_map {
+                        engine_canvas::apply_map_tile_bytes(&fetch.surface_id, &fetch, &bytes);
                     }
                     app.asset_poll_pending = false;
                 };
@@ -10873,6 +12154,22 @@ impl AppRuntime {
             if !graph_commands.is_empty() {
                 self.dispatch_commands(graph_commands).await;
             }
+            let mut map_commands = Vec::new();
+            for (surface_id, surface) in &self.shell.gis_map_states {
+                if !surface.bounds.contains(x, y) {
+                    continue;
+                }
+                map_commands.extend(scenes::gis_map_pointer_up(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                ));
+            }
+            if !map_commands.is_empty() {
+                self.dispatch_commands(map_commands).await;
+            }
             return;
         }
         let mut world_commands = Vec::new();
@@ -10937,6 +12234,38 @@ impl AppRuntime {
         if !graph_commands.is_empty() {
             self.dispatch_commands(graph_commands).await;
         }
+        let mut map_commands = Vec::new();
+        for (surface_id, surface) in &self.shell.gis_map_states {
+            if !surface.bounds.contains(x, y) {
+                continue;
+            }
+            if down {
+                map_commands.extend(scenes::gis_map_pointer_down(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                    button,
+                    modifiers.shift,
+                    modifiers.ctrl,
+                    modifiers.alt,
+                    &surface.selection_method,
+                ));
+            } else {
+                map_commands.extend(scenes::gis_map_pointer_up(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                ));
+            }
+        }
+        if !map_commands.is_empty() {
+            self.dispatch_commands(map_commands).await;
+            return;
+        }
         if let Err(err) = self
             .shell
             .handle_pointer_button(x, y, down, button, &mut self.input)
@@ -10983,10 +12312,16 @@ impl AppRuntime {
         }
         let mut world_commands = Vec::new();
         for state in self.shell.world3d_states.values_mut() {
+            log_debug(&format!(
+                "[DEBUG] pointer_move x={x} y={y} bounds={:?} contains={}",
+                state.bounds,
+                state.bounds.contains(x, y)
+            ));
             if !state.bounds.contains(x, y) {
                 continue;
             }
             if let Some(command) = handle_world3d_pointer_move(state, x, y, down, button) {
+                log_debug(&format!("[DEBUG] pointer_move produced command={:?}", command));
                 apply_world_command_preview(state, &command);
                 world_commands.push(command);
             }
@@ -11012,6 +12347,22 @@ impl AppRuntime {
         }
         if !graph_commands.is_empty() {
             self.dispatch_commands(graph_commands).await;
+        }
+        let mut map_commands = Vec::new();
+        for (surface_id, surface) in &self.shell.gis_map_states {
+            if surface.bounds.contains(x, y) {
+                map_commands.extend(scenes::gis_map_pointer_move(
+                    surface_id,
+                    &surface.controller_id,
+                    surface.bounds,
+                    x,
+                    y,
+                    down,
+                ));
+            }
+        }
+        if !map_commands.is_empty() {
+            self.dispatch_commands(map_commands).await;
         }
         if !world_commands.is_empty() {
             self.dispatch_commands(world_commands).await;

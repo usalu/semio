@@ -1,0 +1,14 @@
+{
+  "title": "Finish Procedural 3d End to End",
+  "emoji": "🏙️",
+  "status": "closed",
+  "description": "Fix procedural3d wasm plugin build and verify dev:procedural:3d boots end-to-end with flow graph and 3d preview.",
+  "summary": "Fixed wasm plugin builds by correcting getrandom_backend cfg quoting in .cargo/config.toml (nightly rustc rejects unquoted value syntax). Removed duplicate GraphContextMenuItem type in node-graph-host.tsx that blocked React lazy-load of the flow graph. Rebuilt procedural3d_plugin.wasm, refreshed plugin-modules, and verified dev:procedural:3d boots with flow graph + world-3d preview via e2e-verify.ts (preview ratio 1.0, no console errors).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1838"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪0ae78f8d9a814f3fb93338579f64ce21"
+  ]
+}

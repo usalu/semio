@@ -850,7 +850,7 @@ if (-not $SkipGlobalCliInstall) {
     $cargoConfigPath = Join-HomePath @(".cargo", "config.toml")
     @"
 [target.wasm32-unknown-unknown]
-rustflags = ["--cfg", "getrandom_backend=wasm_js"]
+rustflags = ['--cfg', 'getrandom_backend="wasm_js"']
 "@ | Set-Content -Path $cargoConfigPath -Encoding UTF8
 }
 #endregion 🌐GlobalCliInstall

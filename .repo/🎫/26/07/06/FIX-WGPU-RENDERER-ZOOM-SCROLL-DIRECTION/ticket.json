@@ -3,7 +3,7 @@
   "emoji": "🔍",
   "status": "closed",
   "description": "Fix the inverted scroll wheel zoom direction in the wgpu renderer",
-  "summary": "Fixed UI mirroring issue by restoring shader clip_position calculation in BLUR_DOWNSAMPLE_SHADER and SCENE_BLIT_SHADER.",
+  "summary": "Fixed 3D zoom scroll direction by changing handle_world3d_wheel to use delta instead of -delta under the winit platform layer.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1829"
   },
@@ -11,6 +11,7 @@
   "sessions": [
     "⚪262642a2381f4d3b995718ef4b274123",
     "⚪3cb7e0a4b0554f18bdd71decaef95319",
-    "⚪10315d276cdd4646a042e177a15208f3"
+    "⚪10315d276cdd4646a042e177a15208f3",
+    "⚪0b5c0cf376fe403e935d9381f03b572b"
   ]
 }

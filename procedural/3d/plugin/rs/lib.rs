@@ -11,7 +11,7 @@ use semio_framework_plugin::{
     export_mesh_glb_bytes, export_mesh_obj, handle_generation_command, merge_world_selection_ids,
     mesh_from_kind, render_generation_form_body, render_generation_preview_text, render_generations_tree,
     selected_generation, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
-    ui_stack_vertical, ui_text, App, world3d_default_camera, world3d_scene, world3d_selection_json,
+    ui_stack_vertical, ui_text, App, world3d_scene, world3d_selection_json,
     CommandDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle, UiControlNode,
     UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,

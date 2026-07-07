@@ -1224,6 +1224,42 @@ export const FRAMEWORK_OS_PLAYGROUND_PORT_ENV: Readonly<Record<string, string>> 
 	presentation: "PRESENTATION_PLAY_PORT",
 };
 
+/** @emoji 🔌 Default dev ports (React and Wgpu) mapped per plugin id. */
+export const FRAMEWORK_OS_PLAYGROUND_DEFAULT_PORTS: Readonly<Record<string, { readonly react: number; readonly wgpu: number }>> = {
+	puzzle2d: { react: 6012, wgpu: 6112 },
+	puzzle3d: { react: 6013, wgpu: 6113 },
+	puzzle5d: { react: 6014, wgpu: 6114 },
+	"reasoning-wires": { react: 6015, wgpu: 6115 },
+	flow: { react: 6016, wgpu: 6116 },
+	dag: { react: 6017, wgpu: 6117 },
+	procedural3d: { react: 6018, wgpu: 6118 },
+	shooting: { react: 6019, wgpu: 6119 },
+	cad: { react: 6020, wgpu: 6120 },
+	procedural2d: { react: 6021, wgpu: 6121 },
+	gis2d: { react: 6040, wgpu: 6140 },
+	presentation: { react: 6051, wgpu: 6151 },
+	trinity: { react: 6054, wgpu: 6154 },
+	"trinity-rewrite": { react: 6056, wgpu: 6156 },
+	forms: { react: 6058, wgpu: 6158 },
+	raster: { react: 6060, wgpu: 6160 },
+	writer: { react: 6062, wgpu: 6162 },
+	draw: { react: 6064, wgpu: 6164 },
+	s: { react: 6070, wgpu: 6066 },
+	vcs: { react: 6075, wgpu: 6175 },
+	imperative: { react: 6076, wgpu: 6176 },
+	sequence: { react: 6077, wgpu: 6177 },
+	lowpoly: { react: 6078, wgpu: 6178 },
+	layout: { react: 6079, wgpu: 6179 },
+	note: { react: 6080, wgpu: 6180 },
+};
+
+/** @emoji 🔌 Resolves the default dev port for a given plugin and renderer. */
+export function frameworkOsPlaygroundDefaultPort(plugin: string, renderer: string): number {
+	const spec = FRAMEWORK_OS_PLAYGROUND_DEFAULT_PORTS[plugin];
+	if (!spec) return 6066;
+	return renderer === "wgpu" ? spec.wgpu : spec.react;
+}
+
 /** @emoji 🎯 Resolves `bun ./script.ts dev …` segments to a framework OS plugin filter. */
 export function resolveFrameworkOsPlaygroundPlugin(
 	segments: readonly string[],
@@ -1245,12 +1281,14 @@ export function frameworkOsPlaygroundDevEnv(
 	extra: NodeJS.ProcessEnv = {},
 	env: NodeJS.ProcessEnv = process.env,
 ): NodeJS.ProcessEnv {
+	const renderer = env.SEMIO_RENDERER ?? "react";
 	const portEnv = FRAMEWORK_OS_PLAYGROUND_PORT_ENV[plugin];
-	const port = portEnv && env[portEnv] ? { S_OS_PORT: env[portEnv] } : {};
+	const defaultPort = frameworkOsPlaygroundDefaultPort(plugin, renderer);
+	const portVal = (portEnv && env[portEnv]) || String(defaultPort);
 	return devToolingEnv({
 		SEMIO_PLUGIN: plugin,
-		SEMIO_RENDERER: env.SEMIO_RENDERER ?? "react",
-		...port,
+		SEMIO_RENDERER: renderer,
+		S_OS_PORT: portVal,
 		...extra,
 	});
 }

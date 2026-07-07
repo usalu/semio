@@ -1789,7 +1789,7 @@ pub fn handle_world3d_pointer_drag(
 }
 
 pub fn handle_world3d_wheel(state: &mut World3dState, delta: f32) {
-    state.orbit.zoom(-delta);
+    state.orbit.zoom(delta);
 }
 
 fn merge_string_ids(existing: &[String], incoming: &[String], merge: &str) -> Vec<String> {
@@ -1894,7 +1894,28 @@ pub fn ingest_glb_mesh(state: &mut World3dState, url: &str, mesh: MeshData, mesh
     store_mesh(state, mesh_id, mesh_from_data(&mesh));
 }
 
+#[cfg(target_arch = "wasm32")]
+fn debug_log_world(message: &str) {
+    web_sys::console::log_1(&wasm_bindgen::JsValue::from_str(message));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn debug_log_world(message: &str) {
+    eprintln!("{message}");
+}
+
 fn pick_hover_command(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> Option<CommandDescriptor> {
+    let debug_hit = pick_instance_at(state, x, y, inner);
+    debug_log_world(&format!(
+        "[DEBUG] pick_hover_command x={x} y={y} inner={:?} granularity={} component_mode_active={} debug_pick_instance_at={:?} local_hover_id={:?} draws_len={} meshes_len={}",
+        inner,
+        state.granularity,
+        component_mode_active(state),
+        debug_hit,
+        state.local_hover_id,
+        state.draws.len(),
+        state.meshes.len(),
+    ));
     if state.active_tool == "brush" {
         let hit = pick_vortex_at(state, x, y, inner);
         if state.hovered_vortex_id == hit {
@@ -2257,6 +2278,7 @@ fn pick_component_at(
                     }
                 }
             }
+            debug_log_world(&format!("[DEBUG] pick_component_at vertex best={:?}", best));
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "edge" => {
@@ -2289,6 +2311,7 @@ fn pick_component_at(
                     }
                 }
             }
+            debug_log_world(&format!("[DEBUG] pick_component_at edge best={:?}", best));
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         "face" => {
@@ -2312,6 +2335,7 @@ fn pick_component_at(
                     }
                 }
             }
+            debug_log_world(&format!("[DEBUG] pick_component_at face best={:?}", best));
             return best.map(|(_, id, object_id)| (granularity.to_string(), id, object_id));
         }
         _ => {}
@@ -2392,15 +2416,65 @@ fn pick_instance_at(state: &World3dState, x: f32, y: f32, inner: Rect) -> Option
     let local_x = x - inner.x;
     let local_y = y - inner.y;
     let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, inner.w, inner.h);
+    debug_log_world(&format!(
+        "[DEBUG] pick_instance_at local=({local_x},{local_y}) origin={:?} dir={:?} draws={}",
+        origin, dir, state.draws.len()
+    ));
     let mut best: Option<(f32, String)> = None;
     for draw in &state.draws {
         let Some(mesh) = state.meshes.get(&draw.mesh_key) else {
+            debug_log_world(&format!(
+                "[DEBUG] pick_instance_at MISSING mesh_key={} available_keys={:?}",
+                draw.mesh_key,
+                state.meshes.keys().collect::<Vec<_>>()
+            ));
             continue;
         };
+        debug_log_world(&format!(
+            "[DEBUG] pick_instance_at mesh_key={} aabb_min={:?} aabb_max={:?} instances={} tris={}",
+            draw.mesh_key, mesh.aabb_min, mesh.aabb_max, draw.instances.len(), mesh.indices.len() / 3
+        ));
         for instance in &draw.instances {
+            let (world_min, world_max) = transform_aabb(instance.model, mesh.aabb_min, mesh.aabb_max);
+            let aabb_hit = ray_aabb_slab(origin, dir, world_min, world_max);
+            debug_log_world(&format!(
+                "[DEBUG] pick_instance_at instance.id={} world_min={:?} world_max={:?} aabb_hit={:?}",
+                instance.id, world_min, world_max, aabb_hit
+            ));
             if let Some(distance) = ray_pick_instance(origin, dir, mesh, instance) {
                 if best.as_ref().map_or(true, |(best_distance, _)| distance < *best_distance) {
                     best = Some((distance, instance.id.clone()));
+                }
+            } else {
+                for (ti, tri) in mesh.indices.chunks_exact(3).enumerate() {
+                    let get = |idx: u32| {
+                        let i = idx as usize * 3;
+                        instance.model.transform_point(Vec3::new(
+                            mesh.positions[i],
+                            mesh.positions[i + 1],
+                            mesh.positions[i + 2],
+                        ))
+                    };
+                    let a = get(tri[0]);
+                    let b = get(tri[1]);
+                    let c = get(tri[2]);
+                    let edge1 = Vec3::new(b.x - a.x, b.y - a.y, b.z - a.z);
+                    let edge2 = Vec3::new(c.x - a.x, c.y - a.y, c.z - a.z);
+                    let h = dir.cross(edge2);
+                    let det = edge1.dot(h);
+                    if det.abs() < 1e-8 {
+                        continue;
+                    }
+                    let f = 1.0 / det;
+                    let s = Vec3::new(origin.x - a.x, origin.y - a.y, origin.z - a.z);
+                    let u = f * s.dot(h);
+                    let q = s.cross(edge1);
+                    let v = f * dir.dot(q);
+                    let t = f * edge2.dot(q);
+                    debug_log_world(&format!(
+                        "[DEBUG] tri#{ti} u={u} v={v} t={t} accept={}",
+                        (0.0..=1.0).contains(&u) && v >= 0.0 && u + v <= 1.0 && t > 1e-4
+                    ));
                 }
             }
         }
@@ -2749,6 +2823,7 @@ mod tests {
             table: None,
             raster: None,
             virtual_file_system: None,
+            gis_map: None,
         }
     }
 

@@ -61,6 +61,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg \
     lsb-release \
     libatomic1 \
+    mold \
     openjdk-21-jre-headless \
     netbase \
     && apt-get clean \

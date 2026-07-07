@@ -1304,15 +1304,6 @@ export function SelectionAlignChrome({
 
 //#region 🔖flow-graph-canvas-host
 
-//#region Types
-type GraphContextMenuItem = {
-	readonly id: string;
-	readonly label: string;
-	readonly command: string;
-	readonly args?: Record<string, unknown>;
-};
-//#endregion Types
-
 //#region Sync
 function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
 	if (scene.operatorsJson) session.setNeuronKindInfosJson(scene.operatorsJson);

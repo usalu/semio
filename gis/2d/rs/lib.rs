@@ -2097,6 +2097,85 @@ impl MapHost {
         serde_json::to_string(&serde_json::json!({ "x": s.x, "y": s.y })).unwrap_or_else(|_| "null".into())
     }
 
+    pub fn focus_feature(&mut self, kind: &str, id: &str) -> bool {
+        let limits: serde_json::Value =
+            serde_json::from_str(&gis_map_camera_limits_json_for_viewport(&self.viewport)).unwrap_or_default();
+        let min_zoom = limits.get("min").and_then(|value| value.as_f64()).unwrap_or(0.05);
+        let max_zoom = limits.get("max").and_then(|value| value.as_f64()).unwrap_or(64.0);
+        match kind {
+            "position" => {
+                let Some(pos) = self.positions.get(id) else {
+                    return false;
+                };
+                let world = projection::lonlat_to_world(pos.lon, pos.lat);
+                self.camera.x = world.x;
+                self.camera.y = world.y;
+                self.camera.zoom = (self.camera.zoom * 1.75).clamp(min_zoom, max_zoom);
+                self.clamp_camera_to_world();
+                self.push_event(
+                    "camera",
+                    serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }),
+                );
+                true
+            }
+            "route" => {
+                let Some(route) = self.routes.get(id) else {
+                    return false;
+                };
+                if route.points.len() < 2 {
+                    return false;
+                }
+                let mut min_x = f64::INFINITY;
+                let mut max_x = f64::NEG_INFINITY;
+                let mut min_y = f64::INFINITY;
+                let mut max_y = f64::NEG_INFINITY;
+                for [lon, lat] in &route.points {
+                    let world = projection::lonlat_to_world(*lon, *lat);
+                    min_x = min_x.min(world.x);
+                    max_x = max_x.max(world.x);
+                    min_y = min_y.min(world.y);
+                    max_y = max_y.max(world.y);
+                }
+                let span = (max_x - min_x).max(max_y - min_y).max(64.0);
+                let fit_zoom = ((self.viewport.width as f64) * 0.55 / span).clamp(min_zoom, max_zoom);
+                self.camera.x = (min_x + max_x) * 0.5;
+                self.camera.y = (min_y + max_y) * 0.5;
+                self.camera.zoom = fit_zoom;
+                self.clamp_camera_to_world();
+                self.push_event(
+                    "camera",
+                    serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }),
+                );
+                true
+            }
+            _ => false,
+        }
+    }
+
+    pub fn has_tile(&self, key: &str) -> bool {
+        self.tile_images.contains_key(key)
+    }
+
+    pub fn has_vector_tile(&self, key: &str) -> bool {
+        self.vector_tiles.contains_key(key)
+    }
+
+    pub fn selected_positions_json(&self) -> Vec<String> {
+        self.selected_positions.iter().cloned().collect()
+    }
+
+    pub fn selected_routes_json(&self) -> Vec<String> {
+        self.selected_routes.iter().cloned().collect()
+    }
+
+    pub fn hovered_kind(&self) -> Option<&str> {
+        self.hovered_kind.as_deref()
+    }
+
+    pub fn hovered_id(&self) -> Option<&str> {
+        self.hovered_id.as_deref()
+    }
+
     fn push_event(&mut self, kind: &str, payload: serde_json::Value) {
         self.events.push(serde_json::json!({ "type": kind, "payload": payload }));
     }
@@ -4072,3 +4151,26 @@ mod gis_map_vcs_tests {
     }
 }
 // #endregion 🔖DocumentVcs
+
+// #region 🔖OpenUrl
+/** @emoji 🌐 Opens a URL in the system browser when available. */
+pub fn open_url(url: &str) -> bool {
+    if url.trim().is_empty() {
+        return false;
+    }
+    #[cfg(target_arch = "wasm32")]
+    {
+        use wasm_bindgen::JsValue;
+        return web_sys::window()
+            .and_then(|window| window.open_with_url(url).ok())
+            .flatten()
+            .is_some();
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = url;
+        eprintln!("[DEBUG] open_url native fallback: {url}");
+        false
+    }
+}
+// #endregion 🔖OpenUrl

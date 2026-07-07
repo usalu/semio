@@ -4838,6 +4838,19 @@ mod tests {
     }
 
     #[test]
+    fn paint_scene_dark_theme_paints_edges_and_nodes() {
+        let mut host = host_with_test_bridge();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_canvas_theme_dark(true);
+        let mut scene = cavas::Scene::new();
+        host.paint_scene(&mut scene, 1280, 800, 1.0);
+        assert!(
+            scene.path_count() > 8,
+            "populated fixture should paint edges, handles, and node bodies under dark board theme"
+        );
+    }
+
+    #[test]
     fn replace_fixture_preserves_kind_infos_and_named_input_ports() {
         let mut host = host_with_test_bridge();
         host.replace_fixture(FlowFixture {
@@ -5716,7 +5729,7 @@ mod tests {
     #[test]
     fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
-        let json = include_str!("../../procedural/3d/example/rectangle-extrude-volume.procedural.json");
+        let json = include_str!("../../../procedural/3d/example/rectangle-extrude-volume.procedural.json");
         let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
         let mut host = FlowHost::from_fixture(fixture);
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
@@ -5743,7 +5756,7 @@ mod tests {
     #[test]
     fn rectangle_extrude_fixture_evaluates_solid_output() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
-        let json = include_str!("../../procedural/3d/example/rectangle-extrude-volume.procedural.json");
+        let json = include_str!("../../../procedural/3d/example/rectangle-extrude-volume.procedural.json");
         let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
         let mut host = FlowHost::from_fixture(fixture);
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
@@ -5760,7 +5773,7 @@ mod tests {
 
     #[test]
     fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
-        let json = include_str!("../../procedural/3d/example/hexagonal-mushroom-column.procedural.json");
+        let json = include_str!("../../../procedural/3d/example/hexagonal-mushroom-column.procedural.json");
         let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
         let mut host = FlowHost::from_fixture(fixture);
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());

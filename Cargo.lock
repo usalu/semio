@@ -5209,6 +5209,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "os-hub"
+version = "0.1.0"
+dependencies = [
+ "axum 0.8.9",
+ "dashmap",
+ "futures",
+ "serde",
+ "serde_json",
+ "sqlx-core",
+ "sqlx-postgres",
+ "thiserror 2.0.18",
+ "time",
+ "tokio",
+ "tower-http 0.6.10",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
 name = "palette"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6792,6 +6812,7 @@ dependencies = [
  "flow_core",
  "framework_editor",
  "framework_graph",
+ "gis_2d",
  "image",
  "infinite_cavas",
  "infinite_world",
@@ -6805,6 +6826,7 @@ dependencies = [
  "serde_json",
  "tiny-skia",
  "ui_wgpu",
+ "ureq",
  "usvg 0.45.1",
  "vello",
  "wasm-bindgen",

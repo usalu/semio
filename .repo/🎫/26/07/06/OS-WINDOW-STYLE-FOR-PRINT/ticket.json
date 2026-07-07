@@ -1,0 +1,16 @@
+{
+  "title": "OS Window Style for Print",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "Port OS window chrome styling into print LaTeX framework: chrome tokens, semio-window.sty, chapter/section auto-windowing.",
+  "summary": "Fixed broken navbar/footer rendering. `semio-logo.sty` now scales the emblem via `\\resizebox` using the optional width argument (was ignored, causing full-size logos). Replaced nested `tcbox` page bars with flat `\\colorbox` + fixed-height `\\parbox` + external `\\rule` hairline (bottom for navbar, top for footer) for a single clean border edge. Emblem sizes fixed at 1em (navbar) and 0.75em (footer chip). Tuned `\\headheight`, `\\headsep`, and `\\footskip` to prevent header overlap with body content. All 12 template PDFs rebuild successfully.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1835"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪9ee71a7606464c8089665caeaaed9b49",
+    "⚪0f90c6a42f32447b8835685c45fd9c40",
+    "⚪5bb97a9bb30e400ea30482bfd2bd7612"
+  ]
+}

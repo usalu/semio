@@ -3,7 +3,7 @@
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, getWorkspaceRoot, runBundleScriptMain, runVitest } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, getWorkspaceRoot, runBundleScriptMain, runVitest, frameworkOsPlaygroundDefaultPort } from "../../../repo/lib/js/index.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
@@ -84,7 +84,9 @@ class TrunkServeScript extends BundleScript {
 		ensureTrunk();
 		ensureWasmTarget();
 		buildBootScript(this.root);
-		const port = process.env.S_OS_PORT ?? "6066";
+		const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+		const defaultPort = String(frameworkOsPlaygroundDefaultPort(plugin, "wgpu"));
+		const port = process.env.S_OS_PORT ?? defaultPort;
 		const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
 		const args = ["serve", "--config", "Trunk.toml", "--port", port, ...extra];
 		const serve = spawnSync("trunk", args, { cwd: this.root, stdio: "inherit", env: trunkEnv() });

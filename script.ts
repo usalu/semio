@@ -17,7 +17,7 @@ import {
 	runWorkspaceScriptMain,
 	tryRun,
 } from "./repo/lib/js/index.ts";
-import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { extname, join, resolve } from "node:path";
 import { createServer } from "node:net";
@@ -71,6 +71,80 @@ export class NativeOsScript extends Script {
   }
 }
 //#endregion 🔖NativeOsScript
+
+//#region 🔖SccacheSetup
+const SCCACHE_VERSION = "0.10.0";
+
+/** ⚡Ensures `sccache` is on PATH for `.cargo/config.toml` rustc-wrapper. */
+function ensureSccache(): void {
+  const probe = spawnSync("sccache", ["--version"], { encoding: "utf8" });
+  if (probe.status === 0) return;
+
+  const asset = sccacheReleaseAsset();
+  if (!asset) {
+    console.warn("[setup] sccache auto-install unsupported on this platform; install manually.");
+    return;
+  }
+
+  const binDir =
+    process.platform === "win32"
+      ? join(process.env.LOCALAPPDATA ?? join(homedir(), "AppData", "Local"), "bin")
+      : join(homedir(), ".local", "bin");
+  const binName = process.platform === "win32" ? "sccache.exe" : "sccache";
+  const dest = join(binDir, binName);
+  if (existsSync(dest)) return;
+
+  const cacheDir = join(WORKSPACE_ROOT, ".repo", "cache", "sccache");
+  mkdirSync(cacheDir, { recursive: true });
+  const archive = join(cacheDir, asset);
+  const url = `https://github.com/mozilla/sccache/releases/download/v${SCCACHE_VERSION}/${asset}`;
+  console.log(`[setup] downloading sccache ${SCCACHE_VERSION}…`);
+  runCmd("curl", ["-fSL", "-o", archive, url]);
+
+  if (asset.endsWith(".tar.gz")) {
+    runCmd("tar", ["-xzf", archive, "-C", cacheDir]);
+    const extractedDir = readdirSync(cacheDir).find((name) => name.startsWith("sccache-") && !name.endsWith(".tar.gz"));
+    if (!extractedDir) throw new Error("sccache archive extraction failed");
+    copyFileSync(join(cacheDir, extractedDir, binName), dest);
+  } else {
+    const extractDir = join(cacheDir, "extract");
+    rmSync(extractDir, { recursive: true, force: true });
+    mkdirSync(extractDir, { recursive: true });
+    if (process.platform === "win32") {
+      runCmd("powershell.exe", ["-NoProfile", "-Command", `Expand-Archive -Path '${archive}' -DestinationPath '${extractDir}' -Force`]);
+    } else {
+      runCmd("unzip", ["-o", archive, "-d", extractDir]);
+    }
+    const extractedDir = readdirSync(extractDir).find((name) => name.startsWith("sccache-"));
+    if (!extractedDir) throw new Error("sccache archive extraction failed");
+    copyFileSync(join(extractDir, extractedDir, binName), dest);
+  }
+
+  if (process.platform !== "win32") chmodSync(dest, 0o755);
+  console.log(`[setup] installed sccache -> ${dest}`);
+}
+
+function sccacheReleaseAsset(): string | null {
+  if (process.platform === "darwin") {
+    return process.arch === "arm64"
+      ? `sccache-v${SCCACHE_VERSION}-aarch64-apple-darwin.tar.gz`
+      : `sccache-v${SCCACHE_VERSION}-x86_64-apple-darwin.tar.gz`;
+  }
+  if (process.platform === "linux") {
+    const report = process.report?.getReport?.() as { header?: { glibcVersionRuntime?: string } } | undefined;
+    const libc = report?.header?.glibcVersionRuntime ? "gnu" : "musl";
+    return process.arch === "arm64"
+      ? `sccache-v${SCCACHE_VERSION}-aarch64-unknown-linux-${libc}.tar.gz`
+      : `sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-${libc}.tar.gz`;
+  }
+  if (process.platform === "win32") {
+    return process.arch === "arm64"
+      ? `sccache-v${SCCACHE_VERSION}-aarch64-pc-windows-msvc.zip`
+      : `sccache-v${SCCACHE_VERSION}-x86_64-pc-windows-msvc.zip`;
+  }
+  return null;
+}
+//#endregion 🔖SccacheSetup
 
 //#region 🔖SetupScript
 export class SetupScript extends Script {
@@ -160,13 +234,11 @@ export class SetupScript extends Script {
     tryRun("dotnet", ["restore", "Monorepo.sln"]);
     console.log("[setup] rustup wasm target…");
     tryRun("rustup", ["target", "add", "wasm32-unknown-unknown"]);
-
-    const cargoHome = join(homedir(), ".cargo");
-    const cargoConfig = join(cargoHome, "config.toml");
-    if (!existsSync(cargoConfig)) {
-      mkdirSync(cargoHome, { recursive: true });
-      writeFileSync(cargoConfig, `[target.wasm32-unknown-unknown]\nrustflags = ["--cfg", "getrandom_backend=wasm_js"]\n`);
-      console.log("[setup] wrote ~/.cargo/config.toml wasm flags.");
+    console.log("[setup] sccache…");
+    try {
+      ensureSccache();
+    } catch (error) {
+      console.warn("[setup] sccache install skipped:", error);
     }
 
     const browsersPath = join(this.root, "node_modules", ".cache", "ms-playwright");

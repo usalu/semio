@@ -43,18 +43,101 @@ const PRINT_FONTS: readonly { readonly family: string; readonly dir: string; rea
 
 const TEMPLATES: readonly { readonly id: string; readonly tex: string; readonly pdf: string }[] = [
 	{ id: "report", tex: "template/report/report.tex", pdf: "report.pdf" },
+	{ id: "report-dark", tex: "template/report/report-dark.tex", pdf: "report-dark.pdf" },
 	{ id: "paper", tex: "template/paper/paper.tex", pdf: "paper.pdf" },
+	{ id: "paper-dark", tex: "template/paper/paper-dark.tex", pdf: "paper-dark.pdf" },
 	{ id: "flyer", tex: "template/flyer/flyer.tex", pdf: "flyer.pdf" },
+	{ id: "flyer-dark", tex: "template/flyer/flyer-dark.tex", pdf: "flyer-dark.pdf" },
 	{ id: "forschungsbericht", tex: "template/zukunftbau/forschungsbericht.tex", pdf: "forschungsbericht.pdf" },
+	{ id: "forschungsbericht-dark", tex: "template/zukunftbau/forschungsbericht-dark.tex", pdf: "forschungsbericht-dark.pdf" },
 	{ id: "zwischenbericht", tex: "template/zukunftbau/zwischenbericht.tex", pdf: "zwischenbericht.pdf" },
+	{ id: "zwischenbericht-dark", tex: "template/zukunftbau/zwischenbericht-dark.tex", pdf: "zwischenbericht-dark.pdf" },
 	{ id: "kompaktbericht", tex: "template/zukunftbau/kompaktbericht.tex", pdf: "kompaktbericht.pdf" },
+	{ id: "kompaktbericht-dark", tex: "template/zukunftbau/kompaktbericht-dark.tex", pdf: "kompaktbericht-dark.pdf" },
 ];
+
+type PaintRef = {
+	readonly token?: string;
+	readonly hex?: string;
+	readonly alpha?: number;
+	readonly mix?: readonly [string, string, number];
+};
 
 type Tokens = {
 	readonly colors: Record<string, string>;
 	readonly spacing: Record<string, string>;
 	readonly strokes?: Record<string, number | number[]>;
+	readonly themes?: Record<string, Record<string, Record<string, PaintRef>>>;
+	readonly metrics?: {
+		readonly chrome?: {
+			readonly controlHeightUiSpacing?: number;
+			readonly paddingStandardUiSpacing?: number;
+			readonly navbarHeightUiSpacing?: number;
+			readonly footerHeightUiSpacing?: number;
+		};
+		readonly typography?: {
+			readonly textXsPx?: number;
+			readonly text2xsPx?: number;
+			readonly textSmPx?: number;
+		};
+	};
 };
+
+const CHROME_PAINT_KEYS = [
+	"window",
+	"canvas",
+	"borderNormal",
+	"borderEmphasized",
+	"activeBase",
+	"activeForeground",
+	"foreground",
+	"accent",
+] as const;
+
+function parseHex6(hex: string): [number, number, number] {
+	const s = hex.trim().replace(/^#/, "");
+	if (s.length === 3) {
+		return [Number.parseInt(s[0]! + s[0], 16), Number.parseInt(s[1]! + s[1], 16), Number.parseInt(s[2]! + s[2], 16)];
+	}
+	const v = Number.parseInt(s, 16);
+	return [(v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff];
+}
+
+function blendHex(a: string, b: string, ratioA: number): string {
+	const [ar, ag, ab] = parseHex6(a);
+	const [br, bg, bb] = parseHex6(b);
+	const t = Math.min(1, Math.max(0, ratioA));
+	const r = Math.round(ar * t + br * (1 - t));
+	const g = Math.round(ag * t + bg * (1 - t));
+	const bl = Math.round(ab * t + bb * (1 - t));
+	return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${bl.toString(16).padStart(2, "0")}`;
+}
+
+function resolvePaint(colors: Record<string, string>, ref: PaintRef): string {
+	if (ref.mix) {
+		const [a, b, ratio] = ref.mix;
+		const bHex = b === "transparent" ? "#000000" : colors[b];
+		if (!bHex) throw new Error(`tokens.colors[${b}] missing`);
+		return blendHex(colors[a]!, bHex, ratio);
+	}
+	if (ref.hex) return ref.hex;
+	if (ref.token) {
+		const v = colors[ref.token];
+		if (!v) throw new Error(`tokens.colors[${ref.token}] missing`);
+		return v;
+	}
+	throw new Error("paint ref needs token, hex, or mix");
+}
+
+function chromePaintKeyToLatex(key: string): string {
+	return key.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
+}
+
+function remFactor(rem: string): number {
+	const match = rem.match(/^([\d.]+)rem$/);
+	if (!match) return Number.parseFloat(rem) || 0;
+	return Number.parseFloat(match[1]!);
+}
 
 function colorKeyToLatex(key: string): string {
 	return `semio-${key.replaceAll("_", "-")}`;
@@ -85,12 +168,61 @@ export function emitSemioTokensSty(): void {
 	for (const [key, value] of Object.entries(tokens.spacing)) {
 		lines.push(`\\newcommand{\\semio@spacing@${key.replaceAll("-", "@")}}{${remToEm(value)}}`);
 	}
-	const hairline = typeof tokens.strokes?.gridLarge === "number" ? tokens.strokes.gridLarge * 0.75 : 0.75;
-	const strokeDefault = typeof tokens.strokes?.edgeBase === "number" ? tokens.strokes.edgeBase * 0.75 : 1.5;
-	const strokeFocus = typeof tokens.strokes?.dagNodeSelected === "number" ? tokens.strokes.dagNodeSelected * 0.75 : 1.75;
+	const hairline =
+		typeof tokens.strokes?.chromeBorderHairline === "number"
+			? tokens.strokes.chromeBorderHairline * 0.75
+			: typeof tokens.strokes?.gridLarge === "number"
+				? tokens.strokes.gridLarge * 0.75
+				: 0.75;
+	const strokeDefault =
+		typeof tokens.strokes?.chromeBorderDefault === "number"
+			? tokens.strokes.chromeBorderDefault * 0.75
+			: typeof tokens.strokes?.edgeBase === "number"
+				? tokens.strokes.edgeBase * 0.75
+				: 1.5;
+	const strokeFocus =
+		typeof tokens.strokes?.chromeBorderFocus === "number"
+			? tokens.strokes.chromeBorderFocus * 0.75
+			: typeof tokens.strokes?.dagNodeSelected === "number"
+				? tokens.strokes.dagNodeSelected * 0.75
+				: 1.75;
 	lines.push(`\\newcommand{\\semio@stroke@hairline}{${hairline}pt}`);
 	lines.push(`\\newcommand{\\semio@stroke@default}{${strokeDefault}pt}`);
 	lines.push(`\\newcommand{\\semio@stroke@focus}{${strokeFocus}pt}`);
+	lines.push("");
+	const compactFactor = remFactor(tokens.spacing.compact ?? "0.2rem");
+	const chromeMetrics = tokens.metrics?.chrome;
+	if (chromeMetrics) {
+		const titleBarHeight = compactFactor * (chromeMetrics.controlHeightUiSpacing ?? 7);
+		const chromePadding = compactFactor * (chromeMetrics.paddingStandardUiSpacing ?? 1);
+		const navbarHeight = compactFactor * (chromeMetrics.navbarHeightUiSpacing ?? 9);
+		const footerHeight = compactFactor * (chromeMetrics.footerHeightUiSpacing ?? 9);
+		lines.push(`\\newcommand{\\semio@chrome@titlebar@height}{${+titleBarHeight.toFixed(3)}em}`);
+		lines.push(`\\newcommand{\\semio@chrome@padding}{${+chromePadding.toFixed(3)}em}`);
+		lines.push(`\\newcommand{\\semio@chrome@navbar@height}{${+navbarHeight.toFixed(3)}em}`);
+		lines.push(`\\newcommand{\\semio@chrome@footer@height}{${+footerHeight.toFixed(3)}em}`);
+	}
+	const typography = tokens.metrics?.typography;
+	if (typography) {
+		const titleFont = (typography.textXsPx ?? 11.2) / 16;
+		const numberFont = (typography.text2xsPx ?? 9.6) / 16;
+		const bodyFont = (typography.textSmPx ?? 12.8) / 16;
+		lines.push(`\\newcommand{\\semio@chrome@font@title}{${+titleFont.toFixed(3)}em}`);
+		lines.push(`\\newcommand{\\semio@chrome@font@number}{${+numberFont.toFixed(3)}em}`);
+		lines.push(`\\newcommand{\\semio@chrome@font@body}{${+bodyFont.toFixed(3)}em}`);
+	}
+	lines.push("");
+	for (const themeName of ["light", "dark"] as const) {
+		const chrome = tokens.themes?.[themeName]?.chrome;
+		if (!chrome) continue;
+		for (const key of CHROME_PAINT_KEYS) {
+			const paint = chrome[key];
+			if (!paint) continue;
+			const hex = resolvePaint(tokens.colors, paint).replace(/^#/, "");
+			const latexKey = chromePaintKeyToLatex(key);
+			lines.push(`\\definecolor{semio-chrome-${themeName}-${latexKey}}{HTML}{${hex}}`);
+		}
+	}
 	lines.push("");
 	mkdirSync(texDir, { recursive: true });
 	writeFileSync(tokensOut, lines.join("\n"), "utf8");
