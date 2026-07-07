@@ -30,7 +30,7 @@
         /* ── Layout: 2-column (controls + canvas) ── */
         .dashboard {
             display: grid;
-            grid-template-columns: 360px 1fr;
+            grid-template-columns: 280px 1fr;
             grid-template-rows: 1fr;
             height: 100vh;
             gap: 0;
@@ -75,6 +75,26 @@
             font-size: 0.8rem;
             color: #334155;
             margin-bottom: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            user-select: none;
+        }
+
+        .section-card h3::after {
+            content: '▼';
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+            color: #94a3b8;
+        }
+
+        .section-card.collapsed h3::after {
+            transform: rotate(-90deg);
+        }
+
+        .section-card.collapsed > *:not(h3) {
+            display: none !important;
         }
 
         /* Zone List */
@@ -264,9 +284,9 @@
             backdrop-filter: blur(12px);
             border: 1px solid rgba(56, 189, 248, 0.2);
             border-radius: 12px;
-            padding: 16px;
-            max-width: 320px;
-            font-size: 0.8rem;
+            padding: 12px;
+            max-width: 250px;
+            font-size: 0.75rem;
             display: none;
             animation: slideIn 0.3s ease;
         }
@@ -1167,6 +1187,18 @@
                     cursor: pointer;
                     transition: background 0.18s;
                 ">Redo</button>
+                <button id="btn-delete-all" style="
+                    flex: 1;
+                    padding: 11px 0;
+                    background: #ef4444;
+                    color: #ffffff;
+                    border: 1px solid rgba(255,255,255,0.12);
+                    border-radius: 8px;
+                    font-size: 0.88rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: background 0.18s;
+                ">Clear All</button>
             </div>
 
             <!-- System Logs -->
@@ -1384,6 +1416,15 @@
         </div>
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            document.querySelectorAll('.section-card h3').forEach(header => {
+                header.addEventListener('click', () => {
+                    header.parentElement.classList.toggle('collapsed');
+                });
+            });
+        });
+    </script>
     <script type="module" src="./main_mcp.js"></script>
 </body>
 

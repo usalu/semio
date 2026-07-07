@@ -705,15 +705,6 @@
       "name": "@semio/rs",
       "version": "1.0.0",
     },
-    "semio/client/lib/sketchpad/docs": {
-      "name": "@semio/docs",
-      "version": "0.1.0",
-      "dependencies": {
-        "@semio/js": "*",
-        "@semio/sketchpad": "*",
-        "@ui/react": "workspace:*",
-      },
-    },
     "semio/client/lib/sketchpad/js": {
       "name": "@semio/sketchpad",
       "version": "0.1.0",
@@ -2028,8 +2019,6 @@
     "@semio/assets": ["@semio/assets@workspace:semio/assets"],
 
     "@semio/desktop": ["@semio/desktop@workspace:semio/client/ui/desktop"],
-
-    "@semio/docs": ["@semio/docs@workspace:semio/client/lib/sketchpad/docs"],
 
     "@semio/engine": ["@semio/engine@workspace:semio/client/bin/engine"],
 

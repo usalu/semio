@@ -1894,15 +1894,15 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
 
     let p_vol = graph.add_entity(EntityData::Property(PropertyData { 
         name: "Volume (V_e)".into(), value: format!("{:.1}", state.geometry.as_ref().map(|g| g.total_conditioned_volume).unwrap_or(0.0)), unit: "m³".into(),
-        doc: Some("**Conditioned Volume ($V_e$)**\nThe total heated volume of the building. Used to calculate ventilation air mass flows ($V_e \\cdot n$).".into())
+        doc: Some("**Conditioned Volume ($V_e$)**The total heated volume of the building. Used to calculate ventilation air mass flows ($V_e \\cdot n$).".into())
     }));
     let p_year = graph.add_entity(EntityData::Property(PropertyData { 
         name: "Year Class".into(), value: state.params.year_class.clone(), unit: "".into(),
-        doc: Some("**Year Class**\nThe construction age bracket. Dictates default U-values, infiltration rates, and system efficiencies if not explicitly overridden.".into())
+        doc: Some("**Year Class**The construction age bracket. Dictates default U-values, infiltration rates, and system efficiencies if not explicitly overridden.".into())
     }));
     let p_heat = graph.add_entity(EntityData::Property(PropertyData { 
         name: "Heating System".into(), value: state.params.heating_system.clone(), unit: "".into(),
-        doc: Some("**Heating System**\nThe primary thermal generator. Affects the primary energy factor ($f_P$) and conversion efficiency ($e_g$).".into())
+        doc: Some("**Heating System**The primary thermal generator. Affects the primary energy factor ($f_P$) and conversion efficiency ($e_g$).".into())
     }));
     graph.add_relationship(Relationship::HasProperty { host: b_idx, property: p_vol });
     graph.add_relationship(Relationship::HasProperty { host: b_idx, property: p_year });
@@ -1980,7 +1980,7 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
 
                 let p_area = graph.add_entity(EntityData::Property(PropertyData { 
                     name: "Area (A_NGF)".into(), value: format!("{:.1}", z_area), unit: "m²".into(),
-                    doc: Some("**Net Floor Area ($A_{NGF}$)**\nThe reference area used to multiply specific internal gains ($q_I$).".into())
+                    doc: Some("**Net Floor Area ($A_{NGF}$)**The reference area used to multiply specific internal gains ($q_I$).".into())
                 }));
                 graph.add_relationship(Relationship::HasProperty { host: z_idx, property: p_area });
 
@@ -2060,7 +2060,8 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
                 // --- WALL ---
                 let w_idx = graph.add_entity(EntityData::Wall(WallData {
                     area: a_wall_total * scale_factor, u_value: u_wall, thickness: 0.3,
-                    r_si: 0.13, r_se: 0.04, f_neig: 1.0, f_x: 1.0, solar_absorptance: 0.6, is_roof: false
+                    r_si: 0.13, r_se: 0.04, f_neig: 1.0, f_x: 1.0, solar_absorptance: 0.6, is_roof: false,
+                    name: "".to_string(), orientation: None,
                 }));
                 graph.add_relationship(Relationship::BoundsSpace { space: z_idx, boundary_element: w_idx });
                 
@@ -2096,6 +2097,7 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
                     let win_idx = graph.add_entity(EntityData::Window(WindowData {
                         area: win_area_total * scale_factor, u_value: u_window, u_w_sh: u_window, f_sh: 0.0, g_value: 0.6, frame_fraction: 0.3, f_neig: 1.0, f_x: 1.0, shading_factor_fc: 1.0, surroundings_shading_fs: 1.0,
                         shutter_control: crate::transmission::ShutterControl::Manual, glazing_type: crate::transmission::WindowGlazingType::Double, inclination_angle: crate::transmission::WindowInclinationAngle::Deg90,
+                        name: "".to_string(), orientation: None,
                     }));
                     graph.add_relationship(Relationship::FillsVoid { host: w_idx, filler: win_idx });
 
@@ -2195,7 +2197,8 @@ fn map_state_to_graph(state: &State, u_wall: f64, u_roof: f64, u_floor: f64, u_w
 
             let w_idx = graph.add_entity(EntityData::Wall(WallData {
                 area: a_wall_total, u_value: u_wall, thickness: 0.3,
-                r_si: 0.13, r_se: 0.04, f_neig: 1.0, f_x: 1.0, solar_absorptance: 0.6, is_roof: false
+                r_si: 0.13, r_se: 0.04, f_neig: 1.0, f_x: 1.0, solar_absorptance: 0.6, is_roof: false,
+                name: "".to_string(), orientation: None,
             }));
             graph.add_relationship(Relationship::BoundsSpace { space: z_idx, boundary_element: w_idx });
             
@@ -3770,3 +3773,604 @@ pub mod overheating {
     }
 }
 
+
+pub mod lighting {
+    use serde::{Deserialize, Serialize};
+
+    // --- CONSTANTS ---
+    pub const DEFAULT_MAINTENANCE_FACTOR_WF: f64 = 0.67;
+    pub const K_WF_DEFAULT: f64 = 0.80 / DEFAULT_MAINTENANCE_FACTOR_WF;
+
+    // --- ENUMS & DATA MODELS ---
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum LightingType {
+        Direct,
+        DirectIndirect,
+        Indirect,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum LampTechnology {
+        Incandescent,
+        Halogen,
+        FluorescentEVG,
+        CompactFluorescent,
+        LEDReplacement,
+        LEDLuminaire,
+    }
+
+    impl LampTechnology {
+        /// Table 6: Adjustment factor k_L
+        pub fn k_l_factor(&self) -> f64 {
+            match self {
+                Self::Incandescent => 6.0,
+                Self::Halogen => 5.0,
+                Self::FluorescentEVG => 1.0,
+                Self::CompactFluorescent => 1.4,
+                Self::LEDReplacement => 0.68,
+                Self::LEDLuminaire => 0.49, // highly efficient
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum DaylightControl {
+        Manual,
+        DimmedAutoOnOff,     // Gedimmt, wiedereinschaltend
+        DimmedManualOnAutoOff, // Gedimmt, nicht wiedereinschaltend
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum PresenceControl {
+        Manual,
+        MotionDetector,
+    }
+
+    impl PresenceControl {
+        /// Table 28: Detector efficiency c_prä,kon
+        pub fn c_pra_kon(&self) -> f64 {
+            match self {
+                Self::Manual => 0.50,
+                Self::MotionDetector => 0.95,
+            }
+        }
+    }
+
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub struct LightingRequirement {
+        pub e_m: Option<f64>,
+        pub ugr_l: Option<f64>,
+        pub r_a: Option<f64>,
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+    pub enum RoomUsage {
+    EntranceHalls,
+    LoungesWaitingAreas,
+    CirculationAreasAndCorridors,
+    StairsEscalatorsMovingWalkways,
+    LoadingRampsBays,
+    CanteensAndPantries,
+    RestRooms,
+    RoomsForPhysicalExercise,
+    CloakroomsWashroomsBathroomsToilets,
+    SickBayFirstAidRooms,
+    PlantRoomsSwitchGearRooms,
+    TelexPostRoomSwitchboard,
+    StoreAndStockroomsUnmanned,
+    StoreAndStockroomsManned,
+    DispatchAndPackingAreas,
+    GangwaysInRackSystemsUnmanned,
+    GangwaysInRackSystemsManned,
+    LoadingAndOperatingOfGoods,
+    BuildingsForLivestock,
+    SickAnimalPens,
+    FeedPreparation,
+    PreparationAndBaking,
+    FinishingGlazingDecorating,
+    DryingCement,
+    PreparationOfMaterialsKilns,
+    GeneralMachineWorkCement,
+    RoughForms,
+    DryingCeramics,
+    PreparationGeneralMachineWorkCeramics,
+    EnamellingRollingPressing,
+    GrindingEngravingPolishing,
+    PrecisionWorkDecorativePainting,
+    RemoteoperatedProcessing,
+    ProcessingWithLimitedManualIntervention,
+    ConstantlyMannedWorkPlaces,
+    PrecisionMeasuringRoomsLabs,
+    ColorInspectionChemicals,
+    CableAndWireManufacture,
+    WindingLargeCoils,
+    WindingMediumCoils,
+    WindingSmallCoils,
+    CoilImpregnating,
+    AssemblyWorkRough,
+    AssemblyWorkMedium,
+    AssemblyWorkFine,
+    AssemblyWorkPrecision,
+    ElectronicWorkshopsTesting,
+    WorkplacesZonesInBreweriesMalting,
+    WashingBarrelFillingCleaning,
+    SortingAndWashingOfProducts,
+    WorkOnColorcriticalGoods,
+    UndergroundTunnelsCellars,
+    Platforms,
+    SandPreparation,
+    CoreMakingMouldMaking,
+    Hairdressing,
+    WorkingWithPreciousStones,
+    WatchMakingManual,
+    GoodsInMarkingAndSorting,
+    WashingAndDryCleaning,
+    IroningPressing,
+    InspectionAndRepairs,
+    VatsBarrelsPits,
+    FleshingSkivingSplitting,
+    SaddleryShoeManufacture,
+    QualityControlLeather,
+    ColorInspectionLeather,
+    OpenDieForging,
+    DropForging,
+    Welding,
+    RoughMediumMachining,
+    PrecisionMachining,
+    ToolMakingCuttingEquipment,
+    EdgeRunnersPulpMills,
+    PaperManufacturePaperMachines,
+    PaperInspection,
+    FuelSupplyPlant,
+    BoilerHouse,
+    MachineHalls,
+    ControlRoomsPowerStations,
+    CuttingGildingEmbossing,
+    SortingPaperReproduction,
+    TypeSettingRetouching,
+    ColorInspectionInPrinting,
+    ProductionPlantsWithoutManualOp,
+    ProductionPlantsWithManualOp,
+    SlabInspection,
+    BaleOpeningCardingWashing,
+    SpinningPlyingReeling,
+    WeavingKnitting,
+    SewingFineKnitting,
+    ColorInspectionFabricControl,
+    BodyWorkAndAssembly,
+    PaintingSpraying,
+    PaintingInspectionRepair,
+    AutomaticProcessingSawing,
+    JoinersBenchGluing,
+    PolishingPainting,
+    QualityControlWood,
+    FilingCopyingCirculation,
+    WritingTypingReadingDataProc,
+    CadWorkStations,
+    ConferenceAndMeetingRooms,
+    ReceptionDesk,
+    Archives,
+    SalesAreaSmall,
+    SalesAreaLarge,
+    TillAreaCashier,
+    WrapperTable,
+    ReceptionCashier,
+    Kitchens,
+    RestaurantDiningRoom,
+    SelfserviceRestaurants,
+    Buffet,
+    ConferenceRoomsHotels,
+    GeneralExhibitions,
+    Bookshelves,
+    ReadingArea,
+    Counters,
+    InOutRampsDay,
+    InOutRampsNight,
+    TrafficLanes,
+    ParkingAreas,
+    TicketOffice,
+    PlaySchoolRoomsNursery,
+    NurseryClassCrafts,
+    ClassroomsTutorialRooms,
+    ClassroomsForEveningClasses,
+    AuditoriumsLectureHalls,
+    BlackboardsWhiteboards,
+    DemonstrationTables,
+    ArtAndCraftRooms,
+    ArtRoomsInArtSchools,
+    TechnicalDrawingRooms,
+    ComputerPracticeRooms,
+    LanguageLaboratories,
+    PreparationRooms,
+    StudentCommonRooms,
+    TeachersRooms,
+    SportsHallsGymnasiums,
+    WaitingRooms,
+    CorridorsDay,
+    CorridorsNight,
+    StaffOfficeRooms,
+    StaffRooms,
+    WardsGeneralLighting,
+    WardsReadingLighting,
+    WardsSimpleExaminations,
+    ExaminationAndTreatmentGeneral,
+    ExaminationAndTreatmentDetailed,
+    EarAndEyeExamination,
+    OperatingTheatrePreopRecovery,
+    OperatingTheatreGeneral,
+    OperatingCavity,
+    IntensiveCareGeneral,
+    IntensiveCareExamination,
+    DentistsGeneral,
+    DentistsAtThePatient,
+    Pharmacies,
+    AutopsyRooms,
+    AutopsyTable,
+    ArrivalAndDepartureHalls,
+    BaggageClaim,
+    ConnectionAreasEscalators,
+    InformationDesksCheckin,
+    CustomsAndPassportControl,
+    AirportWaitingAreas,
+    LuggageSortingRooms,
+    SecurityCheck,
+    AirTrafficControlTower,
+    EnclosedPlatforms,
+    PassengerSubwaysTunnels,
+    TicketHallsAndConcourse,
+    TicketAndLuggageOffices,
+    RailwayWaitingRooms,
+    }
+
+    impl RoomUsage {
+        pub fn requirements(&self) -> LightingRequirement {
+            match self {
+            Self::EntranceHalls => LightingRequirement { e_m: Some(100.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::LoungesWaitingAreas => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::CirculationAreasAndCorridors => LightingRequirement { e_m: Some(100.0), ugr_l: Some(28.0), r_a: Some(80.0) },
+            Self::StairsEscalatorsMovingWalkways => LightingRequirement { e_m: Some(150.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::LoadingRampsBays => LightingRequirement { e_m: Some(150.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::CanteensAndPantries => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::RestRooms => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::RoomsForPhysicalExercise => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::CloakroomsWashroomsBathroomsToilets => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::SickBayFirstAidRooms => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::PlantRoomsSwitchGearRooms => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::TelexPostRoomSwitchboard => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::StoreAndStockroomsUnmanned => LightingRequirement { e_m: Some(100.0), ugr_l: Some(25.0), r_a: Some(60.0) },
+            Self::StoreAndStockroomsManned => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::DispatchAndPackingAreas => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::GangwaysInRackSystemsUnmanned => LightingRequirement { e_m: Some(20.0), ugr_l: None, r_a: Some(40.0) },
+            Self::GangwaysInRackSystemsManned => LightingRequirement { e_m: Some(150.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::LoadingAndOperatingOfGoods => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::BuildingsForLivestock => LightingRequirement { e_m: Some(50.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::SickAnimalPens => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::FeedPreparation => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::PreparationAndBaking => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::FinishingGlazingDecorating => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::DryingCement => LightingRequirement { e_m: Some(50.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::PreparationOfMaterialsKilns => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::GeneralMachineWorkCement => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::RoughForms => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::DryingCeramics => LightingRequirement { e_m: Some(50.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::PreparationGeneralMachineWorkCeramics => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::EnamellingRollingPressing => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::GrindingEngravingPolishing => LightingRequirement { e_m: Some(750.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::PrecisionWorkDecorativePainting => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(16.0), r_a: Some(90.0) },
+            Self::RemoteoperatedProcessing => LightingRequirement { e_m: Some(50.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::ProcessingWithLimitedManualIntervention => LightingRequirement { e_m: Some(150.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::ConstantlyMannedWorkPlaces => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::PrecisionMeasuringRoomsLabs => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ColorInspectionChemicals => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(16.0), r_a: Some(90.0) },
+            Self::CableAndWireManufacture => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::WindingLargeCoils => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::WindingMediumCoils => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::WindingSmallCoils => LightingRequirement { e_m: Some(750.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::CoilImpregnating => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::AssemblyWorkRough => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::AssemblyWorkMedium => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::AssemblyWorkFine => LightingRequirement { e_m: Some(750.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::AssemblyWorkPrecision => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(16.0), r_a: Some(80.0) },
+            Self::ElectronicWorkshopsTesting => LightingRequirement { e_m: Some(1500.0), ugr_l: Some(16.0), r_a: Some(80.0) },
+            Self::WorkplacesZonesInBreweriesMalting => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::WashingBarrelFillingCleaning => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::SortingAndWashingOfProducts => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::WorkOnColorcriticalGoods => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(90.0) },
+            Self::UndergroundTunnelsCellars => LightingRequirement { e_m: Some(50.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::Platforms => LightingRequirement { e_m: Some(100.0), ugr_l: Some(25.0), r_a: Some(40.0) },
+            Self::SandPreparation => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::CoreMakingMouldMaking => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::Hairdressing => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::WorkingWithPreciousStones => LightingRequirement { e_m: Some(1500.0), ugr_l: Some(16.0), r_a: Some(90.0) },
+            Self::WatchMakingManual => LightingRequirement { e_m: Some(1500.0), ugr_l: Some(16.0), r_a: Some(80.0) },
+            Self::GoodsInMarkingAndSorting => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::WashingAndDryCleaning => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::IroningPressing => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::InspectionAndRepairs => LightingRequirement { e_m: Some(750.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::VatsBarrelsPits => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::FleshingSkivingSplitting => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::SaddleryShoeManufacture => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::QualityControlLeather => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ColorInspectionLeather => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(16.0), r_a: Some(90.0) },
+            Self::OpenDieForging => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::DropForging => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::Welding => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::RoughMediumMachining => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::PrecisionMachining => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ToolMakingCuttingEquipment => LightingRequirement { e_m: Some(750.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::EdgeRunnersPulpMills => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::PaperManufacturePaperMachines => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::PaperInspection => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::FuelSupplyPlant => LightingRequirement { e_m: Some(50.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::BoilerHouse => LightingRequirement { e_m: Some(100.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::MachineHalls => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::ControlRoomsPowerStations => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::CuttingGildingEmbossing => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::SortingPaperReproduction => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::TypeSettingRetouching => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ColorInspectionInPrinting => LightingRequirement { e_m: Some(1500.0), ugr_l: Some(16.0), r_a: Some(90.0) },
+            Self::ProductionPlantsWithoutManualOp => LightingRequirement { e_m: Some(50.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::ProductionPlantsWithManualOp => LightingRequirement { e_m: Some(150.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::SlabInspection => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::BaleOpeningCardingWashing => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::SpinningPlyingReeling => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::WeavingKnitting => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::SewingFineKnitting => LightingRequirement { e_m: Some(750.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::ColorInspectionFabricControl => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(16.0), r_a: Some(90.0) },
+            Self::BodyWorkAndAssembly => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::PaintingSpraying => LightingRequirement { e_m: Some(750.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::PaintingInspectionRepair => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(16.0), r_a: Some(90.0) },
+            Self::AutomaticProcessingSawing => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::JoinersBenchGluing => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::PolishingPainting => LightingRequirement { e_m: Some(750.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::QualityControlWood => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::FilingCopyingCirculation => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::WritingTypingReadingDataProc => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::CadWorkStations => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ConferenceAndMeetingRooms => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ReceptionDesk => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::Archives => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::SalesAreaSmall => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::SalesAreaLarge => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::TillAreaCashier => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::WrapperTable => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ReceptionCashier => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::Kitchens => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::RestaurantDiningRoom => LightingRequirement { e_m: None, ugr_l: None, r_a: Some(80.0) },
+            Self::SelfserviceRestaurants => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::Buffet => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::ConferenceRoomsHotels => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::GeneralExhibitions => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::Bookshelves => LightingRequirement { e_m: Some(200.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ReadingArea => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::Counters => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::InOutRampsDay => LightingRequirement { e_m: Some(300.0), ugr_l: Some(25.0), r_a: Some(40.0) },
+            Self::InOutRampsNight => LightingRequirement { e_m: Some(75.0), ugr_l: Some(25.0), r_a: Some(40.0) },
+            Self::TrafficLanes => LightingRequirement { e_m: Some(75.0), ugr_l: Some(25.0), r_a: Some(40.0) },
+            Self::ParkingAreas => LightingRequirement { e_m: Some(75.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::TicketOffice => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::PlaySchoolRoomsNursery => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::NurseryClassCrafts => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ClassroomsTutorialRooms => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ClassroomsForEveningClasses => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::AuditoriumsLectureHalls => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::BlackboardsWhiteboards => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::DemonstrationTables => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ArtAndCraftRooms => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ArtRoomsInArtSchools => LightingRequirement { e_m: Some(750.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::TechnicalDrawingRooms => LightingRequirement { e_m: Some(750.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ComputerPracticeRooms => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::LanguageLaboratories => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::PreparationRooms => LightingRequirement { e_m: Some(500.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::StudentCommonRooms => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::TeachersRooms => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::SportsHallsGymnasiums => LightingRequirement { e_m: Some(300.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::WaitingRooms => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::CorridorsDay => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::CorridorsNight => LightingRequirement { e_m: Some(50.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::StaffOfficeRooms => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::StaffRooms => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::WardsGeneralLighting => LightingRequirement { e_m: Some(100.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::WardsReadingLighting => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::WardsSimpleExaminations => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::ExaminationAndTreatmentGeneral => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::ExaminationAndTreatmentDetailed => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::EarAndEyeExamination => LightingRequirement { e_m: Some(1000.0), ugr_l: None, r_a: Some(90.0) },
+            Self::OperatingTheatrePreopRecovery => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::OperatingTheatreGeneral => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::OperatingCavity => LightingRequirement { e_m: Some(100000.0), ugr_l: None, r_a: None },
+            Self::IntensiveCareGeneral => LightingRequirement { e_m: Some(100.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::IntensiveCareExamination => LightingRequirement { e_m: Some(1000.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::DentistsGeneral => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::DentistsAtThePatient => LightingRequirement { e_m: Some(1000.0), ugr_l: None, r_a: Some(90.0) },
+            Self::Pharmacies => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::AutopsyRooms => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(90.0) },
+            Self::AutopsyTable => LightingRequirement { e_m: Some(5000.0), ugr_l: None, r_a: Some(90.0) },
+            Self::ArrivalAndDepartureHalls => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::BaggageClaim => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::ConnectionAreasEscalators => LightingRequirement { e_m: Some(150.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::InformationDesksCheckin => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::CustomsAndPassportControl => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::AirportWaitingAreas => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            Self::LuggageSortingRooms => LightingRequirement { e_m: Some(200.0), ugr_l: Some(25.0), r_a: Some(80.0) },
+            Self::SecurityCheck => LightingRequirement { e_m: Some(300.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::AirTrafficControlTower => LightingRequirement { e_m: Some(500.0), ugr_l: Some(16.0), r_a: Some(80.0) },
+            Self::EnclosedPlatforms => LightingRequirement { e_m: Some(200.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::PassengerSubwaysTunnels => LightingRequirement { e_m: Some(150.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::TicketHallsAndConcourse => LightingRequirement { e_m: Some(200.0), ugr_l: Some(28.0), r_a: Some(40.0) },
+            Self::TicketAndLuggageOffices => LightingRequirement { e_m: Some(500.0), ugr_l: Some(19.0), r_a: Some(80.0) },
+            Self::RailwayWaitingRooms => LightingRequirement { e_m: Some(200.0), ugr_l: Some(22.0), r_a: Some(80.0) },
+            }
+        }
+    }
+
+
+    pub struct RoomGeometry {
+        pub a_floor: f64,
+        pub a_window: f64,
+        pub room_depth: f64,
+        pub room_width: f64,
+        pub h_sturz: f64, // Height of window lintel (m)
+        pub h_nutz: f64,  // Height of working plane (e.g. 0.8m)
+    }
+
+    impl RoomGeometry {
+        /// Calculates Room Index k (Eq. 10)
+        pub fn room_index(&self) -> f64 {
+            let h_prime = self.h_sturz - self.h_nutz;
+            let k = (self.room_depth * self.room_width) / (h_prime * (self.room_depth + self.room_width));
+            f64::max(0.6, k)
+        }
+
+        /// Calculates max daylight depth (Eq. 7) and splits the room
+        pub fn daylight_zone_area(&self) -> (f64, f64) {
+            let a_tl_max = 2.5 * (self.h_sturz - self.h_nutz);
+            let effective_depth = f64::min(self.room_depth, a_tl_max);
+            
+            let a_tl = effective_depth * self.room_width;
+            let a_tl_clamped = f64::min(a_tl, self.a_floor);
+            let a_ktl = self.a_floor - a_tl_clamped;
+            
+            (a_tl_clamped, a_ktl)
+        }
+
+        /// Estimates the Raw Daylight Quotient (D_Rb) based on Eq. 30
+        pub fn daylight_quotient(&self) -> f64 {
+            let (a_tl, _) = self.daylight_zone_area();
+            if a_tl <= 0.0 { return 0.0; }
+            
+            let i_tr = self.a_window / a_tl;
+            let effective_depth = f64::min(self.room_depth, 2.5 * (self.h_sturz - self.h_nutz));
+            let i_rt = effective_depth / (self.h_sturz - self.h_nutz);
+            let i_v = 0.7; // Standard obstruction index
+
+            let d_rb = (4.13 + 20.0 * i_tr - 1.36 * i_rt) * i_v;
+            f64::max(0.0, d_rb)
+        }
+    }
+
+    // --- ENGINE ---
+
+    pub struct LightingEngine {
+        pub geometry: RoomGeometry,
+        pub lamp_tech: LampTechnology,
+        pub light_type: LightingType,
+        pub daylight_control: DaylightControl,
+        pub presence_control: PresenceControl,
+        pub e_m_lux: f64, // Required lux (e.g., 500)
+        pub t_day: f64,   // Usage hours during daytime (h/a)
+        pub t_night: f64, // Usage hours during nighttime (h/a)
+        pub relative_absence: f64, // C_A (e.g., 0.3 for 30% away)
+    }
+
+    impl LightingEngine {
+        /// Interpolates Table 5 to get base power p_j,lx
+        pub fn calculate_base_power_per_lux(&self) -> f64 {
+            let k = self.geometry.room_index();
+            // Simplified fallback array corresponding to Table 5 [k=0.6, 1.0, 2.0, 5.0]
+            match self.light_type {
+                LightingType::Direct => if k < 1.0 { 0.040 } else if k < 2.0 { 0.030 } else { 0.022 },
+                LightingType::DirectIndirect => if k < 1.0 { 0.055 } else if k < 2.0 { 0.035 } else { 0.026 },
+                LightingType::Indirect => if k < 1.0 { 0.100 } else if k < 2.0 { 0.050 } else { 0.035 },
+            }
+        }
+
+        /// Eq. 11: Calculates total installed power density p_j (W/m²)
+        pub fn calculate_installed_power_density(&self) -> f64 {
+            let p_j_lx = self.calculate_base_power_per_lux();
+            let k_a = 0.85; // Standard task area reduction
+            let k_l = self.lamp_tech.k_l_factor();
+            
+            p_j_lx * self.e_m_lux * K_WF_DEFAULT * k_a * k_l
+        }
+
+        /// Eq. 40: Calculates Presence Factor F_Prä
+        pub fn calculate_f_pra(&self) -> f64 {
+            1.0 - (self.relative_absence * self.presence_control.c_pra_kon())
+        }
+
+        /// Extracts C_TL,kon based on Table 25 (Simplified for 500 Lux)
+        pub fn calculate_c_tl_kon(&self, d_rb: f64) -> f64 {
+            // Table 25 logic based on Daylight Quality
+            let is_good = d_rb >= 6.0;
+            let is_medium = d_rb >= 4.0 && d_rb < 6.0;
+            
+            match self.daylight_control {
+                DaylightControl::Manual => {
+                    if is_good { 0.52 } else if is_medium { 0.49 } else { 0.47 }
+                },
+                DaylightControl::DimmedAutoOnOff => {
+                    if is_good { 0.78 } else if is_medium { 0.75 } else { 0.70 }
+                },
+                DaylightControl::DimmedManualOnAutoOff => {
+                    if is_good { 0.81 } else if is_medium { 0.79 } else { 0.73 }
+                }
+            }
+        }
+
+        /// Eq. 19 & 38: Calculates Daylight Supply Factor F_TL
+        pub fn calculate_f_tl(&self) -> f64 {
+            let d_rb = self.geometry.daylight_quotient();
+            if d_rb < 2.0 { return 1.0; } // No daylight, factor is 1.0 (100% artificial)
+
+            // Simplified implementation of Eq 38 weighting (using South default 67% off / 33% blinds)
+            // A full implementation requires Table 12 and Table 15 interpolation.
+            let c_tl_vers_sna = if d_rb >= 6.0 { 0.93 } else if d_rb >= 4.0 { 0.82 } else { 0.60 };
+            let c_tl_vers_sa = 0.40; // Default for auto blinds
+            
+            let c_tl_vers = (0.67 * c_tl_vers_sna) + (0.33 * c_tl_vers_sa);
+            let c_tl_kon = self.calculate_c_tl_kon(d_rb);
+
+            f64::max(0.0, 1.0 - (c_tl_vers * c_tl_kon))
+        }
+
+        /// Main Engine Call: Calculates final energy demand for lighting (Q_l,f) in kWh/a
+        pub fn calculate_annual_final_energy_kwh(&self) -> f64 {
+            let (a_tl, a_ktl) = self.geometry.daylight_zone_area();
+            let p_j = self.calculate_installed_power_density();
+            
+            let f_pra = self.calculate_f_pra();
+            let f_kl = 1.0; // Assume no constant light dimming sensor to save complexity
+            let f_tl = self.calculate_f_tl();
+
+            // Eq. 4, 5, 6
+            let t_eff_tag_tl = self.t_day * f_tl * f_pra * f_kl;
+            let t_eff_tag_ktl = self.t_day * f_pra * f_kl;
+            let t_eff_nacht = self.t_night * f_pra * f_kl;
+
+            // Eq. 2 (Watt-hours)
+            let q_lf_wh = p_j * (
+                a_tl * (t_eff_tag_tl + t_eff_nacht) + 
+                a_ktl * (t_eff_tag_ktl + t_eff_nacht)
+            );
+
+            q_lf_wh / 1000.0 // Return kWh
+        }
+    }
+}
+
+#[cfg(test)]
+mod lighting_tests {
+    use super::*;
+    use crate::lighting::{RoomUsage, LightingRequirement};
+
+    #[test]
+    fn test_lighting_requirements() {
+        let req = RoomUsage::OperatingCavity.requirements();
+        assert_eq!(req.e_m, Some(100000.0));
+        assert_eq!(req.ugr_l, None);
+        assert_eq!(req.r_a, None);
+
+        let req = RoomUsage::StoreAndStockroomsUnmanned.requirements();
+        assert_eq!(req.e_m, Some(100.0));
+        assert_eq!(req.ugr_l, Some(25.0));
+        assert_eq!(req.r_a, Some(60.0));
+
+        let req = RoomUsage::RestaurantDiningRoom.requirements();
+        assert_eq!(req.e_m, None);
+        assert_eq!(req.ugr_l, None);
+        assert_eq!(req.r_a, Some(80.0));
+    }
+}

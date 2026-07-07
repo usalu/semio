@@ -97,6 +97,8 @@ pub struct SpaceData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WallData { 
+    pub name: String,
+    pub orientation: Option<String>,
     pub area: f64, 
     pub u_value: f64, 
     pub thickness: f64,
@@ -110,6 +112,8 @@ pub struct WallData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WindowData { 
+    pub name: String,
+    pub orientation: Option<String>,
     pub area: f64, 
     pub u_value: f64, 
     pub u_w_sh: f64,
@@ -290,8 +294,8 @@ impl BuildingKnowledgeGraph {
                 EntityData::Building(d) => (format!("Building: {}", d.name), "Building"),
                 EntityData::Story(d) => (format!("Story: {}", d.name), "Story"),
                 EntityData::Space(d) => (format!("Space: {}", d.name), "Space"),
-                EntityData::Wall(d) => (format!("Wall (U={:.2})", d.u_value), "Wall"),
-                EntityData::Window(d) => (format!("Window (U={:.2})", d.u_value), "Window"),
+                EntityData::Wall(d) => (format!("{} (U={:.2})", d.name, d.u_value), "Wall"),
+                EntityData::Window(d) => (format!("{} (U={:.2})", d.name, d.u_value), "Window"),
                 EntityData::Slab(d) => (format!("Slab (U={:.2})", d.u_value), "Slab"),
                 EntityData::Roof(d) => (format!("Roof (U={:.2})", d.u_value), "Roof"),
                 EntityData::ThermalBridge(_) => (format!("ThermalBridge"), "ThermalBridge"),

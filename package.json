@@ -48,7 +48,8 @@
     "semio/client/lib/*",
     "semio/client/lib/net/*",
     "semio/client/lib/react/*",
-    "semio/client/lib/sketchpad/*",
+    "semio/client/lib/sketchpad/js",
+    "semio/client/lib/sketchpad/play",
     "semio/client/schema/*",
     "semio/client/ui/*",
     "semio/client/ui/3dm/*",
@@ -100,11 +101,6 @@
     "query:wasm": "bun ./script.ts query wasm"
   },
   "devDependencies": {
-    "@mdx-js/rollup": "^3.1.1",
-    "@playwright/test": "^1.57.0",
-    "@storybook/addon-docs": "^10.4.0",
-    "@storybook/addon-vitest": "^10.4.0",
-    "@storybook/react-vite": "^10.4.0",
     "@eslint/js": "^10.0.1",
     "@mdx-js/rollup": "^3.1.1",
     "@modelcontextprotocol/ext-apps": "^1.3.2",
@@ -138,9 +134,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.1",
     "vite-plugin-singlefile": "^2.3.2",
-    "vitest": "^4.0.17",
-    "eslint-plugin-storybook": "10.4.0",
-    "chevrotain": "^11.0.3"
+    "vitest": "^4.0.17"
   },
   "keywords": [
     "kit-of-parts",

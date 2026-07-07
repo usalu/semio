@@ -261,6 +261,7 @@ function updateSelectionPanel() {
             <div style="font-size:0.8rem; color:#94a3b8;">
                 Use the Gizmo to move or scale the entire zone. Click on a specific wall to add windows.
             </div>
+            <button class="btn-primary" style="background:#ef4444;color:#fff;margin-top:8px;" onclick="removeZone('${selectedObject.userData.zoneId}'); selectedObject = null; updateSelectionPanel();">Delete Zone</button>
         `;
     } else {
         panel.style.display = 'none';
@@ -304,7 +305,7 @@ function showToast(message, isError = false, durationMs = 4000) {
 
 function initThree() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0f1e);
+    scene.background = new THREE.Color(0xf8fafc);
 
     const container = document.getElementById('canvas-container');
     const rect = container.getBoundingClientRect();
@@ -341,7 +342,7 @@ function initThree() {
     scene.add(fillLight);
 
     // Grid
-    const grid = new THREE.GridHelper(30, 30, 0x1e293b, 0x0f172a);
+    const grid = new THREE.GridHelper(30, 30, 0xcbd5e1, 0xe2e8f0);
     grid.rotation.x = Math.PI / 2;
     grid.position.z = -0.01;
     scene.add(grid);
@@ -1208,17 +1209,28 @@ function syncUIFromState(state) {
 
 window.visNetwork = null;
 window.currentSuggestions = [];
+window.currentGraphData = null; // Store for filtering
+window.visNodes = null;
+window.visEdges = null;
 
 function initGraph(graphData) {
+    window.currentGraphData = graphData;
     const container = document.getElementById('graph-container');
     if (!container || !window.vis) return;
+    
+    window.visNodes = new vis.DataSet(graphData.nodes.map(n => {
+        let n2 = {...n};
+        delete n2.title;
+        return n2;
+    }));
+    window.visEdges = new vis.DataSet(graphData.edges);
     const data = {
-        nodes: new vis.DataSet(graphData.nodes),
-        edges: new vis.DataSet(graphData.edges)
+        nodes: window.visNodes,
+        edges: window.visEdges
     };
     const options = {
-        nodes: { shape: 'box', margin: 10, font: { color: '#ffffff' } },
-        edges: { color: '#38bdf8', arrows: 'to' },
+        nodes: { shape: 'box', margin: 10, font: { color: '#0f172a' } },
+        edges: { color: '#38bdf8', arrows: 'to', font: { color: '#334155', size: 11, strokeWidth: 3, strokeColor: '#f8fafc' } },
         groups: {
             Building: { color: { background: '#ef4444', border: '#b91c1c' } },
             Space: { color: { background: '#38bdf8', border: '#0284c7' } },
@@ -1228,58 +1240,168 @@ function initGraph(graphData) {
             Window: { color: { background: '#818cf8', border: '#4f46e5' } },
             Calculation: { shape: 'diamond', font: { size: 16, bold: true }, color: { background: '#22c55e', border: '#166534' } }
         },
-        physics: { stabilization: true }
+        physics: { stabilization: true },
+        layout: { improvedLayout: true } // Professional touch
     };
     window.visNetwork = new vis.Network(container, data, options);
 
-    // Setup click handler for physics documentation
+    // Setup click handler for physics documentation and isolation filtering
     window.visNetwork.on("click", function (params) {
         const infoPanel = document.getElementById('info-panel');
+        const resetBtn = document.getElementById('btn-reset-graph-focus');
+        
         if (params.nodes.length > 0) {
             const nodeId = params.nodes[0];
-            const nodesDataset = window.visNetwork.body.data.nodes;
-            const node = nodesDataset.get(nodeId);
+            const node = window.visNodes.get(nodeId);
             
+            // Show documentation side-dialog
             if (node && node.doc) {
                 const infoTitle = document.getElementById('info-title');
                 const infoContent = document.getElementById('info-content');
+                let titleText = node.label.split(':')[0];
+                if (titleText.includes('_') || titleText.includes('^') || titleText.includes('\\')) {
+                    infoTitle.innerHTML = '$' + titleText + '$';
+                } else {
+                    infoTitle.innerText = titleText;
+                }
                 
-                // Extract property name cleanly
-                infoTitle.innerText = node.label.split(':')[0];
-                
-                // Simple markdown-to-HTML parser for the doc
                 let htmlDoc = node.doc.replace(/\*\*(.*?)\*\*/g, '<b style="color:white;">$1</b>');
                 htmlDoc = htmlDoc.replace(/\n/g, '<br/><br/>');
                 
                 infoContent.innerHTML = htmlDoc;
                 infoPanel.classList.add('visible');
                 
-                // Render math equations using KaTeX if available
                 if (window.renderMathInElement) {
-                    window.renderMathInElement(infoContent, {
+                    const katexOpts = {
                         delimiters: [
                             {left: '$$', right: '$$', display: true},
                             {left: '$', right: '$', display: false}
                         ],
                         throwOnError: false
-                    });
+                    };
+                    window.renderMathInElement(infoTitle, katexOpts);
+                    window.renderMathInElement(infoContent, katexOpts);
                 }
             } else {
                 infoPanel.classList.remove('visible');
             }
+            
+            // Isolate clicked node and its connected nodes
+            const connectedNodes = window.visNetwork.getConnectedNodes(nodeId);
+            const connectedEdges = window.visNetwork.getConnectedEdges(nodeId);
+            
+            const nodeUpdates = window.currentGraphData.nodes.map(n => ({
+                id: n.id,
+                hidden: n.id !== nodeId && !connectedNodes.includes(n.id)
+            }));
+            const edgeUpdates = window.currentGraphData.edges.map(e => ({
+                id: e.id,
+                hidden: !connectedEdges.includes(e.id)
+            }));
+            
+            window.visNodes.update(nodeUpdates);
+            window.visEdges.update(edgeUpdates);
+            
+            if (resetBtn) resetBtn.style.display = 'block';
+            
         } else {
+            // Clicked empty background: remove focus, hide dialog
             infoPanel.classList.remove('visible');
+            resetGraphFocus();
         }
     });
+
+    setupGraphFilters();
 }
+
+function resetGraphFocus() {
+    if (!window.currentGraphData || !window.visNodes || !window.visEdges) return;
+    
+    // Check if any group filter is active
+    const activeFilterBtn = document.querySelector('.graph-filter-btn.active');
+    const activeGroup = activeFilterBtn ? activeFilterBtn.dataset.group : 'all';
+    
+    applyGraphGroupFilter(activeGroup);
+    
+    const resetBtn = document.getElementById('btn-reset-graph-focus');
+    if (resetBtn) resetBtn.style.display = 'none';
+}
+
+function applyGraphGroupFilter(group) {
+    if (!window.currentGraphData || !window.visNodes || !window.visEdges) return;
+    
+    const nodeUpdates = window.currentGraphData.nodes.map(n => {
+        let hidden = false;
+        if (group !== 'all' && n.group !== group) hidden = true;
+        return { id: n.id, hidden: hidden };
+    });
+    
+    const edgeUpdates = window.currentGraphData.edges.map(e => {
+        const fromNode = window.currentGraphData.nodes.find(n => n.id === e.from);
+        const toNode = window.currentGraphData.nodes.find(n => n.id === e.to);
+        let fromHidden = group !== 'all' && fromNode && fromNode.group !== group;
+        let toHidden = group !== 'all' && toNode && toNode.group !== group;
+        return { id: e.id, hidden: fromHidden || toHidden };
+    });
+    
+    window.visNodes.update(nodeUpdates);
+    window.visEdges.update(edgeUpdates);
+}
+
+function setupGraphFilters() {
+    const btns = document.querySelectorAll('.graph-filter-btn');
+    const resetBtn = document.getElementById('btn-reset-graph-focus');
+    
+    btns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            btns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            const group = e.target.dataset.group;
+            applyGraphGroupFilter(group);
+            
+            if (resetBtn) resetBtn.style.display = 'none';
+            document.getElementById('info-panel').classList.remove('visible');
+        });
+    });
+    
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            resetGraphFocus();
+            document.getElementById('info-panel').classList.remove('visible');
+        });
+    }
+    
+    const btnCloseInfo = document.getElementById('btn-close-info');
+    if (btnCloseInfo && !btnCloseInfo._hasListener) {
+        btnCloseInfo.addEventListener('click', () => {
+            document.getElementById('info-panel').classList.remove('visible');
+            resetGraphFocus();
+        });
+        btnCloseInfo._hasListener = true;
+    }
+}
+
 function updateGraph(graphData) {
+    window.currentGraphData = graphData;
     if (!window.visNetwork) {
         initGraph(graphData);
     } else {
-        window.visNetwork.setData({
-            nodes: new vis.DataSet(graphData.nodes),
-            edges: new vis.DataSet(graphData.edges)
-        });
+        window.visNodes.clear();
+        window.visEdges.clear();
+        window.visNodes.add(graphData.nodes.map(n => {
+            let n2 = {...n};
+            delete n2.title;
+            return n2;
+        }));
+        window.visEdges.add(graphData.edges);
+        
+        const resetBtn = document.getElementById('btn-reset-graph-focus');
+        if (resetBtn && resetBtn.style.display === 'block') {
+            resetGraphFocus();
+        } else {
+            resetGraphFocus();
+        }
     }
 }
 
@@ -1458,6 +1580,8 @@ async function dispatchState() {
         }
         const payload = getRustStatePayload();
         
+        // (Removed localStorage saving per user request to start fresh on refresh)
+
         // Removed Graph integration
 
         const numZones = payload.ui_state && payload.ui_state.raw_zones ? payload.ui_state.raw_zones.length : 0;
@@ -2068,6 +2192,23 @@ function initEventListeners() {
     const btnRedo = document.getElementById('btn-redo');
     if (btnRedo) btnRedo.addEventListener('click', handleRedo);
 
+    const btnDeleteAll = document.getElementById('btn-delete-all');
+    if (btnDeleteAll) {
+        btnDeleteAll.addEventListener('click', () => {
+            if (confirm("Are you sure you want to clear all geometry?")) {
+                zones = [];
+                selectedObject = null;
+                selectedWall = null;
+                selectedWindowId = null;
+                updateSelectionPanel();
+                renderZoneList();
+                render3DZones();
+                updateStats();
+                dispatchState();
+            }
+        });
+    }
+
     ['tabula-type', 'tabula-year', 'tabula-scenario', 'num-stories', 'story-height', 'heating-system', 'usage-profile', 'thermal-bridge', 'ground-contact', 'shutter-control', 'climate-region', 'automation-class',
      'custom-wall-mat', 'custom-wall-thick', 'custom-roof-mat', 'custom-roof-thick', 'custom-floor-mat', 'custom-floor-thick',
      'air-tightness', 'has-atd', 'mech-supply', 'mech-exhaust', 'heat-recovery', 'mech-hours',
@@ -2132,17 +2273,20 @@ function initEventListeners() {
     const btnToggleGraph = document.getElementById('btn-toggle-graph');
     const graphContainer = document.getElementById('graph-container');
     const canvasContainer = document.getElementById('canvas-container');
+    const graphControls = document.getElementById('graph-controls');
     
     if (btnToggleGraph && graphContainer && canvasContainer) {
         btnToggleGraph.addEventListener('click', () => {
             if (graphContainer.style.display === 'none') {
                 graphContainer.style.display = 'block';
                 canvasContainer.style.display = 'none';
+                if (graphControls) graphControls.style.display = 'block';
                 btnToggleGraph.classList.add('active');
                 if (window.visNetwork) window.visNetwork.fit();
             } else {
                 graphContainer.style.display = 'none';
                 canvasContainer.style.display = 'block';
+                if (graphControls) graphControls.style.display = 'none';
                 btnToggleGraph.classList.remove('active');
             }
         });
@@ -2163,9 +2307,55 @@ function initEventListeners() {
             suggestionsModal.classList.remove('active');
         });
     }
+
+    const btnLoadBenchmark = document.getElementById('btn-load-benchmark');
+    if (btnLoadBenchmark) {
+        btnLoadBenchmark.addEventListener('click', () => {
+            // 1. Clear existing zones
+            zones.length = 0; // Reset the zones array
+            
+            // 2. Draw a 10.46m x 10.46m square building
+            // Assuming addZone is globally accessible or in scope
+            if (typeof addZone === 'function') {
+                addZone('Space', 0, 0, 10.46, 10.46);
+            }
+            if (typeof render3DZones === 'function') {
+                render3DZones();
+            }
+
+            // 3. Set UI parameters
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            };
+            setVal('num-stories', '2');
+            setVal('story-height', '2.8');
+            setVal('tabula-type', 'SFH');
+            setVal('tabula-year', '...1859');
+            setVal('tabula-scenario', 'Existing State');
+            setVal('wwr', '0.15');
+
+            // 4. Update energy calculations
+            if (typeof dispatchState === 'function') {
+                dispatchState();
+            }
+        });
+    }
 }
 
 // ── Bootstrap ───────────────────────────────────────────────────────────────
+function loadPersistedState() {
+    // Intentionally empty: user requested to start from new on refresh.
+    // Cleared any existing state that might be lingering.
+    localStorage.removeItem('sketchpad_zones');
+    localStorage.removeItem('sketchpad_zone_counter');
+    localStorage.removeItem('sketchpad_rotation');
+    localStorage.removeItem('sketchpad_story_height');
+    localStorage.removeItem('sketchpad_num_stories');
+}
+
 initThree();
 initEventListeners();
 initCompass();
+loadPersistedState();
+
