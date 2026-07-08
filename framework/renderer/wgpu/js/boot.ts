@@ -22,6 +22,12 @@ type PluginModuleHandle = {
 	destroyApp: (instanceId: number) => Promise<void>;
 	handleCommand: (instanceId: number, commandJson: string, viewState: unknown) => Promise<unknown>;
 	render: (instanceId: number, bodyKey: string, viewState: unknown) => Promise<unknown>;
+	renderWithDocument?: (
+		instanceId: number,
+		bodyKey: string,
+		viewState: unknown,
+		documentJson: string,
+	) => Promise<unknown>;
 	tools: (instanceId: number, viewState: unknown) => Promise<unknown>;
 	windowEngagements: (instanceId: number, viewState: unknown) => Promise<unknown>;
 	windowMeasures: (instanceId: number, viewState: unknown) => Promise<unknown>;
@@ -46,7 +52,6 @@ async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<Pl
 	return loadPluginModuleViaWorker(pluginId, moduleUrl);
 }
 
-function pluginHandleForBridge(handle: PluginModuleHandle) {
 function pluginWorkerUrl(moduleUrl: string): string {
 	return moduleUrl.replace(/\/[^/]+\.js$/, "/plugin-worker.js");
 }
@@ -163,8 +168,8 @@ class PluginWorkerClient {
 		return String(response.value ?? "{}");
 	}
 
-	async render(instanceId: number, bodyKey: string, viewStateJson: string): Promise<string> {
-		const response = await this.request("render", { instanceId, bodyKey, viewStateJson });
+	async render(instanceId: number, bodyKey: string, viewStateJson: string, documentJson?: string): Promise<string> {
+		const response = await this.request("render", { instanceId, bodyKey, viewStateJson, documentJson });
 		return String(response.value ?? "{}");
 	}
 
@@ -202,6 +207,8 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
 			JSON.parse(await client.handleCommand(instanceId, commandJson, viewState)),
 		render: async (instanceId: number, bodyKey: string, viewState: unknown) =>
 			JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))),
+		renderWithDocument: async (instanceId: number, bodyKey: string, viewState: unknown, documentJson: string) =>
+			JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)),
 		tools: async (instanceId: number, viewState: unknown) =>
 			JSON.parse(await client.tools(instanceId, JSON.stringify(viewState))),
 		windowEngagements: async (instanceId: number, viewState: unknown) =>
@@ -211,6 +218,7 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
 	};
 }
 //#region PluginWorkerLoad
+function pluginHandleForBridge(handle: PluginModuleHandle) {
 	return {
 		manifest: () => JSON.stringify(handle.manifest),
 		createApp: (appId: string) => handle.createApp(appId),
@@ -221,6 +229,12 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
 				.then((result) => JSON.stringify(result)),
 		render: (instanceId: number, bodyKey: string, viewStateJson: string) =>
 			handle.render(instanceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
+		renderWithDocument: handle.renderWithDocument
+			? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) =>
+					handle
+						.renderWithDocument!(instanceId, bodyKey, JSON.parse(viewStateJson), documentJson)
+						.then((node) => JSON.stringify(node))
+			: undefined,
 		tools: (instanceId: number, viewStateJson: string) =>
 			handle.tools(instanceId, JSON.parse(viewStateJson)).then((nodes) => JSON.stringify(nodes)),
 		windowEngagements: (instanceId: number, viewStateJson: string) =>
@@ -235,7 +249,9 @@ const pluginFilter = pluginFromUrl ?? DEFAULT_PLUGIN_FILTER;
 const studioMode = pluginFilter === "s";
 const pluginTargets = studioMode
 	? PLUGIN_TARGETS
-	: PLUGIN_TARGETS.filter((entry) => entry.pluginId === pluginFilter);
+	: PLUGIN_TARGETS.filter(
+			(entry) => entry.pluginId === pluginFilter || entry.pluginId === `${pluginFilter}-module-procedural`,
+		);
 
 async function pluginModuleAvailable(moduleUrl: string): Promise<boolean> {
 	try {

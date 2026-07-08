@@ -6,6 +6,8 @@
 \RequirePackage{semio-core}
 \RequirePackage{semio-logo}
 \RequirePackage{graphicx}
+\RequirePackage{semio-table}
+\RequirePackage{semio-window}
 
 \ExplSyntaxOn
 
@@ -14,7 +16,7 @@
     \semio_theme_apply:
     \centering
     \semioemblem[2.5cm]\par\vspace{\semio@spacing@double}
-    {\SemioSerif\LARGE\@title\par}
+    {\SemioSans\LARGE\@title\par}
     \tl_if_empty:NTF \l_semio_subtitle_tl {} {{\large\tl_use:N \l_semio_subtitle_tl\par}}
     \vfill
     {\SemioSans\@author\par}
@@ -30,17 +32,28 @@
     \semio_theme_apply:
     \centering
     \vfill
-    {\SemioSerif\Huge\@title\par}
+    {\SemioSans\Huge\@title\par}
     \vspace{\semio@spacing@double}
+    \tl_if_empty:NTF \l_semio_subtitle_tl {} {{\large\tl_use:N \l_semio_subtitle_tl\par\vspace{\semio@spacing@single}}}
     \tl_if_empty:NTF \l_semio_aktenzeichen_tl {} {{\SemioSans Aktenzeichen:~ \tl_use:N \l_semio_aktenzeichen_tl\par}}
     \tl_if_empty:NTF \l_semio_foerderzeitraum_tl {} {{\SemioSans Förderzeitraum:~ \tl_use:N \l_semio_foerderzeitraum_tl\par}}
     \tl_if_empty:NTF \l_semio_doi_tl {} {{\SemioMono DOI:~ \tl_use:N \l_semio_doi_tl\par}}
+    \vspace{\semio@spacing@double}
+    \tl_if_empty:NTF \l_semio_kurzfassung_tl {} {{\SemioSans\small\tl_use:N \l_semio_kurzfassung_tl\par}}
+    \vspace{\semio@spacing@double}
+    {\SemioSans\@author\par}
     \vfill
     \semio@logo@slot[3.5cm]{zukunftbau-logo.pdf}\hfill
     \semio@logo@slot[3.5cm]{bbsr-logo.pdf}\hfill
     \semio@logo@slot[3.5cm]{bundesbauministerium-logo.pdf}
     \vfill
   \end{titlepage}
+}
+
+\NewDocumentCommand{\maketableofcontents}{}{%
+  \setcounter{tocdepth}{3}%
+  \tableofcontents
+  \clearpage
 }
 
 \NewDocumentCommand{\makefundingacknowledgement}{}{%
@@ -58,6 +71,23 @@
   \begin{Table}[title=Netzwerk]
     #1
   \end{Table}
+}
+
+\NewDocumentCommand{\makeregisters}{}{%
+  \listofimages
+  \listofphotos
+  \listoffigures
+  \listoftables
+  \listoflistings
+  \listofpseudocodes
+  \listoftheorems
+  \listoflemmas
+  \listofproofs
+  \listofequations
+  \listofglossaries
+  \listofabbreviations
+  \listofblockquotes
+  \listofepigraphs
 }
 
 \cs_new_protected:Npn \semio_kompakt_draft_report: {

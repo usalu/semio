@@ -16,7 +16,7 @@ use semio_framework_core::{
         InverseOperation, KernelOperation, ModelDiff, ModelHandle, ModelVersion, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    AppDefinition, CommandDescriptor, ExampleDefinition, Keybinding,
+    AppDefinition, CommandDescriptor, Contribution, ExampleDefinition, Keybinding,
     ModeDefinition, NamedLayout, PanelGroup, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode,
     UiNode, ViewState, WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
 };
@@ -428,6 +428,7 @@ impl PluginBundle {
                 programs: Vec::new(),
                 examples: Vec::new(),
                 capabilities: Vec::new(),
+                contributions: Vec::new(),
             },
             apps: HashMap::new(),
         }
@@ -437,6 +438,11 @@ impl PluginBundle {
         if !self.manifest.capabilities.contains(&capability) {
             self.manifest.capabilities.push(capability);
         }
+        self
+    }
+
+    pub fn contributes(mut self, contribution: Contribution) -> Self {
+        self.manifest.contributions.push(contribution);
         self
     }
 
@@ -1021,6 +1027,7 @@ use semio_framework_core::{
     },
     PluginManifest, UiNode, ViewState,
 };
+use serde::Deserialize;
 use std::cell::RefCell;
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -1164,6 +1171,7 @@ pub fn plugin_manifest() -> PluginManifest {
                 programs: vec![],
                 examples: vec![],
                 capabilities: vec![],
+                contributions: vec![],
             })
     })
 }
@@ -1249,17 +1257,69 @@ pub fn plugin_handle_command(
 }
 
 pub fn plugin_render(instance_id: u32, body_key: &str, view_state_json: &str) -> Result<UiNode, String> {
-    let view_state: ViewState =
-        serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
+    plugin_render_with_document(instance_id, body_key, None, view_state_json)
+}
+
+pub fn plugin_render_with_document(
+    instance_id: u32,
+    body_key: &str,
+    document_json: Option<&str>,
+    view_state_json: &str,
+) -> Result<UiNode, String> {
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct WindowRenderInput {
+        #[serde(default)]
+        body_key: String,
+        view_state: ViewState,
+        #[serde(default)]
+        document_json: Option<String>,
+    }
+    let (resolved_body_key, view_state, override_document) = if body_key.is_empty() {
+        let input: WindowRenderInput =
+            serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
+        (
+            if input.body_key.is_empty() {
+                body_key.to_string()
+            } else {
+                input.body_key
+            },
+            input.view_state,
+            input.document_json,
+        )
+    } else if let Ok(input) = serde_json::from_str::<WindowRenderInput>(view_state_json) {
+        (
+            if input.body_key.is_empty() {
+                body_key.to_string()
+            } else {
+                input.body_key
+            },
+            input.view_state,
+            input
+                .document_json
+                .or_else(|| document_json.map(str::to_string)),
+        )
+    } else {
+        let view_state: ViewState =
+            serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
+        (
+            body_key.to_string(),
+            view_state,
+            document_json.map(str::to_string),
+        )
+    };
     INSTANCES.with(|instances| {
         let list = instances.borrow();
         let instance = list
             .iter()
             .find(|instance| instance.id == instance_id)
             .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
+        let document = override_document
+            .as_deref()
+            .unwrap_or(instance.document_json.as_str());
         Ok(instance
             .app
-            .render(body_key, &instance.document_json, &view_state))
+            .render(&resolved_body_key, document, &view_state))
     })
 }
 

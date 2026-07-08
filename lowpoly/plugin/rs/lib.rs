@@ -13,7 +13,7 @@ use semio_framework_plugin::{
     export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, PanelGroup,
     world3d_selection_json, App, Canvas2dScene, CommandDescriptor, MeshData, PluginApp, PluginBundle,
-    tool_button, tool_collection, tool_toggle, ToolNode, UiControlNode, UiFieldNode,
+    tool_button, tool_collection, tool_toggle, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiNode, UiToggleNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -1149,7 +1149,8 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     lowpoly_cmd("toggleSelectionKind", Some(json!({ "kind": "vertex" }))),
                 ),
             ],
-        ),
+        )
+        .with_category(ToolCategory::Selection),
         tool_collection(
             "lowpoly-tools-transform",
             "move",
@@ -1177,7 +1178,8 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     lowpoly_cmd("setTransformTool", Some(json!({ "tool": "scale" }))),
                 ),
             ],
-        ),
+        )
+        .with_category(ToolCategory::Tools),
         tool_collection(
             "lowpoly-tools-edit",
             "pen-tool",
@@ -1210,7 +1212,8 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                 ),
                 tool_button("lowpoly-tools-decimate", "minimize-2", "Decimate", lowpoly_cmd("decimate", None)),
             ],
-        ),
+        )
+        .with_category(ToolCategory::Commands),
         tool_collection(
             "lowpoly-tools-history",
             "undo",
@@ -1219,7 +1222,8 @@ fn edit_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                 tool_button("lowpoly-tools-undo", "undo", "Undo", lowpoly_cmd("editUndo", None)),
                 tool_button("lowpoly-tools-redo", "redo", "Redo", lowpoly_cmd("editRedo", None)),
             ],
-        ),
+        )
+        .with_category(ToolCategory::History),
     ]
 }
 
@@ -1260,7 +1264,8 @@ fn paint_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     lowpoly_cmd("setPaintTool", Some(json!({ "tool": "eyedropper" }))),
                 ),
             ],
-        ),
+        )
+        .with_category(ToolCategory::Tools),
         tool_collection(
             "lowpoly-paint-uv",
             "grid-3x3",
@@ -1280,7 +1285,8 @@ fn paint_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                     lowpoly_cmd("clearSeam", None),
                 ),
             ],
-        ),
+        )
+        .with_category(ToolCategory::Commands),
         tool_collection(
             "lowpoly-paint-history",
             "undo",
@@ -1289,7 +1295,8 @@ fn paint_tools(envelope: &LowpolyPlayEnvelope) -> Vec<ToolNode> {
                 tool_button("lowpoly-paint-undo", "undo", "Undo", lowpoly_cmd("paintUndo", None)),
                 tool_button("lowpoly-paint-redo", "redo", "Redo", lowpoly_cmd("paintRedo", None)),
             ],
-        ),
+        )
+        .with_category(ToolCategory::History),
     ]
 }
 //#endregion 🔖Tools

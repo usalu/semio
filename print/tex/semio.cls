@@ -38,9 +38,9 @@
 \RequirePackage{semio-fonts}
 \RequirePackage{semio-core}
 \RequirePackage{semio-logo}
-\RequirePackage{semio-components}
-\RequirePackage{semio-window}
 \RequirePackage{semio-table}
+\RequirePackage{semio-window}
+\RequirePackage{semio-components}
 
 \ExplSyntaxOn
 \keys_set:nx { semio / setup } {
@@ -48,6 +48,9 @@
   theme = \semio@theme,
   language = \semio@language,
 }
+\str_case:Vn \semio@language {
+  { de } { \PassOptionsToPackage { main = ngerman } { babel } }
+} { }
 \ExplSyntaxOff
 
 \RequirePackage[ngerman,english]{babel}

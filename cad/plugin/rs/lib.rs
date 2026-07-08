@@ -14,7 +14,7 @@ use semio_framework_plugin::{PanelGroup,
     tool_button, tool_collection, tool_separator, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, App,
-    CommandDescriptor, MeshData, PluginApp, PluginBundle, ToolNode, UiControlNode, UiFieldNode,
+    CommandDescriptor, MeshData, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementOption,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
@@ -1967,16 +1967,19 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
         .with_order((transfers_to.len() + index + 1) as u32)
     }));
     let mut tools = vec![
-        tool_collection("view", "layout-grid", "View", view_tools),
-        tool_collection("save", "save", "Save", save_tools),
+        tool_collection("view", "layout-grid", "View", view_tools).with_category(ToolCategory::Tools),
+        tool_collection("save", "save", "Save", save_tools).with_category(ToolCategory::Commands),
     ];
     if !transfer_tools.is_empty() {
-        tools.push(tool_collection(
-            "transfer",
-            "arrow-right-left",
-            "Transfer",
-            transfer_tools,
-        ));
+        tools.push(
+            tool_collection(
+                "transfer",
+                "arrow-right-left",
+                "Transfer",
+                transfer_tools,
+            )
+            .with_category(ToolCategory::Commands),
+        );
     }
     tools
 }

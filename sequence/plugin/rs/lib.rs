@@ -5,7 +5,7 @@ use sequence_core::{default_fixture, SequenceFixture, SequenceHost, SequenceStep
 use semio_framework_plugin::{PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, tool_button, tool_collection,
     tool_toggle, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
-    App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, ToolNode, UiControlNode,
+    App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, ToolCategory, ToolNode, UiControlNode,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -514,13 +514,20 @@ fn edit_tools(envelope: &SequencePlayEnvelope) -> Vec<ToolNode> {
                 tool_button("sequence-tools-run", "play", "Run", sequence_cmd("run", None)),
                 tool_button("sequence-tools-stop", "square", "Stop", sequence_cmd("stop", None)),
             ],
-        ),
+        )
+        .with_category(ToolCategory::Commands),
+        tool_button(
+            "sequence-tools-reorganize",
+            "refresh-cw",
+            "Reorganize",
+            sequence_cmd("reorganize", None),
+        )
+        .with_category(ToolCategory::Commands),
         tool_collection(
-            "sequence-tools-layout",
+            "sequence-tools-orientation",
             "layout-grid",
             "Layout",
             vec![
-                tool_button("sequence-tools-reorganize", "refresh-cw", "Reorganize", sequence_cmd("reorganize", None)),
                 tool_toggle(
                     "sequence-tools-orientation-lr",
                     "arrow-right",
@@ -536,7 +543,8 @@ fn edit_tools(envelope: &SequencePlayEnvelope) -> Vec<ToolNode> {
                     sequence_cmd("setOrientation", Some(orientation_arg(DagLayoutOrientation::TopBottom))),
                 ),
             ],
-        ),
+        )
+        .with_category(ToolCategory::Tools),
     ]
 }
 //#endregion 🔖Tools

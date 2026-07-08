@@ -79,7 +79,9 @@ self.addEventListener("message", async (event) => {
         break;
       case "render":
         reply(requestId, "render", {
-          value: await api.render(msg.instanceId, msg.bodyKey, msg.viewStateJson),
+          value: msg.documentJson && api.renderWithDocument
+            ? await api.renderWithDocument(msg.instanceId, msg.bodyKey, msg.viewStateJson, msg.documentJson)
+            : await api.render(msg.instanceId, msg.bodyKey, msg.viewStateJson),
         });
         break;
       case "tools":
@@ -143,6 +145,13 @@ export async function createPluginApi() {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
       const response = await plugin.updateWindow(instanceId, {
         json: JSON.stringify({ bodyKey, viewState: JSON.parse(viewStateJson) }),
+      });
+      return response.json;
+    },
+    async renderWithDocument(instanceId, bodyKey, viewStateJson, documentJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const response = await plugin.updateWindow(instanceId, {
+        json: JSON.stringify({ bodyKey, viewState: JSON.parse(viewStateJson), documentJson }),
       });
       return response.json;
     },
@@ -228,7 +237,10 @@ async function buildPlugins(filterPlugin?: string): Promise<void> {
 		rmSync(stalePublicPlugins, { recursive: true, force: true });
 	}
 	const targets = filterPlugin
-		? PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin)
+		? PLUGIN_BUILD_TARGETS.filter(
+				(target) =>
+					target.pluginId === filterPlugin || target.pluginId === `${filterPlugin}-module-procedural`,
+			)
 		: PLUGIN_BUILD_TARGETS;
 	for (const target of targets) {
 		await buildPlugin(target);

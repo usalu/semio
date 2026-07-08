@@ -20,6 +20,7 @@ use semio_framework_plugin::{PanelGroup,
     layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
     App, CommandDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, SurfaceKind, TextEditorScene,
+    ToolCategory,
     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
     UiSelectItem, UiSelectNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, VirtualFileSystemScene,
@@ -2478,13 +2479,14 @@ fn home_create_tools() -> Vec<semio_framework_plugin::ToolNode> {
         s_home_cmd("createStudio", Some(json!({ "kind": "folder" }))),
     ));
     vec![
-        tool_collection("s-home.create", "plus", "Create", children),
+        tool_collection("s-home.create", "plus", "Create", children).with_category(ToolCategory::Commands),
         tool_button(
             "s-home.import",
             "upload",
             "Import Studio",
             s_home_cmd("importStudio", None),
-        ),
+        )
+        .with_category(ToolCategory::Commands),
     ]
 }
 
@@ -2565,7 +2567,8 @@ fn create_studio_app() -> App {
                         s_play_cmd("commitCheckpoint", None),
                     ),
                 ],
-            )],
+            )
+            .with_category(ToolCategory::History)],
         )
         .keybinding("mod+z", "undo")
         .keybinding("mod+shift+z", "redo")

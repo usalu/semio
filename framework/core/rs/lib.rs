@@ -1346,6 +1346,15 @@ pub mod tools {
 use crate::layout::CommandDescriptor;
 use serde::{Deserialize, Serialize};
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ToolCategory {
+    Selection,
+    Tools,
+    Commands,
+    History,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ToolNode {
@@ -1369,6 +1378,8 @@ pub enum ToolNode {
         order: Option<u32>,
         #[serde(skip_serializing_if = "Option::is_none")]
         disabled: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        category: Option<ToolCategory>,
         on_press: CommandDescriptor,
     },
     Toggle {
@@ -1386,6 +1397,8 @@ pub enum ToolNode {
         pressed: Option<bool>,
         #[serde(skip_serializing_if = "Option::is_none")]
         disabled: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        category: Option<ToolCategory>,
         on_change: CommandDescriptor,
     },
     Collection {
@@ -1401,8 +1414,31 @@ pub enum ToolNode {
         order: Option<u32>,
         #[serde(skip_serializing_if = "Option::is_none")]
         disabled: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        category: Option<ToolCategory>,
         children: Vec<ToolNode>,
     },
+}
+
+impl ToolNode {
+    pub fn category(&self) -> ToolCategory {
+        match self {
+            ToolNode::Separator { .. } => ToolCategory::Tools,
+            ToolNode::Button { category, .. } => category.unwrap_or(ToolCategory::Commands),
+            ToolNode::Toggle { category, .. } => category.unwrap_or(ToolCategory::Tools),
+            ToolNode::Collection { category, .. } => category.unwrap_or(ToolCategory::Tools),
+        }
+    }
+
+    pub fn with_category(mut self, category: ToolCategory) -> Self {
+        match &mut self {
+            ToolNode::Button { category: slot, .. }
+            | ToolNode::Toggle { category: slot, .. }
+            | ToolNode::Collection { category: slot, .. } => *slot = Some(category),
+            ToolNode::Separator { .. } => {}
+        }
+        self
+    }
 }
 
 pub fn tool_separator(id: impl Into<String>) -> ToolNode {
@@ -1428,6 +1464,7 @@ pub fn tool_button(
         title: Some(label),
         order: None,
         disabled: None,
+        category: None,
         on_press,
     }
 }
@@ -1449,6 +1486,7 @@ pub fn tool_toggle(
         order: None,
         pressed: Some(pressed),
         disabled: None,
+        category: None,
         on_change,
     }
 }
@@ -1468,6 +1506,7 @@ pub fn tool_collection(
         title: Some(label),
         order: None,
         disabled: None,
+        category: None,
         children,
     }
 }
@@ -2439,6 +2478,15 @@ impl GisMapScene {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct UiExternalSlotNode {
+    pub plugin_id: String,
+    pub app_id: String,
+    pub body_key: String,
+    pub params_json: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct UiComponentSceneNode {
     pub surface_id: String,
     pub controller_id: String,
@@ -2487,6 +2535,7 @@ pub enum UiNode {
     Section(UiSectionNode),
     Tree(UiTreeNode),
     ComponentScene(UiComponentSceneNode),
+    ExternalSlot(UiExternalSlotNode),
 }
 
 impl NodeGraphScene {
@@ -2593,6 +2642,21 @@ pub fn ui_text(value: impl Into<String>) -> UiNode {
         value: value.into(),
         emphasize: None,
         data_attributes: None,
+    })
+}
+
+/** @emoji 🔌 Renders a contributing plugin body inline at this tree position. */
+pub fn ui_external_slot(
+    plugin_id: impl Into<String>,
+    app_id: impl Into<String>,
+    body_key: impl Into<String>,
+    params_json: impl Into<String>,
+) -> UiNode {
+    UiNode::ExternalSlot(UiExternalSlotNode {
+        plugin_id: plugin_id.into(),
+        app_id: app_id.into(),
+        body_key: body_key.into(),
+        params_json: params_json.into(),
     })
 }
 
@@ -2943,6 +3007,21 @@ pub struct ExampleDefinition {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum Contribution {
+    FormsQuestionKind {
+        app_id: String,
+        question_kind: String,
+        label: String,
+        icon_id: String,
+        #[serde(default, skip_serializing_if = "String::is_empty")]
+        default_value_json: String,
+        params_body_key: String,
+        preview_body_key: String,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginManifest {
     pub plugin_id: String,
@@ -2953,6 +3032,8 @@ pub struct PluginManifest {
     pub examples: Vec<ExampleDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub capabilities: Vec<kernel::CapabilityRequirement>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub contributions: Vec<Contribution>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -2966,6 +3047,8 @@ pub struct ViewState {
     pub selection_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub panel_json: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub contributions_json: Option<String>,
 }
 
 //#region 🔖Kernel
@@ -3415,7 +3498,7 @@ pub use mesh::{
     mesh_plane, mesh_to_glb, mesh_to_obj, mesh_torus, mesh_uv_sphere, MeshData,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
-pub use tools::{tool_button, tool_collection, tool_separator, tool_toggle, ToolNode};
+pub use tools::{tool_button, tool_collection, tool_separator, tool_toggle, ToolCategory, ToolNode};
 pub use ui::*;
 pub use ui::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,

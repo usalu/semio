@@ -496,6 +496,8 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
 			return <DeclarativeTreePanel treeNode={node} onCommand={context.onCommand} />;
 		case "componentScene":
 			return renderComponentSceneHost(node, context.onCommand);
+		case "externalSlot":
+			return <p className="text-muted-foreground text-xs">Extension unavailable: {node.pluginId}</p>;
 	}
 }
 //#endregion InterpretUiNode

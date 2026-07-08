@@ -14,6 +14,7 @@ const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
 const jobs: readonly (readonly [string, number])[] = [
 	["report.pdf", 3],
+	["report.pdf", 4],
 	["report-dark.pdf", 3],
 	["paper.pdf", 2],
 	["paper-dark.pdf", 2],

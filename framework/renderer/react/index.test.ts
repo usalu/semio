@@ -55,6 +55,59 @@ describe("framework renderer types", () => {
 	});
 });
 
+describe("framework external slots", () => {
+	it("resolves external slots through contributor plugins", async () => {
+		const { resolveExternalSlots } = await import("@semio-tech/framework-core");
+		const handle = {
+			pluginId: "forms-module-procedural",
+			manifest: { pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] },
+			createApp: async () => 7,
+			destroyApp: async () => {},
+			handleCommand: async () => [],
+			render: async () => ({ type: "text", value: "fallback" }),
+			renderWithDocument: async (_instanceId: number, bodyKey: string) => ({
+				type: "text",
+				value: `resolved:${bodyKey}`,
+			}),
+			tools: async () => [],
+			windowEngagements: async () => ({}),
+			windowMeasures: async () => ({}),
+			dispose: () => {},
+		};
+		const resolved = await resolveExternalSlots(
+			{
+				type: "externalSlot",
+				pluginId: "forms-module-procedural",
+				appId: "forms-module-procedural",
+				bodyKey: "preview",
+				paramsJson: "{}",
+			},
+			{
+				plugins: new Map([["forms-module-procedural", handle]]),
+				contributorInstances: new Map(),
+				viewState: {},
+			},
+		);
+		expect(resolved).toEqual({ type: "text", value: "resolved:preview" });
+	});
+
+	it("renders external slot fallback text when unresolved", () => {
+		const markup = renderToStaticMarkup(
+			interpretUiNode(
+				{
+					type: "externalSlot",
+					pluginId: "missing-module",
+					appId: "missing-module",
+					bodyKey: "preview",
+					paramsJson: "{}",
+				},
+				{ onCommand: noopCommand },
+			),
+		);
+		expect(markup).toContain("Extension unavailable: missing-module");
+	});
+});
+
 describe("framework renderer hosts", () => {
 	it("renders node graph host from media graph scene json", () => {
 		const markup = renderToStaticMarkup(

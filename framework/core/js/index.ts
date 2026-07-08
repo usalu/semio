@@ -617,9 +617,26 @@ export type PluginViewState = {
 	readonly activeWindowKindId?: string;
 	readonly selectionJson?: string;
 	readonly panelJson?: string;
+	readonly contributionsJson?: string;
 };
 
 export type PluginUiNode = Record<string, unknown> & { readonly type: string };
+
+export type PluginContribution = {
+	readonly kind: "formsQuestionKind";
+	readonly appId: string;
+	readonly questionKind: string;
+	readonly label: string;
+	readonly iconId: string;
+	readonly defaultValueJson?: string;
+	readonly paramsBodyKey: string;
+	readonly previewBodyKey: string;
+};
+
+export type PluginContributionEntry = {
+	readonly pluginId: string;
+	readonly contribution: PluginContribution;
+};
 
 export type PluginManifest = {
 	readonly pluginId: string;
@@ -633,6 +650,7 @@ export type PluginManifest = {
 		readonly yields: string;
 	}[];
 	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string }[];
+	readonly contributions?: readonly PluginContribution[];
 };
 
 export type PluginWasmHandle = {
@@ -642,6 +660,12 @@ export type PluginWasmHandle = {
 	readonly destroyApp: (instanceId: number) => Promise<void>;
 	readonly handleCommand: (instanceId: number, commandJson: string, viewState: PluginViewState) => Promise<string[]>;
 	readonly render: (instanceId: number, bodyKey: string, viewState: PluginViewState) => Promise<PluginUiNode>;
+	readonly renderWithDocument?: (
+		instanceId: number,
+		bodyKey: string,
+		viewState: PluginViewState,
+		documentJson: string,
+	) => Promise<PluginUiNode>;
 	readonly tools: (instanceId: number, viewState: PluginViewState) => Promise<readonly Record<string, unknown>[]>;
 	readonly windowEngagements: (
 		instanceId: number,
@@ -653,6 +677,92 @@ export type PluginWasmHandle = {
 	) => Promise<Readonly<Record<string, readonly Record<string, unknown>[]>>>;
 	readonly dispose: () => void;
 };
+
+export function buildContributionsJson(
+	loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>,
+): string {
+	const entries: PluginContributionEntry[] = [];
+	for (const entry of loaded) {
+		for (const contribution of entry.manifest.contributions ?? []) {
+			entries.push({ pluginId: entry.pluginId, contribution });
+		}
+	}
+	return JSON.stringify(entries);
+}
+
+export function contributorPluginIdsFor(primaryPluginId: string): readonly string[] {
+	return [`${primaryPluginId}-module-procedural`];
+}
+
+export function expandPluginRegistry(
+	plugins: readonly PluginRegistryEntry[],
+	primaryPluginId?: string,
+	studioMode = false,
+): readonly PluginRegistryEntry[] {
+	if (studioMode || !primaryPluginId) return plugins;
+	const extraIds = new Set(contributorPluginIdsFor(primaryPluginId));
+	return [
+		...plugins.filter((entry) => entry.pluginId === primaryPluginId),
+		...plugins.filter((entry) => entry.pluginId !== primaryPluginId && extraIds.has(entry.pluginId)),
+	];
+}
+
+export type ExternalSlotResolverContext = {
+	readonly plugins: ReadonlyMap<string, PluginWasmHandle>;
+	readonly contributorInstances: Map<string, number>;
+	readonly viewState: PluginViewState;
+};
+
+export async function ensureContributorInstance(
+	pluginId: string,
+	appId: string,
+	context: ExternalSlotResolverContext,
+): Promise<number | null> {
+	const existing = context.contributorInstances.get(pluginId);
+	if (existing != null) return existing;
+	const handle = context.plugins.get(pluginId);
+	if (!handle) return null;
+	const instanceId = await handle.createApp(appId);
+	context.contributorInstances.set(pluginId, instanceId);
+	return instanceId;
+}
+
+export async function resolveExternalSlots(
+	node: PluginUiNode,
+	context: ExternalSlotResolverContext,
+): Promise<PluginUiNode> {
+	if (node.type === "externalSlot") {
+		const pluginId = String(node.pluginId ?? "");
+		const appId = String(node.appId ?? pluginId);
+		const bodyKey = String(node.bodyKey ?? "");
+		const paramsJson = String(node.paramsJson ?? "{}");
+		const handle = context.plugins.get(pluginId);
+		if (!handle) {
+			return { type: "text", value: `Extension unavailable: ${pluginId}` };
+		}
+		const instanceId = await ensureContributorInstance(pluginId, appId, context);
+		if (instanceId == null) {
+			return { type: "text", value: `Extension unavailable: ${pluginId}` };
+		}
+		const rendered = handle.renderWithDocument
+			? await handle.renderWithDocument(instanceId, bodyKey, context.viewState, paramsJson)
+			: await handle.render(instanceId, bodyKey, context.viewState);
+		return resolveExternalSlots(rendered, context);
+	}
+	if (node.type === "stack" && Array.isArray(node.children)) {
+		const children = await Promise.all(
+			node.children.map((child) => resolveExternalSlots(child as PluginUiNode, context)),
+		);
+		return { ...node, children };
+	}
+	if (node.type === "section" && Array.isArray(node.children)) {
+		const children = await Promise.all(
+			node.children.map((child) => resolveExternalSlots(child as PluginUiNode, context)),
+		);
+		return { ...node, children };
+	}
+	return node;
+}
 
 export type PluginRegistryEntry = {
 	readonly pluginId: string;
@@ -666,6 +776,22 @@ export const DEFAULT_PLUGIN_REGISTRY: readonly PluginRegistryEntry[] = [
 export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
 	const module = (await import(/* @vite-ignore */ moduleUrl)) as {
 		default?: () => Promise<void> | void;
+		createPluginApi?: () => Promise<{
+			manifest: () => Promise<string>;
+			createApp: (appId: string) => Promise<number>;
+			destroyApp?: (instanceId: number) => Promise<void>;
+			handleCommand: (instanceId: number, commandJson: string, contextJson: string) => Promise<string>;
+			render: (instanceId: number, bodyKey: string, viewStateJson: string) => Promise<string>;
+			renderWithDocument?: (
+				instanceId: number,
+				bodyKey: string,
+				viewStateJson: string,
+				documentJson: string,
+			) => Promise<string>;
+			tools?: (instanceId: number, viewStateJson: string) => Promise<string>;
+			windowEngagements?: (instanceId: number, viewStateJson: string) => Promise<string>;
+			windowMeasures?: (instanceId: number, viewStateJson: string) => Promise<string>;
+		}>;
 		semio_plugin_manifest?: () => string;
 		semio_plugin_create_app?: (appId: string) => number;
 		semio_plugin_destroy_app?: (instanceId: number) => void;
@@ -676,6 +802,49 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 		semio_plugin_window_measures?: (instanceId: number, viewStateJson: string) => string;
 	};
 	if (module.default) await module.default();
+	if (module.createPluginApi) {
+		const api = await module.createPluginApi();
+		const manifest = JSON.parse(await api.manifest()) as PluginManifest;
+		return {
+			pluginId,
+			manifest,
+			createApp: (appId) => api.createApp(appId),
+			destroyApp: async (instanceId) => {
+				await api.destroyApp?.(instanceId);
+			},
+			handleCommand: async (instanceId, commandJson, viewState) => {
+				const raw = await api.handleCommand(instanceId, commandJson, JSON.stringify(viewState));
+				return JSON.parse(raw) as string[];
+			},
+			render: async (instanceId, bodyKey, viewState) =>
+				JSON.parse(await api.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
+			renderWithDocument: api.renderWithDocument
+				? async (instanceId, bodyKey, viewState, documentJson) =>
+						JSON.parse(
+							await api.renderWithDocument!(instanceId, bodyKey, JSON.stringify(viewState), documentJson),
+						) as PluginUiNode
+				: undefined,
+			tools: async (instanceId, viewState) => {
+				if (!api.tools) return [];
+				return JSON.parse(await api.tools(instanceId, JSON.stringify(viewState))) as Record<string, unknown>[];
+			},
+			windowEngagements: async (instanceId, viewState) => {
+				if (!api.windowEngagements) return {};
+				return JSON.parse(await api.windowEngagements(instanceId, JSON.stringify(viewState))) as Record<
+					string,
+					Record<string, unknown>
+				>;
+			},
+			windowMeasures: async (instanceId, viewState) => {
+				if (!api.windowMeasures) return {};
+				return JSON.parse(await api.windowMeasures(instanceId, JSON.stringify(viewState))) as Record<
+					string,
+					readonly Record<string, unknown>[]
+				>;
+			},
+			dispose() {},
+		};
+	}
 	if (!module.semio_plugin_manifest) {
 		throw new Error(`[DEBUG] plugin ${pluginId} missing semio_plugin_manifest export`);
 	}
@@ -734,6 +903,15 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
 			handle.handleCommand(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)),
 		render: (instanceId: number, bodyKey: string, viewStateJson: string) =>
 			handle.render(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState).then((node) => JSON.stringify(node)),
+		renderWithDocument: handle.renderWithDocument
+			? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) =>
+					handle.renderWithDocument!(
+						instanceId,
+						bodyKey,
+						JSON.parse(viewStateJson) as PluginViewState,
+						documentJson,
+					).then((node) => JSON.stringify(node))
+			: undefined,
 		tools: (instanceId: number, viewStateJson: string) =>
 			handle.tools(instanceId, JSON.parse(viewStateJson) as PluginViewState).then((nodes) => JSON.stringify(nodes)),
 		windowEngagements: (instanceId: number, viewStateJson: string) =>

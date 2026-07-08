@@ -1,0 +1,14 @@
+{
+  "title": "Print Footer Bottom Spacing",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "The print LaTeX footer leaves too much space below it and should sit closer to the physical page bottom.",
+  "summary": "Fixed print footer sitting too high above the page bottom. KOMA was overriding fancy page styles so chapter/TOC pages only showed a bare page number; chrome footer never rendered. Applied chrome styles after preamble end for fancy/plain/scrplain/scrheadings, reduced bottom margin to a single spacing unit, and anchored the chrome footer at the physical page bottom via eso-pic shipout (skipping empty/title pages). Verified on paper.pdf page 2.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1862"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪29fbb939c9e5416793800eb6fb8040ff"
+  ]
+}

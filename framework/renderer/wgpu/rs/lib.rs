@@ -4050,6 +4050,19 @@ fn render_ui_node_inner(
                 render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
             }
         }
+        UiNode::Section(section) => {
+            let gap = gap_for_token(ctx.theme, None);
+            let padding = padding_for_token(ctx.theme, None);
+            let sizes: Vec<f32> = section
+                .children
+                .iter()
+                .map(|child| measure_ui_node(ctx.atlas, ctx.theme, child).1)
+                .collect();
+            let rects = layout_vertical(bounds, gap, padding, &sizes);
+            for (child, rect) in section.children.iter().zip(rects.iter()) {
+                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
+            }
+        }
         other => render_widget(&ui_node_to_widget(other), bounds, ctx),
     }
 }
@@ -4151,6 +4164,10 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<CommandDescriptor> {
         },
         UiNode::ComponentScene(_) => WidgetNode::Text {
             value: String::new(),
+            emphasize: false,
+        },
+        UiNode::ExternalSlot(slot) => WidgetNode::Text {
+            value: format!("Extension: {} / {}", slot.plugin_id, slot.body_key),
             emphasize: false,
         },
     }
@@ -4534,11 +4551,26 @@ impl PluginBridgeEntry {
         body_key: &str,
         view_state: &ViewState,
     ) -> Result<UiNode, String> {
+        self.render_with_document(instance_id, body_key, view_state, None)
+            .await
+    }
+
+    pub async fn render_with_document(
+        &self,
+        instance_id: u32,
+        body_key: &str,
+        view_state: &ViewState,
+        document_json: Option<&str>,
+    ) -> Result<UiNode, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
-            PluginBridgeBackend::Js(handle) => render_js(handle, instance_id, body_key, view_state).await,
+            PluginBridgeBackend::Js(handle) => {
+                render_with_document_js(handle, instance_id, body_key, view_state, document_json).await
+            }
             #[cfg(not(target_arch = "wasm32"))]
-            PluginBridgeBackend::Wasm(runtime) => runtime.render(instance_id, body_key, view_state),
+            PluginBridgeBackend::Wasm(runtime) => {
+                runtime.render_with_document(instance_id, body_key, view_state, document_json)
+            }
         }
     }
 
@@ -4683,16 +4715,44 @@ async fn render_js(
     body_key: &str,
     view_state: &ViewState,
 ) -> Result<UiNode, String> {
-    let render = get_fn(handle.as_ref(), "render")?;
+    render_with_document_js(handle, instance_id, body_key, view_state, None).await
+}
+
+#[cfg(target_arch = "wasm32")]
+async fn render_with_document_js(
+    handle: &Rc<JsValue>,
+    instance_id: u32,
+    body_key: &str,
+    view_state: &ViewState,
+    document_json: Option<&str>,
+) -> Result<UiNode, String> {
+    let render = if document_json.is_some() {
+        Reflect::get(handle.as_ref(), &JsValue::from_str("renderWithDocument"))
+            .ok()
+            .and_then(|v| v.dyn_into::<Function>().ok())
+            .or_else(|| get_fn(handle, "render").ok())
+    } else {
+        get_fn(handle, "render").ok()
+    };
+    let render = render.ok_or("render failed")?;
     let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
-    let result = render
-        .call3(
+    let result = if let Some(document) = document_json {
+        render.call4(
+            &JsValue::NULL,
+            &JsValue::from_f64(instance_id as f64),
+            &JsValue::from_str(body_key),
+            &JsValue::from_str(&view_json),
+            &JsValue::from_str(document),
+        )
+    } else {
+        render.call3(
             &JsValue::NULL,
             &JsValue::from_f64(instance_id as f64),
             &JsValue::from_str(body_key),
             &JsValue::from_str(&view_json),
         )
-        .map_err(|_| "render failed")?;
+    }
+    .map_err(|_| "render failed")?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
         JsFuture::from(promise.clone())
             .await
@@ -7195,7 +7255,7 @@ use infinite_world::{
 use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
 use semio_framework_core::{
     app_document_label, app_window_document_label, AppDefinition, CommandDescriptor, ExampleDefinition,
-    ModeDefinition, PanelGroup, PanelTabDefinition, ToolNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, ViewState, WindowEngagement,
+    ModeDefinition, PanelGroup, PanelTabDefinition, ToolCategory, ToolNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, ViewState, WindowEngagement,
     WindowEngagementControl, WindowEngagementInput, WindowEngagementOption, WindowMeasure,
 };
 use semio_framework_core::layout::{
@@ -7421,11 +7481,85 @@ pub struct ShellState {
     pub measures_resize_window_id: Option<String>,
     pub deferred_commands: Vec<CommandDescriptor>,
     pub active_tools: Vec<ToolNode>,
+    pub active_tool_id: Option<String>,
     pub window_engagements: HashMap<String, WindowEngagement>,
     pub window_measures: HashMap<String, Vec<WindowMeasure>>,
     pub tool_collection_expanded: HashMap<String, bool>,
+    pub contributor_instances: HashMap<String, u32>,
 }
 //#endregion ShellTypes
+
+async fn resolve_external_slots_in_tree(
+    node: UiNode,
+    plugins: &[PluginBridgeEntry],
+    contributor_instances: &mut HashMap<String, u32>,
+    view_state: &ViewState,
+) -> Result<UiNode, String> {
+    match node {
+        UiNode::ExternalSlot(slot) => {
+            let plugin = plugins
+                .iter()
+                .find(|entry| entry.plugin_id == slot.plugin_id)
+                .cloned()
+                .ok_or_else(|| format!("contributor plugin missing: {}", slot.plugin_id))?;
+            let instance_id = if let Some(id) = contributor_instances.get(&slot.plugin_id) {
+                *id
+            } else {
+                let id = plugin.create_app(&slot.app_id).await?;
+                contributor_instances.insert(slot.plugin_id.clone(), id);
+                id
+            };
+            let rendered = plugin
+                .render_with_document(
+                    instance_id,
+                    &slot.body_key,
+                    view_state,
+                    Some(slot.params_json.as_str()),
+                )
+                .await?;
+            Box::pin(resolve_external_slots_in_tree(
+                rendered,
+                plugins,
+                contributor_instances,
+                view_state,
+            ))
+            .await
+        }
+        UiNode::Stack(mut stack) => {
+            let mut children = Vec::with_capacity(stack.children.len());
+            for child in stack.children {
+                children.push(
+                    Box::pin(resolve_external_slots_in_tree(
+                        child,
+                        plugins,
+                        contributor_instances,
+                        view_state,
+                    ))
+                    .await?,
+                );
+            }
+            stack.children = children;
+            Ok(UiNode::Stack(stack))
+        }
+        UiNode::Section(mut section) => {
+            let mut children = Vec::with_capacity(section.children.len());
+            for child in section.children {
+                children.push(
+                    Box::pin(resolve_external_slots_in_tree(
+                        child,
+                        plugins,
+                        contributor_instances,
+                        view_state,
+                    ))
+                    .await?,
+                );
+            }
+            section.children = children;
+            Ok(UiNode::Section(section))
+        }
+        other => Ok(other),
+    }
+}
 
 //#region ShellLifecycle
 impl ShellState {
@@ -7507,9 +7641,11 @@ impl ShellState {
             measures_resize_window_id: None,
             deferred_commands: Vec::new(),
             active_tools: Vec::new(),
+            active_tool_id: None,
             window_engagements: HashMap::new(),
             window_measures: HashMap::new(),
             tool_collection_expanded: HashMap::new(),
+            contributor_instances: HashMap::new(),
         }
     }
 
@@ -7582,6 +7718,7 @@ impl ShellState {
                 active_window_kind_id: s_app.window_kinds.first().map(|w| w.id.clone()),
                 selection_json: None,
                 panel_json: Some(Self::panel_json(&panel_state)),
+                contributions_json: None,
             };
             self.active_window_id = s_app.window_kinds.first().map(|w| w.id.clone());
             self.session = Some(ActiveSession {
@@ -7608,6 +7745,7 @@ impl ShellState {
                     active_window_kind_id: self.active_window_id.clone(),
                     selection_json: None,
                     panel_json: None,
+                    contributions_json: None,
                 },
             });
         }
@@ -7717,23 +7855,61 @@ impl ShellState {
             .collect()
     }
 
+    fn contributions_json_from_plugins(plugins: &[PluginBridgeEntry]) -> String {
+        #[derive(serde::Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct PluginContributionEntry<'a> {
+            plugin_id: &'a str,
+            contribution: &'a semio_framework_core::Contribution,
+        }
+        let entries: Vec<PluginContributionEntry<'_>> = plugins
+            .iter()
+            .flat_map(|plugin| {
+                plugin
+                    .manifest
+                    .contributions
+                    .iter()
+                    .map(|contribution| PluginContributionEntry {
+                        plugin_id: plugin.plugin_id.as_str(),
+                        contribution,
+                    })
+            })
+            .collect();
+        serde_json::to_string(&entries).unwrap_or_else(|_| "[]".into())
+    }
+
+    async fn resolve_external_slots(
+        &mut self,
+        node: UiNode,
+        view_state: &ViewState,
+    ) -> Result<UiNode, String> {
+        let plugins = self.plugins.clone();
+        resolve_external_slots_in_tree(node, &plugins, &mut self.contributor_instances, view_state).await
+    }
+
     pub async fn refresh_ui(&mut self) -> Result<(), String> {
         let Some(session) = self.session.clone() else {
             return Ok(());
         };
         self.sync_dock();
         self.window_ui.clear();
+        let mut view_state = session.view_state.clone();
+        view_state.contributions_json = Some(Self::contributions_json_from_plugins(&self.plugins));
         {
             let plugin = self
                 .plugins
                 .iter()
                 .find(|p| p.plugin_id == session.plugin_id)
+                .cloned()
                 .ok_or("session plugin missing")?;
             for kind in &session.app.window_kinds {
                 let node = plugin
-                    .render(session.instance_id, &kind.body_key, &session.view_state)
+                    .render(session.instance_id, &kind.body_key, &view_state)
                     .await?;
-                self.window_ui.insert(kind.id.clone(), node);
+                let resolved = self
+                    .resolve_external_slots(node, &view_state)
+                    .await?;
+                self.window_ui.insert(kind.id.clone(), resolved);
             }
         }
         self.panel_ui.clear();
@@ -7742,15 +7918,17 @@ impl ShellState {
             .plugins
             .iter()
             .find(|p| p.plugin_id == session.plugin_id)
+            .cloned()
             .ok_or("session plugin missing")?;
         for tab in &session.app.panel_tabs {
             let node = plugin
-                .render(session.instance_id, &tab.body_key, &session.view_state)
+                .render(session.instance_id, &tab.body_key, &view_state)
                 .await?;
-            self.panel_ui.insert(tab.id.clone(), node);
+            let resolved = self.resolve_external_slots(node, &view_state).await?;
+            self.panel_ui.insert(tab.id.clone(), resolved);
         }
         self.active_tools = plugin
-            .tools(session.instance_id, &session.view_state)
+            .tools(session.instance_id, &view_state)
             .await
             .unwrap_or_default();
         if self.active_tools.is_empty() {
@@ -7768,12 +7946,13 @@ impl ShellState {
                 .map(|mode| mode.tools.clone())
                 .unwrap_or_default();
         }
+        self.active_tool_id = find_active_tool_id(&self.active_tools);
         self.window_engagements = plugin
-            .window_engagements(session.instance_id, &session.view_state)
+            .window_engagements(session.instance_id, &view_state)
             .await
             .unwrap_or_default();
         self.window_measures = plugin
-            .window_measures(session.instance_id, &session.view_state)
+            .window_measures(session.instance_id, &view_state)
             .await
             .unwrap_or_default();
         if self.studio_mode {
@@ -7800,6 +7979,7 @@ impl ShellState {
                                 active_window_kind_id: app.window_kinds.first().map(|w| w.id.clone()),
                                 selection_json: None,
                                 panel_json: None,
+                                contributions_json: None,
                             };
                             self.spawned_ui = Some(
                                 spawn_plugin
@@ -8235,6 +8415,7 @@ impl ShellState {
             active_window_kind_id: app.window_kinds.first().map(|window| window.id.clone()),
             selection_json: None,
             panel_json: Some(Self::panel_json(&panel_state)),
+            contributions_json: None,
         });
         self.active_window_id = app.window_kinds.first().map(|window| window.id.clone());
         if app_id == S_HOME_APP_ID {
@@ -9175,33 +9356,6 @@ impl ShellState {
                 }
                 return Ok(true);
             }
-            "framework.footer.undo" => {
-                self.dispatch_command(CommandDescriptor {
-                    controller_id: S_PLAY_CONTROLLER_ID.into(),
-                    command: "undo".into(),
-                    args: None,
-                })
-                .await?;
-                return Ok(true);
-            }
-            "framework.footer.redo" => {
-                self.dispatch_command(CommandDescriptor {
-                    controller_id: S_PLAY_CONTROLLER_ID.into(),
-                    command: "redo".into(),
-                    args: None,
-                })
-                .await?;
-                return Ok(true);
-            }
-            "framework.footer.checkpoint" => {
-                self.dispatch_command(CommandDescriptor {
-                    controller_id: S_PLAY_CONTROLLER_ID.into(),
-                    command: "commitCheckpoint".into(),
-                    args: None,
-                })
-                .await?;
-                return Ok(true);
-            }
             id if self.context_menu.as_ref().is_some_and(|menu| menu.items.iter().any(|item| item.id == id)) => {
                 if let Some(menu) = &self.context_menu {
                     if let Some(item) = menu.items.iter().find(|item| item.id == id) {
@@ -10057,6 +10211,7 @@ struct ChromeGroupItem<'a> {
     icon_id: Option<&'a str>,
     label: Option<&'a str>,
     active: bool,
+    disabled: bool,
     kind: HitKind,
 }
 
@@ -10178,14 +10333,22 @@ fn render_chrome_group(
     for (index, item) in items.iter().enumerate() {
         let item_w = measure_chrome_group_item(atlas, theme, item);
         let item_rect = Rect::new(x, inner_y, item_w, inner_h);
-        let hovered = item_rect.contains(input.pointer_x, input.pointer_y);
-        let bg = chrome_item_bg(theme, item.active, hovered);
+        let hovered = !item.disabled && item_rect.contains(input.pointer_x, input.pointer_y);
+        let bg = if item.disabled {
+            Rgba::new(0.0, 0.0, 0.0, 0.0)
+        } else {
+            chrome_item_bg(theme, item.active, hovered)
+        };
         if bg.a > 0.0 {
             draw.push_solid([item_rect.x, item_rect.y, item_rect.w, item_rect.h], bg);
         }
+        let text_color = if item.disabled {
+            theme.text_muted
+        } else {
+            chrome_item_text(theme, item.active, hovered)
+        };
         let mut content_x = item_rect.x + theme.padding_standard;
         if let Some(icon_id) = item.icon_id {
-            let icon_color = chrome_item_text(theme, item.active, hovered);
             chrome_icon(
                 draw,
                 icons,
@@ -10193,7 +10356,7 @@ fn render_chrome_group(
                 content_x,
                 item_rect.y + (item_rect.h - CHROME_ICON_TINY) * 0.5,
                 CHROME_ICON_TINY,
-                icon_color,
+                text_color,
             );
             content_x += CHROME_ICON_TINY + theme.gap_standard;
         }
@@ -10207,10 +10370,10 @@ fn render_chrome_group(
                 content_x,
                 item_rect.y + (item_rect.h + theme.font_size_small) * 0.5 - 1.0,
                 theme.font_size_small,
-                chrome_item_text(theme, item.active, hovered),
+                text_color,
             );
         }
-        if register_hits {
+        if register_hits && !item.disabled {
             input.register_hit(HitTarget {
                 rect: item_rect,
                 event: None,
@@ -10236,6 +10399,60 @@ fn footer_tool_label<'a>(label: &'a Option<String>, text: &'a Option<String>, ti
         .unwrap_or(id)
 }
 
+const TOOL_ID_PREFIXES_ALLOWING_COMMANDS_WHILE_ACTIVE: &[&str] = &["cad.play.view."];
+
+fn tool_allows_commands_while_active(tool_id: &str) -> bool {
+    TOOL_ID_PREFIXES_ALLOWING_COMMANDS_WHILE_ACTIVE
+        .iter()
+        .any(|prefix| tool_id.starts_with(prefix))
+}
+
+fn footer_command_gated(section: ToolCategory, active_tool_id: &Option<String>) -> bool {
+    section == ToolCategory::Commands
+        && active_tool_id
+            .as_ref()
+            .is_some_and(|id| !tool_allows_commands_while_active(id))
+}
+
+fn find_active_tool_id(tools: &[ToolNode]) -> Option<String> {
+    for tool in tools {
+        match tool {
+            ToolNode::Toggle { id, pressed, .. } if tool.category() == ToolCategory::Tools && pressed.unwrap_or(false) => {
+                return Some(id.clone());
+            }
+            ToolNode::Collection { children, .. } => {
+                if let Some(id) = find_active_tool_id(children) {
+                    return Some(id);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+fn partition_tools_by_category(tools: &[ToolNode]) -> [Vec<ToolNode>; 4] {
+    let mut buckets: [Vec<ToolNode>; 4] = [vec![], vec![], vec![], vec![]];
+    for tool in tools {
+        let idx = match tool.category() {
+            ToolCategory::Selection => 0,
+            ToolCategory::Tools => 1,
+            ToolCategory::Commands => 2,
+            ToolCategory::History => 3,
+        };
+        buckets[idx].push(tool.clone());
+    }
+    buckets
+}
+
+fn render_footer_section_divider(draw: &mut DrawList, theme: &Theme, x: f32, btn_y: f32, btn_h: f32) -> f32 {
+    draw.push_solid(
+        [x + theme.gap_standard * 0.5, btn_y + 4.0, theme.stroke_hairline, btn_h - 8.0],
+        theme.border_normal,
+    );
+    x + theme.gap_standard
+}
+
 fn render_footer_tool_nodes(
     draw: &mut DrawList,
     atlas: &mut FontAtlas,
@@ -10247,15 +10464,13 @@ fn render_footer_tool_nodes(
     btn_h: f32,
     tools: &[ToolNode],
     collection_expanded: &HashMap<String, bool>,
+    active_tool_id: &Option<String>,
+    section: ToolCategory,
 ) -> f32 {
     for tool in tools {
         match tool {
             ToolNode::Separator { .. } => {
-                draw.push_solid(
-                    [x + theme.gap_standard * 0.5, btn_y + 4.0, theme.stroke_hairline, btn_h - 8.0],
-                    theme.border_normal,
-                );
-                x += theme.gap_standard;
+                x = render_footer_section_divider(draw, theme, x, btn_y, btn_h);
             }
             ToolNode::Button {
                 id,
@@ -10270,25 +10485,29 @@ fn render_footer_tool_nodes(
                 if disabled.unwrap_or(false) {
                     continue;
                 }
+                let command_gated = footer_command_gated(section, active_tool_id);
                 let label_text = footer_tool_label(label, text, title, id);
                 let item = ChromeGroupItem {
                     control_id: "framework.tool.button",
                     icon_id: Some(icon_id.as_str()),
                     label: Some(label_text),
                     active: false,
+                    disabled: command_gated,
                     kind: HitKind::Button,
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
-                input.register_hit(HitTarget {
-                    rect,
-                    event: Some(on_press.clone()),
-                    control_id: Some(format!("framework.tool.button.{id}")),
-                    kind: HitKind::Button,
-                    drag_axis: None,
-                    drag_data: None,
-                });
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], !command_gated);
+                if !command_gated {
+                    input.register_hit(HitTarget {
+                        rect,
+                        event: Some(on_press.clone()),
+                        control_id: Some(format!("framework.tool.button.{id}")),
+                        kind: HitKind::Button,
+                        drag_axis: None,
+                        drag_data: None,
+                    });
+                }
                 x += item_w + theme.gap_standard * 0.5;
             }
             ToolNode::Toggle {
@@ -10311,6 +10530,7 @@ fn render_footer_tool_nodes(
                     icon_id: Some(icon_id.as_str()),
                     label: Some(label_text),
                     active: pressed.unwrap_or(false),
+                    disabled: false,
                     kind: HitKind::Button,
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
@@ -10339,6 +10559,7 @@ fn render_footer_tool_nodes(
                 if disabled.unwrap_or(false) {
                     continue;
                 }
+                let command_gated = footer_command_gated(section, active_tool_id);
                 let expanded = collection_expanded.get(id).copied().unwrap_or(false);
                 let label_text = footer_tool_label(label, text, title, id);
                 let item = ChromeGroupItem {
@@ -10346,21 +10567,24 @@ fn render_footer_tool_nodes(
                     icon_id: Some(icon_id.as_str()),
                     label: Some(label_text),
                     active: expanded,
+                    disabled: command_gated,
                     kind: HitKind::Button,
                 };
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
-                input.register_hit(HitTarget {
-                    rect,
-                    event: None,
-                    control_id: Some(format!("framework.tool.collection.{id}")),
-                    kind: HitKind::Button,
-                    drag_axis: None,
-                    drag_data: None,
-                });
+                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], !command_gated);
+                if !command_gated {
+                    input.register_hit(HitTarget {
+                        rect,
+                        event: None,
+                        control_id: Some(format!("framework.tool.collection.{id}")),
+                        kind: HitKind::Button,
+                        drag_axis: None,
+                        drag_data: None,
+                    });
+                }
                 x += item_w + theme.gap_standard * 0.5;
-                if expanded {
+                if expanded && !command_gated {
                     let leaves: Vec<ToolNode> = children
                         .iter()
                         .filter(|child| !matches!(child, ToolNode::Collection { .. }))
@@ -10377,6 +10601,8 @@ fn render_footer_tool_nodes(
                         btn_h,
                         &leaves,
                         collection_expanded,
+                        active_tool_id,
+                        section,
                     );
                 }
             }
@@ -10763,6 +10989,7 @@ impl ShellState {
                     icon_id: None,
                     label: Some(active_label),
                     active: self.overlay_state == OverlayState::Dropdown("example".to_string()),
+                    disabled: false,
                     kind: HitKind::NavbarItem,
                 }],
                 true,
@@ -10775,6 +11002,7 @@ impl ShellState {
             icon_id: Some("maximize-2"),
             label: Some("Fullscreen"),
             active: false,
+            disabled: false,
             kind: HitKind::Toggle,
         };
         let fullscreen_w = measure_chrome_group_item(atlas, theme, &fullscreen_item);
@@ -10797,6 +11025,7 @@ impl ShellState {
                 icon_id: Some(panel_toggle_icon_id("display", self.session.as_ref())),
                 label: Some("Display"),
                 active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display,
+                disabled: false,
                 kind: HitKind::Toggle,
             });
         }
@@ -10805,6 +11034,7 @@ impl ShellState {
             icon_id: Some(panel_toggle_icon_id("workbench", self.session.as_ref())),
             label: Some("Workbench"),
             active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
+            disabled: false,
             kind: HitKind::Toggle,
         });
         toggle_items.push(ChromeGroupItem {
@@ -10812,6 +11042,7 @@ impl ShellState {
             icon_id: Some(panel_toggle_icon_id("details", self.session.as_ref())),
             label: Some("Details"),
             active: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
+            disabled: false,
             kind: HitKind::Toggle,
         });
         toggle_items.push(ChromeGroupItem {
@@ -10819,6 +11050,7 @@ impl ShellState {
             icon_id: Some(panel_toggle_icon_id("settings", self.session.as_ref())),
             label: Some("Settings"),
             active: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
+            disabled: false,
             kind: HitKind::Toggle,
         });
         let toggle_w: f32 = toggle_items
@@ -10864,6 +11096,7 @@ impl ShellState {
                             icon_id: None,
                             label: Some(mode.label.as_str()),
                             active: active_mode == mode.id,
+                            disabled: false,
                             kind: HitKind::NavbarItem,
                         }
                     })
@@ -10907,74 +11140,43 @@ impl ShellState {
             theme.border_normal
         };
         draw.push_solid([0.0, y, width, theme.stroke_hairline], border_color);
-        let session = match &self.session {
-            Some(s) => s,
-            None => return,
-        };
+        if self.session.is_none() {
+            return;
+        }
         let btn_h = theme.control_height;
         let btn_y = y + (theme.footer_height - btn_h) * 0.5;
-        let x = theme.padding_standard;
-        let app_label = app_document_label(&session.app.document);
-        let mut footer_items = vec![ChromeGroupItem {
-            control_id: "framework.footer.app",
-            icon_id: Some(app_icon_id(&session.app, icons)),
-            label: Some(app_label.as_str()),
-            active: false,
-            kind: HitKind::Button,
-        }];
-        if self.studio_mode && session.app.controller_id == S_PLAY_CONTROLLER_ID {
-            footer_items.extend([
-                ChromeGroupItem {
-                    control_id: "framework.footer.undo",
-                    icon_id: Some("rotate-ccw"),
-                    label: Some("Undo"),
-                    active: false,
-                    kind: HitKind::Button,
-                },
-                ChromeGroupItem {
-                    control_id: "framework.footer.redo",
-                    icon_id: Some("rotate-cw"),
-                    label: Some("Redo"),
-                    active: false,
-                    kind: HitKind::Button,
-                },
-                ChromeGroupItem {
-                    control_id: "framework.footer.checkpoint",
-                    icon_id: Some("save"),
-                    label: Some("Checkpoint"),
-                    active: false,
-                    kind: HitKind::Button,
-                },
-            ]);
+        let partitions = partition_tools_by_category(&self.active_tools);
+        let sections = [
+            (ToolCategory::Selection, partitions[0].as_slice()),
+            (ToolCategory::Tools, partitions[1].as_slice()),
+            (ToolCategory::Commands, partitions[2].as_slice()),
+            (ToolCategory::History, partitions[3].as_slice()),
+        ];
+        let mut tool_x = theme.padding_standard;
+        let mut first_section = true;
+        for (section, tools) in sections {
+            if tools.is_empty() {
+                continue;
+            }
+            if !first_section {
+                tool_x = render_footer_section_divider(draw, theme, tool_x, btn_y, btn_h);
+            }
+            first_section = false;
+            tool_x = render_footer_tool_nodes(
+                draw,
+                atlas,
+                icons,
+                input,
+                theme,
+                tool_x,
+                btn_y,
+                btn_h,
+                tools,
+                &self.tool_collection_expanded,
+                &self.active_tool_id,
+                section,
+            );
         }
-        let group_w: f32 = footer_items
-            .iter()
-            .map(|item| measure_chrome_group_item(atlas, theme, item))
-            .sum();
-        render_chrome_group(
-            draw,
-            atlas,
-            icons,
-            input,
-            theme,
-            Rect::new(x, btn_y, group_w, btn_h),
-            &footer_items,
-            true,
-        );
-        let mut tool_x = x + group_w + theme.gap_standard;
-        tool_x = render_footer_tool_nodes(
-            draw,
-            atlas,
-            icons,
-            input,
-            theme,
-            tool_x,
-            btn_y,
-            btn_h,
-            &self.active_tools,
-            &self.tool_collection_expanded,
-        );
-        let _ = width;
         let _ = tool_x;
     }
 
@@ -11397,6 +11599,7 @@ impl ShellState {
                 icon_id: Some("home"),
                 label: Some("Home"),
                 active: false,
+                disabled: false,
                 kind: HitKind::Button,
             };
             let bar_w = measure_chrome_group_item(atlas, theme, &item);
@@ -11421,6 +11624,7 @@ impl ShellState {
                     icon_id: Some("chevron-left"),
                     label: Some(&label),
                     active: false,
+                    disabled: false,
                     kind: HitKind::Button,
                 };
                 let bar_w = measure_chrome_group_item(atlas, theme, &item).min(canvas.w);
@@ -11823,6 +12027,7 @@ impl ShellState {
                     icon_id: Some("chevron-left"),
                     label: Some("Window Options"),
                     active: false,
+                    disabled: false,
                     kind: HitKind::Button,
                 };
                 let chip_w = measure_chrome_group_item(atlas, theme, &item);
@@ -11882,6 +12087,7 @@ impl ShellState {
                 icon_id: Some(if expanded { "minimize-2" } else { "maximize-2" }),
                 label: Some(focus_label),
                 active: false,
+                disabled: false,
                 kind: HitKind::Button,
             };
             let fold_item = ChromeGroupItem {
@@ -11889,6 +12095,7 @@ impl ShellState {
                 icon_id: Some("chevron-right"),
                 label: Some("Window Options"),
                 active: false,
+                disabled: false,
                 kind: HitKind::Button,
             };
             let focus_w = measure_chrome_group_item(atlas, theme, &focus_item);
@@ -12169,6 +12376,7 @@ impl ShellState {
                     icon_id: Some("chevron-right"),
                     label: Some("Command"),
                     active: false,
+                    disabled: false,
                     kind: HitKind::Button,
                 };
                 let chip_w = measure_chrome_group_item(atlas, theme, &item);
@@ -12203,6 +12411,7 @@ impl ShellState {
                 icon_id: Some("chevron-left"),
                 label: Some("Command"),
                 active: false,
+                disabled: false,
                 kind: HitKind::Button,
             };
             let toggle_w = measure_chrome_group_item(atlas, theme, &toggle_item);
@@ -12235,6 +12444,7 @@ impl ShellState {
                         icon_id: None,
                         label: Some(&label),
                         active: pressed,
+                        disabled: false,
                         kind: HitKind::Button,
                     };
                     let item_w = measure_chrome_group_item(atlas, theme, &item);

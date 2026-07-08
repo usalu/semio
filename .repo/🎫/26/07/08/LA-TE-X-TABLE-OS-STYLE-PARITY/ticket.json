@@ -3,12 +3,14 @@
   "emoji": "🖨️",
   "status": "closed",
   "description": "LaTeX Table OS Style Parity",
-  "summary": "Added `semio-table.sty` LaTeX package mirroring OS React `Table` styling: hairline horizontal row dividers, window-toned header row (`semio-chrome-window`, 9× spacing height, bold), body rows at 7× spacing height, token-driven colors/strokes/fonts. Registered in `semio.cls`. Migrated `zwischenbericht.content.tex` workpackages table from bare `tabular` to `SemioTableBegin`/`SemioTableHeaderRow`/`SemioTableRow`/`SemioTableEnd`. All 12 print template PDFs compile.",
+  "summary": "Added `\\semio@spacing@single` padding above and below table row text: `\\noalign{\\vskip\\semio@spacing@single}` before each `\\SemioTableRow` (clears the divider above) and `\\\\[\\semio@spacing@single]` before the row-ending `\\hline`. Header cells now use matching `\\vspace{\\semio@spacing@single}` top and bottom inside `\\semio@table@header@cell`. Verified zwischenbericht light/dark builds still render table content.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1860"
   },
   "goal": "🎯r2602🎯updateddocs",
   "sessions": [
-    "⚪ebc996286bcd4a81abe550a310235e9d"
+    "⚪ebc996286bcd4a81abe550a310235e9d",
+    "⚪b88c8d706fcb4c0b8e9da415e211521d",
+    "⚪e5217bce1b7a429dad9b212da78ccfd5"
   ]
 }

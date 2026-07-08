@@ -1,0 +1,18 @@
+{
+  "title": "Automatic Print Registers",
+  "emoji": "📑",
+  "status": "open",
+  "description": "Add automatic List of X registers for all 14 semio window kinds (figures, tables, etc.), populated via addcontentsline on window begin, rendered in appendix with SemioTable styling, and wired into report and forschungsbericht templates.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1863"
+  },
+  "goal": "🎯r2602",
+  "plan": {
+    "client": "cursor",
+    "id": "57371734",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/automatic_print_registers_57371734.plan.md"
+  },
+  "sessions": [
+    "⚪7c2863d9a972495dac704d722d1d53dc"
+  ]
+}

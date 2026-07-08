@@ -7,16 +7,18 @@
 
 \makecoverpages
 
-\begin{Panel}[anchor=top-right, x=1cm, y=1cm, width=5.5cm]
+\maketableofcontents
+
+\begin{Panel}[anchor=top-right, x=1cm, y=5cm, width=5.5cm]
   Zwischenbericht Vorlage
 \end{Panel}
 
 \makeworkpackages{%
-  \SemioTableBegin{ll}
-  \SemioTableHeaderRow{AP & Partner}
-  \SemioTableRow{AP1 & Partner A}
-  \SemioTableRow{AP2 & Partner B}
-  \SemioTableEnd
+  \SemioTableTwo{%
+    \SemioTableHeaderRow{AP & Partner}
+    \SemioTableRow{AP1 & Partner A}
+    \SemioTableRow{AP2 & Partner B}
+  }%
 }
 
 \section{Ergebnisse}

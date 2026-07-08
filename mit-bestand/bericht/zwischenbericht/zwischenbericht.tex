@@ -2,100 +2,255 @@
 % !TEX root = zwischenbericht.tex
 \documentclass[type=zwischenbericht]{zukunftbau}
 
+\setcounter{secnumdepth}{4}
+
 \title{Entwerfen mit Bestand}
+\subtitle{Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten}
 \author{%
-  Professur für Architektur und Konstruktion, ETH Zürich\\
-  Semio Tech GmbH
+  Leibniz Universität Hannover\\
+  Fakultät für Architektur und Landschaft, IEK, Abt.\ Nachhaltige Gebäudesysteme\\
+  Projektleitung: Ueli Saluz\\
+  Weitere Bearbeitung: Nikolaus Möllenhof\\[0.5\baselineskip]
+  Universität der Künste Berlin\\
+  Konstruktives Entwerfen und Tragwerksplanung\\
+  Bearbeitung: Kinan Sarakbi
 }
 \aktenzeichen{10.08.18.7-25.06}
-\foerderzeitraum{01/2024 - 12/2026}
+\foerderzeitraum{11/2025 - 05/2027}
+\kurzfassung{%
+  Entwerfen mit inhomogenen Baukomponenten ist ästhetisch, historisch und ökologisch reizvoll, aber entwurfstechnisch anspruchsvoll und komplex, da funktionale, konstruktive und qualitative Abhängigkeiten direkt beim Entwerfen berücksichtigt werden müssen.
+  Die im Projekt entwickelte End-To-End-Plattform, welche gleichzeitig Katalog-, Entwurfs- und Performancebeurteilungs-Tool beinhaltet, ermöglicht es, in dieser Situation effektiv Lösungen zu entwickeln.
+  Das Performance-Assessment hinsichtlich Energie und Tragwerk erlaubt frühe multidisziplinäre Optimierung.
+  Mithilfe einer KI-Assistenz können auch große Bestandspools, in welchen es explosionsartig viele Kombinationsmöglichkeiten gibt, im Entwurfsprozess berücksichtigt werden.
+  Die Assistenz schlägt für die jeweilige Entwurfssituation passende Baukomponenten und Verknüpfungen vor.
+  Basierend auf einer semantischen Repräsentation der Baukomponenten und des komponentenbasierten Entwurfes wird die generative Stärke der vortrainierten Large-Language-Models direkt für den Entwurf genutzt.
+  Über eine Framework-unabhängige Schnittstellendefinition wird es bestehenden Bauteilbörsen ermöglicht, ihre Baukomponenten nahtlos maschinenlesbar zu veröffentlichen, sodass die Integrierbarkeit in die Plattform gewährleistet ist.
+  Das Schema dieser Schnittstellendefinition beinhaltet neben Fotos und den üblichen Metadaten wie Ort und Preis auch 3D-Modelle und Performance-Kennwerte wie das Treibhauspotential, welche direkt von den Tools verwendet werden.
+  Ein Modellierungstool, welches moderne Bild-zu-3D-KI-Modelle benutzt, reduziert den Aufbereitungsaufwand der Bauteilbörsen.
+  Durch die open-source Veröffentlichung der gesamten Plattform, deren Dokumentation und den Aufbau einer Community werden die Langlebigkeit und das Vertrauen gestärkt.
+  Das Self-Hosting ermöglicht einerseits eine Breitenwirkung, wodurch der zukünftige Unterhalt und neue Featureentwicklung effizient geteilt wird.
+  Andererseits bleibt die Datensouveränität gewährleistet.%
+}
 
 \begin{document}
 
 \makecoverpages
 
+\maketableofcontents
+
 \makeworkpackages{%
-  \begin{tabular}{@{}p{0.18\linewidth}p{0.34\linewidth}p{0.4\linewidth}@{}}
-    \textbf{AP} & \textbf{Partner} & \textbf{Schwerpunkt im Berichtszeitraum} \\
-    AP1 & ETH Zürich & Recherche, Fallstudien, Anforderungskatalog \\
-    AP2 & Semio Tech & Entwurfswerkzeug, Puzzle-basierte Komposition \\
-    AP3 & ETH Zürich & Bauteilportal, Eingabe- und Generatorenlogik \\
-    AP4 & Semio Tech & Systematik, Datenmodell, Schnittstellen \\
-  \end{tabular}%
+  \SemioTableThree{%
+    \SemioTableHeaderRow{AP & Partner & Schwerpunkt im Berichtszeitraum}
+    \SemioTableRow{AP-Erfahrung & Leibniz Universität Hannover & Recherche, Interviews, User Stories}
+    \SemioTableRow{AP-Plattform & Leibniz Universität Hannover & Generatoren, Bauteileinspeisung}
+    \SemioTableRow{AP-Tool & Universität der Künste Berlin & HID, Lebenszyklusanalyse, Tragwerksanalyse, KI-Assistenz}
+    \SemioTableRow{AP-Validierung & Leibniz Universität Hannover & Test-Case, Entwurfsgrammatik, Entwicklung}
+  }%
 }
 
 \section{Ergebnisse}
-Im Berichtszeitraum wurden die Grundlagen für ein integriertes Entwerfen mit Bestand weiter vertieft
 
-\begin{Blockquote}
-  \textbf{Recherche}
-  \begin{itemize}
-    \item Strukturierte Auswertung von Fallstudien zu Rotor, Madaster, Concular und weiteren Akteuren
-    \item Verdichtung der Hürdenlandschaft zu Logistik, Lagerfläche, Nachweisführung und Ausschreibung
-    \item Aufbau einer vernetzten Wissensbasis in \texttt{mit-bestand/recherche}
-  \end{itemize}
-\end{Blockquote}
+\subsection{Forschungsfragen und Vorgehen}
 
-\begin{Blockquote}
-  \textbf{Entwurfswerkzeug}
-  \begin{itemize}
-    \item Puzzle-basierte Benutzeroberfläche für Komposition wiederverwendbarer Bauteile
-    \item Verknüpfung von Katalog, Filter und Detailansicht im Playground-Prototyp
-    \item Demonstrator für die 33.\ Projektetage der Bauforschung
-  \end{itemize}
-\end{Blockquote}
+\subsection{Arbeitspakete}
 
-\begin{Blockquote}
-  \textbf{Bauteilportal}
-  \begin{itemize}
-    \item Konzeption von Eingabearten, Prüfprozessen und Generatorlogik
-    \item Abgrenzung zwischen manueller Erfassung, Import und automatisierter Verarbeitung
-    \item Vorbereitung standardisierter Ausgabeformate für Planung und Ausschreibung
-  \end{itemize}
-\end{Blockquote}
+\subsubsection{AP-Erfahrung}
 
-Relevante Ergebnisse Dritter wurden berücksichtigt, insbesondere Entwicklungen bei digitalen Materialpässen und kommunalen Re-Use-Infrastrukturen
+\paragraph{Recherche}
+\begin{SemioNest}
+\paragraph{Bauteilbörsen}
+\begin{SemioNest}
+\paragraph{Archetypen}
+\begin{SemioNest}
+\paragraph{Depotshop}
+\paragraph{Marktplatz}
+\paragraph{Harvestkatalog}
+\paragraph{Vermittlungsplattform}
+\end{SemioNest}
+\paragraph{Daten}
+\begin{SemioNest}
+\paragraph{Verfügbarkeit}
+\paragraph{Qualität}
+\paragraph{Verknüpfung}
+\end{SemioNest}
+\end{SemioNest}
+\paragraph{Prozesse}
+\begin{SemioNest}
+\paragraph{Gestaltung}
+\paragraph{Nachweise}
+\end{SemioNest}
+\paragraph{Typologien}
+\begin{SemioNest}
+\paragraph{Linienelemente}
+\paragraph{Flächenelemente}
+\paragraph{Rahmenelemente}
+\end{SemioNest}
+\end{SemioNest}
+
+\paragraph{Interviews}
+\begin{SemioNest}
+\paragraph{18 Interviews}
+\paragraph{Fehlende Sichtweisen}
+\begin{SemioNest}
+\paragraph{I-S-Tragwerksplanung}
+\paragraph{I-S-Digitale Gestaltung}
+\paragraph{I-S-Kreislaufwirtschaft}
+\end{SemioNest}
+\end{SemioNest}
+
+\paragraph{User Stories}
+\begin{SemioNest}
+\paragraph{Bauteilbörse}
+\paragraph{Architekt:in}
+\paragraph{Tragwerksplaner:in}
+\paragraph{Energieberater:in}
+\end{SemioNest}
+
+\subsubsection{AP-Plattform}
+
+\paragraph{Generatoren}
+
+\paragraph{Bauteileinspeisung}
+\begin{SemioNest}
+\paragraph{UI}
+\begin{SemioNest}
+\paragraph{Wizard}
+\end{SemioNest}
+\paragraph{API}
+\begin{SemioNest}
+\paragraph{REST}
+\end{SemioNest}
+\end{SemioNest}
+
+\subsubsection{AP-Tool}
+
+\paragraph{Human Interface Design}
+
+\paragraph{Lebenszyklusanalyse}
+
+\paragraph{Tragwerksanalyse}
+
+\paragraph{KI Assistenz}
+
+\subsubsection{AP-Validierung}
+
+\paragraph{Test-Case}
+\begin{SemioNest}
+\paragraph{Entwurfsgrammatik}
+\paragraph{Entwicklung}
+\end{SemioNest}
 
 \section{Projektstand}
-Der aktuelle Vorhabenstand entspricht weitgehend der ursprünglichen Arbeits- und Zeitplanung
 
-\begin{tabular}{@{}p{0.34\linewidth}p{0.28\linewidth}p{0.28\linewidth}@{}}
-  \textbf{Arbeitspaket} & \textbf{Plan} & \textbf{Ist} \\
-  AP1 Recherche & abgeschlossen & abgeschlossen \\
-  AP2 Entwurfswerkzeug & Prototyp & Prototyp mit UI-Parität \\
-  AP3 Bauteilportal & Konzept & Konzept und erste Fixtures \\
-  AP4 Systematik & laufend & laufend \\
-\end{tabular}
+\subsection{Arbeitspakete}
 
-\medskip
-Gegenüber dem Antrag wurden keine wesentlichen Änderungen der Zielsetzung vorgenommen
-Die Schärfung des Fokus auf port-basiertes Denken und kit-of-parts-Logik war geplant und unterstützt die Übertragbarkeit der Ergebnisse
+\subsubsection{AP-Erfahrung}
+
+\paragraph{Neuer Sekundärbefund}
+\begin{SemioNest}
+\paragraph{Geplante Interviews}
+\begin{SemioNest}
+\paragraph{I-Usability}
+\begin{SemioNest}
+\paragraph{I-U-Plattform}
+\paragraph{I-U-Tool}
+\end{SemioNest}
+\paragraph{I-Validierung}
+\begin{SemioNest}
+\paragraph{I-V-Bauteilbörse}
+\paragraph{I-V-Architekt:in}
+\paragraph{I-V-Tragwerksplaner:in}
+\paragraph{I-V-Energieberater:in}
+\end{SemioNest}
+\end{SemioNest}
+\end{SemioNest}
+
+\subsubsection{AP-Plattform}
+
+\paragraph{Eingabe}
+
+\paragraph{Schnittstelle}
+
+\subsubsection{AP-Tool}
+
+\paragraph{Human Interface Design}
+
+\paragraph{Lebenszyklusanalyse}
+
+\paragraph{Tragwerksanalyse}
+
+\paragraph{KI Assistenz}
+
+\subsubsection{AP-Validierung}
+
+\paragraph{Test-Case}
+\begin{SemioNest}
+\paragraph{Entwurfsgrammatik}
+\paragraph{Entwicklung}
+\end{SemioNest}
+
+\paragraph{Workshop}
+\begin{SemioNest}
+\paragraph{Vorbereitung}
+\paragraph{Durchführung und Auswertung}
+\end{SemioNest}
 
 \section{Mittelverwendung}
-Die Zuwendung wurde zweckentsprechend für Personalkosten, Softwareentwicklung, Rechercheaufwände und Veranstaltungsvorbereitung eingesetzt
 
-\begin{itemize}
-  \item \textbf{Bisherig:} Entwicklung des semio Playgrounds, Rechercheinfrastruktur, Präsentationsaufbereitung
-  \item \textbf{Geplant:} Vertiefung des Bauteilportals, Verprobung in Fallstudien, Vorbereitung Zwischenbericht und Transferformate
-  \item \textbf{Bewertung:} Der Aufwand für UI-Parität und Framework-Integration war angemessen, um belastbare Demonstratoren zu liefern
-\end{itemize}
+\subsection{Personalkosten}
+
+\subsubsection{Leibniz Universität Hannover}
+\begin{SemioNest}
+\paragraph{Ueli Saluz}
+\paragraph{Nikolaus Möllenhof}
+\end{SemioNest}
+
+\subsubsection{Universität der Künste Berlin}
+\begin{SemioNest}
+\paragraph{Kinan Sarakbi}
+\end{SemioNest}
+
+\subsection{Material}
+
+\subsection{Leistungen Dritter}
+
+\subsubsection{Softwarelizenzen}
+
+\subsubsection{Dienstleistungen}
+\begin{SemioNest}
+\paragraph{Cloud - Infrastructure-as-a-Service}
+\paragraph{Nutzung vortrainierter KI-Modelle}
+\paragraph{Externe Softwareentwicklung}
+\begin{SemioNest}
+\paragraph{Server}
+\paragraph{Fotogrammetrie}
+\paragraph{User-Interface}
+\paragraph{Anbindungen Bauteilbörsen}
+\end{SemioNest}
+\end{SemioNest}
+
+\subsection{Reisekosten}
 
 \section{Ergebnisverwertung}
-Der Transfer ist auf Baupraxis, Lehre und digitale Planungswerkzeuge ausgerichtet
 
-\begin{itemize}
-  \item Veröffentlichung und Demonstration auf der 33.\ Projektetage der Bauforschung
-  \item Bereitstellung des Entwurfswerkzeugs als interaktiver Playground
-  \item Weiterführung über Open-Source-Komponenten und dokumentierte Rechercheartefakte
-  \item Geplante Anbindung an Zukunft-Bau-Berichtswesen über die semio print Vorlagen
-\end{itemize}
+\subsection{Repositorien}
 
-\appendix
-\section{Anlagen}
-\begin{itemize}
-  \item Übersicht Rechercheberichte in \texttt{mit-bestand/recherche/berichte}
-  \item Screenshots Entwurfswerkzeug und Bauteilportal
-  \item Platzhalter Messprotokolle Rückbau- und Aufbereitungsszenarien
-\end{itemize}
+\subsubsection{GitHub}
+
+\subsection{Websiten}
+
+\subsubsection{Tool}
+
+\subsubsection{Dokumentation}
+
+\subsection{Community}
+
+\subsubsection{Discourse}
+
+\subsection{Forschung}
+
+\subsubsection{Zenodo}
+
+\subsubsection{Journalpaper}
 
 \end{document}

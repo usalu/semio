@@ -24,12 +24,6 @@ const PRINT_FONTS: readonly { readonly family: string; readonly dir: string; rea
 		url: "https://raw.githubusercontent.com/google/fonts/main/ofl/anta/Anta-Regular.ttf",
 	},
 	{
-		family: "Kelly Slab",
-		dir: "kelly-slab",
-		file: "KellySlab-Regular.ttf",
-		url: "https://raw.githubusercontent.com/google/fonts/main/ofl/kellyslab/KellySlab-Regular.ttf",
-	},
-	{
 		family: "Share Tech Mono",
 		dir: "share-tech-mono",
 		file: "ShareTechMono-Regular.ttf",
@@ -239,7 +233,7 @@ export async function renderPanelGlass(options: {
 	const [tintR, tintG, tintB] = parseHex6(panelTint);
 	const tintAlpha = Math.round(glassPanelAlpha * 255);
 	const renderScale = PANEL_RENDER_DPI / PDF_PT_PER_INCH;
-	const blurSigma = Math.max(0.3, (glassPanelBlurPx * renderScale) / 8);
+	const blurSigma = Math.max(1.5, (glassPanelBlurPx * renderScale) / 9);
 
 	const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 	const { createCanvas } = loadPdfjsNapiCanvas();
@@ -271,44 +265,32 @@ export async function renderPanelGlass(options: {
 		const cropWidth = Math.max(1, Math.round(entry.wPt * renderScale));
 		const cropHeight = Math.max(1, Math.round(entry.hPt * renderScale));
 
-		const cropped = await sharp(pageRender.png)
+		const tintRaw = Buffer.alloc(cropWidth * cropHeight * 4);
+		for (let i = 0; i < cropWidth * cropHeight; i++) {
+			const offset = i * 4;
+			tintRaw[offset] = tintR;
+			tintRaw[offset + 1] = tintG;
+			tintRaw[offset + 2] = tintB;
+			tintRaw[offset + 3] = tintAlpha;
+		}
+		const processed = await sharp(pageRender.png)
 			.extract({
 				left: Math.min(cropLeft, Math.max(0, Math.round(pageRender.pageWidthPt * renderScale) - 1)),
 				top: Math.min(cropTop, Math.max(0, Math.round(pageRender.pageHeightPt * renderScale) - 1)),
 				width: cropWidth,
 				height: cropHeight,
 			})
-			.png()
-			.toBuffer();
-
-		const tintLayer = await sharp({
-			create: {
-				width: cropWidth,
-				height: cropHeight,
-				channels: 4,
-				background: { r: tintR, g: tintG, b: tintB, alpha: tintAlpha },
-			},
-		})
-			.png()
-			.toBuffer();
-		const frostNoise = await sharp({
-			create: {
-				width: cropWidth,
-				height: cropHeight,
-				channels: 3,
-				noise: { type: "gaussian", mean: 128, sigma: 20 },
-			},
-		})
-			.png()
-			.toBuffer();
-		const processed = await sharp(cropped)
+			.removeAlpha()
 			.blur(blurSigma)
 			.modulate({ saturation: Math.round(glassSaturate * 100) })
 			.composite([
-				{ input: tintLayer, blend: "over" },
-				{ input: frostNoise, blend: "soft-light" },
+				{
+					input: tintRaw,
+					raw: { width: cropWidth, height: cropHeight, channels: 4 },
+					blend: "over",
+				},
 			])
-			.png()
+			.png({ compressionLevel: 9 })
 			.toBuffer();
 
 		writeFileSync(join(options.glassDir, `${entry.id}.png`), processed);

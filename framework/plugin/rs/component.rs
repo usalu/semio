@@ -1,7 +1,7 @@
 //! 🧩 WASI P2 component exports for the plugin world contract.
 
 use crate::plugin_runtime::{
-    plugin_create_app, plugin_handle_command, plugin_manifest, plugin_render,
+    plugin_create_app, plugin_handle_command, plugin_manifest, plugin_render_with_document,
 };
 use wit_bindgen::generate;
 
@@ -45,7 +45,8 @@ impl Guest for ComponentGuest {
         instance_id: u32,
         input: WindowInputJson,
     ) -> Result<WindowOutputJson, PluginError> {
-        let node = plugin_render(instance_id, "", &input.json).map_err(PluginError::Message)?;
+        let node = plugin_render_with_document(instance_id, "", None, &input.json)
+            .map_err(PluginError::Message)?;
         Ok(WindowOutputJson {
             json: serde_json::to_string(&node).unwrap_or_else(|_| "{}".into()),
         })

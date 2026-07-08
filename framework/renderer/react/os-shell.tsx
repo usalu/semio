@@ -82,6 +82,9 @@ import {
 	createNamedLayout,
 	loadPluginModule as loadCorePluginModule,
 	loadPluginWasm as loadCorePluginWasm,
+	buildContributionsJson,
+	expandPluginRegistry,
+	resolveExternalSlots,
 	type NamedLayout,
 	type PluginRegistryEntry,
 	type PluginWasmHandle as CorePluginWasmHandle,
@@ -640,6 +643,7 @@ export function FrameworkOsShell({
 	const [findOpen, setFindOpen] = useState(false);
 	const importStudioInputRef = useRef<HTMLInputElement>(null);
 	const refreshGenerationRef = useRef(0);
+	const contributorInstancesRef = useRef<Map<string, number>>(new Map());
 	const layoutSeedKeyRef = useRef<string | null>(null);
 	const [mobileActiveTabId, setMobileActiveTabId] = useState<string | undefined>(undefined);
 	const [leftPanelTabId, setLeftPanelTabId] = useState<string | undefined>(undefined);
@@ -659,8 +663,9 @@ export function FrameworkOsShell({
 	);
 
 	const registry = useMemo(() => {
-		if (studioMode) return plugins;
-		return pluginFilter ? plugins.filter((entry) => entry.pluginId === pluginFilter) : plugins;
+		const expanded = expandPluginRegistry(plugins, pluginFilter || undefined, studioMode);
+		if (studioMode) return expanded;
+		return pluginFilter ? expanded : plugins;
 	}, [pluginFilter, plugins, studioMode]);
 
 	const panel = session ? parsePanelState(session.viewState) : null;
@@ -745,31 +750,50 @@ export function FrameworkOsShell({
 			const generation = ++refreshGenerationRef.current;
 			const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
 			if (!plugin) return;
+			const contributionsJson = buildContributionsJson(
+				loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })),
+			);
+			const viewState: ViewState = { ...nextSession.viewState, contributionsJson };
+			const slotContext = {
+				plugins: new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.handle])),
+				contributorInstances: contributorInstancesRef.current,
+				viewState,
+			};
 			const windowCount = nextSession.app.windowKinds.length;
 			const rendered = await Promise.all([
 				...nextSession.app.windowKinds.map((kind) =>
-					plugin.render(nextSession.instanceId, kind.bodyKey, nextSession.viewState),
+					plugin.render(nextSession.instanceId, kind.bodyKey, viewState),
 				),
-				...nextSession.app.panelTabs.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey, nextSession.viewState)),
-				plugin.tools(nextSession.instanceId, nextSession.viewState),
-				plugin.windowEngagements(nextSession.instanceId, nextSession.viewState),
-				plugin.windowMeasures(nextSession.instanceId, nextSession.viewState),
+				...nextSession.app.panelTabs.map((tab) => plugin.render(nextSession.instanceId, tab.bodyKey, viewState)),
+				plugin.tools(nextSession.instanceId, viewState),
+				plugin.windowEngagements(nextSession.instanceId, viewState),
+				plugin.windowMeasures(nextSession.instanceId, viewState),
 			]);
 			if (generation !== refreshGenerationRef.current) return;
-			const windowNodes = rendered.slice(0, windowCount);
-			const panelNodes = rendered.slice(windowCount, windowCount + nextSession.app.panelTabs.length);
+			const windowNodes = await Promise.all(
+				rendered.slice(0, windowCount).map((node) => resolveExternalSlots(node as UiNode, slotContext)),
+			);
+			const panelNodes = await Promise.all(
+				rendered
+					.slice(windowCount, windowCount + nextSession.app.panelTabs.length)
+					.map((node) => resolveExternalSlots(node as UiNode, slotContext)),
+			);
 			const dynamicTools = rendered[windowCount + nextSession.app.panelTabs.length] as readonly ToolNode[];
 			const dynamicEngagements = rendered[rendered.length - 2] as Readonly<Record<string, WindowEngagement>>;
 			const dynamicMeasures = rendered[rendered.length - 1] as Readonly<Record<string, readonly WindowMeasure[]>>;
 			setWindowUiByKind(
 				Object.fromEntries(
-					nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]!]),
+					nextSession.app.windowKinds.map((kind, index) => [kind.id, windowNodes[index]! as UiNode]),
 				),
 			);
 			setWindowEngagementsByKind(dynamicEngagements);
 			setWindowMeasuresByKind(dynamicMeasures);
-			setPanelUiByKey(Object.fromEntries(nextSession.app.panelTabs.map((tab, index) => [tab.id, panelNodes[index]!])));
-			const activeModeId = nextSession.viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
+			setPanelUiByKey(
+				Object.fromEntries(
+					nextSession.app.panelTabs.map((tab, index) => [tab.id, panelNodes[index]! as UiNode]),
+				),
+			);
+			const activeModeId = viewState.activeModeId ?? nextSession.app.defaultModeId ?? nextSession.app.modes[0]?.id;
 			const staticTools = nextSession.app.modes.find((mode) => mode.id === activeModeId)?.tools ?? [];
 			setActiveToolNodes(dynamicTools.length > 0 ? dynamicTools : staticTools);
 			const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
@@ -2104,6 +2128,14 @@ export type VirtualFileSystemScene = {
 	readonly dragDropEnabled?: boolean;
 };
 
+export type UiExternalSlotNode = {
+	readonly type: "externalSlot";
+	readonly pluginId: string;
+	readonly appId: string;
+	readonly bodyKey: string;
+	readonly paramsJson: string;
+};
+
 export type UiComponentSceneNode = {
 	readonly type: "componentScene";
 	readonly surfaceId: string;
@@ -2137,7 +2169,8 @@ export type UiNode =
 	| UiFieldNode
 	| UiSectionNode
 	| UiTreeNode
-	| UiComponentSceneNode;
+	| UiComponentSceneNode
+	| UiExternalSlotNode;
 
 export type WindowLayoutWindowNode = {
 	readonly kind: "window";
@@ -2329,6 +2362,7 @@ export type ViewState = {
 	readonly activeWindowKindId?: string;
 	readonly selectionJson?: string;
 	readonly panelJson?: string;
+	readonly contributionsJson?: string;
 };
 
 export type AppDefinition = {
@@ -2360,6 +2394,16 @@ export type PluginManifest = {
 	readonly apps: readonly AppDefinition[];
 	readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
 	readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string }[];
+	readonly contributions?: readonly {
+		readonly kind: "formsQuestionKind";
+		readonly appId: string;
+		readonly questionKind: string;
+		readonly label: string;
+		readonly iconId: string;
+		readonly defaultValueJson?: string;
+		readonly paramsBodyKey: string;
+		readonly previewBodyKey: string;
+	}[];
 };
 
 export type PluginHotSwapEvent = {
@@ -2467,6 +2511,12 @@ export type PluginWasmHandle = {
 	readonly destroyApp: (instanceId: number) => Promise<void>;
 	readonly handleCommand: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<string[]>;
 	readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
+	readonly renderWithDocument?: (
+		instanceId: number,
+		bodyKey: string,
+		viewState: ViewState,
+		documentJson: string,
+	) => Promise<UiNode>;
 	readonly tools: (instanceId: number, viewState: ViewState) => Promise<readonly ToolNode[]>;
 	readonly windowEngagements: (
 		instanceId: number,
@@ -2496,6 +2546,10 @@ function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
 			handle.handleCommand(instanceId, commandJson, viewState),
 		render: async (instanceId, bodyKey, viewState) =>
 			(await handle.render(instanceId, bodyKey, viewState)) as unknown as UiNode,
+		renderWithDocument: handle.renderWithDocument
+			? async (instanceId, bodyKey, viewState, documentJson) =>
+					(await handle.renderWithDocument!(instanceId, bodyKey, viewState, documentJson)) as unknown as UiNode
+			: undefined,
 		tools: async (instanceId, viewState) =>
 			(await handle.tools(instanceId, viewState)) as unknown as ToolNode[],
 		windowEngagements: async (instanceId, viewState) =>

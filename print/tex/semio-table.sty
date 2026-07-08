@@ -1,73 +1,125 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{semio-table}[2026/07/08 v1.0.0 semio data table styling]
 
-\RequirePackage{expl3}
-\RequirePackage{xparse}
 \RequirePackage{array}
 \RequirePackage{colortbl}
+\RequirePackage{expl3}
 \RequirePackage{semio-core}
 \RequirePackage{semio-fonts}
 
 \ExplSyntaxOn
+\seq_new:N \l_semio_table_row_seq
+\cs_new_protected:Npn \semio_table_header_row:n #1 {
+  \seq_set_split:Nnn \l_semio_table_row_seq { & } {#1}
+  \int_zero:N \l_tmpa_int
+  \seq_map_inline:Nn \l_semio_table_row_seq {
+    \int_compare:nNnF \l_tmpa_int = \c_zero_int { & }
+    \semio@table@header@cell { ##1 }
+    \int_incr:N \l_tmpa_int
+  }
+}
+\NewDocumentCommand \SemioTableHeaderRow { m } {
+  \semio_table_header_row:n {#1}
+  \\
+  \hline
+}
+\ExplSyntaxOff
 
-\dim_new:N \l_semio_table_header_height_dim
-\dim_new:N \l_semio_table_body_height_dim
 \newlength{\semio@table@header@height}
 \newlength{\semio@table@body@height}
 
-\cs_new_protected:Npn \semio_table_rules_apply: {
-  \dim_set:Nn \l_semio_table_header_height_dim {
-    \dimexpr 9 \semio@spacing@unit \relax
-  }
-  \dim_set:Nn \l_semio_table_body_height_dim {
-    \dimexpr 7 \semio@spacing@unit \relax
-  }
-  \setlength{\semio@table@header@height}{\dim_use:N \l_semio_table_header_height_dim}
-  \setlength{\semio@table@body@height}{\dim_use:N \l_semio_table_body_height_dim}
-  \arrayrulecolor{semio-chrome-border-normal}
-  \setlength{\arrayrulewidth}{\semio@stroke@hairline}
-  \setlength{\tabcolsep}{\semio@spacing@single}
-  \setlength{\extrarowheight}{\semio@table@body@height}
+\newcommand{\semio@table@setup}{%
+  \setlength{\semio@table@header@height}{\dimexpr9\semio@spacing@unit\relax}%
+  \setlength{\semio@table@body@height}{\dimexpr7\semio@spacing@unit\relax}%
+  \arrayrulecolor{semio-chrome-border-normal}%
+  \setlength{\arrayrulewidth}{\semio@stroke@hairline}%
+  \setlength{\tabcolsep}{\semio@spacing@single}%
+  \setlength{\extrarowheight}{0pt}%
+  \renewcommand{\arraystretch}{1}%
 }
 
-\cs_new_protected:Npn \semio_table_begin:n #1 {
-  \semio_table_rules_apply:
-  \begingroup
-  \SemioSans
-  \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
-  \color{semio-chrome-text-normal}
-  \begin{tabular}{@{}#1@{}}
+\newcommand{\semio@table@colspec@two}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.5\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.5\linewidth-\tabcolsep\relax}@{}}
+
+\newcommand{\semio@table@colspec@three}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.34\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.33\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{}}
+
+\newcommand{\semio@table@colspec@register}{@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.16\linewidth-\tabcolsep\relax}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.62\linewidth-\tabcolsep\relax}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
+
+\newcommand{\semio@table@header@cell}[1]{%
+  \cellcolor{semio-chrome-window}%
+  \vspace{\semio@spacing@single}%
+  \bfseries #1%
+  \vspace{\semio@spacing@single}%
 }
 
-\cs_new_protected:Npn \semio_table_end: {
-  \end{tabular}
-  \endgroup
-}
-
-\NewDocumentCommand { \SemioTableBegin } { m } {
-  \semio_table_begin:n {#1}
-}
-
-\NewDocumentCommand { \SemioTableEnd } { } {
-  \semio_table_end:
-}
-
-\NewDocumentEnvironment { SemioTable } { m } {
-  \semio_table_begin:n {#1}
-} {
-  \semio_table_end:
-}
-
-\ExplSyntaxOff
-
-\newcommand{\SemioTableHeaderRow}[1]{%
-  \rowcolor{semio-chrome-window}%
-  \rule{0pt}{\semio@table@header@height}%
-  \bfseries #1 \\%
-  \hline
+\newcommand{\semio@table@row@pad}{%
+  \noalign{\vskip\semio@spacing@single}%
 }
 
 \newcommand{\SemioTableRow}[1]{%
-  #1 \\%
+  \semio@table@row@pad
+  #1\\[\semio@spacing@single]%
   \hline
+}
+
+\newcommand{\semio@table@render}[2]{%
+  \semio@table@setup
+  \begingroup
+  \SemioSans
+  \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+  \color{semio-chrome-text-normal}%
+  \begin{tabular}{#1}%
+  #2%
+  \end{tabular}%
+  \endgroup
+}
+
+\newcommand{\SemioTableTwo}[1]{%
+  \expandafter\semio@table@render\expandafter{\semio@table@colspec@two}{#1}%
+}
+
+\newcommand{\SemioTableThree}[1]{%
+  \expandafter\semio@table@render\expandafter{\semio@table@colspec@three}{#1}%
+}
+
+\newcommand{\SemioTableRegister}[1]{%
+  \expandafter\semio@table@render\expandafter{\semio@table@colspec@register}{#1}%
+}
+
+\newcommand{\semio@table@begin@tabular}[1]{\begin{tabular}{#1}}
+
+\newcommand{\SemioTableBegin}[1]{%
+  \semio@table@setup
+  \begingroup
+  \SemioSans
+  \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+  \color{semio-chrome-text-normal}%
+  \def\semio@table@spec{#1}%
+  \ifx\semio@table@spec\semio@table@spec@ll
+    \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@two}%
+  \else
+    \ifx\semio@table@spec\semio@table@spec@lll
+      \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@three}%
+    \else
+      \ifx\semio@table@spec\semio@table@spec@nrp
+        \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@register}%
+      \else
+        \begin{tabular}{@{}#1@{}}%
+      \fi
+    \fi
+  \fi
+}
+
+\def\semio@table@spec@ll{ll}
+\def\semio@table@spec@lll{lll}
+\def\semio@table@spec@nrp{nrp}
+
+\newcommand{\SemioTableEnd}{%
+  \end{tabular}%
+  \endgroup
+}
+
+\newenvironment{SemioTable}[1]{%
+  \SemioTableBegin{#1}%
+}{%
+  \SemioTableEnd
 }

@@ -18,7 +18,7 @@ use crate::registry::{
 };
 use semio_framework_core::{
     AppDefinition, CommandContext, CommandDescriptor, CommandInvocation, CommandResult,
-    HybridLogicalTimestamp, InverseOperation, KernelOperation, ModelDiff, ModelHandle, ModelVersion,
+    Contribution, HybridLogicalTimestamp, InverseOperation, KernelOperation, ModelDiff, ModelHandle, ModelVersion,
     OperationId, PluginManifest, SchemaId, UiButtonNode, UiNode, UndoGroup, UndoPolicy, ViewState,
     ui_stack_vertical, ui_text,
 };
@@ -45,6 +45,13 @@ pub struct LoadedPlugin {
     pub plugin_id: String,
     pub manifest: PluginManifest,
     pub artifact_uri: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PluginContributionEntry {
+    pub plugin_id: String,
+    pub contribution: Contribution,
 }
 
 //#region 🔖PluginSupervisorState
@@ -205,6 +212,23 @@ impl PluginHost {
 
     pub fn apps(&self) -> Vec<AppDefinition> {
         self.registry.apps()
+    }
+
+    pub fn contributions(&self) -> Vec<PluginContributionEntry> {
+        let mut entries = Vec::new();
+        for plugin in self.plugins.values() {
+            for contribution in &plugin.manifest.contributions {
+                entries.push(PluginContributionEntry {
+                    plugin_id: plugin.plugin_id.clone(),
+                    contribution: contribution.clone(),
+                });
+            }
+        }
+        entries
+    }
+
+    pub fn contributions_json(&self) -> String {
+        serde_json::to_string(&self.contributions()).unwrap_or_else(|_| "[]".into())
     }
 
     pub fn create_instance(&mut self, app_id: &str, document_json: String) -> Option<u32> {
@@ -1870,6 +1894,7 @@ mod tests {
             }],
             programs: vec![],
             capabilities: vec![],
+            contributions: vec![],
             examples: vec![],
         };
         host.load_plugin(LoadedPlugin {
@@ -1952,6 +1977,7 @@ mod tests {
                 apps: vec![draw_app.clone()],
                 programs: vec![],
                 capabilities: vec![],
+                contributions: vec![],
                 examples: vec![],
             },
             artifact_uri: "plugin://draw".into(),
@@ -1967,6 +1993,7 @@ mod tests {
                 apps: vec![draw_app, note_app],
                 programs: vec![],
                 capabilities: vec![],
+                contributions: vec![],
                 examples: vec![],
             },
             artifact_uri: "plugin://draw".into(),
@@ -2024,6 +2051,7 @@ mod tests {
                 apps: vec![draw_app],
                 programs: vec![],
                 capabilities: vec![],
+                contributions: vec![],
                 examples: vec![],
             },
             artifact_uri: "plugin://draw".into(),
@@ -2039,6 +2067,7 @@ mod tests {
                 apps: vec![],
                 programs: vec![],
                 capabilities: vec![],
+                contributions: vec![],
                 examples: vec![],
             },
             artifact_uri: "plugin://draw".into(),
@@ -2055,6 +2084,51 @@ mod tests {
             host.plugins.get("draw").expect("plugin").manifest.version,
             "0.1.0"
         );
+    }
+
+    #[test]
+    fn contributions_track_plugin_load_and_hot_swap() {
+        let mut host = PluginHost::new();
+        let contribution = Contribution::FormsQuestionKind {
+            app_id: "forms-module-procedural".into(),
+            question_kind: "buildingComponent".into(),
+            label: "Building Component".into(),
+            icon_id: "building".into(),
+            default_value_json: "{}".into(),
+            params_body_key: "params".into(),
+            preview_body_key: "preview".into(),
+        };
+        host.load_plugin(LoadedPlugin {
+            plugin_id: "forms-module-procedural".into(),
+            manifest: PluginManifest {
+                plugin_id: "forms-module-procedural".into(),
+                label: "Forms Module Procedural".into(),
+                version: "0.1.0".into(),
+                apps: vec![],
+                programs: vec![],
+                capabilities: vec![],
+                contributions: vec![contribution.clone()],
+                examples: vec![],
+            },
+            artifact_uri: "plugin://forms-module-procedural".into(),
+        });
+        assert_eq!(host.contributions().len(), 1);
+        assert_eq!(host.contributions()[0].plugin_id, "forms-module-procedural");
+        host.hot_swap_plugin(LoadedPlugin {
+            plugin_id: "forms-module-procedural".into(),
+            manifest: PluginManifest {
+                plugin_id: "forms-module-procedural".into(),
+                label: "Forms Module Procedural".into(),
+                version: "0.2.0".into(),
+                apps: vec![],
+                programs: vec![],
+                capabilities: vec![],
+                contributions: vec![],
+                examples: vec![],
+            },
+            artifact_uri: "plugin://forms-module-procedural".into(),
+        });
+        assert!(host.contributions().is_empty());
     }
 
     #[test]
@@ -2096,6 +2170,7 @@ mod tests {
             }],
             programs: vec![],
             capabilities: vec![],
+            contributions: vec![],
             examples: vec![],
         };
         host.load_plugin(LoadedPlugin {

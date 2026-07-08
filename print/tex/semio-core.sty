@@ -21,6 +21,7 @@
 \tl_new:N \l_semio_identifier_tl
 \tl_new:N \l_semio_aktenzeichen_tl
 \tl_new:N \l_semio_foerderzeitraum_tl
+\tl_new:N \l_semio_kurzfassung_tl
 \tl_new:N \l_semio_doi_tl
 \bool_new:N \l_semio_kompakt_draft_bool
 
@@ -85,17 +86,278 @@
 
 \NewDocumentCommand{\aktenzeichen}{m}{\tl_set:Nn \l_semio_aktenzeichen_tl {#1}}
 \NewDocumentCommand{\foerderzeitraum}{m}{\tl_set:Nn \l_semio_foerderzeitraum_tl {#1}}
+\NewDocumentCommand{\kurzfassung}{m}{\tl_set:Nn \l_semio_kurzfassung_tl {#1}}
 \NewDocumentCommand{\doi}{m}{\tl_set:Nn \l_semio_doi_tl {#1}}
 \RenewDocumentCommand{\subtitle}{m}{\tl_set:Nn \l_semio_subtitle_tl {#1}}
 
 \cs_new_protected:Npn \semio_begindocument_hook: {
+  \semio_language_apply:
   \semio_theme_apply:
   \semio@set@main@fonts
 }
 
+%region Kinds
+\tl_new:N \g_semio_hierarchy_path_tl
+\newcounter { semio@window@slot }
+
+\cs_new_protected:Npn \semio_kind_label:n #1 {
+  \exp_args:Ne \semio_kind_label_resolved:n { #1 }
+}
+
+\cs_new_protected:Npn \semio_kind_label_plural:n #1 {
+  \exp_args:Ne \semio_kind_label_plural_resolved:n { #1 }
+}
+
+\cs_new_protected:Npn \semio_register_title:n #1 {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { Verzeichnis~der~\semio_kind_label_plural:n {#1} }
+  } {
+    List~of~\semio_kind_label_plural:n {#1}
+  }
+}
+
+\cs_new_protected:Npn \semio_register_header_number: {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { Nr. }
+  } { No. }
+}
+
+\cs_new_protected:Npn \semio_register_header_title: {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { Titel }
+  } { Title }
+}
+
+\cs_new_protected:Npn \semio_register_header_page: {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { Seite }
+  } { Page }
+}
+
+\cs_new_protected:Npn \semio_kind_number:nn #1 #2 {
+  \semio@kind@number {#1} {#2}
+}
+
+\cs_new_protected:Npn \semio_hierarchy_path_sync_document: {
+  \tl_gset:Nx \g_semio_hierarchy_path_tl { \semio@hierarchy@path }
+}
+
+\cs_new_protected:Npn \semio_hierarchy_window_slot_step: {
+  \refstepcounter { semio@window@slot }
+}
+
+\cs_new_protected:Npn \semio_window_kind_number:n #1 {
+  \semio_hierarchy_path_sync_document:
+  \semio_hierarchy_window_slot_step:
+  \semio_kind_number:nn
+    { \use:c { semio@window@#1@kind } }
+    {
+      \tl_if_empty:NTF \g_semio_hierarchy_path_tl
+        { \alph { semio@window@slot } }
+        { \tl_use:N \g_semio_hierarchy_path_tl . \alph { semio@window@slot } }
+    }
+}
+
+\tl_new:N \l_semio_heading_number_tl
+
+\cs_new_protected:Npn \semio_language_apply: {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { \selectlanguage { ngerman } }
+    { en } { \selectlanguage { english } }
+  } {
+    \selectlanguage { english }
+  }
+}
+%endregion Kinds
+
 \AddToHook{begindocument/before}{\semio_begindocument_hook:}
 
 \ExplSyntaxOff
+
+\newif\ifsemio@heading@chips
+\semio@heading@chipstrue
+
+\newcommand{\semio@heading@chips@disable}{\semio@heading@chipsfalse}
+\newcommand{\semio@heading@chips@enable}{\semio@heading@chipstrue}
+
+\newcommand{\semio@if@heading@chips}[2]{%
+  \ifsemio@heading@chips #1\else #2\fi
+}
+
+\newcommand{\semio@kind@register@en}[2]{\expandafter\def\csname semio@kind@resolve@en@#1\endcsname{#2}}
+\newcommand{\semio@kind@register@de}[2]{\expandafter\def\csname semio@kind@resolve@de@#1\endcsname{#2}}
+\newcommand{\semio@kind@register@plural@en}[2]{\expandafter\def\csname semio@kind@resolve@plural@en@#1\endcsname{#2}}
+\newcommand{\semio@kind@register@plural@de}[2]{\expandafter\def\csname semio@kind@resolve@plural@de@#1\endcsname{#2}}
+
+\semio@kind@register@en{part}{Part}
+\semio@kind@register@en{chapter}{Chapter}
+\semio@kind@register@en{section}{Section}
+\semio@kind@register@en{subsection}{Subsection}
+\semio@kind@register@en{subsubsection}{Subsubsection}
+\semio@kind@register@en{paragraph}{Paragraph}
+\semio@kind@register@en{image}{Image}
+\semio@kind@register@en{photo}{Photo}
+\semio@kind@register@en{figure}{Figure}
+\semio@kind@register@en{table}{Table}
+\semio@kind@register@en{listing}{Listing}
+\semio@kind@register@en{pseudocode}{Pseudocode}
+\semio@kind@register@en{theorem}{Theorem}
+\semio@kind@register@en{lemma}{Lemma}
+\semio@kind@register@en{proof}{Proof}
+\semio@kind@register@en{equation}{Equation}
+\semio@kind@register@en{glossary}{Glossary}
+\semio@kind@register@en{abbreviations}{Abbreviations}
+\semio@kind@register@en{blockquote}{Blockquote}
+\semio@kind@register@en{epigraph}{Epigraph}
+
+\semio@kind@register@de{part}{Teil}
+\semio@kind@register@de{chapter}{Kapitel}
+\semio@kind@register@de{section}{Abschnitt}
+\semio@kind@register@de{subsection}{Unterabschnitt}
+\semio@kind@register@de{subsubsection}{Unterunterabschnitt}
+\semio@kind@register@de{paragraph}{Absatz}
+\semio@kind@register@de{image}{Bild}
+\semio@kind@register@de{photo}{Foto}
+\semio@kind@register@de{figure}{Abbildung}
+\semio@kind@register@de{table}{Tabelle}
+\semio@kind@register@de{listing}{Auflistung}
+\semio@kind@register@de{pseudocode}{Pseudocode}
+\semio@kind@register@de{theorem}{Satz}
+\semio@kind@register@de{lemma}{Lemma}
+\semio@kind@register@de{proof}{Beweis}
+\semio@kind@register@de{equation}{Gleichung}
+\semio@kind@register@de{glossary}{Glossar}
+\semio@kind@register@de{abbreviations}{Abkürzungen}
+\semio@kind@register@de{blockquote}{Zitat}
+\semio@kind@register@de{epigraph}{Epigraph}
+
+\semio@kind@register@plural@en{image}{Images}
+\semio@kind@register@plural@en{photo}{Photos}
+\semio@kind@register@plural@en{figure}{Figures}
+\semio@kind@register@plural@en{table}{Tables}
+\semio@kind@register@plural@en{listing}{Listings}
+\semio@kind@register@plural@en{pseudocode}{Pseudocodes}
+\semio@kind@register@plural@en{theorem}{Theorems}
+\semio@kind@register@plural@en{lemma}{Lemmas}
+\semio@kind@register@plural@en{proof}{Proofs}
+\semio@kind@register@plural@en{equation}{Equations}
+\semio@kind@register@plural@en{glossary}{Glossaries}
+\semio@kind@register@plural@en{abbreviations}{Abbreviations}
+\semio@kind@register@plural@en{blockquote}{Blockquotes}
+\semio@kind@register@plural@en{epigraph}{Epigraphs}
+
+\semio@kind@register@plural@de{image}{Bilder}
+\semio@kind@register@plural@de{photo}{Fotos}
+\semio@kind@register@plural@de{figure}{Abbildungen}
+\semio@kind@register@plural@de{table}{Tabellen}
+\semio@kind@register@plural@de{listing}{Auflistungen}
+\semio@kind@register@plural@de{pseudocode}{Pseudocodes}
+\semio@kind@register@plural@de{theorem}{Sätze}
+\semio@kind@register@plural@de{lemma}{Lemmas}
+\semio@kind@register@plural@de{proof}{Beweise}
+\semio@kind@register@plural@de{equation}{Gleichungen}
+\semio@kind@register@plural@de{glossary}{Glossare}
+\semio@kind@register@plural@de{abbreviations}{Abkürzungen}
+\semio@kind@register@plural@de{blockquote}{Zitate}
+\semio@kind@register@plural@de{epigraph}{Epigraphen}
+
+\newcommand{\semio@kind@resolve@en}[1]{%
+  \ifcsname semio@kind@resolve@en@#1\endcsname
+    \csname semio@kind@resolve@en@#1\endcsname
+  \else
+    #1%
+  \fi
+}
+
+\newcommand{\semio@kind@resolve@de}[1]{%
+  \ifcsname semio@kind@resolve@de@#1\endcsname
+    \csname semio@kind@resolve@de@#1\endcsname
+  \else
+    #1%
+  \fi
+}
+
+\newcommand{\semio@kind@resolve@plural@en}[1]{%
+  \ifcsname semio@kind@resolve@plural@en@#1\endcsname
+    \csname semio@kind@resolve@plural@en@#1\endcsname
+  \else
+    #1%
+  \fi
+}
+
+\newcommand{\semio@kind@resolve@plural@de}[1]{%
+  \ifcsname semio@kind@resolve@plural@de@#1\endcsname
+    \csname semio@kind@resolve@plural@de@#1\endcsname
+  \else
+    #1%
+  \fi
+}
+
+\ExplSyntaxOn
+\cs_new_protected:Npn \semio_kind_label_resolved:n #1 {
+  \tl_if_eq:NnTF \l_semio_language_tl { de }
+    { \use:c { semio@kind@resolve@de@#1 } }
+    { \use:c { semio@kind@resolve@en@#1 } }
+}
+\cs_new_protected:Npn \semio_kind_label_plural_resolved:n #1 {
+  \tl_if_eq:NnTF \l_semio_language_tl { de }
+    { \use:c { semio@kind@resolve@plural@de@#1 } }
+    { \use:c { semio@kind@resolve@plural@en@#1 } }
+}
+\cs_new_protected:Npn \semio_kind_chip_number:nn #1 #2 {
+  \semio_kind_label:n {#1}
+  \tl_if_blank:nTF {#2} { } { :\space #2 }
+}
+\cs_new_protected:Npn \semio_kind_chip_bare:n #1 {
+  \tl_if_blank:nTF {#1} { } { #1 }
+}
+\cs_new_protected:Npn \semio_kind_label_document:n #1 {
+  \semio_kind_label:n {#1}
+}
+\cs_new_protected:Npn \semio_kind_label_plural_document:n #1 {
+  \semio_kind_label_plural:n {#1}
+}
+\NewDocumentCommand \SemioKindLabel { m } { \semio_kind_label_document:n {#1} }
+\NewDocumentCommand \semio@kind@label@plural { m } { \semio_kind_label_plural_document:n {#1} }
+\NewDocumentCommand \semio@kind@number { m m } { \semio_kind_chip_number:nn {#1} {#2} }
+\NewDocumentCommand \semio@kind@number@bare { m } { \semio_kind_chip_bare:n {#1} }
+\NewDocumentCommand \semio@register@title { m } { \semio_register_title:n {#1} }
+\NewDocumentCommand \semio@register@header@number { } { \semio_register_header_number: }
+\NewDocumentCommand \semio@register@header@title { } { \semio_register_header_title: }
+\NewDocumentCommand \semio@register@header@page { } { \semio_register_header_page: }
+\ExplSyntaxOff
+
+\newcommand{\semio@heading@kind@number}[2]{%
+  \semio@kind@number@bare{\csname the#2\endcsname}%
+}
+
+\newcommand{\semio@window@kind@number}[1]{%
+  \refstepcounter{semio@window@slot}%
+  \if\relax\detokenize\expandafter{\semio@hierarchy@path}\relax
+    \semio@kind@number{\csname semio@window@#1@kind\endcsname}{\alph{semio@window@slot}}%
+  \else
+    \semio@kind@number{\csname semio@window@#1@kind\endcsname}{\semio@hierarchy@path.\alph{semio@window@slot}}%
+  \fi
+}
+
+\newcommand{\semio@hierarchy@path}{}
+\newcommand{\semio@hierarchy@path@set}[1]{%
+  \def\semio@hierarchy@path@next{#1}%
+  \ifx\semio@hierarchy@path\semio@hierarchy@path@next\else
+    \xdef\semio@hierarchy@path{#1}%
+    \setcounter{semio@window@slot}{0}%
+  \fi
+}
+
+\newcommand{\semio@hierarchy@hooks@install}{%
+  \AddToHook{cmd/tableofcontents/before}{\semio@heading@chips@disable}%
+  \AddToHook{cmd/tableofcontents/after}{\semio@heading@chips@enable}%
+}
+
+\newcommand{\semio@register@hooks@install}[1]{%
+  \AddToHook{cmd/#1/before}{\semio@heading@chips@disable}%
+  \AddToHook{cmd/#1/after}{\semio@heading@chips@enable}%
+}
 
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}

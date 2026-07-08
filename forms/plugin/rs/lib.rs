@@ -1,24 +1,21 @@
 //! 📋 Forms plugin — declarative forms play app bundled as a hot-swappable WASM component.
 
 use base64::Engine;
-use flow_core::{FlowFixture, FlowHost, Widget};
-use flow_module_brep::tessellate_geometry_json;
 use forms::{
     can_advance, default_value_for_question, empty_forms_projection, flatten_form_questions,
     initial_try_values, is_extension_question_kind, visible_questions, FormOp, FormQuestion,
     FormQuestionOption, FormSpec, FormStep, FormVectorField, FormsEnvelope, FormsStore,
-    FORMS_DOCUMENT_SCHEMA,
+    FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
 };
 use image::RgbaImage;
-use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
-    build_raster_scene, build_table_scene, build_world_3d_scene, create_default_layout,
-    mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
-    ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, PanelGroup,
-    CommandDescriptor, PluginApp, PluginBundle, RasterScene, TableScene, UiButtonNode,
+    build_raster_scene, build_table_scene, create_default_layout,
+    ui_external_slot, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
+    ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Contribution,
+    PanelGroup, CommandDescriptor, PluginApp, PluginBundle, RasterScene, TableScene, UiButtonNode,
     UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
     UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode, ViewState, world3d_default_camera, world3d_scene, world3d_selection_json,
+    UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -32,20 +29,16 @@ use vcs::{create_document_vcs_envelope, materialize_document_projection, Documen
 //#region 🔖Constants
 const FORMS_PLAY_APP_ID: &str = "forms-play";
 const FORMS_PLAY_CONTROLLER_ID: &str = "forms-play";
-const FORMS_PLAY_SURFACE_EDIT: &str = "forms.play.edit";
+const FORMS_PLAY_SURFACE_BLUEPRINT: &str = "forms.play.blueprint";
 const FORMS_PLAY_SURFACE_TRY: &str = "forms.play.try";
-const FORMS_PLAY_SURFACE_PREVIEW: &str = "forms.play.preview";
-const FORMS_PLAY_BODY_EDIT: &str = "forms.play.edit";
+const FORMS_PLAY_BODY_BLUEPRINT: &str = "forms.play.blueprint";
 const FORMS_PLAY_BODY_TRY: &str = "forms.play.try";
-const FORMS_PLAY_BODY_PREVIEW: &str = "forms.play.preview";
 const FORMS_PLAY_BODY_DOCUMENT: &str = "forms.play.document";
 const FORMS_PLAY_BODY_CATALOGUE: &str = "forms.play.catalogue";
 const FORMS_PLAY_BODY_INSPECTION: &str = "forms.play.inspection";
-const FORMS_PLAY_WINDOW_EDIT: &str = "forms-edit";
+const FORMS_PLAY_WINDOW_BLUEPRINT: &str = "forms-blueprint";
 const FORMS_PLAY_WINDOW_TRY: &str = "forms-try";
-const FORMS_PLAY_WINDOW_PREVIEW: &str = "forms-preview";
 const FORMS_QUESTION_DRAG_MIME: &str = "application/x-semio-forms-question-kind";
-const FORMS_PREVIEW_FALLBACK_MESH_KIND: &str = "box";
 const BUILDING_COMPONENT_EXAMPLE_JSON: &str = include_str!("../../example/building-component.forms.json");
 const DEFAULT_EXAMPLE_JSON: &str = r##"{
   "schema": "forms.form",
@@ -159,7 +152,6 @@ const ONBOARDING_EXAMPLE_JSON: &str = r##"{
     }
   ]
 }"##;
-const HEX_COLUMN_FIXTURE_JSON: &str = include_str!("../../../procedural/3d/example/hexagonal-mushroom-column.procedural.json");
 const AVATAR_PLACEHOLDER_PNG_BASE64: &str =
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
 
@@ -297,26 +289,88 @@ fn question_shell(id: String, label: String, kind: String) -> FormQuestion {
     }
 }
 
-fn fixture_json_for_slug(slug: &str) -> Option<&'static str> {
-    match slug {
-        "hexagonal-mushroom-column" => Some(HEX_COLUMN_FIXTURE_JSON),
-        _ => None,
-    }
+//#region 🔖Contributions
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct PluginContributionEntry {
+    plugin_id: String,
+    contribution: Contribution,
 }
 
-fn first_building_component_question<'a>(spec: &'a FormSpec) -> Option<&'a FormQuestion> {
-    flatten_form_questions(spec)
-        .into_iter()
-        .find(|question| question.kind == "buildingComponent")
+fn parse_contributions(view_state: &ViewState) -> Vec<PluginContributionEntry> {
+    view_state
+        .contributions_json
+        .as_ref()
+        .and_then(|json| serde_json::from_str::<Vec<PluginContributionEntry>>(json).ok())
+        .unwrap_or_default()
 }
 
-fn building_component_params(question: &FormQuestion, values: &Map<String, Value>) -> Value {
+fn find_question_kind_contribution<'a>(
+    contributions: &'a [PluginContributionEntry],
+    kind: &str,
+) -> Option<(&'a str, &'a Contribution)> {
+    contributions.iter().find_map(|entry| {
+        if let Contribution::FormsQuestionKind { question_kind, .. } = &entry.contribution {
+            if question_kind == kind {
+                return Some((entry.plugin_id.as_str(), &entry.contribution));
+            }
+        }
+        None
+    })
+}
+
+fn extension_params_value(question: &FormQuestion, values: &Map<String, Value>) -> Value {
     values
         .get(&question.id)
         .cloned()
         .or_else(|| question.params.clone())
         .unwrap_or_else(|| json!({}))
 }
+
+fn extension_render_payload(
+    question: &FormQuestion,
+    params: &Value,
+    surface: &str,
+    interactive: bool,
+) -> String {
+    serde_json::to_string(&json!({
+        "fixtureSlug": question.fixture_slug.clone().unwrap_or_else(|| "hexagonal-mushroom-column".into()),
+        "params": params,
+        "questionId": question.id,
+        "controllerId": FORMS_PLAY_CONTROLLER_ID,
+        "surface": surface,
+        "interactive": interactive,
+    }))
+    .unwrap_or_else(|_| "{}".into())
+}
+
+fn render_extension_question(
+    question: &FormQuestion,
+    values: &Map<String, Value>,
+    contributions: &[PluginContributionEntry],
+    surface: &str,
+    interactive: bool,
+) -> UiNode {
+    let Some((plugin_id, contribution)) = find_question_kind_contribution(contributions, &question.kind) else {
+        return ui_text(format!("Extension unavailable: {}", question.kind));
+    };
+    let Contribution::FormsQuestionKind {
+        app_id,
+        params_body_key,
+        preview_body_key,
+        ..
+    } = contribution
+    else {
+        return ui_text(format!("Extension unavailable: {}", question.kind));
+    };
+    let params = extension_params_value(question, values);
+    let payload = extension_render_payload(question, &params, surface, interactive);
+    ui_stack_vertical(vec![
+        ui_external_slot(plugin_id, app_id, params_body_key, &payload),
+        ui_external_slot(plugin_id, app_id, preview_body_key, &payload),
+    ])
+}
+//#endregion 🔖Contributions
 
 fn flatten_questions(spec: &FormSpec) -> Vec<(String, FormQuestion)> {
     spec.steps
@@ -660,210 +714,43 @@ fn apply_store_command(play: &mut FormsPlayEnvelope, store: &mut FormsStore) -> 
     vec![set_document_op(play)]
 }
 
-fn catalogue_kinds() -> [(&'static str, &'static str, &'static str); 14] {
-    [
-        ("text", "Text", "type"),
-        ("number", "Number", "hash"),
-        ("boolean", "Boolean", "toggle-left"),
-        ("single", "Single Select", "circle-dot"),
-        ("multi", "Multi Select", "list-checks"),
-        ("slider", "Slider", "sliders-horizontal"),
-        ("longText", "Long Text", "align-left"),
-        ("note", "Note", "sticky-note"),
-        ("date", "Date", "calendar"),
-        ("color", "Color", "palette"),
-        ("image", "Image", "image"),
-        ("file", "File", "file"),
-        ("vector", "Vector", "move-3d"),
-        ("buildingComponent", "Building Component", "building"),
-    ]
+fn catalogue_kinds(contributions: &[PluginContributionEntry]) -> Vec<(String, String, String)> {
+    let mut kinds: Vec<(String, String, String)> = FORM_BUILTIN_KINDS
+        .iter()
+        .map(|kind| {
+            let (label, icon) = match *kind {
+                "text" => ("Text", "type"),
+                "longText" => ("Long Text", "align-left"),
+                "number" => ("Number", "hash"),
+                "slider" => ("Slider", "sliders-horizontal"),
+                "boolean" => ("Boolean", "toggle-left"),
+                "single" => ("Single Select", "circle-dot"),
+                "multi" => ("Multi Select", "list-checks"),
+                "date" => ("Date", "calendar"),
+                "color" => ("Color", "palette"),
+                "image" => ("Image", "image"),
+                "file" => ("File", "file"),
+                "vector" => ("Vector", "move-3d"),
+                "note" => ("Note", "sticky-note"),
+                other => (other, "help-circle"),
+            };
+            (kind.to_string(), label.into(), icon.into())
+        })
+        .collect();
+    for entry in contributions {
+        if let Contribution::FormsQuestionKind {
+            question_kind,
+            label,
+            icon_id,
+            ..
+        } = &entry.contribution
+        {
+            kinds.push((question_kind.clone(), label.clone(), icon_id.clone()));
+        }
+    }
+    kinds
 }
 //#endregion 🔖Helpers
-
-//#region 🔖Preview
-fn widget_id(widget: &Widget) -> &str {
-    match widget {
-        Widget::Neuron { id, .. }
-        | Widget::InputSlider { id, .. }
-        | Widget::InputStepper { id, .. }
-        | Widget::InputNote { id, .. }
-        | Widget::InputImage { id, .. }
-        | Widget::Variable { id, .. }
-        | Widget::OutputPreview { id, .. }
-        | Widget::OutputAction { id, .. }
-        | Widget::OutputExport { id, .. }
-        | Widget::Cluster { id, .. } => id,
-    }
-}
-
-fn is_brep_geometry_handle(handle: &str) -> bool {
-    handle.starts_with("solid-")
-        || handle.starts_with("shell-")
-        || handle.starts_with("face-")
-        || handle.starts_with("wire-")
-        || handle.starts_with("edge-")
-        || handle.starts_with("vertex-")
-        || handle.starts_with("compound-")
-        || handle.starts_with("curve-")
-        || handle.starts_with("surface-")
-}
-
-fn collect_geometry_handles_from_eval(value: &Value, handles: &mut Vec<String>) {
-    match value {
-        Value::Object(map) => {
-            if let Some(handle) = map.get("handle").and_then(|entry| entry.as_str()) {
-                if is_brep_geometry_handle(handle) {
-                    handles.push(handle.into());
-                }
-            }
-            for entry in map.values() {
-                collect_geometry_handles_from_eval(entry, handles);
-            }
-        }
-        Value::Array(items) => {
-            for item in items {
-                collect_geometry_handles_from_eval(item, handles);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn geometry_handle_for_widget(eval: &Value, widget_id: &str) -> Option<String> {
-    let widget_eval = eval.get(widget_id)?;
-    let channels = widget_eval.get("out").or_else(|| widget_eval.get("in"))?;
-    let mut handles = Vec::new();
-    collect_geometry_handles_from_eval(channels, &mut handles);
-    handles.into_iter().next()
-}
-
-fn mesh_from_tessellation_json(mesh_json: &str) -> Option<semio_framework_plugin::MeshData> {
-    let parsed: Value = serde_json::from_str(mesh_json).ok()?;
-    if parsed.get("error").is_some() {
-        return None;
-    }
-    let positions: Vec<f32> = parsed
-        .get("position")
-        .or_else(|| parsed.get("positions"))
-        .and_then(|entry| entry.as_array())
-        .map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect())
-        .filter(|items: &Vec<f32>| !items.is_empty())?;
-    let normals: Vec<f32> = parsed
-        .get("normal")
-        .or_else(|| parsed.get("normals"))
-        .and_then(|entry| entry.as_array())
-        .map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect())
-        .unwrap_or_default();
-    let indices: Vec<u32> = parsed
-        .get("index")
-        .or_else(|| parsed.get("indices"))
-        .and_then(|entry| entry.as_array())
-        .map(|items| items.iter().filter_map(|value| value.as_u64().map(|number| number as u32)).collect())
-        .filter(|items: &Vec<u32>| !items.is_empty())?;
-    Some(mesh_from_indexed(&positions, &normals, &indices))
-}
-
-fn apply_flow_params(host: &mut FlowHost, fixture: &FlowFixture, params: &Value) {
-    let Some(object) = params.as_object() else {
-        return;
-    };
-    for (key, value) in object {
-        if let Some(number) = value.as_f64() {
-            host.set_slider_value(key, number);
-        }
-    }
-    if let Ok(params_json) = serde_json::to_string(object) {
-        for widget in &fixture.widgets {
-            if let Widget::Neuron { id, .. } = widget {
-                let _ = host.set_neuron_params(id, &params_json);
-            }
-        }
-    }
-}
-
-fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, String) {
-    let mut host = FlowHost::from_fixture(fixture.clone());
-    apply_flow_params(&mut host, fixture, params);
-    let eval_json = host.evaluate().unwrap_or_default();
-    let eval: Value = serde_json::from_str(&eval_json).unwrap_or(json!({}));
-    let mut meshes: Vec<Value> = Vec::new();
-    let mut instances: Vec<Value> = Vec::new();
-    for widget in &fixture.widgets {
-        let id = widget_id(widget).to_string();
-        let preview = matches!(widget, Widget::Neuron { preview: true, .. } | Widget::OutputPreview { .. });
-        if !preview {
-            continue;
-        }
-        let Some(handle) = geometry_handle_for_widget(&eval, &id) else {
-            continue;
-        };
-        let mesh_id = format!("eval-{id}");
-        if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-            let tessellation = tessellate_geometry_json(&handle, 0.05);
-            if let Some(data) = mesh_from_tessellation_json(&tessellation) {
-                meshes.push(json!({ "id": mesh_id, "data": data }));
-            }
-        }
-        if meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-            instances.push(json!({
-                "id": id,
-                "meshId": mesh_id,
-                "position": [0.0, 0.0, 0.0],
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": id,
-                "selected": false,
-                "hovered": false,
-            }));
-        }
-    }
-    if meshes.is_empty() {
-        let fallback = json!([{ "id": FORMS_PREVIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(FORMS_PREVIEW_FALLBACK_MESH_KIND) }]);
-        let fallback_instances = json!([{
-            "id": "preview",
-            "meshId": FORMS_PREVIEW_FALLBACK_MESH_KIND,
-            "position": [0.0, 0.0, 0.0],
-            "rotation": [0.0, 0.0, 0.0, 1.0],
-            "scale": [1.0, 1.0, 1.0],
-            "label": "preview",
-            "selected": false,
-            "hovered": false,
-        }]);
-        return (
-            serde_json::to_string(&fallback).unwrap_or_else(|_| "[]".into()),
-            serde_json::to_string(&fallback_instances).unwrap_or_else(|_| "[]".into()),
-        );
-    }
-    (
-        serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()),
-        serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()),
-    )
-}
-
-fn render_preview_body(spec: &FormSpec, play: &FormsPlayEnvelope) -> UiNode {
-    let Some(question) = first_building_component_question(spec) else {
-        return ui_text("No building component question in this form.");
-    };
-    let slug = question.fixture_slug.as_deref().unwrap_or("hexagonal-mushroom-column");
-    let Some(fixture_json) = fixture_json_for_slug(slug) else {
-        return ui_text(format!("Unknown fixture slug: {slug}"));
-    };
-    let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
-    let values = effective_try_values(spec, play);
-    let params = building_component_params(question, &values);
-    let (meshes_json, instances_json) = evaluated_preview_payload(&fixture, &params);
-    build_world_3d_scene(
-        FORMS_PLAY_SURFACE_PREVIEW,
-        FORMS_PLAY_CONTROLLER_ID,
-        world3d_scene(
-            world3d_default_camera(),
-            meshes_json,
-            instances_json,
-            world3d_selection_json("single", &[], None),
-        ),
-    )
-}
-//#endregion 🔖Preview
 
 //#region 🔖Tables
 #[derive(Serialize)]
@@ -890,7 +777,7 @@ fn edit_table_rows(spec: &FormSpec) -> String {
 
 fn render_edit_table(spec: &FormSpec) -> UiNode {
     build_table_scene(
-        FORMS_PLAY_SURFACE_EDIT,
+        FORMS_PLAY_SURFACE_BLUEPRINT,
         FORMS_PLAY_CONTROLLER_ID,
         TableScene {
             columns_json: json!([
@@ -943,7 +830,11 @@ fn render_image_question(question: &FormQuestion) -> UiNode {
     ui_text("No image")
 }
 
-fn render_try_question(question: &FormQuestion, values: &Map<String, Value>) -> UiNode {
+fn render_try_question(
+    question: &FormQuestion,
+    values: &Map<String, Value>,
+    contributions: &[PluginContributionEntry],
+) -> UiNode {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| default_value_for_question(question));
     let key = question.id.clone();
     match question.kind.as_str() {
@@ -1148,47 +1039,13 @@ fn render_try_question(question: &FormQuestion, values: &Map<String, Value>) -> 
             }),
         }),
         kind if is_extension_question_kind(kind) => {
-            let mut params = value.as_object().cloned().unwrap_or_default();
-            if params.is_empty() {
-                if let Some(default_params) = question.params.as_ref().and_then(|entry| entry.as_object()) {
-                    params = default_params.clone();
-                }
-            }
-            let children: Vec<UiNode> = params
-                .iter()
-                .map(|(param_key, param_value)| {
-                    UiNode::Field(UiFieldNode {
-                        id: format!("forms-try.{key}.{param_key}"),
-                        label: param_key.clone(),
-                        child: UiControlNode::NumberStepper(UiNumberStepperNode {
-                            id: format!("forms-try.{key}.{param_key}.stepper"),
-                            value: json_f64_value(param_value),
-                            step: 0.1,
-                            uniform: true,
-                            on_absolute: forms_cmd(
-                                "setTryValue",
-                                Some(json!({ "key": key, "paramKey": param_key })),
-                            ),
-                            on_delta: forms_cmd(
-                                "setTryValue",
-                                Some(json!({ "key": key, "paramKey": param_key })),
-                            ),
-                        }),
-                    })
-                })
-                .collect();
-            UiNode::Section(semio_framework_plugin::UiSectionNode {
-                id: format!("forms-try.{key}.section"),
-                label: Some(question.label.clone()),
-                default_open: Some(true),
-                children,
-            })
+            render_extension_question(question, values, contributions, "try", true)
         }
         _ => ui_text(format!("Unsupported kind: {}", question.kind)),
     }
 }
 
-fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope) -> UiNode {
+fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope, contributions: &[PluginContributionEntry]) -> UiNode {
     if spec.steps.is_empty() {
         return ui_text("No steps in this form.");
     }
@@ -1206,7 +1063,7 @@ fn render_try_wizard(spec: &FormSpec, play: &FormsPlayEnvelope) -> UiNode {
         children.push(ui_text(description.clone()));
     }
     for question in visible {
-        children.push(render_try_question(question, &values));
+        children.push(render_try_question(question, &values, contributions));
     }
     for error in &errors {
         children.push(ui_text(format!("⚠ {}", error.message)));
@@ -1320,17 +1177,17 @@ fn build_document_tree(spec: &FormSpec, selected_ids: &[String]) -> UiNode {
     })
 }
 
-fn build_catalogue_tree() -> UiNode {
-    let kind_items: Vec<UiTreeItemNode> = catalogue_kinds()
+fn build_catalogue_tree(contributions: &[PluginContributionEntry]) -> UiNode {
+    let kind_items: Vec<UiTreeItemNode> = catalogue_kinds(contributions)
         .into_iter()
         .map(|(kind, label, icon)| {
             let mut drag_data = HashMap::new();
             drag_data.insert(FORMS_QUESTION_DRAG_MIME.into(), json!({ "kind": kind }).to_string());
             UiTreeItemNode {
                 id: format!("forms-play-catalogue.{kind}"),
-                label: label.into(),
-                description: Some(kind.into()),
-                icon_id: Some(icon.into()),
+                label: label.clone(),
+                description: Some(kind.clone()),
+                icon_id: Some(icon.clone()),
                 selected: None,
                 default_open: None,
                 command: Some(forms_cmd("addQuestion", Some(json!({ "kind": kind })))),
@@ -1437,7 +1294,11 @@ fn inspector_number_field(question_ids: &[String], field_id: &str, label: &str, 
     })
 }
 
-fn inspector_kind_fields(question: &FormQuestion, question_ids: &[String]) -> Vec<UiNode> {
+fn inspector_kind_fields(
+    question: &FormQuestion,
+    question_ids: &[String],
+    contributions: &[PluginContributionEntry],
+) -> Vec<UiNode> {
     let mut fields = Vec::new();
     if let Some(description) = &question.description {
         fields.push(inspector_text_field(question_ids, "forms-play-inspector.description", "Description", &[description.clone()], "description"));
@@ -1615,39 +1476,26 @@ fn inspector_kind_fields(question: &FormQuestion, question_ids: &[String]) -> Ve
                 fields.push(inspector_text_field(question_ids, "forms-play-inspector.accept", "Accept", &[String::new()], "accept"));
             }
         }
-        "buildingComponent" => {
+        kind if is_extension_question_kind(kind) => {
+            let params = question.params.clone().unwrap_or_else(|| json!({}));
+            let values = serde_json::Map::new();
+            fields.push(render_extension_question(question, &values, contributions, "blueprint", true));
             if let Some(slug) = &question.fixture_slug {
                 fields.push(ui_inspector_readonly_field("forms-play-inspector.fixtureSlug", "Fixture Slug", slug));
             }
-            if let Some(params) = question.params.as_ref().and_then(|value| value.as_object()) {
-                for (param_key, param_value) in params {
-                    fields.push(UiNode::Field(UiFieldNode {
-                        id: format!("forms-play-inspector.param.{param_key}"),
-                        label: param_key.clone(),
-                        child: UiControlNode::NumberStepper(UiNumberStepperNode {
-                            id: format!("forms-play-inspector.param.{param_key}.stepper"),
-                            value: json_f64_value(param_value),
-                            step: 0.1,
-                            uniform: true,
-                            on_absolute: forms_cmd(
-                                "patchQuestions",
-                                Some(json!({ "questionIds": question_ids, "field": "param", "paramKey": param_key })),
-                            ),
-                            on_delta: forms_cmd(
-                                "patchQuestions",
-                                Some(json!({ "questionIds": question_ids, "field": "param", "paramKey": param_key })),
-                            ),
-                        }),
-                    }));
-                }
-            }
+            let _ = params;
+            let _ = question_ids;
         }
         _ => {}
     }
     fields
 }
 
-fn build_inspector_tree(spec: &FormSpec, play: &FormsPlayEnvelope) -> UiNode {
+fn build_inspector_tree(
+    spec: &FormSpec,
+    play: &FormsPlayEnvelope,
+    contributions: &[PluginContributionEntry],
+) -> UiNode {
     let questions: Vec<FormQuestion> = play
         .selected_ids
         .iter()
@@ -1666,11 +1514,11 @@ fn build_inspector_tree(spec: &FormSpec, play: &FormsPlayEnvelope) -> UiNode {
     let required: Vec<bool> = questions.iter().map(|question| question.required.unwrap_or(false)).collect();
     let kind_mixed = ui_inspector_mixed_text(&kinds);
     let required_mixed = ui_inspector_mixed_toggle(&required);
-    let kind_items: Vec<UiSelectItem> = catalogue_kinds()
+    let kind_items: Vec<UiSelectItem> = catalogue_kinds(contributions)
         .into_iter()
         .map(|(kind, label, _)| UiSelectItem {
-            value: kind.into(),
-            label: label.into(),
+            value: kind,
+            label,
         })
         .collect();
     let mut base_fields = vec![
@@ -1712,7 +1560,7 @@ fn build_inspector_tree(spec: &FormSpec, play: &FormsPlayEnvelope) -> UiNode {
         }),
     ];
     if questions.len() == 1 {
-        base_fields.extend(inspector_kind_fields(&questions[0], &question_ids));
+        base_fields.extend(inspector_kind_fields(&questions[0], &question_ids, contributions));
     }
     let groups = vec![UiInspectorFieldGroup {
         id: "forms-play-inspector.base".into(),
@@ -2112,16 +1960,16 @@ impl PluginApp for FormsPlayApp {
         Vec::new()
     }
 
-    fn render(&self, body_key: &str, document_json: &str, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode {
         let play = parse_envelope(document_json);
         let spec = materialized_projection(&play);
+        let contributions = parse_contributions(view_state);
         match body_key {
-            FORMS_PLAY_BODY_EDIT => render_edit_table(&spec),
-            FORMS_PLAY_BODY_TRY => render_try_wizard(&spec, &play),
-            FORMS_PLAY_BODY_PREVIEW => render_preview_body(&spec, &play),
+            FORMS_PLAY_BODY_BLUEPRINT => render_edit_table(&spec),
+            FORMS_PLAY_BODY_TRY => render_try_wizard(&spec, &play, &contributions),
             FORMS_PLAY_BODY_DOCUMENT => build_document_tree(&spec, &play.selected_ids),
-            FORMS_PLAY_BODY_CATALOGUE => build_catalogue_tree(),
-            FORMS_PLAY_BODY_INSPECTION => build_inspector_tree(&spec, &play),
+            FORMS_PLAY_BODY_CATALOGUE => build_catalogue_tree(&contributions),
+            FORMS_PLAY_BODY_INSPECTION => build_inspector_tree(&spec, &play, &contributions),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -2133,25 +1981,20 @@ fn create_forms_app() -> App {
     App::from_builder(
         App::builder(FORMS_PLAY_APP_ID, "Forms").document(["semio", "forms"])
             .icon_id("forms")
-            .mode("edit", "Edit")
-            .default_mode_id("edit")
-            .window_kind(FORMS_PLAY_WINDOW_EDIT, "Edit", FORMS_PLAY_BODY_EDIT)
+            .mode("blueprint", "Blueprint")
+            .default_mode_id("blueprint")
+            .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT)
             .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY)
-            .window_kind(FORMS_PLAY_WINDOW_PREVIEW, "Preview", FORMS_PLAY_BODY_PREVIEW)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, FORMS_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.catalogue", "Catalogue", PanelGroup::Workbench, FORMS_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, FORMS_PLAY_BODY_INSPECTION)
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")
             .default_layout(create_default_layout(
-                &[
-                    FORMS_PLAY_WINDOW_EDIT.into(),
-                    FORMS_PLAY_WINDOW_TRY.into(),
-                    FORMS_PLAY_WINDOW_PREVIEW.into(),
-                ],
+                &[FORMS_PLAY_WINDOW_BLUEPRINT.into(), FORMS_PLAY_WINDOW_TRY.into()],
                 "row",
-                Some(&[40.0, 35.0, 25.0]),
-                Some(&["Edit".into(), "Try".into(), "Preview".into()]),
+                Some(&[50.0, 50.0]),
+                Some(&["Blueprint".into(), "Try".into()]),
             )),
     )
     .example("empty", "Empty", serde_json::to_string(&default_envelope()).unwrap())
@@ -2194,12 +2037,68 @@ mod tests {
     }
 
     #[test]
-    fn renders_edit_table() {
+    fn renders_blueprint_table() {
         let app = FormsPlayApp;
         let document = app.initial_document_json();
-        let node = app.render(FORMS_PLAY_BODY_EDIT, &document, &ViewState::default());
+        let node = app.render(FORMS_PLAY_BODY_BLUEPRINT, &document, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("table"));
+    }
+
+    #[test]
+    fn app_has_blueprint_and_try_windows_only() {
+        let app = create_forms_app();
+        assert_eq!(app.definition.window_kinds.len(), 2);
+        assert_eq!(app.definition.window_kinds[0].id, FORMS_PLAY_WINDOW_BLUEPRINT);
+        assert_eq!(app.definition.window_kinds[1].id, FORMS_PLAY_WINDOW_TRY);
+        assert_eq!(app.definition.modes[0].id, "blueprint");
+    }
+
+    #[test]
+    fn extension_question_emits_external_slot_when_contribution_registered() {
+        let app = FormsPlayApp;
+        let contributions = vec![PluginContributionEntry {
+            plugin_id: "forms-module-procedural".into(),
+            contribution: Contribution::FormsQuestionKind {
+                app_id: "forms-module-procedural".into(),
+                question_kind: "buildingComponent".into(),
+                label: "Building Component".into(),
+                icon_id: "building".into(),
+                default_value_json: "{}".into(),
+                params_body_key: "params".into(),
+                preview_body_key: "preview".into(),
+            },
+        }];
+        let mut view_state = ViewState::default();
+        view_state.contributions_json = Some(serde_json::to_string(&contributions).unwrap());
+        let mut play_app = FormsPlayApp;
+        let ops = play_app.handle_command_patch_ops(
+            "setActiveExample",
+            Some(&json!({ "exampleId": "building-component" })),
+            &app.initial_document_json(),
+            &view_state,
+        );
+        let play = apply_ops(&app.initial_document_json(), &ops);
+        let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&play).unwrap(), &view_state);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("externalSlot"));
+        assert!(json.contains("forms-module-procedural"));
+    }
+
+    #[test]
+    fn extension_question_falls_back_without_contribution() {
+        let app = FormsPlayApp;
+        let mut play_app = FormsPlayApp;
+        let ops = play_app.handle_command_patch_ops(
+            "setActiveExample",
+            Some(&json!({ "exampleId": "building-component" })),
+            &app.initial_document_json(),
+            &ViewState::default(),
+        );
+        let play = apply_ops(&app.initial_document_json(), &ops);
+        let node = app.render(FORMS_PLAY_BODY_TRY, &serde_json::to_string(&play).unwrap(), &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("Extension unavailable"));
     }
 
     #[test]
@@ -2335,29 +2234,6 @@ mod tests {
         let next_spec = materialized_projection(&next);
         let question = &next_spec.steps[0].questions[0];
         assert!(!question.required.unwrap_or(true));
-    }
-
-    #[test]
-    fn preview_mesh_json_non_empty_for_building_component() {
-        let mut app = FormsPlayApp;
-        let ops = app.handle_command_patch_ops(
-            "setActiveExample",
-            Some(&json!({ "exampleId": "building-component" })),
-            &app.initial_document_json(),
-            &ViewState::default(),
-        );
-        let play = apply_ops(&app.initial_document_json(), &ops);
-        let spec = materialized_projection(&play);
-        let node = app.render(FORMS_PLAY_BODY_PREVIEW, &serde_json::to_string(&play).unwrap(), &ViewState::default());
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("world3d"), "preview should render world3d scene");
-        let question = first_building_component_question(&spec).expect("building component question");
-        let values = effective_try_values(&spec, &play);
-        let params = building_component_params(question, &values);
-        let fixture: FlowFixture = serde_json::from_str(HEX_COLUMN_FIXTURE_JSON).expect("fixture json");
-        let (meshes_json, _) = evaluated_preview_payload(&fixture, &params);
-        assert!(!meshes_json.is_empty());
-        assert_ne!(meshes_json, "[]");
     }
 
     #[test]

@@ -937,7 +937,7 @@ pub fn screen_select_components(
                         selected.insert(id);
                     }
                 }
-                "face" if !mesh.face_ids.is_empty() => {
+                "face" => {
                     for (tri_index, tri) in mesh.indices.chunks_exact(3).enumerate() {
                         let mut screens = [[0.0_f32; 2]; 3];
                         let mut visible = 0usize;

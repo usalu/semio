@@ -26,8 +26,12 @@ function findPluginCargoFiles(root: string): string[] {
 			}
 			if (st.isDirectory()) {
 				walk(path);
-			} else if (name === "Cargo.toml" && path.endsWith("/plugin/rs/Cargo.toml") && !path.includes("/framework/plugin/rs/")) {
-				out.push(path);
+			} else if (name === "Cargo.toml" && !path.includes("/framework/plugin/rs/")) {
+				const isPluginCrate = path.endsWith("/plugin/rs/Cargo.toml");
+				const isFormsModuleCrate = path.includes("/forms/module/") && path.endsWith("/rs/Cargo.toml");
+				if (isPluginCrate || isFormsModuleCrate) {
+					out.push(path);
+				}
 			}
 		}
 	}

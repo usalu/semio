@@ -261,11 +261,24 @@ impl WasmPluginRuntime {
     }
 
     pub fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewState) -> Result<UiNode, String> {
-        let input_json = serde_json::json!({
+        self.render_with_document(instance_id, body_key, view_state, None)
+    }
+
+    pub fn render_with_document(
+        &self,
+        instance_id: u32,
+        body_key: &str,
+        view_state: &ViewState,
+        document_json: Option<&str>,
+    ) -> Result<UiNode, String> {
+        let mut input = serde_json::json!({
             "bodyKey": body_key,
             "viewState": view_state,
-        })
-        .to_string();
+        });
+        if let Some(document) = document_json {
+            input["documentJson"] = serde_json::Value::String(document.to_string());
+        }
+        let input_json = input.to_string();
         let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
         let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
         Self::prepare_call(&mut store);
@@ -316,6 +329,7 @@ impl WasmPluginRuntime {
             programs: vec![],
             examples: vec![],
             capabilities: vec![],
+            contributions: vec![],
         };
         let mut store = Store::new(engine, Self::host_state("bootstrap", &manifest));
         let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker)

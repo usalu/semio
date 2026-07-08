@@ -1,0 +1,14 @@
+{
+  "title": "Forms Blueprint Try Module Preview",
+  "emoji": "🧩",
+  "status": "closed",
+  "description": "Consolidate forms to Blueprint+Try windows, runtime Contribution/ExternalSlot mechanism, forms-module-procedural plugin for buildingComponent preview.",
+  "summary": "Implemented runtime Contribution mechanism (PluginManifest.contributions, UiNode::ExternalSlot, PluginBundle::contributes, PluginHost.contributions), consolidated forms to Blueprint+Try windows with registry-driven ExternalSlot emission, extracted buildingComponent flow/tessellation into forms-module-procedural plugin, and wired ExternalSlot resolution + contributions_json injection in React os-shell, wgpu ShellState, framework-core JS utilities, dev plugin bridge, and wgpu boot.ts. Regenerated plugin registry to include forms-module-procedural; contributor plugin auto-loads alongside forms in filtered dev/wgpu sessions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1861"
+  },
+  "goal": "🎯forms🎯formstechnology",
+  "sessions": [
+    "⚪66c3d091985a4f45a090f8bd42e83d4e"
+  ]
+}

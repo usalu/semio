@@ -18,7 +18,27 @@
 - Marquee preview/commit: use render viewport for projection
 - Tests: viewport offset, face overlay lines, ray face/edge pick
 
-## Verification
+## Follow-up (face hover + rectangle preview regression)
+
+### Symptoms
+- Face hover under cursor not showing
+- Rectangle / group selection preview not showing for faces
+
+### Root causes
+1. Face hover pick used per-triangle `ray_triangle` loop instead of `ray_pick_mesh_detail` (same path as mesh paint hit) — less reliable under scene camera.
+2. `sync_world3d_state` cleared `hovered_component_*` whenever `hoveredComponent` was absent from selection JSON, wiping renderer-local hover before plugin echo.
+3. Face overlays gated only on `granularity == "face"`, not `selection_targets.face`.
+4. `screen_select_components` skipped face marquee when `face_ids` was empty.
+5. `setSelection` marquee commit did not update local `component_ids` via `apply_world_command_preview`.
+
+### Fixes
+- Face pick → `ray_pick_mesh_detail` + `mesh_face_id`
+- `apply_hovered_component_from_selection`: only touch hover when JSON key present/null
+- Face line + translucent overlays → `face_component_mode_active`
+- Kernel face marquee branch without `face_ids.is_empty()` guard
+- `apply_world_command_preview` handles `setSelection`
+- Tests: face marquee preview, hover preservation, overlay lines
+
 - `cargo test -p infinite_world` — 23/23 pass
 - `cargo test -p kernel_3d_scene` — pass
 - `cargo build --target=wasm32-unknown-unknown --manifest-path framework/renderer/wgpu/rs/Cargo.toml` — pass

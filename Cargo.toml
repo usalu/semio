@@ -16,6 +16,7 @@ members = [
     "writer/plugin/rs",
     "raster/plugin/rs",
     "forms/plugin/rs",
+    "forms/module/procedural/rs",
     "vcs/plugin/rs",
     "vcs/rs",
     "s/rs",

@@ -2795,16 +2795,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "forms-module-procedural"
+version = "0.1.0"
+dependencies = [
+ "flow_core",
+ "flow_module_brep",
+ "forms",
+ "kernel_3d_brepkit",
+ "kernel_3d_engine",
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "forms-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "flow_core",
- "flow_module_brep",
  "forms",
  "image",
- "kernel_3d_brepkit",
- "kernel_3d_engine",
  "semio-framework-core",
  "semio-framework-plugin",
  "serde",
