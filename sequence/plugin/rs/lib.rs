@@ -553,7 +553,7 @@ impl PluginApp for SequencePlayApp {
         serde_json::to_string(&default_envelope()).expect("sequence envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -942,7 +942,7 @@ mod tests {
     fn add_step_command_appends_step() {
         let mut app = SequencePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("addStep", Some(&json!({ "kind": "log.print" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
         let updated: SequencePlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
@@ -953,7 +953,7 @@ mod tests {
     fn run_stores_result_in_runtime() {
         let mut app = SequencePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("run", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("run", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -966,7 +966,7 @@ mod tests {
         let envelope = default_envelope();
         let step_id = envelope.fixture.steps[0].id.clone();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command("removeStep", Some(&json!({ "id": step_id })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("removeStep", Some(&json!({ "id": step_id })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -990,7 +990,7 @@ mod tests {
     fn set_orientation_command_flips_toggle_state() {
         let mut app = SequencePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("setOrientation", Some(&json!({ "orientation": "topBottom" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setOrientation", Some(&json!({ "orientation": "topBottom" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -1023,7 +1023,7 @@ mod tests {
             step.y = 0.0;
         }
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command("reorganize", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("reorganize", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -1035,9 +1035,9 @@ mod tests {
     fn stop_command_clears_last_run_result() {
         let mut app = SequencePlayApp;
         let document = app.initial_document_json();
-        let ran = app.handle_command("run", None, &document, &ViewState::default());
+        let ran = app.handle_command_patch_ops("run", None, &document, &ViewState::default());
         let ran_document = serde_json::from_str::<Value>(&ran[0]).unwrap()["document"].to_string();
-        let ops = app.handle_command("stop", None, &ran_document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("stop", None, &ran_document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: SequencePlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();

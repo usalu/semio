@@ -643,7 +643,7 @@ impl PluginApp for DagPlayApp {
         serde_json::to_string(&default_envelope()).expect("dag envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1028,7 +1028,7 @@ mod tests {
     fn add_node_command_updates_fixture() {
         let mut app = DagPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("addNode", Some(&json!({ "kind": "slider" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addNode", Some(&json!({ "kind": "slider" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
         let updated: DagPlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
@@ -1052,7 +1052,7 @@ mod tests {
         let document = app.initial_document_json();
         let envelope: DagPlayEnvelope = serde_json::from_str(&document).unwrap();
         let old_id = envelope.fixture.nodes.first().map(|node| node.id.clone()).expect("node");
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "renameDagNode",
             Some(&json!({ "oldId": old_id, "value": "renamed-node" })),
             &document,
@@ -1070,7 +1070,7 @@ mod tests {
         let document = app.initial_document_json();
         let envelope: DagPlayEnvelope = serde_json::from_str(&document).unwrap();
         let node_id = envelope.fixture.nodes.first().map(|node| node.id.clone()).expect("node");
-        let ops = app.handle_command("removeNode", Some(&json!({ "nodeId": node_id })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("removeNode", Some(&json!({ "nodeId": node_id })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: DagPlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();

@@ -23,113 +23,157 @@ import { PLUGIN_BUILD_TARGETS } from "./js/index.ts";
 import { generatePluginRegistry } from "../../../plugin/registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
-const wasmTarget = "wasm32-unknown-unknown";
 const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
 
-function pluginApiWrapperSource(wasmFileName: string, bindgenBase: string): string {
-	return `/** @generated semio plugin C-ABI API wrapper */
-import initBindgen from "./${bindgenBase}.js";
+const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 
-let wasm;
+function pluginWorkerSource(): string {
+	return `/** @generated semio plugin web worker */
+let pluginApi = null;
 
-function readCString(ptr) {
-  const view = new Uint8Array(wasm.memory.buffer);
-  let end = ptr;
-  while (view[end]) end += 1;
-  return new TextDecoder().decode(view.subarray(ptr, end));
-}
-
-function writeCString(value) {
-  const bytes = new TextEncoder().encode(value + "\\0");
-  const ptr = wasm.semio_plugin_alloc(bytes.length);
-  new Uint8Array(wasm.memory.buffer).set(bytes, ptr);
-  return ptr;
-}
-
-function callStringExport(name, ...args) {
-  const ptr = wasm[name](...args);
-  const value = readCString(ptr);
-  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(ptr);
-  return value;
-}
-
-export default async function init() {
-  wasm = await initBindgen(new URL("./${wasmFileName}", import.meta.url));
-  if (wasm.semio_plugin_start) wasm.semio_plugin_start();
-}
-
-export function semio_plugin_manifest() {
-  return callStringExport("semio_plugin_manifest");
-}
-
-export function semio_plugin_create_app(appId) {
-  const ptr = writeCString(appId);
-  const id = wasm.semio_plugin_create_app(ptr);
-  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(ptr);
-  return id;
-}
-
-export function semio_plugin_destroy_app(instanceId) {
-  wasm.semio_plugin_destroy_app(instanceId);
-}
-
-export function semio_plugin_handle_command(instanceId, commandJson, viewStateJson) {
-  const commandPtr = writeCString(commandJson);
-  const viewPtr = writeCString(viewStateJson);
-  const out = callStringExport("semio_plugin_handle_command", instanceId, commandPtr, viewPtr);
-  if (wasm.semio_plugin_free_string) {
-    wasm.semio_plugin_free_string(commandPtr);
-    wasm.semio_plugin_free_string(viewPtr);
+async function loadPlugin(moduleUrl) {
+  if (pluginApi) return pluginApi;
+  const module = await import(moduleUrl);
+  if (module.createPluginApi) {
+    pluginApi = await module.createPluginApi();
+    return pluginApi;
   }
-  return out;
+  throw new Error("plugin module missing createPluginApi export");
 }
 
-export function semio_plugin_render(instanceId, bodyKey, viewStateJson) {
-  const bodyPtr = writeCString(bodyKey);
-  const viewPtr = writeCString(viewStateJson);
-  const out = callStringExport("semio_plugin_render", instanceId, bodyPtr, viewPtr);
-  if (wasm.semio_plugin_free_string) {
-    wasm.semio_plugin_free_string(bodyPtr);
-    wasm.semio_plugin_free_string(viewPtr);
+function reply(requestId, type, payload) {
+  self.postMessage({ requestId, type, ...payload });
+}
+
+function replyError(requestId, message) {
+  self.postMessage({ requestId, type: "error", message });
+}
+
+self.addEventListener("message", async (event) => {
+  const msg = event.data ?? {};
+  const { type, requestId } = msg;
+  if (!requestId || !type) return;
+  try {
+    if (type === "init") {
+      await loadPlugin(msg.moduleUrl);
+      reply(requestId, "init", { ok: true });
+      return;
+    }
+    const api = pluginApi;
+    if (!api) throw new Error("worker not initialized");
+    switch (type) {
+      case "manifest":
+        reply(requestId, "manifest", { value: await api.manifest() });
+        break;
+      case "createApp":
+        reply(requestId, "createApp", { instanceId: await api.createApp(msg.appId) });
+        break;
+      case "destroy":
+        await api.destroyApp?.(msg.instanceId);
+        reply(requestId, "destroy", { ok: true });
+        break;
+      case "handleCommand":
+        reply(requestId, "handleCommand", {
+          value: await api.handleCommand(msg.instanceId, msg.commandJson, msg.contextJson ?? msg.viewStateJson),
+        });
+        break;
+      case "render":
+        reply(requestId, "render", {
+          value: await api.render(msg.instanceId, msg.bodyKey, msg.viewStateJson),
+        });
+        break;
+      case "tools":
+        reply(requestId, "tools", {
+          value: await api.tools ? await api.tools(msg.instanceId, msg.viewStateJson) : "[]",
+        });
+        break;
+      case "windowEngagements":
+        reply(requestId, "windowEngagements", {
+          value: await api.windowEngagements
+            ? await api.windowEngagements(msg.instanceId, msg.viewStateJson)
+            : "{}",
+        });
+        break;
+      case "windowMeasures":
+        reply(requestId, "windowMeasures", {
+          value: await api.windowMeasures
+            ? await api.windowMeasures(msg.instanceId, msg.viewStateJson)
+            : "{}",
+        });
+        break;
+      default:
+        throw new Error(\`unknown worker message type: \${type}\`);
+    }
+  } catch (error) {
+    replyError(requestId, error instanceof Error ? error.message : String(error));
   }
-  return out;
+});
+`;
 }
 
-export function semio_plugin_tools(instanceId, viewStateJson) {
-  const viewPtr = writeCString(viewStateJson);
-  const out = callStringExport("semio_plugin_tools", instanceId, viewPtr);
-  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(viewPtr);
-  return out;
-}
+function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
+	return `/** @generated semio plugin jco component bridge */
+import { plugin } from "./${componentBase}.js";
 
-export function semio_plugin_window_engagements(instanceId, viewStateJson) {
-  const viewPtr = writeCString(viewStateJson);
-  const out = callStringExport("semio_plugin_window_engagements", instanceId, viewPtr);
-  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(viewPtr);
-  return out;
-}
+const apps = new Set();
 
-export function semio_plugin_window_measures(instanceId, viewStateJson) {
-  const viewPtr = writeCString(viewStateJson);
-  const out = callStringExport("semio_plugin_window_measures", instanceId, viewPtr);
-  if (wasm.semio_plugin_free_string) wasm.semio_plugin_free_string(viewPtr);
-  return out;
+export async function createPluginApi() {
+  return {
+    async manifest() {
+      return (await plugin.manifest()).json;
+    },
+    async createApp(appId) {
+      const instanceId = await plugin.instantiateApp(appId, appId);
+      apps.add(instanceId);
+      return instanceId;
+    },
+    async destroyApp(instanceId) {
+      apps.delete(instanceId);
+    },
+    async handleCommand(instanceId, commandJson, contextJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const context =
+        contextJson && contextJson.trim().startsWith("{")
+          ? contextJson
+          : JSON.stringify({ viewState: JSON.parse(contextJson), actor: "local" });
+      const response = await plugin.handleCommand(instanceId, { json: commandJson }, { json: context });
+      return response.json;
+    },
+    async render(instanceId, bodyKey, viewStateJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const response = await plugin.updateWindow(instanceId, {
+        json: JSON.stringify({ bodyKey, viewState: JSON.parse(viewStateJson) }),
+      });
+      return response.json;
+    },
+    async tools() {
+      return "[]";
+    },
+    async windowEngagements() {
+      return "{}";
+    },
+    async windowMeasures() {
+      return "{}";
+    },
+  };
 }
 `;
 }
 
-function ensureWasmBindgenCli(): void {
-	const probe = spawnSync("wasm-bindgen", ["--version"], { encoding: "utf8" });
-	if (probe.status !== 0) {
-		spawnSync("cargo", ["install", "wasm-bindgen-cli", "--locked"], { stdio: "inherit" });
+function ensureWasmTarget(): void {
+	const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
+	if (!probe.stdout?.includes(PLUGIN_WASM_TARGET)) {
+		spawnSync("rustup", ["target", "add", PLUGIN_WASM_TARGET], { stdio: "inherit" });
 	}
 }
 
-function ensureWasmTarget(): void {
-	const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
-	if (!probe.stdout?.includes(wasmTarget)) {
-		spawnSync("rustup", ["target", "add", wasmTarget], { stdio: "inherit" });
-	}
+function transpilePluginComponent(artifact: string, outDir: string, componentBase: string): void {
+	const transpile = spawnSync(
+		"bunx",
+		["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase],
+		{ cwd: repoRoot, stdio: "inherit" },
+	);
+	if (transpile.status !== 0) throw new Error(`jco transpile failed for ${artifact}`);
 }
 
 async function readPackageName(cratePath: string): Promise<string> {
@@ -143,29 +187,30 @@ async function buildPlugin(target: (typeof PLUGIN_BUILD_TARGETS)[number]): Promi
 	const packageName = await readPackageName(target.cratePath);
 	const build = spawnSync(
 		"cargo",
-		["build", "-p", packageName, "--target", wasmTarget, "--release"],
+		["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--release"],
 		{ cwd: repoRoot, stdio: "inherit" },
 	);
 	if (build.status !== 0) throw new Error(`plugin build failed: ${target.pluginId}`);
-	const artifact = join(repoRoot, "target", wasmTarget, "release", `${packageName.replace(/-/g, "_")}.wasm`);
+	const artifact = join(
+		repoRoot,
+		"target",
+		PLUGIN_WASM_TARGET,
+		"release",
+		`${packageName.replace(/-/g, "_")}.wasm`,
+	);
 	const outDir = join(pluginOutRoot, target.pluginId);
 	mkdirSync(outDir, { recursive: true });
 	const jsBase = target.wasmOut.replace(/\.wasm$/, "");
-	const bindgenBase = `${jsBase}_bindgen`;
-	ensureWasmBindgenCli();
-	const bindgen = spawnSync(
-		"wasm-bindgen",
-		["--target", "web", "--out-dir", outDir, "--out-name", bindgenBase, artifact],
-		{ cwd: repoRoot, stdio: "inherit" },
-	);
-	if (bindgen.status !== 0) throw new Error(`wasm-bindgen failed: ${target.pluginId}`);
 	const wasmOut = join(outDir, target.wasmOut);
-	copyFileSync(join(outDir, `${bindgenBase}_bg.wasm`), wasmOut);
+	const componentBase = `${jsBase}_component`;
+	copyFileSync(artifact, wasmOut);
+	transpilePluginComponent(wasmOut, outDir, componentBase);
 	const jsOut = join(outDir, `${jsBase}.js`);
-	writeFileSync(jsOut, pluginApiWrapperSource(target.wasmOut, bindgenBase));
+	writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
+	writeFileSync(join(outDir, "plugin-worker.js"), pluginWorkerSource());
 	const hotSwapMarker = join(pluginOutRoot, ".hot-swap");
 	writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
-	console.log(`[DEBUG] built plugin ${target.pluginId} -> ${outDir}`);
+	console.log(`[DEBUG] built plugin ${target.pluginId} (${PLUGIN_WASM_TARGET}) -> ${outDir}`);
 }
 
 async function ensurePluginRegistry(): Promise<void> {
@@ -182,10 +227,9 @@ async function buildPlugins(filterPlugin?: string): Promise<void> {
 	if (existsSync(stalePublicPlugins)) {
 		rmSync(stalePublicPlugins, { recursive: true, force: true });
 	}
-	const targets =
-		!filterPlugin || filterPlugin === "s"
-			? PLUGIN_BUILD_TARGETS
-			: PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin);
+	const targets = filterPlugin
+		? PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin)
+		: PLUGIN_BUILD_TARGETS;
 	for (const target of targets) {
 		await buildPlugin(target);
 	}
@@ -356,7 +400,7 @@ class PluginCapabilityLintScript extends BundleScript {
 					declared.add(entry.slice(1, -1));
 				}
 			}
-			if (manifestText.includes("Capability::LocalBackboneStorage")) {
+			if (manifestText.includes("local_backbone_storage()") || manifestText.includes("ResourceKind::Backbone")) {
 				declared.add("localBackboneStorage");
 			}
 			const depNames = new Set(pkg.dependencies.map((dep) => dep.name));
@@ -401,8 +445,11 @@ class VerifyScript extends BundleScript {
 			".repo/🎫/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs",
 		);
 		if (!existsSync(e2eScript)) throw new Error(`missing e2e script: ${e2eScript}`);
-		const sPluginTests = spawnSync("cargo", ["test", "-p", "s-plugin"], { cwd: repoRoot, stdio: "inherit" });
-		if (sPluginTests.status !== 0) throw new Error("s-plugin tests failed");
+		for (const target of PLUGIN_BUILD_TARGETS) {
+			const packageName = await readPackageName(target.cratePath);
+			const pluginTests = spawnSync("cargo", ["test", "-p", packageName], { cwd: repoRoot, stdio: "inherit" });
+			if (pluginTests.status !== 0) throw new Error(`${packageName} tests failed`);
+		}
 		const rendererTests = spawnSync("bunx", ["vitest", "run"], {
 			cwd: join(repoRoot, "framework/renderer/react"),
 			stdio: "inherit",

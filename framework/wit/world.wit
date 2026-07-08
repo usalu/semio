@@ -1,546 +1,86 @@
 package semio:framework;
 
-interface ui {
-  use types.{json-value, command-descriptor, style-spec};
-
-  record stack-node {
-    direction: string,
-    gap: option<string>,
-    padding: option<string>,
-    children: list<ui-node>,
-  }
-
-  record text-node {
-    value: string,
-    emphasize: option<bool>,
-    data-attributes: option<list<tuple<string, string>>>,
-  }
-
-  record button-node {
-    id: option<string>,
-    icon-id: string,
-    label: string,
-    command: command-descriptor,
-    style: option<style-spec>,
-  }
-
-  record separator-node {}
-
-  record input-node {
-    id: string,
-    input-kind: string,
-    value: string,
-    placeholder: option<string>,
-    commit: option<string>,
-    on-change: command-descriptor,
-  }
-
-  record select-item {
-    value: string,
-    label: string,
-  }
-
-  record select-node {
-    id: string,
-    value: string,
-    items: list<select-item>,
-    placeholder: option<string>,
-    on-change: command-descriptor,
-  }
-
-  record toggle-node {
-    id: string,
-    icon-id: string,
-    pressed: bool,
-    text: option<string>,
-    on-change: command-descriptor,
-  }
-
-  record vec3-node {
-    id: string,
-    value: option<tuple<f64, f64, f64>>,
-    on-change: command-descriptor,
-  }
-
-  record key-value-entry {
-    label: string,
-    value: string,
-  }
-
-  record key-value-node {
-    entries: list<key-value-entry>,
-  }
-
-  record slider-node {
-    id: string,
-    value: f64,
-    min: f64,
-    max: f64,
-    step: f64,
-    on-change: command-descriptor,
-  }
-
-  record number-stepper-node {
-    id: string,
-    value: f64,
-    step: f64,
-    uniform: bool,
-    on-absolute: command-descriptor,
-    on-delta: command-descriptor,
-  }
-
-  record ring-node {
-    id: string,
-    orb-id: string,
-    t: f64,
-    disabled: option<bool>,
-    on-change: command-descriptor,
-  }
-
-  record icon-select-node {
-    id: string,
-    value: string,
-    uniform: bool,
-    classifier-kind: string,
-    on-change: command-descriptor,
-  }
-
-  variant ui-control-node {
-    input(input-node),
-    select(select-node),
-    toggle(toggle-node),
-    vec3(vec3-node),
-    button(button-node),
-    key-value(key-value-node),
-    slider(slider-node),
-    number-stepper(number-stepper-node),
-    ring(ring-node),
-    icon-select(icon-select-node),
-  }
-
-  record field-node {
-    id: string,
-    label: string,
-    child: ui-control-node,
-  }
-
-  record section-node {
-    id: string,
-    label: option<string>,
-    default-open: option<bool>,
-    children: list<ui-node>,
-  }
-
-  record tree-item-node {
-    id: string,
-    label: string,
-    description: option<string>,
-    icon-id: option<string>,
-    selected: option<bool>,
-    default-open: option<bool>,
-    command: option<command-descriptor>,
-    draggable: option<bool>,
-    drag-data: option<list<tuple<string, string>>>,
-    items: option<list<tree-item-node>>,
-    control: option<ui-control-node>,
-    is-hidden: option<bool>,
-  }
-
-  record tree-section-node {
-    id: string,
-    label: option<string>,
-    default-open: option<bool>,
-    items: list<tree-item-node>,
-  }
-
-  record tree-node {
-    sections: list<tree-section-node>,
-    selected-ids: option<list<string>>,
-    highlighted-ids: option<list<string>>,
-    selection-change: option<command-descriptor>,
-  }
-
-  record canvas-2d-scene {
-    camera-x: f64,
-    camera-y: f64,
-    zoom: f64,
-    layers-json: string,
-  }
-
-  record world-3d-scene {
-    camera-json: string,
-    meshes-json: string,
-    instances-json: string,
-    selection-json: string,
-  }
-
-  record node-graph-scene {
-    nodes-json: string,
-    edges-json: string,
-    viewport-json: string,
-  }
-
-  record text-editor-scene {
-    buffer: string,
-    language: option<string>,
-    selection-json: option<string>,
-  }
-
-  record table-scene {
-    columns-json: string,
-    rows-json: string,
-  }
-
-  record raster-scene {
-    width: u32,
-    height: u32,
-    pixels-base64: string,
-  }
-
-  record virtual-file-system-scene {
-    schema-json: string,
-    rows-json: string,
-    selected-row-ids-json: option<string>,
-    hovered-row-id: option<string>,
-    empty-message: option<string>,
-    drag-drop-enabled: option<bool>,
-  }
-
-  record component-scene-node {
-    surface-id: string,
-    controller-id: string,
-    component-kind: string,
-    pane-id: option<string>,
-    binding-id: option<string>,
-    canvas-2d: option<canvas-2d-scene>,
-    world-3d: option<world-3d-scene>,
-    node-graph: option<node-graph-scene>,
-    text-editor: option<text-editor-scene>,
-    table: option<table-scene>,
-    raster: option<raster-scene>,
-    virtual-file-system: option<virtual-file-system-scene>,
-  }
-
-  variant ui-node {
-    stack(stack-node),
-    text(text-node),
-    button(button-node),
-    separator(separator-node),
-    input(input-node),
-    select(select-node),
-    toggle(toggle-node),
-    vec3(vec3-node),
-    key-value(key-value-node),
-    slider(slider-node),
-    number-stepper(number-stepper-node),
-    ring(ring-node),
-    icon-select(icon-select-node),
-    field(field-node),
-    section(section-node),
-    tree(tree-node),
-    component-scene(component-scene-node),
-  }
-}
-
 interface types {
-  use ui.{ui-node};
-
-  record command-descriptor {
-    controller-id: string,
-    command: string,
-    args-json: option<string>,
+  record plugin-manifest-json {
+    json: string,
   }
 
-  record style-spec {
-    variant: option<string>,
-    size: option<string>,
-    density: option<string>,
+  record command-invocation-json {
+    json: string,
   }
 
-  type json-value = string;
-
-  record measure-select-item {
-    id: string,
-    value: string,
-    label: string,
+  record command-context-json {
+    json: string,
   }
 
-  variant window-measure {
-    select(
-      id: string,
-      label: option<string>,
-      value: string,
-      items: list<measure-select-item>,
-      on-change: command-descriptor,
-    ),
-    slider(
-      id: string,
-      label: option<string>,
-      value: f64,
-      min: f64,
-      max: f64,
-      step: option<f64>,
-      on-change: command-descriptor,
-    ),
-    toggle(
-      id: string,
-      icon-id: string,
-      label: option<string>,
-      pressed: bool,
-      text: option<string>,
-      on-change: command-descriptor,
-    ),
-    group(
-      id: string,
-      label: string,
-      default-open: option<bool>,
-      children: list<window-measure>,
-    ),
+  record command-response-json {
+    json: string,
   }
 
-  record window-layout-window-node {
-    kind: string,
-    window-kind-id: string,
-    title: option<string>,
-    instance-id: option<string>,
-    template-id: option<string>,
+  record window-input-json {
+    json: string,
   }
 
-  record window-layout-stack-node {
-    kind: string,
-    size: option<f64>,
-    children: list<window-layout-window-node>,
+  record window-output-json {
+    json: string,
   }
 
-  record window-layout-axis-node {
-    kind: string,
-    size: option<f64>,
-    children: list<window-layout-child>,
+  record migrate-model-input {
+    from-version: string,
+    to-version: string,
+    data: list<u8>,
   }
 
-  variant window-layout-child {
-    axis(window-layout-axis-node),
-    stack(window-layout-stack-node),
+  record migrate-model-output {
+    data: list<u8>,
   }
 
-  variant window-layout-root {
-    axis(window-layout-axis-node),
-    stack(window-layout-stack-node),
-  }
-
-  record window-layout {
-    root: window-layout-root,
-  }
-
-  record named-layout {
-    id: string,
-    label: string,
-    icon-id: option<string>,
-    layout: window-layout,
-    origin: string,
-    group-path: option<list<string>>,
-  }
-
-  record window-engagement-option {
-    id: string,
-    label: option<string>,
-    icon-id: option<string>,
-    pressed: option<bool>,
-    disabled: option<bool>,
-    command: option<command-descriptor>,
-  }
-
-  record window-engagement-input {
-    id: option<string>,
-    value: option<string>,
-    placeholder: option<string>,
-    disabled: option<bool>,
-    on-change: option<command-descriptor>,
-    on-submit: option<command-descriptor>,
-    on-repeat-last: option<command-descriptor>,
-    on-abort: option<command-descriptor>,
-  }
-
-  record window-engagement-status {
-    id: string,
-    text: string,
-  }
-
-  record window-engagement-possible {
-    id: string,
-    label: string,
-    detail: option<string>,
-    command: option<command-descriptor>,
-  }
-
-  record window-engagement-ring-option {
-    id: string,
-    label: string,
-    disabled: option<bool>,
-  }
-
-  record window-engagement-toggle-group-option {
-    id: string,
-    label: string,
-    disabled: option<bool>,
-  }
-
-  record window-engagement-select-item {
-    id: string,
-    value: string,
-    label: string,
-  }
-
-  variant window-engagement-control {
-    slider(
-      id: option<string>,
-      label: option<string>,
-      value: f64,
-      min: f64,
-      max: f64,
-      step: option<f64>,
-      unit: option<string>,
-      disabled: option<bool>,
-      on-change: option<command-descriptor>,
-      on-commit: option<command-descriptor>,
-    ),
-    stepper(
-      id: option<string>,
-      label: option<string>,
-      value: f64,
-      min: option<f64>,
-      max: option<f64>,
-      step: option<f64>,
-      unit: option<string>,
-      disabled: option<bool>,
-      on-change: option<command-descriptor>,
-      on-commit: option<command-descriptor>,
-    ),
-    ring(
-      id: option<string>,
-      label: option<string>,
-      value: option<string>,
-      options: list<window-engagement-ring-option>,
-      disabled: option<bool>,
-      on-select: option<command-descriptor>,
-    ),
-    toggle-group(
-      id: option<string>,
-      label: option<string>,
-      value: option<string>,
-      options: list<window-engagement-toggle-group-option>,
-      disabled: option<bool>,
-      on-select: option<command-descriptor>,
-    ),
-    select(
-      id: option<string>,
-      label: option<string>,
-      value: option<string>,
-      placeholder: option<string>,
-      items: list<window-engagement-select-item>,
-      disabled: option<bool>,
-      on-change: option<command-descriptor>,
-    ),
-  }
-
-  record window-engagement {
-    session-active: option<bool>,
-    options: option<list<window-engagement-option>>,
-    input: option<window-engagement-input>,
-    control: option<window-engagement-control>,
-    controls: option<list<window-engagement-control>>,
-    status: option<list<window-engagement-status>>,
-    possible-engagements: option<list<window-engagement-possible>>,
-  }
-
-  record keybinding {
-    keys: string,
-    command: command-descriptor,
-  }
-
-  record mode-definition {
-    id: string,
-    label: string,
-  }
-
-  record window-kind-definition {
-    id: string,
-    label: string,
-    body-key: string,
-    icon-id: option<string>,
-    measures: list<window-measure>,
-    engagement: option<window-engagement>,
-  }
-
-  record panel-tab-definition {
-    id: string,
-    label: string,
-    group: string,
-    body-key: string,
-  }
-
-  record app-definition {
-    id: string,
-    label: string,
-    icon-id: option<string>,
-    controller-id: string,
-    modes: list<mode-definition>,
-    default-mode-id: option<string>,
-    window-kinds: list<window-kind-definition>,
-    panel-tabs: list<panel-tab-definition>,
-    keybindings: list<keybinding>,
-    named-layouts: list<named-layout>,
-    default-layout: option<window-layout>,
-  }
-
-  record program-definition {
-    program-id: string,
-    app-id: string,
-    label: string,
-    yields: string,
-  }
-
-  record example-definition {
-    id: string,
-    label: string,
-    document-json: string,
-  }
-
-  record plugin-manifest {
-    plugin-id: string,
-    label: string,
-    version: string,
-    apps: list<app-definition>,
-    programs: list<program-definition>,
-    examples: list<example-definition>,
-  }
-
-  record view-state {
-    active-mode-id: option<string>,
-    active-window-kind-id: option<string>,
-    selection-json: option<string>,
-    panel-json: option<string>,
+  variant plugin-error {
+    message(string),
   }
 }
 
-interface plugin-api {
-  use types.{plugin-manifest, view-state};
-  use ui.{ui-node};
+interface plugin {
+  use types.{
+    plugin-manifest-json,
+    command-invocation-json,
+    command-context-json,
+    command-response-json,
+    window-input-json,
+    window-output-json,
+    migrate-model-input,
+    migrate-model-output,
+    plugin-error,
+  };
 
-  create-app: func(app-id: string) -> result<u32, string>;
-  destroy-app: func(instance-id: u32) -> result<_, string>;
-  handle-command: func(instance-id: u32, command-json: string, document-json: string, view-state: view-state) -> result<list<string>, string>;
-  render: func(instance-id: u32, body-key: string, document-json: string, view-state: view-state) -> result<ui-node, string>;
-  manifest: func() -> plugin-manifest;
+  manifest: func() -> plugin-manifest-json;
+  instantiate-app: func(app-id: string, instance-id: string) -> result<u32, plugin-error>;
+  handle-command: func(
+    instance-id: u32,
+    command: command-invocation-json,
+    context: command-context-json,
+  ) -> result<command-response-json, plugin-error>;
+  update-window: func(
+    instance-id: u32,
+    input: window-input-json,
+  ) -> result<window-output-json, plugin-error>;
+  migrate-model: func(input: migrate-model-input) -> result<migrate-model-output, plugin-error>;
 }
 
 interface host {
   log: func(level: string, message: string);
   now-ms: func() -> s64;
-  fetch-asset: func(uri: string) -> result<string, string>;
+  read-model: func(handle: u64) -> result<string, string>;
+  write-model: func(handle: u64, payload-json: string) -> result<_, string>;
+  open-window: func(kind: string, params-json: string) -> result<u64, string>;
+  invoke-command: func(target: string, invocation-json: string) -> result<string, string>;
+  read-asset: func(handle: u64) -> result<list<u8>, string>;
+  network-fetch: func(origin: string, path: string) -> result<list<u8>, string>;
+  backbone-read: func(uri: string) -> result<string, string>;
+  backbone-write: func(uri: string, payload: string) -> result<_, string>;
 }
 
 world plugin-world {
   import host;
-  export plugin-api;
+  export plugin;
 }

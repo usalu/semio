@@ -1,11 +1,22 @@
 //! 🔌 Declarative app plugin SDK — build fully declarative Rust apps bundled into hot-swappable WASM components.
 
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+pub mod component;
+
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
+pub use component::component_export_anchor;
+
 pub mod app {
 // #region app
 //! 🧩 Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    collect_window_kind_ids_from_layout, AppDefinition, CommandDescriptor, ExampleDefinition, Keybinding,
+    collect_window_kind_ids_from_layout, kernel::{
+        ActorId, CapabilityRequirement, CommandInvocationId, CommandResult, HybridLogicalTimestamp,
+        InverseOperation, KernelOperation, ModelDiff, ModelHandle, ModelVersion, OperationId, Rights,
+        ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
+    },
+    AppDefinition, CommandDescriptor, ExampleDefinition, Keybinding,
     ModeDefinition, NamedLayout, PanelGroup, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode,
     UiNode, ViewState, WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
 };
@@ -255,6 +266,11 @@ impl AppBuilder {
                     icon_id: window.icon_id,
                     measures: window.measures,
                     engagement: window.engagement,
+                    params_schema: None,
+                    model_projection_schema: None,
+                    input_event_schema: None,
+                    output_schema: None,
+                    capabilities: vec![],
                 })
                 .collect(),
             panel_tabs: self
@@ -358,7 +374,13 @@ impl App {
 pub trait PluginApp: Send {
     fn app_id(&self) -> &str;
     fn initial_document_json(&self) -> String;
-    fn handle_command(&mut self, command: &str, args: Option<&Value>, document_json: &str, view_state: &ViewState) -> Vec<String>;
+    fn handle_command_patch_ops(
+        &mut self,
+        command: &str,
+        args: Option<&Value>,
+        document_json: &str,
+        view_state: &ViewState,
+    ) -> Vec<String>;
     fn render(&self, body_key: &str, document_json: &str, view_state: &ViewState) -> UiNode;
     fn tools(&self, _document_json: &str, _view_state: &ViewState) -> Vec<ToolNode> {
         Vec::new()
@@ -411,11 +433,24 @@ impl PluginBundle {
         }
     }
 
-    pub fn capability(mut self, capability: semio_framework_core::Capability) -> Self {
+    pub fn capability(mut self, capability: CapabilityRequirement) -> Self {
         if !self.manifest.capabilities.contains(&capability) {
             self.manifest.capabilities.push(capability);
         }
         self
+    }
+
+    pub fn local_backbone_storage(mut self) -> Self {
+        self.capability(CapabilityRequirement {
+            resource: ResourceKind::Backbone,
+            rights: Rights::Read,
+            scope: Scope::Plugin,
+        })
+        .capability(CapabilityRequirement {
+            resource: ResourceKind::Backbone,
+            rights: Rights::Write,
+            scope: Scope::Plugin,
+        })
     }
 
     pub fn register_app(
@@ -978,13 +1013,134 @@ pub mod plugin_runtime {
 //! 📤 WASM component export glue for plugin bundles.
 
 use crate::app::{AppInstance, Plugin, PluginBundle};
-use semio_framework_core::{PluginManifest, UiNode, ViewState};
+use semio_framework_core::{
+    kernel::{
+        ActorId, CommandInvocationId, CommandResult, HybridLogicalTimestamp, InverseOperation,
+        KernelOperation, ModelDiff, ModelHandle, ModelVersion, OperationId, SchemaId, UndoGroup,
+        UndoPolicy,
+    },
+    PluginManifest, UiNode, ViewState,
+};
 use std::cell::RefCell;
 use std::sync::atomic::{AtomicU32, Ordering};
+
+const JSON_PATCH_SCHEMA_ID: &str = "semio.kernel.json-patch";
 
 thread_local! {
     static PLUGIN: RefCell<Option<PluginBundle>> = const { RefCell::new(None) };
     static INSTANCES: RefCell<Vec<AppInstance>> = const { RefCell::new(Vec::new()) };
+}
+
+pub fn command_result_from_patch_ops(
+    patch_ops: Vec<String>,
+    command: &str,
+    instance_id: u32,
+    generation: u64,
+    actor: &str,
+) -> CommandResult {
+    let invocation_id = CommandInvocationId(format!("{command}:{instance_id}:{generation}"));
+    let actor_id = ActorId(actor.to_string());
+    let model = ModelHandle(instance_id as u128);
+    let base_version = ModelVersion(generation);
+    let operations: Vec<KernelOperation> = patch_ops
+        .iter()
+        .enumerate()
+        .map(|(index, op_json)| {
+            let payload: serde_json::Value =
+                serde_json::from_str(op_json).unwrap_or(serde_json::Value::Null);
+            let operation_id = OperationId(format!("{}:{index}", invocation_id.0));
+            KernelOperation {
+                id: operation_id.clone(),
+                model,
+                base_version,
+                command_id: invocation_id.clone(),
+                diff: ModelDiff {
+                    schema_id: SchemaId(JSON_PATCH_SCHEMA_ID.into()),
+                    payload,
+                },
+                inverse: InverseOperation {
+                    target_operation: operation_id,
+                    inverse_diff: ModelDiff {
+                        schema_id: SchemaId("semio.kernel.json-patch.inverse".into()),
+                        payload: serde_json::Value::Null,
+                    },
+                    base_version,
+                    dependencies: vec![],
+                    undo_policy: UndoPolicy::ExactBaseOnly,
+                },
+                dependencies: vec![],
+                author: actor_id.clone(),
+                timestamp: HybridLogicalTimestamp::new(0, 0),
+            }
+        })
+        .collect();
+    let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
+    let inverse_operations: Vec<InverseOperation> =
+        operations.iter().map(|op| op.inverse.clone()).collect();
+    CommandResult {
+        output: serde_json::Value::Null,
+        operations,
+        inverse_group: UndoGroup {
+            command_id: invocation_id,
+            operations: operation_ids,
+            inverse_operations,
+        },
+        diagnostics: vec![],
+        requested_effects: vec![],
+        events: vec![],
+    }
+}
+
+fn sync_instance_document(document_json: &str, result: &CommandResult) -> Result<String, String> {
+    let mut document = document_json.to_string();
+    for operation in &result.operations {
+        if operation.diff.schema_id.0 != JSON_PATCH_SCHEMA_ID {
+            continue;
+        }
+        let op_json = serde_json::to_string(&operation.diff.payload).map_err(|error| error.to_string())?;
+        document = apply_document_op(&document, &op_json)?;
+    }
+    Ok(document)
+}
+
+fn apply_document_op(document_json: &str, op_json: &str) -> Result<String, String> {
+    let mut document: serde_json::Value =
+        serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    match op.get("op").and_then(|value| value.as_str()) {
+        Some("setDocument") => {
+            if let Some(next) = op.get("document") {
+                document = next.clone();
+            }
+        }
+        Some("patch") => {
+            if let Some(patch) = op.get("patch") {
+                merge_json(&mut document, patch);
+            }
+        }
+        _ => {}
+    }
+    serde_json::to_string(&document).map_err(|error| error.to_string())
+}
+
+fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    match (target, patch) {
+        (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+            for (key, value) in patch_map {
+                if value.is_null() {
+                    target_map.remove(key);
+                } else {
+                    let entry = target_map
+                        .entry(key.clone())
+                        .or_insert(serde_json::Value::Null);
+                    merge_json(entry, value);
+                }
+            }
+        }
+        (target_slot, patch_value) => {
+            *target_slot = patch_value.clone();
+        }
+    }
 }
 
 static NEXT_INSTANCE_ID: AtomicU32 = AtomicU32::new(1);
@@ -1047,35 +1203,48 @@ pub fn plugin_destroy_app(instance_id: u32) -> Result<(), String> {
 pub fn plugin_handle_command(
     instance_id: u32,
     command_json: &str,
-    view_state_json: &str,
-) -> Result<Vec<String>, String> {
+    context_json: &str,
+) -> Result<CommandResult, String> {
     let command: serde_json::Value =
         serde_json::from_str(command_json).map_err(|error| error.to_string())?;
-    let view_state: ViewState =
-        serde_json::from_str(view_state_json).map_err(|error| error.to_string())?;
+    let context: serde_json::Value =
+        serde_json::from_str(context_json).map_err(|error| error.to_string())?;
+    let view_state: ViewState = context
+        .get("viewState")
+        .cloned()
+        .map(|value| serde_json::from_value(value).unwrap_or_default())
+        .unwrap_or_default();
     let command_name = command
         .get("command")
         .and_then(|value| value.as_str())
         .unwrap_or("");
     let args = command.get("args").cloned();
-    INSTANCES.with(|instances| {
+    let actor = context
+        .get("actor")
+        .and_then(|value| value.as_str())
+        .unwrap_or("local");
+  INSTANCES.with(|instances| {
         let mut list = instances.borrow_mut();
         let instance = list
             .iter_mut()
             .find(|instance| instance.id == instance_id)
             .ok_or_else(|| format!("unknown instance: {instance_id}"))?;
-        let ops = instance.app.handle_command(
+        let generation = 0_u64;
+        let patch_ops = instance.app.handle_command_patch_ops(
             command_name,
             args.as_ref(),
             &instance.document_json,
             &view_state,
         );
-        for op in &ops {
-            if let Ok(next) = apply_document_op(&instance.document_json, op) {
-                instance.document_json = next;
-            }
-        }
-        Ok(ops)
+        let result = command_result_from_patch_ops(
+            patch_ops,
+            command_name,
+            instance_id,
+            generation,
+            actor,
+        );
+        instance.document_json = sync_instance_document(&instance.document_json, &result)?;
+        Ok(result)
     })
 }
 
@@ -1145,289 +1314,11 @@ pub fn plugin_window_measures(
     })
 }
 
-fn apply_document_op(document_json: &str, op_json: &str) -> Result<String, String> {
-    let mut document: serde_json::Value =
-        serde_json::from_str(document_json).map_err(|error| error.to_string())?;
-    let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
-    match op.get("op").and_then(|value| value.as_str()) {
-        Some("setDocument") => {
-            if let Some(next) = op.get("document") {
-                document = next.clone();
-            }
-        }
-        Some("patch") => {
-            if let Some(patch) = op.get("patch") {
-                merge_json(&mut document, patch);
-            }
-        }
-        _ => {}
-    }
-    serde_json::to_string(&document).map_err(|error| error.to_string())
-}
-
-fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
-    match (target, patch) {
-        (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
-            for (key, value) in patch_map {
-                if value.is_null() {
-                    target_map.remove(key);
-                } else {
-                    let entry = target_map
-                        .entry(key.clone())
-                        .or_insert(serde_json::Value::Null);
-                    merge_json(entry, value);
-                }
-            }
-        }
-        (target_slot, patch_value) => {
-            *target_slot = patch_value.clone();
-        }
-    }
-}
-
-#[macro_export]
-macro_rules! wasm_plugin_exports {
-    () => {
-        #[cfg(target_arch = "wasm32")]
-        mod semio_wasm_exports {
-            use super::_PLUGIN_INIT;
-            use semio_framework_plugin::plugin_runtime::{
-                plugin_create_app, plugin_destroy_app, plugin_handle_command, plugin_manifest, plugin_render,
-                plugin_tools, plugin_window_engagements, plugin_window_measures,
-            };
-            use wasm_bindgen::prelude::*;
-
-            #[wasm_bindgen(start)]
-            pub fn semio_plugin_start() {
-                let _ = &*_PLUGIN_INIT;
-            }
-
-            #[wasm_bindgen]
-            pub fn semio_plugin_manifest() -> String {
-                serde_json::to_string(&plugin_manifest()).unwrap_or_else(|_| "{}".into())
-            }
-
-            #[wasm_bindgen]
-            pub fn semio_plugin_create_app(app_id: &str) -> Result<u32, JsValue> {
-                plugin_create_app(app_id).map_err(|error| JsValue::from_str(&error))
-            }
-
-            #[wasm_bindgen]
-            pub fn semio_plugin_destroy_app(instance_id: u32) -> Result<(), JsValue> {
-                plugin_destroy_app(instance_id).map_err(|error| JsValue::from_str(&error))
-            }
-
-            #[wasm_bindgen]
-            pub fn semio_plugin_handle_command(
-                instance_id: u32,
-                command_json: &str,
-                view_state_json: &str,
-            ) -> Result<String, JsValue> {
-                let ops = plugin_handle_command(instance_id, command_json, view_state_json)
-                    .map_err(|error| JsValue::from_str(&error))?;
-                serde_json::to_string(&ops).map_err(|error| JsValue::from_str(&error.to_string()))
-            }
-
-            #[wasm_bindgen]
-            pub fn semio_plugin_render(
-                instance_id: u32,
-                body_key: &str,
-                view_state_json: &str,
-            ) -> Result<String, JsValue> {
-                let node = plugin_render(instance_id, body_key, view_state_json)
-                    .map_err(|error| JsValue::from_str(&error))?;
-                serde_json::to_string(&node).map_err(|error| JsValue::from_str(&error.to_string()))
-            }
-
-            #[wasm_bindgen]
-            pub fn semio_plugin_tools(instance_id: u32, view_state_json: &str) -> Result<String, JsValue> {
-                let tools = plugin_tools(instance_id, view_state_json)
-                    .map_err(|error| JsValue::from_str(&error))?;
-                serde_json::to_string(&tools).map_err(|error| JsValue::from_str(&error.to_string()))
-            }
-
-            #[wasm_bindgen]
-            pub fn semio_plugin_window_engagements(
-                instance_id: u32,
-                view_state_json: &str,
-            ) -> Result<String, JsValue> {
-                let engagements = plugin_window_engagements(instance_id, view_state_json)
-                    .map_err(|error| JsValue::from_str(&error))?;
-                serde_json::to_string(&engagements).map_err(|error| JsValue::from_str(&error.to_string()))
-            }
-
-            #[wasm_bindgen]
-            pub fn semio_plugin_window_measures(
-                instance_id: u32,
-                view_state_json: &str,
-            ) -> Result<String, JsValue> {
-                let measures = plugin_window_measures(instance_id, view_state_json)
-                    .map_err(|error| JsValue::from_str(&error))?;
-                serde_json::to_string(&measures).map_err(|error| JsValue::from_str(&error.to_string()))
-            }
-        }
-    };
-}
-
-#[macro_export]
-macro_rules! native_plugin_exports {
-    () => {
-        mod semio_plugin_exports {
-            use super::_PLUGIN_INIT;
-            use semio_framework_plugin::plugin_runtime::{
-                plugin_create_app, plugin_destroy_app, plugin_handle_command, plugin_manifest, plugin_render,
-                plugin_tools, plugin_window_engagements, plugin_window_measures,
-            };
-            use std::ffi::{c_char, CStr, CString};
-            use std::sync::LazyLock;
-
-            static START: LazyLock<()> = LazyLock::new(|| {
-                let _ = &*_PLUGIN_INIT;
-            });
-
-            fn to_c_string(value: String) -> *mut c_char {
-                CString::new(value)
-                    .map(|string| string.into_raw())
-                    .unwrap_or(std::ptr::null_mut())
-            }
-
-            unsafe fn read_c_str(ptr: *const c_char) -> Result<String, String> {
-                if ptr.is_null() {
-                    return Err("null c string".into());
-                }
-                CStr::from_ptr(ptr)
-                    .to_str()
-                    .map(|value| value.to_string())
-                    .map_err(|error| error.to_string())
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_start() {
-                let _ = &*START;
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_alloc(size: u32) -> *mut c_char {
-                let _ = &*START;
-                if size == 0 {
-                    return std::ptr::null_mut();
-                }
-                let layout = std::alloc::Layout::from_size_align(size as usize, 1).expect("alloc layout");
-                unsafe { std::alloc::alloc(layout) as *mut c_char }
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_dealloc(ptr: *mut c_char, size: u32) {
-                if ptr.is_null() || size == 0 {
-                    return;
-                }
-                let layout = std::alloc::Layout::from_size_align(size as usize, 1).expect("dealloc layout");
-                unsafe { std::alloc::dealloc(ptr as *mut u8, layout) };
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_manifest() -> *mut c_char {
-                let _ = &*START;
-                to_c_string(serde_json::to_string(&plugin_manifest()).unwrap_or_else(|_| "{}".into()))
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_create_app(app_id: *const c_char) -> u32 {
-                let _ = &*START;
-                let Ok(app_id) = (unsafe { read_c_str(app_id) }) else {
-                    return u32::MAX;
-                };
-                plugin_create_app(&app_id).unwrap_or(u32::MAX)
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_destroy_app(instance_id: u32) {
-                let _ = plugin_destroy_app(instance_id);
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_handle_command(
-                instance_id: u32,
-                command_json: *const c_char,
-                view_state_json: *const c_char,
-            ) -> *mut c_char {
-                let Ok(command_json) = (unsafe { read_c_str(command_json) }) else {
-                    return std::ptr::null_mut();
-                };
-                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
-                    return std::ptr::null_mut();
-                };
-                let ops = plugin_handle_command(instance_id, &command_json, &view_state_json)
-                    .unwrap_or_default();
-                to_c_string(serde_json::to_string(&ops).unwrap_or_else(|_| "[]".into()))
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_render(
-                instance_id: u32,
-                body_key: *const c_char,
-                view_state_json: *const c_char,
-            ) -> *mut c_char {
-                let Ok(body_key) = (unsafe { read_c_str(body_key) }) else {
-                    return std::ptr::null_mut();
-                };
-                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
-                    return std::ptr::null_mut();
-                };
-                let node = plugin_render(instance_id, &body_key, &view_state_json).unwrap_or_default();
-                to_c_string(serde_json::to_string(&node).unwrap_or_else(|_| "{}".into()))
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_tools(instance_id: u32, view_state_json: *const c_char) -> *mut c_char {
-                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
-                    return std::ptr::null_mut();
-                };
-                let tools = plugin_tools(instance_id, &view_state_json).unwrap_or_default();
-                to_c_string(serde_json::to_string(&tools).unwrap_or_else(|_| "[]".into()))
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_window_engagements(
-                instance_id: u32,
-                view_state_json: *const c_char,
-            ) -> *mut c_char {
-                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
-                    return std::ptr::null_mut();
-                };
-                let engagements = plugin_window_engagements(instance_id, &view_state_json).unwrap_or_default();
-                to_c_string(serde_json::to_string(&engagements).unwrap_or_else(|_| "{}".into()))
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_window_measures(
-                instance_id: u32,
-                view_state_json: *const c_char,
-            ) -> *mut c_char {
-                let Ok(view_state_json) = (unsafe { read_c_str(view_state_json) }) else {
-                    return std::ptr::null_mut();
-                };
-                let measures = plugin_window_measures(instance_id, &view_state_json).unwrap_or_default();
-                to_c_string(serde_json::to_string(&measures).unwrap_or_else(|_| "{}".into()))
-            }
-
-            #[no_mangle]
-            pub extern "C" fn semio_plugin_free_string(ptr: *mut c_char) {
-                if ptr.is_null() {
-                    return;
-                }
-                unsafe {
-                    drop(CString::from_raw(ptr));
-                }
-            }
-        }
-    };
-}
-
 #[macro_export]
 macro_rules! plugin_exports {
     () => {
-        semio_framework_plugin::native_plugin_exports!();
+        #[used]
+        static _SEMIO_PLUGIN_COMPONENT_LINK: fn() = semio_framework_plugin::component_export_anchor;
     };
 }
 // #endregion plugin_runtime
@@ -1594,7 +1485,7 @@ impl PluginApp for StandardPluginApp {
         self.spec.initial_document_json.to_string()
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -2094,7 +1985,7 @@ pub use generate_mode::{
     render_generations_tree, select_generation, selected_generation, selected_generation_mut,
     update_generation_values, FormGeneration, GenerationPlayState,
 };
-pub use plugin_runtime::install_plugin_bundle;
+pub use plugin_runtime::{command_result_from_patch_ops, install_plugin_bundle};
 pub use scaffold::{
     assert_standard_app_renders, register_standard_app, standard_app,
     standard_factory, StandardApp, StandardPluginApp,

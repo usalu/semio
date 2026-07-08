@@ -821,7 +821,7 @@ impl PluginApp for LayoutPlayApp {
         serde_json::to_string(&default_envelope()).expect("layout envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1389,7 +1389,7 @@ mod tests {
     fn set_selection_updates_runtime() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setSelection",
             Some(&json!({ "ids": ["frame-text-1"] })),
             &document,
@@ -1414,7 +1414,7 @@ mod tests {
         let document = app.initial_document_json();
         let before: LayoutPlayEnvelope = serde_json::from_str(&document).expect("parse envelope");
         let before_count = before.document.pages[0].frames.len();
-        let ops = app.handle_command("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -1432,7 +1432,7 @@ mod tests {
             ("marginLeft", 40.0),
             ("columnsGutter", 18.0),
         ] {
-            let ops = app.handle_command(
+            let ops = app.handle_command_patch_ops(
                 "patchPage",
                 Some(&json!({ "pageId": "page-1", "field": field, "value": value })),
                 &document,
@@ -1440,7 +1440,7 @@ mod tests {
             );
             assert_eq!(ops.len(), 1, "field {field} should apply");
         }
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "patchPage",
             Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })),
             &document,
@@ -1456,13 +1456,13 @@ mod tests {
     fn patch_frame_supports_rect_fill_and_stroke() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addFrame", Some(&json!({ "kind": "rect" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let after_add: LayoutPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         let document = serde_json::to_string(&after_add).unwrap();
         let frame_id = after_add.runtime.selected_ids[0].clone();
 
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "patchFrame",
             Some(&json!({ "frameId": frame_id, "pageId": "page-1", "field": "fill", "value": "0.5, 0.4, 0.3, 1" })),
             &document,
@@ -1480,7 +1480,7 @@ mod tests {
     fn patch_frame_supports_text_story_content_and_wrap_mode() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "storyContent", "value": "Edited story body." })),
             &document,
@@ -1493,7 +1493,7 @@ mod tests {
         assert_eq!(story.content, "Edited story body.");
 
         let document = serde_json::to_string(&next).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "wrapMode", "value": "contour" })),
             &document,
@@ -1510,7 +1510,7 @@ mod tests {
     fn patch_frame_supports_image_link_path() {
         let mut app = LayoutPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "patchFrame",
             Some(&json!({ "frameId": "frame-image-1", "pageId": "page-1", "field": "linkPath", "value": "assets/updated.png" })),
             &document,
@@ -1533,7 +1533,7 @@ mod tests {
             ("exportPdf", "application/pdf"),
             ("exportPackage", "application/zip"),
         ] {
-            let ops = app.handle_command(command, Some(&json!({ "pageId": "page-1" })), &document, &ViewState::default());
+            let ops = app.handle_command_patch_ops(command, Some(&json!({ "pageId": "page-1" })), &document, &ViewState::default());
             assert_eq!(ops.len(), 1, "{command} should emit a download op");
             let payload: Value = serde_json::from_str(&ops[0]).unwrap();
             assert_eq!(payload["op"], "downloadMediaExport");

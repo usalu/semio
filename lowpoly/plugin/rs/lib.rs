@@ -1597,7 +1597,7 @@ impl PluginApp for LowpolyPlayApp {
         ])
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1863,7 +1863,7 @@ impl PluginApp for LowpolyPlayApp {
                     .filter(|value| !value.is_empty())
                     .map(str::to_lowercase);
                 if let Some(command) = value {
-                    return self.handle_command(&command, None, document_json, _view_state);
+                    return self.handle_command_patch_ops(&command, None, document_json, _view_state);
                 }
                 return Vec::new();
             }
@@ -2067,7 +2067,7 @@ impl PluginApp for LowpolyPlayApp {
                 });
             }
             "clearSeam" => {
-                return self.handle_command("markUvSeam", Some(&json!({ "seam": false })), document_json, _view_state);
+                return self.handle_command_patch_ops("markUvSeam", Some(&json!({ "seam": false })), document_json, _view_state);
             }
             "editUndo" => {
                 if let Some(snapshot) = self.edit_undo.pop() {
@@ -2335,7 +2335,7 @@ mod tests {
     fn add_primitive_creates_object() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command("addPrimitive", Some(&json!({ "kind": "box" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addPrimitive", Some(&json!({ "kind": "box" })), &document, &ViewState::default());
         let envelope: LowpolyPlayEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.fixture.objects.len(), 2);
         assert!(envelope.fixture.objects.iter().any(|object| object.name == "box"));
@@ -2362,7 +2362,7 @@ mod tests {
             .unwrap()
             .face_count();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command("extrude", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("extrude", None, &document, &ViewState::default());
         let next: LowpolyPlayEnvelope = apply_ops(&envelope, &ops);
         let after_faces = LowpolyDocument::new(next.fixture).unwrap().active_mesh().unwrap().face_count();
         assert!(after_faces > before_faces);
@@ -2372,7 +2372,7 @@ mod tests {
     fn set_active_object_switches_selection() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command("addPrimitive", Some(&json!({ "kind": "plane" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addPrimitive", Some(&json!({ "kind": "plane" })), &document, &ViewState::default());
         let mut envelope: LowpolyPlayEnvelope = apply_ops(&parse_envelope(&document), &ops);
         let second_id = envelope.fixture.active_object_id.clone();
         let rock_id = envelope
@@ -2383,7 +2383,7 @@ mod tests {
             .map(|object| object.id.clone())
             .expect("rock object");
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setActiveObject",
             Some(&json!({ "objectId": rock_id })),
             &document,
@@ -2431,14 +2431,14 @@ mod tests {
     fn world_pick_null_clears_selection() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "worldPick",
             Some(&json!({ "granularity": "vertex", "id": 2, "merge": "replace" })),
             &document,
             &ViewState::default(),
         );
         let envelope = apply_ops(&parse_envelope(&document), &ops);
-        let clear_ops = app.handle_command(
+        let clear_ops = app.handle_command_patch_ops(
             "worldPick",
             Some(&json!({ "granularity": "vertex", "id": null, "merge": "replace" })),
             &serde_json::to_string(&envelope).unwrap(),
@@ -2452,7 +2452,7 @@ mod tests {
     fn world_pick_updates_selection() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "worldPick",
             Some(&json!({ "granularity": "face", "id": 0, "merge": "replace" })),
             &document,
@@ -2467,7 +2467,7 @@ mod tests {
     fn paint_stroke_updates_pixels() {
         let mut app = LowpolyPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "paintAt",
             Some(&json!({ "u": 0.5, "v": 0.5 })),
             &document,
@@ -2504,7 +2504,7 @@ mod tests {
         envelope.fixture.selection.keys.clear();
         let object_id = envelope.fixture.active_object_id.clone();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "toggleSelectionTarget",
             Some(&json!({ "objectId": object_id, "mode": "face", "id": 0, "merge": "invertive" })),
             &document,
@@ -2541,7 +2541,7 @@ mod tests {
         let envelope = parse_envelope(&app.initial_document_json());
         let object_id = envelope.fixture.active_object_id.clone();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setHover",
             Some(&json!({ "objectId": object_id, "mode": "vertex", "id": 3 })),
             &document,
@@ -2555,7 +2555,7 @@ mod tests {
         let highlighted = highlighted_document_ids(&hovered.runtime, &hovered.fixture);
         assert_eq!(highlighted.len(), 1);
         assert!(highlighted[0].contains(".vertex.3"));
-        let clear_ops = app.handle_command("setHover", None, &serde_json::to_string(&hovered).unwrap(), &ViewState::default());
+        let clear_ops = app.handle_command_patch_ops("setHover", None, &serde_json::to_string(&hovered).unwrap(), &ViewState::default());
         let cleared = apply_ops(&hovered, &clear_ops);
         assert!(cleared.runtime.hovered_target.is_none());
     }
@@ -2647,7 +2647,7 @@ mod tests {
             .unwrap()
             .face_count();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command("extrude", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("extrude", None, &document, &ViewState::default());
         let extruded: LowpolyPlayEnvelope = apply_ops(&envelope, &ops);
         let after_faces = LowpolyDocument::new(extruded.fixture.clone())
             .unwrap()
@@ -2655,7 +2655,7 @@ mod tests {
             .unwrap()
             .face_count();
         assert!(after_faces > before_faces);
-        let undo_ops = app.handle_command(
+        let undo_ops = app.handle_command_patch_ops(
             "editUndo",
             None,
             &serde_json::to_string(&extruded).unwrap(),
@@ -2699,7 +2699,7 @@ mod tests {
         let mut app = LowpolyPlayApp::default();
         let envelope = parse_envelope(&app.initial_document_json());
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command("toggleShowEdges", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("toggleShowEdges", None, &document, &ViewState::default());
         let next = apply_ops(&envelope, &ops);
         assert!(next.runtime.show_edges);
         let selection_json = world_selection_json_for(&next, None, None);
@@ -2712,7 +2712,7 @@ mod tests {
         let mut app = LowpolyPlayApp::default();
         let envelope = parse_envelope(&app.initial_document_json());
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "toggleSelectionKind",
             Some(&json!({ "kind": "vertex" })),
             &document,

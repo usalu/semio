@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-sync"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Local-first operation DAG sync for the command kernel"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../core/rs" }
+semio-framework-hash = { path = "../../hash/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+vcs = { path = "../../../vcs/rs" }

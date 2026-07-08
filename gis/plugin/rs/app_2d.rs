@@ -624,7 +624,7 @@ impl PluginApp for Gis2dPlayApp {
         serde_json::to_string(&default_envelope()).expect("gis2d envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -998,7 +998,7 @@ mod tests {
     fn set_selection_updates_runtime() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setSelection",
             Some(&json!({ "ids": ["roads"] })),
             &document,
@@ -1015,7 +1015,7 @@ mod tests {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
         let layers = vec![json!({ "id": "custom", "name": "Custom", "x": 0.0, "y": 0.0, "width": 80.0, "height": 40.0 })];
-        let ops = app.handle_command("setLayers", Some(&json!({ "layers": layers })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setLayers", Some(&json!({ "layers": layers })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -1026,7 +1026,7 @@ mod tests {
     fn toggle_layer_visibility_hides_layer() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "toggleLayerVisibility",
             Some(&json!({ "layerId": "raster" })),
             &document,
@@ -1041,19 +1041,19 @@ mod tests {
     fn set_render_mode_vector_style_lod_mode_persist() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("setRenderMode", Some(&json!({ "mode": "vector" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setRenderMode", Some(&json!({ "mode": "vector" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.render_mode, "vector");
         let document = serde_json::to_string(&next).unwrap();
 
-        let ops = app.handle_command("setVectorStyle", Some(&json!({ "style": "figureGround" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setVectorStyle", Some(&json!({ "style": "figureGround" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.vector_style, "figureGround");
         let document = serde_json::to_string(&next).unwrap();
 
-        let ops = app.handle_command("setLodMode", Some(&json!({ "mode": "city" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setLodMode", Some(&json!({ "mode": "city" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.lod_mode, "city");
@@ -1067,7 +1067,7 @@ mod tests {
     fn set_feature_selection_updates_runtime_and_host() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["p_institut_de_botanique_ulg_liege"], "routes": [] })),
             &document,
@@ -1084,7 +1084,7 @@ mod tests {
     fn set_hover_updates_runtime() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setHover",
             Some(&json!({ "hover": { "kind": "position", "id": "p_test" } })),
             &document,
@@ -1102,7 +1102,7 @@ mod tests {
     fn clear_selection_resets_features() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["p_institut_de_botanique_ulg_liege"], "routes": [] })),
             &document,
@@ -1110,7 +1110,7 @@ mod tests {
         );
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let document = payload["document"].to_string();
-        let ops = app.handle_command("clearSelection", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("clearSelection", None, &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Gis2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.feature_selection_json, default_feature_selection_json());
@@ -1120,14 +1120,14 @@ mod tests {
     fn set_feature_selection_additive_merges() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["a"], "routes": [], "mode": "default" })),
             &document,
             &ViewState::default(),
         );
         let document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["b"], "routes": [], "mode": "additive" })),
             &document,
@@ -1146,14 +1146,14 @@ mod tests {
     fn set_feature_selection_subtractive_removes() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["a", "b"], "routes": [], "mode": "default" })),
             &document,
             &ViewState::default(),
         );
         let document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["a"], "routes": [], "mode": "subtractive" })),
             &document,
@@ -1169,14 +1169,14 @@ mod tests {
     fn set_feature_selection_invertive_toggles() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["a"], "routes": [], "mode": "default" })),
             &document,
             &ViewState::default(),
         );
         let document = serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].to_string();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setFeatureSelection",
             Some(&json!({ "positions": ["b"], "routes": [], "mode": "invertive" })),
             &document,
@@ -1192,7 +1192,7 @@ mod tests {
     fn set_layer_stroke_scale_persists_weight() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setLayerStrokeScale",
             Some(&json!({ "layerId": "roads", "value": 1.5 })),
             &document,
@@ -1216,7 +1216,7 @@ mod tests {
     fn patch_route_updates_matching_route_field() {
         let mut app = Gis2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "patchRoute",
             Some(&json!({
                 "routeId": "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0",

@@ -40,6 +40,7 @@
 \RequirePackage{semio-logo}
 \RequirePackage{semio-components}
 \RequirePackage{semio-window}
+\RequirePackage{semio-table}
 
 \ExplSyntaxOn
 \keys_set:nx { semio / setup } {

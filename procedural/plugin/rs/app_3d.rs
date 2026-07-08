@@ -804,7 +804,7 @@ impl PluginApp for Procedural3dPlayApp {
         serde_json::to_string(&default_envelope()).expect("procedural3d envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1392,7 +1392,7 @@ mod tests {
     fn set_lod_mode_reads_value_arg() {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("setLodMode", Some(&json!({ "value": "wireframe" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setLodMode", Some(&json!({ "value": "wireframe" })), &document, &ViewState::default());
         let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.lod_mode, "wireframe");
     }
@@ -1401,7 +1401,7 @@ mod tests {
     fn set_active_example_loads_sphere_fixture() {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
             &document,
@@ -1503,7 +1503,7 @@ mod tests {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
         let before = parse_envelope(&document).fixture.widgets.len();
-        let ops = app.handle_command("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
         let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(envelope.fixture.widgets.len() > before);
     }
@@ -1520,7 +1520,7 @@ mod tests {
     fn add_generation_evaluates_preview() {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("addGeneration", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addGeneration", None, &document, &ViewState::default());
         let envelope: Procedural3dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.generation.generations.len(), 1);
         assert!(envelope.generation.preview_text.as_deref().unwrap_or("").len() > 2);
@@ -1532,7 +1532,7 @@ mod tests {
         let document = app.initial_document_json();
         let before = parse_envelope(&document);
         assert!(before.fixture.synapses.iter().any(|synapse| synapse.from == "extrude" && synapse.to == "column-preview"));
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "translateSelection",
             Some(&json!({ "ids": ["extrude"], "dx": 1.0, "dy": 2.0, "dz": 3.0 })),
             &document,
@@ -1553,7 +1553,7 @@ mod tests {
 
         // Re-grabbing the same transform accumulates the delta instead of creating a second node.
         let document2 = serde_json::to_string(&envelope).unwrap();
-        let ops2 = app.handle_command(
+        let ops2 = app.handle_command_patch_ops(
             "translateSelection",
             Some(&json!({ "ids": [transform_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })),
             &document2,
@@ -1570,7 +1570,7 @@ mod tests {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
         let envelope = parse_envelope(&document);
-        let rotate_ops = app.handle_command(
+        let rotate_ops = app.handle_command_patch_ops(
             "rotateSelection",
             Some(&json!({ "ids": ["extrude"], "angle": std::f64::consts::FRAC_PI_2 })),
             &document,
@@ -1581,7 +1581,7 @@ mod tests {
         assert!(rotated.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuronKind, .. } if id == rotate_id && neuronKind == "brep.xform.rotate")));
         assert_eq!(gumball_widget_number_param(&host_from_envelope(&rotated), rotate_id, "angle", 0.0), std::f64::consts::FRAC_PI_2);
 
-        let scale_ops = app.handle_command(
+        let scale_ops = app.handle_command_patch_ops(
             "scaleSelection",
             Some(&json!({ "ids": ["extrude"], "sx": 2.0, "sy": 2.0, "sz": 2.0 })),
             &document,
@@ -1598,20 +1598,20 @@ mod tests {
         let mut app = Procedural3dPlayApp;
         let document = app.initial_document_json();
         let before = parse_envelope(&document);
-        let add_ops = app.handle_command("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
+        let add_ops = app.handle_command_patch_ops("addWidget", Some(&json!({ "kind": "inputNote" })), &document, &ViewState::default());
         let after_add = apply_ops(&before, &add_ops);
         assert!(after_add.fixture.widgets.len() > before.fixture.widgets.len());
         assert_eq!(after_add.runtime.undo_fixtures.len(), 1);
 
         let document_after_add = serde_json::to_string(&after_add).unwrap();
-        let undo_ops = app.handle_command("undo", None, &document_after_add, &ViewState::default());
+        let undo_ops = app.handle_command_patch_ops("undo", None, &document_after_add, &ViewState::default());
         let after_undo = apply_ops(&after_add, &undo_ops);
         assert_eq!(after_undo.fixture.widgets.len(), before.fixture.widgets.len());
         assert_eq!(after_undo.runtime.undo_fixtures.len(), 0);
         assert_eq!(after_undo.runtime.redo_fixtures.len(), 1);
 
         let document_after_undo = serde_json::to_string(&after_undo).unwrap();
-        let redo_ops = app.handle_command("redo", None, &document_after_undo, &ViewState::default());
+        let redo_ops = app.handle_command_patch_ops("redo", None, &document_after_undo, &ViewState::default());
         let after_redo = apply_ops(&after_undo, &redo_ops);
         assert_eq!(after_redo.fixture.widgets.len(), after_add.fixture.widgets.len());
         assert_eq!(after_redo.runtime.redo_fixtures.len(), 0);
@@ -1623,13 +1623,13 @@ mod tests {
         let document = app.initial_document_json();
         let before = parse_envelope(&document);
         assert!(before.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
-        let ops = app.handle_command("removeWidget", Some(&json!({ "widgetId": "sides" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("removeWidget", Some(&json!({ "widgetId": "sides" })), &document, &ViewState::default());
         let after = apply_ops(&before, &ops);
         assert!(!after.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
         assert_eq!(after.runtime.undo_fixtures.len(), 1);
 
         let document_after = serde_json::to_string(&after).unwrap();
-        let undo_ops = app.handle_command("undo", None, &document_after, &ViewState::default());
+        let undo_ops = app.handle_command_patch_ops("undo", None, &document_after, &ViewState::default());
         let restored = apply_ops(&after, &undo_ops);
         assert!(restored.fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
     }

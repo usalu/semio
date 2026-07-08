@@ -1,5 +1,6 @@
 //! 🗄️ Generic document VCS engine — Operation/Edit/Change/Checkpoint/Alternative, materialize-by-replay, backbone.
 
+use semio_framework_core::{HybridLogicalTimestamp, MergeStrategyKind, UndoPolicy};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -34,10 +35,26 @@ pub struct Author {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct OperationMeta {
+    pub operation_id: String,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dependencies: Vec<String>,
+    pub base_version: u64,
+    pub author_id: String,
+    pub timestamp: HybridLogicalTimestamp,
+    pub undo_policy: UndoPolicy,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payload_hash: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Edit<Op> {
     pub id: String,
     pub forwards: Vec<Op>,
     pub backwards: Vec<Op>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub operation_meta: Vec<OperationMeta>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
     pub sequence_number: i32,
@@ -109,6 +126,11 @@ pub enum DocumentVcsCommand<Op> {
     },
     Undo,
     Redo,
+    UndoWithPolicy {
+        policy: UndoPolicy,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        semantic_command: Option<String>,
+    },
     CommitCheckpoint {
         #[serde(skip_serializing_if = "Option::is_none")]
         message: Option<String>,
@@ -197,6 +219,27 @@ pub trait Operation<P>: Clone + Serialize + DeserializeOwned {
     type Diff: OperationDiff<P>;
     fn diff(&self, projection: &P) -> Self::Diff;
     fn backwards(&self, projection: &P) -> Vec<Self>;
+    fn operation_id(&self) -> Option<String> {
+        None
+    }
+    fn dependencies(&self) -> Vec<String> {
+        Vec::new()
+    }
+    fn base_version(&self) -> u64 {
+        0
+    }
+    fn author_id(&self) -> Option<String> {
+        None
+    }
+    fn timestamp(&self) -> Option<HybridLogicalTimestamp> {
+        None
+    }
+    fn undo_policy(&self) -> UndoPolicy {
+        UndoPolicy::ExactBaseOnly
+    }
+    fn merge_strategy(&self) -> MergeStrategyKind {
+        MergeStrategyKind::LwwRegister
+    }
 }
 
 pub fn apply_operation<P, Op>(projection: &P, operation: &Op) -> P
@@ -205,7 +248,81 @@ where
 {
     operation.diff(projection).apply(projection)
 }
+
+pub fn absorb_diff<P, Op>(projection: &P, existing: &mut Op::Diff, incoming: Op::Diff)
+where
+    Op: Operation<P>,
+{
+    existing.absorb(incoming);
+}
 //#endregion 🔖Operation
+
+//#region 🔖MergeStrategy
+pub fn merge_concurrent_diffs<P, Op>(
+    projection: &P,
+    strategy: MergeStrategyKind,
+    existing: &mut Op::Diff,
+    incoming: Op::Diff,
+) where
+    Op: Operation<P>,
+{
+    match strategy {
+        MergeStrategyKind::LwwRegister | MergeStrategyKind::OrderedSequence
+        | MergeStrategyKind::TextSequence | MergeStrategyKind::TombstonedGraphSet
+        | MergeStrategyKind::ContentAddressedBlob => {
+            existing.absorb(incoming);
+        }
+    }
+}
+
+pub fn reconcile_alternative<P, Op>(
+    envelope: &mut DocumentVcsEnvelope<P, Op>,
+    alternative_name: &str,
+    checkpoint_message: Option<String>,
+    authors: Vec<Author>,
+) -> Result<String, VcsError>
+where
+    P: Clone + Serialize + DeserializeOwned,
+    Op: Clone + Serialize + DeserializeOwned,
+{
+    if envelope.vcs.checkpoints.is_empty() {
+        return Err(VcsError::NoCheckpoint);
+    }
+    let checkpoint_id = envelope
+        .vcs
+        .checkpoints
+        .last()
+        .map(|checkpoint| checkpoint.id.clone())
+        .ok_or(VcsError::NoCheckpoint)?;
+    let alternative_id = create_document_vcs_id("alternative");
+    envelope.vcs.alternatives.push(Alternative {
+        id: alternative_id.clone(),
+        name: alternative_name.to_string(),
+        checkpoint_ids: vec![checkpoint_id],
+    });
+    if let Some(message) = checkpoint_message {
+        let change = Change {
+            id: create_document_vcs_id("change"),
+            edit_ids: Vec::new(),
+            description: Some(message),
+            saved_at: now_iso(),
+        };
+        let parent = envelope.vcs.checkpoints.last();
+        let mut change_ids = parent.map(|checkpoint| checkpoint.change_ids.clone()).unwrap_or_default();
+        change_ids.push(change.id.clone());
+        envelope.vcs.changes.push(change);
+        envelope.vcs.checkpoints.push(Checkpoint {
+            id: create_document_vcs_id("checkpoint"),
+            change_ids,
+            parent_id: parent.map(|checkpoint| checkpoint.id.clone()),
+            authors,
+            message: Some("reconciled".into()),
+            timestamp: now_iso(),
+        });
+    }
+    Ok(alternative_id)
+}
+//#endregion 🔖MergeStrategy
 
 //#region 🔖Materialize
 pub fn create_document_vcs_envelope<P, Op>(
@@ -270,18 +387,21 @@ where
 }
 
 fn now_iso() -> String {
+    format!("{}", now_ms())
+}
+
+fn now_ms() -> u64 {
     #[cfg(not(target_arch = "wasm32"))]
     {
         use std::time::{SystemTime, UNIX_EPOCH};
-        let ms = SystemTime::now()
+        return SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .map(|d| d.as_millis())
+            .map(|duration| duration.as_millis() as u64)
             .unwrap_or(0);
-        return format!("{ms}");
     }
     #[cfg(target_arch = "wasm32")]
     {
-        js_sys::Date::new_0().to_iso_string().into()
+        js_sys::Date::now() as u64
     }
 }
 
@@ -398,9 +518,42 @@ where
 
     pub fn dispatch(&mut self, command: DocumentVcsCommand<Op>) -> Result<(), VcsError> {
         match command {
-            DocumentVcsCommand::Undo => {
-                let last = self.applied_edit_ids.pop().ok_or(VcsError::NothingToUndo)?;
-                self.redo_edit_ids.push(last);
+            DocumentVcsCommand::Undo => self.dispatch(DocumentVcsCommand::UndoWithPolicy {
+                policy: UndoPolicy::ExactBaseOnly,
+                semantic_command: None,
+            }),
+            DocumentVcsCommand::UndoWithPolicy {
+                policy,
+                semantic_command,
+            } => {
+                let last = self.applied_edit_ids.last().cloned().ok_or(VcsError::NothingToUndo)?;
+                let edit = self
+                    .envelope
+                    .vcs
+                    .edits
+                    .iter()
+                    .find(|edit| edit.id == last)
+                    .ok_or_else(|| VcsError::UnknownEdit(last.clone()))?;
+                match policy {
+                    UndoPolicy::ExactBaseOnly => {
+                        self.applied_edit_ids.pop().ok_or(VcsError::NothingToUndo)?;
+                        self.redo_edit_ids.push(last);
+                    }
+                    UndoPolicy::TransformAgainstConcurrent => {
+                        self.applied_edit_ids.pop().ok_or(VcsError::NothingToUndo)?;
+                        self.redo_edit_ids.push(last);
+                    }
+                    UndoPolicy::SemanticUndo | UndoPolicy::CompensatingCommand => {
+                        if semantic_command.is_none() {
+                            return Err(VcsError::Backbone(
+                                "semantic undo requires compensating command".into(),
+                            ));
+                        }
+                        self.applied_edit_ids.pop().ok_or(VcsError::NothingToUndo)?;
+                        self.redo_edit_ids.push(last);
+                    }
+                }
+                let _ = edit;
                 self.bump();
                 Ok(())
             }
@@ -515,10 +668,26 @@ where
                 let mut projection = self.projection()?;
                 let mut forwards = Vec::with_capacity(operations.len());
                 let mut backwards = Vec::new();
+                let mut operation_meta = Vec::with_capacity(operations.len());
                 for operation in operations {
                     let mut back = operation.backwards(&projection);
                     back.reverse();
                     backwards.extend(back);
+                    operation_meta.push(OperationMeta {
+                        operation_id: operation
+                            .operation_id()
+                            .unwrap_or_else(|| create_document_vcs_id("operation")),
+                        dependencies: operation.dependencies(),
+                        base_version: operation.base_version(),
+                        author_id: operation.author_id().unwrap_or_else(|| "local".into()),
+                        timestamp: operation
+                            .timestamp()
+                            .unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
+                        undo_policy: operation.undo_policy(),
+                        payload_hash: Some(semio_framework_hash::hash_bytes(
+                            &serde_json::to_vec(&operation).unwrap_or_default(),
+                        )),
+                    });
                     projection = apply_operation(&projection, &operation);
                     forwards.push(operation);
                 }
@@ -527,6 +696,7 @@ where
                     id: create_document_vcs_id("edit"),
                     forwards,
                     backwards,
+                    operation_meta,
                     description,
                     sequence_number: self.edit_sequence,
                     started_at,

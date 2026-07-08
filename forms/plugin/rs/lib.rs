@@ -1736,7 +1736,7 @@ impl PluginApp for FormsPlayApp {
         serde_json::to_string(&default_envelope()).expect("forms envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -2227,7 +2227,7 @@ mod tests {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
         let before = materialized_projection(&parse_envelope(&document)).steps.len();
-        let ops = app.handle_command("addStep", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addStep", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let next = apply_ops(&document, &ops);
         assert_eq!(materialized_projection(&next).steps.len(), before + 1);
@@ -2237,7 +2237,7 @@ mod tests {
     fn add_question_command_appends_question() {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addQuestion",
             Some(&json!({ "kind": "text" })),
             &document,
@@ -2253,7 +2253,7 @@ mod tests {
     fn set_try_values_updates_runtime() {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setTryValues",
             Some(&json!({ "values": { "q-text": "Ada" } })),
             &document,
@@ -2281,7 +2281,7 @@ mod tests {
     fn wizard_step_navigation() {
         let mut app = FormsPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "onboarding" })),
             &document,
@@ -2289,10 +2289,10 @@ mod tests {
         );
         let play = apply_ops(&document, &ops);
         assert_eq!(play.current_step_index, 0);
-        let next_ops = app.handle_command("nextStep", None, &serde_json::to_string(&play).unwrap(), &ViewState::default());
+        let next_ops = app.handle_command_patch_ops("nextStep", None, &serde_json::to_string(&play).unwrap(), &ViewState::default());
         let next = apply_ops(&document, &next_ops);
         assert_eq!(next.current_step_index, 1);
-        let back_ops = app.handle_command("previousStep", None, &serde_json::to_string(&next).unwrap(), &ViewState::default());
+        let back_ops = app.handle_command_patch_ops("previousStep", None, &serde_json::to_string(&next).unwrap(), &ViewState::default());
         let back = apply_ops(&document, &back_ops);
         assert_eq!(back.current_step_index, 0);
     }
@@ -2300,7 +2300,7 @@ mod tests {
     #[test]
     fn conditional_visibility_hides_team_size() {
         let mut app = FormsPlayApp;
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "onboarding" })),
             &app.initial_document_json(),
@@ -2316,7 +2316,7 @@ mod tests {
     #[test]
     fn inspector_patch_updates_required() {
         let mut app = FormsPlayApp;
-        let document = app.handle_command(
+        let document = app.handle_command_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "default" })),
             &app.initial_document_json(),
@@ -2325,7 +2325,7 @@ mod tests {
         let play = apply_ops(&app.initial_document_json(), &document);
         let spec = materialized_projection(&play);
         let name_id = spec.steps[0].questions[0].id.clone();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "patchQuestions",
             Some(&json!({ "questionIds": [name_id.clone()], "field": "required", "pressed": false })),
             &serde_json::to_string(&play).unwrap(),
@@ -2340,7 +2340,7 @@ mod tests {
     #[test]
     fn preview_mesh_json_non_empty_for_building_component() {
         let mut app = FormsPlayApp;
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "building-component" })),
             &app.initial_document_json(),
@@ -2363,7 +2363,7 @@ mod tests {
     #[test]
     fn renders_try_wizard() {
         let mut app = FormsPlayApp;
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setActiveExample",
             Some(&json!({ "exampleId": "default" })),
             &app.initial_document_json(),

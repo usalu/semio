@@ -629,7 +629,7 @@ impl PluginApp for WiresPlayApp {
         serde_json::to_string(&default_envelope()).expect("wires envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -856,20 +856,20 @@ mod tests {
     fn pointer_drag_translates_node_by_screen_delta() {
         let mut app = WiresPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("addNode", Some(&json!({ "kind": "identity" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addNode", Some(&json!({ "kind": "identity" })), &document, &ViewState::default());
         let with_node = apply_ops(&document, &ops);
         let document = serde_json::to_string(&with_node).unwrap();
-        let ops = app.handle_command("canvasPointerDown", Some(&json!({ "id": "node-1", "x": 100.0, "y": 100.0 })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("canvasPointerDown", Some(&json!({ "id": "node-1", "x": 100.0, "y": 100.0 })), &document, &ViewState::default());
         let dragging = apply_ops(&document, &ops);
         assert_eq!(dragging.drag.as_ref().map(|drag| drag.node_id.as_str()), Some("node-1"));
         let document = serde_json::to_string(&dragging).unwrap();
-        let ops = app.handle_command("canvasPointerMove", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("canvasPointerMove", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
         let moved = apply_ops(&document, &ops);
         let node = fixture_nodes(&moved.board_fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some("node-1")).expect("node-1");
         assert_eq!(node.get("x").and_then(|value| value.as_f64()), Some(40.0));
         assert_eq!(node.get("y").and_then(|value| value.as_f64()), Some(30.0));
         let document = serde_json::to_string(&moved).unwrap();
-        let ops = app.handle_command("canvasPointerUp", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("canvasPointerUp", Some(&json!({ "x": 140.0, "y": 130.0 })), &document, &ViewState::default());
         let released = apply_ops(&document, &ops);
         assert!(released.drag.is_none());
     }
@@ -883,7 +883,7 @@ mod tests {
             .map(|node| (node.get("x").and_then(|value| value.as_f64()).unwrap_or(0.0), node.get("y").and_then(|value| value.as_f64()).unwrap_or(0.0)))
             .collect();
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command("forceLayout", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("forceLayout", None, &document, &ViewState::default());
         let laid_out = apply_ops(&document, &ops);
         let after: Vec<(f64, f64)> = fixture_nodes(&laid_out.board_fixture)
             .iter()

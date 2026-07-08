@@ -1,0 +1,12 @@
+[package]
+name = "semio-framework-hlc"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Hybrid logical clock for causal operation ordering"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../core/rs" }

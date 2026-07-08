@@ -1377,7 +1377,7 @@ impl PluginApp for Puzzle2dPlayApp {
         serde_json::to_string(&default_envelope()).expect("puzzle2d envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -2006,7 +2006,7 @@ mod tests {
     fn set_lod_mode_for_pane_persists_per_pane_state() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setLodModeForPane",
             Some(&json!({ "pane": PUZZLE2D_PANE_DETAIL, "value": "compact" })),
             &document,
@@ -2021,7 +2021,7 @@ mod tests {
     fn engagement_input_and_submit_round_trip_sets_active_tool() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "engagementInput",
             Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })),
             &document,
@@ -2030,7 +2030,7 @@ mod tests {
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.engagement_input_by_pane.get(PUZZLE2D_PANE_OVERVIEW).map(String::as_str), Some("brush"));
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "engagementSubmit",
             Some(&json!({ "pane": PUZZLE2D_PANE_OVERVIEW, "value": "brush" })),
             &document,
@@ -2065,12 +2065,12 @@ mod tests {
     fn suggestion_offset_and_brush_kind_weight_commands_persist() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command("setSuggestionOffset", Some(&json!({ "value": 40.0 })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setSuggestionOffset", Some(&json!({ "value": 40.0 })), &document, &ViewState::default());
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.runtime.suggestion_offset, 40.0);
 
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setBrushKindWeights",
             Some(&json!({ "kindId": "heavy", "catalogSlice": "nodes", "value": 0.75 })),
             &document,
@@ -2098,7 +2098,7 @@ mod tests {
     fn add_node_command_appends_node() {
         let mut app = Puzzle2dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command("addNode", Some(&json!({ "kind": "node" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addNode", Some(&json!({ "kind": "node" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let envelope: Puzzle2dPlayEnvelope = apply_document_op(&document, &ops[0]);
         assert_eq!(envelope.fixture.get("nodes").and_then(|value| value.as_array()).map(|values| values.len()), Some(1));

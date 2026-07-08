@@ -177,7 +177,7 @@ impl semio_framework_plugin::PluginApp for DrawApp {
         .expect("draw document json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1367,7 +1367,7 @@ mod tests {
     fn add_layer_command_appends_path() {
         let mut app = DrawApp;
         let document = serde_json::to_string(&empty_draw_projection()).unwrap();
-        let ops = app.handle_command("addLayer", Some(&json!({ "kind": "path" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addLayer", Some(&json!({ "kind": "path" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 2);
         let next: DrawDocument = serde_json::from_str(&document).unwrap();
         let applied = apply_ops(&next, &ops);
@@ -1380,7 +1380,7 @@ mod tests {
         let mut document = default_draw_document("patch", None);
         let layer_id = draw::layer_id(&document.layers[0]).to_string();
         let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "patchLayers",
             Some(&json!({ "layerIds": [layer_id.clone()], "field": "opacity", "value": 0.5 })),
             &document_json,
@@ -1410,7 +1410,7 @@ mod tests {
     fn set_active_tool_updates_document() {
         let mut app = DrawApp;
         let document = serde_json::to_string(&empty_draw_projection()).unwrap();
-        let ops = app.handle_command("setActiveTool", Some(&json!({ "tool": "pen" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setActiveTool", Some(&json!({ "tool": "pen" })), &document, &ViewState::default());
         let next: DrawDocument = apply_ops(&empty_draw_projection(), &ops);
         assert_eq!(next.active_tool.as_deref(), Some("pen"));
     }
@@ -1432,7 +1432,7 @@ mod tests {
         document.layers.push(second);
         let first_id = draw::layer_id(&document.layers[0]).to_string();
         let document_json = serde_json::to_string(&document).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "combineBoolean",
             Some(&json!({ "op": "union", "ids": [first_id, second_id] })),
             &document_json,

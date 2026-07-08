@@ -16,6 +16,8 @@ use serde_json::Value;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::broadcast;
+use semio_framework_core::OpEnvelope;
+use semio_framework_sync::OpDag;
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -23,6 +25,7 @@ struct HubState {
     nodes: Arc<DashMap<Uuid, NodeRow>>,
     documents: Arc<DashMap<String, DocumentRow>>,
     ops: Arc<DashMap<String, Vec<OpRow>>>,
+    dags: Arc<DashMap<String, OpDag>>,
     bus: broadcast::Sender<HubEvent>,
 }
 
@@ -48,14 +51,15 @@ struct OpRow {
     id: Uuid,
     document_id: String,
     version: i64,
-    change: Value,
+    envelope: OpEnvelope,
 }
 
 #[derive(Clone, Serialize)]
 struct HubEvent {
     document_id: String,
     version: i64,
-    change: Value,
+    envelope: OpEnvelope,
+    insert_result: String,
 }
 
 #[derive(Serialize)]
@@ -67,7 +71,7 @@ struct DocumentResponse {
 #[derive(Deserialize)]
 struct AppendOpRequest {
     version: i64,
-    change: Value,
+    envelope: OpEnvelope,
 }
 
 #[derive(Serialize)]
@@ -158,11 +162,15 @@ async fn append_op(
         return Err(StatusCode::CONFLICT);
     }
     document.version += 1;
+    let mut dag = state.dags.entry(document_id.clone()).or_default();
+    let insert_result = dag
+        .insert(body.envelope.clone())
+        .map_err(|_| StatusCode::CONFLICT)?;
     let op = OpRow {
         id: Uuid::now_v7(),
         document_id: document_id.clone(),
         version: document.version,
-        change: body.change.clone(),
+        envelope: body.envelope.clone(),
     };
     if let Some(mut snapshot) = document.snapshot.as_object_mut() {
         if let Some(vcs) = snapshot.get_mut("vcs").and_then(|value| value.as_object_mut()) {
@@ -171,7 +179,7 @@ async fn append_op(
                 .and_then(|value| value.as_array())
                 .cloned()
                 .unwrap_or_default();
-            operations.push(body.change.clone());
+            operations.push(serde_json::to_value(&body.envelope).unwrap_or(Value::Null));
             vcs.insert("operations".into(), Value::Array(operations));
         }
     }
@@ -181,7 +189,8 @@ async fn append_op(
     let _ = state.bus.send(HubEvent {
         document_id: document_id.clone(),
         version: document.version,
-        change: body.change,
+        envelope: body.envelope,
+        insert_result: format!("{insert_result:?}"),
     });
     Ok(Json(AppendOpResponse {
         version: document.version,
@@ -217,7 +226,8 @@ async fn handle_ws(mut socket: WebSocket, document_id: String, state: HubState) 
                     let payload = serde_json::json!({
                         "kind": "op",
                         "version": event.version,
-                        "change": event.change,
+                        "envelope": event.envelope,
+                        "insertResult": event.insert_result,
                     });
                     if socket.send(Message::Text(payload.to_string().into())).await.is_err() {
                         break;
@@ -240,6 +250,7 @@ async fn main() {
         nodes: Arc::new(DashMap::new()),
         documents: Arc::new(DashMap::new()),
         ops: Arc::new(DashMap::new()),
+        dags: Arc::new(DashMap::new()),
         bus,
     };
     seed_state(&state);

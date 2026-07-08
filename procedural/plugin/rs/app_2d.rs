@@ -663,7 +663,7 @@ impl PluginApp for Procedural2dPlayApp {
         serde_json::to_string(&default_envelope()).expect("procedural2d envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1017,7 +1017,7 @@ mod tests {
     fn generate_command_sets_eval_outputs() {
         let mut app = Procedural2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("generate", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("generate", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Procedural2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -1028,7 +1028,7 @@ mod tests {
     fn set_show_mode_updates_runtime() {
         let mut app = Procedural2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("setShowMode", Some(&json!({ "value": "wire" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setShowMode", Some(&json!({ "value": "wire" })), &document, &ViewState::default());
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: Procedural2dPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
         assert_eq!(next.runtime.show_mode, "wire");
@@ -1046,7 +1046,7 @@ mod tests {
     fn add_generation_evaluates_preview() {
         let mut app = Procedural2dPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("addGeneration", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addGeneration", None, &document, &ViewState::default());
         let updated: Procedural2dPlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
         assert_eq!(updated.generation.generations.len(), 1);

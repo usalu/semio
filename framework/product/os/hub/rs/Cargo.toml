@@ -28,6 +28,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 futures = "0.3"
 dashmap = "6"
+semio-framework-core = { path = "../../../../core/rs" }
+semio-framework-sync = { path = "../../../../sync/rs" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

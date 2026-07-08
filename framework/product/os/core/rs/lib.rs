@@ -16,8 +16,14 @@ use crate::media_graph::{
 use crate::registry::{
     os_app_primary_output_kind, os_app_registration, PluginRegistry,
 };
-use semio_framework_core::{AppDefinition, PluginManifest, UiNode, ViewState};
+use semio_framework_core::{
+    AppDefinition, CommandContext, CommandDescriptor, CommandInvocation, CommandResult,
+    HybridLogicalTimestamp, InverseOperation, KernelOperation, ModelDiff, ModelHandle, ModelVersion,
+    OperationId, PluginManifest, SchemaId, UiButtonNode, UiNode, UndoGroup, UndoPolicy, ViewState,
+    ui_stack_vertical, ui_text,
+};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 use vcs::{
@@ -34,17 +40,32 @@ pub struct PluginHotSwapEvent {
     pub removed_apps: Vec<String>,
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct LoadedPlugin {
     pub plugin_id: String,
     pub manifest: PluginManifest,
     pub artifact_uri: String,
 }
 
+//#region 🔖PluginSupervisorState
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PluginSupervisorState {
+    Loaded,
+    Running,
+    Crashed,
+    TimedOut,
+    Restarting,
+    Quarantined,
+    Unloaded,
+}
+//#endregion 🔖PluginSupervisorState
+
 pub struct PluginHost {
     registry: PluginRegistry,
     instances: HashMap<u32, OsInstanceState>,
     next_instance_id: u32,
     plugins: HashMap<String, LoadedPlugin>,
+    supervisor: HashMap<String, PluginSupervisorState>,
 }
 
 impl Default for PluginHost {
@@ -60,7 +81,12 @@ impl PluginHost {
             instances: HashMap::new(),
             next_instance_id: 1,
             plugins: HashMap::new(),
+            supervisor: HashMap::new(),
         }
+    }
+
+    pub fn supervisor_state(&self, plugin_id: &str) -> Option<PluginSupervisorState> {
+        self.supervisor.get(plugin_id).copied()
     }
 
     pub fn registry(&self) -> &PluginRegistry {
@@ -72,9 +98,11 @@ impl PluginHost {
     }
 
     pub fn load_plugin(&mut self, plugin: LoadedPlugin) -> PluginHotSwapEvent {
+        let plugin_id = plugin.plugin_id.clone();
+        let version = plugin.manifest.version.clone();
         let previous_apps: Vec<String> = self
             .plugins
-            .get(&plugin.plugin_id)
+            .get(&plugin_id)
             .map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect())
             .unwrap_or_default();
         let next_apps: Vec<String> = plugin.manifest.apps.iter().map(|app| app.id.clone()).collect();
@@ -84,15 +112,12 @@ impl PluginHost {
         for program in &plugin.manifest.programs {
             self.registry.register_program(program.clone());
         }
-        self.plugins.insert(plugin.plugin_id.clone(), plugin);
+        self.plugins.insert(plugin_id.clone(), plugin);
+        self.supervisor
+            .insert(plugin_id.clone(), PluginSupervisorState::Running);
         PluginHotSwapEvent {
-            plugin_id: self.plugins.keys().next().cloned().unwrap_or_default(),
-            version: self
-                .plugins
-                .values()
-                .last()
-                .map(|plugin| plugin.manifest.version.clone())
-                .unwrap_or_default(),
+            plugin_id,
+            version,
             added_apps: next_apps
                 .iter()
                 .filter(|app| !previous_apps.contains(app))
@@ -107,11 +132,75 @@ impl PluginHost {
     }
 
     pub fn hot_swap_plugin(&mut self, plugin: LoadedPlugin) -> PluginHotSwapEvent {
-        let event = self.load_plugin(plugin);
+        let plugin_id = plugin.plugin_id.clone();
+        let rollback = HotSwapRollback {
+            previous_plugin: self.plugins.get(&plugin_id).cloned(),
+            instance_generations: self
+                .instances
+                .iter()
+                .map(|(id, state)| (*id, state.generation))
+                .collect(),
+        };
+
+        if let Err(error) = validate_plugin_manifest(&plugin) {
+            self.supervisor
+                .insert(plugin_id.clone(), PluginSupervisorState::Loaded);
+            return rollback.emit_failure(plugin_id, error);
+        }
+
+        let previous_apps: Vec<String> = rollback
+            .previous_plugin
+            .as_ref()
+            .map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect())
+            .unwrap_or_default();
+        let next_apps: Vec<String> = plugin.manifest.apps.iter().map(|app| app.id.clone()).collect();
+
+        if let Err(error) = self.validate_swap_apps(&plugin) {
+            return self.hot_swap_failed(plugin_id, error, rollback);
+        }
+        if let Err(error) = self.validate_swap_instances(&plugin_id, &plugin) {
+            return self.hot_swap_failed(plugin_id, error, rollback);
+        }
+        if let Err(error) = self.validate_swap_model_migration(&plugin, rollback.previous_plugin.as_ref()) {
+            return self.hot_swap_failed(plugin_id, error, rollback);
+        }
+        if let Err(error) = self.validate_swap_window_kinds(&plugin) {
+            return self.hot_swap_failed(plugin_id, error, rollback);
+        }
+
+        let controller_rebindings = self.plan_controller_rebindings(&plugin_id, &plugin);
+        let version = plugin.manifest.version.clone();
+        for app in &plugin.manifest.apps {
+            self.registry.register_app(app.clone());
+        }
+        for program in &plugin.manifest.programs {
+            self.registry.register_program(program.clone());
+        }
+        self.plugins.insert(plugin_id.clone(), plugin);
+        for (instance_id, controller_id) in controller_rebindings {
+            if let Some(instance) = self.instances.get_mut(&instance_id) {
+                instance.controller_id = controller_id;
+            }
+        }
         for instance in self.instances.values_mut() {
             instance.generation += 1;
         }
-        event
+        self.supervisor
+            .insert(plugin_id.clone(), PluginSupervisorState::Running);
+        PluginHotSwapEvent {
+            plugin_id,
+            version,
+            added_apps: next_apps
+                .iter()
+                .filter(|app| !previous_apps.contains(app))
+                .cloned()
+                .collect(),
+            removed_apps: previous_apps
+                .iter()
+                .filter(|app| !next_apps.contains(app))
+                .cloned()
+                .collect(),
+        }
     }
 
     pub fn apps(&self) -> Vec<AppDefinition> {
@@ -144,18 +233,134 @@ impl PluginHost {
         self.instances.get_mut(&instance_id)
     }
 
-    pub fn apply_ops(&mut self, instance_id: u32, ops: &[String]) -> bool {
+    pub fn commit_command_result(
+        &mut self,
+        instance_id: u32,
+        result: &CommandResult,
+    ) -> Result<(), String> {
         let Some(instance) = self.instances.get_mut(&instance_id) else {
-            return false;
+            return Err("instance not found".into());
         };
-        for op in ops {
-            if let Ok(next) = apply_document_op(&instance.document_json, op) {
-                instance.document_json = next;
-                instance.generation += 1;
+        for operation in &result.operations {
+            if operation.diff.schema_id.0 != JSON_PATCH_SCHEMA_ID {
+                continue;
             }
+            let op_json =
+                serde_json::to_string(&operation.diff.payload).map_err(|error| error.to_string())?;
+            instance.document_json = apply_kernel_patch_op(&instance.document_json, &op_json)?;
+            instance.generation += 1;
         }
-        true
+        Ok(())
     }
+    pub fn invoke_command(
+        &mut self,
+        invocation: CommandInvocation,
+    ) -> Result<CommandResult, String> {
+        if invocation.command.0.trim().is_empty() {
+            return Err("command id must not be empty".into());
+        }
+        let instance_id: u32 = invocation
+            .app
+            .0
+            .parse()
+            .map_err(|_| "invalid app instance id".to_string())?;
+        let (document_json, view_state, generation) = {
+            let instance = self
+                .instances
+                .get(&instance_id)
+                .ok_or_else(|| "instance not found".to_string())?;
+            (
+                instance.document_json.clone(),
+                instance.view_state.clone(),
+                instance.generation,
+            )
+        };
+        let model_projection =
+            serde_json::from_str(&document_json).unwrap_or(Value::Null);
+        let _context = CommandContext {
+            invocation: invocation.clone(),
+            model_projection,
+            view_state,
+            granted_capabilities: vec![],
+        };
+        let model = ModelHandle(instance_id as u128);
+        let base_version = ModelVersion(generation);
+        let patch_ops = extract_patch_ops(&invocation.input);
+        let operations: Vec<KernelOperation> = patch_ops
+            .iter()
+            .enumerate()
+            .map(|(index, op)| {
+                kernel_operation_from_patch_op(&invocation, op, index, base_version, model)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
+        let inverse_operations: Vec<InverseOperation> =
+            operations.iter().map(|op| op.inverse.clone()).collect();
+        let result = CommandResult {
+            output: invocation.input.clone(),
+            operations,
+            inverse_group: UndoGroup {
+                command_id: invocation.id.clone(),
+                operations: operation_ids,
+                inverse_operations,
+            },
+            diagnostics: vec![],
+            requested_effects: vec![],
+            events: vec![],
+        };
+        self.commit_command_result(instance_id, &result)?;
+        Ok(result)
+    }
+
+    //#region 🔖CommandKernel
+
+    pub fn recovery_ui(&self, plugin_id: &str) -> UiNode {
+        let state = self
+            .supervisor
+            .get(plugin_id)
+            .copied()
+            .unwrap_or(PluginSupervisorState::Unloaded);
+        if state != PluginSupervisorState::Quarantined {
+            return ui_stack_vertical(vec![ui_text("Plugin is not quarantined.")]);
+        }
+        ui_stack_vertical(vec![
+            ui_text("This app stopped responding."),
+            UiNode::Button(UiButtonNode {
+                id: Some("recovery-restart-app".into()),
+                icon_id: "restart".into(),
+                label: "Restart app".into(),
+                command: CommandDescriptor {
+                    controller_id: plugin_id.into(),
+                    command: "recovery.restartApp".into(),
+                    args: None,
+                },
+                style: None,
+            }),
+            UiNode::Button(UiButtonNode {
+                id: Some("recovery-disable-plugin".into()),
+                icon_id: "disable".into(),
+                label: "Disable plugin".into(),
+                command: CommandDescriptor {
+                    controller_id: plugin_id.into(),
+                    command: "recovery.disablePlugin".into(),
+                    args: None,
+                },
+                style: None,
+            }),
+            UiNode::Button(UiButtonNode {
+                id: Some("recovery-show-diagnostics".into()),
+                icon_id: "diagnostics".into(),
+                label: "Show diagnostics".into(),
+                command: CommandDescriptor {
+                    controller_id: plugin_id.into(),
+                    command: "recovery.showDiagnostics".into(),
+                    args: None,
+                },
+                style: None,
+            }),
+        ])
+    }
+    //#endregion 🔖CommandKernel
 
     pub fn set_view_state(&mut self, instance_id: u32, view_state: ViewState) {
         if let Some(instance) = self.instances.get_mut(&instance_id) {
@@ -168,9 +373,226 @@ impl PluginHost {
         let _ = (instance_id, body_key);
         ui
     }
+
+    fn hot_swap_failed(
+        &mut self,
+        plugin_id: String,
+        error: String,
+        rollback: HotSwapRollback,
+    ) -> PluginHotSwapEvent {
+        rollback.restore(self);
+        self.supervisor
+            .insert(plugin_id.clone(), PluginSupervisorState::Loaded);
+        rollback.emit_failure(plugin_id, error)
+    }
+
+    fn validate_swap_apps(&self, plugin: &LoadedPlugin) -> Result<(), String> {
+        for app in &plugin.manifest.apps {
+            if app.id.trim().is_empty() {
+                return Err("app id must not be empty".into());
+            }
+            if app.controller_id.trim().is_empty() {
+                return Err(format!("app {} controller_id must not be empty", app.id));
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_swap_instances(&self, plugin_id: &str, plugin: &LoadedPlugin) -> Result<(), String> {
+        let next_app_ids: HashSet<String> = plugin
+            .manifest
+            .apps
+            .iter()
+            .map(|app| app.id.clone())
+            .collect();
+        let previous_app_ids: HashSet<String> = self
+            .plugins
+            .get(plugin_id)
+            .map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect())
+            .unwrap_or_default();
+        for instance in self.instances.values() {
+            if !previous_app_ids.contains(&instance.app_id) {
+                continue;
+            }
+            if !next_app_ids.contains(&instance.app_id) {
+                return Err(format!(
+                    "instance {} references removed app {}",
+                    instance.id, instance.app_id
+                ));
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_swap_model_migration(
+        &self,
+        plugin: &LoadedPlugin,
+        previous: Option<&LoadedPlugin>,
+    ) -> Result<(), String> {
+        if let Some(previous) = previous {
+            if previous.manifest.version == plugin.manifest.version
+                && previous.manifest.apps.len() > plugin.manifest.apps.len()
+            {
+                return Err("cannot hot-swap to fewer apps without migration".into());
+            }
+        }
+        Ok(())
+    }
+
+    fn validate_swap_window_kinds(&self, plugin: &LoadedPlugin) -> Result<(), String> {
+        for app in &plugin.manifest.apps {
+            if app.window_kinds.is_empty() {
+                return Err(format!("app {} must declare at least one window kind", app.id));
+            }
+            for window_kind in &app.window_kinds {
+                if window_kind.body_key.trim().is_empty() {
+                    return Err(format!(
+                        "app {} window kind {} body_key must not be empty",
+                        app.id, window_kind.id
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn plan_controller_rebindings(
+        &self,
+        plugin_id: &str,
+        plugin: &LoadedPlugin,
+    ) -> Vec<(u32, String)> {
+        let apps_by_id: HashMap<&str, &AppDefinition> = plugin
+            .manifest
+            .apps
+            .iter()
+            .map(|app| (app.id.as_str(), app))
+            .collect();
+        let previous_app_ids: HashSet<String> = self
+            .plugins
+            .get(plugin_id)
+            .map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect())
+            .unwrap_or_default();
+        self.instances
+            .values()
+            .filter(|instance| previous_app_ids.contains(&instance.app_id))
+            .filter_map(|instance| {
+                apps_by_id
+                    .get(instance.app_id.as_str())
+                    .map(|app| (instance.id, app.controller_id.clone()))
+            })
+            .collect()
+    }
 }
 
-fn apply_document_op(document_json: &str, op_json: &str) -> Result<String, String> {
+const JSON_PATCH_SCHEMA_ID: &str = "semio.kernel.json-patch";
+
+struct HotSwapRollback {
+    previous_plugin: Option<LoadedPlugin>,
+    instance_generations: HashMap<u32, u64>,
+}
+
+impl HotSwapRollback {
+    fn emit_failure(self, plugin_id: String, _error: String) -> PluginHotSwapEvent {
+        let version = self
+            .previous_plugin
+            .as_ref()
+            .map(|plugin| plugin.manifest.version.clone())
+            .unwrap_or_default();
+        PluginHotSwapEvent {
+            plugin_id,
+            version,
+            added_apps: vec![],
+            removed_apps: vec![],
+        }
+    }
+
+    fn restore(&self, host: &mut PluginHost) {
+        if let Some(previous) = &self.previous_plugin {
+            for app in &previous.manifest.apps {
+                host.registry.register_app(app.clone());
+            }
+            for program in &previous.manifest.programs {
+                host.registry.register_program(program.clone());
+            }
+            host.plugins
+                .insert(previous.plugin_id.clone(), previous.clone());
+        }
+        for (instance_id, generation) in &self.instance_generations {
+            if let Some(instance) = host.instances.get_mut(instance_id) {
+                instance.generation = *generation;
+            }
+        }
+    }
+}
+
+fn validate_plugin_manifest(plugin: &LoadedPlugin) -> Result<(), String> {
+    if plugin.plugin_id.trim().is_empty() {
+        return Err("plugin_id must not be empty".into());
+    }
+    if plugin.manifest.plugin_id.trim().is_empty() {
+        return Err("manifest.plugin_id must not be empty".into());
+    }
+    if plugin.manifest.version.trim().is_empty() {
+        return Err("manifest.version must not be empty".into());
+    }
+    if plugin.plugin_id != plugin.manifest.plugin_id {
+        return Err("plugin_id must match manifest.plugin_id".into());
+    }
+    Ok(())
+}
+
+fn extract_patch_ops(input: &Value) -> Vec<String> {
+    input
+        .get("ops")
+        .and_then(|value| value.as_array())
+        .map(|ops| {
+            ops.iter()
+                .filter_map(|op| {
+                    op.as_str()
+                        .map(str::to_string)
+                        .or_else(|| serde_json::to_string(op).ok())
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn kernel_operation_from_patch_op(
+    invocation: &CommandInvocation,
+    op_json: &str,
+    index: usize,
+    base_version: ModelVersion,
+    model: ModelHandle,
+) -> Result<KernelOperation, String> {
+    let payload: Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    let operation_id = OperationId(format!("{}:{index}", invocation.id.0));
+    let inverse_diff = ModelDiff {
+        schema_id: SchemaId("semio.kernel.json-patch.inverse".into()),
+        payload: Value::Null,
+    };
+    Ok(KernelOperation {
+        id: operation_id.clone(),
+        model,
+        base_version,
+        command_id: invocation.id.clone(),
+        diff: ModelDiff {
+            schema_id: SchemaId(JSON_PATCH_SCHEMA_ID.into()),
+            payload,
+        },
+        inverse: InverseOperation {
+            target_operation: operation_id,
+            inverse_diff,
+            base_version,
+            dependencies: vec![],
+            undo_policy: UndoPolicy::ExactBaseOnly,
+        },
+        dependencies: invocation.causal_context.clone(),
+        author: invocation.actor.clone(),
+        timestamp: HybridLogicalTimestamp::new(0, 0),
+    })
+}
+
+fn apply_kernel_patch_op(document_json: &str, op_json: &str) -> Result<String, String> {
     let mut document: serde_json::Value =
         serde_json::from_str(document_json).map_err(|error| error.to_string())?;
     let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
@@ -1402,7 +1824,10 @@ mod tests {
     use super::*;
     use crate::registry::{merge_os_program_definition, os_baseline_resource, OsPlatformAppInput, OsPlatformInput};
     use crate::media_graph::{empty_media_graph, validate_media_graph};
-    use semio_framework_core::{ModeDefinition, PluginManifest, WindowKindDefinition};
+    use semio_framework_core::{
+        ActorId, AppInstanceId, CommandId, CommandInvocationId, ModeDefinition, PluginManifest,
+        WindowKindDefinition,
+    };
     use std::sync::Arc;
     use vcs::MemoryBackbonePort;
 
@@ -1432,6 +1857,11 @@ mod tests {
                     icon_id: None,
                     measures: Vec::new(),
                     engagement: None,
+                    params_schema: None,
+                    model_projection_schema: None,
+                    input_event_schema: None,
+                    output_schema: None,
+                    capabilities: vec![],
                 }],
                 panel_tabs: vec![],
                 keybindings: vec![],
@@ -1472,6 +1902,11 @@ mod tests {
                 icon_id: None,
                 measures: Vec::new(),
                 engagement: None,
+                params_schema: None,
+                model_projection_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: vec![],
             }],
             panel_tabs: vec![],
             keybindings: vec![],
@@ -1497,6 +1932,11 @@ mod tests {
                 icon_id: None,
                 measures: Vec::new(),
                 engagement: None,
+                params_schema: None,
+                model_projection_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: vec![],
             }],
             panel_tabs: vec![],
             keybindings: vec![],
@@ -1533,11 +1973,170 @@ mod tests {
         });
         assert_eq!(event.added_apps, vec!["note-play".to_string()]);
         assert!(event.removed_apps.is_empty());
+        assert_eq!(event.plugin_id, "draw");
+        assert_eq!(event.version, "0.2.0");
         assert!(
             host.instance(instance_id).expect("instance").generation > generation_before,
             "hot swap must bump instance generation"
         );
         assert_eq!(host.apps().len(), 2);
+    }
+
+    #[test]
+    fn hot_swap_rollback_on_invalid_manifest_keeps_old_plugin() {
+        let mut host = PluginHost::new();
+        let draw_app = AppDefinition {
+            id: "draw-play".into(),
+            label: "Draw".into(),
+            document: vec!["semio".into(), "draw".into()],
+            icon_id: None,
+            controller_id: "draw-play".into(),
+            modes: vec![ModeDefinition {
+                id: "edit".into(),
+                label: "Edit".into(),
+                tools: Vec::new(),
+            }],
+            default_mode_id: Some("edit".into()),
+            window_kinds: vec![WindowKindDefinition {
+                id: "composite".into(),
+                label: "Canvas".into(),
+                body_key: "composite".into(),
+                icon_id: None,
+                measures: Vec::new(),
+                engagement: None,
+                params_schema: None,
+                model_projection_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: vec![],
+            }],
+            panel_tabs: vec![],
+            keybindings: vec![],
+            named_layouts: Vec::new(),
+            default_layout: None,
+        };
+        host.load_plugin(LoadedPlugin {
+            plugin_id: "draw".into(),
+            manifest: PluginManifest {
+                plugin_id: "draw".into(),
+                label: "Draw".into(),
+                version: "0.1.0".into(),
+                apps: vec![draw_app],
+                programs: vec![],
+                capabilities: vec![],
+                examples: vec![],
+            },
+            artifact_uri: "plugin://draw".into(),
+        });
+        let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
+        let generation_before = host.instance(instance_id).expect("instance").generation;
+        let event = host.hot_swap_plugin(LoadedPlugin {
+            plugin_id: "draw".into(),
+            manifest: PluginManifest {
+                plugin_id: "draw".into(),
+                label: "Draw".into(),
+                version: "".into(),
+                apps: vec![],
+                programs: vec![],
+                capabilities: vec![],
+                examples: vec![],
+            },
+            artifact_uri: "plugin://draw".into(),
+        });
+        assert_eq!(event.plugin_id, "draw");
+        assert_eq!(event.version, "0.1.0");
+        assert!(event.added_apps.is_empty());
+        assert_eq!(host.apps().len(), 1);
+        assert_eq!(
+            host.instance(instance_id).expect("instance").generation,
+            generation_before
+        );
+        assert_eq!(
+            host.plugins.get("draw").expect("plugin").manifest.version,
+            "0.1.0"
+        );
+    }
+
+    #[test]
+    fn invoke_command_applies_patch_ops_and_returns_kernel_operations() {
+        let mut host = PluginHost::new();
+        let manifest = PluginManifest {
+            plugin_id: "draw".into(),
+            label: "Draw".into(),
+            version: "0.1.0".into(),
+            apps: vec![AppDefinition {
+                id: "draw-play".into(),
+                label: "Draw".into(),
+                document: vec!["semio".into(), "draw".into()],
+                icon_id: None,
+                controller_id: "draw-play".into(),
+                modes: vec![ModeDefinition {
+                    id: "edit".into(),
+                    label: "Edit".into(),
+                    tools: Vec::new(),
+                }],
+                default_mode_id: Some("edit".into()),
+                window_kinds: vec![WindowKindDefinition {
+                    id: "composite".into(),
+                    label: "Canvas".into(),
+                    body_key: "composite".into(),
+                    icon_id: None,
+                    measures: Vec::new(),
+                    engagement: None,
+                    params_schema: None,
+                    model_projection_schema: None,
+                    input_event_schema: None,
+                    output_schema: None,
+                    capabilities: vec![],
+                }],
+                panel_tabs: vec![],
+                keybindings: vec![],
+                named_layouts: Vec::new(),
+                default_layout: None,
+            }],
+            programs: vec![],
+            capabilities: vec![],
+            examples: vec![],
+        };
+        host.load_plugin(LoadedPlugin {
+            plugin_id: "draw".into(),
+            manifest,
+            artifact_uri: "plugin://draw".into(),
+        });
+        let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
+        let patch_op = serde_json::json!({
+            "op": "patch",
+            "patch": { "title": "Hello" }
+        })
+        .to_string();
+        let result = host
+            .invoke_command(CommandInvocation {
+                id: CommandInvocationId("invoke-1".into()),
+                app: AppInstanceId(instance_id.to_string()),
+                command: CommandId("setTitle".into()),
+                input: serde_json::json!({ "ops": [patch_op] }),
+                actor: ActorId("tester".into()),
+                causal_context: vec![],
+            })
+            .expect("invoke");
+        assert_eq!(result.operations.len(), 1);
+        assert_eq!(result.inverse_group.operations.len(), 1);
+        let document: serde_json::Value =
+            serde_json::from_str(&host.instance(instance_id).expect("instance").document_json)
+                .expect("document json");
+        assert_eq!(document.get("title").and_then(|value| value.as_str()), Some("Hello"));
+    }
+
+    #[test]
+    fn recovery_ui_renders_actions_for_quarantined_plugin() {
+        let mut host = PluginHost::new();
+        host.supervisor
+            .insert("draw".into(), PluginSupervisorState::Quarantined);
+        let ui = host.recovery_ui("draw");
+        match ui {
+            UiNode::Stack(stack) => assert_eq!(stack.children.len(), 4),
+            other => panic!("expected recovery stack, got {other:?}"),
+        }
     }
 
     fn seed_draw_program() {
@@ -4066,7 +4665,7 @@ pub use host::{
     load_os_studio_document, materialize_os_projection, os_document_from_json, os_document_to_json,
     seed_os_studio_catalog_if_empty, DevJsonBackbone, LoadedPlugin, LocalJsonBackbone, OsBackbonePort, OsBackboneRef,
     OsConflict, OsDiff, OsDocument, OsEnvelope, OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost,
-    PluginHotSwapEvent, RemoteOsBackbone, OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
+    PluginHotSwapEvent, PluginSupervisorState, RemoteOsBackbone, OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
 };
 pub use instance::{
     apply_parameter_values_to_projection, create_default_os_parameter, create_os_id,

@@ -995,7 +995,7 @@ impl PluginApp for RasterApp {
         .expect("raster document json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1383,7 +1383,7 @@ mod tests {
     fn add_layer_command() {
         let mut app = RasterApp;
         let document = serde_json::to_string(&empty_raster_document()).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addLayer",
             Some(&json!({ "kind": "group" })),
             &document,

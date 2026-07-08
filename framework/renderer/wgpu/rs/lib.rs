@@ -3681,7 +3681,8 @@ pub mod interpreter {
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
 use crate::scenes::{render_component_scene, GisMapSurface, NodeGraphSurface};
-use semio_framework_core::{CommandDescriptor, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
+use semio_framework_core::{CommandDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
+use serde_json::Value;
 use ui_wgpu::{
     gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect, SelectItem,
     Theme, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode, measure_widget,
@@ -3689,6 +3690,281 @@ use ui_wgpu::{
 };
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, CommandDescriptor>;
+
+//#region RenderPlanValidator
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RenderPlanLimits {
+    pub max_tree_depth: usize,
+    pub max_node_count: usize,
+    pub max_json_payload_bytes: usize,
+    pub max_texture_dimension: u32,
+    pub max_mesh_count: usize,
+}
+
+impl Default for RenderPlanLimits {
+    fn default() -> Self {
+        Self {
+            max_tree_depth: 64,
+            max_node_count: 4096,
+            max_json_payload_bytes: 4 * 1024 * 1024,
+            max_texture_dimension: 8192,
+            max_mesh_count: 2048,
+        }
+    }
+}
+
+pub const RENDER_PLAN_LIMITS: RenderPlanLimits = RenderPlanLimits {
+    max_tree_depth: 64,
+    max_node_count: 4096,
+    max_json_payload_bytes: 4 * 1024 * 1024,
+    max_texture_dimension: 8192,
+    max_mesh_count: 2048,
+};
+
+fn check_json_payload(label: &str, payload: &str, limits: &RenderPlanLimits) -> Result<(), String> {
+    if payload.len() > limits.max_json_payload_bytes {
+        return Err(format!(
+            "render plan limit exceeded: {label} has {} bytes (max {})",
+            payload.len(),
+            limits.max_json_payload_bytes
+        ));
+    }
+    Ok(())
+}
+
+fn check_optional_json_payload(
+    label: &str,
+    payload: &Option<String>,
+    limits: &RenderPlanLimits,
+) -> Result<(), String> {
+    if let Some(value) = payload {
+        check_json_payload(label, value, limits)?;
+    }
+    Ok(())
+}
+
+pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPlanLimits) -> Result<(), String> {
+    let scene_label = format!("component scene '{}'", scene.surface_id);
+    if let Some(canvas) = &scene.canvas_2d {
+        check_json_payload(&format!("{scene_label} canvas2d.layers"), &canvas.layers_json, limits)?;
+    }
+    if let Some(world) = &scene.world_3d {
+        check_json_payload(&format!("{scene_label} world3d.camera"), &world.camera_json, limits)?;
+        check_json_payload(&format!("{scene_label} world3d.meshes"), &world.meshes_json, limits)?;
+        let mesh_count = serde_json::from_str::<Value>(&world.meshes_json)
+            .ok()
+            .and_then(|value| value.as_array().map(|array| array.len()))
+            .unwrap_or(0);
+        if mesh_count > limits.max_mesh_count {
+            return Err(format!(
+                "render plan limit exceeded: {scene_label} world3d mesh count {mesh_count} exceeds max {}",
+                limits.max_mesh_count
+            ));
+        }
+        check_json_payload(&format!("{scene_label} world3d.instances"), &world.instances_json, limits)?;
+        check_json_payload(&format!("{scene_label} world3d.selection"), &world.selection_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} world3d.vortices"), &world.vortices_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} world3d.attractions"), &world.attractions_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} world3d.targetVolumes"),
+            &world.target_volumes_json,
+            limits,
+        )?;
+        check_optional_json_payload(&format!("{scene_label} world3d.references"), &world.references_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} world3d.brushPreview"),
+            &world.brush_preview_json,
+            limits,
+        )?;
+        check_optional_json_payload(
+            &format!("{scene_label} world3d.interaction"),
+            &world.interaction_json,
+            limits,
+        )?;
+        check_optional_json_payload(&format!("{scene_label} world3d.lod"), &world.lod_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} world3d.chunking"), &world.chunking_json, limits)?;
+    }
+    if let Some(graph) = &scene.node_graph {
+        check_json_payload(&format!("{scene_label} nodeGraph.nodes"), &graph.nodes_json, limits)?;
+        check_json_payload(&format!("{scene_label} nodeGraph.edges"), &graph.edges_json, limits)?;
+        check_json_payload(&format!("{scene_label} nodeGraph.viewport"), &graph.viewport_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.operators"), &graph.operators_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} nodeGraph.contextMenu"),
+            &graph.context_menu_json,
+            limits,
+        )?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.findItems"), &graph.find_items_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.selection"), &graph.selection_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.hover"), &graph.hover_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} nodeGraph.previewOff"),
+            &graph.preview_off_json,
+            limits,
+        )?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.lod"), &graph.lod_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.catalogue"), &graph.catalogue_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.controls"), &graph.controls_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.clusters"), &graph.clusters_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.computing"), &graph.computing_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} nodeGraph.capabilities"),
+            &graph.capabilities_json,
+            limits,
+        )?;
+        check_optional_json_payload(&format!("{scene_label} nodeGraph.fixture"), &graph.fixture_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} nodeGraph.presencePeers"),
+            &graph.presence_peers_json,
+            limits,
+        )?;
+    }
+    if let Some(editor) = &scene.text_editor {
+        check_json_payload(&format!("{scene_label} textEditor.buffer"), &editor.buffer, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} textEditor.selection"),
+            &editor.selection_json,
+            limits,
+        )?;
+        check_optional_json_payload(&format!("{scene_label} textEditor.tokens"), &editor.tokens_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} textEditor.diagnostics"),
+            &editor.diagnostics_json,
+            limits,
+        )?;
+        check_optional_json_payload(
+            &format!("{scene_label} textEditor.completions"),
+            &editor.completions_json,
+            limits,
+        )?;
+        check_optional_json_payload(&format!("{scene_label} textEditor.overlays"), &editor.overlays_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} textEditor.occurrences"),
+            &editor.occurrences_json,
+            limits,
+        )?;
+        check_optional_json_payload(
+            &format!("{scene_label} textEditor.placeholders"),
+            &editor.placeholders_json,
+            limits,
+        )?;
+        check_optional_json_payload(
+            &format!("{scene_label} textEditor.extraCarets"),
+            &editor.extra_carets_json,
+            limits,
+        )?;
+        check_optional_json_payload(
+            &format!("{scene_label} textEditor.selectableSpans"),
+            &editor.selectable_spans_json,
+            limits,
+        )?;
+        check_optional_json_payload(&format!("{scene_label} textEditor.settings"), &editor.settings_json, limits)?;
+        check_optional_json_payload(&format!("{scene_label} textEditor.camera"), &editor.camera_json, limits)?;
+    }
+    if let Some(table) = &scene.table {
+        check_json_payload(&format!("{scene_label} table.columns"), &table.columns_json, limits)?;
+        check_json_payload(&format!("{scene_label} table.rows"), &table.rows_json, limits)?;
+    }
+    if let Some(raster) = &scene.raster {
+        if raster.width > limits.max_texture_dimension || raster.height > limits.max_texture_dimension {
+            return Err(format!(
+                "render plan limit exceeded: {scene_label} raster dimensions {}x{} exceed max {}",
+                raster.width,
+                raster.height,
+                limits.max_texture_dimension
+            ));
+        }
+        check_json_payload(&format!("{scene_label} raster.pixels"), &raster.pixels_base64, limits)?;
+    }
+    if let Some(vfs) = &scene.virtual_file_system {
+        check_json_payload(&format!("{scene_label} vfs.schema"), &vfs.schema_json, limits)?;
+        check_json_payload(&format!("{scene_label} vfs.rows"), &vfs.rows_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} vfs.selectedRowIds"),
+            &vfs.selected_row_ids_json,
+            limits,
+        )?;
+    }
+    if let Some(map) = &scene.gis_map {
+        check_json_payload(&format!("{scene_label} gisMap.fixture"), &map.map_fixture_json, limits)?;
+        check_json_payload(&format!("{scene_label} gisMap.camera"), &map.camera_json, limits)?;
+        check_json_payload(
+            &format!("{scene_label} gisMap.layerVisibility"),
+            &map.layer_visibility_json,
+            limits,
+        )?;
+        check_json_payload(
+            &format!("{scene_label} gisMap.layerStrokeScale"),
+            &map.layer_stroke_scale_json,
+            limits,
+        )?;
+        check_json_payload(&format!("{scene_label} gisMap.selection"), &map.selection_json, limits)?;
+        check_json_payload(&format!("{scene_label} gisMap.hover"), &map.hover_json, limits)?;
+        check_optional_json_payload(
+            &format!("{scene_label} gisMap.contextMenu"),
+            &map.context_menu_json,
+            limits,
+        )?;
+    }
+    Ok(())
+}
+
+struct RenderPlanWalkState {
+    node_count: usize,
+}
+
+fn walk_ui_node(
+    node: &UiNode,
+    depth: usize,
+    limits: &RenderPlanLimits,
+    state: &mut RenderPlanWalkState,
+) -> Result<(), String> {
+    state.node_count += 1;
+    if state.node_count > limits.max_node_count {
+        return Err(format!(
+            "render plan limit exceeded: node count {} exceeds max {}",
+            state.node_count, limits.max_node_count
+        ));
+    }
+    if depth > limits.max_tree_depth {
+        return Err(format!(
+            "render plan limit exceeded: tree depth {depth} exceeds max {}",
+            limits.max_tree_depth
+        ));
+    }
+    match node {
+        UiNode::ComponentScene(scene) => validate_component_scene(scene, limits)?,
+        UiNode::Stack(stack) => {
+            for child in &stack.children {
+                walk_ui_node(child, depth + 1, limits, state)?;
+            }
+        }
+        UiNode::Section(section) => {
+            for child in &section.children {
+                walk_ui_node(child, depth + 1, limits, state)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+pub fn validate_ui_node(node: &UiNode, limits: &RenderPlanLimits) -> Result<(), String> {
+    let mut state = RenderPlanWalkState { node_count: 0 };
+    walk_ui_node(node, 1, limits, &mut state)
+}
+
+fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    render_widget(
+        &WidgetNode::Text {
+            value: format!("Render plan rejected: {message}"),
+            emphasize: true,
+        },
+        bounds,
+        ctx,
+    );
+}
+//#endregion RenderPlanValidator
 
 pub fn measure_ui_node(atlas: &mut ui_wgpu::FontAtlas, theme: &Theme, node: &UiNode) -> (f32, f32) {
     match node {
@@ -3734,6 +4010,21 @@ pub fn render_ui_node(
     node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
     gis_map_states: &mut std::collections::HashMap<String, GisMapSurface>,
 ) {
+    if let Err(message) = validate_ui_node(node, &RENDER_PLAN_LIMITS) {
+        return render_plan_error_widget(&message, bounds, ctx);
+    }
+    render_ui_node_inner(node, bounds, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
+}
+
+fn render_ui_node_inner(
+    node: &UiNode,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    gpu: &mut ui_wgpu::GpuContext,
+    world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
+    node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
+    gis_map_states: &mut std::collections::HashMap<String, GisMapSurface>,
+) {
     match node {
         UiNode::ComponentScene(scene) => {
             render_component_scene(scene, bounds, ctx, gpu, world3d_states, node_graph_states, gis_map_states)
@@ -3756,7 +4047,7 @@ pub fn render_ui_node(
                 layout_horizontal(bounds, gap, padding, &sizes)
             };
             for (child, rect) in stack.children.iter().zip(rects.iter()) {
-                render_ui_node(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
+                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, gis_map_states);
             }
         }
         other => render_widget(&ui_node_to_widget(other), bounds, ctx),
@@ -4081,6 +4372,33 @@ pub fn framework_widget_context<'a>(
         pick_clip: None,
     }
 }
+
+//#region RenderPlanValidatorTests
+#[cfg(test)]
+mod render_plan_validator_tests {
+    use super::*;
+    use semio_framework_core::{build_table_scene, TableScene};
+
+    #[test]
+    fn validate_ui_node_rejects_oversized_json_payload() {
+        let limits = RenderPlanLimits {
+            max_json_payload_bytes: 16,
+            ..RenderPlanLimits::default()
+        };
+        let node = build_table_scene(
+            "table",
+            "controller",
+            TableScene {
+                columns_json: "[]".into(),
+                rows_json: "x".repeat(32),
+            },
+        );
+        let error = validate_ui_node(&node, &limits).expect_err("oversized payload should be rejected");
+        assert!(error.contains("table.rows"));
+        assert!(error.contains("32 bytes"));
+    }
+}
+//#endregion RenderPlanValidatorTests
 // #endregion interpreter
 }
 
@@ -4201,7 +4519,7 @@ impl PluginBridgeEntry {
         instance_id: u32,
         command_json: &str,
         view_state: &ViewState,
-    ) -> Result<Vec<String>, String> {
+    ) -> Result<semio_framework_core::kernel::CommandResult, String> {
         match &self.backend {
             #[cfg(target_arch = "wasm32")]
             PluginBridgeBackend::Js(handle) => handle_command_js(handle, instance_id, command_json, view_state).await,
@@ -4291,20 +4609,35 @@ async fn handle_command_js(
     instance_id: u32,
     command_json: &str,
     view_state: &ViewState,
-) -> Result<Vec<String>, String> {
+) -> Result<semio_framework_core::kernel::CommandResult, String> {
     let command = Reflect::get(handle.as_ref(), &JsValue::from_str("handleCommand"))
         .ok()
         .and_then(|v| v.dyn_into::<Function>().ok());
     let Some(command) = command else {
-        return Ok(Vec::new());
+        return Ok(semio_framework_core::kernel::CommandResult {
+            output: serde_json::Value::Null,
+            operations: vec![],
+            inverse_group: semio_framework_core::kernel::UndoGroup {
+                command_id: semio_framework_core::kernel::CommandInvocationId(String::new()),
+                operations: vec![],
+                inverse_operations: vec![],
+            },
+            diagnostics: vec![],
+            requested_effects: vec![],
+            events: vec![],
+        });
     };
-    let view_json = serde_json::to_string(view_state).map_err(|err| err.to_string())?;
+    let context_json = serde_json::json!({
+        "viewState": view_state,
+        "actor": "local",
+    })
+    .to_string();
     let result = command
         .call3(
             &JsValue::NULL,
             &JsValue::from_f64(instance_id as f64),
             &JsValue::from_str(command_json),
-            &JsValue::from_str(&view_json),
+            &JsValue::from_str(&context_json),
         )
         .map_err(|_| "handle_command failed")?;
     let resolved = if let Some(promise) = result.dyn_ref::<js_sys::Promise>() {
@@ -4314,20 +4647,33 @@ async fn handle_command_js(
     } else {
         result
     };
-    if let Some(array) = resolved.dyn_ref::<Array>() {
-        let mut ops = Vec::new();
-        for index in 0..array.length() {
-            if let Some(value) = array.get(index).as_string() {
-                ops.push(value);
-            }
-        }
-        return Ok(ops);
-    }
     if let Some(text) = resolved.as_string() {
-        let parsed: Vec<String> = serde_json::from_str(&text).unwrap_or_default();
-        return Ok(parsed);
+        if let Ok(parsed) = serde_json::from_str::<semio_framework_core::kernel::CommandResult>(&text) {
+            return Ok(parsed);
+        }
+        if let Ok(ops) = serde_json::from_str::<Vec<String>>(&text) {
+            let descriptor: semio_framework_core::CommandDescriptor =
+                serde_json::from_str(command_json).unwrap_or(semio_framework_core::CommandDescriptor {
+                    controller_id: String::new(),
+                    command: String::new(),
+                    args: None,
+                });
+            return Ok(semio_framework_plugin::command_result_from_patch_ops(
+                ops,
+                &descriptor.command,
+                instance_id,
+                0,
+                "local",
+            ));
+        }
     }
-    Ok(Vec::new())
+    Ok(semio_framework_plugin::command_result_from_patch_ops(
+        Vec::new(),
+        "",
+        instance_id,
+        0,
+        "local",
+    ))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -4490,18 +4836,19 @@ pub fn filter_plugins(entries: Vec<PluginBridgeEntry>, plugin_filter: &str) -> V
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<PluginBridgeEntry>, String> {
-    let plugin_ids: Vec<&str> = if is_studio_mode(plugin_filter) {
-        vec![
-            "cad", "dag", "draw", "flow", "forms", "gis", "imperative", "layout", "lowpoly", "note",
-            "presentation", "procedural", "puzzle", "raster", "reasoning-mindmap", "s", "sequence",
-            "shooting", "trinity", "vcs", "writer",
-        ]
+    let plugin_ids: Vec<String> = if is_studio_mode(plugin_filter) {
+        std::fs::read_dir(modules_root)
+            .map_err(|error| error.to_string())?
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.path().is_dir())
+            .filter_map(|entry| entry.file_name().to_str().map(str::to_string))
+            .collect()
     } else {
-        vec![plugin_filter]
+        vec![plugin_filter.to_string()]
     };
     let mut entries = Vec::new();
     for plugin_id in plugin_ids {
-        let plugin_dir = modules_root.join(plugin_id);
+        let plugin_dir = modules_root.join(&plugin_id);
         if !plugin_dir.is_dir() {
             continue;
         }
@@ -4514,7 +4861,7 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
             continue;
         };
         let runtime = Arc::new(WasmPluginRuntime::load(&path)?);
-        entries.push(PluginBridgeEntry::from_wasm(plugin_id.to_string(), runtime)?);
+        entries.push(PluginBridgeEntry::from_wasm(plugin_id, runtime)?);
     }
     if entries.is_empty() {
         return Err(format!("[DEBUG] no wasm plugins found under {}", modules_root.display()));
@@ -4529,7 +4876,7 @@ pub mod scenes {
 //! 🎬 Native component scene hosts for canvas-2d, tables, graphs, and 3D views.
 
 use crate::engine_canvas;
-use crate::interpreter::FrameworkWidgetContext;
+use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDER_PLAN_LIMITS};
 use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem};
 use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
@@ -5197,6 +5544,24 @@ pub fn render_component_scene(
     node_graph_states: &mut HashMap<String, NodeGraphSurface>,
     gis_map_states: &mut HashMap<String, GisMapSurface>,
 ) {
+    if let Err(message) = validate_component_scene(scene, &RENDER_PLAN_LIMITS) {
+        let theme = ctx.theme;
+        ctx.draw.set_screen_height(bounds.y + bounds.h);
+        ctx.draw.push_rounded(
+            [bounds.x, bounds.y, bounds.w, bounds.h],
+            theme.panel,
+            theme.border_radius,
+        );
+        draw_text(
+            ctx,
+            &format!("Render plan rejected: {message}"),
+            bounds.x + 12.0,
+            bounds.y + 24.0,
+            theme.font_size_body,
+            theme.text_muted,
+        );
+        return;
+    }
     let theme = ctx.theme;
     ctx.draw.set_screen_height(bounds.y + bounds.h);
     ctx.draw.push_rounded(
@@ -7587,6 +7952,14 @@ impl ShellState {
 //#endregion ShellLifecycle
 
 //#region ShellCommands
+fn patch_ops_from_command_result(result: &semio_framework_core::kernel::CommandResult) -> Vec<String> {
+    result
+        .operations
+        .iter()
+        .filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok())
+        .collect()
+}
+
 impl ShellState {
     pub async fn dispatch_command(&mut self, command: CommandDescriptor) -> Result<(), String> {
         if command.controller_id == "framework" {
@@ -7642,9 +8015,14 @@ impl ShellState {
             .or_else(|| self.plugins.iter().find(|p| p.plugin_id == session.plugin_id))
             .ok_or("command plugin missing")?;
         let command_json = serde_json::to_string(&command).map_err(|err| err.to_string())?;
-        let ops = plugin
+        let result = plugin
             .handle_command(session.instance_id, &command_json, &session.view_state)
             .await?;
+        let ops: Vec<String> = result
+            .operations
+            .iter()
+            .filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok())
+            .collect();
         self.apply_ops(&ops).await
     }
 
@@ -7703,11 +8081,11 @@ impl ShellState {
                         };
                         if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                             if let Ok(command_json) = serde_json::to_string(&command) {
-                                if let Ok(import_ops) = plugin
+                                if let Ok(import_result) = plugin
                                     .handle_command(session.instance_id, &command_json, &session.view_state)
                                     .await
                                 {
-                                    follow_up_ops.extend(import_ops);
+                                    follow_up_ops.extend(patch_ops_from_command_result(&import_result));
                                 }
                             }
                         }
@@ -7734,11 +8112,11 @@ impl ShellState {
                             };
                             if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                 if let Ok(command_json) = serde_json::to_string(&command) {
-                                    if let Ok(bind_ops) = plugin
+                                    if let Ok(bind_result) = plugin
                                         .handle_command(session.instance_id, &command_json, &session.view_state)
                                         .await
                                     {
-                                        follow_up_ops.extend(bind_ops);
+                                        follow_up_ops.extend(patch_ops_from_command_result(&bind_result));
                                     }
                                 }
                             }
@@ -7762,11 +8140,11 @@ impl ShellState {
                             };
                             if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                 if let Ok(command_json) = serde_json::to_string(&command) {
-                                    if let Ok(folder_ops) = plugin
+                                    if let Ok(folder_result) = plugin
                                         .handle_command(session.instance_id, &command_json, &session.view_state)
                                         .await
                                     {
-                                        follow_up_ops.extend(folder_ops);
+                                        follow_up_ops.extend(patch_ops_from_command_result(&folder_result));
                                     }
                                 }
                             }
@@ -10060,6 +10438,24 @@ fn panel_toggle_icon_id(kind: &str, session: Option<&ActiveSession>) -> &'static
     }
 }
 
+/// 🛡 Chrome content must always win over window bodies; route it to the
+/// overlay compositing phase (guaranteed last) whenever one is available.
+fn with_chrome_sink<F, R>(
+    draw: &mut DrawList,
+    overlay: &mut Option<&mut DrawList>,
+    f: F,
+) -> R
+where
+    F: FnOnce(&mut DrawList, &mut Option<&mut DrawList>) -> R,
+{
+    if let Some(chrome) = overlay.as_deref_mut() {
+        let mut nested_overlay = None;
+        f(chrome, &mut nested_overlay)
+    } else {
+        f(draw, overlay)
+    }
+}
+
 //#region ShellChrome
 impl ShellState {
     pub fn render_chrome(
@@ -10102,8 +10498,10 @@ impl ShellState {
                 self.render_right_panel(draw, None, atlas, icons, input, theme, body, gpu);
             }
         }
-        self.render_navbar(draw, atlas, icons, input, theme, w);
-        self.render_footer(draw, atlas, icons, input, theme, w, h);
+        with_chrome_sink(draw, &mut overlay_slot, |chrome, _select_overlay| {
+            self.render_navbar(chrome, atlas, icons, input, theme, w);
+            self.render_footer(chrome, atlas, icons, input, theme, w, h);
+        });
         if let Some(overlay) = overlay_slot.as_deref_mut() {
             self.render_overlay(overlay, atlas, input, theme, w, h);
             self.render_tree_drag_overlay(overlay, input, theme);
@@ -10899,9 +11297,9 @@ impl ShellState {
                 });
             }
         }
-        {
+        with_chrome_sink(draw, overlay, |chrome, _select_overlay| {
             let mut dock_ctx = DockRenderContext {
-                draw,
+                draw: chrome,
                 atlas,
                 icons,
                 input,
@@ -10909,7 +11307,7 @@ impl ShellState {
                 window_labels: &window_labels,
             };
             self.dock.paint_chrome(&mut dock_ctx, canvas, false);
-        }
+        });
         {
             let mut resize_ctx = DockRenderContext {
                 draw,
@@ -11418,156 +11816,158 @@ impl ShellState {
         }
         let folded = self.measures_folded.get(window_id).copied().unwrap_or(true);
         let expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
-        if folded {
-            let item = ChromeGroupItem {
-                control_id: "",
-                icon_id: Some("chevron-left"),
+        with_chrome_sink(draw, overlay, |chrome, select_overlay| {
+            if folded {
+                let item = ChromeGroupItem {
+                    control_id: "",
+                    icon_id: Some("chevron-left"),
+                    label: Some("Window Options"),
+                    active: false,
+                    kind: HitKind::Button,
+                };
+                let chip_w = measure_chrome_group_item(atlas, theme, &item);
+                let chip = Rect::new(
+                    content.x + content.w - chip_w - inset,
+                    content.y + inset,
+                    chip_w,
+                    theme.control_height,
+                );
+                render_chrome_group(chrome, atlas, icons, input, theme, chip, &[item], false);
+                return WindowMeasuresRailOutcome {
+                    chip_hit: Some((chip, format!("shell.measures.unfold.{window_id}"))),
+                    reserve_width: chip_w + inset,
+                };
+            }
+            let max_w = window_overlay_max_width(content.w, inset);
+            let default_w = *self
+                .measures_width
+                .get(window_id)
+                .unwrap_or(&theme.window_measures_default_width);
+            let width = if expanded {
+                content.w
+            } else {
+                default_w
+                    .clamp(theme.panel_min_width, theme.panel_max_width)
+                    .min(max_w)
+            };
+            let body_content_h =
+                measure_window_measures_body_height(theme, &self.collapsed_sections, &measures);
+            let rail_h = if expanded {
+                content.h
+            } else {
+                let card_h = theme.panel_header_height + theme.gap_standard * 2.0 + body_content_h;
+                card_h.min((content.h - inset * 2.0).max(theme.panel_header_height))
+            };
+            let (rail_x, rail_y) = if expanded {
+                (content.x, content.y)
+            } else {
+                (
+                    content.x + content.w - width - inset,
+                    content.y + inset,
+                )
+            };
+            let rail = Rect::new(rail_x, rail_y, width, rail_h);
+            let glass = chrome.push_glass(
+                [rail.x, rail.y, rail.w, rail.h],
+                theme.border_radius,
+                GlassTier::WindowOptions,
+                theme,
+            );
+            chrome.begin_glass_content(glass);
+            let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
+            chrome.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
+            let focus_label = if expanded { "Unfocus" } else { "Focus" };
+            let focus_item = ChromeGroupItem {
+                control_id: "shell.measures.focus",
+                icon_id: Some(if expanded { "minimize-2" } else { "maximize-2" }),
+                label: Some(focus_label),
+                active: false,
+                kind: HitKind::Button,
+            };
+            let fold_item = ChromeGroupItem {
+                control_id: "shell.measures.fold",
+                icon_id: Some("chevron-right"),
                 label: Some("Window Options"),
                 active: false,
                 kind: HitKind::Button,
             };
-            let chip_w = measure_chrome_group_item(atlas, theme, &item);
-            let chip = Rect::new(
-                content.x + content.w - chip_w - inset,
-                content.y + inset,
-                chip_w,
-                theme.control_height,
-            );
-            render_chrome_group(draw, atlas, icons, input, theme, chip, &[item], false);
-            return WindowMeasuresRailOutcome {
-                chip_hit: Some((chip, format!("shell.measures.unfold.{window_id}"))),
-                reserve_width: chip_w + inset,
-            };
-        }
-        let max_w = window_overlay_max_width(content.w, inset);
-        let default_w = *self
-            .measures_width
-            .get(window_id)
-            .unwrap_or(&theme.window_measures_default_width);
-        let width = if expanded {
-            content.w
-        } else {
-            default_w
-                .clamp(theme.panel_min_width, theme.panel_max_width)
-                .min(max_w)
-        };
-        let body_content_h =
-            measure_window_measures_body_height(theme, &self.collapsed_sections, &measures);
-        let rail_h = if expanded {
-            content.h
-        } else {
-            let card_h = theme.panel_header_height + theme.gap_standard * 2.0 + body_content_h;
-            card_h.min((content.h - inset * 2.0).max(theme.panel_header_height))
-        };
-        let (rail_x, rail_y) = if expanded {
-            (content.x, content.y)
-        } else {
-            (
-                content.x + content.w - width - inset,
-                content.y + inset,
-            )
-        };
-        let rail = Rect::new(rail_x, rail_y, width, rail_h);
-        let glass = draw.push_glass(
-            [rail.x, rail.y, rail.w, rail.h],
-            theme.border_radius,
-            GlassTier::WindowOptions,
-            theme,
-        );
-        draw.begin_glass_content(glass);
-        let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
-        draw.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
-        let focus_label = if expanded { "Unfocus" } else { "Focus" };
-        let focus_item = ChromeGroupItem {
-            control_id: "shell.measures.focus",
-            icon_id: Some(if expanded { "minimize-2" } else { "maximize-2" }),
-            label: Some(focus_label),
-            active: false,
-            kind: HitKind::Button,
-        };
-        let fold_item = ChromeGroupItem {
-            control_id: "shell.measures.fold",
-            icon_id: Some("chevron-right"),
-            label: Some("Window Options"),
-            active: false,
-            kind: HitKind::Button,
-        };
-        let focus_w = measure_chrome_group_item(atlas, theme, &focus_item);
-        render_chrome_group(
-            draw,
-            atlas,
-            icons,
-            input,
-            theme,
-            Rect::new(header.x, header.y, focus_w, header.h),
-            &[focus_item],
-            true,
-        );
-        input.register_hit(HitTarget {
-            rect: Rect::new(header.x, header.y, focus_w, header.h),
-            event: None,
-            control_id: Some(format!("shell.measures.focus.{window_id}")),
-            kind: HitKind::Button,
-            drag_axis: None,
-            drag_data: None,
-        });
-        let fold_w = measure_chrome_group_item(atlas, theme, &fold_item);
-        render_chrome_group(
-            draw,
-            atlas,
-            icons,
-            input,
-            theme,
-            Rect::new(header.x + header.w - fold_w, header.y, fold_w, header.h),
-            &[fold_item],
-            true,
-        );
-        input.register_hit(HitTarget {
-            rect: Rect::new(header.x + header.w - fold_w, header.y, fold_w, header.h),
-            event: None,
-            control_id: Some(format!("shell.measures.fold.{window_id}")),
-            kind: HitKind::Button,
-            drag_axis: None,
-            drag_data: None,
-        });
-        let body = Rect::new(
-            rail.x + theme.gap_standard,
-            rail.y + theme.panel_header_height + theme.gap_standard,
-            rail.w - theme.gap_standard * 2.0,
-            rail.h - theme.panel_header_height - theme.gap_standard * 2.0,
-        );
-        let mut y = body.y;
-        for measure in &measures {
-            let h = measure_window_measure_height(theme, &self.collapsed_sections, measure);
-            self.render_window_measure(
-                draw,
-                overlay,
+            let focus_w = measure_chrome_group_item(atlas, theme, &focus_item);
+            render_chrome_group(
+                chrome,
                 atlas,
                 icons,
                 input,
                 theme,
-                Rect::new(body.x, y, body.w, h),
-                measure,
-                gpu,
+                Rect::new(header.x, header.y, focus_w, header.h),
+                &[focus_item],
+                true,
             );
-            y += h;
-        }
-        if !expanded {
-            let resize = Rect::new(rail.x - 3.0, rail.y, 6.0, rail.h);
             input.register_hit(HitTarget {
-                rect: resize,
+                rect: Rect::new(header.x, header.y, focus_w, header.h),
                 event: None,
-                control_id: Some(format!("shell.measures.resize.{window_id}")),
-                kind: HitKind::PanelResize,
-                drag_axis: Some(DragAxis::Horizontal),
+                control_id: Some(format!("shell.measures.focus.{window_id}")),
+                kind: HitKind::Button,
+                drag_axis: None,
                 drag_data: None,
             });
-        }
-        draw.end_glass_content();
-        WindowMeasuresRailOutcome {
-            chip_hit: None,
-            reserve_width: if expanded { width } else { width + inset },
-        }
+            let fold_w = measure_chrome_group_item(atlas, theme, &fold_item);
+            render_chrome_group(
+                chrome,
+                atlas,
+                icons,
+                input,
+                theme,
+                Rect::new(header.x + header.w - fold_w, header.y, fold_w, header.h),
+                &[fold_item],
+                true,
+            );
+            input.register_hit(HitTarget {
+                rect: Rect::new(header.x + header.w - fold_w, header.y, fold_w, header.h),
+                event: None,
+                control_id: Some(format!("shell.measures.fold.{window_id}")),
+                kind: HitKind::Button,
+                drag_axis: None,
+                drag_data: None,
+            });
+            let body = Rect::new(
+                rail.x + theme.gap_standard,
+                rail.y + theme.panel_header_height + theme.gap_standard,
+                rail.w - theme.gap_standard * 2.0,
+                rail.h - theme.panel_header_height - theme.gap_standard * 2.0,
+            );
+            let mut y = body.y;
+            for measure in &measures {
+                let h = measure_window_measure_height(theme, &self.collapsed_sections, measure);
+                self.render_window_measure(
+                    chrome,
+                    select_overlay,
+                    atlas,
+                    icons,
+                    input,
+                    theme,
+                    Rect::new(body.x, y, body.w, h),
+                    measure,
+                    gpu,
+                );
+                y += h;
+            }
+            if !expanded {
+                let resize = Rect::new(rail.x - 3.0, rail.y, 6.0, rail.h);
+                input.register_hit(HitTarget {
+                    rect: resize,
+                    event: None,
+                    control_id: Some(format!("shell.measures.resize.{window_id}")),
+                    kind: HitKind::PanelResize,
+                    drag_axis: Some(DragAxis::Horizontal),
+                    drag_data: None,
+                });
+            }
+            chrome.end_glass_content();
+            WindowMeasuresRailOutcome {
+                chip_hit: None,
+                reserve_width: if expanded { width } else { width + inset },
+            }
+        })
     }
 
     fn render_window_measure(
@@ -11762,145 +12162,147 @@ impl ShellState {
             .get(window_id)
             .copied()
             .unwrap_or(false);
-        if !activated {
-            let item = ChromeGroupItem {
-                control_id: "",
-                icon_id: Some("chevron-right"),
+        with_chrome_sink(draw, overlay, |chrome, select_overlay| {
+            if !activated {
+                let item = ChromeGroupItem {
+                    control_id: "",
+                    icon_id: Some("chevron-right"),
+                    label: Some("Command"),
+                    active: false,
+                    kind: HitKind::Button,
+                };
+                let chip_w = measure_chrome_group_item(atlas, theme, &item);
+                let chip = Rect::new(
+                    content.x + inset,
+                    content.y + inset,
+                    chip_w,
+                    theme.control_height,
+                );
+                render_chrome_group(chrome, atlas, icons, input, theme, chip, &[item], false);
+                return Some((chip, format!("shell.engagement.toggle.{window_id}")));
+            }
+            let rail_w = engagement_rail_width(theme, content.w, inset, measures_reserve);
+            if rail_w <= 0.0 {
+                return None;
+            }
+            let body_content_h = measure_engagement_body_height(theme, &engagement);
+            let card_h = theme.panel_header_height + theme.gap_standard * 2.0 + body_content_h;
+            let rail_h = card_h.min((content.h - inset * 2.0).max(theme.panel_header_height));
+            let rail = Rect::new(content.x + inset, content.y + inset, rail_w, rail_h);
+            let glass = chrome.push_glass(
+                [rail.x, rail.y, rail.w, rail.h],
+                theme.border_radius,
+                GlassTier::WindowOptions,
+                theme,
+            );
+            chrome.begin_glass_content(glass);
+            let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
+            chrome.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
+            let toggle_item = ChromeGroupItem {
+                control_id: "shell.engagement.toggle",
+                icon_id: Some("chevron-left"),
                 label: Some("Command"),
                 active: false,
                 kind: HitKind::Button,
             };
-            let chip_w = measure_chrome_group_item(atlas, theme, &item);
-            let chip = Rect::new(
-                content.x + inset,
-                content.y + inset,
-                chip_w,
-                theme.control_height,
+            let toggle_w = measure_chrome_group_item(atlas, theme, &toggle_item);
+            let toggle_rect = Rect::new(header.x, header.y, toggle_w, header.h);
+            render_chrome_group(
+                chrome,
+                atlas,
+                icons,
+                input,
+                theme,
+                toggle_rect,
+                &[toggle_item],
+                true,
             );
-            render_chrome_group(draw, atlas, icons, input, theme, chip, &[item], false);
-            return Some((chip, format!("shell.engagement.toggle.{window_id}")));
-        }
-        let rail_w = engagement_rail_width(theme, content.w, inset, measures_reserve);
-        if rail_w <= 0.0 {
-            return None;
-        }
-        let body_content_h = measure_engagement_body_height(theme, &engagement);
-        let card_h = theme.panel_header_height + theme.gap_standard * 2.0 + body_content_h;
-        let rail_h = card_h.min((content.h - inset * 2.0).max(theme.panel_header_height));
-        let rail = Rect::new(content.x + inset, content.y + inset, rail_w, rail_h);
-        let glass = draw.push_glass(
-            [rail.x, rail.y, rail.w, rail.h],
-            theme.border_radius,
-            GlassTier::WindowOptions,
-            theme,
-        );
-        draw.begin_glass_content(glass);
-        let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
-        draw.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
-        let toggle_item = ChromeGroupItem {
-            control_id: "shell.engagement.toggle",
-            icon_id: Some("chevron-left"),
-            label: Some("Command"),
-            active: false,
-            kind: HitKind::Button,
-        };
-        let toggle_w = measure_chrome_group_item(atlas, theme, &toggle_item);
-        let toggle_rect = Rect::new(header.x, header.y, toggle_w, header.h);
-        render_chrome_group(
-            draw,
-            atlas,
-            icons,
-            input,
-            theme,
-            toggle_rect,
-            &[toggle_item],
-            true,
-        );
-        input.register_hit(HitTarget {
-            rect: toggle_rect,
-            event: None,
-            control_id: Some(format!("shell.engagement.toggle.{window_id}")),
-            kind: HitKind::Button,
-            drag_axis: None,
-            drag_data: None,
-        });
-        let mut y = rail.y + theme.panel_header_height + theme.gap_standard;
-        if let Some(options) = &engagement.options {
-            for option in options {
-                let label = option.label.clone().unwrap_or_else(|| option.id.clone());
-                let pressed = option.pressed.unwrap_or(false);
-                let item = ChromeGroupItem {
-                    control_id: "shell.engagement.option",
-                    icon_id: None,
-                    label: Some(&label),
-                    active: pressed,
-                    kind: HitKind::Button,
-                };
-                let item_w = measure_chrome_group_item(atlas, theme, &item);
-                let rect = Rect::new(rail.x + 8.0, y, item_w, theme.control_height);
-                render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
-                if let Some(command) = &option.command {
-                    input.register_hit(HitTarget {
-                        rect,
-                        event: Some(command.clone()),
-                        control_id: Some(format!("shell.engagement.option.{}.{}", window_id, option.id)),
+            input.register_hit(HitTarget {
+                rect: toggle_rect,
+                event: None,
+                control_id: Some(format!("shell.engagement.toggle.{window_id}")),
+                kind: HitKind::Button,
+                drag_axis: None,
+                drag_data: None,
+            });
+            let mut y = rail.y + theme.panel_header_height + theme.gap_standard;
+            if let Some(options) = &engagement.options {
+                for option in options {
+                    let label = option.label.clone().unwrap_or_else(|| option.id.clone());
+                    let pressed = option.pressed.unwrap_or(false);
+                    let item = ChromeGroupItem {
+                        control_id: "shell.engagement.option",
+                        icon_id: None,
+                        label: Some(&label),
+                        active: pressed,
                         kind: HitKind::Button,
-                        drag_axis: None,
-                        drag_data: None,
-                    });
+                    };
+                    let item_w = measure_chrome_group_item(atlas, theme, &item);
+                    let rect = Rect::new(rail.x + 8.0, y, item_w, theme.control_height);
+                    render_chrome_group(chrome, atlas, icons, input, theme, rect, &[item], true);
+                    if let Some(command) = &option.command {
+                        input.register_hit(HitTarget {
+                            rect,
+                            event: Some(command.clone()),
+                            control_id: Some(format!("shell.engagement.option.{}.{}", window_id, option.id)),
+                            kind: HitKind::Button,
+                            drag_axis: None,
+                            drag_data: None,
+                        });
+                    }
+                    y += theme.control_height + 4.0;
                 }
-                y += theme.control_height + 4.0;
             }
-        }
-        if let Some(input_spec) = &engagement.input {
-            self.render_engagement_input(
-                draw, overlay, atlas, icons, input, theme,
-                Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height * 2.0),
-                window_id, input_spec, gpu,
-            );
-            y += theme.control_height * 2.0 + 8.0;
-        }
-        if let Some(control) = &engagement.control {
-            self.render_engagement_control(
-                draw, overlay, atlas, icons, input, theme,
-                Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height),
-                control, gpu,
-            );
-            y += theme.control_height;
-        }
-        if let Some(status_rows) = &engagement.status {
-            for row in status_rows {
+            if let Some(input_spec) = &engagement.input {
+                self.render_engagement_input(
+                    chrome, select_overlay, atlas, icons, input, theme,
+                    Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height * 2.0),
+                    window_id, input_spec, gpu,
+                );
+                y += theme.control_height * 2.0 + 8.0;
+            }
+            if let Some(control) = &engagement.control {
+                self.render_engagement_control(
+                    chrome, select_overlay, atlas, icons, input, theme,
+                    Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height),
+                    control, gpu,
+                );
                 y += theme.control_height;
-                chrome_text(
-                    draw, atlas, input, theme, &row.text,
-                    rail.x + 8.0, y, theme.font_size_small, theme.text_muted,
-                );
             }
-        }
-        if let Some(possibles) = &engagement.possible_engagements {
-            for possible in possibles {
-                y += theme.control_height + 2.0;
-                let rect = Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height);
-                draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.button, theme.border_radius);
-                chrome_text(
-                    draw, atlas, input, theme, &possible.label,
-                    rect.x + 8.0, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0,
-                    theme.font_size_small, theme.text,
-                );
-                if let Some(command) = &possible.command {
-                    input.register_hit(HitTarget {
-                        rect,
-                        event: Some(command.clone()),
-                        control_id: Some(format!("shell.engagement.possible.{}.{}", window_id, possible.id)),
-                        kind: HitKind::Button,
-                        drag_axis: None,
-                        drag_data: None,
-                    });
+            if let Some(status_rows) = &engagement.status {
+                for row in status_rows {
+                    y += theme.control_height;
+                    chrome_text(
+                        chrome, atlas, input, theme, &row.text,
+                        rail.x + 8.0, y, theme.font_size_small, theme.text_muted,
+                    );
                 }
             }
-        }
-        draw.end_glass_content();
-        None
+            if let Some(possibles) = &engagement.possible_engagements {
+                for possible in possibles {
+                    y += theme.control_height + 2.0;
+                    let rect = Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height);
+                    chrome.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.button, theme.border_radius);
+                    chrome_text(
+                        chrome, atlas, input, theme, &possible.label,
+                        rect.x + 8.0, rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0,
+                        theme.font_size_small, theme.text,
+                    );
+                    if let Some(command) = &possible.command {
+                        input.register_hit(HitTarget {
+                            rect,
+                            event: Some(command.clone()),
+                            control_id: Some(format!("shell.engagement.possible.{}.{}", window_id, possible.id)),
+                            kind: HitKind::Button,
+                            drag_axis: None,
+                            drag_data: None,
+                        });
+                    }
+                }
+            }
+            chrome.end_glass_content();
+            None
+        })
     }
 
     fn render_engagement_input(

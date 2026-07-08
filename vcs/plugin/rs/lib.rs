@@ -580,7 +580,7 @@ impl PluginApp for VcsPlayApp {
         serde_json::to_string(&default_envelope()).expect("vcs envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -784,7 +784,7 @@ mod tests {
         let mut app = VcsPlayApp;
         let document = app.initial_document_json();
         let before = materialized_projection(&parse_envelope(&document)).counter;
-        let ops = app.handle_command("incrementCounter", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("incrementCounter", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: VcsPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -810,7 +810,7 @@ mod tests {
         edited.counter = before.counter + 41;
         edited.tags.push("edited-in-place".into());
         let text = serde_json::to_string_pretty(&edited).unwrap();
-        let ops = app.handle_command("textEdit", Some(&json!({ "text": text })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("textEdit", Some(&json!({ "text": text })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: VcsPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();
@@ -828,7 +828,7 @@ mod tests {
         let mut edited = before.clone();
         edited.status = "reviewed".into();
         let text = serde_json::to_string(&edited).unwrap();
-        let ops = app.handle_command("edit", Some(&json!({ "text": text })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("edit", Some(&json!({ "text": text })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let payload: Value = serde_json::from_str(&ops[0]).unwrap();
         let next: VcsPlayEnvelope = serde_json::from_value(payload["document"].clone()).unwrap();

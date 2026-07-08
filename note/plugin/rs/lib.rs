@@ -1023,7 +1023,7 @@ impl PluginApp for NoteApp {
         .expect("note document json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1539,7 +1539,7 @@ mod tests {
     fn add_block_command() {
         let mut app = NoteApp;
         let document = serde_json::to_string(&empty_note_document()).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addBlock",
             Some(&json!({ "kind": "text" })),
             &document,
@@ -1565,7 +1565,7 @@ mod tests {
             ("nudgeSelectionLeft", -1.0, 0.0),
             ("nudgeSelectionRight", 1.0, 0.0),
         ] {
-            let ops = app.handle_command(command, None, &document, &ViewState::default());
+            let ops = app.handle_command_patch_ops(command, None, &document, &ViewState::default());
             assert_eq!(ops.len(), 1, "{command} should emit a setDocument op");
             let updated: NotePlayEnvelope =
                 serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();

@@ -777,7 +777,7 @@ impl PluginApp for ShootingPlayApp {
         serde_json::to_string(&default_envelope()).expect("shooting envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1222,7 +1222,7 @@ mod tests {
     fn add_shot_command_appends_shot() {
         let mut app = ShootingPlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("addShot", Some(&json!({ "format": "svg", "shape": "ellipse" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addShot", Some(&json!({ "format": "svg", "shape": "ellipse" })), &document, &ViewState::default());
         let envelope: ShootingPlayEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(envelope.fixture.shots.iter().any(|shot| shot.format == "svg" && shot.shape == "ellipse"));
     }
@@ -1233,7 +1233,7 @@ mod tests {
         let document = app.initial_document_json();
         let envelope = parse_envelope(&document);
         let second_id = envelope.fixture.shots.get(1).map(|shot| shot.id.clone()).expect("second shot");
-        let ops = app.handle_command("setActiveShot", Some(&json!({ "value": second_id })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setActiveShot", Some(&json!({ "value": second_id })), &document, &ViewState::default());
         let next: ShootingPlayEnvelope = apply_ops(&envelope, &ops);
         assert_eq!(next.fixture.active_shot_id, second_id);
     }

@@ -19,6 +19,7 @@
     "@semio-tech/ui-styling": "workspace:*"
   },
   "devDependencies": {
+    "@bytecodealliance/jco": "^1.7.0",
     "@tailwindcss/vite": "^4.1.18",
     "@types/react": "^19.2.8",
     "@types/react-dom": "^19.2.3",

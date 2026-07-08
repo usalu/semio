@@ -16,6 +16,8 @@ path = "lib.rs"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
+semio-framework-core = { path = "../../framework/core/rs" }
+semio-framework-hash = { path = "../../framework/hash/rs" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

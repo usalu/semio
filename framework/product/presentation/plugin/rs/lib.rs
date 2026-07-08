@@ -423,7 +423,7 @@ impl PluginApp for PresentationPlayApp {
         serde_json::to_string(&default_envelope()).expect("presentation envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -790,7 +790,7 @@ mod tests {
     fn seed_grid_command_adds_tiles() {
         let mut app = PresentationPlayApp;
         let mut document = app.initial_document_json();
-        for op in app.handle_command("seedGrid", Some(&json!({ "rows": 2, "columns": 2 })), &document, &ViewState::default()) {
+        for op in app.handle_command_patch_ops("seedGrid", Some(&json!({ "rows": 2, "columns": 2 })), &document, &ViewState::default()) {
             if let Ok(value) = serde_json::from_str::<Value>(&op) {
                 if value.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
                     document = serde_json::to_string(&value.get("document").unwrap()).unwrap();
@@ -811,7 +811,7 @@ mod tests {
     fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let mut app = PresentationPlayApp;
         let mut document = app.initial_document_json();
-        for op in app.handle_command("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
+        for op in app.handle_command_patch_ops("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
             if let Ok(value) = serde_json::from_str::<Value>(&op) {
                 if value.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
                     document = serde_json::to_string(&value.get("document").unwrap()).unwrap();
@@ -836,7 +836,7 @@ mod tests {
     fn document_lists_seeded_tiles() {
         let mut app = PresentationPlayApp;
         let mut document = app.initial_document_json();
-        for op in app.handle_command("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
+        for op in app.handle_command_patch_ops("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &document, &ViewState::default()) {
             if let Ok(value) = serde_json::from_str::<Value>(&op) {
                 if let Some(doc) = value.get("document") {
                     document = doc.to_string();

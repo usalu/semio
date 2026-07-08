@@ -2217,7 +2217,7 @@ impl PluginApp for CadApp {
         serde_json::to_string(&default_envelope()).expect("cad envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -2979,7 +2979,7 @@ mod tests {
     fn add_object_command_appends_object() {
         let mut app = CadApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addObject",
             Some(&json!({ "typology": "building.building.column" })),
             &document,
@@ -3005,7 +3005,7 @@ mod tests {
         let mut app = CadApp;
         let document = app.initial_document_json();
         let before_count = parse_envelope(&document).document.objects.len();
-        let add_ops = app.handle_command(
+        let add_ops = app.handle_command_patch_ops(
             "addObject",
             Some(&json!({ "typology": "spatial.shape.primitive.box" })),
             &document,
@@ -3014,7 +3014,7 @@ mod tests {
         let after_add = apply_ops(&parse_envelope(&document), &add_ops);
         assert_eq!(after_add.document.objects.len(), before_count + 1);
         let after_add_json = serde_json::to_string(&after_add).unwrap();
-        let undo_ops = app.handle_command("undo", None, &after_add_json, &ViewState::default());
+        let undo_ops = app.handle_command_patch_ops("undo", None, &after_add_json, &ViewState::default());
         let after_undo = apply_ops(&after_add, &undo_ops);
         assert_eq!(after_undo.document.objects.len(), before_count);
     }
@@ -3057,7 +3057,7 @@ mod tests {
     fn gumball_fields_present_when_selection_active() {
         let mut app = CadApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setSelection",
             Some(&json!({ "objectIds": ["object-box-1"] })),
             &document,
@@ -3084,7 +3084,7 @@ mod tests {
     fn set_transform_tool_updates_runtime_and_engagement() {
         let mut app = CadApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "setTransformTool",
             Some(&json!({ "tool": "rotate" })),
             &document,
@@ -3123,18 +3123,18 @@ mod tests {
         let document = app.initial_document_json();
         let before_count = parse_envelope(&document).document.nodes.len();
 
-        let add_ops = app.handle_command("addNode", Some(&json!({ "kind": "solid" })), &document, &ViewState::default());
+        let add_ops = app.handle_command_patch_ops("addNode", Some(&json!({ "kind": "solid" })), &document, &ViewState::default());
         let after_add = apply_ops(&parse_envelope(&document), &add_ops);
         assert_eq!(after_add.document.nodes.len(), before_count + 1);
         let after_add_json = serde_json::to_string(&after_add).unwrap();
 
-        let undo_ops = app.handle_command("undo", None, &after_add_json, &ViewState::default());
+        let undo_ops = app.handle_command_patch_ops("undo", None, &after_add_json, &ViewState::default());
         assert!(!undo_ops.is_empty(), "undo should produce an op");
         let after_undo = apply_ops(&after_add, &undo_ops);
         assert_eq!(after_undo.document.nodes.len(), before_count);
         let after_undo_json = serde_json::to_string(&after_undo).unwrap();
 
-        let redo_ops = app.handle_command("redo", None, &after_undo_json, &ViewState::default());
+        let redo_ops = app.handle_command_patch_ops("redo", None, &after_undo_json, &ViewState::default());
         assert!(!redo_ops.is_empty(), "redo should produce an op");
         let after_redo = apply_ops(&after_undo, &redo_ops);
         assert_eq!(after_redo.document.nodes.len(), before_count + 1);
@@ -3161,7 +3161,7 @@ mod tests {
         let object = make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape);
         envelope.document.objects = vec![object];
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "applyTransformation",
             Some(&json!({ "qid": "spatial.shape.from_geometry" })),
             &document,
@@ -3182,7 +3182,7 @@ mod tests {
         let mut envelope = parse_envelope(&app.initial_document_json());
         envelope.runtime.selected_object_ids = vec!["object-box-1".into()];
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command("saveSelected", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("saveSelected", None, &document, &ViewState::default());
         assert!(ops.iter().any(|op| op.contains("downloadMediaExport")));
         assert!(ops.iter().any(|op| op.contains("activeModelDefinitionId")));
     }
@@ -3192,7 +3192,7 @@ mod tests {
         let mut app = CadApp;
         let mut envelope = parse_envelope(&app.initial_document_json());
         envelope.runtime.engagement_input = "b".into();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "engagementSubmit",
             Some(&json!({ "pane": "shape" })),
             &serde_json::to_string(&envelope).unwrap(),

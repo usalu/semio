@@ -1,6 +1,10 @@
 [workspace]
 members = [
     "framework/core/rs",
+    "framework/hash/rs",
+    "framework/hlc/rs",
+    "framework/schema/rs",
+    "framework/sync/rs",
     "framework/editor/rs",
     "framework/graph/rs",
     "framework/renderer/wgpu/rs",

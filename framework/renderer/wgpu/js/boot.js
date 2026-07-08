@@ -35,64 +35,151 @@ await new Promise((resolve) => {
     resolve();
   }
 });
+var PLUGIN_WORKER_TIMEOUT_MS = 5000;
 async function loadPluginModule(pluginId, moduleUrl) {
-  const module = await import(moduleUrl);
-  if (module.default)
-    await module.default();
-  if (!module.semio_plugin_manifest) {
-    throw new Error(`[DEBUG] plugin ${pluginId} missing semio_plugin_manifest export`);
-  }
-  const manifest = JSON.parse(module.semio_plugin_manifest());
-  return {
-    pluginId,
-    manifest,
-    createApp: async (appId) => {
-      const create = module.semio_plugin_create_app;
-      if (!create)
-        throw new Error(`plugin ${pluginId} missing create_app`);
-      return create(appId);
-    },
-    destroyApp: async (instanceId) => {
-      module.semio_plugin_destroy_app?.(instanceId);
-    },
-    handleCommand: async (instanceId, commandJson, viewState) => {
-      const handle = module.semio_plugin_handle_command;
-      if (!handle)
-        return [];
-      return JSON.parse(handle(instanceId, commandJson, JSON.stringify(viewState)));
-    },
-    render: async (instanceId, bodyKey, viewState) => {
-      const render = module.semio_plugin_render;
-      if (!render)
-        throw new Error(`plugin ${pluginId} missing render`);
-      return JSON.parse(render(instanceId, bodyKey, JSON.stringify(viewState)));
-    },
-    tools: async (instanceId, viewState) => {
-      const tools = module.semio_plugin_tools;
-      if (!tools)
-        return [];
-      return JSON.parse(tools(instanceId, JSON.stringify(viewState)));
-    },
-    windowEngagements: async (instanceId, viewState) => {
-      const engagements = module.semio_plugin_window_engagements;
-      if (!engagements)
-        return {};
-      return JSON.parse(engagements(instanceId, JSON.stringify(viewState)));
-    },
-    windowMeasures: async (instanceId, viewState) => {
-      const measures = module.semio_plugin_window_measures;
-      if (!measures)
-        return {};
-      return JSON.parse(measures(instanceId, JSON.stringify(viewState)));
-    }
-  };
+  return loadPluginModuleViaWorker(pluginId, moduleUrl);
 }
 function pluginHandleForBridge(handle) {
+  function pluginWorkerUrl(moduleUrl) {
+    return moduleUrl.replace(/\/[^/]+\.js$/, "/plugin-worker.js");
+  }
+
+  class PluginWorkerClient {
+    pluginId;
+    moduleUrl;
+    worker = null;
+    pending = new Map;
+    constructor(pluginId, moduleUrl) {
+      this.pluginId = pluginId;
+      this.moduleUrl = moduleUrl;
+    }
+    clearPending(error) {
+      for (const [requestId, entry] of this.pending) {
+        window.clearTimeout(entry.timer);
+        entry.reject(error);
+        this.pending.delete(requestId);
+      }
+    }
+    terminateWorker() {
+      if (!this.worker)
+        return;
+      this.worker.terminate();
+      this.worker = null;
+    }
+    attachWorker(worker) {
+      worker.onmessage = (event) => {
+        const message = event.data;
+        const requestId = message.requestId;
+        if (!requestId)
+          return;
+        const entry = this.pending.get(requestId);
+        if (!entry)
+          return;
+        window.clearTimeout(entry.timer);
+        this.pending.delete(requestId);
+        if (message.type === "error") {
+          entry.reject(new Error(message.message ?? `plugin worker ${this.pluginId} error`));
+          return;
+        }
+        entry.resolve(message);
+      };
+      worker.onerror = (error) => {
+        console.error(`[DEBUG] plugin worker ${this.pluginId} crashed`, error);
+        this.terminateWorker();
+        this.clearPending(new Error(`plugin worker ${this.pluginId} crashed`));
+      };
+    }
+    async spawnWorker() {
+      this.terminateWorker();
+      this.clearPending(new Error(`plugin worker ${this.pluginId} restarted`));
+      const worker = new Worker(pluginWorkerUrl(this.moduleUrl), { type: "module" });
+      this.attachWorker(worker);
+      this.worker = worker;
+      await this.request("init", { moduleUrl: this.moduleUrl });
+    }
+    async restartWorker(reason) {
+      console.warn(`[DEBUG] restarting plugin worker ${this.pluginId}: ${reason}`);
+      await this.spawnWorker();
+    }
+    request(type, payload) {
+      return new Promise((resolve, reject) => {
+        if (!this.worker) {
+          reject(new Error(`plugin worker ${this.pluginId} is not running`));
+          return;
+        }
+        const requestId = crypto.randomUUID();
+        const timer = window.setTimeout(() => {
+          this.pending.delete(requestId);
+          this.restartWorker(`timeout:${type}`).catch((error) => {
+            console.error(`[DEBUG] plugin worker ${this.pluginId} restart failed`, error);
+          });
+          reject(new Error(`plugin worker ${this.pluginId} timeout: ${type}`));
+        }, PLUGIN_WORKER_TIMEOUT_MS);
+        this.pending.set(requestId, { resolve, reject, timer });
+        this.worker.postMessage({ type, requestId, ...payload });
+      });
+    }
+    async start() {
+      await this.spawnWorker();
+    }
+    async manifest() {
+      const response = await this.request("manifest", {});
+      return String(response.value ?? "");
+    }
+    async createApp(appId) {
+      const response = await this.request("createApp", { appId });
+      return Number(response.instanceId);
+    }
+    async destroyApp(instanceId) {
+      await this.request("destroy", { instanceId });
+    }
+    async handleCommand(instanceId, commandJson, viewState) {
+      const contextJson = JSON.stringify({ viewState, actor: "local" });
+      const response = await this.request("handleCommand", { instanceId, commandJson, contextJson });
+      return String(response.value ?? "{}");
+    }
+    async render(instanceId, bodyKey, viewStateJson) {
+      const response = await this.request("render", { instanceId, bodyKey, viewStateJson });
+      return String(response.value ?? "{}");
+    }
+    async tools(instanceId, viewStateJson) {
+      const response = await this.request("tools", { instanceId, viewStateJson });
+      return String(response.value ?? "[]");
+    }
+    async windowEngagements(instanceId, viewStateJson) {
+      const response = await this.request("windowEngagements", { instanceId, viewStateJson });
+      return String(response.value ?? "{}");
+    }
+    async windowMeasures(instanceId, viewStateJson) {
+      const response = await this.request("windowMeasures", { instanceId, viewStateJson });
+      return String(response.value ?? "{}");
+    }
+    dispose() {
+      this.clearPending(new Error(`plugin worker ${this.pluginId} disposed`));
+      this.terminateWorker();
+    }
+  }
+  async function loadPluginModuleViaWorker2(pluginId, moduleUrl) {
+    const client = new PluginWorkerClient(pluginId, moduleUrl);
+    await client.start();
+    const manifest = JSON.parse(await client.manifest());
+    return {
+      pluginId,
+      manifest,
+      createApp: (appId) => client.createApp(appId),
+      destroyApp: (instanceId) => client.destroyApp(instanceId),
+      handleCommand: async (instanceId, commandJson, viewState) => JSON.parse(await client.handleCommand(instanceId, commandJson, viewState)),
+      render: async (instanceId, bodyKey, viewState) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))),
+      tools: async (instanceId, viewState) => JSON.parse(await client.tools(instanceId, JSON.stringify(viewState))),
+      windowEngagements: async (instanceId, viewState) => JSON.parse(await client.windowEngagements(instanceId, JSON.stringify(viewState))),
+      windowMeasures: async (instanceId, viewState) => JSON.parse(await client.windowMeasures(instanceId, JSON.stringify(viewState)))
+    };
+  }
   return {
     manifest: () => JSON.stringify(handle.manifest),
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
-    handleCommand: (instanceId, commandJson, viewStateJson) => handle.handleCommand(instanceId, commandJson, JSON.parse(viewStateJson)).then((ops) => JSON.stringify(ops)),
+    handleCommand: (instanceId, commandJson, viewStateJson) => handle.handleCommand(instanceId, commandJson, JSON.parse(viewStateJson)).then((result) => JSON.stringify(result)),
     render: (instanceId, bodyKey, viewStateJson) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson)).then((node) => JSON.stringify(node)),
     tools: (instanceId, viewStateJson) => handle.tools(instanceId, JSON.parse(viewStateJson)).then((nodes) => JSON.stringify(nodes)),
     windowEngagements: (instanceId, viewStateJson) => handle.windowEngagements(instanceId, JSON.parse(viewStateJson)).then((engagements) => JSON.stringify(engagements)),

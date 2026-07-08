@@ -741,7 +741,7 @@ impl PluginApp for TrinityJackPlayApp {
         serde_json::to_string(&envelope).expect("trinity jack envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1083,7 +1083,7 @@ mod tests {
         let mut app = TrinityJackPlayApp;
         let document = app.initial_document_json();
         let mut next = document;
-        for op in app.handle_command("runJackQuery", None, &next, &ViewState::default()) {
+        for op in app.handle_command_patch_ops("runJackQuery", None, &next, &ViewState::default()) {
             if let Ok(value) = serde_json::from_str::<Value>(&op) {
                 if let Some(doc) = value.get("document") {
                     next = doc.to_string();
@@ -1101,7 +1101,7 @@ mod tests {
         let document = app.initial_document_json();
         let fixture = parse_fixture_json(NAKAGIN_FIXTURE_JSON).expect("fixture");
         let node_id = fixture.nodes.first().expect("node").id.clone();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "nodeGraphSelect",
             Some(&json!({ "nodeIds": [node_id.clone()] })),
             &document,

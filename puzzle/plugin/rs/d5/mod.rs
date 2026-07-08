@@ -919,7 +919,7 @@ impl PluginApp for Puzzle5dPlayApp {
         serde_json::to_string(&default_envelope()).expect("puzzle5d envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1513,7 +1513,7 @@ mod tests {
     fn set_active_tool_updates_runtime() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setActiveTool", Some(&json!({ "tool": "brush" })), &document, &ViewState::default());
         let envelope: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.active_tool, "brush");
     }
@@ -1522,7 +1522,7 @@ mod tests {
     fn add_brush_part_appends_part() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addBrushPart",
             Some(&json!({ "partKind": "Hexagonal Cut Concrete Forest Left", "x": 200.0, "y": 180.0 })),
             &document,
@@ -1543,7 +1543,7 @@ mod tests {
     fn add_part_kind_appends_part() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addPartKind",
             Some(&json!({ "partKind": "Test Part" })),
             &document,
@@ -1597,7 +1597,7 @@ mod tests {
         });
         envelope.runtime.selection.part_ids = vec!["part-b".into()];
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command("deleteSelection", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("deleteSelection", None, &document, &ViewState::default());
         let next: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(next.document.parts.iter().all(|part| part.id != "part-b"));
         assert!(next.runtime.selection.part_ids.is_empty());
@@ -1609,7 +1609,7 @@ mod tests {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let replacement = serde_json::to_string(&empty_document()).unwrap();
-        let ops = app.handle_command("setFixtureJson", Some(&json!({ "json": replacement })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setFixtureJson", Some(&json!({ "json": replacement })), &document, &ViewState::default());
         let envelope: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert!(envelope.document.parts.is_empty());
     }
@@ -1619,11 +1619,11 @@ mod tests {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
         let full_id = "seed-left-001:v0";
-        let hover_ops = app.handle_command("worldVortexHover", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
+        let hover_ops = app.handle_command_patch_ops("worldVortexHover", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
         let hovered: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &hover_ops);
         assert_eq!(hovered.runtime.selection.grip_ids, vec![full_id.to_string()]);
 
-        let select_ops = app.handle_command("worldVortexSelect", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
+        let select_ops = app.handle_command_patch_ops("worldVortexSelect", Some(&json!({ "fullId": full_id })), &document, &ViewState::default());
         let selected: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &select_ops);
         assert_eq!(selected.runtime.selection.grip_ids, vec![full_id.to_string()]);
         assert!(selected.runtime.selection.part_ids.is_empty());
@@ -1634,7 +1634,7 @@ mod tests {
         let mut app = Puzzle5dPlayApp::default();
         let envelope = two_grip_parts_envelope([10.0, 10.0, 10.0]);
         let document = serde_json::to_string(&envelope).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "worldRelocate",
             Some(&json!({ "objectId": "part-b", "position": [0.0, 0.0, 0.0] })),
             &document,
@@ -1652,7 +1652,7 @@ mod tests {
     fn set_brush_placement_overlap_budget_clamps_value() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command("setBrushPlacementOverlapBudget", Some(&json!({ "value": 5.0 })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("setBrushPlacementOverlapBudget", Some(&json!({ "value": 5.0 })), &document, &ViewState::default());
         let envelope: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &ops);
         assert_eq!(envelope.runtime.overlap_budget, 1.0);
     }
@@ -1661,7 +1661,7 @@ mod tests {
     fn set_object_and_vortex_kind_weight_updates_runtime_maps() {
         let mut app = Puzzle5dPlayApp::default();
         let document = app.initial_document_json();
-        let object_ops = app.handle_command(
+        let object_ops = app.handle_command_patch_ops(
             "setObjectKindWeight",
             Some(&json!({ "kindId": "Hexagonal Cut Concrete Forest Left", "value": 2.0 })),
             &document,
@@ -1670,7 +1670,7 @@ mod tests {
         let with_object_weight: Puzzle5dEnvelope = apply_ops(&parse_envelope(&document), &object_ops);
         assert_eq!(with_object_weight.runtime.object_kind_weights.get("Hexagonal Cut Concrete Forest Left"), Some(&2.0));
 
-        let vortex_ops = app.handle_command(
+        let vortex_ops = app.handle_command_patch_ops(
             "setVortexKindWeight",
             Some(&json!({ "kindId": "b-l", "value": 0.5 })),
             &document,

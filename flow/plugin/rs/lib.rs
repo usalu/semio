@@ -851,7 +851,7 @@ impl PluginApp for FlowPlayApp {
         serde_json::to_string(&default_envelope()).expect("flow envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1372,7 +1372,7 @@ mod tests {
     fn evaluate_updates_preview_state() {
         let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
-        let ops = app.handle_command("evaluate", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("evaluate", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: FlowPlayEnvelope = serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
         assert!(!updated.runtime.last_eval_json.is_empty());
@@ -1384,7 +1384,7 @@ mod tests {
         let document = app.initial_document_json();
         let before: FlowPlayEnvelope = serde_json::from_str(&document).unwrap();
         let count_before = before.fixture.widgets.len();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addWidget",
             Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })),
             &document,
@@ -1392,7 +1392,7 @@ mod tests {
         );
         assert_eq!(ops.len(), 1);
         let after_add = serde_json::to_string(&serde_json::from_str::<Value>(&ops[0]).unwrap()["document"]).unwrap();
-        let undo_ops = app.handle_command("undo", None, &after_add, &ViewState::default());
+        let undo_ops = app.handle_command_patch_ops("undo", None, &after_add, &ViewState::default());
         let restored: FlowPlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&undo_ops[0]).unwrap()["document"].clone()).unwrap();
         assert_eq!(restored.fixture.widgets.len(), count_before);
@@ -1414,7 +1414,7 @@ mod tests {
     fn add_generation_evaluates_preview() {
         let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
-        let ops = app.handle_command("addGeneration", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addGeneration", None, &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated: FlowPlayEnvelope =
             serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap();
@@ -1423,7 +1423,7 @@ mod tests {
     }
 
     fn document_after(app: &mut FlowPlayApp, document: &str, command: &str, args: Option<Value>) -> FlowPlayEnvelope {
-        let ops = app.handle_command(command, args.as_ref(), document, &ViewState::default());
+        let ops = app.handle_command_patch_ops(command, args.as_ref(), document, &ViewState::default());
         assert_eq!(ops.len(), 1, "command {command} produced no op");
         serde_json::from_value(serde_json::from_str::<Value>(&ops[0]).unwrap()["document"].clone()).unwrap()
     }
@@ -1432,7 +1432,7 @@ mod tests {
     fn set_lod_mode_rejects_unknown_and_accepts_known() {
         let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
-        assert!(app.handle_command("setLodMode", Some(&json!({ "mode": "bogus" })), &document, &ViewState::default()).is_empty());
+        assert!(app.handle_command_patch_ops("setLodMode", Some(&json!({ "mode": "bogus" })), &document, &ViewState::default()).is_empty());
         let next = document_after(&mut app, &document, "setLodMode", Some(json!({ "mode": "micro" })));
         assert_eq!(next.runtime.lod_mode, "micro");
         let node_graph = app.render(FLOW_PLAY_BODY_MAIN, &serde_json::to_string(&next).unwrap(), &ViewState::default());
@@ -1477,7 +1477,7 @@ mod tests {
         let mut app = FlowPlayApp { host: None };
         let document = app.initial_document_json();
         assert!(app
-            .handle_command("runExtensionCommand", Some(&json!({ "commandId": "flow.extension.reorganize" })), &document, &ViewState::default())
+            .handle_command_patch_ops("runExtensionCommand", Some(&json!({ "commandId": "flow.extension.reorganize" })), &document, &ViewState::default())
             .is_empty());
         let toggled = document_after(&mut app, &document, "toggleExtension", Some(json!({ "id": "auto-layout", "enabled": true })));
         assert_eq!(toggled.runtime.extension_enabled.get("auto-layout"), Some(&true));

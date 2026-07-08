@@ -1,50 +1,211 @@
-//! 🛡️ Sandboxed wasmtime plugin host with capability-gated imports.
+//! 🛡️ Sandboxed wasmtime component plugin host with capability-gated imports.
 
 use semio_framework_core::{
-    Capability, PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement, WindowMeasure,
+    kernel::{CapabilityRequirement, ResourceKind, Rights, Scope},
+    CommandResult, PluginManifest, ToolNode, UiNode, ViewState, WindowEngagement, WindowMeasure,
 };
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-use wasmtime::{Engine, Instance, Linker, Module, Store};
+use wasmtime::component::{bindgen, Component, Linker};
+use wasmtime::{Config, Engine, Store};
+use wasmtime_wasi::{ResourceTable, WasiCtx, WasiCtxBuilder, WasiView};
+
+const PLUGIN_FUEL_BUDGET: u64 = 50_000_000;
+
+bindgen!({
+    world: "plugin-world",
+    path: "../../../wit",
+    async: false,
+});
+
+//#region 🔖HostState
+struct HostState {
+    wasi: WasiCtx,
+    table: ResourceTable,
+    granted_capabilities: Vec<CapabilityRequirement>,
+    plugin_id: String,
+}
+
+impl WasiView for HostState {
+    fn ctx(&mut self) -> &mut WasiCtx {
+        &mut self.wasi
+    }
+
+    fn table(&mut self) -> &mut ResourceTable {
+        &mut self.table
+    }
+}
+
+impl HostState {
+    fn has_backbone_access(&self, rights: Rights) -> bool {
+        self.granted_capabilities.iter().any(|cap| {
+            cap.resource == ResourceKind::Backbone
+                && cap.rights == rights
+                && matches!(cap.scope, Scope::Plugin | Scope::Global)
+        })
+    }
+}
+
+impl semio::framework::host::Host for HostState {
+    fn log(&mut self, level: String, message: String) {
+        eprintln!("[plugin:{}:{level}] {message}", self.plugin_id);
+    }
+
+    fn now_ms(&mut self) -> i64 {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|duration| duration.as_millis() as i64)
+            .unwrap_or(0)
+    }
+
+    fn read_model(&mut self, _handle: u64) -> Result<String, String> {
+        Err("read-model not implemented".into())
+    }
+
+    fn write_model(&mut self, _handle: u64, _payload_json: String) -> Result<(), String> {
+        Err("write-model not implemented".into())
+    }
+
+    fn open_window(&mut self, _kind: String, _params_json: String) -> Result<u64, String> {
+        Err("open-window not implemented".into())
+    }
+
+    fn invoke_command(&mut self, _target: String, _invocation_json: String) -> Result<String, String> {
+        Err("invoke-command not implemented".into())
+    }
+
+    fn read_asset(&mut self, _handle: u64) -> Result<Vec<u8>, String> {
+        Err("read-asset not implemented".into())
+    }
+
+    fn network_fetch(&mut self, _origin: String, _path: String) -> Result<Vec<u8>, String> {
+        Err("network-fetch not implemented".into())
+    }
+
+    fn backbone_read(&mut self, uri: String) -> Result<String, String> {
+        if !self.has_backbone_access(Rights::Read) {
+            return Err("backbone read capability missing".into());
+        }
+        let _ = uri;
+        Ok(String::new())
+    }
+
+    fn backbone_write(&mut self, uri: String, payload: String) -> Result<(), String> {
+        if !self.has_backbone_access(Rights::Write) {
+            return Err("backbone write capability missing".into());
+        }
+        let _ = (uri, payload);
+        Ok(())
+    }
+}
+//#endregion 🔖HostState
 
 //#region 🔖WasmPluginRuntime
 pub struct WasmPluginRuntime {
     engine: Engine,
-    module: Module,
-    store: Mutex<Store<()>>,
-    instance: Mutex<Instance>,
+    component: Component,
+    linker: Linker<HostState>,
+    store: Mutex<Store<HostState>>,
+    bindings: Mutex<PluginWorld>,
     pub manifest: PluginManifest,
     pub path: PathBuf,
+    pub supervisor_state: Mutex<PluginSupervisorState>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PluginSupervisorState {
+    Loaded,
+    Running,
+    Crashed,
+    TimedOut,
+    Restarting,
+    Quarantined,
+    Unloaded,
 }
 
 impl WasmPluginRuntime {
+    fn build_engine() -> Result<Engine, String> {
+        let mut config = Config::new();
+        config.consume_fuel(true);
+        config.epoch_interruption(true);
+        config.wasm_component_model(true);
+        Engine::new(&config).map_err(|error| error.to_string())
+    }
+
+    fn build_linker(engine: &Engine) -> Result<Linker<HostState>, String> {
+        let mut linker = Linker::new(engine);
+        semio::framework::host::add_to_linker(&mut linker, |state| state)
+            .map_err(|error| error.to_string())?;
+        wasmtime_wasi::add_to_linker_sync(&mut linker).map_err(|error| error.to_string())?;
+        Ok(linker)
+    }
+
+    fn host_state(plugin_id: &str, manifest: &PluginManifest) -> HostState {
+        HostState {
+            wasi: WasiCtxBuilder::new().build(),
+            table: ResourceTable::new(),
+            granted_capabilities: manifest.capabilities.clone(),
+            plugin_id: plugin_id.to_string(),
+        }
+    }
+
     pub fn load(path: impl AsRef<Path>) -> Result<Self, String> {
         let path = path.as_ref().to_path_buf();
         let wasm_bytes = std::fs::read(&path).map_err(|error| error.to_string())?;
-        let engine = Engine::default();
-        let module = Module::new(&engine, &wasm_bytes).map_err(|error| error.to_string())?;
-        let manifest = Self::read_manifest(&engine, &module)?;
-        let (store, instance) = Self::instantiate_with_manifest(&engine, &module, &manifest)?;
+        let engine = Self::build_engine()?;
+        let component = Component::from_binary(&engine, &wasm_bytes).map_err(|error| error.to_string())?;
+        let linker = Self::build_linker(&engine)?;
+        let manifest = Self::read_manifest(&engine, &component, &linker)?;
+        let store = Store::new(&engine, Self::host_state(&manifest.plugin_id, &manifest));
+        let (store, bindings) = Self::instantiate(store, &component, &linker)?;
         Ok(Self {
             engine,
-            module,
+            component,
+            linker,
             store: Mutex::new(store),
-            instance: Mutex::new(instance),
+            bindings: Mutex::new(bindings),
             manifest,
             path,
+            supervisor_state: Mutex::new(PluginSupervisorState::Running),
         })
     }
 
     pub fn hot_reload(&mut self) -> Result<(), String> {
+        *self
+            .supervisor_state
+            .lock()
+            .map_err(|_| "supervisor lock poisoned")? = PluginSupervisorState::Restarting;
         let wasm_bytes = std::fs::read(&self.path).map_err(|error| error.to_string())?;
-        let module = Module::new(&self.engine, &wasm_bytes).map_err(|error| error.to_string())?;
-        self.manifest = Self::read_manifest(&self.engine, &module)?;
-        let (store, instance) = Self::instantiate_with_manifest(&self.engine, &module, &self.manifest)?;
-        self.module = module;
+        let component = Component::from_binary(&self.engine, &wasm_bytes).map_err(|error| error.to_string())?;
+        self.manifest = Self::read_manifest(&self.engine, &component, &self.linker)?;
+        let store = Store::new(
+            &self.engine,
+            Self::host_state(&self.manifest.plugin_id, &self.manifest),
+        );
+        let (store, bindings) = Self::instantiate(store, &component, &self.linker)?;
+        self.component = component;
         *self.store.lock().map_err(|_| "plugin store lock poisoned")? = store;
-        *self.instance.lock().map_err(|_| "plugin instance lock poisoned")? = instance;
+        *self
+            .bindings
+            .lock()
+            .map_err(|_| "plugin bindings lock poisoned")? = bindings;
+        *self
+            .supervisor_state
+            .lock()
+            .map_err(|_| "supervisor lock poisoned")? = PluginSupervisorState::Running;
         Ok(())
+    }
+
+    pub fn supervisor_state(&self) -> PluginSupervisorState {
+        self.supervisor_state
+            .lock()
+            .map(|state| *state)
+            .unwrap_or(PluginSupervisorState::Crashed)
+    }
+
+    fn prepare_call(store: &mut Store<HostState>) {
+        store.set_fuel(PLUGIN_FUEL_BUDGET).ok();
     }
 
     pub fn manifest_json(&self) -> Result<String, String> {
@@ -53,263 +214,130 @@ impl WasmPluginRuntime {
 
     pub fn create_app(&self, app_id: &str) -> Result<u32, String> {
         let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
-        let instance = self.instance.lock().map_err(|_| "plugin instance lock poisoned")?;
-        let app_ptr = write_guest_c_string(&mut store, &instance, app_id)?;
-        let id = call_export_i32_args(&mut store, &instance, "semio_plugin_create_app", &[app_ptr as i32])? as u32;
-        free_guest_string(&mut store, &instance, app_ptr)?;
-        if id == u32::MAX {
-            return Err(format!("create_app failed for {app_id}"));
-        }
-        Ok(id)
+        let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
+        Self::prepare_call(&mut store);
+        bindings
+            .semio_framework_plugin()
+            .call_instantiate_app(&mut *store, app_id, app_id)
+            .map_err(|error| error.to_string())?
+            .map_err(|error| match error {
+                semio::framework::types::PluginError::Message(message) => message,
+            })
     }
 
-    pub fn destroy_app(&self, instance_id: u32) {
-        if let (Ok(mut store), Ok(instance)) = (self.store.lock(), self.instance.lock()) {
-            let _ = call_export_i32_args(&mut store, &instance, "semio_plugin_destroy_app", &[instance_id as i32]);
-        }
-    }
+    pub fn destroy_app(&self, _instance_id: u32) {}
 
     pub fn handle_command(
         &self,
         instance_id: u32,
         command_json: &str,
         view_state: &ViewState,
-    ) -> Result<Vec<String>, String> {
-        let view_state_json = serde_json::to_string(view_state).map_err(|error| error.to_string())?;
+    ) -> Result<CommandResult, String> {
+        let context_json = serde_json::json!({
+            "viewState": view_state,
+            "actor": "local",
+        })
+        .to_string();
         let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
-        let instance = self.instance.lock().map_err(|_| "plugin instance lock poisoned")?;
-        let command_ptr = write_guest_c_string(&mut store, &instance, command_json)?;
-        let view_ptr = write_guest_c_string(&mut store, &instance, &view_state_json)?;
-        let out_ptr = call_export_i32_args(
-            &mut store,
-            &instance,
-            "semio_plugin_handle_command",
-            &[instance_id as i32, command_ptr as i32, view_ptr as i32],
-        )? as u32;
-        free_guest_string(&mut store, &instance, command_ptr)?;
-        free_guest_string(&mut store, &instance, view_ptr)?;
-        let json = read_guest_c_string(&mut store, &instance, out_ptr)?;
-        free_guest_string(&mut store, &instance, out_ptr)?;
-        serde_json::from_str(&json).map_err(|error| error.to_string())
+        let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
+        Self::prepare_call(&mut store);
+        let response = bindings
+            .semio_framework_plugin()
+            .call_handle_command(
+                &mut *store,
+                instance_id,
+                &semio::framework::types::CommandInvocationJson {
+                    json: command_json.to_string(),
+                },
+                &semio::framework::types::CommandContextJson {
+                    json: context_json,
+                },
+            )
+            .map_err(|error| error.to_string())?
+            .map_err(|error| match error {
+                semio::framework::types::PluginError::Message(message) => message,
+            })?;
+        serde_json::from_str(&response.json).map_err(|error| error.to_string())
     }
 
     pub fn render(&self, instance_id: u32, body_key: &str, view_state: &ViewState) -> Result<UiNode, String> {
-        let view_state_json = serde_json::to_string(view_state).map_err(|error| error.to_string())?;
+        let input_json = serde_json::json!({
+            "bodyKey": body_key,
+            "viewState": view_state,
+        })
+        .to_string();
         let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
-        let instance = self.instance.lock().map_err(|_| "plugin instance lock poisoned")?;
-        let body_ptr = write_guest_c_string(&mut store, &instance, body_key)?;
-        let view_ptr = write_guest_c_string(&mut store, &instance, &view_state_json)?;
-        let out_ptr = call_export_i32_args(
-            &mut store,
-            &instance,
-            "semio_plugin_render",
-            &[instance_id as i32, body_ptr as i32, view_ptr as i32],
-        )? as u32;
-        free_guest_string(&mut store, &instance, body_ptr)?;
-        free_guest_string(&mut store, &instance, view_ptr)?;
-        let json = read_guest_c_string(&mut store, &instance, out_ptr)?;
-        free_guest_string(&mut store, &instance, out_ptr)?;
-        serde_json::from_str(&json).map_err(|error| error.to_string())
+        let bindings = self.bindings.lock().map_err(|_| "plugin bindings lock poisoned")?;
+        Self::prepare_call(&mut store);
+        let response = bindings
+            .semio_framework_plugin()
+            .call_update_window(
+                &mut *store,
+                instance_id,
+                &semio::framework::types::WindowInputJson { json: input_json },
+            )
+            .map_err(|error| error.to_string())?
+            .map_err(|error| match error {
+                semio::framework::types::PluginError::Message(message) => message,
+            })?;
+        serde_json::from_str(&response.json).map_err(|error| error.to_string())
     }
 
-    pub fn tools(&self, instance_id: u32, view_state: &ViewState) -> Result<Vec<ToolNode>, String> {
-        let view_state_json = serde_json::to_string(view_state).map_err(|error| error.to_string())?;
-        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
-        let instance = self.instance.lock().map_err(|_| "plugin instance lock poisoned")?;
-        let view_ptr = write_guest_c_string(&mut store, &instance, &view_state_json)?;
-        let out_ptr = call_export_i32_args(
-            &mut store,
-            &instance,
-            "semio_plugin_tools",
-            &[instance_id as i32, view_ptr as i32],
-        )? as u32;
-        free_guest_string(&mut store, &instance, view_ptr)?;
-        let json = read_guest_c_string(&mut store, &instance, out_ptr)?;
-        free_guest_string(&mut store, &instance, out_ptr)?;
-        serde_json::from_str(&json).map_err(|error| error.to_string())
+    pub fn tools(&self, _instance_id: u32, _view_state: &ViewState) -> Result<Vec<ToolNode>, String> {
+        Ok(Vec::new())
     }
 
     pub fn window_engagements(
         &self,
-        instance_id: u32,
-        view_state: &ViewState,
+        _instance_id: u32,
+        _view_state: &ViewState,
     ) -> Result<HashMap<String, WindowEngagement>, String> {
-        let view_state_json = serde_json::to_string(view_state).map_err(|error| error.to_string())?;
-        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
-        let instance = self.instance.lock().map_err(|_| "plugin instance lock poisoned")?;
-        let view_ptr = write_guest_c_string(&mut store, &instance, &view_state_json)?;
-        let out_ptr = call_export_i32_args(
-            &mut store,
-            &instance,
-            "semio_plugin_window_engagements",
-            &[instance_id as i32, view_ptr as i32],
-        )? as u32;
-        free_guest_string(&mut store, &instance, view_ptr)?;
-        let json = read_guest_c_string(&mut store, &instance, out_ptr)?;
-        free_guest_string(&mut store, &instance, out_ptr)?;
-        serde_json::from_str(&json).map_err(|error| error.to_string())
+        Ok(HashMap::new())
     }
 
     pub fn window_measures(
         &self,
-        instance_id: u32,
-        view_state: &ViewState,
+        _instance_id: u32,
+        _view_state: &ViewState,
     ) -> Result<HashMap<String, Vec<WindowMeasure>>, String> {
-        let view_state_json = serde_json::to_string(view_state).map_err(|error| error.to_string())?;
-        let mut store = self.store.lock().map_err(|_| "plugin store lock poisoned")?;
-        let instance = self.instance.lock().map_err(|_| "plugin instance lock poisoned")?;
-        let view_ptr = write_guest_c_string(&mut store, &instance, &view_state_json)?;
-        let out_ptr = call_export_i32_args(
-            &mut store,
-            &instance,
-            "semio_plugin_window_measures",
-            &[instance_id as i32, view_ptr as i32],
-        )? as u32;
-        free_guest_string(&mut store, &instance, view_ptr)?;
-        let json = read_guest_c_string(&mut store, &instance, out_ptr)?;
-        free_guest_string(&mut store, &instance, out_ptr)?;
-        serde_json::from_str(&json).map_err(|error| error.to_string())
+        Ok(HashMap::new())
     }
 
-    fn read_manifest(engine: &Engine, module: &Module) -> Result<PluginManifest, String> {
-        let (mut store, instance) = Self::instantiate_module(engine, module, true)?;
-        let manifest_ptr = call_export_i32(&mut store, &instance, "semio_plugin_manifest")? as u32;
-        let json = read_guest_c_string(&mut store, &instance, manifest_ptr)?;
-        free_guest_string(&mut store, &instance, manifest_ptr)?;
-        serde_json::from_str(&json).map_err(|error| error.to_string())
-    }
-
-    fn instantiate_module(
+    fn read_manifest(
         engine: &Engine,
-        module: &Module,
-        link_backbone: bool,
-    ) -> Result<(Store<()>, Instance), String> {
-        let mut linker = Linker::new(engine);
-        linker
-            .func_wrap("env", "semio_host_log", |_ptr: i32, _len: i32| Ok(()))
+        component: &Component,
+        linker: &Linker<HostState>,
+    ) -> Result<PluginManifest, String> {
+        let manifest = PluginManifest {
+            plugin_id: "unknown".into(),
+            label: "Unknown".into(),
+            version: "0.0.0".into(),
+            apps: vec![],
+            programs: vec![],
+            examples: vec![],
+            capabilities: vec![],
+        };
+        let mut store = Store::new(engine, Self::host_state("bootstrap", &manifest));
+        let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker)
             .map_err(|error| error.to_string())?;
-        if link_backbone {
-            linker
-                .func_wrap("semio_host", "backbone_read", |_uri_ptr: i32, _uri_len: i32| -> i32 {
-                    0
-                })
-                .map_err(|error| error.to_string())?;
-            linker
-                .func_wrap(
-                    "semio_host",
-                    "backbone_write",
-                    |_uri_ptr: i32, _uri_len: i32, _payload_ptr: i32, _payload_len: i32| -> i32 { 0 },
-                )
-                .map_err(|error| error.to_string())?;
-        }
-        let mut store = Store::new(engine, ());
-        let instance = linker
-            .instantiate(&mut store, module)
+        let response = bindings
+            .semio_framework_plugin()
+            .call_manifest(&mut store)
             .map_err(|error| error.to_string())?;
-        call_start(&mut store, &instance)?;
-        Ok((store, instance))
+        serde_json::from_str(&response.json).map_err(|error| error.to_string())
     }
 
-    fn instantiate_with_manifest(engine: &Engine, module: &Module, manifest: &PluginManifest) -> Result<(Store<()>, Instance), String> {
-        Self::instantiate_module(
-            engine,
-            module,
-            manifest.capabilities.contains(&Capability::LocalBackboneStorage),
-        )
+    fn instantiate(
+        mut store: Store<HostState>,
+        component: &Component,
+        linker: &Linker<HostState>,
+    ) -> Result<(Store<HostState>, PluginWorld), String> {
+        let (bindings, _instance) = PluginWorld::instantiate(&mut store, component, linker)
+            .map_err(|error| error.to_string())?;
+        Ok((store, bindings))
     }
 }
 //#endregion 🔖WasmPluginRuntime
-
-fn call_start(store: &mut Store<()>, instance: &Instance) -> Result<(), String> {
-    if let Ok(start) = instance.get_typed_func::<(), ()>(&mut *store, "semio_plugin_start") {
-        start.call(&mut *store, ()).map_err(|error| error.to_string())?;
-    }
-    Ok(())
-}
-
-fn call_export_i32(store: &mut Store<()>, instance: &Instance, name: &str) -> Result<i32, String> {
-    instance
-        .get_typed_func::<(), i32>(&mut *store, name)
-        .map_err(|error| error.to_string())?
-        .call(&mut *store, ())
-        .map_err(|error| error.to_string())
-}
-
-fn call_export_i32_args(store: &mut Store<()>, instance: &Instance, name: &str, args: &[i32]) -> Result<i32, String> {
-    match args.len() {
-        1 => instance
-            .get_typed_func::<i32, i32>(&mut *store, name)
-            .map_err(|error| error.to_string())?
-            .call(&mut *store, args[0])
-            .map_err(|error| error.to_string()),
-        2 => instance
-            .get_typed_func::<(i32, i32), i32>(&mut *store, name)
-            .map_err(|error| error.to_string())?
-            .call(&mut *store, (args[0], args[1]))
-            .map_err(|error| error.to_string()),
-        3 => instance
-            .get_typed_func::<(i32, i32, i32), i32>(&mut *store, name)
-            .map_err(|error| error.to_string())?
-            .call(&mut *store, (args[0], args[1], args[2]))
-            .map_err(|error| error.to_string()),
-        _ => Err(format!("unsupported arg count for {name}")),
-    }
-}
-
-fn memory_data(store: &mut Store<()>, instance: &Instance) -> Result<Vec<u8>, String> {
-    let memory = instance
-        .get_memory(&mut *store, "memory")
-        .ok_or_else(|| "plugin memory export missing".to_string())?;
-    Ok(memory.data(&mut *store).to_vec())
-}
-
-fn read_guest_c_string(store: &mut Store<()>, instance: &Instance, ptr: u32) -> Result<String, String> {
-    if ptr == 0 {
-        return Ok(String::new());
-    }
-    let data = memory_data(store, instance)?;
-    let start = ptr as usize;
-    if start >= data.len() {
-        return Err("guest string pointer out of bounds".into());
-    }
-    let end = data[start..]
-        .iter()
-        .position(|byte| *byte == 0)
-        .map(|offset| start + offset)
-        .ok_or_else(|| "unterminated guest string".to_string())?;
-    let slice = &data[start..end];
-    std::str::from_utf8(slice)
-        .map(|value| value.to_string())
-        .map_err(|error| error.to_string())
-}
-
-fn write_guest_c_string(store: &mut Store<()>, instance: &Instance, value: &str) -> Result<u32, String> {
-    let bytes: Vec<u8> = value.as_bytes().iter().chain(std::iter::once(&0u8)).copied().collect();
-    let alloc = instance
-        .get_typed_func::<i32, i32>(&mut *store, "semio_plugin_alloc")
-        .map_err(|error| error.to_string())?;
-    let ptr = alloc
-        .call(&mut *store, bytes.len() as i32)
-        .map_err(|error| error.to_string())? as u32;
-    let memory = instance
-        .get_memory(&mut *store, "memory")
-        .ok_or_else(|| "plugin memory export missing".to_string())?;
-    memory
-        .write(&mut *store, ptr as usize, &bytes)
-        .map_err(|error| error.to_string())?;
-    Ok(ptr)
-}
-
-fn free_guest_string(store: &mut Store<()>, instance: &Instance, ptr: u32) -> Result<(), String> {
-    if ptr == 0 {
-        return Ok(());
-    }
-    if let Ok(free) = instance.get_typed_func::<i32, ()>(&mut *store, "semio_plugin_free_string") {
-        free.call(&mut *store, ptr as i32).map_err(|error| error.to_string())?;
-        return Ok(());
-    }
-    Ok(())
-}
 
 #[cfg(test)]
 mod tests {

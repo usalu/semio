@@ -817,7 +817,7 @@ impl PluginApp for Puzzle3dPlayApp {
         serde_json::to_string(&default_envelope()).expect("puzzle3d envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -1299,7 +1299,7 @@ mod tests {
     fn add_object_kind_appends_object() {
         let mut app = Puzzle3dPlayApp::default();
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addObjectKind",
             Some(&json!({ "objectKind": "Test Kind" })),
             &document,

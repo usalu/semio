@@ -317,7 +317,7 @@ impl PluginApp for ImperativePlayApp {
         serde_json::to_string(&default_envelope()).expect("imperative envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -546,7 +546,7 @@ mod tests {
     fn add_step_command_appends_step() {
         let mut app = ImperativePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("addStep", Some(&json!({ "kind": "log.print" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addStep", Some(&json!({ "kind": "log.print" })), &document, &ViewState::default());
         assert_eq!(ops.len(), 1);
         let updated_op: Value = serde_json::from_str(&ops[0]).unwrap();
         let updated: ImperativePlayEnvelope = serde_json::from_value(updated_op["document"].clone()).unwrap();
@@ -566,11 +566,11 @@ mod tests {
     fn add_step_at_owner_slot_nests_into_control_body() {
         let mut app = ImperativePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("addStepAt", Some(&json!({ "kind": "control.if" })), &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("addStepAt", Some(&json!({ "kind": "control.if" })), &document, &ViewState::default());
         let with_owner = apply_ops(&document, &ops);
         let owner_id = with_owner.runtime.selected_step_ids[0].clone();
         let document = serde_json::to_string(&with_owner).unwrap();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addStepAt",
             Some(&json!({ "kind": "log.print", "owner": owner_id, "slot": "then" })),
             &document,
@@ -586,7 +586,7 @@ mod tests {
     fn add_step_at_falls_back_to_root_for_unknown_owner() {
         let mut app = ImperativePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command(
+        let ops = app.handle_command_patch_ops(
             "addStepAt",
             Some(&json!({ "kind": "log.print", "owner": "missing-step", "slot": "then" })),
             &document,
@@ -600,7 +600,7 @@ mod tests {
     fn run_command_expands_scope_into_readable_rows_without_truncation() {
         let mut app = ImperativePlayApp;
         let document = app.initial_document_json();
-        let ops = app.handle_command("run", None, &document, &ViewState::default());
+        let ops = app.handle_command_patch_ops("run", None, &document, &ViewState::default());
         let ran = apply_ops(&document, &ops);
         assert!(!ran.runtime.run_output_json.is_empty());
         let node = app.render(IMPERATIVE_PLAY_BODY_MAIN, &serde_json::to_string(&ran).unwrap(), &ViewState::default());

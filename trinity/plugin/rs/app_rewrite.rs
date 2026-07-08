@@ -882,7 +882,7 @@ impl PluginApp for TrinityRewritePlayApp {
         serde_json::to_string(&default_envelope()).expect("trinity rewrite envelope json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,

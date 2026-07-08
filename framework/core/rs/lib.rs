@@ -1322,6 +1322,11 @@ mod tests {
                 icon_id: None,
                 measures: Vec::new(),
                 engagement: None,
+                params_schema: None,
+                model_projection_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: Vec::new(),
             }],
             panel_tabs: vec![],
             keybindings: vec![],
@@ -2831,6 +2836,16 @@ pub struct WindowKindDefinition {
     pub measures: Vec<WindowMeasure>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub engagement: Option<WindowEngagement>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub params_schema: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model_projection_schema: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub input_event_schema: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output_schema: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capabilities: Vec<kernel::CapabilityRequirement>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -2927,12 +2942,6 @@ pub struct ExampleDefinition {
     pub document_json: String,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum Capability {
-    LocalBackboneStorage,
-}
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PluginManifest {
@@ -2943,7 +2952,7 @@ pub struct PluginManifest {
     pub programs: Vec<ProgramDefinition>,
     pub examples: Vec<ExampleDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub capabilities: Vec<Capability>,
+    pub capabilities: Vec<kernel::CapabilityRequirement>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -2958,6 +2967,417 @@ pub struct ViewState {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub panel_json: Option<String>,
 }
+
+//#region 🔖Kernel
+pub mod kernel {
+//! 🧠 Local-first command kernel contracts: commands, operations, capabilities, window I/O.
+
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+
+//#region 🔖Identifiers
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ModelHandle(pub u128);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct WindowHandle(pub u128);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct AssetHandle(pub u128);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct CapabilityToken(pub u128);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct PluginInstanceId(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ResourceId(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct OperationId(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct CommandInvocationId(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct CommandId(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct AppInstanceId(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ActorId(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ModelId(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct SchemaId(pub String);
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct ModelVersion(pub u64);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct SchemaVersion(pub String);
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct WindowKindId(pub String);
+//#endregion 🔖Identifiers
+
+//#region 🔖HybridLogicalTimestamp
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HybridLogicalTimestamp {
+    pub actor: u64,
+    pub physical_ms: u64,
+    pub logical: u64,
+}
+
+impl HybridLogicalTimestamp {
+    pub fn new(actor: u64, physical_ms: u64) -> Self {
+        Self {
+            actor,
+            physical_ms,
+            logical: 0,
+        }
+    }
+
+    pub fn tick(&mut self, physical_ms: u64) {
+        if physical_ms > self.physical_ms {
+            self.physical_ms = physical_ms;
+            self.logical = 0;
+        } else {
+            self.logical = self.logical.saturating_add(1);
+        }
+    }
+
+    pub fn merge(&mut self, other: &Self) {
+        if other.physical_ms > self.physical_ms {
+            self.physical_ms = other.physical_ms;
+            self.logical = other.logical;
+        } else if other.physical_ms == self.physical_ms && other.logical > self.logical {
+            self.logical = other.logical;
+        }
+        self.logical = self.logical.saturating_add(1);
+    }
+
+    pub fn cmp_key(&self) -> (u64, u64) {
+        (self.physical_ms, self.logical)
+    }
+}
+//#endregion 🔖HybridLogicalTimestamp
+
+//#region 🔖Capability
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Rights {
+    Read,
+    Write,
+    Invoke,
+    Open,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ResourceKind {
+    Model,
+    Projection,
+    Window,
+    Asset,
+    Network,
+    Backbone,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Scope {
+    Instance,
+    App,
+    Plugin,
+    Global,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CapabilityRequirement {
+    pub resource: ResourceKind,
+    pub rights: Rights,
+    pub scope: Scope,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Capability {
+    pub subject: PluginInstanceId,
+    pub resource: ResourceId,
+    pub rights: Rights,
+    pub scope: Scope,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CapabilityGrant {
+    pub token: CapabilityToken,
+    pub capability: Capability,
+}
+//#endregion 🔖Capability
+
+//#region 🔖Command
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandDef {
+    pub id: CommandId,
+    pub input_schema: SchemaId,
+    pub output_schema: SchemaId,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub required_capabilities: Vec<CapabilityRequirement>,
+    pub deterministic: bool,
+    pub produces_operations: bool,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandInvocation {
+    pub id: CommandInvocationId,
+    pub app: AppInstanceId,
+    pub command: CommandId,
+    pub input: Value,
+    pub actor: ActorId,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub causal_context: Vec<OperationId>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Diagnostic {
+    pub level: String,
+    pub message: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum HostEffect {
+    OpenWindow { kind: WindowKindId, params: Value },
+    CloseWindow { window: WindowHandle },
+    Notify { message: String },
+    RequestSync,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppEvent {
+    pub kind: String,
+    pub payload: Value,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelDiff {
+    pub schema_id: SchemaId,
+    pub payload: Value,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum UndoPolicy {
+    ExactBaseOnly,
+    TransformAgainstConcurrent,
+    SemanticUndo,
+    CompensatingCommand,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InverseOperation {
+    pub target_operation: OperationId,
+    pub inverse_diff: ModelDiff,
+    pub base_version: ModelVersion,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dependencies: Vec<OperationId>,
+    pub undo_policy: UndoPolicy,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct KernelOperation {
+    pub id: OperationId,
+    pub model: ModelHandle,
+    pub base_version: ModelVersion,
+    pub command_id: CommandInvocationId,
+    pub diff: ModelDiff,
+    pub inverse: InverseOperation,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub dependencies: Vec<OperationId>,
+    pub author: ActorId,
+    pub timestamp: HybridLogicalTimestamp,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UndoGroup {
+    pub command_id: CommandInvocationId,
+    pub operations: Vec<OperationId>,
+    pub inverse_operations: Vec<InverseOperation>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandResult {
+    pub output: Value,
+    pub operations: Vec<KernelOperation>,
+    pub inverse_group: UndoGroup,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub diagnostics: Vec<Diagnostic>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub requested_effects: Vec<HostEffect>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub events: Vec<AppEvent>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandContext {
+    pub invocation: CommandInvocation,
+    pub model_projection: Value,
+    pub view_state: super::ViewState,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub granted_capabilities: Vec<CapabilityGrant>,
+}
+//#endregion 🔖Command
+
+//#region 🔖Sync
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct PayloadHash(pub String);
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OpEnvelope {
+    pub id: OperationId,
+    pub actor: ActorId,
+    pub model: ModelId,
+    pub schema_version: SchemaVersion,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub deps: Vec<OperationId>,
+    pub payload_hash: PayloadHash,
+    pub diff: ModelDiff,
+    pub inverse: InverseOperation,
+}
+//#endregion 🔖Sync
+
+//#region 🔖Window
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PhysicalSize {
+    pub width: u32,
+    pub height: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Theme {
+    pub mode: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowEvent {
+    pub kind: String,
+    pub payload: Value,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CommandRequest {
+    pub invocation: CommandInvocation,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowKindDef {
+    pub id: WindowKindId,
+    pub params_schema: SchemaId,
+    pub model_projection_schema: SchemaId,
+    pub input_event_schema: SchemaId,
+    pub output_schema: SchemaId,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub capabilities: Vec<CapabilityRequirement>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowInput {
+    pub window: WindowHandle,
+    pub params: Value,
+    pub model_projection: Value,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub events: Vec<WindowEvent>,
+    pub size: PhysicalSize,
+    pub scale_factor: f64,
+    pub theme: Theme,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WindowOutput {
+    pub ui: super::UiNode,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub commands: Vec<CommandRequest>,
+}
+//#endregion 🔖Window
+
+//#region 🔖MergeStrategy
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ModelKind {
+    PlainRecord,
+    OrderedSequence,
+    TextSequence,
+    TombstonedGraph,
+    ContentAddressedBlob,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum MergeStrategyKind {
+    LwwRegister,
+    OrderedSequence,
+    TextSequence,
+    TombstonedGraphSet,
+    ContentAddressedBlob,
+}
+
+impl ModelKind {
+    pub fn merge_strategy(&self) -> MergeStrategyKind {
+        match self {
+            ModelKind::PlainRecord => MergeStrategyKind::LwwRegister,
+            ModelKind::OrderedSequence => MergeStrategyKind::OrderedSequence,
+            ModelKind::TextSequence => MergeStrategyKind::TextSequence,
+            ModelKind::TombstonedGraph => MergeStrategyKind::TombstonedGraphSet,
+            ModelKind::ContentAddressedBlob => MergeStrategyKind::ContentAddressedBlob,
+        }
+    }
+}
+//#endregion 🔖MergeStrategy
+}
+//#endregion 🔖Kernel
 
 #[cfg(test)]
 mod app_document_tests {
@@ -2997,3 +3417,12 @@ pub use mesh::{
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use tools::{tool_button, tool_collection, tool_separator, tool_toggle, ToolNode};
 pub use ui::*;
+pub use ui::kernel::{
+    ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
+    CapabilityToken, CommandContext, CommandDef, CommandId, CommandInvocation, CommandInvocationId,
+    CommandRequest, CommandResult, Diagnostic, HostEffect, HybridLogicalTimestamp, InverseOperation,
+    KernelOperation, MergeStrategyKind, ModelDiff, ModelHandle, ModelId, ModelKind, ModelVersion,
+    OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, ResourceId, ResourceKind,
+    Rights, SchemaId, SchemaVersion, Scope, Theme, UndoGroup, UndoPolicy, WindowEvent, WindowHandle,
+    WindowInput, WindowKindDef, WindowKindId, WindowOutput,
+};

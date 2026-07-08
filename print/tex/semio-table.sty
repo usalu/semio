@@ -1,0 +1,73 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-table}[2026/07/08 v1.0.0 semio data table styling]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{array}
+\RequirePackage{colortbl}
+\RequirePackage{semio-core}
+\RequirePackage{semio-fonts}
+
+\ExplSyntaxOn
+
+\dim_new:N \l_semio_table_header_height_dim
+\dim_new:N \l_semio_table_body_height_dim
+\newlength{\semio@table@header@height}
+\newlength{\semio@table@body@height}
+
+\cs_new_protected:Npn \semio_table_rules_apply: {
+  \dim_set:Nn \l_semio_table_header_height_dim {
+    \dimexpr 9 \semio@spacing@unit \relax
+  }
+  \dim_set:Nn \l_semio_table_body_height_dim {
+    \dimexpr 7 \semio@spacing@unit \relax
+  }
+  \setlength{\semio@table@header@height}{\dim_use:N \l_semio_table_header_height_dim}
+  \setlength{\semio@table@body@height}{\dim_use:N \l_semio_table_body_height_dim}
+  \arrayrulecolor{semio-chrome-border-normal}
+  \setlength{\arrayrulewidth}{\semio@stroke@hairline}
+  \setlength{\tabcolsep}{\semio@spacing@single}
+  \setlength{\extrarowheight}{\semio@table@body@height}
+}
+
+\cs_new_protected:Npn \semio_table_begin:n #1 {
+  \semio_table_rules_apply:
+  \begingroup
+  \SemioSans
+  \fontsize{\semio@chrome@font@body}{\semio@chrome@font@body}\selectfont
+  \color{semio-chrome-text-normal}
+  \begin{tabular}{@{}#1@{}}
+}
+
+\cs_new_protected:Npn \semio_table_end: {
+  \end{tabular}
+  \endgroup
+}
+
+\NewDocumentCommand { \SemioTableBegin } { m } {
+  \semio_table_begin:n {#1}
+}
+
+\NewDocumentCommand { \SemioTableEnd } { } {
+  \semio_table_end:
+}
+
+\NewDocumentEnvironment { SemioTable } { m } {
+  \semio_table_begin:n {#1}
+} {
+  \semio_table_end:
+}
+
+\ExplSyntaxOff
+
+\newcommand{\SemioTableHeaderRow}[1]{%
+  \rowcolor{semio-chrome-window}%
+  \rule{0pt}{\semio@table@header@height}%
+  \bfseries #1 \\%
+  \hline
+}
+
+\newcommand{\SemioTableRow}[1]{%
+  #1 \\%
+  \hline
+}

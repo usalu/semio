@@ -19,7 +19,7 @@ use semio_framework_plugin::{PanelGroup,
     create_default_layout, create_tab_stack_layout, layout::MeasureSelectItem,
     layout::WindowEngagementStatus, tool_button, tool_collection, ui_declarative_sections_to_tree,
     ui_inspector_all_equal, ui_text,
-    App, Capability, CommandDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, SurfaceKind, TextEditorScene,
+    App, CommandDescriptor, ModeDefinition, NodeGraphScene, PluginApp, PluginBundle, SurfaceKind, TextEditorScene,
     UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSectionNode,
     UiSelectItem, UiSelectNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, VirtualFileSystemScene,
@@ -1433,7 +1433,7 @@ impl PluginApp for SHomeApp {
         .expect("home document json")
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -2334,7 +2334,7 @@ impl PluginApp for SStudioApp {
         initial_studio_document_json()
     }
 
-    fn handle_command(
+    fn handle_command_patch_ops(
         &mut self,
         command: &str,
         args: Option<&Value>,
@@ -2602,7 +2602,7 @@ fn create_studio_app() -> App {
 
 fn bundle() -> PluginBundle {
     PluginBundle::new("s", "S Studio", "0.1.0")
-        .capability(Capability::LocalBackboneStorage)
+        .local_backbone_storage()
         .register_app(create_home_app(), || Box::new(SHomeApp))
         .register_app(create_studio_app(), || Box::new(SStudioApp))
 }
@@ -2835,7 +2835,7 @@ mod tests {
         let port = catalog_port();
         let before = list_os_studio_catalog_entries(port.clone()).expect("list").len();
         let mut home = SHomeApp;
-        home.handle_command(
+        home.handle_command_patch_ops(
             "createStudio",
             Some(&json!({ "name": "Test Studio" })),
             &home.initial_document_json(),
@@ -2862,7 +2862,7 @@ mod tests {
     #[test]
     fn temporary_studio_uses_ephemeral_port() {
         let mut home = SHomeApp;
-        let ops = home.handle_command(
+        let ops = home.handle_command_patch_ops(
             "createStudio",
             Some(&json!({ "name": "Temp Studio", "kind": "temporary" })),
             &home.initial_document_json(),

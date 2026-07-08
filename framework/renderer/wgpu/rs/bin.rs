@@ -10,7 +10,7 @@ fn main() {
     let plugin_filter = env::args()
         .position(|arg| arg == "--plugin")
         .and_then(|index| env::args().nth(index + 1))
-        .unwrap_or_else(|| "s".to_string());
+        .unwrap_or_else(|| "studio".to_string());
     let modules_root = env::var("SEMIO_PLUGIN_MODULES")
         .map(PathBuf::from)
         .unwrap_or_else(|_| {
