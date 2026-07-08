@@ -2497,7 +2497,7 @@ fn create_home_app() -> App {
             .mode("explore", "Explore")
             .default_mode_id("explore")
             .mode_tools("explore", home_create_tools())
-            .window_kind(S_HOME_WINDOW, "Studios", S_HOME_BODY)
+            .window_kind(S_HOME_WINDOW, "Studios", S_HOME_BODY, SurfaceKind::Canvas2d)
             .default_layout(create_tab_stack_layout(
                 &[S_HOME_WINDOW.into()],
                 Some(&["Studios".into()]),
@@ -2525,12 +2525,13 @@ fn create_studio_app() -> App {
         .icon_id("s")
         .mode("main", "Studio")
         .default_mode_id("main")
-        .window_kind(S_PLAY_WINDOW_MEDIA_GRAPH, "Media Graph", S_PLAY_BODY_MEDIA_GRAPH)
-        .window_kind(S_PLAY_WINDOW_MEDIA_VFS, "Media VFS", S_PLAY_BODY_MEDIA_VFS)
+        .window_kind(S_PLAY_WINDOW_MEDIA_GRAPH, "Media Graph", S_PLAY_BODY_MEDIA_GRAPH, SurfaceKind::NodeGraph)
+        .window_kind(S_PLAY_WINDOW_MEDIA_VFS, "Media VFS", S_PLAY_BODY_MEDIA_VFS, SurfaceKind::VirtualFileSystem)
         .window_kind(
             S_PLAY_WINDOW_COMPILED_DAG,
             "Compiled DAG",
             S_PLAY_BODY_COMPILED_DAG,
+            SurfaceKind::NodeGraph,
         )
         .panel_tab(
             S_PLAY_CATALOGUE_TAB_ID,

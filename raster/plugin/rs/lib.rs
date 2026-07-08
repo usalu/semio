@@ -1,6 +1,6 @@
 //! 🖼️ Raster plugin — declarative raster board bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{
+use semio_framework_plugin::{SurfaceKind, 
     build_canvas_2d_scene, build_raster_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, RasterScene, UiInspectorFieldGroup,
@@ -1277,8 +1277,8 @@ fn create_raster_app() -> App {
             .icon_id("raster")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, "Composite", RASTER_PLAY_BODY_COMPOSITE)
-            .window_kind(RASTER_PLAY_WINDOW_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_NAVIGATOR)
+            .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, "Composite", RASTER_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d)
+            .window_kind(RASTER_PLAY_WINDOW_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_NAVIGATOR, SurfaceKind::Canvas2d)
             .default_layout(create_default_layout(
                 &[RASTER_PLAY_WINDOW_COMPOSITE.into(), RASTER_PLAY_WINDOW_NAVIGATOR.into()],
                 "row",

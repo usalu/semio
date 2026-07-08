@@ -5,7 +5,7 @@ use mathematical_graph_port_directed_dag::{
     stepper_widget_height, stepper_widget_width, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost,
     DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, IoPortSpec,
 };
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field,
     ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, UiControlNode,
@@ -960,8 +960,8 @@ fn create_dag_app() -> App {
             .icon_id("dag")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(DAG_PLAY_WINDOW_MAIN, "DAG", DAG_PLAY_BODY_MAIN)
-            .window_kind(DAG_PLAY_WINDOW_COMPILED, "DSL", DAG_PLAY_BODY_COMPILED)
+            .window_kind(DAG_PLAY_WINDOW_MAIN, "DAG", DAG_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
+            .window_kind(DAG_PLAY_WINDOW_COMPILED, "DSL", DAG_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph)
             .default_layout(create_default_layout(
                 &[DAG_PLAY_WINDOW_MAIN.into(), DAG_PLAY_WINDOW_COMPILED.into()],
                 "row",

@@ -1851,6 +1851,7 @@ mod tests {
     use semio_framework_core::{
         ActorId, AppInstanceId, CommandId, CommandInvocationId, ModeDefinition, PluginManifest,
         WindowKindDefinition,
+        SurfaceKind,
     };
     use std::sync::Arc;
     use vcs::MemoryBackbonePort;
@@ -1878,6 +1879,7 @@ mod tests {
                     id: "composite".into(),
                     label: "Canvas".into(),
                     body_key: "composite".into(),
+                    surface_kind: SurfaceKind::Canvas2d,
                     icon_id: None,
                     measures: Vec::new(),
                     engagement: None,
@@ -1924,6 +1926,7 @@ mod tests {
                 id: "composite".into(),
                 label: "Canvas".into(),
                 body_key: "composite".into(),
+                surface_kind: SurfaceKind::Canvas2d,
                 icon_id: None,
                 measures: Vec::new(),
                 engagement: None,
@@ -1954,6 +1957,7 @@ mod tests {
                 id: "composite".into(),
                 label: "Canvas".into(),
                 body_key: "composite".into(),
+                surface_kind: SurfaceKind::Canvas2d,
                 icon_id: None,
                 measures: Vec::new(),
                 engagement: None,
@@ -2028,6 +2032,7 @@ mod tests {
                 id: "composite".into(),
                 label: "Canvas".into(),
                 body_key: "composite".into(),
+                surface_kind: SurfaceKind::Canvas2d,
                 icon_id: None,
                 measures: Vec::new(),
                 engagement: None,
@@ -2154,6 +2159,7 @@ mod tests {
                     id: "composite".into(),
                     label: "Canvas".into(),
                     body_key: "composite".into(),
+                    surface_kind: SurfaceKind::Canvas2d,
                     icon_id: None,
                     measures: Vec::new(),
                     engagement: None,

@@ -23,7 +23,38 @@
   \\
   \hline
 }
+\cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
+  \int_zero:N \l_tmpa_int
+  \tl_map_inline:nn {#1} {
+    \str_if_eq:nnT {##1} {.} { \int_incr:N \l_tmpa_int }
+  }
+}
 \ExplSyntaxOff
+
+\newcount\semio@table@dot@count
+\def\semio@table@dot@sentinel{}
+\newcommand{\semio@table@count@dots}[1]{%
+  \semio@table@dot@count=0
+  \semio@table@scan@dots#1\semio@table@dot@sentinel
+}
+\def\semio@table@scan@dots#1{%
+  \ifx\semio@table@dot@sentinel#1\else
+    \if.#1\advance\semio@table@dot@count1\fi
+    \expandafter\semio@table@scan@dots
+  \fi
+}
+
+\newcommand{\SemioTableRegisterRow}[3]{%
+  \semio@table@count@dots{#1}%
+  \dimen0=\semio@block@sep@skip
+  \multiply\dimen0 by 2
+  \multiply\dimen0 by \semio@table@dot@count
+  \SemioTableRow{%
+    #1 &
+    \hspace{\dimen0}#2 &
+    \pageref{#3}%
+  }%
+}
 
 \newlength{\semio@table@header@height}
 \newlength{\semio@table@body@height}
@@ -51,17 +82,14 @@
   \vspace{\semio@spacing@single}%
 }
 
-\newcommand{\semio@table@row@pad}{%
-  \noalign{\vskip\semio@spacing@single}%
-}
-
 \newcommand{\SemioTableRow}[1]{%
-  \semio@table@row@pad
-  #1\\[\semio@spacing@single]%
+  #1\\
+  \noalign{\vskip\semio@block@sep@skip}%
   \hline
 }
 
 \newcommand{\semio@table@render}[2]{%
+  \ExplSyntaxOff
   \semio@table@setup
   \begingroup
   \SemioSans
@@ -88,6 +116,7 @@
 \newcommand{\semio@table@begin@tabular}[1]{\begin{tabular}{#1}}
 
 \newcommand{\SemioTableBegin}[1]{%
+  \ExplSyntaxOff
   \semio@table@setup
   \begingroup
   \SemioSans

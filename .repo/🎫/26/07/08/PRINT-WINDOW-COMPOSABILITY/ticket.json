@@ -1,0 +1,19 @@
+{
+  "title": "Print Window Composability",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "Add generic non-registered Window chrome primitive plus fixed-gutter horizontal composition macros (SemioWindowRowTwo/SemioWindowRowThree) to print LaTeX stack. Rebuild makecoverpages as 6 vertically-stacked window rows plus 3 side-by-side logo windows. Add antragstellendeinstitution/kooperationspartner metadata fields. Update zwischenbericht and template call sites.",
+  "summary": "Added composable print windows mirroring the UI layout system: generic non-registered `Window` environment (structural tier chrome, no counter/register), `SemioWindowRowTwo`/`SemioWindowRowThree` with fixed `\\semio@spacing@single` gutter, new `\\antragstellendeinstitution{}` and `\\kooperationspartner{}` metadata fields, and rebuilt `\\makecoverpages` as 6 stacked window rows plus a 3-column logo row (Zukunft Bau, BBSR, BBR). Updated zwischenbericht light/dark and zukunftbau template call sites. Verified: `bun ./script.ts test` (12 PDFs), mit-bestand zwischenbericht build, cover-page raster spacing (~0.2em gaps, logo gutter ~9px).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1868"
+  },
+  "goal": "🎯r2602🎯updateddocs",
+  "plan": {
+    "client": "cursor",
+    "id": "c4651ad2",
+    "local": "composable_print_windows_c4651ad2.plan.md"
+  },
+  "sessions": [
+    "⚪c20bfd7c92294a34a5c7c85c982a21c5"
+  ]
+}

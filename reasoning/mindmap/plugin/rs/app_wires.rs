@@ -2,7 +2,7 @@
 
 use puzzle_2d::Puzzle2dExtension;
 use reasoning_mindmap_wires::{DefaultWiresExtension, RelationshipKind};
-use semio_framework_plugin::{
+use semio_framework_plugin::{SurfaceKind, 
     build_canvas_2d_scene, create_default_layout, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App,
     Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -778,7 +778,7 @@ pub fn create_wires_app() -> App {
             .icon_id("reasoning-wires")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind("reasoning-wires-composite", "Canvas", WIRES_PLAY_BODY_COMPOSITE)
+            .window_kind("reasoning-wires-composite", "Canvas", WIRES_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d)
             .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, WIRES_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, WIRES_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, WIRES_PLAY_BODY_PROPERTIES)

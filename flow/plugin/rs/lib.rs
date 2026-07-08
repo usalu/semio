@@ -6,7 +6,7 @@ use flow_core::{
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     CameraJson, FlowFixture, FlowHost, Widget,
 };
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout,
     handle_generation_command, render_generation_form_body, render_generation_preview_text, render_generations_tree,
     selected_generation, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
@@ -1245,14 +1245,15 @@ fn create_flow_app() -> App {
             .mode("edit", "Edit")
             .mode("generate", "Generate")
             .default_mode_id("edit")
-            .window_kind(FLOW_PLAY_WINDOW_MAIN, "Flow", FLOW_PLAY_BODY_MAIN)
-            .window_kind(FLOW_PLAY_WINDOW_COMPILED, "DSL", FLOW_PLAY_BODY_COMPILED)
-            .window_kind(FLOW_PLAY_WINDOW_GENERATIONS, "Generations", FLOW_PLAY_BODY_GENERATIONS)
-            .window_kind(FLOW_PLAY_WINDOW_GENERATE_FORM, "Form", FLOW_PLAY_BODY_GENERATE_FORM)
+            .window_kind(FLOW_PLAY_WINDOW_MAIN, "Flow", FLOW_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
+            .window_kind(FLOW_PLAY_WINDOW_COMPILED, "DSL", FLOW_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph)
+            .window_kind(FLOW_PLAY_WINDOW_GENERATIONS, "Generations", FLOW_PLAY_BODY_GENERATIONS, SurfaceKind::Canvas2d)
+            .window_kind(FLOW_PLAY_WINDOW_GENERATE_FORM, "Form", FLOW_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d)
             .window_kind(
                 FLOW_PLAY_WINDOW_GENERATE_PREVIEW,
                 "Preview",
                 FLOW_PLAY_BODY_GENERATE_PREVIEW,
+                SurfaceKind::Canvas2d,
             )
             .default_layout(create_default_layout(
                 &[FLOW_PLAY_WINDOW_MAIN.into(), FLOW_PLAY_WINDOW_COMPILED.into()],

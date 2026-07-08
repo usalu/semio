@@ -39,3 +39,20 @@ Minor `Overfull \hbox (5.87991pt too wide)` on panel shipout — fbox border/pad
 2. Glass rasterize: resolve `@napi-rs/canvas` via pdfjs `createRequire` (dedupe Path2D types)
 3. Pass-2 layout: `\rlap` + `\resizebox` glass background under centered text
 4. Panel content: `minipage` width constraint in `lrbox` capture
+5. **Saturation bug (color corruption)**: `sharp.modulate({ saturation })` expects a multiplier (`1.45`), not a percentage. Was `Math.round(glassSaturate * 100)` → `145`, producing neon cyan/magenta. Fixed to `glassSaturate` directly.
+
+## Saturation fix verification (2026-07-08)
+
+Pass-1 crop from `debug-out/pass1.pdf` at manifest coords:
+
+| Stage | File | Result |
+|---|---|---|
+| Raw crop | `pass1-crop-raw.png` | Dark bg + red TOC chips/lines visible |
+| Blur + sat 1.45 | `pass1-crop-blur-fixed.png` | Subtle frosted red blurs on dark bg ✓ |
+| Blur + sat 145 | `pass1-crop-blur-bad.png` | Neon cyan + magenta blobs (reproduces user bug) |
+
+Rebuild: `bun ./script.ts build kompaktbericht` — light/dark PDFs built successfully.
+
+## Border alignment fix (2026-07-08)
+
+TikZ `path picture` + `inner sep` made the border wider than the glass PNG. Fixed by drawing image, inset border stroke, and text in one `tikzpicture` with `\useasboundingbox (0,0) rectangle (#2,#4)` so both share exact manifest dimensions.

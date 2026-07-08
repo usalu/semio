@@ -32,28 +32,68 @@
     \semio_theme_apply:
     \centering
     \vfill
-    {\SemioSans\Huge\@title\par}
-    \vspace{\semio@spacing@double}
-    \tl_if_empty:NTF \l_semio_subtitle_tl {} {{\large\tl_use:N \l_semio_subtitle_tl\par\vspace{\semio@spacing@single}}}
-    \tl_if_empty:NTF \l_semio_aktenzeichen_tl {} {{\SemioSans Aktenzeichen:~ \tl_use:N \l_semio_aktenzeichen_tl\par}}
-    \tl_if_empty:NTF \l_semio_foerderzeitraum_tl {} {{\SemioSans Förderzeitraum:~ \tl_use:N \l_semio_foerderzeitraum_tl\par}}
-    \tl_if_empty:NTF \l_semio_doi_tl {} {{\SemioMono DOI:~ \tl_use:N \l_semio_doi_tl\par}}
-    \vspace{\semio@spacing@double}
-    \tl_if_empty:NTF \l_semio_kurzfassung_tl {} {{\SemioSans\small\tl_use:N \l_semio_kurzfassung_tl\par}}
-    \vspace{\semio@spacing@double}
-    {\SemioSans\@author\par}
-    \vfill
-    \semio@logo@slot[3.5cm]{zukunftbau-logo.pdf}\hfill
-    \semio@logo@slot[3.5cm]{bbsr-logo.pdf}\hfill
-    \semio@logo@slot[3.5cm]{bundesbauministerium-logo.pdf}
+    \begin{Window}[title=Titel]
+      {\SemioSans\Huge\@title\par}
+      \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
+        \vspace{\semio@spacing@single}%
+        {\large\tl_use:N \l_semio_subtitle_tl\par}%
+      }
+    \end{Window}
+    \tl_if_empty:NTF \l_semio_aktenzeichen_tl {} {%
+      \begin{Window}[title=Aktenzeichen]
+        {\SemioSans\tl_use:N \l_semio_aktenzeichen_tl\par}
+      \end{Window}%
+    }
+    \tl_if_empty:NTF \l_semio_berichtszeitraum_tl {} {%
+      \begin{Window}[title=Berichtszeitraum]
+        {\SemioSans\tl_use:N \l_semio_berichtszeitraum_tl\par}
+      \end{Window}%
+    }
+    \tl_if_empty:NTF \l_semio_foerderzeitraum_tl {} {%
+      \begin{Window}[title=Förderzeitraum]
+        {\SemioSans\tl_use:N \l_semio_foerderzeitraum_tl\par}
+      \end{Window}%
+    }
+    \tl_if_empty:NTF \l_semio_doi_tl {} {%
+      \begin{Window}[title=DOI]
+        {\SemioMono\tl_use:N \l_semio_doi_tl\par}
+      \end{Window}%
+    }
+    \tl_if_empty:NTF \l_semio_kurzfassung_tl {} {%
+      \begin{Window}[title=Beschreibung]
+        {\SemioSans\small\tl_use:N \l_semio_kurzfassung_tl\par}
+      \end{Window}%
+    }
+    \tl_if_empty:NTF \l_semio_antragstellendeinstitution_tl {} {%
+      \begin{Window}[title=Antragstellende~Institution]
+        {\SemioSans\tl_use:N \l_semio_antragstellendeinstitution_tl\par}
+      \end{Window}%
+    }
+    \tl_if_empty:NTF \l_semio_kooperationspartner_tl {} {%
+      \begin{Window}[title=Kooperationspartner]
+        {\SemioSans\tl_use:N \l_semio_kooperationspartner_tl\par}
+      \end{Window}%
+    }
+    \SemioWindowRowThree{%
+      \begin{Window}[title=Zukunft~Bau]
+        \semio@logo@slot[3.5cm]{zukunftbau-logo.pdf}
+      \end{Window}%
+    }{%
+      \begin{Window}[title=BBSR]
+        \semio@logo@slot[3.5cm]{bbsr-logo.pdf}
+      \end{Window}%
+    }{%
+      \begin{Window}[title=BBR]
+        \semio@logo@slot[3.5cm]{bundesbauministerium-logo.pdf}
+      \end{Window}%
+    }
     \vfill
   \end{titlepage}
 }
 
 \NewDocumentCommand{\maketableofcontents}{}{%
-  \setcounter{tocdepth}{3}%
+  \setcounter{tocdepth}{\value{secnumdepth}}%
   \tableofcontents
-  \clearpage
 }
 
 \NewDocumentCommand{\makefundingacknowledgement}{}{%

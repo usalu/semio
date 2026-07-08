@@ -20,7 +20,6 @@ gis_2d = { path = "../../../../gis/2d/rs" }
 flow_core = { path = "../../../../flow/core/rs" }
 ui_wgpu = { path = "../../../../ui/wgpu/rs" }
 semio-framework-plugin = { path = "../../../plugin/rs" }
-semio-framework-plugin-host = { path = "../../../plugin/host/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"
@@ -41,6 +40,7 @@ path = "bin.rs"
 required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-plugin-host = { path = "../../../plugin/host/rs" }
 ureq = "2.12.1"
 rfd = "0.15.4"
 

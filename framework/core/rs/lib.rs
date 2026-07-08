@@ -528,6 +528,21 @@ pub struct WindowEngagement {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub possible_engagements: Option<Vec<WindowEngagementPossible>>,
 }
+
+pub fn default_viewport_engagement() -> WindowEngagement {
+    WindowEngagement {
+        session_active: Some(true),
+        options: None,
+        input: None,
+        control: None,
+        controls: None,
+        status: Some(vec![WindowEngagementStatus {
+            id: "framework.viewport.status".into(),
+            text: "Viewport".into(),
+        }]),
+        possible_engagements: None,
+    }
+}
 //#endregion 🔖WindowEngagement
 // #endregion layout
 }
@@ -1319,6 +1334,7 @@ mod tests {
                 id: "composite".into(),
                 label: "Canvas".into(),
                 body_key: "composite".into(),
+                surface_kind: crate::SurfaceKind::Canvas2d,
                 icon_id: None,
                 measures: Vec::new(),
                 engagement: None,
@@ -2152,6 +2168,10 @@ impl SurfaceKind {
             Self::GisMap => "gis2d-map",
         }
     }
+
+    pub fn is_viewport(self) -> bool {
+        matches!(self, Self::World3d | Self::NodeGraph | Self::Canvas2d)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2894,6 +2914,7 @@ pub struct WindowKindDefinition {
     pub id: String,
     pub label: String,
     pub body_key: String,
+    pub surface_kind: SurfaceKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub icon_id: Option<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -3485,7 +3506,7 @@ pub use layout::{
     create_tab_stack_layout, create_window_layout, merge_named_layouts, CommandDescriptor, NamedLayout,
     StyleSpec, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
-    WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure,
+    WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, default_viewport_engagement,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,

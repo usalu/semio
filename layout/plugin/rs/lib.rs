@@ -5,7 +5,7 @@ use layout_rs::{
     export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip, parse_layout_document,
     resolve_page, Frame, LayoutCamera, LayoutDocument, LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins,
 };
-use semio_framework_plugin::{
+use semio_framework_plugin::{SurfaceKind, 
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene,
     CommandDescriptor, PanelGroup, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
@@ -1277,8 +1277,8 @@ fn create_layout_app() -> App {
             .icon_id("layout")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT)
-            .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW)
+            .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::NodeGraph)
+            .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d)
             .default_layout(create_default_layout(
                 &[LAYOUT_PLAY_WINDOW_BLUEPRINT.into(), LAYOUT_PLAY_WINDOW_PREVIEW.into()],
                 "row",

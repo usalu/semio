@@ -5,7 +5,7 @@ use gis_2d::{
     open_url, GisMapDocument, GisMapEnvelope, GisMapOp, GisMapStore, MapHost, GIS_MAP_LOD_MODE_AUTOMATIC,
     GIS_MAP_SCHEMA,
 };
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_gis_map_scene, create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
     ui_inspector_readonly_field, ui_text, App, CommandDescriptor, GisMapScene, PluginApp, PluginBundle,
     UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
@@ -908,7 +908,7 @@ pub fn create_gis2d_app() -> App {
             .icon_id("gis2d")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(GIS2D_PLAY_WINDOW_MAIN, "Map", GIS2D_PLAY_BODY_COMPOSITE)
+            .window_kind(GIS2D_PLAY_WINDOW_MAIN, "Map", GIS2D_PLAY_BODY_COMPOSITE, SurfaceKind::GisMap)
             .default_layout(create_default_layout(
                 &[GIS2D_PLAY_WINDOW_MAIN.into()],
                 "row",

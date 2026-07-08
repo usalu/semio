@@ -2,7 +2,7 @@
 
 use puzzle_5d::{BrushPlacePayload, Puzzle5dPrecomputeSession};
 use semio_framework_os::register_mesh_obj_glb_export_handlers;
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
     world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json,
@@ -1429,8 +1429,8 @@ pub fn create_puzzle5d_app() -> App {
             .icon_id("puzzle")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D)
-            .window_kind(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D)
+            .window_kind(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Canvas2d)
+            .window_kind(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d)
             .default_layout(create_default_layout(
                 &[PUZZLE5D_PLAY_WINDOW_2D.into(), PUZZLE5D_PLAY_WINDOW_3D.into()],
                 "row",

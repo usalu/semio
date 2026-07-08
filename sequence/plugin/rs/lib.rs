@@ -2,7 +2,7 @@
 
 use mathematical_graph_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOrientation};
 use sequence_core::{default_fixture, SequenceFixture, SequenceHost, SequenceStep};
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_node_graph_scene, build_text_editor_scene, create_default_layout, tool_button, tool_collection,
     tool_toggle, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text,
     App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle, TextEditorScene, ToolCategory, ToolNode, UiControlNode,
@@ -870,9 +870,9 @@ fn create_sequence_app() -> App {
             .icon_id("sequence")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(SEQUENCE_PLAY_WINDOW_MAIN, "Sequence", SEQUENCE_PLAY_BODY_MAIN)
-            .window_kind(SEQUENCE_PLAY_WINDOW_SCRIPT, "Script", SEQUENCE_PLAY_BODY_SCRIPT)
-            .window_kind(SEQUENCE_PLAY_WINDOW_COMPILED, "DSL", SEQUENCE_PLAY_BODY_COMPILED)
+            .window_kind(SEQUENCE_PLAY_WINDOW_MAIN, "Sequence", SEQUENCE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
+            .window_kind(SEQUENCE_PLAY_WINDOW_SCRIPT, "Script", SEQUENCE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor)
+            .window_kind(SEQUENCE_PLAY_WINDOW_COMPILED, "DSL", SEQUENCE_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph)
             .default_layout(create_default_layout(
                 &[
                     SEQUENCE_PLAY_WINDOW_MAIN.into(),

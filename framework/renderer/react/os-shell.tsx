@@ -407,6 +407,41 @@ function windowEngagementControlToSpec(
 	};
 }
 
+const PLUGIN_LOAD_TIMEOUT_MS = 30_000;
+
+async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
+	try {
+		return await Promise.race([
+			loadPluginModule(pluginId, moduleUrl),
+			new Promise<never>((_, reject) => {
+				window.setTimeout(() => reject(new Error(`timeout loading ${pluginId}`)), PLUGIN_LOAD_TIMEOUT_MS);
+			}),
+		]);
+	} catch (error) {
+		console.error("[DEBUG] plugin load failed", pluginId, error);
+		return null;
+	}
+}
+
+function isViewportSurface(surfaceKind: string | undefined): boolean {
+	return surfaceKind === "world-3d" || surfaceKind === "node-graph" || surfaceKind === "canvas-2d";
+}
+
+function defaultViewportEngagement(): WindowEngagement {
+	return {
+		sessionActive: true,
+		status: [{ id: "framework.viewport.status", text: "Viewport" }],
+	};
+}
+
+function resolveWindowEngagement(
+	kind: AppDefinition["windowKinds"][number],
+	byKind: Readonly<Record<string, WindowEngagement>>,
+): WindowEngagement | undefined {
+	const surfaceKind = (kind as { surfaceKind?: string }).surfaceKind;
+	return byKind[kind.id] ?? kind.engagement ?? (isViewportSurface(surfaceKind) ? defaultViewportEngagement() : undefined);
+}
+
 function windowEngagementToSpec(engagement: WindowEngagement | undefined, onCommand: (command: CommandDescriptor) => void): EngagementSpec | undefined {
 	if (!engagement) return undefined;
 	const options = engagement.options?.map((option) => ({
@@ -687,7 +722,17 @@ export function FrameworkOsShell({
 		let cancelled = false;
 		void (async () => {
 			try {
-				const loaded = await Promise.all(registry.map((entry) => loadPluginModule(entry.pluginId, entry.moduleUrl)));
+				const settled = await Promise.allSettled(
+					registry.map((entry) => loadPluginModuleResilient(entry.pluginId, entry.moduleUrl)),
+				);
+				const loaded = settled.flatMap((result, index) => {
+					if (result.status === "fulfilled" && result.value) return [result.value];
+					if (result.status === "rejected") {
+						console.error(`[DEBUG] plugin rejected: ${registry[index]?.pluginId}`, result.reason);
+					}
+					return [];
+				});
+				if (loaded.length === 0) throw new Error("No plugins loaded");
 				if (cancelled) return;
 				const loadedState = loaded.map((handle) => ({ handle, manifest: handle.manifest }));
 				setLoadedPlugins(loadedState);
@@ -1668,7 +1713,7 @@ export function FrameworkOsShell({
 			fill: true,
 			showControls: true,
 			measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onCommand),
-			engagement: windowEngagementToSpec(windowEngagementsByKind[kind.id] ?? kind.engagement, onCommand),
+			engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onCommand),
 			children: (
 				<ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
 					{interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onCommand })}
@@ -1685,7 +1730,7 @@ export function FrameworkOsShell({
 					fill: true,
 					showControls: true,
 					measures: windowMeasuresOverlay(windowMeasuresByKind[kind.id] ?? kind.measures, onCommand),
-					engagement: windowEngagementToSpec(windowEngagementsByKind[kind.id] ?? kind.engagement, onCommand),
+					engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onCommand),
 					children: (
 						<ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id}>
 							{interpretUiNode(windowUiByKind[kind.id] ?? { type: "text", value: `Missing window: ${kind.id}` }, { onCommand })}

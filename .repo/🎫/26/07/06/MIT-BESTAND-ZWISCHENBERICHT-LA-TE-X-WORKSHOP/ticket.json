@@ -3,7 +3,7 @@
   "emoji": "🖨️",
   "status": "closed",
   "description": "Create mit-bestand zwischenbericht LaTeX document with placeholder content and configure LaTeX Workshop for Tectonic build.",
-  "summary": "Added \\maketableofcontents component (tocdepth 3, \\clearpage after) to semio-components.sty and inserted it after \\makecoverpages in zwischenbericht template and mit-bestand zwischenbericht light/dark sources. TOC now renders on page 2; body content starts on page 3.",
+  "summary": "Footer left now shows each author as a shortened chip (e.g. U. Saluz, K. Sarakbi) via \\footerauthors and \\SemioFooterAuthorChips. Author shortening uses a robust LaTeX first-name parser in semio-core.sty. Fixed TOC aux file rename to .sctoc and register body materialize (cs_gset_nopar:cpn instead of Npx) to stop premature table expansion on second LaTeX pass. Verified in zwischenbericht.pdf footer text on pages 2–4.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1834"
   },
@@ -15,6 +15,7 @@
     "⚪600aec384ba749b09a159899055cb233",
     "⚪d9d5c318ec594ad892578ea9f3d6f2e0",
     "⚪8c837ee321d548008fee3dfcbf56a128",
-    "⚪f34b7f5f72e54e03b4e873de37a33b69"
+    "⚪f34b7f5f72e54e03b4e873de37a33b69",
+    "⚪767bf085ba2d443dbfc0673ade96fb10"
   ]
 }

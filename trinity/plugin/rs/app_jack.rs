@@ -1,6 +1,6 @@
 //! 🔱 Trinity Jack plugin — jack query play app bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_node_graph_scene, build_table_scene, build_text_editor_scene, create_default_layout,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
     ui_inspector_readonly_field, ui_text, App, CommandDescriptor, NodeGraphScene, PluginApp, PluginBundle,
@@ -1024,9 +1024,9 @@ pub fn create_trinity_jack_app() -> App {
             .icon_id("trinity")
             .mode("explore", "Explore")
             .default_mode_id("explore")
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_GRAPH, "Nakagin Graph", TRINITY_JACK_PLAY_BODY_GRAPH)
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_EDITOR, "Jack Query", TRINITY_JACK_PLAY_BODY_EDITOR)
-            .window_kind(TRINITY_JACK_PLAY_WINDOW_RESULTS, "Results", TRINITY_JACK_PLAY_BODY_RESULTS)
+            .window_kind(TRINITY_JACK_PLAY_WINDOW_GRAPH, "Nakagin Graph", TRINITY_JACK_PLAY_BODY_GRAPH, SurfaceKind::NodeGraph)
+            .window_kind(TRINITY_JACK_PLAY_WINDOW_EDITOR, "Jack Query", TRINITY_JACK_PLAY_BODY_EDITOR, SurfaceKind::TextEditor)
+            .window_kind(TRINITY_JACK_PLAY_WINDOW_RESULTS, "Results", TRINITY_JACK_PLAY_BODY_RESULTS, SurfaceKind::Canvas2d)
             .default_layout(jack_layout())
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,

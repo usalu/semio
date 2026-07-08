@@ -19,6 +19,7 @@ use semio_framework_core::{
     AppDefinition, CommandDescriptor, Contribution, ExampleDefinition, Keybinding,
     ModeDefinition, NamedLayout, PanelGroup, PanelTabDefinition, PluginManifest, ProgramDefinition, ToolNode,
     UiNode, ViewState, WindowEngagement, WindowKindDefinition, WindowLayout, WindowMeasure,
+    SurfaceKind,
 };
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -33,6 +34,7 @@ pub struct WindowKindSpec {
     pub id: String,
     pub label: String,
     pub body_key: String,
+    pub surface_kind: SurfaceKind,
     pub icon_id: Option<String>,
     pub measures: Vec<WindowMeasure>,
     pub engagement: Option<WindowEngagement>,
@@ -121,11 +123,18 @@ impl AppBuilder {
         self
     }
 
-    pub fn window_kind(mut self, id: impl Into<String>, label: impl Into<String>, body_key: impl Into<String>) -> Self {
+    pub fn window_kind(
+        mut self,
+        id: impl Into<String>,
+        label: impl Into<String>,
+        body_key: impl Into<String>,
+        surface_kind: SurfaceKind,
+    ) -> Self {
         self.window_kinds.push(WindowKindSpec {
             id: id.into(),
             label: label.into(),
             body_key: body_key.into(),
+            surface_kind,
             icon_id: None,
             measures: Vec::new(),
             engagement: None,
@@ -138,12 +147,14 @@ impl AppBuilder {
         id: impl Into<String>,
         label: impl Into<String>,
         body_key: impl Into<String>,
+        surface_kind: SurfaceKind,
         engagement: WindowEngagement,
     ) -> Self {
         self.window_kinds.push(WindowKindSpec {
             id: id.into(),
             label: label.into(),
             body_key: body_key.into(),
+            surface_kind,
             icon_id: None,
             measures: Vec::new(),
             engagement: Some(engagement),
@@ -263,6 +274,7 @@ impl AppBuilder {
                     id: window.id,
                     label: window.label,
                     body_key: window.body_key,
+                    surface_kind: window.surface_kind,
                     icon_id: window.icon_id,
                     measures: window.measures,
                     engagement: window.engagement,
@@ -311,7 +323,9 @@ mod app_builder_tests {
         let result = std::panic::catch_unwind(|| {
             App::builder("bad-app", "Bad")
                 .document(["semio", "bad"])
-                .window_kind("main", "Main", "bad.main")
+                .mode("edit", "Edit")
+                .mode_tools("edit", vec![])
+                .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d)
                 .default_layout(create_default_layout(&["missing".into()], "row", None, None))
                 .build_definition();
         });
@@ -322,7 +336,9 @@ mod app_builder_tests {
     fn build_definition_accepts_valid_manifest() {
         let definition = App::builder("good-app", "Good")
             .document(["semio", "good"])
-            .window_kind("main", "Main", "good.main")
+            .mode("edit", "Edit")
+            .mode_tools("edit", vec![])
+            .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, "good.document")
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
             .build_definition();
@@ -1717,7 +1733,8 @@ pub fn standard_app(spec: StandardApp) -> App {
             .icon_id(spec.app_id)
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind("main", "Main", spec.body_key)
+            .mode_tools("edit", vec![])
+            .window_kind("main", "Main", spec.body_key, spec.surface_kind)
             .panel_tab(
                 FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
                 FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,

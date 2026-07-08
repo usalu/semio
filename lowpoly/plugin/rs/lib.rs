@@ -8,7 +8,7 @@ use lowpoly_core::{
 };
 use png::{BitDepth, ColorType, Encoder};
 use semio_framework_os::{register_os_media_export_handler, OsMediaExportFormat, OsMediaExportResult};
-use semio_framework_plugin::{
+use semio_framework_plugin::{SurfaceKind, 
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, create_named_layout,
     export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, PanelGroup,
@@ -2198,8 +2198,8 @@ fn create_lowpoly_app() -> App {
             .mode("edit", "Edit")
             .mode("paint", "Paint")
             .default_mode_id("edit")
-            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, engagement.clone())
-            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_UV, "UV", LOWPOLY_PLAY_BODY_UV, engagement)
+            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, SurfaceKind::World3d, engagement.clone())
+            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_UV, "UV", LOWPOLY_PLAY_BODY_UV, SurfaceKind::Canvas2d, engagement)
             .default_layout(create_default_layout(
                 &[LOWPOLY_PLAY_WINDOW_MAIN.into()],
                 "row",

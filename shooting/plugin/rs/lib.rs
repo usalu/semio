@@ -1,6 +1,6 @@
 //! 📸 Shooting plugin — icon studio with model + preview windows bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_raster_scene, build_world_3d_scene, create_default_layout, merge_world_selection_ids,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
@@ -1093,8 +1093,8 @@ fn create_shooting_app() -> App {
             .icon_id("camera")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(SHOOTING_PLAY_WINDOW_MODEL, "Model", SHOOTING_PLAY_BODY_MODEL)
-            .window_kind(SHOOTING_PLAY_WINDOW_ICON, "Icon", SHOOTING_PLAY_BODY_ICON)
+            .window_kind(SHOOTING_PLAY_WINDOW_MODEL, "Model", SHOOTING_PLAY_BODY_MODEL, SurfaceKind::World3d)
+            .window_kind(SHOOTING_PLAY_WINDOW_ICON, "Icon", SHOOTING_PLAY_BODY_ICON, SurfaceKind::Canvas2d)
             .default_layout(create_default_layout(
                 &[SHOOTING_PLAY_WINDOW_MODEL.into(), SHOOTING_PLAY_WINDOW_ICON.into()],
                 "row",

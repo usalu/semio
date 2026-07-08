@@ -190,7 +190,7 @@ const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
 //#region 🔖BrepMeshes
 use kernel_3d_brepkit::BrepkitKernel;
 use kernel_3d_engine::{block_on, BrepKernel, MeshTransfer};
-use semio_framework_core::mesh_from_indexed;
+use semio_framework_core::{SurfaceKind, mesh_from_indexed;
 use std::sync::{Mutex, OnceLock};
 
 static CAD_BREP_KERNEL: OnceLock<Mutex<BrepkitKernel>> = OnceLock::new();
@@ -2858,10 +2858,10 @@ fn create_cad_app() -> App {
             .icon_id("box")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE)
-            .window_kind(CAD_PLAY_WINDOW_BUILDING, "Building", CAD_PLAY_BODY_BUILDING)
-            .window_kind(CAD_PLAY_WINDOW_ENERGY, "Energy", CAD_PLAY_BODY_ENERGY)
-            .window_kind(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, "Structure Classic", CAD_PLAY_BODY_STRUCTURE_CLASSIC)
+            .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE, SurfaceKind::World3d)
+            .window_kind(CAD_PLAY_WINDOW_BUILDING, "Building", CAD_PLAY_BODY_BUILDING, SurfaceKind::World3d)
+            .window_kind(CAD_PLAY_WINDOW_ENERGY, "Energy", CAD_PLAY_BODY_ENERGY, SurfaceKind::World3d)
+            .window_kind(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, "Structure Classic", CAD_PLAY_BODY_STRUCTURE_CLASSIC, SurfaceKind::World3d)
             .default_layout(cad_quad_layout())
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")

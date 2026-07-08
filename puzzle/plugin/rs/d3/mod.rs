@@ -1,6 +1,6 @@
 //! 🧊 Puzzle 3D plugin — 3D puzzle assembly play app bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_world_3d_scene, create_default_layout, export_mesh_glb_bytes, export_mesh_obj,
     merge_world_selection_ids, mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls,
@@ -1208,7 +1208,7 @@ pub fn create_puzzle3d_app() -> App {
             .icon_id("puzzle")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE)
+            .window_kind(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d)
             .default_layout(create_default_layout(
                 &[PUZZLE3D_PLAY_WINDOW_MAIN.into()],
                 "row",

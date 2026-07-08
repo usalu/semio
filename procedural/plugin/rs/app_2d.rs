@@ -2,7 +2,7 @@
 
 use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, FlowFixture, FlowHost, Widget};
 use flow_module_draw::render_scene_json;
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout, handle_generation_command,
     render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical,
@@ -889,18 +889,20 @@ pub fn create_procedural2d_app() -> App {
             .mode("edit", "Edit")
             .mode("generate", "Generate")
             .default_mode_id("edit")
-            .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL2D_PLAY_BODY_MAIN)
-            .window_kind(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, "Preview", PROCEDURAL2D_PLAY_BODY_PREVIEW)
+            .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL2D_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
+            .window_kind(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, "Preview", PROCEDURAL2D_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d)
             .window_kind(
                 PROCEDURAL2D_PLAY_WINDOW_GENERATIONS,
                 "Generations",
                 PROCEDURAL2D_PLAY_BODY_GENERATIONS,
+                SurfaceKind::Canvas2d,
             )
-            .window_kind(PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, "Form", PROCEDURAL2D_PLAY_BODY_GENERATE_FORM)
+            .window_kind(PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, "Form", PROCEDURAL2D_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d)
             .window_kind(
                 PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW,
                 "Preview",
                 PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW,
+                SurfaceKind::Canvas2d,
             )
             .default_layout(create_default_layout(
                 &[PROCEDURAL2D_PLAY_WINDOW_MAIN.into(), PROCEDURAL2D_PLAY_WINDOW_PREVIEW.into()],

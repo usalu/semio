@@ -11,9 +11,9 @@ use semio_framework_plugin::{PanelGroup,
     build_node_graph_scene, build_world_3d_scene, create_default_layout, create_named_layout,
     export_mesh_glb_bytes, export_mesh_obj, handle_generation_command, merge_world_selection_ids,
     mesh_from_kind, render_generation_form_body, render_generation_preview_text, render_generations_tree,
-    selected_generation, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
+    selected_generation, tool_button, tool_collection, tool_toggle, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, App, world3d_scene, world3d_selection_json,
-    CommandDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle, UiControlNode,
+    CommandDescriptor, GenerationPlayState, NodeGraphScene, PluginApp, PluginBundle, ToolCategory, ToolNode, UiControlNode,
     UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -1258,6 +1258,51 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
 }
 //#endregion 🔖Procedural3dPlayApp
 
+fn procedural3d_cmd(command: &str, args: Option<Value>) -> CommandDescriptor {
+    CommandDescriptor {
+        controller_id: PROCEDURAL_3D_PLAY_CONTROLLER_ID.into(),
+        command: command.into(),
+        args,
+    }
+}
+
+fn procedural3d_edit_tools() -> Vec<ToolNode> {
+    vec![
+        tool_collection(
+            "procedural3d-tools-lod",
+            "layers",
+            "LOD",
+            vec![
+                tool_toggle(
+                    "procedural3d-tools-lod-solid",
+                    "box",
+                    "Solid",
+                    true,
+                    procedural3d_cmd("setLodMode", Some(json!({ "value": "solid" }))),
+                ),
+                tool_toggle(
+                    "procedural3d-tools-lod-wireframe",
+                    "git-commit-horizontal",
+                    "Wireframe",
+                    false,
+                    procedural3d_cmd("setLodMode", Some(json!({ "value": "wireframe" }))),
+                ),
+            ],
+        )
+        .with_category(ToolCategory::Tools),
+    ]
+}
+
+fn procedural3d_generate_tools() -> Vec<ToolNode> {
+    vec![tool_button(
+        "procedural3d-tools-add-generation",
+        "plus",
+        "Add Generation",
+        procedural3d_cmd("addGeneration", None),
+    )
+    .with_category(ToolCategory::Commands)]
+}
+
 //#region 🔖Manifest
 pub fn create_procedural3d_app() -> App {
     App::from_builder(
@@ -1266,22 +1311,37 @@ pub fn create_procedural3d_app() -> App {
             .mode("edit", "Edit")
             .mode("generate", "Generate")
             .default_mode_id("edit")
-            .window_kind(PROCEDURAL_3D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL_3D_PLAY_BODY_MAIN)
-            .window_kind(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, "Preview", PROCEDURAL_3D_PLAY_BODY_PREVIEW)
+            .mode_tools("edit", procedural3d_edit_tools())
+            .mode_tools("generate", procedural3d_generate_tools())
+            .window_kind(
+                PROCEDURAL_3D_PLAY_WINDOW_MAIN,
+                "Flow",
+                PROCEDURAL_3D_PLAY_BODY_MAIN,
+                SurfaceKind::NodeGraph,
+            )
+            .window_kind(
+                PROCEDURAL_3D_PLAY_WINDOW_PREVIEW,
+                "Preview",
+                PROCEDURAL_3D_PLAY_BODY_PREVIEW,
+                SurfaceKind::World3d,
+            )
             .window_kind(
                 PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS,
                 "Generations",
                 PROCEDURAL_3D_PLAY_BODY_GENERATIONS,
+                SurfaceKind::Canvas2d,
             )
             .window_kind(
                 PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM,
                 "Form",
                 PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM,
+                SurfaceKind::Canvas2d,
             )
             .window_kind(
                 PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW,
                 "Preview",
                 PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW,
+                SurfaceKind::World3d,
             )
             .default_layout(create_default_layout(
                 &[PROCEDURAL_3D_PLAY_WINDOW_MAIN.into(), PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.into()],

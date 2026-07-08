@@ -1,6 +1,6 @@
 //! 🗂️ VCS plugin — declarative version-control play app bundled as a hot-swappable WASM component.
 
-use semio_framework_plugin::{
+use semio_framework_plugin::{SurfaceKind, 
     build_table_scene, build_text_editor_scene, create_default_layout, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, App, CommandDescriptor, PanelGroup, PluginApp, PluginBundle, TableScene, TextEditorScene,
     UiControlNode, UiFieldNode, UiInputNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
@@ -724,8 +724,8 @@ fn create_vcs_app() -> App {
             .icon_id("git-branch")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(VCS_PLAY_WINDOW_EDITOR, "Editor", VCS_PLAY_BODY_EDITOR)
-            .window_kind(VCS_PLAY_WINDOW_HISTORY, "History", VCS_PLAY_BODY_HISTORY)
+            .window_kind(VCS_PLAY_WINDOW_EDITOR, "Editor", VCS_PLAY_BODY_EDITOR, SurfaceKind::TextEditor)
+            .window_kind(VCS_PLAY_WINDOW_HISTORY, "History", VCS_PLAY_BODY_HISTORY, SurfaceKind::Canvas2d)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, VCS_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, VCS_PLAY_BODY_INSPECTION)
             .keybinding("mod+z", "undo")

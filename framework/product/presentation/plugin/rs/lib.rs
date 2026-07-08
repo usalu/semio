@@ -5,7 +5,7 @@ use presentation_deck::{
     populate_tile_drafts_from_grid, PresentationDeck, PresentationEdit, FigureTileDraft, FigureTileFrame,
     FigureTileGridSeedSpec, FigureTileSource, PRESENTATION_DOCUMENT_SCHEMA,
 };
-use semio_framework_plugin::{PanelGroup, 
+use semio_framework_plugin::{SurfaceKind, PanelGroup, 
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, App,
     Canvas2dScene, CommandDescriptor, PluginApp, PluginBundle, UiControlNode, UiFieldNode, UiInputNode,
@@ -722,7 +722,7 @@ fn create_presentation_app() -> App {
             .icon_id("presentation")
             .mode("main", "Edit")
             .default_mode_id("main")
-            .window_kind(PRESENTATION_PLAY_WINDOW_MAIN, "Tile editor", PRESENTATION_PLAY_BODY_MAIN)
+            .window_kind(PRESENTATION_PLAY_WINDOW_MAIN, "Tile editor", PRESENTATION_PLAY_BODY_MAIN, SurfaceKind::Canvas2d)
             .default_layout(create_default_layout(
                 &[PRESENTATION_PLAY_WINDOW_MAIN.into()],
                 "stack",

@@ -1007,7 +1007,10 @@ fn render_node(
     match node {
         DockNode::Row(children) => render_axis(state, ctx, children, bounds, path, true, body_fill, render_body, outer_split),
         DockNode::Column(children) => render_axis(state, ctx, children, bounds, path, false, body_fill, render_body, outer_split),
-        DockNode::Stack { .. } => render_stack(state, ctx, path, node, bounds, false, body_fill, render_body),
+        DockNode::Stack { .. } => {
+            let maximized = state.maximized_stack.as_ref().map(|p| p.as_slice()) == Some(path);
+            render_stack(state, ctx, path, node, bounds, maximized, body_fill, render_body)
+        }
     }
 }
 
@@ -1685,9 +1688,15 @@ mod tests {
                     id: (*id).into(),
                     label: (*id).into(),
                     body_key: format!("{id}.body"),
+                    surface_kind: semio_framework_core::SurfaceKind::Canvas2d,
                     icon_id: None,
                     measures: vec![],
                     engagement: None,
+                    params_schema: None,
+                    model_projection_schema: None,
+                    input_event_schema: None,
+                    output_schema: None,
+                    capabilities: vec![],
                 })
                 .collect(),
             panel_tabs: vec![PanelTabDefinition {
@@ -1753,6 +1762,34 @@ mod tests {
             drag_data: None,
         };
         assert!(ShellState::wheel_propagates_to_scene_surface(Some(&graph_pane)));
+    }
+
+    #[test]
+    fn row_layout_stack_content_rects_match_per_window() {
+        let layout = create_default_layout(
+            &["flow".into(), "preview".into()],
+            "row",
+            Some(&[68.0, 32.0]),
+            Some(&["Flow".into(), "Preview".into()]),
+        );
+        let app = sample_app(&["flow", "preview"], Some(layout));
+        let dock = DockState::from_app(&app, Some("flow"));
+        let canvas = Rect::new(0.0, 0.0, 1200.0, 800.0);
+        let theme = Theme::default();
+        let mut atlas = FontAtlas::default();
+        let labels = HashMap::from([
+            ("flow".into(), "Flow".into()),
+            ("preview".into(), "Preview".into()),
+        ]);
+        let placements = dock.stack_body_rects(canvas, &theme, &labels, &mut atlas);
+        assert_eq!(placements.len(), 2);
+        let flow_rect = placements.iter().find(|(_, _, id)| id == "flow").map(|(_, rect, _)| *rect);
+        let preview_rect = placements.iter().find(|(_, _, id)| id == "preview").map(|(_, rect, _)| *rect);
+        let flow_rect = flow_rect.expect("flow body rect");
+        let preview_rect = preview_rect.expect("preview body rect");
+        assert!(flow_rect.w > preview_rect.w);
+        assert!((flow_rect.x + flow_rect.w - preview_rect.x).abs() < 1.0);
+        assert!(flow_rect.h > 0.0 && preview_rect.h > 0.0);
     }
 
     #[test]
@@ -3952,6 +3989,21 @@ fn walk_ui_node(
 pub fn validate_ui_node(node: &UiNode, limits: &RenderPlanLimits) -> Result<(), String> {
     let mut state = RenderPlanWalkState { node_count: 0 };
     walk_ui_node(node, 1, limits, &mut state)
+}
+
+pub fn validate_window_body_surface(
+    kind: &semio_framework_core::WindowKindDefinition,
+    node: &UiNode,
+) -> Result<(), String> {
+    match node {
+        UiNode::ComponentScene(scene) if scene.component_kind != kind.surface_kind => Err(format!(
+            "window {} declared {} but plugin returned {}",
+            kind.id,
+            kind.surface_kind.as_str(),
+            scene.component_kind.as_str()
+        )),
+        _ => Ok(()),
+    }
 }
 
 fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
@@ -7245,7 +7297,7 @@ use crate::dock::{
     compute_dock_drop_zone, dock_from_window_layout, drop_zone_indicator_rect, parse_path,
     DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
 };
-use crate::interpreter::{framework_widget_context, render_ui_node};
+use crate::interpreter::{framework_widget_context, render_ui_node, validate_window_body_surface};
 use crate::scenes::{clear_graph_node_context, push_gis_map_context_menu, resolve_graph_context_command, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, GisMapSurface, NodeGraphSurface};
 use infinite_world::{
     fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_commands,
@@ -7909,7 +7961,15 @@ impl ShellState {
                 let resolved = self
                     .resolve_external_slots(node, &view_state)
                     .await?;
-                self.window_ui.insert(kind.id.clone(), resolved);
+                let ui = match validate_window_body_surface(kind, &resolved) {
+                    Ok(()) => resolved,
+                    Err(message) => UiNode::Text(UiTextNode {
+                        value: format!("Framework rejected render plan: {message}"),
+                        emphasize: Some(true),
+                        data_attributes: None,
+                    }),
+                };
+                self.window_ui.insert(kind.id.clone(), ui);
             }
         }
         self.panel_ui.clear();
@@ -11997,6 +12057,20 @@ impl ShellState {
             .unwrap_or_else(|| kind.measures.clone())
     }
 
+    fn engagement_for_kind(&self, kind: &semio_framework_core::WindowKindDefinition) -> Option<WindowEngagement> {
+        self.window_engagements
+            .get(&kind.id)
+            .cloned()
+            .or_else(|| kind.engagement.clone())
+            .or_else(|| {
+                if kind.surface_kind.is_viewport() {
+                    Some(semio_framework_core::default_viewport_engagement())
+                } else {
+                    None
+                }
+            })
+    }
+
     fn render_window_measures_rail(
         &mut self,
         draw: &mut DrawList,
@@ -12356,11 +12430,7 @@ impl ShellState {
         if !window_active {
             return None;
         }
-        let engagement = self
-            .window_engagements
-            .get(&kind.id)
-            .cloned()
-            .or_else(|| kind.engagement.clone());
+        let engagement = self.engagement_for_kind(kind);
         let Some(engagement) = engagement else {
             return None;
         };

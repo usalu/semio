@@ -282,7 +282,7 @@ export async function renderPanelGlass(options: {
 			})
 			.removeAlpha()
 			.blur(blurSigma)
-			.modulate({ saturation: Math.round(glassSaturate * 100) })
+			.modulate({ saturation: glassSaturate })
 			.composite([
 				{
 					input: tintRaw,

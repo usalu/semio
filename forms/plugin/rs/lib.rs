@@ -8,7 +8,7 @@ use forms::{
     FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
 };
 use image::RgbaImage;
-use semio_framework_plugin::{
+use semio_framework_plugin::{SurfaceKind, 
     build_raster_scene, build_table_scene, create_default_layout,
     ui_external_slot, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Contribution,
@@ -1983,8 +1983,8 @@ fn create_forms_app() -> App {
             .icon_id("forms")
             .mode("blueprint", "Blueprint")
             .default_mode_id("blueprint")
-            .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT)
-            .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY)
+            .window_kind(FORMS_PLAY_WINDOW_BLUEPRINT, "Blueprint", FORMS_PLAY_BODY_BLUEPRINT, SurfaceKind::NodeGraph)
+            .window_kind(FORMS_PLAY_WINDOW_TRY, "Try", FORMS_PLAY_BODY_TRY, SurfaceKind::Canvas2d)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, FORMS_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.catalogue", "Catalogue", PanelGroup::Workbench, FORMS_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, FORMS_PLAY_BODY_INSPECTION)

@@ -21,7 +21,10 @@
 \tl_new:N \l_semio_identifier_tl
 \tl_new:N \l_semio_aktenzeichen_tl
 \tl_new:N \l_semio_foerderzeitraum_tl
+\tl_new:N \l_semio_berichtszeitraum_tl
 \tl_new:N \l_semio_kurzfassung_tl
+\tl_new:N \l_semio_antragstellendeinstitution_tl
+\tl_new:N \l_semio_kooperationspartner_tl
 \tl_new:N \l_semio_doi_tl
 \bool_new:N \l_semio_kompakt_draft_bool
 
@@ -40,6 +43,9 @@
   identifier .tl_set:N = \l_semio_identifier_tl,
   aktenzeichen .tl_set:N = \l_semio_aktenzeichen_tl,
   foerderzeitraum .tl_set:N = \l_semio_foerderzeitraum_tl,
+  berichtszeitraum .tl_set:N = \l_semio_berichtszeitraum_tl,
+  antragstellendeinstitution .tl_set:N = \l_semio_antragstellendeinstitution_tl,
+  kooperationspartner .tl_set:N = \l_semio_kooperationspartner_tl,
   doi .tl_set:N = \l_semio_doi_tl,
   kompakt-draft .bool_set:N = \l_semio_kompakt_draft_bool,
 }
@@ -86,7 +92,10 @@
 
 \NewDocumentCommand{\aktenzeichen}{m}{\tl_set:Nn \l_semio_aktenzeichen_tl {#1}}
 \NewDocumentCommand{\foerderzeitraum}{m}{\tl_set:Nn \l_semio_foerderzeitraum_tl {#1}}
+\NewDocumentCommand{\berichtszeitraum}{m}{\tl_set:Nn \l_semio_berichtszeitraum_tl {#1}}
 \NewDocumentCommand{\kurzfassung}{m}{\tl_set:Nn \l_semio_kurzfassung_tl {#1}}
+\NewDocumentCommand{\antragstellendeinstitution}{m}{\tl_set:Nn \l_semio_antragstellendeinstitution_tl {#1}}
+\NewDocumentCommand{\kooperationspartner}{m}{\tl_set:Nn \l_semio_kooperationspartner_tl {#1}}
 \NewDocumentCommand{\doi}{m}{\tl_set:Nn \l_semio_doi_tl {#1}}
 \RenewDocumentCommand{\subtitle}{m}{\tl_set:Nn \l_semio_subtitle_tl {#1}}
 
@@ -109,11 +118,21 @@
 }
 
 \cs_new_protected:Npn \semio_register_title:n #1 {
+  \semio_register_title_text:n {#1}
+}
+
+\cs_new:Npn \semio_register_title_text:n #1 {
   \str_case:Vn \l_semio_language_tl {
     { de } { Verzeichnis~der~\semio_kind_label_plural:n {#1} }
   } {
     List~of~\semio_kind_label_plural:n {#1}
   }
+}
+
+\cs_new:Npn \semio_toc_title_text: {
+  \str_case:Vn \l_semio_language_tl {
+    { de } { Inhaltsverzeichnis }
+  } { Table~of~Contents }
 }
 
 \cs_new_protected:Npn \semio_register_header_number: {
@@ -159,6 +178,22 @@
 }
 
 \tl_new:N \l_semio_heading_number_tl
+\clist_new:N \l_semio_footer_authors_clist
+\seq_new:N \l_semio_author_name_parts_seq
+\tl_new:N \l_semio_author_name_tl
+
+\NewDocumentCommand \footerauthors { m } {
+  \clist_set:Nn \l_semio_footer_authors_clist {#1}
+}
+
+\cs_new:Npn \semio_author_name_shorten:n #1 {
+  \tl_set:Nn \l_semio_author_name_tl {#1}
+  \tl_trim_spaces:N \l_semio_author_name_tl
+  \exp_args:NV \semio_author_name_chip_text:n \l_semio_author_name_tl
+}
+\cs_new:Npn \semio_author_name_chip_text:n #1 {
+  \semio@author@name@chip {#1}
+}
 
 \cs_new_protected:Npn \semio_language_apply: {
   \str_case:Vn \l_semio_language_tl {
@@ -174,14 +209,29 @@
 
 \ExplSyntaxOff
 
+\newcommand{\semio@author@name@chip}[1]{%
+  \semio@author@name@chip@parse#1 \@nil
+}
+\def\semio@author@name@chip@parse#1 #2\@nil{%
+  \ifx\relax#2\relax
+    #1%
+  \else
+    \semio@author@name@chip@short#1\relax #2%
+  \fi
+}
+\def\semio@author@name@chip@short#1#2\relax #3{#1.\space#3}
+
 \newif\ifsemio@heading@chips
 \semio@heading@chipstrue
+\newif\ifsemio@register@list
 
 \newcommand{\semio@heading@chips@disable}{\semio@heading@chipsfalse}
 \newcommand{\semio@heading@chips@enable}{\semio@heading@chipstrue}
 
 \newcommand{\semio@if@heading@chips}[2]{%
-  \ifsemio@heading@chips #1\else #2\fi
+  \ifsemio@register@list #2\else
+    \ifsemio@heading@chips #1\else #2\fi
+  \fi
 }
 
 \newcommand{\semio@kind@register@en}[2]{\expandafter\def\csname semio@kind@resolve@en@#1\endcsname{#2}}
@@ -322,6 +372,8 @@
 \NewDocumentCommand \semio@kind@number { m m } { \semio_kind_chip_number:nn {#1} {#2} }
 \NewDocumentCommand \semio@kind@number@bare { m } { \semio_kind_chip_bare:n {#1} }
 \NewDocumentCommand \semio@register@title { m } { \semio_register_title:n {#1} }
+\NewExpandableDocumentCommand \SemioRegisterTitle { m } { \semio_register_title_text:n {#1} }
+\NewExpandableDocumentCommand \SemioTocTitle { } { \semio_toc_title_text: }
 \NewDocumentCommand \semio@register@header@number { } { \semio_register_header_number: }
 \NewDocumentCommand \semio@register@header@title { } { \semio_register_header_title: }
 \NewDocumentCommand \semio@register@header@page { } { \semio_register_header_page: }
@@ -350,6 +402,8 @@
 }
 
 \newcommand{\semio@hierarchy@hooks@install}{%
+  \AddToHook{cmd/maketableofcontents/before}{\semio@heading@chips@disable}%
+  \AddToHook{cmd/maketableofcontents/after}{\semio@heading@chips@enable}%
   \AddToHook{cmd/tableofcontents/before}{\semio@heading@chips@disable}%
   \AddToHook{cmd/tableofcontents/after}{\semio@heading@chips@enable}%
 }
@@ -359,5 +413,13 @@
   \AddToHook{cmd/#1/after}{\semio@heading@chips@enable}%
 }
 
+\newskip\semio@block@sep@skip
+\newskip\semio@heading@after@skip
+\setlength\semio@block@sep@skip{0.2em}
+\setlength\semio@heading@after@skip{0pt}
+\newcommand{\semio@block@sep}{%
+  \par
+  \vspace*{\semio@block@sep@skip}%
+}
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}

@@ -4,7 +4,7 @@ use puzzle_2d::{
     handle_position_on_circle, handle_position_on_rectangle, puzzle_board_host, puzzle_2d_lod_scale_json, BoardHost,
     Point, Puzzle2dExtension, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN,
 };
-use semio_framework_plugin::{
+use semio_framework_plugin::{SurfaceKind, 
     build_canvas_2d_scene, create_default_layout,
     layout::{MeasureSelectItem, WindowEngagementStatus, WindowEngagementToggleGroupOption},
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, Canvas2dScene, CommandDescriptor, PanelGroup, PluginApp,
@@ -1890,23 +1890,11 @@ pub fn create_puzzle2d_app() -> App {
             .icon_id("puzzle2d")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind_with_engagement(
-                PUZZLE2D_PANE_OVERVIEW,
-                "Overview",
-                PUZZLE2D_PLAY_BODY_OVERVIEW,
-                puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW),
+            .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW),
             )
-            .window_kind_with_engagement(
-                PUZZLE2D_PANE_DETAIL,
-                "Detail",
-                PUZZLE2D_PLAY_BODY_DETAIL,
-                puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL),
+            .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, "Detail", PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL),
             )
-            .window_kind_with_engagement(
-                PUZZLE2D_PANE_SELECTION,
-                "Selection",
-                PUZZLE2D_PLAY_BODY_SELECTION,
-                puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION),
+            .window_kind_with_engagement(PUZZLE2D_PANE_SELECTION, "Selection", PUZZLE2D_PLAY_BODY_SELECTION, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION),
             )
             .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_LAYERS)
             .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_CATALOGUE)
