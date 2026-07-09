@@ -13,6 +13,10 @@
 
 \bool_new:N \l_semio_cover@meta@row_bool
 \bool_new:N \l_semio_cover@institution@row_bool
+\bool_new:N \l_semio_is_zwischenbericht_bool
+\seq_new:N \l_semio_title_seq
+\tl_new:N \l_semio_clean_title_tl
+\cs_generate_variant:Nn \seq_set_split:Nnn { Nnx }
 
 \newcommand{\semio@cover@zukunftbau@logo}{zukunftbau-logo.pdf}
 \newcommand{\semio@cover@bbsr@logo}{bbsr-logo.pdf}
@@ -21,7 +25,7 @@
 \cs_new_protected:Npn \semio_cover_address:n #1 {
   \group_begin:
   \ExplSyntaxOff
-  \SemioSans
+  \SemioSans\footnotesize
   \raggedright
   \setlength{\parindent}{0pt}%
   #1%
@@ -45,17 +49,58 @@
 \RenewDocumentCommand{\maketitle}{}{\semio_maketitle:}
 
 \NewDocumentCommand{\makecoverpages}{}{%
+  \clearpage
+  \newgeometry{left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm}
   \begin{titlepage}
     \semio_theme_apply:
     \vfill
-    \begin{Window}[title=Titel]
-      \centering
-      {\SemioSans\Huge\@title\par}
-      \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
-        \vspace{\semio@spacing@single}%
-        {\large\tl_use:N \l_semio_subtitle_tl\par}%
+    \setlength{\semio@block@sep@skip}{4pt}
+    \cs_if_exist:cTF { zukunftbau@type } {
+      \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
+        \bool_set_true:N \l_semio_is_zwischenbericht_bool
+        \seq_set_split:Nnx \l_semio_title_seq { --- } { \@title }
+        \tl_set:Nx \l_semio_clean_title_tl { \seq_item:Nn \l_semio_title_seq { 2 } }
+        \tl_trim_spaces:N \l_semio_clean_title_tl
+        \tl_if_empty:NT \l_semio_clean_title_tl {
+          \tl_set:Nn \l_semio_clean_title_tl { \@title }
+        }
+        \SemioWindowRowTwo{%
+          \begin{Window}[title={Zukunft\ Bau}, row]
+            \centering\hyphenpenalty=10000
+            {\SemioSans\Large Zwischenbericht\par}
+          \end{Window}%
+        }{%
+          \begin{Window}[title={Titel}, row]
+            \centering\hyphenpenalty=10000
+            {\SemioSans\Large\tl_use:N \l_semio_clean_title_tl\par}
+          \end{Window}%
+        }
+        \begin{Window}[title={Untertitel}]
+          \centering\hyphenpenalty=10000
+          {\large\tl_use:N \l_semio_subtitle_tl\par}
+        \end{Window}
+      } {
+        \bool_set_false:N \l_semio_is_zwischenbericht_bool
+        \begin{Window}[title={Titel}]
+          \centering
+          {\SemioSans\Huge\@title\par}
+          \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
+            \vspace{\semio@spacing@single}%
+            {\large\tl_use:N \l_semio_subtitle_tl\par}%
+          }
+        \end{Window}
       }
-    \end{Window}
+    } {
+      \bool_set_false:N \l_semio_is_zwischenbericht_bool
+      \begin{Window}[title={Titel}]
+        \centering
+        {\SemioSans\Huge\@title\par}
+        \tl_if_empty:NTF \l_semio_subtitle_tl {} {%
+          \vspace{\semio@spacing@single}%
+          {\large\tl_use:N \l_semio_subtitle_tl\par}%
+        }
+      \end{Window}
+    }
     \bool_set_false:N \l_semio_cover@meta@row_bool
     \tl_if_empty:NF \l_semio_aktenzeichen_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
     \tl_if_empty:NF \l_semio_foerderzeitraum_tl { \bool_set_true:N \l_semio_cover@meta@row_bool }
@@ -80,10 +125,12 @@
         {\SemioMono\tl_use:N \l_semio_doi_tl\par}
       \end{Window}%
     }
-    \tl_if_empty:NTF \l_semio_kurzfassung_tl {} {%
-      \begin{Window}[title=Beschreibung]
-        {\SemioSans\small\tl_use:N \l_semio_kurzfassung_tl\par}
-      \end{Window}%
+    \bool_if:NF \l_semio_is_zwischenbericht_bool {
+      \tl_if_empty:NTF \l_semio_kurzfassung_tl {} {%
+        \begin{Window}[title=Beschreibung]
+          {\SemioSans\small\tl_use:N \l_semio_kurzfassung_tl\par}
+        \end{Window}%
+      }
     }
     \bool_set_false:N \l_semio_cover@institution@row_bool
     \tl_if_empty:NF \l_semio_antragstellendeinstitution_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
@@ -114,6 +161,8 @@
     }
     \vfill
   \end{titlepage}
+  \clearpage
+  \restoregeometry
 }
 
 \NewDocumentCommand{\maketableofcontents}{o}{%
@@ -133,9 +182,9 @@
 
 \NewDocumentCommand{\makeworkpackages}{m}{%
   \section*{Arbeitspaketzuordnung}
-  \begin{Table}[title=Netzwerk]
+  \begin{Window}[title=Netzwerk]
     #1
-  \end{Table}
+  \end{Window}
 }
 
 \NewDocumentCommand{\makeregisters}{}{%

@@ -1,0 +1,81 @@
+% !TEX program = tectonic
+% !TEX root = zwischenbericht.tex
+\documentclass[type=zwischenbericht]{zukunftbau}
+
+\setcounter{secnumdepth}{4}
+
+\title{Zwischenbericht --- Entwerfen mit Bestand}
+\subtitle{Eine offene Plattform für einen KI-unterstützten, performance-optimierten und integrativen Entwurfsprozess mit wiederverwendeten Baukomponenten}
+\antragstellendeinstitution{%
+  Leibniz Universität Hannover\\
+  Fakultät für Architektur und Landschaft, IEK\\
+  Abt.\ Nachhaltige Gebäudesysteme\\
+  Projektleitung: Ueli Saluz\\
+  Weitere Bearbeitung: Nikolaus Möllenhof
+}
+\kooperationspartner{%
+  Universität der Künste Berlin\\
+  Konstruktives Entwerfen und Tragwerksplanung\\
+  Bearbeitung: Kinan Sarakbi
+}
+\aktenzeichen{10.08.18.7-25.06}
+\berichtszeitraum{01.01.--10.07.2026}
+\foerderzeitraum{11/2025 - 05/2027}
+\footerauthors{Ueli Saluz, Kinan Sarakbi}
+\makeatletter
+\renewcommand{\semio@cover@zukunftbau@logo}{asset/logo/zukunft-bau.png}
+\renewcommand{\semio@cover@bbsr@logo}{asset/logo/bbsr.png}
+\renewcommand{\semio@cover@bundesministerium@logo}{asset/logo/gefördert-durch-bmwsb.png}
+\makeatother
+\kurzfassung{%
+  Entwerfen mit inhomogenen Baukomponenten ist ästhetisch, historisch und ökologisch reizvoll, aber entwurfstechnisch anspruchsvoll und komplex, da funktionale, konstruktive und qualitative Abhängigkeiten direkt beim Entwerfen berücksichtigt werden müssen.
+  Die im Projekt entwickelte End-To-End-Plattform, welche gleichzeitig Katalog-, Entwurfs- und Performancebeurteilungs-Tool beinhaltet, ermöglicht es, in dieser Situation effektiv Lösungen zu entwickeln.
+  Das Performance-Assessment hinsichtlich Energie und Tragwerk erlaubt frühe multidisziplinäre Optimierung.
+  Mithilfe einer KI-Assistenz können auch große Bestandspools, in welchen es explosionsartig viele Kombinationsmöglichkeiten gibt, im Entwurfsprozess berücksichtigt werden.
+  Die Assistenz schlägt für die jeweilige Entwurfssituation passende Baukomponenten und Verknüpfungen vor.
+  Basierend auf einer semantischen Repräsentation der Baukomponenten und des komponentenbasierten Entwurfes wird die generative Stärke der vortrainierten Large-Language-Models direkt für den Entwurf genutzt.
+  Über eine Framework-unabhängige Schnittstellendefinition wird es bestehenden Bauteilbörsen ermöglicht, ihre Baukomponenten nahtlos maschinenlesbar zu veröffentlichen, sodass die Integrierbarkeit in die Plattform gewährleistet ist.
+  Das Schema dieser Schnittstellendefinition beinhaltet neben Fotos und den üblichen Metadaten wie Ort und Preis auch 3D-Modelle und Performance-Kennwerte wie das Treibhauspotential, welche direkt von den Tools verwendet werden.
+  Ein Modellierungstool, welches moderne Bild-zu-3D-KI-Modelle benutzt, reduziert den Aufbereitungsaufwand der Bauteilbörsen.
+  Durch die open-source Veröffentlichung der gesamten Plattform, deren Dokumentation und den Aufbau einer Community werden die Langlebigkeit und das Vertrauen gestärkt.
+  Das Self-Hosting ermöglicht einerseits eine Breitenwirkung, wodurch der zukünftige Unterhalt und neue Featureentwicklung effizient geteilt wird.
+  Andererseits bleibt die Datensouveränität gewährleistet.%
+}
+
+\begin{document}
+
+\makecoverpages
+
+\maketableofcontents
+
+\makeworkpackages{%
+  \SemioTableThree{%
+    \SemioTableHeaderRow{AP & Partner & Schwerpunkt im Berichtszeitraum}
+    \SemioTableRow{AP-Erfahrung & Leibniz Universität Hannover & Recherche, Interviews, User Stories}
+    \SemioTableRow{AP-Plattform & Leibniz Universität Hannover & Generatoren, Bauteileinspeisung}
+    \SemioTableRow{AP-Tool & Universität der Künste Berlin & HID, Lebenszyklusanalyse, Tragwerksanalyse, KI-Assistenz}
+    \SemioTableRow{AP-Validierung & Leibniz Universität Hannover & Test-Case, Entwurfsgrammatik, Entwicklung}
+  }%
+}
+
+\section{Ergebnisse}
+
+\subsection{Forschungsfragen und Vorgehen}
+
+Wiederverwendung wird nicht dadurch skalierbar, dass mehr Bauteile verfügbar sind, sondern dadurch, dass vorhandene Bauteile entwurfsfähig werden. Diese These trägt das Vorhaben. Sie verschiebt den Blick von der Menge des Angebots hin zu der Frage, ob ein rückgebautes Bauteil mit seinen Maßen, seinem Zustand und seinen Nachweisen so beschrieben ist, dass Entwerfende damit arbeiten können. Als entwurfsfähig gilt ein Bauteil in diesem Vorhaben dann, wenn es nicht nur beschaffbar ist, sondern mit belastbaren Informationen zu Geometrie, Zustand, Verfügbarkeit, Tragwerksverhalten, Umweltwirkung und Vertrauensstand in eine frühe Entwurfsentscheidung einbezogen werden kann. Der Hebel ist bei tragenden, großformatigen Bauteilen am größten, wo Wiederverwendung das Treibhauspotenzial gegenüber einem Neubauteil deutlich senkt (Küpfer et al.\ 2024, 2025). Der Engpass liegt dabei weniger im Material als im Entwurfsprozess und im Datenfluss zwischen Bauteilquelle und Entwurf.
+
+Wiederverwendbare Bauteile sind in großer Zahl physisch vorhanden, doch entwurfsfähig sind sie damit noch nicht. Ein rückgebautes Bauteil bringt häufig eine unvollständige, uneinheitliche und oft nur analog dokumentierte Datenlage mit, aus der für einen Entwurf erst Geometrie, Tragwerks- und Umweltkennwerte sowie ein nachvollziehbarer Vertrauensstand werden müssen. Das Vorhaben ist das direkte Folgevorhaben zu „Abbau/Aufbau" (Gengnagel/Henschel 2024). Der Vorgänger löste die physische Seite, den zerstörungsarmen Rückbau und die Zerlegung von Stahlbeton, und benannte die offene digitale Lücke: die Überführung rückgebauter Bauteile in einen entwurfsfähigen Zustand. Genau dort setzt „Entwerfen mit Bestand" an und entwickelt eine durchgängige digitale Kette von der Bauteilquelle bis zur Entwurfsentscheidung.
+
+Vier Forschungsfragen leiten die Arbeit, jeweils auf die Skalierbarkeit des Entwerfens bezogen:
+
+\begin{Blockquote}
+\textit{[Platzhalter --- die final abgestimmten vier Forschungsfragen werden hier eingesetzt.]}
+\end{Blockquote}
+
+Innerhalb des Verbunds sind die Schwerpunkte verteilt. Die LUH (NGS) untersucht und entwickelt federführend das Human-Interface-Design, die vereinfachte Ökobilanzierung mit Blick auf Verfügbarkeit, Präzision und Unsicherheit der Bauteil-Inputs sowie die KI-gestützte Entwurfsassistenz. Die UdK (KET) bearbeitet die test-case-basierte Entwurfsraumerkundung und die Integration der vereinfachten Tragwerksanalyse, hier mit Blick auf Kombinierbarkeit, Präzision und Unsicherheit der System-Inputs.
+
+Als Untersuchungsrahmen dient Stahlbeton als Test-Case, während das System materialübergreifend angelegt ist. Grundlage sind Verbund-Monolithteile aus „Abbau/Aufbau". Die Wirkungsebene ist die Vorplanung; finale statische Nachweise und Genehmigungen liegen außerhalb des Vorhabens.
+
+Das Vorgehen folgt den vier Arbeitspaketen, die zugleich den Aufbau dieses Berichts tragen. Das AP-Erfahrung sammelt Erfahrungswissen aus Recherche, Interviews und daraus abgeleiteten User-Stories. Das AP-Plattform entwickelt das Bauteilportal, über das Bauteile eingespeist, qualifiziert und generatorisch zu entwurfsfähigen Objekten aufbereitet werden. Das AP-Tool erweitert das Entwurfswerkzeug um Bauteilkatalog, Kompositionsumgebung sowie Lebenszyklus-, Tragwerks- und KI-Funktionen. Das AP-Validierung prüft die Kette am Stahlbeton-Test-Case. Kapitel~1 stellt die Ergebnisse dieser Arbeitspakete im Berichtszeitraum dar, Kapitel~2 den Projektstand.
+
+\end{document}

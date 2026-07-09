@@ -7,7 +7,7 @@ use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{get, post};
+use axum::routing::{get, post, put};
 use axum::{Json, Router};
 use dashmap::DashMap;
 use futures::{SinkExt, StreamExt};
@@ -26,7 +26,7 @@ struct HubState {
     documents: Arc<DashMap<String, DocumentRow>>,
     ops: Arc<DashMap<String, Vec<OpRow>>>,
     dags: Arc<DashMap<String, OpDag>>,
-    bus: broadcast::Sender<HubEvent>,
+    bus: broadcast::Sender<HubBusEvent>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -55,11 +55,19 @@ struct OpRow {
 }
 
 #[derive(Clone, Serialize)]
-struct HubEvent {
-    document_id: String,
-    version: i64,
-    envelope: OpEnvelope,
-    insert_result: String,
+#[serde(tag = "kind", rename_all = "camelCase")]
+enum HubBusEvent {
+    Op {
+        document_id: String,
+        version: i64,
+        envelope: OpEnvelope,
+        insert_result: String,
+    },
+    Envelope {
+        document_id: String,
+        version: i64,
+        envelope: Value,
+    },
 }
 
 #[derive(Serialize)]
@@ -67,6 +75,32 @@ struct DocumentResponse {
     snapshot: Value,
     version: i64,
 }
+
+#[derive(Serialize)]
+struct EnvelopeResponse {
+    envelope: Value,
+    version: i64,
+}
+
+#[derive(Deserialize)]
+struct PutEnvelopeRequest {
+    version: i64,
+    envelope: Value,
+}
+
+#[derive(Serialize)]
+struct PutEnvelopeResponse {
+    version: i64,
+}
+
+#[derive(Clone, Serialize)]
+struct HubEnvelopeEvent {
+    document_id: String,
+    version: i64,
+    envelope: Value,
+}
+
+// kept for local clarity in put_envelope; bus uses HubBusEvent
 
 #[derive(Deserialize)]
 struct AppendOpRequest {
@@ -151,6 +185,75 @@ async fn get_document(Path(document_id): Path<String>, State(state): State<HubSt
     }))
 }
 
+async fn get_envelope(
+    Path(document_id): Path<String>,
+    State(state): State<HubState>,
+) -> Result<Json<EnvelopeResponse>, StatusCode> {
+    seed_state(&state);
+    let document = state.documents.get(&document_id).ok_or(StatusCode::NOT_FOUND)?;
+    let envelope = document
+        .snapshot
+        .get("vcs")
+        .cloned()
+        .map(|vcs| {
+            serde_json::json!({
+                "schema": document.schema,
+                "id": document.id,
+                "vcs": vcs,
+                "backbone": document.snapshot.get("backbone").cloned(),
+            })
+        })
+        .unwrap_or_else(|| document.snapshot.clone());
+    Ok(Json(EnvelopeResponse {
+        envelope,
+        version: document.version,
+    }))
+}
+
+async fn put_envelope(
+    Path(document_id): Path<String>,
+    State(state): State<HubState>,
+    Json(body): Json<PutEnvelopeRequest>,
+) -> Result<Json<PutEnvelopeResponse>, StatusCode> {
+    seed_state(&state);
+    let mut document = state.documents.get(&document_id).ok_or(StatusCode::NOT_FOUND)?.clone();
+    if body.version != document.version {
+        return Err(StatusCode::CONFLICT);
+    }
+    document.version += 1;
+    if let Some(envelope_obj) = body.envelope.as_object() {
+        if let Some(vcs) = envelope_obj.get("vcs") {
+            if let Some(snapshot) = document.snapshot.as_object_mut() {
+                snapshot.insert("vcs".into(), vcs.clone());
+                if let Some(schema) = envelope_obj.get("schema").and_then(|value| value.as_str()) {
+                    document.schema = schema.into();
+                    snapshot.insert("schema".into(), Value::String(schema.into()));
+                }
+                if let Some(id) = envelope_obj.get("id").and_then(|value| value.as_str()) {
+                    document.id = id.into();
+                    snapshot.insert("id".into(), Value::String(id.into()));
+                }
+                if let Some(backbone) = envelope_obj.get("backbone") {
+                    snapshot.insert("backbone".into(), backbone.clone());
+                }
+            }
+        } else {
+            document.snapshot = body.envelope.clone();
+        }
+    } else {
+        document.snapshot = body.envelope.clone();
+    }
+    state.documents.insert(document_id.clone(), document.clone());
+    let _ = state.bus.send(HubBusEvent::Envelope {
+        document_id: document_id.clone(),
+        version: document.version,
+        envelope: body.envelope,
+    });
+    Ok(Json(PutEnvelopeResponse {
+        version: document.version,
+    }))
+}
+
 async fn append_op(
     Path(document_id): Path<String>,
     State(state): State<HubState>,
@@ -186,7 +289,7 @@ async fn append_op(
     document.snapshot = document.snapshot.clone();
     state.documents.insert(document_id.clone(), document.clone());
     state.ops.entry(document_id.clone()).or_default().push(op);
-    let _ = state.bus.send(HubEvent {
+    let _ = state.bus.send(HubBusEvent::Op {
         document_id: document_id.clone(),
         version: document.version,
         envelope: body.envelope,
@@ -220,17 +323,28 @@ async fn handle_ws(mut socket: WebSocket, document_id: String, state: HubState) 
             }
             event = rx.recv() => {
                 if let Ok(event) = event {
-                    if event.document_id != document_id {
-                        continue;
-                    }
-                    let payload = serde_json::json!({
-                        "kind": "op",
-                        "version": event.version,
-                        "envelope": event.envelope,
-                        "insertResult": event.insert_result,
-                    });
-                    if socket.send(Message::Text(payload.to_string().into())).await.is_err() {
-                        break;
+                    let payload = match event {
+                        HubBusEvent::Op { document_id: id, version, envelope, insert_result } if id == document_id => {
+                            Some(serde_json::json!({
+                                "kind": "op",
+                                "version": version,
+                                "envelope": envelope,
+                                "insertResult": insert_result,
+                            }))
+                        }
+                        HubBusEvent::Envelope { document_id: id, version, envelope } if id == document_id => {
+                            Some(serde_json::json!({
+                                "kind": "envelope",
+                                "version": version,
+                                "envelope": envelope,
+                            }))
+                        }
+                        _ => None,
+                    };
+                    if let Some(payload) = payload {
+                        if socket.send(Message::Text(payload.to_string().into())).await.is_err() {
+                            break;
+                        }
                     }
                 }
             }
@@ -257,6 +371,7 @@ async fn main() {
     let app = Router::new()
         .route("/nodes", get(list_nodes))
         .route("/documents/{id}", get(get_document))
+        .route("/documents/{id}/envelope", get(get_envelope).put(put_envelope))
         .route("/documents/{id}/ops", post(append_op))
         .route("/documents/{id}/ws", get(document_ws))
         .with_state(state);
@@ -270,6 +385,36 @@ async fn main() {
 mod tests {
     use super::*;
 
+    use semio_framework_core::{
+        ActorId, DocumentDiff, DocumentId, InverseOperation, OperationId, PayloadHash, SchemaId,
+        SchemaVersion, UndoPolicy,
+    };
+
+    fn sample_envelope(id: &str) -> OpEnvelope {
+        OpEnvelope {
+            id: OperationId(id.into()),
+            actor: ActorId("actor-1".into()),
+            document: DocumentId("default".into()),
+            schema_version: SchemaVersion("test.v1".into()),
+            deps: Vec::new(),
+            payload_hash: PayloadHash("hash".into()),
+            diff: DocumentDiff {
+                schema_id: SchemaId("diff.v1".into()),
+                payload: serde_json::json!({"value": id}),
+            },
+            inverse: InverseOperation {
+                target_operation: OperationId(id.into()),
+                inverse_diff: DocumentDiff {
+                    schema_id: SchemaId("diff.v1".into()),
+                    payload: serde_json::json!({}),
+                },
+                base_version: semio_framework_core::DocumentVersion(0),
+                dependencies: Vec::new(),
+                undo_policy: UndoPolicy::ExactBaseOnly,
+            },
+        }
+    }
+
     #[tokio::test]
     async fn append_op_increments_version() {
         let (bus, _) = broadcast::channel(8);
@@ -277,6 +422,7 @@ mod tests {
             nodes: Arc::new(DashMap::new()),
             documents: Arc::new(DashMap::new()),
             ops: Arc::new(DashMap::new()),
+            dags: Arc::new(DashMap::new()),
             bus,
         };
         seed_state(&state);
@@ -285,11 +431,38 @@ mod tests {
             State(state.clone()),
             Json(AppendOpRequest {
                 version: 0,
-                change: serde_json::json!({ "id": "change-1", "forwards": [], "backwards": [] }),
+                envelope: sample_envelope("op-1"),
             }),
         )
         .await
         .expect("append");
-        assert_eq!(response.version, 1);
+        assert_eq!(response.0.version, 1);
+    }
+
+    #[tokio::test]
+    async fn envelope_round_trip_updates_version() {
+        let (bus, _) = broadcast::channel(8);
+        let state = HubState {
+            nodes: Arc::new(DashMap::new()),
+            documents: Arc::new(DashMap::new()),
+            ops: Arc::new(DashMap::new()),
+            dags: Arc::new(DashMap::new()),
+            bus,
+        };
+        seed_state(&state);
+        let loaded = get_envelope(Path("default".into()), State(state.clone()))
+            .await
+            .expect("get");
+        let response = put_envelope(
+            Path("default".into()),
+            State(state.clone()),
+            Json(PutEnvelopeRequest {
+                version: loaded.0.version,
+                envelope: loaded.0.envelope,
+            }),
+        )
+        .await
+        .expect("put");
+        assert_eq!(response.0.version, loaded.0.version + 1);
     }
 }

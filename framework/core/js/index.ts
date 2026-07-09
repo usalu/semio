@@ -86,6 +86,8 @@ export enum Expertise {
   EXPERT = "expert",
 }
 
+export type ToolCategory = "selection" | "tools" | "commands" | "history" | "sync";
+
 export type ToolLeaf =
   | { readonly id: string; readonly kind: "separator"; readonly order?: number; readonly disabled?: boolean }
   | {
@@ -97,6 +99,7 @@ export type ToolLeaf =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
+      readonly category?: ToolCategory;
       readonly controllerId?: string;
       readonly command?: string;
       readonly args?: unknown;
@@ -111,6 +114,7 @@ export type ToolLeaf =
       readonly order?: number;
       readonly pressed?: boolean;
       readonly disabled?: boolean;
+      readonly category?: ToolCategory;
       readonly controllerId?: string;
       readonly command?: string;
       readonly args?: unknown;
@@ -127,6 +131,7 @@ export type ToolNode =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
+      readonly category?: ToolCategory;
       readonly children: readonly ToolNode[];
     };
 

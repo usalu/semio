@@ -1,27 +1,25 @@
 //! 🧩 Forms procedural question-kind module — flow-backed building component params + live 3D preview.
 
-use flow_core::{
-    forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
-    FlowFixture, FlowHost, Widget,
-};
+use flow_core::{forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use flow_module_brep::tessellate_geometry_json;
-use forms::{visible_questions, FormQuestion, FormSpec};
+use forms::{visible_questions, FormQuestion};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
-    build_world_3d_scene, mesh_from_kind, ui_external_slot, ui_stack_vertical, ui_text, App,
-    CommandDescriptor, Contribution, PluginApp, PluginBundle, UiButtonNode, UiControlNode,
-    UiFieldNode, UiInputNode, UiNode, UiNumberStepperNode, UiSliderNode, UiToggleNode, ViewState,
-    world3d_default_camera, world3d_scene, world3d_selection_json,
+    build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, App,
+    CommandDescriptor, Contribution, PluginApp, PluginBundle, SurfaceKind, UiControlNode,
+    UiFieldNode, UiInputNode, UiNode, UiSliderNode, UiToggleNode, ViewState, world3d_default_camera,
+    world3d_scene, world3d_selection_json,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
-use std::sync::LazyLock;
 
 //#region 🔖Constants
 const MODULE_PLUGIN_ID: &str = "forms-module-procedural";
 const MODULE_APP_ID: &str = "forms-module-procedural";
 const BODY_PARAMS: &str = "params";
 const BODY_PREVIEW: &str = "preview";
+const MODULE_WINDOW_PARAMS: &str = "forms-module-procedural-params";
+const MODULE_WINDOW_PREVIEW: &str = "forms-module-procedural-preview";
 const PREVIEW_SURFACE: &str = "forms.module.procedural.preview";
 const PREVIEW_FALLBACK_MESH_KIND: &str = "box";
 const HEX_COLUMN_FIXTURE_JSON: &str =
@@ -438,7 +436,18 @@ impl PluginApp for ModuleApp {
 }
 
 fn create_module_app() -> App {
-    App::from_builder(App::builder(MODULE_APP_ID, "Forms Module Procedural").document(["semio", "forms"]))
+    App::from_builder(
+        App::builder(MODULE_APP_ID, "Forms Module Procedural")
+            .document(["semio", "forms"])
+            .window_kind(MODULE_WINDOW_PARAMS, "Params", BODY_PARAMS, SurfaceKind::NodeGraph)
+            .window_kind(MODULE_WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d)
+            .default_layout(create_default_layout(
+                &[MODULE_WINDOW_PARAMS.into(), MODULE_WINDOW_PREVIEW.into()],
+                "row",
+                Some(&[50.0, 50.0]),
+                Some(&["Params".into(), "Preview".into()]),
+            )),
+    )
 }
 
 fn module_bundle() -> PluginBundle {
@@ -463,6 +472,16 @@ semio_framework_plugin::plugin_exports!(module_bundle);
 mod tests {
     use super::*;
     use semio_framework_plugin::Plugin;
+
+    #[test]
+    fn module_app_declares_window_kinds() {
+        let app = create_module_app();
+        assert_eq!(app.definition.window_kinds.len(), 2);
+        assert_eq!(app.definition.window_kinds[0].id, MODULE_WINDOW_PARAMS);
+        assert_eq!(app.definition.window_kinds[0].body_key, BODY_PARAMS);
+        assert_eq!(app.definition.window_kinds[1].id, MODULE_WINDOW_PREVIEW);
+        assert_eq!(app.definition.window_kinds[1].body_key, BODY_PREVIEW);
+    }
 
     #[test]
     fn module_manifest_contributes_building_component() {

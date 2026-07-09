@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 /** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
+import { Database } from "bun:sqlite";
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -26,6 +27,108 @@ const repoRoot = getWorkspaceRoot();
 const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
+
+//#region BackboneVitePlugin
+const temporaryBackboneFiles = new Map<string, string>();
+
+function readBackbonePayload(uri: string): string | null {
+  if (uri.startsWith("temp://")) return temporaryBackboneFiles.get(uri) ?? null;
+  if (uri.startsWith("file://")) {
+    const path = uri.slice("file://".length);
+    if (!existsSync(path)) return null;
+    return readFileSync(path, "utf8");
+  }
+  if (uri.startsWith("folder://")) {
+    const folder = uri.slice("folder://".length);
+    const dbPath = join(folder, ".semio", "document.db");
+    if (!existsSync(dbPath)) return null;
+    const db = new Database(dbPath);
+    db.run("CREATE TABLE IF NOT EXISTS document (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL)");
+    const row = db.query("SELECT json FROM document WHERE id = 1").get() as { json?: string } | null;
+    return row?.json ?? null;
+  }
+  return null;
+}
+
+function writeBackbonePayload(uri: string, payload: string): void {
+  if (uri.startsWith("temp://")) {
+    temporaryBackboneFiles.set(uri, payload);
+    return;
+  }
+  if (uri.startsWith("file://")) {
+    const path = uri.slice("file://".length);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, payload);
+    return;
+  }
+  if (uri.startsWith("folder://")) {
+    const folder = uri.slice("folder://".length);
+    const dbPath = join(folder, ".semio", "document.db");
+    mkdirSync(dirname(dbPath), { recursive: true });
+    const db = new Database(dbPath);
+    db.run("CREATE TABLE IF NOT EXISTS document (id INTEGER PRIMARY KEY CHECK (id = 1), json TEXT NOT NULL)");
+    db.run("INSERT INTO document (id, json) VALUES (1, ?1) ON CONFLICT(id) DO UPDATE SET json = excluded.json", [payload]);
+    return;
+  }
+  throw new Error(`unsupported backbone uri: ${uri}`);
+}
+
+/** @emoji 💾 Vite middleware for browser file/folder backbone IO. */
+export function semioBackboneVitePlugin() {
+  return {
+    name: "semio-backbone",
+    configureServer(server: { middlewares: { use: (handler: (req: { method?: string; url?: string }, res: { statusCode: number; setHeader: (name: string, value: string) => void; end: (body?: string) => void }, next: () => void) => void) => void } }) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url?.startsWith("/semio-backbone")) return next();
+        const requestUrl = new URL(req.url, "http://127.0.0.1");
+        const uri = requestUrl.searchParams.get("uri");
+        if (!uri) {
+          res.statusCode = 400;
+          res.end("missing uri");
+          return;
+        }
+        try {
+          if (req.method === "GET") {
+            const payload = readBackbonePayload(uri);
+            if (payload == null) {
+              res.statusCode = 404;
+              res.end("");
+              return;
+            }
+            res.statusCode = 200;
+            res.setHeader("content-type", "application/json");
+            res.end(payload);
+            return;
+          }
+          if (req.method === "PUT") {
+            let body = "";
+            req.on("data", (chunk) => {
+              body += chunk;
+            });
+            req.on("end", () => {
+              try {
+                writeBackbonePayload(uri, body);
+                res.statusCode = 200;
+                res.setHeader("content-type", "application/json");
+                res.end("{}");
+              } catch (error) {
+                res.statusCode = 500;
+                res.end(String(error));
+              }
+            });
+            return;
+          }
+          res.statusCode = 405;
+          res.end("method not allowed");
+        } catch (error) {
+          res.statusCode = 500;
+          res.end(String(error));
+        }
+      });
+    },
+  };
+}
+//#endregion BackboneVitePlugin
 
 function pluginWorkerSource(): string {
   return `/** @generated semio plugin web worker */

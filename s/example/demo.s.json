@@ -160,7 +160,7 @@
     "alternatives": []
   },
   "backbone": {
-    "kind": "dev",
-    "uri": "dev://demo.s.json"
+    "kind": "temporary",
+    "uri": "temp://demo"
   }
 }

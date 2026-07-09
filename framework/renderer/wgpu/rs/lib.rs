@@ -4506,6 +4506,8 @@ use std::rc::Rc;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
+use wasm_bindgen::JsCast;
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen_futures::JsFuture;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -7554,6 +7556,11 @@ pub struct ShellState {
     pub deferred_commands: Vec<CommandDescriptor>,
     pub active_tools: Vec<ToolNode>,
     pub active_tool_id: Option<String>,
+    pub sync_backbone_uri: Option<String>,
+    pub sync_card_kind: Option<String>,
+    pub sync_card_draft: String,
+    pub sync_card_anchor: Option<(f32, f32)>,
+    pub last_envelope_json: Option<String>,
     pub window_engagements: HashMap<String, WindowEngagement>,
     pub window_measures: HashMap<String, Vec<WindowMeasure>>,
     pub tool_collection_expanded: HashMap<String, bool>,
@@ -7714,6 +7721,11 @@ impl ShellState {
             deferred_commands: Vec::new(),
             active_tools: Vec::new(),
             active_tool_id: None,
+            sync_backbone_uri: None,
+            sync_card_kind: None,
+            sync_card_draft: String::new(),
+            sync_card_anchor: None,
+            last_envelope_json: None,
             window_engagements: HashMap::new(),
             window_measures: HashMap::new(),
             tool_collection_expanded: HashMap::new(),
@@ -8034,6 +8046,11 @@ impl ShellState {
                 .unwrap_or_default();
         }
         self.active_tool_id = find_active_tool_id(&self.active_tools);
+        let document_id = format!("{}-{}", session.plugin_id, session.instance_id);
+        if self.sync_backbone_uri.is_none() {
+            self.sync_backbone_uri = Some(format!("temp://{document_id}"));
+        }
+        self.active_tools.extend(framework_sync_tools(self.sync_backbone_uri.as_deref()));
         self.window_engagements = plugin
             .window_engagements(session.instance_id, &view_state)
             .await
@@ -8228,6 +8245,277 @@ fn patch_ops_from_command_result(result: &semio_framework_core::kernel::CommandR
 }
 
 impl ShellState {
+    fn sync_document_id(&self) -> Option<String> {
+        let session = self.session.as_ref()?;
+        Some(format!("{}-{}", session.plugin_id, session.instance_id))
+    }
+
+    async fn shell_backbone_read(&self, uri: &str) -> Result<Option<String>, String> {
+        if uri.starts_with("temp://") {
+            return Ok(self.last_envelope_json.clone());
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            if uri.starts_with("remote://") {
+                let rest = uri.trim_start_matches("remote://");
+                let (host_port, document_id) = rest
+                    .split_once('/')
+                    .ok_or_else(|| "invalid remote backbone uri".to_string())?;
+                let url = format!("http://{host_port}/documents/{document_id}/envelope");
+                let window = web_sys::window().ok_or("window missing")?;
+                let response = wasm_bindgen_futures::JsFuture::from(window.fetch_with_str(&url))
+                    .await
+                    .map_err(|_| "remote backbone fetch failed".to_string())?;
+                let response: web_sys::Response = response.dyn_into().map_err(|_| "response cast failed".to_string())?;
+                if response.status() == 404 {
+                    return Ok(None);
+                }
+                if !response.ok() {
+                    return Err(format!("remote backbone read failed ({})", response.status()));
+                }
+                let text = wasm_bindgen_futures::JsFuture::from(response.text().map_err(|_| "text failed")?)
+                    .await
+                    .map_err(|_| "remote backbone text failed".to_string())?;
+                let text = text.as_string().ok_or("remote backbone body missing".to_string())?;
+                let value: serde_json::Value = serde_json::from_str(&text).map_err(|err| err.to_string())?;
+                return Ok(Some(
+                    serde_json::to_string(value.get("envelope").unwrap_or(&value)).map_err(|err| err.to_string())?,
+                ));
+            }
+            let url = format!("/semio-backbone?uri={}", js_sys::encode_uri_component(uri));
+            let window = web_sys::window().ok_or("window missing")?;
+            let response = wasm_bindgen_futures::JsFuture::from(window.fetch_with_str(&url))
+                .await
+                .map_err(|_| "backbone fetch failed".to_string())?;
+            let response: web_sys::Response = response.dyn_into().map_err(|_| "response cast failed".to_string())?;
+            if response.status() == 404 {
+                return Ok(None);
+            }
+            if !response.ok() {
+                return Err(format!("backbone read failed ({})", response.status()));
+            }
+            let text = wasm_bindgen_futures::JsFuture::from(response.text().map_err(|_| "text failed")?)
+                .await
+                .map_err(|_| "backbone text failed".to_string())?;
+            return Ok(text.as_string());
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = uri;
+            Ok(None)
+        }
+    }
+
+    async fn shell_backbone_write(&self, uri: &str, payload: &str) -> Result<(), String> {
+        if uri.starts_with("temp://") {
+            return Ok(());
+        }
+        #[cfg(target_arch = "wasm32")]
+        {
+            if uri.starts_with("remote://") {
+                let rest = uri.trim_start_matches("remote://");
+                let (host_port, document_id) = rest
+                    .split_once('/')
+                    .ok_or_else(|| "invalid remote backbone uri".to_string())?;
+                let current_url = format!("http://{host_port}/documents/{document_id}/envelope");
+                let window = web_sys::window().ok_or("window missing")?;
+                let current = wasm_bindgen_futures::JsFuture::from(window.fetch_with_str(&current_url))
+                    .await
+                    .map_err(|_| "remote version fetch failed".to_string())?;
+                let current: web_sys::Response = current.dyn_into().map_err(|_| "response cast failed".to_string())?;
+                let version = if current.ok() {
+                    let text = wasm_bindgen_futures::JsFuture::from(current.text().map_err(|_| "text failed")?)
+                        .await
+                        .map_err(|_| "remote version text failed".to_string())?;
+                    serde_json::from_str::<serde_json::Value>(&text.as_string().unwrap_or_default())
+                        .ok()
+                        .and_then(|value| value.get("version").and_then(|v| v.as_u64()))
+                        .unwrap_or(0)
+                } else {
+                    0
+                };
+                let body = serde_json::json!({
+                    "version": version,
+                    "envelope": serde_json::from_str::<serde_json::Value>(payload).unwrap_or_else(|_| serde_json::json!({})),
+                });
+                let init = web_sys::RequestInit::new();
+                init.set_method("PUT");
+                init.set_body(&wasm_bindgen::JsValue::from_str(&body.to_string()));
+                let headers = web_sys::Headers::new().map_err(|_| "headers failed".to_string())?;
+                headers
+                    .set("content-type", "application/json")
+                    .map_err(|_| "content-type failed".to_string())?;
+                init.set_headers(&headers);
+                let request = web_sys::Request::new_with_str_and_init(&current_url, &init)
+                    .map_err(|_| "request failed".to_string())?;
+                let response = wasm_bindgen_futures::JsFuture::from(window.fetch_with_request(&request))
+                    .await
+                    .map_err(|_| "remote backbone write failed".to_string())?;
+                let response: web_sys::Response = response.dyn_into().map_err(|_| "response cast failed".to_string())?;
+                if !response.ok() {
+                    return Err(format!("remote backbone write failed ({})", response.status()));
+                }
+                web_sys::console::log_1(&format!("[DEBUG] remote backbone synced {uri}").into());
+                return Ok(());
+            }
+            let url = format!("/semio-backbone?uri={}", js_sys::encode_uri_component(uri));
+            let window = web_sys::window().ok_or("window missing")?;
+            let init = web_sys::RequestInit::new();
+            init.set_method("PUT");
+            init.set_body(&wasm_bindgen::JsValue::from_str(payload));
+            let headers = web_sys::Headers::new().map_err(|_| "headers failed".to_string())?;
+            headers
+                .set("content-type", "application/json")
+                .map_err(|_| "content-type failed".to_string())?;
+            init.set_headers(&headers);
+            let request = web_sys::Request::new_with_str_and_init(&url, &init)
+                .map_err(|_| "request failed".to_string())?;
+            let response = wasm_bindgen_futures::JsFuture::from(window.fetch_with_request(&request))
+                .await
+                .map_err(|_| "backbone write failed".to_string())?;
+            let response: web_sys::Response = response.dyn_into().map_err(|_| "response cast failed".to_string())?;
+            if !response.ok() {
+                return Err(format!("backbone write failed ({})", response.status()));
+            }
+            web_sys::console::log_1(&format!("[DEBUG] backbone synced {uri}").into());
+            return Ok(());
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            let _ = (uri, payload);
+            Ok(())
+        }
+    }
+
+    fn wrap_document_envelope(&self, document: &serde_json::Value, document_id: &str, uri: &str) -> String {
+        if document.get("vcs").is_some() {
+            let mut envelope = document.clone();
+            if let Some(obj) = envelope.as_object_mut() {
+                obj.insert(
+                    "backbone".into(),
+                    serde_json::json!({ "kind": backbone_kind_from_uri(uri), "uri": uri }),
+                );
+            }
+            return serde_json::to_string(&envelope).unwrap_or_else(|_| "{}".into());
+        }
+        serde_json::json!({
+            "schema": "document/v1",
+            "id": document_id,
+            "projection": document,
+            "vcs": { "edits": [], "changes": [], "checkpoints": [], "alternatives": [], "operations": [] },
+            "backbone": { "kind": backbone_kind_from_uri(uri), "uri": uri },
+        })
+        .to_string()
+    }
+
+    async fn attach_sync_backbone(&mut self, uri: String) -> Result<(), String> {
+        let session = self.session.clone().ok_or("session missing")?;
+        let plugin = self
+            .plugins
+            .iter()
+            .find(|entry| entry.plugin_id == session.plugin_id)
+            .ok_or("plugin missing")?
+            .clone();
+        let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
+        let mut envelope_json = self.shell_backbone_read(&uri).await?;
+        if envelope_json.is_none() {
+            let empty = self.wrap_document_envelope(&serde_json::json!({}), &document_id, &uri);
+            self.shell_backbone_write(&uri, &empty).await?;
+            envelope_json = Some(empty);
+        }
+        let envelope_json = envelope_json.ok_or("backbone empty")?;
+        self.last_envelope_json = Some(envelope_json.clone());
+        let envelope: serde_json::Value = serde_json::from_str(&envelope_json).map_err(|err| err.to_string())?;
+        let document = envelope
+            .get("projection")
+            .cloned()
+            .or_else(|| envelope.get("document").cloned())
+            .unwrap_or(envelope);
+        let command = CommandDescriptor {
+            controller_id: session.app.controller_id.clone(),
+            command: "setDocument".into(),
+            args: Some(serde_json::json!({ "document": document })),
+        };
+        let command_json = serde_json::to_string(&command).map_err(|err| err.to_string())?;
+        let result = plugin
+            .handle_command(session.instance_id, &command_json, &session.view_state)
+            .await?;
+        let ops = patch_ops_from_command_result(&result);
+        self.sync_backbone_uri = Some(uri);
+        self.sync_card_kind = None;
+        self.apply_ops(&ops).await?;
+        #[cfg(target_arch = "wasm32")]
+        web_sys::console::log_1(&"[DEBUG] attached backbone".into());
+        Ok(())
+    }
+
+    async fn handle_sync_command(&mut self, command: CommandDescriptor) -> Result<(), String> {
+        match command.command.as_str() {
+            "selectTemporary" => {
+                let document_id = self.sync_document_id().ok_or("session missing")?;
+                self.attach_sync_backbone(format!("temp://{document_id}")).await
+            }
+            "selectFile" => {
+                self.sync_card_kind = Some("file".into());
+                self.sync_card_draft = self
+                    .sync_backbone_uri
+                    .as_deref()
+                    .filter(|uri| uri.starts_with("file://"))
+                    .map(|uri| uri.trim_start_matches("file://").to_string())
+                    .unwrap_or_default();
+                Ok(())
+            }
+            "selectFolder" => {
+                self.sync_card_kind = Some("folder".into());
+                self.sync_card_draft = self
+                    .sync_backbone_uri
+                    .as_deref()
+                    .filter(|uri| uri.starts_with("folder://"))
+                    .map(|uri| uri.trim_start_matches("folder://").to_string())
+                    .unwrap_or_default();
+                Ok(())
+            }
+            "selectRemote" => {
+                self.sync_card_kind = Some("remote".into());
+                self.sync_card_draft = self
+                    .sync_backbone_uri
+                    .as_deref()
+                    .filter(|uri| uri.starts_with("remote://"))
+                    .map(|uri| uri.trim_start_matches("remote://").to_string())
+                    .unwrap_or_default();
+                Ok(())
+            }
+            "attach" => {
+                let path = command
+                    .args
+                    .as_ref()
+                    .and_then(|args| args.get("path"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or(self.sync_card_draft.as_str());
+                if path.trim().is_empty() {
+                    return Ok(());
+                }
+                let kind = command
+                    .args
+                    .as_ref()
+                    .and_then(|args| args.get("kind"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or(self.sync_card_kind.as_deref().unwrap_or("file"));
+                let uri = match kind {
+                    "folder" => format!("folder://{path}"),
+                    "remote" => format!("remote://{path}"),
+                    _ => format!("file://{path}"),
+                };
+                self.attach_sync_backbone(uri).await
+            }
+            "detach" => {
+                let document_id = self.sync_document_id().ok_or("session missing")?;
+                self.attach_sync_backbone(format!("temp://{document_id}")).await
+            }
+            _ => Ok(()),
+        }
+    }
+
     pub async fn dispatch_command(&mut self, command: CommandDescriptor) -> Result<(), String> {
         if command.controller_id == "framework" {
             match command.command.as_str() {
@@ -8266,6 +8554,9 @@ impl ShellState {
                 }
                 _ => {}
             }
+        }
+        if command.controller_id == "framework.sync" {
+            return self.handle_sync_command(command).await;
         }
         let Some(session) = self.session.clone() else {
             return Ok(());
@@ -8309,6 +8600,19 @@ impl ShellState {
             let op: serde_json::Value = serde_json::from_str(&op_json).unwrap_or(serde_json::Value::Null);
             if op.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
                 document_changed = true;
+                if let (Some(uri), Some(document)) = (
+                    self.sync_backbone_uri.clone(),
+                    op.get("document"),
+                ) {
+                    let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
+                    let envelope_json = self.wrap_document_envelope(document, &document_id, &uri);
+                    self.last_envelope_json = Some(envelope_json.clone());
+                    let write_uri = uri.clone();
+                    if let Err(error) = self.shell_backbone_write(&write_uri, &envelope_json).await {
+                        #[cfg(target_arch = "wasm32")]
+                        web_sys::console::log_1(&format!("[DEBUG] backbone auto-sync failed {error}").into());
+                    }
+                }
             }
             if op.get("op").and_then(|v| v.as_str()) == Some("setPanel") {
                 if let Some(panel) = op.get("panel") {
@@ -10077,6 +10381,34 @@ impl ShellState {
             self.overlay_state,
             OverlayState::Search | OverlayState::Find
         );
+        if self.sync_card_kind.is_some() {
+            match action {
+                ui_wgpu::KeyAction::Escape => {
+                    self.sync_card_kind = None;
+                    return;
+                }
+                ui_wgpu::KeyAction::Enter => {
+                    self.deferred_commands.push(CommandDescriptor {
+                        controller_id: "framework.sync".into(),
+                        command: "attach".into(),
+                        args: Some(serde_json::json!({
+                            "path": self.sync_card_draft,
+                            "kind": self.sync_card_kind,
+                        })),
+                    });
+                    return;
+                }
+                ui_wgpu::KeyAction::Char(key) => {
+                    self.sync_card_draft.push_str(&key);
+                    return;
+                }
+                ui_wgpu::KeyAction::Backspace => {
+                    self.sync_card_draft.pop();
+                    return;
+                }
+                _ => {}
+            }
+        }
         if palette_open {
             match action {
                 ui_wgpu::KeyAction::Escape => {
@@ -10523,14 +10855,98 @@ fn find_active_tool_id(tools: &[ToolNode]) -> Option<String> {
     None
 }
 
-fn partition_tools_by_category(tools: &[ToolNode]) -> [Vec<ToolNode>; 4] {
-    let mut buckets: [Vec<ToolNode>; 4] = [vec![], vec![], vec![], vec![]];
+fn backbone_kind_from_uri(uri: &str) -> &'static str {
+    if uri.starts_with("file://") {
+        "file"
+    } else if uri.starts_with("folder://") {
+        "folder"
+    } else if uri.starts_with("remote://") {
+        "remote"
+    } else {
+        "temporary"
+    }
+}
+
+fn framework_sync_tools(active_uri: Option<&str>) -> Vec<ToolNode> {
+    let active_kind = active_uri.map(backbone_kind_from_uri);
+    let pressed = |kind: &str| active_kind == Some(kind);
+    vec![
+        ToolNode::Toggle {
+            id: "framework.sync.temporary".into(),
+            icon_id: "hard-drive".into(),
+            label: Some("Temporary".into()),
+            text: None,
+            title: None,
+            order: Some(0),
+            pressed: Some(pressed("temporary")),
+            disabled: None,
+            category: Some(ToolCategory::Sync),
+            on_change: CommandDescriptor {
+                controller_id: "framework.sync".into(),
+                command: "selectTemporary".into(),
+                args: None,
+            },
+        },
+        ToolNode::Toggle {
+            id: "framework.sync.file".into(),
+            icon_id: "file-json".into(),
+            label: Some("File".into()),
+            text: None,
+            title: None,
+            order: Some(1),
+            pressed: Some(pressed("file")),
+            disabled: None,
+            category: Some(ToolCategory::Sync),
+            on_change: CommandDescriptor {
+                controller_id: "framework.sync".into(),
+                command: "selectFile".into(),
+                args: None,
+            },
+        },
+        ToolNode::Toggle {
+            id: "framework.sync.folder".into(),
+            icon_id: "folder".into(),
+            label: Some("Folder".into()),
+            text: None,
+            title: None,
+            order: Some(2),
+            pressed: Some(pressed("folder")),
+            disabled: None,
+            category: Some(ToolCategory::Sync),
+            on_change: CommandDescriptor {
+                controller_id: "framework.sync".into(),
+                command: "selectFolder".into(),
+                args: None,
+            },
+        },
+        ToolNode::Toggle {
+            id: "framework.sync.remote".into(),
+            icon_id: "cloud".into(),
+            label: Some("Remote".into()),
+            text: None,
+            title: None,
+            order: Some(3),
+            pressed: Some(pressed("remote")),
+            disabled: None,
+            category: Some(ToolCategory::Sync),
+            on_change: CommandDescriptor {
+                controller_id: "framework.sync".into(),
+                command: "selectRemote".into(),
+                args: None,
+            },
+        },
+    ]
+}
+
+fn partition_tools_by_category(tools: &[ToolNode]) -> [Vec<ToolNode>; 5] {
+    let mut buckets: [Vec<ToolNode>; 5] = [vec![], vec![], vec![], vec![], vec![]];
     for tool in tools {
         let idx = match tool.category() {
             ToolCategory::Selection => 0,
             ToolCategory::Tools => 1,
             ToolCategory::Commands => 2,
             ToolCategory::History => 3,
+            ToolCategory::Sync => 4,
         };
         buckets[idx].push(tool.clone());
     }
@@ -11243,6 +11659,7 @@ impl ShellState {
             (ToolCategory::Tools, partitions[1].as_slice()),
             (ToolCategory::Commands, partitions[2].as_slice()),
             (ToolCategory::History, partitions[3].as_slice()),
+            (ToolCategory::Sync, partitions[4].as_slice()),
         ];
         let mut tool_x = theme.padding_standard;
         let mut first_section = true;
@@ -11872,6 +12289,128 @@ impl ShellState {
             OverlayState::Dropdown(_) => {}
             OverlayState::ThemeSelect => {}
             OverlayState::None => {}
+        }
+        if let Some(kind) = self.sync_card_kind.as_deref() {
+            let card_w = 320.0;
+            let card_h = 132.0;
+            let card_x = (width - card_w) * 0.5;
+            let card_y = height - theme.footer_height - card_h - theme.gap_standard;
+            overlay.push_solid([card_x, card_y, card_w, card_h], theme.panel);
+            overlay.push_solid([card_x, card_y, card_w, theme.stroke_hairline], theme.border_normal);
+            chrome_text(
+                overlay,
+                atlas,
+                input,
+                theme,
+                &format!("{kind} backbone"),
+                card_x + theme.padding_standard,
+                card_y + theme.padding_standard,
+                theme.font_size_small,
+                theme.text,
+            );
+            if let Some(uri) = &self.sync_backbone_uri {
+                chrome_text(
+                    overlay,
+                    atlas,
+                    input,
+                    theme,
+                    uri,
+                    card_x + theme.padding_standard,
+                    card_y + theme.padding_standard + theme.font_size_small + 4.0,
+                    theme.font_size_small,
+                    theme.text_muted,
+                );
+            }
+            let input_y = card_y + 52.0;
+            let input_h = theme.control_height;
+            overlay.push_solid(
+                [card_x + theme.padding_standard, input_y, card_w - theme.padding_standard * 2.0, input_h],
+                theme.input_bg,
+            );
+            chrome_text(
+                overlay,
+                atlas,
+                input,
+                theme,
+                if self.sync_card_draft.is_empty() {
+                    "/absolute/path"
+                } else {
+                    &self.sync_card_draft
+                },
+                card_x + theme.padding_standard + 8.0,
+                input_y + (input_h + theme.font_size_small) * 0.5 - 1.0,
+                theme.font_size_small,
+                theme.text,
+            );
+            let attach_rect = Rect::new(
+                card_x + theme.padding_standard,
+                card_y + card_h - theme.control_height - theme.padding_standard,
+                72.0,
+                theme.control_height,
+            );
+            overlay.push_solid([attach_rect.x, attach_rect.y, attach_rect.w, attach_rect.h], theme.accent);
+            chrome_text(
+                overlay,
+                atlas,
+                input,
+                theme,
+                "Attach",
+                attach_rect.x + 12.0,
+                attach_rect.y + (attach_rect.h + theme.font_size_small) * 0.5 - 1.0,
+                theme.font_size_small,
+                theme.active_foreground,
+            );
+            input.register_hit(HitTarget {
+                rect: attach_rect,
+                event: Some(CommandDescriptor {
+                    controller_id: "framework.sync".into(),
+                    command: "attach".into(),
+                    args: Some(serde_json::json!({
+                        "path": self.sync_card_draft,
+                        "kind": kind,
+                    })),
+                }),
+                control_id: Some("framework.sync.attach".into()),
+                kind: HitKind::Button,
+                drag_axis: None,
+                drag_data: None,
+            });
+            if self
+                .sync_backbone_uri
+                .as_deref()
+                .is_some_and(|uri| !uri.starts_with("temp://"))
+            {
+                let detach_rect = Rect::new(
+                    attach_rect.x + attach_rect.w + theme.gap_standard,
+                    attach_rect.y,
+                    72.0,
+                    theme.control_height,
+                );
+                overlay.push_solid([detach_rect.x, detach_rect.y, detach_rect.w, detach_rect.h], theme.button);
+                chrome_text(
+                    overlay,
+                    atlas,
+                    input,
+                    theme,
+                    "Detach",
+                    detach_rect.x + 10.0,
+                    detach_rect.y + (detach_rect.h + theme.font_size_small) * 0.5 - 1.0,
+                    theme.font_size_small,
+                    theme.text,
+                );
+                input.register_hit(HitTarget {
+                    rect: detach_rect,
+                    event: Some(CommandDescriptor {
+                        controller_id: "framework.sync".into(),
+                        command: "detach".into(),
+                        args: None,
+                    }),
+                    control_id: Some("framework.sync.detach".into()),
+                    kind: HitKind::Button,
+                    drag_axis: None,
+                    drag_data: None,
+                });
+            }
         }
         // render_palette removed
         if let Some(menu) = &self.context_menu {

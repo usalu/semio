@@ -7,31 +7,31 @@ todos:
     status: completed
   - id: vcs-backbones
     content: Refactor vcs/rs to BackboneKind + Temporary/File/Folder/Remote backbones with temp/file/folder/remote URI schemes and store auto-sync
-    status: in_progress
+    status: completed
   - id: os-core-collapse
     content: Collapse os core and s plugin duplicate backbones onto vcs backbones, fix fixtures and defaults
-    status: pending
+    status: completed
   - id: hub-envelope
     content: Add hub envelope GET/PUT + ws broadcast, fix stale hub test
-    status: pending
+    status: completed
   - id: dev-io
     content: Add os/dev vite backbone middleware (fs JSON + bun:sqlite .semio/document.db)
-    status: pending
+    status: completed
   - id: sync-category
     content: Add ToolCategory::Sync in framework core rs/ts and wgpu 5-bucket partition
-    status: pending
+    status: completed
   - id: react-sync-ui
     content: Inject Sync tools + anchored attach cards in React os-shell with attach/detach/auto-sync
-    status: pending
+    status: completed
   - id: wgpu-sync-ui
     content: Inject Sync tools + floating attach cards in WGPU shell with attach/detach/auto-sync
-    status: pending
+    status: completed
   - id: defaults-audit
     content: Default temp:// backbone for backboneless documents; audit play apps for DocumentVcsStore-typed documents/operations
-    status: pending
+    status: completed
   - id: verify
     content: Run all touched test suites and confirm runtime attach/persist/remote round-trip with [DEBUG] logs
-    status: pending
+    status: completed
 isProject: false
 ---
 

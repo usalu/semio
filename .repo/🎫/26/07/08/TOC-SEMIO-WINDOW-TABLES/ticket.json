@@ -1,9 +1,9 @@
 {
   "title": "TOC Semio Window Tables",
   "emoji": "🖨️",
-  "status": "open",
+  "status": "closed",
   "description": "LaTeX Table OS Style Parity",
-  "summary": "Fixed empty Semio Table TOC body rows: `semio_window_register_body_materialize` used `\\exp_args:Ne`, which fully expanded `\\semio@register@data` / `\\SemioTableRegisterRow` during materialize (outside tabular), so only the Nr/Titel/Seite header rendered. Switched to `\\exp_args:No` so row tokens are stored and expanded inside `\\SemioTableRegister` when `.sctoc` is loaded on pass 2. Also added `\\renewcommand{\\semio@window@header@invoke}` after `\\semio@window@header@muted` to fix expl3 forward-reference tokenization for window chrome.",
+  "summary": "Fixed empty Semio TOC/register table rows: (1) materialize now stores literal row values via Nx+exp_not instead of symbolic tl/str register references; (2) compilePrintDocumentWithPanels always runs a second tectonic pass; (3) register list shells use Window not nested Table tcolorbox; makeworkpackages uses Window; semio-table resets row state and guards pageref on first pass. Tectonic log shows TOC row text at line 50 (26pt overfull paragraph); full PDF rebuild should be re-run locally via mit-bestand/bericht and print/script.ts test.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1860"
   },

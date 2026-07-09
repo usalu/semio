@@ -1,0 +1,22 @@
+% !TEX root = verify-cover.tex
+\documentclass[type=zwischenbericht]{zukunftbau}
+\title{Test}
+\author{Test}
+
+\ExplSyntaxOn
+\cs_set_protected:Npn \semio_window_kind_begin:nnn #1 #2 #3 {
+  \refstepcounter {#1}
+  \semio_window_tier_header:nnn
+    { 1 }
+    { Zitat }
+    { #2 }
+  \semio_window_header_store:
+  \begin{tcolorbox}[semio-window-tier-#2]
+}
+\ExplSyntaxOff
+
+\begin{document}
+\begin{Blockquote}
+Test blockquote
+\end{Blockquote}
+\end{document}

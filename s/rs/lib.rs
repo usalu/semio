@@ -1,8 +1,9 @@
 //! 🖥️ S studio CQRS — programs, app instances, media graph on `vcs`.
 
 use vcs::{
-    create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs,
-    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError,
+    create_document_vcs_envelope, default_temporary_backbone_ref, materialize_document_projection,
+    DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
+    Operation, OperationDiff, VcsError,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -175,10 +176,7 @@ pub fn create_empty_studio_document(id: &str, name: &str) -> SStudioDocument {
         id: id.into(),
         name: name.into(),
         vcs: create_document_vcs_envelope(S_STUDIO_SCHEMA, id, default_studio_projection(), None).vcs,
-        backbone: Some(DocumentBackboneRef {
-            kind: "dev".into(),
-            uri: "dev://studio.json".into(),
-        }),
+        backbone: Some(default_temporary_backbone_ref(id)),
     }
 }
 

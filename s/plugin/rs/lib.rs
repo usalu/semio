@@ -8,7 +8,7 @@ use semio_framework_os::{
     os_document_from_json, os_document_to_json, build_os_media_flow_operator_infos, materialize_os_app_instance_document_json,
     os_media_graph_to_node_graph_payload, os_media_graph_vfs_schema,
     os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
-    register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, DevJsonBackbone, LocalJsonBackbone,
+    register_os_fixture_json, create_os_id, seed_os_studio_catalog_if_empty, document_backbone_ref,
     MediaGraphPosition,
     OsAppInstance, OsBackbonePort, OsDocument, OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding,
     OsParameterType, OsProjection, OsStore, OS_HOME_VFS_ROOT_ID, OS_MEDIA_GRAPH_VFS_ROOT_ID,
@@ -256,19 +256,25 @@ fn create_folder_studio(
 
 #[cfg(not(target_arch = "wasm32"))]
 fn bind_studio_file(studio_id: &str, file_path: &str) -> Result<(), VcsError> {
-    let port = Arc::new(semio_framework_os::NativeFileBackbonePort::new(file_path));
+    let uri = format!("file://{file_path}");
+    let port = semio_framework_os::open_file_studio_backbone(file_path)?;
     register_studio_port(studio_id, port.clone());
     let mut document = load_os_studio_document(studio_id, catalog_port())?;
-    let uri = format!("local://{file_path}");
-    let mut backbone = LocalJsonBackbone::new(port);
-    backbone.attach(&uri)?;
-    backbone.sync(&document)?;
-    document = backbone.load_attached()?.unwrap_or(document);
-    let mut dev_backbone = DevJsonBackbone::new(catalog_port());
+    document.backbone = Some(document_backbone_ref(&uri));
+    port.write(&uri, &os_document_to_json(&document)?)?;
     let catalog_uri = format!("{OS_STUDIO_BACKBONE_URI_PREFIX}{studio_id}");
-    dev_backbone.attach(&catalog_uri);
-    dev_backbone.sync(&document)?;
+    sync_os_studio_document_helper(&document, &catalog_uri, &catalog_port())?;
     Ok(())
+}
+
+fn sync_os_studio_document_helper(
+    document: &OsDocument,
+    backbone_uri: &str,
+    port: &Arc<dyn OsBackbonePort>,
+) -> Result<(), VcsError> {
+    let mut synced = document.clone();
+    synced.backbone = Some(document_backbone_ref(backbone_uri));
+    port.write(backbone_uri, &os_document_to_json(&synced)?)
 }
 //#endregion 🔖CatalogBackbone
 
@@ -287,17 +293,14 @@ fn parse_demo_studio_document() -> OsDocument {
         name: String,
         vcs: DemoVcs,
         #[serde(default)]
-        backbone: Option<semio_framework_os::OsBackboneRef>,
+        backbone: Option<DocumentBackboneRef>,
     }
     let demo: DemoFile = serde_json::from_str(DEMO_STUDIO_JSON).expect("demo studio json");
     let envelope = create_document_vcs_envelope(
         &demo.schema,
         &demo.id,
         demo.vcs.initial_projection,
-        demo.backbone.as_ref().map(|entry| DocumentBackboneRef {
-            kind: entry.kind.clone(),
-            uri: entry.uri.clone(),
-        }),
+        demo.backbone.as_ref().cloned(),
     );
     OsDocument {
         schema: demo.schema,
@@ -434,11 +437,8 @@ fn studio_id_for_envelope(envelope: &SStudioEnvelope) -> Option<String> {
 }
 
 fn persist_studio_document(document: &OsDocument, studio_id: &str) {
-    let port = catalog_port();
     let uri = format!("{OS_STUDIO_BACKBONE_URI_PREFIX}{studio_id}");
-    let mut backbone = DevJsonBackbone::new(port);
-    backbone.attach(&uri);
-    let _ = backbone.sync(document);
+    let _ = sync_os_studio_document_helper(document, &uri, &catalog_port());
 }
 
 fn persist_envelope_document(envelope: &SStudioEnvelope) {

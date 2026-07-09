@@ -27,7 +27,8 @@ use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, LazyLock, Mutex};
 use vcs::{
-    create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs,
+    create_document_vcs_envelope, default_temporary_backbone_ref, document_backbone_ref,
+    materialize_document_projection, BackboneKind, DocumentBackboneRef, DocumentVcs,
     DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError,
 };
 
@@ -659,23 +660,6 @@ fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
 //#region 🔖OsDocument
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct OsBackboneRef {
-    pub kind: String,
-    pub uri: String,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OsConflict {
-    pub kind: String,
-    pub uri: String,
-    pub message: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub remote_revision: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub struct OsProjection {
     pub programs: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -764,7 +748,7 @@ pub struct OsDocument {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub applied_edit_ids: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub backbone: Option<OsBackboneRef>,
+    pub backbone: Option<DocumentBackboneRef>,
 }
 
 pub type OsEnvelope = DocumentVcsEnvelope<OsProjection, OsOp>;
@@ -794,10 +778,7 @@ pub fn create_empty_os_document(id: &str, name: &str) -> OsDocument {
         )
         .vcs,
         applied_edit_ids: Vec::new(),
-        backbone: Some(OsBackboneRef {
-            kind: "dev".into(),
-            uri: "dev://studio.json".into(),
-        }),
+        backbone: Some(default_temporary_backbone_ref(id)),
     }
 }
 
@@ -1314,11 +1295,8 @@ pub fn materialize_os_projection(
         vcs: document.vcs.clone(),
         backbone: document
             .backbone
-            .as_ref()
-            .map(|entry| DocumentBackboneRef {
-                kind: entry.kind.clone(),
-                uri: entry.uri.clone(),
-            }),
+            .clone()
+            .or_else(|| Some(default_temporary_backbone_ref(&document.id))),
         active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone(),
     };
     materialize_document_projection(&envelope, applied_edit_ids)
@@ -1353,10 +1331,7 @@ impl OsStore {
             schema: document.schema,
             id: document.id,
             vcs: document.vcs,
-            backbone: document.backbone.map(|entry| DocumentBackboneRef {
-                kind: entry.kind,
-                uri: entry.uri,
-            }),
+            backbone: document.backbone,
             active_alternative_id: None,
         };
         let mut inner = DocumentVcsStore::new(envelope);
@@ -1386,10 +1361,7 @@ impl OsStore {
             name: self.name.clone(),
             vcs: envelope.vcs.clone(),
             applied_edit_ids: self.inner.applied_edit_ids().to_vec(),
-            backbone: envelope.backbone.as_ref().map(|entry| OsBackboneRef {
-                kind: entry.kind.clone(),
-                uri: entry.uri.clone(),
-            }),
+            backbone: envelope.backbone.clone(),
         }
     }
 
@@ -1474,6 +1446,18 @@ impl OsStore {
     pub fn load_backbone(&mut self) -> Result<(), VcsError> {
         self.inner.load_backbone()
     }
+
+    pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
+        self.inner.attach_backbone(uri)
+    }
+
+    pub fn detach_backbone(&mut self) {
+        self.inner.detach_backbone()
+    }
+
+    pub fn backbone_ref(&self) -> Option<&DocumentBackboneRef> {
+        self.inner.backbone_ref()
+    }
 }
 //#endregion 🔖OsStore
 
@@ -1493,177 +1477,20 @@ impl<T: vcs::BackbonePort> OsBackbonePort for T {
     }
 }
 
-/// @emoji 💾 Dev JSON backbone (`dev://`) over an OS backbone port.
-pub struct DevJsonBackbone {
-    uri: Option<String>,
-    port: Arc<dyn OsBackbonePort>,
-}
-
-impl DevJsonBackbone {
-    pub fn new(port: Arc<dyn OsBackbonePort>) -> Self {
-        Self { uri: None, port }
-    }
-
-    pub fn attach(&mut self, uri: &str) {
-        self.uri = Some(uri.into());
-    }
-
-    pub fn status(&self) -> HashMap<&'static str, Option<String>> {
-        let mut status = HashMap::new();
-        status.insert("attachedUri", self.uri.clone());
-        status.insert("kind", Some("dev".into()));
-        status
-    }
-
-    pub fn load_attached(&self) -> Result<Option<OsDocument>, VcsError> {
-        let Some(uri) = &self.uri else {
-            return Ok(None);
-        };
-        let json = self.port.read(uri)?;
-        if json.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(os_document_from_json(&json)?))
-    }
-
-    pub fn sync(&self, document: &OsDocument) -> Result<String, VcsError> {
-        let mut synced = document.clone();
-        if let Some(uri) = &self.uri {
-            synced.backbone = Some(OsBackboneRef {
-                kind: "dev".into(),
-                uri: uri.clone(),
-            });
-            let json = os_document_to_json(&synced)?;
-            self.port.write(uri, &json)?;
-            return Ok(json);
-        }
-        os_document_to_json(&synced)
-    }
-}
-
-/// @emoji 💾 Local-first backbone stub (`local://`) mirroring dev JSON port shape.
-pub struct LocalJsonBackbone {
-    uri: Option<String>,
-    port: Arc<dyn OsBackbonePort>,
-}
-
-impl LocalJsonBackbone {
-    pub fn new(port: Arc<dyn OsBackbonePort>) -> Self {
-        Self { uri: None, port }
-    }
-
-    pub fn attach(&mut self, uri: &str) -> Result<(), VcsError> {
-        if !uri.starts_with("local://") {
-            return Err(VcsError::Backbone(format!("expected local:// uri, got {uri}")));
-        }
-        self.uri = Some(uri.into());
-        Ok(())
-    }
-
-    pub fn load_attached(&self) -> Result<Option<OsDocument>, VcsError> {
-        let Some(uri) = &self.uri else {
-            return Ok(None);
-        };
-        let json = self.port.read(uri)?;
-        if json.is_empty() {
-            return Ok(None);
-        }
-        Ok(Some(os_document_from_json(&json)?))
-    }
-
-    pub fn sync(&self, document: &OsDocument) -> Result<String, VcsError> {
-        let mut synced = document.clone();
-        if let Some(uri) = &self.uri {
-            synced.backbone = Some(OsBackboneRef {
-                kind: "local".into(),
-                uri: uri.clone(),
-            });
-            let json = os_document_to_json(&synced)?;
-            self.port.write(uri, &json)?;
-            return Ok(json);
-        }
-        os_document_to_json(&synced)
-    }
-}
-
-/// @emoji 🌐 Remote OS backbone (`remote://`) stub with conflict surfacing.
-pub struct RemoteOsBackbone {
-    uri: Option<String>,
-    cached_document: Mutex<Option<OsDocument>>,
-    last_conflict: Mutex<Option<OsConflict>>,
-}
-
-impl RemoteOsBackbone {
-    pub fn new() -> Self {
-        Self {
-            uri: None,
-            cached_document: Mutex::new(None),
-            last_conflict: Mutex::new(None),
-        }
-    }
-
-    pub fn attach(&mut self, uri: &str) -> Result<(), VcsError> {
-        if !uri.starts_with("remote://") {
-            return Err(VcsError::Backbone(format!("expected remote:// uri, got {uri}")));
-        }
-        self.uri = Some(uri.into());
-        Ok(())
-    }
-
-    pub fn status(&self) -> (Option<String>, Option<OsConflict>) {
-        (
-            self.uri.clone(),
-            self.last_conflict.lock().ok().and_then(|guard| guard.clone()),
-        )
-    }
-
-    pub fn load_attached(&self) -> Option<OsDocument> {
-        self.cached_document.lock().ok().and_then(|guard| guard.clone())
-    }
-
-    pub fn sync(&self, document: &OsDocument) -> Result<String, VcsError> {
-        let uri = self
-            .uri
-            .clone()
-            .unwrap_or_else(|| "remote://unknown".into());
-        let conflict = OsConflict {
-            kind: "os-conflict".into(),
-            uri: uri.clone(),
-            message: "remote backbone sync is not implemented".into(),
-            remote_revision: None,
-        };
-        if let Ok(mut guard) = self.last_conflict.lock() {
-            *guard = Some(conflict);
-        }
-        if let Ok(mut guard) = self.cached_document.lock() {
-            *guard = Some(OsDocument {
-                backbone: Some(OsBackboneRef {
-                    kind: "remote".into(),
-                    uri,
-                }),
-                ..document.clone()
-            });
-        }
-        Err(VcsError::RemoteSyncNotImplemented)
-    }
-
-    pub fn clear_conflict(&self) {
-        if let Ok(mut guard) = self.last_conflict.lock() {
-            *guard = None;
-        }
-    }
-}
-
-impl Default for RemoteOsBackbone {
-    fn default() -> Self {
-        Self::new()
-    }
+fn sync_os_studio_document(
+    document: &OsDocument,
+    backbone_uri: &str,
+    port: &Arc<dyn OsBackbonePort>,
+) -> Result<(), VcsError> {
+    let mut synced = document.clone();
+    synced.backbone = Some(document_backbone_ref(backbone_uri));
+    port.write(backbone_uri, &os_document_to_json(&synced)?)
 }
 //#endregion 🔖Backbone
 
 //#region 🔖StudioCatalog
 pub const OS_HOME_VFS_ROOT_ID: &str = "os-home-root";
-pub const OS_STUDIO_BACKBONE_URI_PREFIX: &str = "dev://studio/";
+pub const OS_STUDIO_BACKBONE_URI_PREFIX: &str = "temp://studio/";
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -1769,9 +1596,7 @@ pub fn create_os_studio(
     let id = create_os_id("studio");
     let document = create_empty_os_document(&id, name.trim());
     let backbone_uri = os_studio_backbone_uri(&id);
-    let mut backbone = DevJsonBackbone::new(port.clone());
-    backbone.attach(&backbone_uri);
-    backbone.sync(&document)?;
+    sync_os_studio_document(&document, &backbone_uri, &port)?;
     track_os_studio_backbone_uri(&port, &backbone_uri);
     os_studio_catalog_entry_from_document(&backbone_uri, &document)
 }
@@ -1796,9 +1621,7 @@ pub fn import_os_studio_from_json(
     };
     let backbone_uri = os_studio_backbone_uri(&studio_id);
     document.id = studio_id;
-    let mut backbone = DevJsonBackbone::new(port.clone());
-    backbone.attach(&backbone_uri);
-    backbone.sync(&document)?;
+    sync_os_studio_document(&document, &backbone_uri, &port)?;
     track_os_studio_backbone_uri(&port, &backbone_uri);
     os_studio_catalog_entry_from_document(&backbone_uri, &document)
 }
@@ -1809,11 +1632,11 @@ pub fn load_os_studio_document(
     port: Arc<dyn OsBackbonePort>,
 ) -> Result<OsDocument, VcsError> {
     let backbone_uri = os_studio_backbone_uri(studio_id);
-    let mut backbone = DevJsonBackbone::new(port);
-    backbone.attach(&backbone_uri);
-    backbone
-        .load_attached()?
-        .ok_or_else(|| VcsError::Backbone(format!("unknown os studio: {studio_id}")))
+    let json = port.read(&backbone_uri)?;
+    if json.is_empty() {
+        return Err(VcsError::Backbone(format!("unknown os studio: {studio_id}")));
+    }
+    os_document_from_json(&json)
 }
 
 /// @emoji 🌱 Seeds the demo studio when the catalog is empty.
@@ -1832,9 +1655,7 @@ pub fn seed_os_studio_catalog_if_empty(
     let backbone_uri = os_studio_backbone_uri(&studio_id);
     let mut seeded = seed_document;
     seeded.id = studio_id;
-    let mut backbone = DevJsonBackbone::new(port.clone());
-    backbone.attach(&backbone_uri);
-    backbone.sync(&seeded)?;
+    sync_os_studio_document(&seeded, &backbone_uri, &port)?;
     track_os_studio_backbone_uri(&port, &backbone_uri);
     Ok(Some(os_studio_catalog_entry_from_document(
         &backbone_uri,
@@ -2315,107 +2136,80 @@ pub mod backbone {
 // #region backbone
 //! 🗄️ Trusted host-side backbone ports for local studio storage.
 
-#[cfg(not(target_arch = "wasm32"))]
-use std::path::PathBuf;
-#[cfg(not(target_arch = "wasm32"))]
-use std::sync::Mutex;
 use crate::host::OsBackbonePort;
-use vcs::VcsError;
+use std::sync::Arc;
+use vcs::{resolve_backbone, MemoryBackbonePort, VcsError};
 
-#[cfg(not(target_arch = "wasm32"))]
-pub struct NativeFileBackbonePort {
-    path: PathBuf,
+enum StudioPortKind {
+    File(String),
+    Folder(String),
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-impl NativeFileBackbonePort {
-    pub fn new(path: impl Into<PathBuf>) -> Self {
-        Self { path: path.into() }
-    }
+pub struct StudioBackbonePort {
+    kind: Option<StudioPortKind>,
+    memory: MemoryBackbonePort,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-impl OsBackbonePort for NativeFileBackbonePort {
-    fn read(&self, uri: &str) -> Result<String, VcsError> {
-        let path = uri
-            .strip_prefix("local://")
-            .map(std::path::Path::new)
-            .unwrap_or(self.path.as_path());
-        std::fs::read_to_string(path).map_err(|err| VcsError::Backbone(err.to_string()))
-    }
-
-    fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
-        let path = uri
-            .strip_prefix("local://")
-            .map(std::path::Path::new)
-            .unwrap_or(self.path.as_path());
-        std::fs::write(path, payload).map_err(|err| VcsError::Backbone(err.to_string()))
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-pub struct SqliteFolderBackbonePort {
-    connection: Mutex<rusqlite::Connection>,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl SqliteFolderBackbonePort {
-    pub fn open(path: &std::path::Path) -> Result<Self, VcsError> {
-        let connection =
-            rusqlite::Connection::open(path).map_err(|err| VcsError::Backbone(err.to_string()))?;
-        connection
-            .execute(
-                "CREATE TABLE IF NOT EXISTS documents (
-                    uri TEXT PRIMARY KEY NOT NULL,
-                    payload TEXT NOT NULL
-                )",
-                [],
-            )
-            .map_err(|err| VcsError::Backbone(err.to_string()))?;
+impl StudioBackbonePort {
+    pub fn file(file_path: &str) -> Result<Self, VcsError> {
+        let uri = format!("file://{file_path}");
+        resolve_backbone(&uri)?;
         Ok(Self {
-            connection: Mutex::new(connection),
+            kind: Some(StudioPortKind::File(uri)),
+            memory: MemoryBackbonePort::new(),
+        })
+    }
+
+    pub fn folder(folder_path: &str) -> Result<Self, VcsError> {
+        let uri = format!("folder://{folder_path}");
+        resolve_backbone(&uri)?;
+        Ok(Self {
+            kind: Some(StudioPortKind::Folder(uri)),
+            memory: MemoryBackbonePort::new(),
         })
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-impl OsBackbonePort for SqliteFolderBackbonePort {
+impl OsBackbonePort for StudioBackbonePort {
     fn read(&self, uri: &str) -> Result<String, VcsError> {
-        let guard = self
-            .connection
-            .lock()
-            .map_err(|_| VcsError::Backbone("sqlite lock poisoned".into()))?;
-        let payload: String = guard
-            .query_row(
-                "SELECT payload FROM documents WHERE uri = ?1",
-                [uri],
-                |row| row.get(0),
-            )
-            .map_err(|err| VcsError::Backbone(err.to_string()))?;
-        Ok(payload)
+        if let Some(kind) = &self.kind {
+            match kind {
+                StudioPortKind::File(file_uri) if uri == file_uri => {
+                    return resolve_backbone(file_uri)?.load();
+                }
+                StudioPortKind::Folder(folder_uri) if uri == folder_uri => {
+                    return resolve_backbone(folder_uri)?.load();
+                }
+                _ => {}
+            }
+        }
+        self.memory.read(uri)
     }
 
     fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
-        let guard = self
-            .connection
-            .lock()
-            .map_err(|_| VcsError::Backbone("sqlite lock poisoned".into()))?;
-        guard
-            .execute(
-                "INSERT OR REPLACE INTO documents (uri, payload) VALUES (?1, ?2)",
-                [uri, payload],
-            )
-            .map_err(|err| VcsError::Backbone(err.to_string()))?;
-        Ok(())
+        if let Some(kind) = &self.kind {
+            match kind {
+                StudioPortKind::File(file_uri) if uri == file_uri => {
+                    return resolve_backbone(file_uri)?.sync(payload);
+                }
+                StudioPortKind::Folder(folder_uri) if uri == folder_uri => {
+                    return resolve_backbone(folder_uri)?.sync(payload);
+                }
+                _ => {}
+            }
+        }
+        self.memory.write(uri, payload)
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn open_folder_studio_backbone(folder_path: &str) -> Result<std::sync::Arc<dyn OsBackbonePort>, VcsError> {
-    let semio_dir = std::path::Path::new(folder_path).join(".semio");
-    std::fs::create_dir_all(&semio_dir).map_err(|err| VcsError::Backbone(err.to_string()))?;
-    let db_path = semio_dir.join("studio.db");
-    Ok(std::sync::Arc::new(SqliteFolderBackbonePort::open(&db_path)?))
+pub fn open_folder_studio_backbone(folder_path: &str) -> Result<Arc<dyn OsBackbonePort>, VcsError> {
+    Ok(Arc::new(StudioBackbonePort::folder(folder_path)?))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn open_file_studio_backbone(file_path: &str) -> Result<Arc<dyn OsBackbonePort>, VcsError> {
+    Ok(Arc::new(StudioBackbonePort::file(file_path)?))
 }
 // #endregion backbone
 }
@@ -4747,14 +4541,14 @@ mod tests {
 
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use backbone::{NativeFileBackbonePort, SqliteFolderBackbonePort, open_folder_studio_backbone};
+pub use backbone::{open_file_studio_backbone, open_folder_studio_backbone};
 pub use host::{
     apply_os_operation, create_empty_os_document, create_os_studio, default_os_projection,
     delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries,
     load_os_studio_document, materialize_os_projection, os_document_from_json, os_document_to_json,
-    seed_os_studio_catalog_if_empty, DevJsonBackbone, LoadedPlugin, LocalJsonBackbone, OsBackbonePort, OsBackboneRef,
-    OsConflict, OsDiff, OsDocument, OsEnvelope, OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost,
-    PluginHotSwapEvent, PluginSupervisorState, RemoteOsBackbone, OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
+    seed_os_studio_catalog_if_empty, LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope,
+    OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent,
+    PluginSupervisorState, OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
 };
 pub use instance::{
     apply_parameter_values_to_projection, create_default_os_parameter, create_os_id,
@@ -4789,4 +4583,8 @@ pub use registry::{
     OS_RESOURCE_KIND_IDS,
 };
 pub use semio_framework_core::*;
-pub use vcs::{Author, Checkpoint, DocumentBackboneRef, DocumentVcsCommand, MemoryBackbonePort, VcsError};
+pub use vcs::{
+    Author, BackboneKind, Checkpoint, DocumentBackboneRef, DocumentVcsCommand, LocalStorageBackbonePort,
+    MemoryBackbonePort, VcsError, backbone_kind_from_uri, default_temporary_backbone_ref, document_backbone_ref,
+    set_host_backbone_port,
+};

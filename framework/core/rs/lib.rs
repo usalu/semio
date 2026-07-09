@@ -1370,6 +1370,7 @@ pub enum ToolCategory {
     Tools,
     Commands,
     History,
+    Sync,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

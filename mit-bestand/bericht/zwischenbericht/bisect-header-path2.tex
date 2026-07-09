@@ -1,0 +1,14 @@
+% !TEX root = bisect-header-path2.tex
+\documentclass[type=zwischenbericht]{zukunftbau}
+\title{Header Path2 Bisect}
+\begin{document}
+\ExplSyntaxOn
+\tl_set:Nn \l_semio_window_kind_title_tl { Zitat }
+\tl_clear:N \l_semio_window_number_tl
+\semio_window_header_store_aux:nn { } { Zitat }
+\ExplSyntaxOff
+\makeatletter
+\semio@window@header@invoke
+\makeatother
+Direct after store done.
+\end{document}

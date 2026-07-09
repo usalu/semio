@@ -14,6 +14,21 @@ import type { UiNode } from "./os-shell.tsx";
 
 const noopCommand = () => {};
 
+describe("framework sync tools", () => {
+  it("builds four sync backbone toggles", async () => {
+    const { buildFrameworkSyncTools } = await import("@semio-tech/framework-os-core");
+    const tools = buildFrameworkSyncTools("temp://demo");
+    expect(tools).toHaveLength(4);
+    expect(tools.map((tool) => tool.id)).toEqual([
+      "framework.sync.temporary",
+      "framework.sync.file",
+      "framework.sync.folder",
+      "framework.sync.remote",
+    ]);
+    expect(tools[0]?.pressed).toBe(true);
+  });
+});
+
 describe("framework plugin runtime", () => {
   it("loads plugin modules through framework-core", async () => {
     const { loadPluginModule } = await import("@semio-tech/framework-core");

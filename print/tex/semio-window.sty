@@ -40,10 +40,13 @@
 \cs_new_protected:Npn \semio_window_register_write:nn #1#2 {
   \semio_hierarchy_path_sync_document:
   \tl_if_empty:NTF \g_semio_hierarchy_path_tl {
-    \tl_set:Nx \l_semio_window_register_number_tl { \alph { semio@window@slot } }
+    \tl_set:Nx \l_semio_window_register_number_tl {
+      \int_to_alph:n { \int_use:c { c@semio@window@slot } }
+    }
   } {
     \tl_set:Nx \l_semio_window_register_number_tl {
-      \tl_use:N \g_semio_hierarchy_path_tl . \alph { semio@window@slot }
+      \tl_use:N \g_semio_hierarchy_path_tl .
+      \int_to_alph:n { \int_use:c { c@semio@window@slot } }
     }
   }
   \str_set:Nx \l_tmpb_str { semio-register-#2-\tl_use:N \l_semio_window_register_number_tl }
@@ -271,10 +274,6 @@
   }
 }
 
-\semio_window_define_tier:n { visual }
-\semio_window_define_tier:n { logical }
-\semio_window_define_tier:n { structural }
-
 \tcbset{
   semio~window/.style={
     enhanced,
@@ -300,16 +299,22 @@
   },
   semio~window~table/.style={
     semio~window,
+    breakable=false,
     left=0pt,
     right=0pt,
     bottom=0pt,
   },
   semio~window~row/.style={
     semio~window,
+    enhanced=false,
     breakable=false,
     width=\linewidth,
   },
 }
+
+\semio_window_define_tier:n { visual }
+\semio_window_define_tier:n { logical }
+\semio_window_define_tier:n { structural }
 
 \keys_define:nn { semio / window / kind } {
   title .tl_set:N = \l_semio_window_kind_title_tl,
@@ -332,10 +337,6 @@
   \group_end:
 }
 
-\cs_new_protected:Npn \semio_window_tier_header:nnn #1 #2 #3 {
-  \tl_set:Nn \l_semio_window_number_tl {#1}
-  \tl_set:Nx \l_semio_window_kind_title_tl {#2}
-}
 
 \cs_new_protected:Npn \semio_window_header_muted_use: {
   \group_begin:
@@ -346,6 +347,27 @@
   \semio@window@header@invoke
   \makeatother
   \group_end:
+}
+
+\cs_new_protected:Npn \semio_window_kind_number_set:n #1 {
+  \int_gincr:c { c@semio@window@slot }
+  \semio_hierarchy_path_sync_document:
+  \tl_if_empty:NTF \g_semio_hierarchy_path_tl {
+    \tl_set:Nx \l_semio_window_number_tl {
+      \semio_kind_chip_number:nn
+        { \use:c { semio@window@#1@kind } }
+        { \int_to_alph:n { \int_use:c { c@semio@window@slot } } }
+    }
+  } {
+    \tl_set:Nx \l_semio_window_number_tl {
+      \semio_kind_chip_number:nn
+        { \use:c { semio@window@#1@kind } }
+        {
+          \tl_use:N \g_semio_hierarchy_path_tl .
+          \int_to_alph:n { \int_use:c { c@semio@window@slot } }
+        }
+    }
+  }
 }
 
 \cs_new_protected:Npn \semio_window_kind_begin:nnn #1 #2 #3 {
@@ -367,13 +389,9 @@
       }
     } { }
     \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
-    \tl_set:Nn \l_semio_window_number_tl { \semio@window@kind@number {#1} }
+    \semio_window_kind_number_set:n {#1}
     \semio_window_register_write:nn {#1} { \use:c { semio@window@#1@kind } }
   }
-  \semio_window_tier_header:nnn
-    { \tl_use:N \l_semio_window_number_tl }
-    { \tl_use:N \l_semio_window_kind_title_tl }
-    { #2 }
   \semio_window_header_store:
   \semio_block_sep_before:
   \semio_window_header_muted_use:
@@ -637,10 +655,7 @@
   \tl_clear:N \l_semio_window_kind_title_tl
   \keys_set:nn { semio / window / kind } { #1 }
   \bool_if:NF \l_semio_window_row_bool { \semio_block_sep_before: }
-  \semio_window_tier_header:nnn
-    { }
-    { \tl_use:N \l_semio_window_kind_title_tl }
-    { structural }
+  \tl_clear:N \l_semio_window_number_tl
   \semio_window_header_store:
   \semio_window_header_muted_use:
   \semio_window_vskip_stroke_hairline:

@@ -23,7 +23,9 @@ import {
   Mode,
   Navbar,
   NavbarExampleSelect,
-  PanelToggleGroup,
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
   SemioLogo,
   Slider,
   Select,
@@ -95,6 +97,19 @@ import {
   type PluginWasmHandle as CorePluginWasmHandle,
   type WindowLayout,
 } from "@semio-tech/framework-core";
+import {
+  FRAMEWORK_SYNC_CONTROLLER_ID,
+  buildFileBackboneUri,
+  buildFolderBackboneUri,
+  buildFrameworkSyncTools,
+  buildRemoteBackboneUri,
+  buildTemporaryBackboneUri,
+  documentFromEnvelopeJson,
+  readBackboneEnvelope,
+  wrapDocumentEnvelope,
+  writeBackboneEnvelope,
+  type FrameworkSyncToolLeaf,
+} from "@semio-tech/framework-os-core";
 
 //#region ShellTypes
 type LoadedPluginState = {
@@ -139,6 +154,16 @@ export type FrameworkOsBootOptions = {
   readonly plugin?: string;
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
 };
+
+type SyncCardKind = "file" | "folder" | "remote";
+
+function syncDocumentId(session: ActiveSession, panel: StudioPanelState | null, studioMode: boolean): string {
+  if (studioMode && panel?.activeSpawnedId) {
+    const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+    if (spawned) return `${spawned.pluginId}-${spawned.instanceId}`;
+  }
+  return `${session.pluginId}-${session.instanceId}`;
+}
 
 const S_HOME_APP_ID = "home";
 const S_HOME_CONTROLLER_ID = "s-home";
@@ -690,6 +715,10 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const [uiTheme, setUiTheme] = useState<ElementsSurfaceTheme>(() => readStoredUiChromeTheme());
   const [uiCompact, setUiCompact] = useState(() => readStoredUiChromeCompact());
   const [uiExpertise, setUiExpertise] = useState(() => readStoredUiChromeExpertise());
+  const [syncBackboneUri, setSyncBackboneUri] = useState<string | null>(null);
+  const [syncCardKind, setSyncCardKind] = useState<SyncCardKind | null>(null);
+  const [syncDraftPath, setSyncDraftPath] = useState("");
+  const lastEnvelopeJsonRef = useRef<string | null>(null);
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode);
 
   const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", createBrowserStoragePort()), [session?.app.id]);
@@ -706,6 +735,19 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   useEffect(() => {
     sessionRef.current = session;
   }, [session]);
+
+  useEffect(() => {
+    if (!session) {
+      setSyncBackboneUri(null);
+      setSyncCardKind(null);
+      lastEnvelopeJsonRef.current = null;
+      return;
+    }
+    const docId = syncDocumentId(session, panel, studioMode);
+    setSyncBackboneUri(buildTemporaryBackboneUri(docId));
+    setSyncCardKind(null);
+    lastEnvelopeJsonRef.current = null;
+  }, [panel?.activeSpawnedId, session, studioMode]);
 
   useEffect(() => {
     if (activeAppTitle) document.title = activeAppTitle;
@@ -1090,9 +1132,67 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
       } else if (session?.instanceId === nextSession.instanceId || baseSession.instanceId === nextSession.instanceId) {
         await refreshUi(nextSession);
       }
+      if (syncBackboneUri) {
+        for (const opJson of ops) {
+          const op = JSON.parse(opJson) as { op?: string; document?: unknown };
+          if (op.op !== "setDocument" || op.document == null) continue;
+          const docId = syncDocumentId(session, panel, studioMode);
+          const envelopeJson = wrapDocumentEnvelope(op.document, docId, syncBackboneUri);
+          lastEnvelopeJsonRef.current = envelopeJson;
+          void writeBackboneEnvelope(syncBackboneUri, envelopeJson).catch((syncError) => {
+            console.error("[DEBUG] backbone auto-sync failed", syncError);
+          });
+        }
+      }
     },
-    [ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, studioMode],
+    [ensureSpawnedPlugin, loadedPlugins, navigateHistory, panel, refreshSpawnedUi, refreshUi, session, studioMode, syncBackboneUri],
   );
+
+  const resolveSyncTargetSession = useCallback((): ActiveSession | null => {
+    if (!session) return null;
+    if (studioMode && panel?.activeSpawnedId) {
+      const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
+      if (spawned) {
+        const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+        if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
+      }
+    }
+    return session;
+  }, [loadedPlugins, panel, session, studioMode]);
+
+  const attachSyncBackbone = useCallback(
+    async (uri: string) => {
+      const targetSession = resolveSyncTargetSession();
+      if (!targetSession) return;
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
+      if (!plugin) return;
+      const docId = syncDocumentId(targetSession, panel, studioMode);
+      let envelopeJson = await readBackboneEnvelope(uri);
+      if (!envelopeJson) {
+        envelopeJson = wrapDocumentEnvelope({}, docId, uri);
+        await writeBackboneEnvelope(uri, envelopeJson);
+      }
+      lastEnvelopeJsonRef.current = envelopeJson;
+      const document = documentFromEnvelopeJson(envelopeJson);
+      const ops = await plugin.handleCommand(
+        targetSession.instanceId,
+        JSON.stringify({ controllerId: targetSession.app.controllerId, command: "setDocument", args: { document } }),
+        targetSession.viewState,
+      );
+      setSyncBackboneUri(uri);
+      setSyncCardKind(null);
+      await processPluginOps(ops, targetSession);
+      console.log("[DEBUG] attached backbone", uri);
+    },
+    [loadedPlugins, panel, processPluginOps, resolveSyncTargetSession, studioMode],
+  );
+
+  const detachSyncBackbone = useCallback(async () => {
+    if (!session) return;
+    const docId = syncDocumentId(session, panel, studioMode);
+    await attachSyncBackbone(buildTemporaryBackboneUri(docId));
+    console.log("[DEBUG] detached backbone");
+  }, [attachSyncBackbone, panel, session, studioMode]);
 
   const spawnProgram = useCallback(
     async (program: StudioProgramEntry) => {
@@ -1126,6 +1226,48 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
   const onCommand = useCallback(
     (command: CommandDescriptor) => {
       if (!session) return;
+
+      if (command.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
+        if (command.command === "selectTemporary") {
+          void attachSyncBackbone(buildTemporaryBackboneUri(syncDocumentId(session, panel, studioMode)));
+          return;
+        }
+        if (command.command === "selectFile") {
+          setSyncCardKind("file");
+          setSyncDraftPath(syncBackboneUri?.startsWith("file://") ? syncBackboneUri.slice("file://".length) : "");
+          return;
+        }
+        if (command.command === "selectFolder") {
+          setSyncCardKind("folder");
+          setSyncDraftPath(syncBackboneUri?.startsWith("folder://") ? syncBackboneUri.slice("folder://".length) : "");
+          return;
+        }
+        if (command.command === "selectRemote") {
+          setSyncCardKind("remote");
+          const remote = syncBackboneUri?.startsWith("remote://") ? syncBackboneUri.slice("remote://".length) : "";
+          setSyncDraftPath(remote);
+          return;
+        }
+        if (command.command === "attach") {
+          const path = typeof command.args === "object" && command.args != null && "path" in command.args ? String((command.args as { path?: string }).path ?? "") : syncDraftPath;
+          if (!path.trim()) return;
+          const uri =
+            command.args && typeof command.args === "object" && "kind" in command.args
+              ? String((command.args as { kind?: string }).kind) === "remote"
+                ? buildRemoteBackboneUri(path.split("/")[0] ?? "127.0.0.1:8787", path.split("/").slice(1).join("/") || syncDocumentId(session, panel, studioMode))
+                : String((command.args as { kind?: string }).kind) === "folder"
+                  ? buildFolderBackboneUri(path)
+                  : buildFileBackboneUri(path)
+              : buildFileBackboneUri(path);
+          void attachSyncBackbone(uri);
+          return;
+        }
+        if (command.command === "detach") {
+          void detachSyncBackbone();
+          return;
+        }
+        return;
+      }
 
       if (studioMode && command.controllerId === S_HOME_CONTROLLER_ID && command.command === "importStudio") {
         importStudioInputRef.current?.click();
@@ -1196,7 +1338,7 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
           console.error("[DEBUG] command failed", commandError);
         });
     },
-    [findPluginForCommand, loadedPlugins, panel, processPluginOps, session, spawnProgram, studioMode, updateStudioPanel],
+    [attachSyncBackbone, detachSyncBackbone, findPluginForCommand, loadedPlugins, panel, processPluginOps, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
   );
 
   useSidePanelChromeHotkeys({
@@ -1687,9 +1829,30 @@ export function FrameworkOsShell({ pluginFilter, plugins }: { readonly pluginFil
 
   const footerToolbar = useMemo(() => {
     const tools = studioMode && panel?.activeSpawnedId ? spawnedToolNodes : activeToolNodes;
-    if (!tools.length) return undefined;
-    return <ToolTree tools={tools} onCommand={onCommand} />;
-  }, [activeToolNodes, onCommand, panel?.activeSpawnedId, spawnedToolNodes, studioMode]);
+    const syncTools = buildFrameworkSyncTools(syncBackboneUri) as readonly ToolNode[];
+    if (!tools.length && !syncTools.length) return undefined;
+    return (
+      <div className="flex items-center gap-single">
+        {tools.length > 0 ? <ToolTree tools={tools} onCommand={onCommand} /> : null}
+        {syncTools.length > 0 ? (
+          <>
+            {tools.length > 0 ? <ToolbarDivider /> : null}
+            <SyncAttachCard
+              activeUri={syncBackboneUri}
+              cardKind={syncCardKind}
+              draftPath={syncDraftPath}
+              syncTools={syncTools}
+              onCommand={onCommand}
+              onDraftPathChange={setSyncDraftPath}
+              onClose={() => setSyncCardKind(null)}
+              onAttach={attachSyncBackbone}
+              onDetach={detachSyncBackbone}
+            />
+          </>
+        ) : null}
+      </div>
+    );
+  }, [activeToolNodes, attachSyncBackbone, detachSyncBackbone, onCommand, panel?.activeSpawnedId, spawnedToolNodes, studioMode, syncBackboneUri, syncCardKind, syncDraftPath]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -2509,6 +2672,7 @@ export type ToolLeaf =
       readonly title?: string;
       readonly order?: number;
       readonly disabled?: boolean;
+      readonly category?: "selection" | "tools" | "commands" | "history" | "sync";
       readonly controllerId?: string;
       readonly command?: string;
       readonly args?: unknown;
@@ -2523,6 +2687,7 @@ export type ToolLeaf =
       readonly order?: number;
       readonly pressed?: boolean;
       readonly disabled?: boolean;
+      readonly category?: "selection" | "tools" | "commands" | "history" | "sync";
       readonly controllerId?: string;
       readonly command?: string;
       readonly args?: unknown;
@@ -3077,6 +3242,73 @@ export function UIFind({ open, onOpenChange, placeholder = "Find in window…", 
 }
 //#endregion UIFind
 //#endregion 🔖ui-search-find
+
+//#region 🔖sync-attach-card
+
+type SyncAttachCardProps = {
+  readonly activeUri: string | null;
+  readonly cardKind: SyncCardKind | null;
+  readonly draftPath: string;
+  readonly syncTools: readonly FrameworkSyncToolLeaf[];
+  readonly onCommand: (command: CommandDescriptor) => void;
+  readonly onDraftPathChange: (value: string) => void;
+  readonly onClose: () => void;
+  readonly onAttach: (uri: string) => void;
+  readonly onDetach: () => void;
+};
+
+function SyncAttachCard({ activeUri, cardKind, draftPath, syncTools, onCommand, onDraftPathChange, onClose, onAttach, onDetach }: SyncAttachCardProps): ReactElement {
+  const open = cardKind != null;
+  const placeholder =
+    cardKind === "remote" ? "127.0.0.1:8787/demo" : cardKind === "folder" ? "/absolute/project/folder" : "/absolute/document.json";
+
+  const attachFromDraft = () => {
+    if (!cardKind || !draftPath.trim()) return;
+    if (cardKind === "remote") {
+      const slash = draftPath.indexOf("/");
+      const hostPort = slash > 0 ? draftPath.slice(0, slash) : draftPath;
+      const documentId = slash > 0 ? draftPath.slice(slash + 1) : "document";
+      onAttach(buildRemoteBackboneUri(hostPort, documentId));
+      return;
+    }
+    onAttach(cardKind === "folder" ? buildFolderBackboneUri(draftPath) : buildFileBackboneUri(draftPath));
+  };
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+    >
+      <PopoverAnchor asChild>
+        <div>
+          <ToolTree tools={syncTools as readonly ToolNode[]} onCommand={onCommand} />
+        </div>
+      </PopoverAnchor>
+      {open ? (
+        <PopoverContent side="top" align="center" className="w-80 space-y-3 p-3">
+          <div className="space-y-1">
+            <p className="text-sm font-medium capitalize">{cardKind} backbone</p>
+            {activeUri ? <p className="break-all text-xs text-muted-foreground">{activeUri}</p> : null}
+          </div>
+          <Input value={draftPath} placeholder={placeholder} onChange={(event) => onDraftPathChange(event.target.value)} />
+          <div className="flex items-center gap-2">
+            <Button type="button" onClick={attachFromDraft}>
+              Attach
+            </Button>
+            {activeUri && !activeUri.startsWith("temp://") ? (
+              <Button type="button" onClick={onDetach}>
+                Detach
+              </Button>
+            ) : null}
+          </div>
+        </PopoverContent>
+      ) : null}
+    </Popover>
+  );
+}
+//#endregion 🔖sync-attach-card
 
 //#region 🔖tool-tree
 

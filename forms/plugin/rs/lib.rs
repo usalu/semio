@@ -189,6 +189,24 @@ fn default_envelope() -> FormsPlayEnvelope {
     }
 }
 
+fn building_component_envelope() -> FormsPlayEnvelope {
+    let spec: FormSpec =
+        serde_json::from_str(BUILDING_COMPONENT_EXAMPLE_JSON).unwrap_or_else(|_| empty_forms_projection());
+    let store = FormsStore::new(create_document_vcs_envelope(
+        FORMS_DOCUMENT_SCHEMA,
+        "forms-play",
+        spec,
+        None,
+    ));
+    FormsPlayEnvelope {
+        envelope: store.envelope().clone(),
+        applied_edit_ids: store.applied_edit_ids().to_vec(),
+        selected_ids: Vec::new(),
+        current_step_index: 0,
+        try_values: HashMap::new(),
+    }
+}
+
 fn parse_envelope(document_json: &str) -> FormsPlayEnvelope {
     serde_json::from_str(document_json).unwrap_or_else(|_| default_envelope())
 }
@@ -1581,7 +1599,7 @@ impl PluginApp for FormsPlayApp {
     }
 
     fn initial_document_json(&self) -> String {
-        serde_json::to_string(&default_envelope()).expect("forms envelope json")
+        serde_json::to_string(&building_component_envelope()).expect("forms envelope json")
     }
 
     fn handle_command_patch_ops(
@@ -2032,6 +2050,20 @@ mod tests {
             }
         }
         play
+    }
+
+    #[test]
+    fn initial_document_seeds_building_component_fixture() {
+        let app = FormsPlayApp;
+        let document = app.initial_document_json();
+        let play = parse_envelope(&document);
+        let spec = materialized_projection(&play);
+        assert!(!flatten_questions(&spec).is_empty());
+        assert!(
+            flatten_questions(&spec)
+                .iter()
+                .any(|(_, question)| question.kind == "buildingComponent")
+        );
     }
 
     #[test]
