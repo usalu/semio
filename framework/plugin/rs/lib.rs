@@ -28,6 +28,7 @@ pub struct ModeSpec {
     pub id: String,
     pub label: String,
     pub tools: Vec<ToolNode>,
+    pub layout_id: Option<String>,
 }
 
 pub struct WindowKindSpec {
@@ -106,7 +107,16 @@ impl AppBuilder {
             id: id.into(),
             label: label.into(),
             tools: Vec::new(),
+            layout_id: None,
         });
+        self
+    }
+
+    pub fn mode_layout(mut self, mode_id: impl AsRef<str>, layout_id: impl Into<String>) -> Self {
+        let mode_id = mode_id.as_ref();
+        if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
+            mode.layout_id = Some(layout_id.into());
+        }
         self
     }
 
@@ -264,6 +274,7 @@ impl AppBuilder {
                     id: mode.id,
                     label: mode.label,
                     tools: mode.tools,
+                    layout_id: mode.layout_id,
                 })
                 .collect(),
             default_mode_id,
@@ -1174,7 +1185,21 @@ pub fn install_plugin_bundle(bundle: PluginBundle) {
     });
 }
 
+static PLUGIN_INIT_ONCE: std::sync::Once = std::sync::Once::new();
+
+extern "C" {
+    fn semio_plugin_install_bundle();
+}
+
+/// Ensures the embedding plugin crate's bundle installer ran before any WIT export is served.
+pub fn ensure_plugin_initialized() {
+    PLUGIN_INIT_ONCE.call_once(|| unsafe {
+        semio_plugin_install_bundle();
+    });
+}
+
 pub fn plugin_manifest() -> PluginManifest {
+    ensure_plugin_initialized();
     PLUGIN.with(|slot| {
         slot.borrow()
             .as_ref()
@@ -1392,9 +1417,15 @@ pub fn plugin_window_measures(
 
 #[macro_export]
 macro_rules! plugin_exports {
-    () => {
+    ($bundle_fn:expr) => {
+        #[doc(hidden)]
+        #[unsafe(no_mangle)]
+        pub extern "C" fn semio_plugin_install_bundle() {
+            $crate::plugin_runtime::install_plugin_bundle(($bundle_fn)());
+        }
+
         #[used]
-        static _SEMIO_PLUGIN_COMPONENT_LINK: fn() = semio_framework_plugin::component_export_anchor;
+        static _SEMIO_PLUGIN_COMPONENT_LINK: fn() = $crate::component_export_anchor;
     };
 }
 // #endregion plugin_runtime

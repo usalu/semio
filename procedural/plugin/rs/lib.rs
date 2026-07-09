@@ -3,9 +3,7 @@
 pub mod app_2d;
 pub mod app_3d;
 
-use std::sync::LazyLock;
-
-use semio_framework_plugin::{install_plugin_bundle, PluginBundle};
+use semio_framework_plugin::PluginBundle;
 
 //#region 🔖Bundle
 fn bundle() -> PluginBundle {
@@ -16,7 +14,5 @@ fn bundle() -> PluginBundle {
         .register_app(app_3d::create_procedural3d_app(), || Box::new(app_3d::Procedural3dPlayApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Bundle

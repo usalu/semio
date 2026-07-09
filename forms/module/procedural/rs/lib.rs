@@ -455,9 +455,7 @@ fn module_bundle() -> PluginBundle {
         .register_app(create_module_app(), || Box::new(ModuleApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(module_bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(module_bundle);
 //#endregion 🔖App
 
 //#region 🧪Tests

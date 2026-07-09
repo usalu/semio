@@ -1,13 +1,17 @@
 //! 📏 CAD plugin — spatial model play app bundled as a hot-swappable WASM component.
 
+mod geometry_import;
 mod interaction;
 mod transformation;
 
 use cad_document::{
     cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_objects,
-    empty_cad_projection, CadCamera, CadEnvelope, CadNode, CadObject, CadObjectPatch, CadOp, CadPaneId,
-    CadPrimitiveSlot, CadReference, CadReferencePatch, CadScene, CadStore, CAD_DOCUMENT_SCHEMA,
-    CAD_PLAY_DOCUMENT_SCHEMA,
+    CadCamera, CadEnvelope, CadGeometry, CadNode, CadObject,
+    CadObjectPatch, CadOp, CadPaneId, CadPrimitiveSlot, CadReference, CadReferencePatch, CadScene,
+    CadStore, CAD_DOCUMENT_SCHEMA, CAD_PLAY_DOCUMENT_SCHEMA,
+};
+use geometry_import::{
+    objects_from_fixture_model, parse_geometry, tessellate_geometry_handle,
 };
 use semio_framework_plugin::{PanelGroup, 
     build_world_3d_scene, export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_from_kind,
@@ -29,7 +33,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
 use std::sync::atomic::{AtomicU32, Ordering};
-use std::sync::LazyLock;
 use interaction::{
     apply_event, can_commit, commit_object, keyed_transitions, list_interactions_for_model_definition,
     parse_repl_line, preview_display_items, resolve_interaction_key, start_session, CadEngagementSession,
@@ -67,17 +70,6 @@ const CAD_MODEL_INDEX_ENERGY: usize = 2;
 const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
 
 static CAD_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
-
-const TYPOLOGY_MESH_URLS: &[(&str, &str)] = &[
-    ("building.building.slab", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
-    ("building.building.column", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
-    ("building.building.beam", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
-    ("building.building.wall", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
-    ("structure.structure.onewayreinforcedconcreteslab", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
-    ("structure.structure.reinforcedconcretecolumn", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
-    ("energy.energy.externalwall", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
-    ("spatial.shape.primitive.box", "/mesh/hexagonal-cut-concrete-forest-left.glb"),
-];
 
 struct CadTypologyEntry {
     typology: &'static str,
@@ -190,7 +182,7 @@ const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
 //#region 🔖BrepMeshes
 use kernel_3d_brepkit::BrepkitKernel;
 use kernel_3d_engine::{block_on, BrepKernel, MeshTransfer};
-use semio_framework_core::{SurfaceKind, mesh_from_indexed;
+use semio_framework_core::{SurfaceKind, mesh_from_indexed};
 use std::sync::{Mutex, OnceLock};
 
 static CAD_BREP_KERNEL: OnceLock<Mutex<BrepkitKernel>> = OnceLock::new();
@@ -238,151 +230,27 @@ fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Op
     mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index)
 }
 
-/// @emoji 🎯 Centroid of an object's authored vertices (matched by id prefix), or the origin.
-fn object_origin_from_vertices(object_id: &str, vertices: &[Value]) -> [f64; 3] {
-    let bim_token = object_id.strip_prefix("object-").unwrap_or(object_id);
-    let prefix = format!("{bim_token}-");
-    let mut count = 0usize;
-    let mut sum = [0.0f64; 3];
-    for vertex in vertices {
-        let vertex_id = vertex.get("id").and_then(|value| value.as_str()).unwrap_or("");
-        if !vertex_id.starts_with(&prefix) {
-            continue;
-        }
-        let Some(position) = vertex.get("position").and_then(|value| value.as_array()) else {
-            continue;
-        };
-        if position.len() < 3 {
-            continue;
-        }
-        sum[0] += position[0].as_f64().unwrap_or(0.0);
-        sum[1] += position[1].as_f64().unwrap_or(0.0);
-        sum[2] += position[2].as_f64().unwrap_or(0.0);
-        count += 1;
-    }
-    if count == 0 {
-        return [0.0, 0.0, 0.0];
-    }
-    let n = count as f64;
-    [sum[0] / n, sum[1] / n, sum[2] / n]
-}
-
-/// @emoji 📏 Authored bounding-box extent of an object's vertices (matched by id prefix).
-fn object_extent_from_vertices(object_id: &str, vertices: &[Value]) -> Option<[f64; 3]> {
-    let bim_token = object_id.strip_prefix("object-").unwrap_or(object_id);
-    let prefix = format!("{bim_token}-");
-    let mut min = [f64::MAX; 3];
-    let mut max = [f64::MIN; 3];
-    let mut count = 0usize;
-    for vertex in vertices {
-        let vertex_id = vertex.get("id").and_then(|value| value.as_str()).unwrap_or("");
-        if !vertex_id.starts_with(&prefix) {
-            continue;
-        }
-        let Some(position) = vertex.get("position").and_then(|value| value.as_array()) else {
-            continue;
-        };
-        if position.len() < 3 {
-            continue;
-        }
-        for axis in 0..3 {
-            let value = position[axis].as_f64().unwrap_or(0.0);
-            min[axis] = min[axis].min(value);
-            max[axis] = max[axis].max(value);
-        }
-        count += 1;
-    }
-    if count == 0 {
-        return None;
-    }
-    Some([
-        (max[0] - min[0]).max(0.05),
-        (max[1] - min[1]).max(0.05),
-        (max[2] - min[2]).max(0.05),
-    ])
-}
-
-/// @emoji 🗃️ Reads one pane's objects (with origin/extent derived from authored geometry) from
-/// the shared quad fixture's `models[modelIndex]` model definition.
-fn cad_document_pane_objects(source_json: &str, model_index: usize) -> Vec<CadObject> {
+/// @emoji 🗃️ Reads one pane's objects and geometry from the shared quad fixture.
+fn cad_document_pane_bundle(source_json: &str, model_index: usize) -> (Vec<CadObject>, CadGeometry) {
     let Ok(root) = serde_json::from_str::<Value>(source_json) else {
-        return Vec::new();
+        return (Vec::new(), CadGeometry::default());
     };
-    let Some(objects) = root
+    let geometry = parse_geometry(root.pointer(&format!("/models/{model_index}/model/geometry")));
+    let Some(objects_value) = root
         .pointer(&format!("/models/{model_index}/model/objects"))
         .and_then(|value| value.as_array())
     else {
-        return Vec::new();
+        return (Vec::new(), geometry);
     };
-    let vertices = root
-        .pointer(&format!("/models/{model_index}/model/geometry/vertices"))
-        .and_then(|value| value.as_array())
-        .map(|entries| entries.as_slice())
-        .unwrap_or(&[]);
-    objects
-        .iter()
-        .filter_map(|entry| {
-            let object_id = entry.get("id")?.as_str()?;
-            let typology = entry.get("typology")?.as_str()?;
-            let label = object_id
-                .split('-')
-                .last()
-                .map(str::to_string)
-                .unwrap_or_else(|| object_id.to_string());
-            Some(CadObject {
-                id: object_id.into(),
-                label,
-                typology: typology.into(),
-                visible: true,
-                locked: false,
-                origin: object_origin_from_vertices(object_id, vertices),
-                orientation: Some([0.0, 0.0, 0.0, 1.0]),
-                scale: None,
-                mesh_url: TYPOLOGY_MESH_URLS
-                    .iter()
-                    .find(|(kind, _)| *kind == typology)
-                    .map(|(_, url)| url.to_string()),
-                extent: object_extent_from_vertices(object_id, vertices),
-                solid_handle: None,
-                primitives: primitives_from_json(entry),
-            })
-        })
-        .collect()
+    let Ok(mut kernel) = cad_brep_kernel().lock() else {
+        return (Vec::new(), geometry);
+    };
+    let objects = objects_from_fixture_model(&mut kernel, objects_value, &geometry);
+    (objects, geometry)
 }
 
-fn primitives_from_json(entry: &Value) -> Vec<CadPrimitiveSlot> {
-    let Some(primitives) = entry.get("primitives") else {
-        return Vec::new();
-    };
-    if let Some(map) = primitives.as_object() {
-        return map
-            .iter()
-            .map(|(slot, value)| CadPrimitiveSlot {
-                slot: slot.clone(),
-                primitive_id: value.as_str().unwrap_or_default().into(),
-                kind: slot.clone(),
-            })
-            .collect();
-    }
-    if let Some(rows) = primitives.as_array() {
-        return rows
-            .iter()
-            .filter_map(|row| {
-                let kind = row.get("kind")?.as_str()?;
-                let primitive_id = row.get("id")?.as_str()?;
-                let slot = row
-                    .get("slot")
-                    .and_then(|value| value.as_str())
-                    .unwrap_or(kind);
-                Some(CadPrimitiveSlot {
-                    slot: slot.into(),
-                    primitive_id: primitive_id.into(),
-                    kind: kind.into(),
-                })
-            })
-            .collect();
-    }
-    Vec::new()
+fn cad_document_pane_objects(source_json: &str, model_index: usize) -> Vec<CadObject> {
+    cad_document_pane_bundle(source_json, model_index).0
 }
 
 fn forest_references_for_model_definitions() -> HashMap<String, Vec<CadReference>> {
@@ -517,7 +385,7 @@ fn default_document() -> CadScene {
             origin: [0.0, 0.0, 0.0],
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
             scale: None,
-            mesh_url: Some("/mesh/hexagonal-cut-concrete-forest-left.glb".into()),
+            mesh_url: None,
             extent: Some([1.0, 1.0, 1.0]),
             solid_handle: None,
             primitives: vec![CadPrimitiveSlot {
@@ -542,6 +410,10 @@ fn default_document() -> CadScene {
         building_objects: Vec::new(),
         energy_objects: Vec::new(),
         structure_classic_objects: Vec::new(),
+        shape_geometry: None,
+        building_geometry: None,
+        energy_geometry: None,
+        structure_classic_geometry: None,
         references_by_model_definition_id: HashMap::new(),
         active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
     }
@@ -550,10 +422,14 @@ fn default_document() -> CadScene {
 /// @emoji 🪟 Builds the quad play document: shape/building/energy/structure-classic panes each
 /// sourced from their own model definition inside the shared fixture JSON.
 fn forest_play_document(source_json: &str, id: &str) -> CadScene {
-    let shape_objects = cad_document_pane_objects(source_json, CAD_MODEL_INDEX_SHAPE);
+    let (shape_objects, shape_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_SHAPE);
     if shape_objects.is_empty() {
         return default_document();
     }
+    let (building_objects, building_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_BUILDING);
+    let (energy_objects, energy_geometry) = cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_ENERGY);
+    let (structure_classic_objects, structure_classic_geometry) =
+        cad_document_pane_bundle(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC);
     CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
         id: id.into(),
@@ -570,9 +446,13 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
             kind: "group".into(),
         }],
         active_tool: Some("selectDirect".into()),
-        building_objects: cad_document_pane_objects(source_json, CAD_MODEL_INDEX_BUILDING),
-        energy_objects: cad_document_pane_objects(source_json, CAD_MODEL_INDEX_ENERGY),
-        structure_classic_objects: cad_document_pane_objects(source_json, CAD_MODEL_INDEX_STRUCTURE_CLASSIC),
+        building_objects,
+        energy_objects,
+        structure_classic_objects,
+        shape_geometry: Some(shape_geometry),
+        building_geometry: Some(building_geometry),
+        energy_geometry: Some(energy_geometry),
+        structure_classic_geometry: Some(structure_classic_geometry),
         references_by_model_definition_id: forest_references_for_model_definitions(),
         active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
     }
@@ -985,13 +865,30 @@ fn export_download_ops(envelope: &CadPlayEnvelope) -> Vec<String> {
 //#endregion 🔖PaneHelpers
 
 fn resolve_object_mesh_url(object: &CadObject) -> Option<String> {
-    if let Some(url) = object.mesh_url.as_ref().filter(|url| !url.is_empty()) {
-        return Some(url.clone());
+    object.mesh_url.as_ref().filter(|url| !url.is_empty()).cloned()
+}
+
+fn primary_primitive_kind(object: &CadObject) -> &str {
+    object
+        .primitives
+        .first()
+        .map(|primitive| primitive.kind.as_str())
+        .unwrap_or("solid")
+}
+
+fn object_mesh_data(object: &CadObject) -> MeshData {
+    if let Some(handle) = object.solid_handle.as_deref() {
+        if let Ok(mut kernel) = cad_brep_kernel().lock() {
+            if let Some(mesh) = tessellate_geometry_handle(&mut kernel, handle, primary_primitive_kind(object)) {
+                return mesh;
+            }
+        }
     }
-    TYPOLOGY_MESH_URLS
-        .iter()
-        .find(|(typology, _)| *typology == object.typology)
-        .map(|(_, url)| url.to_string())
+    typology_brep_mesh(
+        &object.typology,
+        object.extent,
+        object.solid_handle.as_deref(),
+    )
 }
 
 fn collect_mesh_urls(objects: &[CadObject]) -> Vec<String> {
@@ -1041,7 +938,7 @@ fn world_instances_json(objects: &[CadObject], runtime: &CadPlayRuntime) -> Stri
         .map(|object| {
             let mesh_id = resolve_object_mesh_url(object)
                 .map(|url| world3d_mesh_id_from_url(&url))
-                .unwrap_or_else(|| typology_mesh_kind(&object.typology).to_string());
+                .unwrap_or_else(|| object.id.clone());
             let selected = runtime.selected_object_ids.contains(&object.id);
             let hovered = runtime.hovered_object_id.as_deref() == Some(object.id.as_str());
             json!({
@@ -1069,26 +966,19 @@ fn world_meshes_json(objects: &[CadObject]) -> String {
     if !urls.is_empty() {
         return semio_framework_plugin::world3d_meshes_json_from_urls(&urls);
     }
-    let mut kinds: Vec<String> = objects
+    let meshes: Vec<Value> = objects
         .iter()
-        .map(|object| typology_mesh_kind(&object.typology).to_string())
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect();
-    if kinds.is_empty() {
-        kinds.push(CAD_FALLBACK_MESH_KIND.into());
-    }
-    let meshes: Vec<Value> = kinds
-        .iter()
-        .map(|kind| {
-            let representative = objects.iter().find(|object| typology_mesh_kind(&object.typology) == kind.as_str());
-            let typology = representative.map(|object| object.typology.as_str()).unwrap_or("spatial.shape.primitive.box");
-            let extent = representative.and_then(|object| object.extent);
-            let solid_handle = representative.and_then(|object| object.solid_handle.as_deref());
-            let data = typology_brep_mesh(typology, extent, solid_handle);
-            json!({ "id": kind, "data": data })
+        .filter(|object| object.visible)
+        .map(|object| {
+            let data = object_mesh_data(object);
+            json!({ "id": object.id, "data": data })
         })
         .collect();
+    if meshes.is_empty() {
+        let data = mesh_from_kind(CAD_FALLBACK_MESH_KIND);
+        return serde_json::to_string(&[json!({ "id": CAD_FALLBACK_MESH_KIND, "data": data })])
+            .unwrap_or_else(|_| "[]".into());
+    }
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
@@ -1102,6 +992,11 @@ fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime) -> String
     if let Some(object) = value.as_object_mut() {
         object.insert("transformTool".into(), json!(runtime.transform_tool));
         object.insert("gumballActive".into(), json!(gumball_active(runtime)));
+        object.insert(
+            "engagementSessionActive".into(),
+            json!(runtime.engagement_session.is_some()),
+        );
+        object.insert("showEdges".into(), json!(true));
         if let Some(target) = gumball_target_for(document, &runtime.selected_object_ids) {
             object.insert("gumballTarget".into(), json!(target));
         }
@@ -1803,7 +1698,7 @@ fn cad_window_engagement(envelope: &CadPlayEnvelope, pane: CadPaneId) -> WindowE
         .map(|session| session.state.clone())
         .unwrap_or_else(|| envelope.runtime.engagement_step.clone());
     WindowEngagement {
-        session_active: Some(session_active || true),
+        session_active: Some(session_active),
         options: Some(vec![
             WindowEngagementOption {
                 id: "cad.opt.move".into(),
@@ -1981,6 +1876,33 @@ fn build_cad_play_toolbar(envelope: &CadPlayEnvelope) -> Vec<ToolNode> {
             .with_category(ToolCategory::Commands),
         );
     }
+    let construct_tools: Vec<ToolNode> = list_interactions_for_model_definition(active)
+        .into_iter()
+        .enumerate()
+        .map(|(index, entry)| {
+            tool_button(
+                format!("cad.play.construct.{}", entry.id),
+                "plus",
+                entry.label,
+                cad_cmd(
+                    "engagementPossibleSelect",
+                    Some(json!({
+                        "pane": cad_pane_suffix(
+                            cad_pane_from_model_definition_id(active).unwrap_or(CadPaneId::Shape),
+                        ),
+                        "possibleId": entry.id,
+                    })),
+                ),
+            )
+            .with_order(index as u32)
+        })
+        .collect();
+    if !construct_tools.is_empty() {
+        tools.push(
+            tool_collection("construct", "hammer", "Construct", construct_tools)
+                .with_category(ToolCategory::Tools),
+        );
+    }
     tools
 }
 
@@ -2124,10 +2046,7 @@ fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId)
         origin: [0.0, 0.0, 0.0],
         orientation: Some([0.0, 0.0, 0.0, 1.0]),
         scale: None,
-        mesh_url: TYPOLOGY_MESH_URLS
-            .iter()
-            .find(|(entry, _)| *entry == typology)
-            .map(|(_, url)| url.to_string()),
+        mesh_url: None,
         extent,
         solid_handle: None,
         primitives: Vec::new(),
@@ -2713,11 +2632,17 @@ impl PluginApp for CadApp {
                 envelope.runtime.engagement_step = "Idle".into();
                 return vec![set_document_op(&envelope)];
             }
-            "engagementPointerDown" => {
+            "worldPointerDown" | "engagementPointerDown" => {
                 let pane = args
                     .and_then(|value| value.get("pane"))
                     .and_then(|value| value.as_str())
                     .map(cad_pane_id_from_suffix)
+                    .or_else(|| {
+                        args.and_then(|value| value.get("surfaceId"))
+                            .and_then(|value| value.as_str())
+                            .and_then(|surface_id| surface_id.rsplit('/').next())
+                            .map(cad_pane_id_from_suffix)
+                    })
                     .unwrap_or(CadPaneId::Shape);
                 let point = args.and_then(|value| value.get("position"));
                 if let Some(session) = envelope.runtime.engagement_session.as_mut() {
@@ -2743,7 +2668,6 @@ impl PluginApp for CadApp {
                         }
                     }
                 }
-                let _ = pane;
                 return vec![set_document_op(&envelope)];
             }
             "setPrimitiveSelection" => {
@@ -2753,7 +2677,7 @@ impl PluginApp for CadApp {
                     return vec![set_document_op(&envelope)];
                 }
             }
-            "noop" | "worldPointerDown" => return Vec::new(),
+            "noop" => return Vec::new(),
             _ => {}
         }
         Vec::new()
@@ -2921,9 +2845,7 @@ fn register_cad_exports() {
     });
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -2933,14 +2855,19 @@ mod tests {
     use semio_framework_plugin::PluginApp;
 
     #[test]
-    fn forest_example_uses_mesh_urls_and_origins() {
+    fn forest_example_uses_per_object_brep_meshes() {
         let envelope = forest_play_envelope();
         let json = world_instances_json(&envelope.document.building_objects, &envelope.runtime);
         assert!(json.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
-        assert!(json.contains("4.05") || json.contains("8.10"));
         let meshes = world_meshes_json(&envelope.document.building_objects);
-        assert!(meshes.contains("hexagonal-cut-concrete-forest-left.glb"));
+        assert!(meshes.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
+        assert!(!meshes.contains("hexagonal-cut-concrete-forest-left.glb"));
         assert!(envelope.document.building_objects.len() > 5);
+        assert!(envelope
+            .document
+            .building_objects
+            .iter()
+            .all(|object| object.solid_handle.is_some()));
     }
 
     #[test]

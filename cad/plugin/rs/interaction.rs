@@ -44,6 +44,34 @@ const INTERACTION_CATALOG: &[InteractionCatalogEntry] = &[
         produces_typology: "spatial.shape.primitive.box",
     },
     InteractionCatalogEntry {
+        id: "building.building.constructWall",
+        label: "Wall",
+        key: "w",
+        model_definition_id: "aec.building",
+        produces_typology: "building.building.wall",
+    },
+    InteractionCatalogEntry {
+        id: "building.building.constructBeam",
+        label: "Beam",
+        key: "m",
+        model_definition_id: "aec.building",
+        produces_typology: "building.building.beam",
+    },
+    InteractionCatalogEntry {
+        id: "building.building.constructColumn",
+        label: "Column",
+        key: "c",
+        model_definition_id: "aec.building",
+        produces_typology: "building.building.column",
+    },
+    InteractionCatalogEntry {
+        id: "building.building.constructSlab",
+        label: "Slab",
+        key: "l",
+        model_definition_id: "aec.building",
+        produces_typology: "building.building.slab",
+    },
+    InteractionCatalogEntry {
         id: "energy.energy.constructExternalWall",
         label: "External Wall",
         key: "e",
@@ -63,6 +91,13 @@ const INTERACTION_CATALOG: &[InteractionCatalogEntry] = &[
         key: "r",
         model_definition_id: "aec.building.structure.classic",
         produces_typology: "structure.structure.reinforcedconcretecolumn",
+    },
+    InteractionCatalogEntry {
+        id: "structure.structure.constructReinforcedConcreteInternalWall",
+        label: "Internal Wall",
+        key: "i",
+        model_definition_id: "aec.building.structure.classic",
+        produces_typology: "structure.structure.reinforcedconcreteinternalwall",
     },
 ];
 //#endregion 🔖Types
@@ -114,6 +149,7 @@ pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagem
     let initial = match entry.id {
         "primitive.box" => "idle",
         "energy.energy.constructExternalWall" => "choose_mode",
+        id if id.contains("construct") => "idle",
         _ => "idle",
     };
     Some(CadEngagementSession {
@@ -123,6 +159,25 @@ pub fn start_session(interaction_id: &str, pane: CadPaneId) -> Option<CadEngagem
         pane,
         last_response: None,
     })
+}
+
+fn is_two_point_height(id: &str) -> bool {
+    matches!(
+        id,
+        "energy.energy.constructExternalWall"
+            | "building.building.constructWall"
+            | "building.building.constructBeam"
+            | "building.building.constructSlab"
+            | "structure.structure.constructOneWayReinforcedConcreteSlab"
+            | "structure.structure.constructReinforcedConcreteInternalWall"
+    )
+}
+
+fn is_base_height(id: &str) -> bool {
+    matches!(
+        id,
+        "structure.structure.constructReinforcedConcreteColumn" | "building.building.constructColumn"
+    )
 }
 
 pub fn keyed_transitions(session: &CadEngagementSession) -> Vec<KeyedTransition> {
@@ -137,16 +192,13 @@ pub fn keyed_transitions(session: &CadEngagementSession) -> Vec<KeyedTransition>
             label: "2 points + height".into(),
             event_kind: "mode.2points".into(),
         }],
-        ("structure.structure.constructOneWayReinforcedConcreteSlab", "idle") => vec![KeyedTransition {
-            key: "s".into(),
-            label: "Start".into(),
-            event_kind: "start".into(),
-        }],
-        ("structure.structure.constructReinforcedConcreteColumn", "idle") => vec![KeyedTransition {
-            key: "s".into(),
-            label: "Start".into(),
-            event_kind: "start".into(),
-        }],
+        (id, "idle") if id.contains("construct") && id != "energy.energy.constructExternalWall" => {
+            vec![KeyedTransition {
+                key: "s".into(),
+                label: "Start".into(),
+                event_kind: "start".into(),
+            }]
+        }
         _ => Vec::new(),
     }
 }
@@ -154,9 +206,8 @@ pub fn keyed_transitions(session: &CadEngagementSession) -> Vec<KeyedTransition>
 pub fn can_commit(session: &CadEngagementSession) -> bool {
     match session.interaction_id.as_str() {
         "primitive.box" => session.state == "ready",
-        "energy.energy.constructExternalWall" => session.state == "ready",
-        "structure.structure.constructOneWayReinforcedConcreteSlab" => session.state == "ready",
-        "structure.structure.constructReinforcedConcreteColumn" => session.state == "ready",
+        id if is_two_point_height(id) => session.state == "ready",
+        id if is_base_height(id) => session.state == "ready",
         _ => false,
     }
 }
@@ -271,6 +322,66 @@ pub fn apply_event(session: &mut CadEngagementSession, event_kind: &str, payload
             }
         }
         ("structure.structure.constructReinforcedConcreteColumn", "column_height", "set.height") => {
+            if let Some(height) = payload.and_then(|value| value.as_f64()) {
+                session.context.insert("height".into(), json!(height));
+                session.state = "ready".into();
+                true
+            } else {
+                false
+            }
+        }
+        (id, "idle", "start") if id.contains("construct")
+            && id != "energy.energy.constructExternalWall"
+            && is_base_height(id) =>
+        {
+            session.state = "column_base".into();
+            true
+        }
+        (id, "idle", "start") if id.contains("construct")
+            && id != "energy.energy.constructExternalWall"
+            && is_two_point_height(id)
+            && id != "structure.structure.constructReinforcedConcreteColumn" =>
+        {
+            session.state = "footprint_first".into();
+            true
+        }
+        (id, "footprint_first", "pointer.down") if is_two_point_height(id) => {
+            if let Some(point) = payload.and_then(parse_vec3) {
+                session.context.insert("cornerA".into(), vec3_json(point));
+                session.state = "footprint_second".into();
+                true
+            } else {
+                false
+            }
+        }
+        (id, "footprint_second", "pointer.down") if is_two_point_height(id) => {
+            if let Some(point) = payload.and_then(parse_vec3) {
+                session.context.insert("cornerB".into(), vec3_json(point));
+                session.state = "slab_height".into();
+                true
+            } else {
+                false
+            }
+        }
+        (id, "slab_height", "set.height") if is_two_point_height(id) => {
+            if let Some(height) = payload.and_then(|value| value.as_f64()) {
+                session.context.insert("height".into(), json!(height));
+                session.state = "ready".into();
+                true
+            } else {
+                false
+            }
+        }
+        (id, "column_base", "pointer.down") if is_base_height(id) => {
+            if let Some(point) = payload.and_then(parse_vec3) {
+                session.context.insert("base".into(), vec3_json(point));
+                session.state = "column_height".into();
+                true
+            } else {
+                false
+            }
+        }
+        (id, "column_height", "set.height") if is_base_height(id) => {
             if let Some(height) = payload.and_then(|value| value.as_f64()) {
                 session.context.insert("height".into(), json!(height));
                 session.state = "ready".into();
@@ -394,14 +505,15 @@ pub fn commit_object(
                 }],
             })
         }
-        "structure.structure.constructReinforcedConcreteColumn" => {
+        "structure.structure.constructReinforcedConcreteColumn" | "building.building.constructColumn" => {
             let base = context_point(session, "base")?;
             let height = session.context.get("height").and_then(|value| value.as_f64()).unwrap_or(3.0);
             let radius = 0.25;
             let solid = kernel.cylinder_prim_sync(radius, height.max(0.05)).ok()?;
+            let label = entry.label;
             Some(CadObject {
                 id: next_id("object"),
-                label: format!("Column {}", label_count + 1),
+                label: format!("{label} {}", label_count + 1),
                 typology: entry.produces_typology.into(),
                 visible: true,
                 locked: false,
@@ -413,6 +525,63 @@ pub fn commit_object(
                 solid_handle: Some(solid.0.clone()),
                 primitives: vec![CadPrimitiveSlot {
                     slot: "solid".into(),
+                    primitive_id: solid.0,
+                    kind: "solid".into(),
+                }],
+            })
+        }
+        id if is_two_point_height(id) => {
+            let corner_a = context_point(session, "cornerA")?;
+            let corner_b = context_point(session, "cornerB")?;
+            let default_height = if id.contains("slab") { 0.25 } else if id.contains("Beam") { 0.4 } else { 3.0 };
+            let height = session
+                .context
+                .get("height")
+                .and_then(|value| value.as_f64())
+                .unwrap_or(default_height);
+            let width = (corner_b[0] - corner_a[0]).abs().max(0.5);
+            let depth = (corner_b[1] - corner_a[1]).abs().max(0.5);
+            let (solid_width, solid_depth, solid_height) = if id == "energy.energy.constructExternalWall" {
+                let span = ((corner_b[0] - corner_a[0]).powi(2) + (corner_b[1] - corner_a[1]).powi(2))
+                    .sqrt()
+                    .max(0.5);
+                (span, 0.2, height.max(0.05))
+            } else if id.contains("Beam") {
+                let span = ((corner_b[0] - corner_a[0]).powi(2) + (corner_b[1] - corner_a[1]).powi(2))
+                    .sqrt()
+                    .max(0.5);
+                (span, 0.3, 0.3)
+            } else if id.contains("Wall") {
+                let span = ((corner_b[0] - corner_a[0]).powi(2) + (corner_b[1] - corner_a[1]).powi(2))
+                    .sqrt()
+                    .max(0.5);
+                (span, 0.2, height.max(0.05))
+            } else {
+                (width, depth, height.max(0.05))
+            };
+            let solid = kernel
+                .box_prim_sync(solid_width, solid_depth, solid_height)
+                .ok()?;
+            Some(CadObject {
+                id: next_id("object"),
+                label: format!("{} {}", entry.label, label_count + 1),
+                typology: entry.produces_typology.into(),
+                visible: true,
+                locked: false,
+                origin: corner_a,
+                orientation: Some([0.0, 0.0, 0.0, 1.0]),
+                scale: None,
+                mesh_url: None,
+                extent: Some([solid_width, solid_depth, solid_height]),
+                solid_handle: Some(solid.0.clone()),
+                primitives: vec![CadPrimitiveSlot {
+                    slot: if id.contains("surface") {
+                        "surface".into()
+                    } else if id.contains("curve") {
+                        "curve".into()
+                    } else {
+                        "solid".into()
+                    },
                     primitive_id: solid.0,
                     kind: "solid".into(),
                 }],

@@ -1873,6 +1873,7 @@ mod tests {
                     id: "edit".into(),
                     label: "Edit".into(),
                     tools: Vec::new(),
+                    layout_id: None,
                 }],
                 default_mode_id: Some("edit".into()),
                 window_kinds: vec![WindowKindDefinition {
@@ -1920,6 +1921,7 @@ mod tests {
                 id: "edit".into(),
                 label: "Edit".into(),
                 tools: Vec::new(),
+                layout_id: None,
             }],
             default_mode_id: Some("edit".into()),
             window_kinds: vec![WindowKindDefinition {
@@ -1951,6 +1953,7 @@ mod tests {
                 id: "edit".into(),
                 label: "Edit".into(),
                 tools: Vec::new(),
+                layout_id: None,
             }],
             default_mode_id: Some("edit".into()),
             window_kinds: vec![WindowKindDefinition {
@@ -2026,6 +2029,7 @@ mod tests {
                 id: "edit".into(),
                 label: "Edit".into(),
                 tools: Vec::new(),
+                layout_id: None,
             }],
             default_mode_id: Some("edit".into()),
             window_kinds: vec![WindowKindDefinition {
@@ -2153,6 +2157,7 @@ mod tests {
                     id: "edit".into(),
                     label: "Edit".into(),
                     tools: Vec::new(),
+                    layout_id: None,
                 }],
                 default_mode_id: Some("edit".into()),
                 window_kinds: vec![WindowKindDefinition {
@@ -2241,6 +2246,7 @@ mod tests {
                         id: "edit".into(),
                         label: "Edit".into(),
                         tools: Vec::new(),
+                    layout_id: None,
                     }],
                     default_mode_id: None,
                 }],
@@ -4462,6 +4468,7 @@ pub fn os_baseline_resource(
             id: "edit".into(),
             label: "Edit".into(),
             tools: Vec::new(),
+            layout_id: None,
         }],
         default_mode_id: None,
         parameter_fields: Vec::new(),
@@ -4626,6 +4633,7 @@ pub fn resolve_os_app_definition(
                 id: "edit".into(),
                 label: "Edit".into(),
                 tools: Vec::new(),
+                layout_id: None,
             }]
         } else {
             app.modes.clone()

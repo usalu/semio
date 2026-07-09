@@ -952,9 +952,7 @@ fn writer_bundle() -> PluginBundle {
     PluginBundle::new("writer", "Writer", "0.1.0").register_app(create_writer_app(), || Box::new(WriterApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(writer_bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(writer_bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

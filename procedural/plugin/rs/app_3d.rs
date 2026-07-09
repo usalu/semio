@@ -1311,6 +1311,7 @@ pub fn create_procedural3d_app() -> App {
             .mode("edit", "Edit")
             .mode("generate", "Generate")
             .default_mode_id("edit")
+            .mode_layout("generate", "procedural3d-generate")
             .mode_tools("edit", procedural3d_edit_tools())
             .mode_tools("generate", procedural3d_generate_tools())
             .window_kind(

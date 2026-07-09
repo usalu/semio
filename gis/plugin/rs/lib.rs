@@ -13,7 +13,5 @@ fn bundle() -> PluginBundle {
         .register_app(app_2d::create_gis2d_app(), || Box::new(app_2d::Gis2dPlayApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Bundle

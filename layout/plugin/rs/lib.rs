@@ -1324,9 +1324,7 @@ fn bundle() -> PluginBundle {
     PluginBundle::new("layout", "Layout", "0.1.0").register_app(create_layout_app(), || Box::new(LayoutPlayApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests

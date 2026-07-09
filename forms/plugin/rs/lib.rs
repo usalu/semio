@@ -2008,9 +2008,7 @@ fn forms_bundle() -> PluginBundle {
     PluginBundle::new("forms", "Forms", "0.1.0").register_app(create_forms_app(), || Box::new(FormsPlayApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(forms_bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(forms_bundle);
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests

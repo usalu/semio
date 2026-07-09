@@ -767,9 +767,7 @@ fn bundle() -> PluginBundle {
     })
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

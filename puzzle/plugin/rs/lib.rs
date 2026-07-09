@@ -23,7 +23,5 @@ fn bundle() -> PluginBundle {
         .register_app(d5::create_puzzle5d_app(), || Box::new(d5::Puzzle5dPlayApp::default()))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Bundle

@@ -110,6 +110,7 @@ type WorldSelectionRecord = {
 	readonly gumballActive?: boolean;
 	readonly hoveredComponent?: WorldHoverComponent;
 	readonly showEdges?: boolean;
+	readonly engagementSessionActive?: boolean;
 };
 
 type SemanticColors = {
@@ -904,6 +905,30 @@ function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefOb
 	return null;
 }
 
+function paneSuffixFromSurfaceId(surfaceId?: string): string | undefined {
+	if (!surfaceId) return undefined;
+	const slash = surfaceId.lastIndexOf("/");
+	return slash >= 0 ? surfaceId.slice(slash + 1) : surfaceId;
+}
+
+function raycastGroundPoint(
+	clientX: number,
+	clientY: number,
+	hostRect: DOMRect,
+	camera: import("three").Camera,
+): [number, number, number] | null {
+	const ndcX = ((clientX - hostRect.left) / hostRect.width) * 2 - 1;
+	const ndcY = -(((clientY - hostRect.top) / hostRect.height) * 2 - 1);
+	const ray = new Vector3(ndcX, ndcY, 0.5).unproject(camera);
+	const origin = camera.position.clone();
+	const direction = ray.sub(origin).normalize();
+	if (Math.abs(direction.z) < 1e-6) return null;
+	const t = -origin.z / direction.z;
+	if (t < 0) return null;
+	const hit = origin.add(direction.multiplyScalar(t));
+	return [hit.x, hit.y, hit.z];
+}
+
 function instanceCenterInMarquee(
 	instance: WorldInstanceRecord,
 	index: number,
@@ -1110,6 +1135,20 @@ export function World3dHost({
 	const handlePointerDown = useCallback(
 		(event: React.PointerEvent<HTMLDivElement>) => {
 			if (event.button !== 0 || event.target !== hostRef.current) return;
+			if (selection.engagementSessionActive && hostRef.current && cameraRef.current) {
+				const rect = hostRef.current.getBoundingClientRect();
+				const point = raycastGroundPoint(event.clientX, event.clientY, rect, cameraRef.current);
+				if (point) {
+					dispatch("worldPointerDown", {
+						pane: paneSuffixFromSurfaceId(node.surfaceId),
+						position: point,
+						shiftKey: event.shiftKey,
+						ctrlKey: event.ctrlKey,
+						metaKey: event.metaKey,
+					});
+					return;
+				}
+			}
 			if (paintMode) {
 				setPaintStrokeActive(true);
 				dispatch("paintStrokeBegin");
@@ -1119,7 +1158,14 @@ export function World3dHost({
 			setMarqueePath([point]);
 			updateMarqueePreview([point]);
 		},
-		[dispatch, paintMode, toLocalPoint, updateMarqueePreview],
+		[
+			dispatch,
+			node.surfaceId,
+			paintMode,
+			selection.engagementSessionActive,
+			toLocalPoint,
+			updateMarqueePreview,
+		],
 	);
 
 	const handlePointerMove = useCallback(

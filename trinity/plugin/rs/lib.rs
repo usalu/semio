@@ -14,7 +14,5 @@ fn bundle() -> PluginBundle {
         .register_app(app_rewrite::create_rewrite_app(), || Box::new(app_rewrite::TrinityRewritePlayApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Bundle

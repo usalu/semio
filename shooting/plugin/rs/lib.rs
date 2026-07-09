@@ -1145,9 +1145,7 @@ fn bundle() -> PluginBundle {
     PluginBundle::new("shooting", "Shooting", "0.1.0").register_app(create_shooting_app(), || Box::new(ShootingPlayApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

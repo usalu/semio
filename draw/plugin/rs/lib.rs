@@ -1312,11 +1312,7 @@ fn draw_bundle() -> semio_framework_plugin::PluginBundle {
     semio_framework_plugin::PluginBundle::new("draw", "Draw", "0.1.0").register_app(create_draw_app(), || Box::new(DrawApp))
 }
 
-static _PLUGIN_INIT: std::sync::LazyLock<()> = std::sync::LazyLock::new(|| {
-    semio_framework_plugin::install_plugin_bundle(draw_bundle());
-});
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(draw_bundle);
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests

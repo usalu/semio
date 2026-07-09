@@ -19,6 +19,7 @@ import {
 	runViteBunxDev,
 	frameworkOsPlaygroundDefaultPort,
 } from "../../../../repo/lib/js/index.ts";
+import { resolvePluginRegistryId } from "../../../core/js/index.ts";
 import { PLUGIN_BUILD_TARGETS } from "./js/index.ts";
 import { generatePluginRegistry } from "../../../plugin/registry/script.ts";
 
@@ -236,10 +237,11 @@ async function buildPlugins(filterPlugin?: string): Promise<void> {
 	if (existsSync(stalePublicPlugins)) {
 		rmSync(stalePublicPlugins, { recursive: true, force: true });
 	}
-	const targets = filterPlugin
+	const registryId = filterPlugin ? resolvePluginRegistryId(filterPlugin) : undefined;
+	const targets = registryId
 		? PLUGIN_BUILD_TARGETS.filter(
 				(target) =>
-					target.pluginId === filterPlugin || target.pluginId === `${filterPlugin}-module-procedural`,
+					target.pluginId === registryId || target.pluginId === `${registryId}-module-procedural`,
 			)
 		: PLUGIN_BUILD_TARGETS;
 	for (const target of targets) {
@@ -258,8 +260,12 @@ class PluginWatchScript extends BundleScript {
 	async run(segments: string[]): Promise<void> {
 		const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
 		await buildPlugins(filterPlugin || undefined);
-		const targets = filterPlugin
-			? PLUGIN_BUILD_TARGETS.filter((target) => target.pluginId === filterPlugin)
+		const registryId = filterPlugin ? resolvePluginRegistryId(filterPlugin) : undefined;
+		const targets = registryId
+			? PLUGIN_BUILD_TARGETS.filter(
+					(target) =>
+						target.pluginId === registryId || target.pluginId === `${registryId}-module-procedural`,
+				)
 			: PLUGIN_BUILD_TARGETS;
 		for (const target of targets) {
 			const watchRoot = join(repoRoot, target.cratePath);

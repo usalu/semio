@@ -413,6 +413,8 @@
   \AddToHook{cmd/#1/after}{\semio@heading@chips@enable}%
 }
 
+\makeatletter
+\newif\ifsemio@block@sep@done
 \newskip\semio@block@sep@skip
 \newskip\semio@heading@after@skip
 \setlength\semio@block@sep@skip{0.2em}
@@ -423,3 +425,4 @@
 }
 \newcommand{\SemioSpacingUnit}{\semio@spacing@single}
 \newcommand{\SemioSpacingDouble}{\semio@spacing@double}
+\makeatother

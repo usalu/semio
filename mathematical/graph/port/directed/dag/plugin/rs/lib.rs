@@ -997,9 +997,7 @@ fn bundle() -> PluginBundle {
     PluginBundle::new("dag", "DAG", "0.1.0").register_app(create_dag_app(), || Box::new(DagPlayApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 #[cfg(test)]

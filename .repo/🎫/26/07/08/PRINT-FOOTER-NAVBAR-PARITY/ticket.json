@@ -1,9 +1,9 @@
 {
   "title": "Print Footer Navbar Parity",
   "emoji": "🖨️",
-  "status": "open",
+  "status": "closed",
   "description": "The print LaTeX footer leaves too much space below it and should sit closer to the physical page bottom.",
-  "summary": "Fixed print footer sitting too high above the page bottom. KOMA was overriding fancy page styles so chapter/TOC pages only showed a bare page number; chrome footer never rendered. Applied chrome styles after preamble end for fancy/plain/scrplain/scrheadings, reduced bottom margin to a single spacing unit, and anchored the chrome footer at the physical page bottom via eso-pic shipout (skipping empty/title pages). Verified on paper.pdf page 2.",
+  "summary": "Aligned print footer chrome with the navbar by rendering it through fancyhdr instead of eso-pic shipout at the physical page corner. Footer now uses \\fancyfoot[C]{\\SemioChromeFooterHead} with the same headwidth=textwidth centering and single-spacing inner padding as the navbar. Disabled the eso-pic footer shipout hook. Verified paper.pdf builds and rasterized page-2 artifacts in the ticket folder.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1862"
   },

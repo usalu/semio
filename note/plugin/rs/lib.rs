@@ -1491,9 +1491,7 @@ fn note_bundle() -> PluginBundle {
     PluginBundle::new("note", "Note", "0.1.0").register_app(create_note_app(), || Box::new(NoteApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(note_bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(note_bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

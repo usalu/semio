@@ -1,19 +1,21 @@
-# Print Footer Bottom Spacing — Verify Log
+# Verify Log — Print Footer Navbar Parity
 
 ## Problem
-Chrome footer sat too high with ~2.5cm dead space below it; chapter/TOC pages used KOMA `plain` style (bare page number only).
+Footer chrome was painted via `eso-pic` at `\AtPageLowerLeft` + `\put(0,0)`, so it started at the physical page edge while the navbar uses `fancyhdr` centered in the text block (`\headwidth` = `\textwidth`).
 
 ## Fix
-- Apply chrome page styles via `\AfterEndPreamble` so KOMA does not override `fancy`
-- Mirror chrome header/footer into `plain`, `scrplain`, `scrheadings`
-- Reduce bottom margin: `\geometry{bottom=\semio@spacing@single}`
-- Anchor footer at physical page bottom with eso-pic `\AtPageLowerLeft` + `\put`
-- Skip footer on `empty` pages via `\Ifthispagestyle`
+- Render footer through `\fancyfoot[C]{\SemioChromeFooterHead}` in `\semio_chrome_pagestyle_def:n` (same mechanism as navbar).
+- Disable eso-pic footer shipout (`\semio_chrome_footer_install:` no-op).
+- Keep inner `\hspace{\semio@spacing@single}` padding in navbar and footer hboxes.
 
-## Verification
-Built `print/dist/paper.pdf` and rasterized page 2.
+## Build
+```bash
+bun ./script.ts build paper
+```
+`print/dist/paper.pdf` built successfully (2026-07-08).
 
-Before: bare centered page number floating mid-lower page.
-After: full chrome footer bar flush at page bottom (emblem, author, page number).
-
-Artifacts: `report-p2-before.png`, `report-p2-footer-crop.png`
+## Visual check
+```bash
+bun .repo/🎫/26/07/08/PRINT-FOOTER-NAVBAR-PARITY/rasterize.ts
+```
+Artifacts: `report-p2-before.png`, `report-p2-footer-crop.png`.

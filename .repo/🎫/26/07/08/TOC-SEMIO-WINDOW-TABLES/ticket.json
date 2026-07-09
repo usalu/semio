@@ -1,9 +1,9 @@
 {
   "title": "TOC Semio Window Tables",
   "emoji": "🖨️",
-  "status": "open",
+  "status": "closed",
   "description": "LaTeX Table OS Style Parity",
-  "summary": "All document TOCs and register lists (\\tableofcontents, \\listof*) now render as hierarchical Semio Table windows with Nr./Titel/Seite columns and child indent from section number depth.\n\n- \\semio@render@toc and \\semio@render@register open a Table window (title bar chrome) and render \\SemioTableRegister with header + body rows\n- TOC entries tracked via .sctoc aux file and \\SemioTocTrack on heading hooks\n- \\SemioTableRegisterRow indents the title column by dot-count × 2 × spacing for child hierarchy\n- Register list mode uses \\ifsemio@register@list (not heading-chips disable) to avoid incomplete \\iffalse during window open\n- Fixed semio-core duplicate author-chip definitions and \\semio@if@heading@chips register-list branch\n- zwischenbericht and report templates build (light + dark)",
+  "summary": "Fixed empty Semio Table-window TOCs despite document content.\n\nRoot cause: Tectonic keeps .sctoc in memory during a run but does not persist it to disk without --keep-intermediates. A separate second tectonic process could not reliably read pass-1 TOC data, so \\maketableofcontents rendered with zero rows.\n\nFixes:\n- compilePrintDocument now uses a single tectonic invocation with --reruns 1 and --keep-intermediates so .sctoc is written and re-read in-process before the final PDF.\n- Set tocdepth to unlimited (99) again in AtBeginDocument so KOMA cannot leave pruning active.\n- Restored \\semio@toc@depth@unlimited definition without breaking ExplSyntaxOn (accidental \\ExplSyntaxOff at package load had broken \\cs_new_protected).\n\nVerified: zwischenbericht.sctoc has 109 entries; build and bun print/script.ts test pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1860"
   },
@@ -13,6 +13,8 @@
     "⚪b88c8d706fcb4c0b8e9da415e211521d",
     "⚪e5217bce1b7a429dad9b212da78ccfd5",
     "⚪80a565fad6e94da8be81d7eaf999e69f",
-    "⚪8f763ee957b04cb9a95a01afd440897b"
+    "⚪8f763ee957b04cb9a95a01afd440897b",
+    "⚪d7f53c00e7d4480e9f17aa5f50794969",
+    "⚪4d8271f8aa914c97b5b570e82de3fee5"
   ]
 }

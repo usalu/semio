@@ -2611,9 +2611,7 @@ fn bundle() -> PluginBundle {
         .register_app(create_studio_app(), || Box::new(SStudioApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -2647,6 +2645,7 @@ mod tests {
                         id: "edit".into(),
                         label: "Edit".into(),
                         tools: vec![],
+                layout_id: None,
                     }],
                     default_mode_id: None,
                 }],
@@ -2996,6 +2995,7 @@ mod tests {
                     id: "edit".into(),
                     label: "Edit".into(),
                     tools: vec![],
+                layout_id: None,
                 }],
                 default_mode_id: None,
                 parameter_fields: Vec::new(),
@@ -3016,6 +3016,7 @@ mod tests {
                         id: "edit".into(),
                         label: "Edit".into(),
                         tools: vec![],
+                layout_id: None,
                     }],
                     default_mode_id: None,
                 }],
@@ -3036,6 +3037,7 @@ mod tests {
                     id: "edit".into(),
                     label: "Edit".into(),
                     tools: vec![],
+                layout_id: None,
                 }],
                 default_mode_id: None,
                 parameter_fields: Vec::new(),
@@ -3056,6 +3058,7 @@ mod tests {
                         id: "edit".into(),
                         label: "Edit".into(),
                         tools: vec![],
+                layout_id: None,
                     }],
                     default_mode_id: None,
                 }],

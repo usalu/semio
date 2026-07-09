@@ -3,7 +3,7 @@
   "emoji": "🖨️",
   "status": "closed",
   "description": "Add generic non-registered Window chrome primitive plus fixed-gutter horizontal composition macros (SemioWindowRowTwo/SemioWindowRowThree) to print LaTeX stack. Rebuild makecoverpages as 6 vertically-stacked window rows plus 3 side-by-side logo windows. Add antragstellendeinstitution/kooperationspartner metadata fields. Update zwischenbericht and template call sites.",
-  "summary": "Added composable print windows mirroring the UI layout system: generic non-registered `Window` environment (structural tier chrome, no counter/register), `SemioWindowRowTwo`/`SemioWindowRowThree` with fixed `\\semio@spacing@single` gutter, new `\\antragstellendeinstitution{}` and `\\kooperationspartner{}` metadata fields, and rebuilt `\\makecoverpages` as 6 stacked window rows plus a 3-column logo row (Zukunft Bau, BBSR, BBR). Updated zwischenbericht light/dark and zukunftbau template call sites. Verified: `bun ./script.ts test` (12 PDFs), mit-bestand zwischenbericht build, cover-page raster spacing (~0.2em gaps, logo gutter ~9px).",
+  "summary": "Combined Antragstellende Institution and Kooperationspartner into one `SemioWindowRowTwo` with `row` windows. Added `\\semio_cover_address:n` for ragged-right multiline address rendering. Split LUH metadata into separate lines for university, faculty/IEK, and department. Verified mit-bestand zwischenbericht build.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1868"
   },
@@ -14,6 +14,9 @@
     "local": "composable_print_windows_c4651ad2.plan.md"
   },
   "sessions": [
-    "⚪c20bfd7c92294a34a5c7c85c982a21c5"
+    "⚪c20bfd7c92294a34a5c7c85c982a21c5",
+    "⚪c1dc5478b46d4534b17296576eac6b1f",
+    "⚪693753fa92ca490aa4b16da92dffe665",
+    "⚪c3c7f94903a2407189ab91c4a1d25223"
   ]
 }

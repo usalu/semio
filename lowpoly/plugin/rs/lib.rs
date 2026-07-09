@@ -2197,6 +2197,7 @@ fn create_lowpoly_app() -> App {
             .icon_id("box")
             .mode("edit", "Edit")
             .mode("paint", "Paint")
+            .mode_layout("paint", "lowpoly-paint")
             .default_mode_id("edit")
             .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, SurfaceKind::World3d, engagement.clone())
             .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_UV, "UV", LOWPOLY_PLAY_BODY_UV, SurfaceKind::Canvas2d, engagement)
@@ -2286,9 +2287,7 @@ fn register_lowpoly_exports() {
     semio_framework_os::register_mesh_obj_glb_export_handlers("3d.mesh", "mesh", |_| Ok(mesh_from_kind("box")));
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

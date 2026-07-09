@@ -913,9 +913,7 @@ fn bundle() -> PluginBundle {
     PluginBundle::new("sequence", "Sequence", "0.1.0").register_app(create_sequence_app(), || Box::new(SequencePlayApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 #[cfg(test)]

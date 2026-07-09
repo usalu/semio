@@ -1328,6 +1328,7 @@ mod tests {
                 id: "edit".into(),
                 label: "Edit".into(),
                 tools: Vec::new(),
+                layout_id: None,
             }],
             default_mode_id: Some("edit".into()),
             window_kinds: vec![WindowKindDefinition {
@@ -2906,6 +2907,8 @@ pub struct ModeDefinition {
     pub label: String,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tools: Vec<crate::tools::ToolNode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub layout_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2988,6 +2991,17 @@ pub struct AppDefinition {
     pub named_layouts: Vec<NamedLayout>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_layout: Option<WindowLayout>,
+}
+
+/// 🧭 Resolves the dock layout a mode should present.
+pub fn resolve_layout_for_mode(app: &AppDefinition, mode_id: &str) -> Option<WindowLayout> {
+    let mode = app.modes.iter().find(|mode| mode.id == mode_id)?;
+    if let Some(layout_id) = &mode.layout_id {
+        if let Some(named) = app.named_layouts.iter().find(|entry| entry.id == *layout_id) {
+            return Some(named.layout.clone());
+        }
+    }
+    app.default_layout.clone()
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

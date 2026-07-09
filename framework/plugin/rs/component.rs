@@ -1,7 +1,8 @@
 //! 🧩 WASI P2 component exports for the plugin world contract.
 
 use crate::plugin_runtime::{
-    plugin_create_app, plugin_handle_command, plugin_manifest, plugin_render_with_document,
+    ensure_plugin_initialized, plugin_create_app, plugin_handle_command, plugin_manifest,
+    plugin_render_with_document,
 };
 use wit_bindgen::generate;
 
@@ -20,12 +21,14 @@ pub struct ComponentGuest;
 
 impl Guest for ComponentGuest {
     fn manifest() -> PluginManifestJson {
+        ensure_plugin_initialized();
         PluginManifestJson {
             json: serde_json::to_string(&plugin_manifest()).unwrap_or_else(|_| "{}".into()),
         }
     }
 
     fn instantiate_app(app_id: String, _instance_id: String) -> Result<u32, PluginError> {
+        ensure_plugin_initialized();
         plugin_create_app(&app_id).map_err(PluginError::Message)
     }
 
@@ -34,6 +37,7 @@ impl Guest for ComponentGuest {
         command: CommandInvocationJson,
         context: CommandContextJson,
     ) -> Result<CommandResponseJson, PluginError> {
+        ensure_plugin_initialized();
         let result = plugin_handle_command(instance_id, &command.json, &context.json)
             .map_err(PluginError::Message)?;
         Ok(CommandResponseJson {
@@ -45,6 +49,7 @@ impl Guest for ComponentGuest {
         instance_id: u32,
         input: WindowInputJson,
     ) -> Result<WindowOutputJson, PluginError> {
+        ensure_plugin_initialized();
         let node = plugin_render_with_document(instance_id, "", None, &input.json)
             .map_err(PluginError::Message)?;
         Ok(WindowOutputJson {

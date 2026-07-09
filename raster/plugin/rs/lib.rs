@@ -1325,9 +1325,7 @@ fn raster_bundle() -> PluginBundle {
     PluginBundle::new("raster", "Raster", "0.1.0").register_app(create_raster_app(), || Box::new(RasterApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(raster_bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(raster_bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests

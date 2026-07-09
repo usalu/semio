@@ -690,8 +690,50 @@ export function buildContributionsJson(
 	return JSON.stringify(entries);
 }
 
+export const PLAYGROUND_PLUGIN_REGISTRY_IDS: Readonly<Record<string, string>> = {
+	procedural3d: "procedural",
+	procedural2d: "procedural",
+	puzzle2d: "puzzle",
+	puzzle3d: "puzzle",
+	puzzle5d: "puzzle",
+	"trinity-rewrite": "trinity",
+	gis2d: "gis",
+	"reasoning-wires": "reasoning-mindmap",
+};
+
+export const PLAYGROUND_DEFAULT_APP_IDS: Readonly<Record<string, string>> = {
+	procedural3d: "procedural3d-play",
+	procedural2d: "procedural2d-play",
+	puzzle2d: "puzzle2d-play",
+	puzzle3d: "puzzle3d-play",
+	puzzle5d: "puzzle5d-play",
+	"trinity-rewrite": "trinity-rewrite-play",
+	gis2d: "gis2d-play",
+	"reasoning-wires": "reasoning-wires-play",
+};
+
+export function resolveLayoutForMode(
+	app: { readonly defaultLayout?: WindowLayout; readonly namedLayouts?: readonly NamedLayout[]; readonly modes: readonly { readonly id: string; readonly layoutId?: string }[] },
+	modeId: string,
+): WindowLayout | undefined {
+	const mode = app.modes.find((entry) => entry.id === modeId);
+	if (mode?.layoutId) {
+		const named = app.namedLayouts?.find((entry) => entry.id === mode.layoutId);
+		if (named) return named.layout;
+	}
+	return app.defaultLayout;
+}
+
+export function resolvePluginRegistryId(playgroundPluginId: string): string {
+	return PLAYGROUND_PLUGIN_REGISTRY_IDS[playgroundPluginId] ?? playgroundPluginId;
+}
+
+export function resolvePlaygroundDefaultAppId(playgroundPluginId: string): string | undefined {
+	return PLAYGROUND_DEFAULT_APP_IDS[playgroundPluginId];
+}
+
 export function contributorPluginIdsFor(primaryPluginId: string): readonly string[] {
-	return [`${primaryPluginId}-module-procedural`];
+	return [`${resolvePluginRegistryId(primaryPluginId)}-module-procedural`];
 }
 
 export function expandPluginRegistry(
@@ -700,10 +742,11 @@ export function expandPluginRegistry(
 	studioMode = false,
 ): readonly PluginRegistryEntry[] {
 	if (studioMode || !primaryPluginId) return plugins;
-	const extraIds = new Set(contributorPluginIdsFor(primaryPluginId));
+	const registryId = resolvePluginRegistryId(primaryPluginId);
+	const extraIds = new Set(contributorPluginIdsFor(registryId));
 	return [
-		...plugins.filter((entry) => entry.pluginId === primaryPluginId),
-		...plugins.filter((entry) => entry.pluginId !== primaryPluginId && extraIds.has(entry.pluginId)),
+		...plugins.filter((entry) => entry.pluginId === registryId),
+		...plugins.filter((entry) => entry.pluginId !== registryId && extraIds.has(entry.pluginId)),
 	];
 }
 

@@ -1,0 +1,13 @@
+{
+  "title": "Print Window Border Gap",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Print windows have a small gap between the title bar first line and the window content box; borders should touch seamlessly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1870"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪c34019e9f36f4fa39b5cca84bc1967e7"
+  ]
+}

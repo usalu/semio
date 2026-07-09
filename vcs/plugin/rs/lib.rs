@@ -743,9 +743,7 @@ fn vcs_bundle() -> PluginBundle {
     PluginBundle::new("vcs", "VCS", "0.1.0").register_app(create_vcs_app(), || Box::new(VcsPlayApp))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(vcs_bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(vcs_bundle);
 //#endregion 🔖AppFactory
 
 //#region 🧪Tests

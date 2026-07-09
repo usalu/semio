@@ -11,6 +11,35 @@ const pdfjsEntry = fileURLToPath(new URL("pdfjs-dist/legacy/build/pdf.mjs", impo
 const { createCanvas } = createRequire(pdfjsEntry)("@napi-rs/canvas");
 const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 
+const chromeBase = { r: 247, g: 243, b: 227 };
+const canvasBg = { r: 240, g: 236, b: 221 };
+
+function chromeLeftEdge(data: Uint8ClampedArray, width: number, y: number): number {
+	for (let x = 0; x < width; x++) {
+		const i = (y * width + x) * 4;
+		const dr = Math.abs(data[i] - chromeBase.r);
+		const dg = Math.abs(data[i + 1] - chromeBase.g);
+		const db = Math.abs(data[i + 2] - chromeBase.b);
+		if (dr + dg + db < 30) return x;
+	}
+	return -1;
+}
+
+function chromeBand(data: Uint8ClampedArray, width: number, height: number, yStart: number, yEnd: number): number {
+	for (let y = yStart; y < yEnd; y++) {
+		let chromePixels = 0;
+		for (let x = 0; x < width; x++) {
+			const i = (y * width + x) * 4;
+			const dr = Math.abs(data[i] - chromeBase.r);
+			const dg = Math.abs(data[i + 1] - chromeBase.g);
+			const db = Math.abs(data[i + 2] - chromeBase.b);
+			if (dr + dg + db < 30) chromePixels++;
+		}
+		if (chromePixels > width * 0.5) return y;
+	}
+	return -1;
+}
+
 const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(pdfPath)), useSystemFonts: true }).promise;
 const page = await doc.getPage(2);
 const viewport = page.getViewport({ scale: 2 });
@@ -19,41 +48,28 @@ const context = canvas.getContext("2d");
 if (!context) throw new Error("canvas 2d unavailable");
 await page.render({ canvas, canvasContext: context, viewport }).promise;
 const { data, width, height } = context.getImageData(0, 0, canvas.width, canvas.height);
-const chromeBase = { r: 247, g: 243, b: 227 };
-const canvasBg = { r: 240, g: 236, b: 221 };
-const scanStart = Math.floor(height * 0.75);
-let footerTop = -1;
-let footerBottom = -1;
-for (let y = height - 1; y >= scanStart; y--) {
-	let chromePixels = 0;
-	for (let x = 0; x < width; x++) {
-		const i = (y * width + x) * 4;
-		const dr = Math.abs(data[i] - chromeBase.r);
-		const dg = Math.abs(data[i + 1] - chromeBase.g);
-		const db = Math.abs(data[i + 2] - chromeBase.b);
-		if (dr + dg + db < 30) chromePixels++;
+
+const navbarY = chromeBand(data, width, height, 0, Math.floor(height * 0.2));
+const footerY = chromeBand(data, width, height, Math.floor(height * 0.75), height);
+const navbarLeft = navbarY >= 0 ? chromeLeftEdge(data, width, navbarY) : -1;
+const footerLeft = footerY >= 0 ? chromeLeftEdge(data, width, footerY) : -1;
+const footerBottom = (() => {
+	for (let y = height - 1; y >= Math.floor(height * 0.75); y--) {
+		let chromePixels = 0;
+		for (let x = 0; x < width; x++) {
+			const i = (y * width + x) * 4;
+			const dr = Math.abs(data[i] - chromeBase.r);
+			const dg = Math.abs(data[i + 1] - chromeBase.g);
+			const db = Math.abs(data[i + 2] - chromeBase.b);
+			if (dr + dg + db < 30) chromePixels++;
+		}
+		if (chromePixels > width * 0.5) return y;
 	}
-	if (chromePixels > width * 0.5) {
-		footerBottom = y;
-		break;
-	}
-}
-for (let y = scanStart; y < height; y++) {
-	let chromePixels = 0;
-	for (let x = 0; x < width; x++) {
-		const i = (y * width + x) * 4;
-		const dr = Math.abs(data[i] - chromeBase.r);
-		const dg = Math.abs(data[i + 1] - chromeBase.g);
-		const db = Math.abs(data[i + 2] - chromeBase.b);
-		if (dr + dg + db < 30) chromePixels++;
-	}
-	if (chromePixels > width * 0.5) {
-		footerTop = y;
-		break;
-	}
-}
+	return -1;
+})();
+
 let contentBottom = -1;
-for (let y = footerTop - 1; y >= 0; y--) {
+for (let y = footerY - 1; y >= 0; y--) {
 	let contentPixels = 0;
 	for (let x = Math.floor(width * 0.1); x < Math.floor(width * 0.9); x++) {
 		const i = (y * width + x) * 4;
@@ -67,7 +83,8 @@ for (let y = footerTop - 1; y >= 0; y--) {
 		break;
 	}
 }
-const gapContentFooter = footerTop - contentBottom - 1;
-const gapPx = height - 1 - footerBottom;
-const footerHeightPx = footerBottom - footerTop;
-console.log(`[DEBUG] page height px=${height} footer top=${footerTop} bottom=${footerBottom} height=${footerBottom - footerTop} gap below footer=${height - 1 - footerBottom}px content bottom=${contentBottom} gap content→footer=${gapContentFooter}px (${(gapContentFooter / (height / 842)).toFixed(1)}pt est)`);
+
+const pxPerPt = height / 842;
+const alignDelta = Math.abs(navbarLeft - footerLeft);
+console.log(`[DEBUG] page2 navbar y=${navbarY} left=${navbarLeft}px footer y=${footerY} left=${footerLeft}px align delta=${alignDelta}px (${(alignDelta / pxPerPt).toFixed(2)}pt)`);
+console.log(`[DEBUG] footer bottom=${footerBottom}px gap below footer=${height - 1 - footerBottom}px content→footer=${footerY - contentBottom - 1}px`);

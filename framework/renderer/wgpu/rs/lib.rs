@@ -1680,6 +1680,7 @@ mod tests {
                 id: "default".into(),
                 label: "Default".into(),
                 tools: vec![],
+            layout_id: None,
             }],
             default_mode_id: Some("default".into()),
             window_kinds: window_ids
@@ -9203,6 +9204,11 @@ impl ShellState {
                 let mode_id = id.trim_start_matches("playground.navbar.modes.");
                 if let Some(session) = self.session.as_mut() {
                     session.view_state.active_mode_id = Some(mode_id.to_string());
+                    if let Some(layout) = semio_framework_core::resolve_layout_for_mode(&session.app, mode_id) {
+                        self.layout_override = Some(layout);
+                        self.sync_dock();
+                        self.active_window_id = self.dock.active_window_id.clone();
+                    }
                 }
                 self.refresh_ui().await?;
                 return Ok(true);

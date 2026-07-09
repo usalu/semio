@@ -85,6 +85,9 @@ import {
 	buildContributionsJson,
 	expandPluginRegistry,
 	resolveExternalSlots,
+	resolveLayoutForMode,
+	resolvePlaygroundDefaultAppId,
+	resolvePluginRegistryId,
 	type NamedLayout,
 	type PluginRegistryEntry,
 	type PluginWasmHandle as CorePluginWasmHandle,
@@ -754,20 +757,26 @@ export function FrameworkOsShell({
 					return;
 				}
 
-				const first = loaded[0];
-				const firstApp = first?.manifest.apps[0];
-				if (first && firstApp) {
-					const instanceId = await first.createApp(firstApp.id);
+				const registryPluginId = pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined;
+				const primary =
+					(registryPluginId ? loaded.find((entry) => entry.pluginId === registryPluginId) : undefined) ??
+					loaded[0];
+				const defaultAppId = pluginFilter ? resolvePlaygroundDefaultAppId(pluginFilter) : undefined;
+				const primaryApp =
+					(defaultAppId ? primary?.manifest.apps.find((app) => app.id === defaultAppId) : undefined) ??
+					primary?.manifest.apps[0];
+				if (primary && primaryApp) {
+					const instanceId = await primary.createApp(primaryApp.id);
 					setSession({
-						pluginId: first.pluginId,
+						pluginId: primary.pluginId,
 						instanceId,
-						app: firstApp,
+						app: primaryApp,
 						viewState: {
-							activeModeId: firstApp.defaultModeId ?? firstApp.modes[0]?.id,
-							activeWindowKindId: firstApp.windowKinds[0]?.id,
+							activeModeId: primaryApp.defaultModeId ?? primaryApp.modes[0]?.id,
+							activeWindowKindId: primaryApp.windowKinds[0]?.id,
 						},
 					});
-					setActiveWindowId(firstApp.windowKinds[0]?.id ?? null);
+					setActiveWindowId(primaryApp.windowKinds[0]?.id ?? null);
 				}
 			} catch (bootError) {
 				if (!cancelled) {
@@ -1253,6 +1262,29 @@ export function FrameworkOsShell({
 		[session],
 	);
 
+	const applyModeChange = useCallback(
+		(modeId: string) => {
+			setSession((current) => {
+				if (!current) return current;
+				const layout = resolveLayoutForMode(current.app, modeId);
+				if (layout) {
+					setExtraWindowInstances([]);
+					extraWindowCounterRef.current = 0;
+					setShellLayout(
+						convertFrameworkLayoutToModeLayout(
+							layout,
+							current.app.windowKinds.map((kind) => kind.id),
+						),
+					);
+					const defaultWindowId = findDefaultActiveWindowKindId(layout, current.app.windowKinds);
+					if (defaultWindowId) setActiveWindowId(defaultWindowId);
+				}
+				return { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
+			});
+		},
+		[],
+	);
+
 	const handleTemplateDrop = useCallback(
 		(payload: WindowTemplateDropPayload, target: ModeCanvasDropTarget) => {
 			if (!session) return;
@@ -1582,9 +1614,7 @@ export function FrameworkOsShell({
 									id={`playground.navbar.modes.${mode.id}`}
 									className={cn(isActive && interactiveActiveFillClass)}
 									data-state={isActive ? "on" : undefined}
-									onClick={() => {
-										setSession((current) => (current ? { ...current, viewState: { ...current.viewState, activeModeId: mode.id } } : current));
-									}}
+									onClick={() => applyModeChange(mode.id)}
 									icon={<span className="hidden" />}
 									text={mode.label}
 								/>
@@ -1595,7 +1625,7 @@ export function FrameworkOsShell({
 			});
 		}
 		return items;
-	}, [activeExampleId, activeModeId, exampleOptions, onCommand, panelToggles, session]);
+	}, [activeExampleId, activeModeId, applyModeChange, exampleOptions, onCommand, panelToggles, session]);
 
 	const searchItems = useMemo(() => {
 		if (!session) return [];
@@ -1794,9 +1824,7 @@ export function FrameworkOsShell({
 					<App
 						modes={modes.map((mode) => ({ id: mode.id, label: mode.label, children: null }))}
 						activeModeId={session.viewState.activeModeId ?? modes[0]?.id ?? session.app.id}
-						onActiveModeChange={(modeId) => {
-							setSession((current) => (current ? { ...current, viewState: { ...current.viewState, activeModeId: modeId } } : current));
-						}}
+						onActiveModeChange={applyModeChange}
 						chrome={false}
 					>
 						<Mode
@@ -2173,6 +2201,23 @@ export type VirtualFileSystemScene = {
 	readonly dragDropEnabled?: boolean;
 };
 
+export type GisMapScene = {
+	readonly mapFixtureJson: string;
+	readonly cameraJson: string;
+	readonly renderMode: string;
+	readonly vectorStyle: string;
+	readonly lodMode: string;
+	readonly tileUrlTemplate: string;
+	readonly vectorTileUrlTemplate: string;
+	readonly layerVisibilityJson: string;
+	readonly layerStrokeScaleJson: string;
+	readonly selectionJson: string;
+	readonly hoverJson: string;
+	readonly selectionMethod: string;
+	readonly selectionMode: string;
+	readonly contextMenuJson?: string;
+};
+
 export type UiExternalSlotNode = {
 	readonly type: "externalSlot";
 	readonly pluginId: string;
@@ -2195,6 +2240,7 @@ export type UiComponentSceneNode = {
 	readonly table?: TableScene;
 	readonly raster?: RasterScene;
 	readonly virtualFileSystem?: VirtualFileSystemScene;
+	readonly gisMap?: GisMapScene;
 };
 
 export type UiNode =
@@ -2746,6 +2792,62 @@ export async function createEditorSession(): Promise<EditorWasmSession> {
 	return new mod.EditorSession();
 }
 //#endregion EditorSession
+
+//#region MapSession
+export type MapWasmSession = {
+	attachCanvas(canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number): Promise<unknown>;
+	setSize(width: number, height: number, dpr: number): void;
+	renderFrame(): void;
+	setCamera(x: number, y: number, zoom: number): void;
+	cameraJson(): string;
+	cameraLimitsJson(): string;
+	fitWorldCamera(): void;
+	reclampCamera(): void;
+	pointerDownScreen(sx: number, sy: number, button: number): void;
+	pointerMoveScreen(sx: number, sy: number): void;
+	pointerUpScreen(sx: number, sy: number): void;
+	wheelScreen(sx: number, sy: number, deltaY: number): void;
+	syncMapJson(json: string): void;
+	uploadTile(z: number, x: number, y: number, bytes: Uint8Array): void;
+	uploadVectorTile(z: number, x: number, y: number, bytes: Uint8Array): void;
+	visibleTilesJson(): string;
+	visibleVectorTilesJson(): string;
+	setRenderMode(mode: string): void;
+	setVectorStyle(style: string): void;
+	setLodMode(mode: string): void;
+	setLayerVisibilityJson(json: string): void;
+	setLayerStrokeScaleJson(json: string): void;
+	setSelectionJson(json: string): void;
+	setHoverJson(json: string): void;
+	featuresInRectJson(x0: number, y0: number, x1: number, y1: number, crossing: boolean): string;
+	featuresInPolygonJson(pointsJson: string, crossing: boolean): string;
+	hitTestFeatureJson(sx: number, sy: number): string;
+	featureScreenJson(kind: string, id: string): string;
+	positionScreenJson(id: string): string;
+	currentLodJson(): string;
+	setMapThemeJson(json: string): void;
+	gpuReady(): boolean;
+	free(): void;
+};
+
+type MapSessionModule = {
+	readonly default: (input?: unknown) => Promise<unknown>;
+	readonly MapSession: new () => MapWasmSession;
+};
+
+let mapSessionPromise: Promise<MapSessionModule> | null = null;
+
+export async function createMapSession(): Promise<MapWasmSession> {
+	if (!mapSessionPromise) {
+		mapSessionPromise = import("@semio-tech/gis-2d-rs/pkg/gis_2d.js").then(async (mod) => {
+			await mod.default();
+			return mod as MapSessionModule;
+		});
+	}
+	const mod = await mapSessionPromise;
+	return new mod.MapSession();
+}
+//#endregion MapSession
 
 //#region SceneHelpers
 export function isFlowGraphScene(capabilitiesJson?: string): boolean {

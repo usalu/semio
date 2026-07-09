@@ -19779,23 +19779,11 @@ function resolveStackPathForWindowId(layout: WindowLayoutNode, windowId: string)
   return found;
 }
 
-/** @emoji 🪟 Adds missing windows and removes stale ones from the layout tree. */
+/** @emoji 🪟 Drops windows that are no longer declared without auto-opening undeclared layout slots. */
 function reconcileWindows(layout: WindowLayoutNode, windowIds: readonly string[]): WindowLayoutNode {
   const normalized = normalizeLayoutToStacks(layout);
   const allowed = new Set(windowIds);
-  let result = windowIds.length === 0 ? normalized : removeAbsentWindowsFromLayout(normalized, allowed);
-  const present = new Set(modeCollectWindowIds(result));
-  const missing = windowIds.filter((id) => !present.has(id));
-  if (missing.length === 0) return collapseLayout(result) ?? { kind: "stack", children: [] };
-  const newStacks: WindowLayoutStackNode[] = missing.map((id) => ({ kind: "stack", children: [{ kind: "window", id }], activeId: id }));
-  if (result.kind === "row" || result.kind === "column") {
-    result = { ...result, children: [...result.children, ...newStacks] };
-  } else if (result.kind === "stack") {
-    if (modeCollectWindowIds(result).length === 0) result = newStacks[0]!;
-    else result = { kind: "row", children: [result, ...newStacks] };
-  } else {
-    result = newStacks[0]!;
-  }
+  const result = windowIds.length === 0 ? normalized : removeAbsentWindowsFromLayout(normalized, allowed);
   return collapseLayout(result) ?? { kind: "stack", children: [] };
 }
 

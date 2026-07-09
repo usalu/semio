@@ -46,6 +46,84 @@ pub struct CadPrimitiveSlot {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct CadVertex {
+    pub id: String,
+    pub position: [f64; 3],
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadEdgeCurve {
+    pub kind: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadEdge {
+    pub id: String,
+    pub vertex_ids: Vec<String>,
+    pub curve: CadEdgeCurve,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadWire {
+    pub id: String,
+    pub edge_ids: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadPlaneSurface {
+    pub kind: String,
+    pub origin: [f64; 3],
+    pub normal: [f64; 3],
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadFace {
+    pub id: String,
+    pub wire_ids: Vec<String>,
+    pub surface: CadPlaneSurface,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadShell {
+    pub id: String,
+    pub face_ids: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadSolid {
+    pub id: String,
+    pub shell_ids: Vec<String>,
+}
+
+/// @emoji 🧱 Authored brep topology carried alongside spatial model objects.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CadGeometry {
+    #[serde(default)]
+    pub anchors: Vec<Value>,
+    #[serde(default)]
+    pub vertices: Vec<CadVertex>,
+    #[serde(default)]
+    pub edges: Vec<CadEdge>,
+    #[serde(default)]
+    pub wires: Vec<CadWire>,
+    #[serde(default)]
+    pub faces: Vec<CadFace>,
+    #[serde(default)]
+    pub shells: Vec<CadShell>,
+    #[serde(default)]
+    pub solids: Vec<CadSolid>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CadObject {
     pub id: String,
     pub label: String,
@@ -161,10 +239,36 @@ pub struct CadScene {
     pub references_by_model_definition_id: HashMap<String, Vec<CadReference>>,
     #[serde(default)]
     pub nodes: Vec<CadNode>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shape_geometry: Option<CadGeometry>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building_geometry: Option<CadGeometry>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub energy_geometry: Option<CadGeometry>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub structure_classic_geometry: Option<CadGeometry>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_tool: Option<String>,
     #[serde(default = "default_model_definition_id")]
     pub active_model_definition_id: String,
+}
+
+pub fn cad_pane_geometry<'a>(scene: &'a CadScene, pane: CadPaneId) -> Option<&'a CadGeometry> {
+    match pane {
+        CadPaneId::Shape => scene.shape_geometry.as_ref(),
+        CadPaneId::Building => scene.building_geometry.as_ref(),
+        CadPaneId::Energy => scene.energy_geometry.as_ref(),
+        CadPaneId::StructureClassic => scene.structure_classic_geometry.as_ref(),
+    }
+}
+
+pub fn cad_pane_geometry_mut(scene: &mut CadScene, pane: CadPaneId) -> &mut Option<CadGeometry> {
+    match pane {
+        CadPaneId::Shape => &mut scene.shape_geometry,
+        CadPaneId::Building => &mut scene.building_geometry,
+        CadPaneId::Energy => &mut scene.energy_geometry,
+        CadPaneId::StructureClassic => &mut scene.structure_classic_geometry,
+    }
 }
 
 fn default_model_definition_id() -> String {
@@ -185,6 +289,10 @@ pub fn empty_cad_projection() -> CadScene {
         structure_classic_objects: Vec::new(),
         references_by_model_definition_id: HashMap::new(),
         nodes: Vec::new(),
+        shape_geometry: None,
+        building_geometry: None,
+        energy_geometry: None,
+        structure_classic_geometry: None,
         active_tool: Some("selectDirect".into()),
         active_model_definition_id: default_model_definition_id(),
     }

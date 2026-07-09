@@ -3,7 +3,7 @@
   "emoji": "🖨️",
   "status": "closed",
   "description": "Create mit-bestand zwischenbericht LaTeX document with placeholder content and configure LaTeX Workshop for Tectonic build.",
-  "summary": "Footer left now shows each author as a shortened chip (e.g. U. Saluz, K. Sarakbi) via \\footerauthors and \\SemioFooterAuthorChips. Author shortening uses a robust LaTeX first-name parser in semio-core.sty. Fixed TOC aux file rename to .sctoc and register body materialize (cs_gset_nopar:cpn instead of Npx) to stop premature table expansion on second LaTeX pass. Verified in zwischenbericht.pdf footer text on pages 2–4.",
+  "summary": "Fixed body text rendering: a dangling \\ExplSyntaxOn at the end of the \\AfterEndPreamble hook in semio-window.sty left expl3 space catcode 9 active after \\begin{document}, silently stripping every space from section headings, chip labels, and prose (words concatenated, lines overshot margins). Added the missing \\ExplSyntaxOff. Rebuilt zwischenbericht light+dark PDFs; verified pages 2/5/6/7 show normal LaTeX spacing and wrapping.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1834"
   },
@@ -16,6 +16,7 @@
     "⚪d9d5c318ec594ad892578ea9f3d6f2e0",
     "⚪8c837ee321d548008fee3dfcbf56a128",
     "⚪f34b7f5f72e54e03b4e873de37a33b69",
-    "⚪767bf085ba2d443dbfc0673ade96fb10"
+    "⚪767bf085ba2d443dbfc0673ade96fb10",
+    "⚪748cee008dca4b49a1459a9bbcd54209"
   ]
 }

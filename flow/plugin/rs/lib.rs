@@ -1307,9 +1307,7 @@ fn bundle() -> PluginBundle {
     PluginBundle::new("flow", "Flow", "0.1.0").register_app(create_flow_app(), || Box::new(FlowPlayApp { host: None }))
 }
 
-static _PLUGIN_INIT: LazyLock<()> = LazyLock::new(|| semio_framework_plugin::install_plugin_bundle(bundle()));
-
-semio_framework_plugin::plugin_exports!();
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Manifest
 
 #[cfg(test)]

@@ -1,7 +1,7 @@
 {
   "title": "Print Uniform Block Spacing",
   "emoji": "🖨️",
-  "status": "closed",
+  "status": "open",
   "description": "Fix inconsistent vertical spacing between chapters, sections, paragraphs, windows, and other block elements in print LaTeX. All inter-block gaps must use exactly one spacing unit (semio@spacing@single).",
   "summary": "Unified print block vertical spacing to one unit (0.2em / semio@spacing@single). Introduced semio@block@sep skip register. Windows add spacing after close (not before) to avoid doubling with heading after-skip (section→table). Nested SemioNest paragraphs get semio@block@sep before each chip. Table rows use noalign vskip with block sep skip. Fixed scrartcl section navbar ifnum. Verified paper and zwischenbericht builds.",
   "github": {
@@ -9,6 +9,7 @@
   },
   "goal": "🎯r2602",
   "sessions": [
-    "⚪e54417b306684b108c0e0e9125face50"
+    "⚪e54417b306684b108c0e0e9125face50",
+    "⚪76468a6f69844b8eaabc85dd2e158296"
   ]
 }
