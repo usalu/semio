@@ -1,7 +1,7 @@
 {
   "title": "TOC Semio Window Tables",
   "emoji": "🖨️",
-  "status": "closed",
+  "status": "open",
   "description": "LaTeX Table OS Style Parity",
   "summary": "Fixed empty Semio TOC/register table rows: (1) materialize now stores literal row values via Nx+exp_not instead of symbolic tl/str register references; (2) compilePrintDocumentWithPanels always runs a second tectonic pass; (3) register list shells use Window not nested Table tcolorbox; makeworkpackages uses Window; semio-table resets row state and guards pageref on first pass. Tectonic log shows TOC row text at line 50 (26pt overfull paragraph); full PDF rebuild should be re-run locally via mit-bestand/bericht and print/script.ts test.",
   "github": {
@@ -17,6 +17,7 @@
     "⚪d7f53c00e7d4480e9f17aa5f50794969",
     "⚪4d8271f8aa914c97b5b570e82de3fee5",
     "⚪75d733eb98464c8fbaa23b7492ea846a",
-    "⚪43b8c301446e4732a2b7f2cfac2d9c33"
+    "⚪43b8c301446e4732a2b7f2cfac2d9c33",
+    "⚪902f40c6e5534574a46632523013bc4a"
   ]
 }

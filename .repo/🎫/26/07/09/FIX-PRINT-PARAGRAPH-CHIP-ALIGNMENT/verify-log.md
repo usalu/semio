@@ -1,12 +1,19 @@
 # Verify Log — Fix Print Paragraph Chip Alignment
 
+## Muted chip fill overshoot — fixed 2026-07-10
+
+**Root cause:** `\semio@heading@cap@muted@core` used `\colorbox{semio-chrome-canvas}` without resetting `\fboxsep` to `0pt`. Default `\fboxsep` (3pt) made the fill `6pt` too wide and `3pt` too tall inside rigid `\hbox to \semio@window@cap@w` / `\vbox to \semio@chrome@titlebar@height`, while hairline border strokes (drawn via `\rule`) stayed correct.
+
+**Fix:** Wrap the muted `\colorbox` with `\begingroup \setlength{\fboxsep}{0pt} ... \endgroup`, matching `\semio@window@cap` (colored chips).
+
+**Verified:**
+- `verify-paragraph.log` — no `Overfull \hbox (6.0pt too wide)` warnings after fix.
+- Full `zwischenbericht` rebuild — no `6.0pt` chip overfull warnings.
+- `verify-paragraph-p1-16x-v4.png`, `verify-paragraph-p1-8x-v4.png`, `verify-cover-p1-12x-v4.png`, `zwischenbericht-p1.png`, `zwischenbericht-p5.png`.
+
 ## Changes (`print/tex/semio-window.sty`)
 
-1. **Rule-based canvas paint** — Replaced `\colorbox` with explicit `\rule` + `\rlap` for caps, gaps, and row window bodies so fill cannot bleed past hairline strokes (`\fboxrule` padding was overshooting).
-2. **Row window body frame** — Custom `\semio@window@body@begin/end` with side v-strokes, bottom hairline, and width-constrained `minipage` content (fixes 241pt overfull in cover columns).
-3. **Expl3 bridge** — `\semio_window_body_begin/end:` defined after body macros; calls via `\csname semio@window@body@...\endcsname` without `\group_begin` (nested groups caused `Missing } inserted`).
-4. **GenericWindow region moved** after body bridge definitions.
-5. **Row-only custom body** — Non-row windows keep `tcolorbox` so long cover text (`kurzfassung`) does not create multi-thousand-pt overfull vboxes.
+1. **Muted chip `\fboxsep` reset** — `\semio@heading@cap@muted@core` canvas fill no longer overshoots border on right/bottom (paragraph chips + window header-row chips).
 
 ## Verify commands
 
@@ -18,8 +25,9 @@ tectonic -Z search-path=../../../print/tex --outdir dist verify-paragraph.tex
 
 ## Visual result
 
-- `verify-paragraph-p1-8x-v3.png` — muted paragraph chips (`18 Interviews`, `Recherche`) align cleanly.
-- `verify-cover-p1-12x-v3.png` — cover row value fields improved; some header overfull warnings remain from logo/header row layout (pre-existing scale).
+- `verify-paragraph-p1-16x-v4.png` — muted paragraph chips (`18 Interviews`, `Recherche`) fill matches border.
+- `verify-cover-p1-12x-v4.png` — cover window header-row chips aligned.
+- `zwischenbericht-p5.png` — body paragraph chips in full document.
 
 ## Compile hang (`watch`) — fixed 2026-07-09
 
@@ -43,5 +51,8 @@ bun nx run @semio-tech/mit-bestand-bericht:build
 
 ## Raster artifacts
 
-- `verify-cover-p1-12x-v3.png`
-- `verify-paragraph-p1-8x-v3.png`
+- `verify-paragraph-p1-16x-v4.png`
+- `verify-paragraph-p1-8x-v4.png`
+- `verify-cover-p1-12x-v4.png`
+- `zwischenbericht-p1.png`
+- `zwischenbericht-p5.png`

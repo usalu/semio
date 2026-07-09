@@ -9,9 +9,13 @@
   \file_if_exist:nTF { ../../asset/font/anta/Anta-Regular.ttf }
     { \def\semio@font@root { ../../asset/font/ } }
     {
-      \file_if_exist:nTF { ../../../print/asset/font/anta/Anta-Regular.ttf }
-        { \def\semio@font@root { ../../../print/asset/font/ } }
-        { \def\semio@font@root { ../../../../print/asset/font/ } }
+      \file_if_exist:nTF { ../asset/font/anta/Anta-Regular.ttf }
+        { \def\semio@font@root { ../asset/font/ } }
+        {
+          \file_if_exist:nTF { ../../../print/asset/font/anta/Anta-Regular.ttf }
+            { \def\semio@font@root { ../../../print/asset/font/ } }
+            { \def\semio@font@root { ../../../../print/asset/font/ } }
+        }
     }
 }
 \semio_fonts_resolve_root:

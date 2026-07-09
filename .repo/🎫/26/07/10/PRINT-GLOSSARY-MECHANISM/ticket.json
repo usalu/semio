@@ -1,0 +1,19 @@
+{
+  "title": "Print Glossary Mechanism",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "Add glossary mechanism to print LaTeX stack: GlossaryDefine/Gls usage tracking, Term/Definition/Pages table at end via listofglossaries, replacing unused semioglossary register stub.",
+  "summary": "Fixed muted chip canvas fill overshooting border on right/bottom. Root cause: \\semio@heading@cap@muted@core used \\colorbox without \\fboxsep=0pt (default 3pt padding caused 6pt width / 3pt height overflow past hairline strokes). Added \\begingroup\\setlength{\\fboxsep}{0pt} guard matching colored \\semio@window@cap. Verified: verify-paragraph.log has no 6pt overfull warnings; full zwischenbericht rebuild clean; high-zoom PNGs in ticket folder.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1885"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "ee2d3121",
+    "local": "print_glossary_mechanism_ee2d3121.plan.md"
+  },
+  "sessions": [
+    "⚪97edf9a40ce045a4a665ac717348c84b"
+  ]
+}

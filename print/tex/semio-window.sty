@@ -61,26 +61,55 @@
   \group_end:
 }
 
-\cs_new_protected:Npn \semio_window_register_body_materialize:n #1 {
+\cs_new_protected:Npn \semio_window_register_rows_tl_build:n #1 {
   \tl_clear:N \l_tmpa_tl
-  \int_step_inline:nn { 5 } {
+  \int_step_inline:nn { \seq_count:c { g_semio_register_ #1 _num_seq } } {
     \tl_set:Nx \l_tmpb_tl { \seq_item:cn { g_semio_register_ #1 _num_seq } { ##1 } }
     \tl_set:Nx \l_tmpc_tl { \seq_item:cn { g_semio_register_ #1 _title_seq } { ##1 } }
     \str_set:Nx \l_tmpd_str { \seq_item:cn { g_semio_register_ #1 _label_seq } { ##1 } }
     \tl_put_right:Nx \l_tmpa_tl {
-      \exp_not:n { \semio@register@data }
+      \exp_not:n { \SemioTableRegisterRow }
         { \tl_use:N \l_tmpb_tl }
         { \tl_use:N \l_tmpc_tl }
         { \str_use:N \l_tmpd_str }
     }
   }
-  \exp_args:No \cs_gset_nopar:cpn { semio@register@body@#1 } { \tl_use:N \l_tmpa_tl }
+}
+
+\cs_generate_variant:Nn \semio_window_register_body_gappto:nnnn { VVVV }
+
+\cs_new_protected:Npn \semio_window_register_body_gappto:nnnn #1#2#3#4 {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gappto\csname #1\endcsname{\SemioTableRegisterRow{#2}{#3}{#4}}
+  \makeatother
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_window_register_body_init:n #1 {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \expandafter\gdef\csname #1\endcsname{}%
+  \makeatother
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_window_register_body_macro_apply:n #1 {
+  \semio_window_register_rows_tl_build:n {#1}
+  \toks0=\expandafter{\tl_use:N \l_tmpa_tl}
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \expandafter\gdef\csname semio@register@body@#1\endcsname{\the\toks0}%
+  \makeatother
+  \group_end:
 }
 
 \seq_new:c { g_semio_register_toc_num_seq }
 \seq_new:c { g_semio_register_toc_title_seq }
 \seq_new:c { g_semio_register_toc_label_seq }
-\cs_gset:cpn { semio@register@body@toc } { }
 
 \cs_new_protected:Npn \semio_toc_level:n #1 {
   \str_case:nn {#1} {
@@ -173,10 +202,18 @@
 \cs_new_protected:Npn \semio_window_toc_render: {
   \semio_window_toc_aux_load:
   \int_compare:nNnT { \seq_count:c { g_semio_register_toc_num_seq } } > { 0 } {
-    \semio_window_register_body_materialize:n { toc }
+    \semio_window_register_body_macro_apply:n { toc }
     \group_begin:
     \ExplSyntaxOff
-    \semio@render@toc
+    \makeatletter
+    \semio@register@window@open{\SemioTocTitle}%
+    \expandafter\SemioTableRegister\expandafter{%
+      \semio@register@table@header
+      \csname semio@register@body@toc\endcsname
+    }%
+    \semio@register@window@close
+    \clearpage
+    \makeatother
     \group_end:
   }
 }
@@ -191,7 +228,7 @@
 }
 
 \cs_new_protected:Npn \SemioWindowListOf #1 {
-  \semio_window_register_body_materialize:n {#1}
+  \semio_window_register_body_macro_apply:n {#1}
   \group_begin:
   \ExplSyntaxOff
   \semio@render@register {#1}
@@ -255,6 +292,140 @@
 \cs_new_protected:Npn \SemioRegisterListEnd { \semio_register_list_end: }
 \cs_new_protected:Npn \SemioTocTrack #1#2 { \semio_window_toc_append:nn {#1}{#2} }
 \cs_new_protected:Npn \SemioTocTrackNum #1#2#3 { \semio_window_toc_append:nnn {#1}{#2}{#3} }
+
+%region Glossary
+\seq_new:N \g_semio_glossary_terms_seq
+\prop_new:N \g_semio_glossary_definition_prop
+\prop_new:N \g_semio_glossary_pages_prop
+\seq_new:N \l_semio_glossary_sorted_terms_seq
+\clist_new:N \l_semio_glossary_labels_clist
+\tl_new:N \l_semio_glossary_title_tl
+\tl_new:N \l_semio_glossary_definition_tl
+\tl_new:N \l_semio_glossary_labels_tl
+
+\cs_new_protected:Npn \semio_glossary_term_ensure:n #1 {
+  \prop_if_in:NnF \g_semio_glossary_pages_prop {#1} {
+    \seq_gput_right:Nn \g_semio_glossary_terms_seq {#1}
+    \clist_clear:N \l_semio_glossary_labels_clist
+    \prop_gput:NnV \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist
+  }
+}
+
+\cs_new_protected:Npn \semio_glossary_define:nn #1#2 {
+  \semio_glossary_term_ensure:n {#1}
+  \prop_gput:Nnn \g_semio_glossary_definition_prop {#1} {#2}
+}
+
+\cs_new_protected:Npn \semio_glossary_label_append:nn #1#2 {
+  \prop_get:NnNTF \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist {
+    \clist_put_right:Nn \l_semio_glossary_labels_clist {#2}
+    \prop_gput:NnV \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist
+  } {
+    \clist_set:Nn \l_semio_glossary_labels_clist { {#2} }
+    \prop_gput:NnV \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist
+  }
+}
+
+\cs_new_protected:Npn \semio_glossary_labels_csv:n #1 {
+  \tl_clear:N \l_tmpd_tl
+  \prop_get:NnNTF \g_semio_glossary_pages_prop {#1} \l_semio_glossary_labels_clist {
+    \clist_map_inline:Nn \l_semio_glossary_labels_clist {
+      \tl_if_empty:NTF \l_tmpd_tl { } { \tl_put_right:Nn \l_tmpd_tl { | } }
+      \tl_put_right:Nn \l_tmpd_tl { ##1 }
+    }
+  }
+}
+
+\tl_new:N \l_semio_glossary_term_tl
+\tl_new:N \l_semio_glossary_label_tl
+
+\cs_new_protected:Npn \semio_glossary_use:n #1 {
+  \semio_glossary_term_ensure:n {#1}
+  \tl_set:Nn \l_semio_glossary_term_tl {#1}
+  \refstepcounter { semioglossaryusage }
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \xdef\semio@gls@label{semio-glossary-\thesemioglossaryusage}%
+  \expandafter\label\expandafter{\semio@gls@label}%
+  \makeatother
+  \group_end:
+  \tl_set:Nx \l_semio_glossary_label_tl { \semio@gls@label }
+  \exp_args:NV \semio_glossary_label_append:nn \l_semio_glossary_term_tl \l_semio_glossary_label_tl
+  \tl_use:N \l_semio_glossary_term_tl
+}
+
+\cs_new:Npn \semio_glossary_sort_compare:nn #1#2 {
+  \str_compare:nNnTF { #1 } < { #2 }
+    { \sort_return_same: }
+    { \sort_return_reverse: }
+}
+
+\cs_new_protected:Npn \semio_glossary_terms_sort: {
+  \seq_set_eq:NN \l_semio_glossary_sorted_terms_seq \g_semio_glossary_terms_seq
+  \seq_sort:Nn \l_semio_glossary_sorted_terms_seq {
+    \semio_glossary_sort_compare:nn { ####1 } { ######1 }
+  }
+}
+
+\cs_generate_variant:Nn \semio_glossary_body_gappto:nnn { VVV }
+
+\cs_new_protected:Npn \semio_glossary_body_gappto:nnn #1#2#3 {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gappto\semio@glossary@table@body{\SemioGlossaryTableRow{#1}{#2}{#3}}%
+  \makeatother
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_glossary_body_init: {
+  \group_begin:
+  \ExplSyntaxOff
+  \makeatletter
+  \gdef\semio@glossary@table@body{}%
+  \makeatother
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_glossary_rows_build: {
+  \semio_glossary_terms_sort:
+  \semio_glossary_body_init:
+  \int_step_inline:nn { \seq_count:N \l_semio_glossary_sorted_terms_seq } {
+    \tl_set:Nx \l_semio_glossary_term_tl { \seq_item:Nn \l_semio_glossary_sorted_terms_seq { ##1 } }
+    \prop_get:NnNTF \g_semio_glossary_definition_prop { \tl_use:N \l_semio_glossary_term_tl } \l_semio_glossary_definition_tl { } {
+      \tl_clear:N \l_semio_glossary_definition_tl
+    }
+    \exp_args:NV \semio_glossary_labels_csv:n \l_semio_glossary_term_tl
+    \exp_args:NVV \semio_glossary_body_gappto:nnn \l_semio_glossary_term_tl \l_semio_glossary_definition_tl \l_tmpd_tl
+  }
+}
+
+\cs_new_protected:Npn \semio_glossary_body_macro_apply: {
+  \semio_glossary_rows_build:
+}
+
+\cs_new_protected:Npn \SemioGlossaryListOf {
+  \semio_glossary_body_macro_apply:
+  \int_compare:nNnT { \seq_count:N \g_semio_glossary_terms_seq } > { 0 } {
+    \tl_set:Nx \l_semio_glossary_title_tl { \semio_glossary_title_text: }
+    \group_begin:
+    \ExplSyntaxOff
+    \exp_args:NV \semio@register@window@open \l_semio_glossary_title_tl
+    \SemioTableGlossary{%
+      \semio@glossary@table@header
+      \semio@glossary@table@body
+    }%
+    \semio@register@window@close
+    \group_end:
+  }
+}
+
+\cs_new_protected:Npn \GlossaryDefine #1#2 { \semio_glossary_define:nn {#1} {#2} }
+\cs_new_protected:Npn \Gls #1 { \semio_glossary_use:n {#1} }
+\cs_gset:cpn { listofglossaries } { \SemioGlossaryListOf }
+\semio@register@hooks@install { listofglossaries }
+%endregion Glossary
 
 \cs_new_protected:Npn \semio_window_listof_cmd_define:nn #1#2 {
   \seq_new:c { g_semio_register_ #1 _num_seq }
@@ -426,7 +597,6 @@
 \semio_window_kind_define:nnnnn { semiolemma } { lemma } { Lemma } { logical } { lemmas }
 \semio_window_kind_define:nnnnn { semioproof } { proof } { Proof } { logical } { proofs }
 \semio_window_kind_define:nnnnn { semioequation } { equation } { Equation } { logical } { equations }
-\semio_window_kind_define:nnnnn { semioglossary } { glossary } { Glossary } { structural } { glossaries }
 \semio_window_kind_define:nnnnn { semioabbreviations } { abbreviations } { Abbreviations } { structural } { abbreviations }
 \semio_window_kind_define:nnnnn { semioblockquote } { blockquote } { Blockquote } { structural } { blockquotes }
 \semio_window_kind_define:nnnnn { semioepigraph } { epigraph } { Epigraph } { structural } { epigraphs }
@@ -723,6 +893,22 @@
   \SemioTableRegisterRow{#1}{#2}{#3}%
 }
 
+\newcounter{semioglossaryusage}
+
+\newcommand{\semio@glossary@data}[3]{%
+  \SemioTableGlossaryRow{#1}{#2}{\SemioTableGlossaryPages{#3}}%
+}
+
+\newcommand{\semio@glossary@table@body}{}
+
+\newcommand{\semio@glossary@table@header}{%
+  \SemioTableHeaderRow{%
+    \semio@glossary@header@term &
+    \semio@glossary@header@definition &
+    \semio@glossary@header@pages
+  }%
+}
+
 \newcommand{\semio@register@table@header}{%
   \SemioTableHeaderRow{%
     \semio@register@header@number &
@@ -740,12 +926,16 @@
   \SemioTocTrackNum{#1}{\semio@toc@entry@num}{#3}%
 }
 
+\newcommand{\semio@register@body@input}[1]{%
+  \csname semio@register@body@#1\endcsname
+}
+
 \newcommand{\semio@render@register}[1]{%
   \ifnum\value{#1}>0
     \semio@register@window@open{\SemioRegisterTitle{\csname semio@window@#1@kind\endcsname}}%
     \SemioTableRegister{%
       \semio@register@table@header
-      \csname semio@register@body@#1\endcsname
+      \semio@register@body@input{#1}
     }%
     \semio@register@window@close
   \fi
@@ -755,7 +945,7 @@
   \semio@register@window@open{\SemioTocTitle}%
   \SemioTableRegister{%
     \semio@register@table@header
-    \SemioTableRegisterRow{1}{Ergebnisse}{semio-toc-section-1}%
+    \semio@register@body@input{toc}
   }%
   \semio@register@window@close
   \clearpage
@@ -1028,6 +1218,8 @@
     }%
     \nointerlineskip
     \hbox to \semio@window@cap@w{%
+      \begingroup
+      \setlength{\fboxsep}{0pt}%
       \colorbox{semio-chrome-canvas}{%
         \vbox to \semio@window@cap@body@h{%
           \vfil
@@ -1038,6 +1230,7 @@
           \vfil
         }%
       }%
+      \endgroup
     }%
   }%
 }
@@ -1107,7 +1300,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{#1}%
+      \semio@window@gap{#1}{#1}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1123,7 +1316,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{semio-chrome-base}%
+      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1139,7 +1332,7 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{semio-chrome-base}%
+      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -1378,7 +1571,7 @@
 }
 %endregion NestedParagraphs
 
-\newcommand{\semio@window@gap}[1]{%
+\newcommand{\semio@window@gap}[2]{%
   \semio@window@cap@body@h@set
   \hbox to \dimexpr\semio@window@gap@w\relax{%
     \vbox to \semio@chrome@titlebar@height{%
@@ -1395,7 +1588,7 @@
       }%
       \nointerlineskip
       \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@gap@w}%
+        \semio@window@stroke@h{#2}{\semio@window@gap@w}%
       }%
     }%
   }%
@@ -1424,7 +1617,7 @@
   \semio@window@header@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@gap{semio-chrome-base}%
+      \semio@window@gap{semio-chrome-base}{semio-chrome-border-normal}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%

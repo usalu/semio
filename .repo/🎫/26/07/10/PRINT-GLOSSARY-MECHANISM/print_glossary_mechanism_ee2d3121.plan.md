@@ -4,22 +4,22 @@ overview: Add a term/definition/usage-tracking glossary mechanism to the semio p
 todos:
   - id: open-ticket
     content: Open ticket under goal r2602/runningsketchpad for the glossary mechanism
-    status: pending
+    status: completed
   - id: remove-old-kind
     content: Remove obsolete semioglossary register kind from semio-window.sty and unused i18n entries from semio-core.sty
-    status: pending
+    status: completed
   - id: data-model
     content: "Add Glossary region to semio-window.sty: term/definition/pages data structures, GlossaryDefine, Gls, listofglossaries render"
-    status: pending
+    status: completed
   - id: table-macros
     content: Add SemioTableGlossary colspec/row/table macros to semio-table.sty
-    status: pending
+    status: completed
   - id: i18n
     content: Add SemioGlossaryTitle and Term/Definition/Pages header i18n strings to semio-core.sty
-    status: pending
+    status: completed
   - id: verify
     content: Build ticket-local verify-glossary.tex + verify.ts, compile with Tectonic, screenshot, confirm dedup/hyperlink behavior
-    status: pending
+    status: in_progress
   - id: regression-build
     content: Rebuild an existing print template to confirm removal of old kind doesn't break other documents
     status: pending
@@ -28,7 +28,6 @@ todos:
     status: pending
 isProject: false
 ---
-
 
 # Add Glossary Mechanism to Print (semio LaTeX stack)
 

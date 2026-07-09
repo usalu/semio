@@ -11,6 +11,7 @@
 \ExplSyntaxOn
 
 \tl_new:N \l_semio_logo_path_tl
+\dim_new:N \l_semio_logo_slot_width_dim
 
 \cs_new_protected:Npn \semio_logo_dark_variant:nN #1 #2 {
   \exp_args:Nx \filename@parse { #1 }
@@ -23,17 +24,17 @@
     \exp_args:NV \file_if_exist:nTF \l_tmpa_tl {
       \tl_set_eq:NN #2 \l_tmpa_tl
     } {
-      \tl_set:Nn #2 {#1}
+      \tl_set:Nx #2 {#1}
     }
   } {
-    \tl_set:Nn #2 {#1}
+    \tl_set:Nx #2 {#1}
   }
 }
 
 \cs_new_protected:Npn \semio_logo_slot:nn #1 #2 {
   \semio_logo_resolve_path:nN {#2} \l_semio_logo_path_tl
   \exp_args:NV \file_if_exist:nTF \l_semio_logo_path_tl {
-    \includegraphics[width=\linewidth]{\tl_use:N \l_semio_logo_path_tl}
+    \includegraphics[width=#1]{\tl_use:N \l_semio_logo_path_tl}
   } {
     \fbox{\rule{0pt}{#1}\rule{\linewidth}{0pt}}%
     \par\small\texttt{\tl_use:N \l_semio_logo_path_tl}%
@@ -41,9 +42,10 @@
 }
 
 \NewDocumentCommand{\semio@logo@slot}{O{4cm} m}{%
-  \begin{minipage}[c]{#1}%
+  \dim_set:Nn \l_semio_logo_slot_width_dim {#1}%
+  \begin{minipage}[c]{\dim_use:N \l_semio_logo_slot_width_dim}%
     \centering%
-    \semio_logo_slot:nn {#1} {#2}%
+    \semio_logo_slot:nn { \dim_use:N \l_semio_logo_slot_width_dim } {#2}%
   \end{minipage}%
 }
 
